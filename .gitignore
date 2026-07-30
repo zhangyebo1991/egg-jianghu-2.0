@@ -1,0 +1,104 @@
+# ---------- 操作系统 ----------
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# ---------- 编辑器 / IDE ----------
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.iml
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+*.swp
+*.swo
+*~
+
+# ---------- 日志 / 临时文件 ----------
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+*.rej
+*.pid
+*.seed
+*.pid.lock
+
+# ---------- 密钥 / 本机配置（不要提交） ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+secrets.json
+credentials.json
+appsettings.Development.json
+local.settings.json
+
+# ---------- 构建产物 / 依赖 ----------
+node_modules/
+dist/
+build/
+out/
+bin/
+obj/
+coverage/
+.cache/
+*.tsbuildinfo
+package-lock.json.bak
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---------- .NET / C# ----------
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.dll
+*.exe
+*.pdb
+*.cache
+TestResults/
+
+# ---------- 压缩包 / 大文件 ----------
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# ---------- AI 工具本机数据 ----------
+.codegraph/
+.ccg/
+.superccg/
+.superpowers/
+.playwright-mcp/
+.claude/settings.local.json
