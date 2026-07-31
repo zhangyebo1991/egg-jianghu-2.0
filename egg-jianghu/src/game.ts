@@ -16,7 +16,10 @@ import {
 import {
   createLearnedMartial,
   emptyEquippedMartialIds,
+  formatMartialPassive,
   getLearnedMartialRank,
+  getMartialRefund,
+  getPassiveBonuses,
   getPrimaryMartialId,
 } from './martials'
 import type {
@@ -31,6 +34,7 @@ import type {
   GameState,
   HeroProgress,
   HeroStats,
+  EquippedMartialIds,
   MartialDefinition,
   MysteryBlessingEffectType,
   MysteryBlessingId,
@@ -38,6 +42,7 @@ import type {
   PartySynergy,
   RegionDefinition,
   RegionId,
+  Resources,
   Sect,
 } from './types'
 
@@ -108,25 +113,19 @@ export function getHeroStats(state: GameState, heroId: string): HeroStats {
     return { attack: 0, defense: 0, hp: 0, power: 0, affinityText: '无' }
   }
 
-  const martialId = getPrimaryMartialId(progress)
-  const martial = martialId ? martialById(martialId) : undefined
-  const rank = martial ? getLearnedMartialRank(progress, martial.id) : 0
-  const elementMatch = martial?.element === hero.element
-  const styleMatch = martial?.style === hero.style
-  const martialPower = martial?.basePower ?? 1
-  const rankPower = martial ? 1 + (rank - 1) * 0.12 : 1
-  const affinityPower = (elementMatch ? 1.18 : 1) * (styleMatch ? 1.08 : 1)
+  const passive = getPassiveBonuses(progress.learnedMartials)
   const level = progress.level
-  const attack = Math.round((hero.baseAttack + (level - 1) * 3.2) * martialPower * rankPower * affinityPower)
-  const defense = Math.round(hero.baseDefense + (level - 1) * 1.9 + (styleMatch ? 2 : 0))
-  const hp = Math.round(hero.baseHp + (level - 1) * 15 + (elementMatch ? 6 : 0))
+  const attack = Math.round((hero.baseAttack + (level - 1) * 3.2) * (1 + passive.attack))
+  const defense = Math.round((hero.baseDefense + (level - 1) * 1.9) * (1 + passive.defense))
+  const hp = Math.round((hero.baseHp + (level - 1) * 15) * (1 + passive.hp))
+  const learnedCount = Object.keys(progress.learnedMartials).length
 
   return {
     attack,
     defense,
     hp,
     power: attack * 3 + defense * 2 + Math.round(hp / 3),
-    affinityText: !martial ? '未习武学' : elementMatch && styleMatch ? '五行·刚柔皆合' : elementMatch ? '五行相合' : styleMatch ? '刚柔相合' : '相性平平',
+    affinityText: `已学 ${learnedCount} 门；主动武功按各自五行与刚柔相性结算`,
   }
 }
 
@@ -811,6 +810,15 @@ export function getUpgradeCost(level: number): { silver: number; experience: num
   return { silver: level * 45, experience: level * 70 }
 }
 
+const refreshIdleMemberHp = (state: GameState, heroId: string, oldMaxHp: number): void => {
+  if (state.combat.mode !== 'idle') return
+  const member = state.combat.partyMembers.find((candidate) => candidate.heroId === heroId)
+  if (!member) return
+  const nextMaxHp = getHeroStats(state, heroId).hp
+  member.maxHp = nextMaxHp
+  member.hp = Math.max(1, Math.min(nextMaxHp, member.hp + nextMaxHp - oldMaxHp))
+}
+
 export function upgradeHero(state: GameState, heroId: string): ActionResult {
   if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可调整养成' }
   const hero = heroById(heroId)
@@ -824,12 +832,7 @@ export function upgradeHero(state: GameState, heroId: string): ActionResult {
   state.resources.experience -= cost.experience
   const oldMaxHp = getHeroStats(state, heroId).hp
   progress.level += 1
-  const combatMember = state.combat.partyMembers.find((member) => member.heroId === heroId)
-  if (combatMember && state.combat.mode === 'idle') {
-    const nextMaxHp = getHeroStats(state, heroId).hp
-    combatMember.maxHp = nextMaxHp
-    combatMember.hp = Math.min(nextMaxHp, combatMember.hp + nextMaxHp - oldMaxHp)
-  }
+  refreshIdleMemberHp(state, heroId, oldMaxHp)
   return { ok: true, message: `${hero.name}提升至 ${progress.level} 级` }
 }
 
@@ -860,38 +863,91 @@ export function unlockMartial(state: GameState, martialId: string): ActionResult
 }
 
 export function equipMartial(state: GameState, heroId: string, martialId: string): ActionResult {
-  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可更换武学' }
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可更换武功' }
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
-  const martial = martialById(martialId)
-  if (!hero || !progress?.unlocked || !martial || !state.unlockedMartials.includes(martialId)) {
-    return { ok: false, message: '无法装备这门武学' }
+  if (!hero || !progress?.unlocked || !martialById(martialId) || !progress.learnedMartials[martialId]) {
+    return { ok: false, message: '只能装备这位侠客已经学会的武功' }
   }
-  progress.learnedMartials[martialId] ??= createLearnedMartial()
-  progress.equippedMartialIds[0] = martialId
-  return { ok: true, message: `${hero.name}改习「${martial.name}」` }
+  if (progress.equippedMartialIds.includes(martialId)) return { ok: false, message: '这门武功已经装备' }
+  const slot = progress.equippedMartialIds.indexOf(null)
+  if (slot < 0) return { ok: false, message: '出战武功已满，请先卸下一门' }
+  progress.equippedMartialIds[slot] = martialId
+  return { ok: true, message: `${hero.name}已将「${martialById(martialId)!.name}」设为优先级 ${slot + 1}` }
 }
 
-export function trainMartial(state: GameState, heroId: string): ActionResult {
+export function unequipMartial(state: GameState, heroId: string, slot: number): ActionResult {
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可更换武功' }
+  const progress = state.heroes[heroId]
+  if (!progress?.unlocked || slot < 0 || slot >= 4 || !progress.equippedMartialIds[slot]) {
+    return { ok: false, message: '这个槽位没有可卸下的武功' }
+  }
+  progress.equippedMartialIds[slot] = null
+  return { ok: true, message: '武功已卸下' }
+}
+
+export function moveMartial(state: GameState, heroId: string, slot: number, direction: -1 | 1): ActionResult {
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可调整优先级' }
+  const progress = state.heroes[heroId]
+  const target = slot + direction
+  if (!progress?.unlocked || slot < 0 || slot >= 4 || target < 0 || target >= 4 || !progress.equippedMartialIds[slot]) {
+    return { ok: false, message: '无法调整这个武功槽位' }
+  }
+  ;[progress.equippedMartialIds[slot], progress.equippedMartialIds[target]] = [
+    progress.equippedMartialIds[target],
+    progress.equippedMartialIds[slot],
+  ]
+  return { ok: true, message: `出招优先级已调整为 ${target + 1}` }
+}
+
+export function trainMartial(state: GameState, heroId: string, martialId: string): ActionResult {
   if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可调整养成' }
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
-  const martialId = progress ? getPrimaryMartialId(progress) : null
-  const martial = martialId ? martialById(martialId) : undefined
-  if (!hero || !progress?.unlocked || !martial) return { ok: false, message: '请先为侠客配置武学' }
-  const learned = progress.learnedMartials[martial.id]
-  const rank = Math.max(1, learned?.rank ?? 1)
-  if (rank >= 3) return { ok: false, message: '这门武学已修至圆满' }
-  const silver = rank * 55
-  const pages = rank * 12
+  const martial = martialById(martialId)
+  const learned = progress?.learnedMartials[martialId]
+  if (!hero || !progress?.unlocked || !martial || !learned) return { ok: false, message: '这位侠客尚未学会该武功' }
+  if (learned.rank >= 3) return { ok: false, message: '这门武功已修至圆满' }
+  const silver = learned.rank * 55
+  const pages = learned.rank * 12
   if (state.resources.silver < silver || state.resources.pages < pages) {
     return { ok: false, message: `进阶需要 ${silver} 银两与 ${pages} 残页` }
   }
   state.resources.silver -= silver
   state.resources.pages -= pages
-  progress.learnedMartials[martial.id] ??= createLearnedMartial(rank)
-  progress.learnedMartials[martial.id].rank = rank + 1
-  return { ok: true, message: `${hero.name}的「${martial.name}」进阶至${martial.rankNames[rank]}` }
+  learned.invested.silver += silver
+  learned.invested.pages += pages
+  learned.rank += 1
+  return { ok: true, message: `${hero.name}的「${martial.name}」进阶至${martial.rankNames[learned.rank - 1]}` }
+}
+
+export const getMartialForgetPreview = (state: GameState, heroId: string, martialId: string) => {
+  const learned = state.heroes[heroId]?.learnedMartials[martialId]
+  const martial = martialById(martialId)
+  if (!learned || !martial) return null
+  return {
+    martial,
+    rank: learned.rank,
+    passiveText: formatMartialPassive(martialId, learned.rank),
+    refund: getMartialRefund(learned.invested),
+  }
+}
+
+export function forgetMartial(state: GameState, heroId: string, martialId: string): ActionResult {
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可遗忘武功' }
+  const hero = heroById(heroId)
+  const progress = state.heroes[heroId]
+  const preview = getMartialForgetPreview(state, heroId, martialId)
+  if (!hero || !progress?.unlocked || !preview) return { ok: false, message: '没有可遗忘的武功' }
+  const oldMaxHp = getHeroStats(state, heroId).hp
+  for (const key of Object.keys(preview.refund) as Array<keyof Resources>) {
+    state.resources[key] += preview.refund[key]
+  }
+  delete progress.learnedMartials[martialId]
+  progress.equippedMartialIds = progress.equippedMartialIds
+    .map((id) => id === martialId ? null : id) as EquippedMartialIds
+  refreshIdleMemberHp(state, heroId, oldMaxHp)
+  return { ok: true, message: `${hero.name}已遗忘「${preview.martial.name}」，返还 80% 培养资源` }
 }
 
 export function setPartySlot(state: GameState, slot: number, heroId: string): ActionResult {

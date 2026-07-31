@@ -678,7 +678,11 @@ app.addEventListener('click', (event) => {
   switch (action) {
     case 'upgrade': notify(upgradeHero(state, heroId ?? '')); break
     case 'recruit': notify(recruitHero(state, heroId ?? '')); break
-    case 'train': notify(trainMartial(state, heroId ?? '')); break
+    case 'train': {
+      const progress = state.heroes[heroId ?? '']
+      notify(trainMartial(state, heroId ?? '', progress ? getPrimaryMartialId(progress) ?? '' : ''))
+      break
+    }
     case 'unlock-martial': notify(unlockMartial(state, martialId ?? '')); break
     case 'open-region': {
       if (!REGIONS.some((region) => region.id === regionId)) return

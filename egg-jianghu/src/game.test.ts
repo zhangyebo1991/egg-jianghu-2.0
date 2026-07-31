@@ -9,6 +9,7 @@ import {
   createInitialState,
   equipMartial,
   finishMystery,
+  forgetMartial,
   getActiveBonds,
   getActiveCombos,
   getFormationSummary,
@@ -16,6 +17,7 @@ import {
   getMysteryChoices,
   getPartySynergy,
   isRegionUnlocked,
+  moveMartial,
   recruitHero,
   returnToIdle,
   selectRegion,
@@ -25,6 +27,7 @@ import {
   startIdleStage,
   startMystery,
   stepCombat,
+  unequipMartial,
 } from './game'
 
 describe('蛋蛋江湖 MVP 核心循环', () => {
@@ -263,6 +266,78 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(comboIds).toEqual(expect.arrayContaining(['mountain_river_reflection', 'twin_blades_resonance']))
   })
 
+  it('只允许装备已学武功并按最小空槽放入，且同一武功不可重复', () => {
+    const state = createInitialState()
+    const heroId = state.formation[0].heroId
+    state.heroes[heroId].learnedMartials.frost_sword = {
+      rank: 1,
+      invested: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+    }
+    expect(equipMartial(state, heroId, 'frost_sword').ok).toBe(true)
+    expect(state.heroes[heroId].equippedMartialIds[1]).toBe('frost_sword')
+    expect(equipMartial(state, heroId, 'frost_sword').ok).toBe(false)
+    expect(equipMartial(state, heroId, 'vajra_staff').ok).toBe(false)
+
+    for (const martialId of ['taiji_breath', 'vajra_staff', 'earth_origin']) {
+      state.heroes[heroId].learnedMartials[martialId] = {
+        rank: 1,
+        invested: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+      }
+    }
+    expect(equipMartial(state, heroId, 'taiji_breath').ok).toBe(true)
+    expect(equipMartial(state, heroId, 'vajra_staff').ok).toBe(true)
+    expect(equipMartial(state, heroId, 'earth_origin').ok).toBe(false)
+  })
+
+  it('可与相邻空槽交换并卸下指定槽位', () => {
+    const state = createInitialState()
+    const heroId = state.formation[0].heroId
+    expect(moveMartial(state, heroId, 0, 1).ok).toBe(true)
+    expect(state.heroes[heroId].equippedMartialIds).toEqual([null, expect.any(String), null, null])
+    expect(unequipMartial(state, heroId, 1).ok).toBe(true)
+    expect(state.heroes[heroId].equippedMartialIds).toEqual([null, null, null, null])
+  })
+
+  it('全部已学被动影响属性，卸下不失效，遗忘后失效并退款 80%', () => {
+    const state = createInitialState()
+    const heroId = state.formation[0].heroId
+    const before = getHeroStats(state, heroId)
+    state.heroes[heroId].learnedMartials.vajra_staff = {
+      rank: 2,
+      invested: { silver: 101, experience: 9, pages: 11, reputation: 1 },
+    }
+    state.heroes[heroId].learnedMartials.frost_sword = {
+      rank: 1,
+      invested: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+    }
+    expect(equipMartial(state, heroId, 'vajra_staff').ok).toBe(true)
+    expect(equipMartial(state, heroId, 'frost_sword').ok).toBe(true)
+    const learned = getHeroStats(state, heroId)
+    expect(learned.attack).toBeGreaterThan(before.attack)
+    expect(unequipMartial(state, heroId, 1).ok).toBe(true)
+    expect(getHeroStats(state, heroId).attack).toBe(learned.attack)
+    expect(equipMartial(state, heroId, 'vajra_staff').ok).toBe(true)
+    expect(forgetMartial(state, heroId, 'vajra_staff').ok).toBe(true)
+    expect(state.resources).toEqual({ silver: 260, experience: 97, pages: 23, reputation: 0 })
+    expect(state.heroes[heroId].learnedMartials.vajra_staff).toBeUndefined()
+    expect(state.heroes[heroId].equippedMartialIds).toEqual([expect.any(String), null, 'frost_sword', null])
+  })
+
+  it('挑战和秘境锁定期间拒绝装备、排序、卸下和遗忘', () => {
+    const state = createInitialState()
+    const heroId = state.formation[0].heroId
+    expect(startChallenge(state).ok).toBe(true)
+    expect(moveMartial(state, heroId, 0, 1).ok).toBe(false)
+    expect(unequipMartial(state, heroId, 0).ok).toBe(false)
+    expect(forgetMartial(state, heroId, state.heroes[heroId].equippedMartialIds[0]!).ok).toBe(false)
+
+    const mystery = createInitialState()
+    expect(startMystery(mystery, 4).ok).toBe(true)
+    expect(moveMartial(mystery, heroId, 0, 1).ok).toBe(false)
+    expect(unequipMartial(mystery, heroId, 0).ok).toBe(false)
+    expect(forgetMartial(mystery, heroId, mystery.heroes[heroId].equippedMartialIds[0]!).ok).toBe(false)
+  })
+
   it.each([
     ['dragon_palm', 'burn', 'enemy'],
     ['frost_sword', 'slow', 'enemy'],
@@ -273,6 +348,11 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     const state = createInitialState()
     if (!state.unlockedMartials.includes(martialId)) state.unlockedMartials.push(martialId)
     const actorId = state.formation[0].heroId
+    state.heroes[actorId].learnedMartials[martialId] ??= {
+      rank: 1,
+      invested: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+    }
+    expect(unequipMartial(state, actorId, 0).ok).toBe(true)
     expect(equipMartial(state, actorId, martialId).ok).toBe(true)
     expect(startChallenge(state).ok).toBe(true)
 
@@ -361,7 +441,13 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
 
     const frostState = createInitialState()
     frostState.defeatedBossIds.push('boss_stonebreaker', 'boss_blackwind_chief')
-    expect(equipMartial(frostState, frostState.formation[0].heroId, 'frost_sword').ok).toBe(true)
+    const frostHeroId = frostState.formation[0].heroId
+    frostState.heroes[frostHeroId].learnedMartials.frost_sword = {
+      rank: 1,
+      invested: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+    }
+    expect(unequipMartial(frostState, frostHeroId, 0).ok).toBe(true)
+    expect(equipMartial(frostState, frostHeroId, 'frost_sword').ok).toBe(true)
     expect(selectRegion(frostState, 'frost_temple').ok).toBe(true)
     expect(startChallenge(frostState).ok).toBe(true)
     stepCombat(frostState)
@@ -387,7 +473,13 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
 
     for (const { heroId } of state.formation) {
       state.heroes[heroId].level = 12
-      expect(equipMartial(state, heroId, 'dragon_palm').ok).toBe(true)
+      state.heroes[heroId].learnedMartials.dragon_palm ??= {
+        rank: 1,
+        invested: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+      }
+      if (!state.heroes[heroId].equippedMartialIds.includes('dragon_palm')) {
+        expect(equipMartial(state, heroId, 'dragon_palm').ok).toBe(true)
+      }
     }
     expect(selectRegion(state, 'frost_temple').ok).toBe(true)
     expect(startChallenge(state).ok).toBe(true)
