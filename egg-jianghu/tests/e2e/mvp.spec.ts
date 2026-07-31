@@ -5,6 +5,27 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => window.__EGG_JIANGHU__.reset())
 })
 
+test('正文和展示文字会加载内置思源宋体', async ({ page }) => {
+  const fontState = await page.evaluate(async () => {
+    const [boldFaces, heavyFaces] = await Promise.all([
+      document.fonts.load('700 16px "Source Han Serif SC Game"', '蛋蛋江湖'),
+      document.fonts.load('400 16px "Source Han Serif SC Game Heavy"', '江湖关卡'),
+    ])
+
+    return {
+      boldFaces: boldFaces.length,
+      heavyFaces: heavyFaces.length,
+      rootFamily: getComputedStyle(document.documentElement).fontFamily,
+      headingFamily: getComputedStyle(document.querySelector('h1')!).fontFamily,
+    }
+  })
+
+  expect(fontState.boldFaces).toBe(1)
+  expect(fontState.heavyFaces).toBe(1)
+  expect(fontState.rootFamily).toContain('Source Han Serif SC Game')
+  expect(fontState.headingFamily).toContain('Source Han Serif SC Game Heavy')
+})
+
 test('启动后先选择大关卡和小关卡，再开始挂机战斗', async ({ page }, testInfo) => {
   await expect(page).toHaveTitle(/蛋蛋江湖 2\.0/)
   await expect(page.locator('h1')).toHaveText('江湖关卡')

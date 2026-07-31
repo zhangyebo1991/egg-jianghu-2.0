@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蛋蛋江湖 · 高保真原型 A</title>
+<style>
+:root{
+  --bg:#14100c; --panel:#1f1812; --panel2:#2a2118; --line:#4a3a28;
+  --gold:#d8b36a; --gold2:#f2d79a; --red:#c0392b; --green:#7fb069;
+  --blue:#5b8dd9; --purple:#9b59b6; --txt:#e8dcc4; --dim:#9a8a6e;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei","PingFang SC",serif;}
+body{background:var(--bg);color:var(--txt);min-height:100vh;
+  background-image:radial-gradient(circle at 20% 10%,rgba(216,179,106,.06),transparent 40%),
+  radial-gradient(circle at 80% 90%,rgba(192,57,43,.05),transparent 40%);}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+/* ===== 顶栏 ===== */
+.topbar{display:flex;align-items:center;gap:18px;padding:10px 20px;background:linear-gradient(180deg,#2a2118,#1f1812);border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:50;}
+.logo{font-size:22px;font-weight:bold;color:var(--gold2);letter-spacing:4px;text-shadow:0 0 12px rgba(216,179,106,.5);}
+.res{display:flex;gap:14px;margin-left:auto;font-size:13px;}
+.res span{background:#00000055;padding:4px 12px;border:1px solid var(--line);border-radius:14px;}
+.res b{color:var(--gold2);}
+/* ===== 主导航 ===== */
+.nav{display:flex;gap:4px;padding:8px 20px;background:#181310;border-bottom:1px solid var(--line);position:sticky;top:55px;z-index:49;flex-wrap:wrap;}
+.nav button{background:none;border:1px solid transparent;color:var(--dim);padding:8px 18px;cursor:pointer;font-size:15px;border-radius:6px;letter-spacing:2px;}
+.nav button:hover{color:var(--txt);}
+.nav button.active{color:var(--gold2);border-color:var(--gold);background:#2a2118;box-shadow:0 0 10px rgba(216,179,106,.2) inset;}
+/* ===== 页面 ===== */
+.page{display:none;padding:20px;max-width:1280px;margin:0 auto;}
+.page.active{display:block;animation:fade .25s;}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+h2.sec{color:var(--gold2);font-size:18px;letter-spacing:3px;border-left:4px solid var(--gold);padding-left:10px;margin:18px 0 12px;}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;}
+.row{display:flex;gap:14px;flex-wrap:wrap;}
+.grid{display:grid;gap:12px;}
+/* ===== 卡牌 ===== */
+.card{background:linear-gradient(160deg,var(--panel2),#1a140e);border:1px solid var(--line);border-radius:10px;padding:12px;position:relative;transition:.15s;}
+.card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 16px #000a;}
+.avatar{width:56px;height:56px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:bold;border:2px solid;flex-shrink:0;}
+.q-凡{border-color:#8a8a8a;color:#ccc;background:#333}.q-良{border-color:var(--green);color:var(--green);background:#1a2a1a}
+.q-优{border-color:var(--blue);color:var(--blue);background:#16202e}.q-绝{border-color:var(--purple);color:var(--purple);background:#241628}
+.q-神{border-color:var(--gold);color:var(--gold2);background:#2e2410;box-shadow:0 0 10px rgba(216,179,106,.35)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border:1px solid var(--line);border-radius:10px;color:var(--dim);margin:2px 2px 0 0;}
+.tag.gold{color:var(--gold2);border-color:var(--gold);}
+.tag.red{color:#e74c3c;border-color:#e74c3c;}
+.tag.blue{color:var(--blue);border-color:var(--blue);}
+.tag.green{color:var(--green);border-color:var(--green);}
+.tag.purple{color:var(--purple);border-color:var(--purple);}
+.btn{background:linear-gradient(180deg,#6b5326,#4a3a18);color:var(--gold2);border:1px solid var(--gold);padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;letter-spacing:1px;}
+.btn:hover{filter:brightness(1.2);}
+.btn.ghost{background:none;color:var(--dim);border-color:var(--line);}
+.btn.red{background:linear-gradient(180deg,#8e2f24,#5e1f18);border-color:#e74c3c;color:#f5b7b1;}
+.bar{height:8px;background:#000;border-radius:4px;overflow:hidden;border:1px solid #00000088;}
+.bar>i{display:block;height:100%;border-radius:4px;}
+.hp>i{background:linear-gradient(90deg,#c0392b,#e74c3c)} .mp>i{background:linear-gradient(90deg,#2471a3,#5b8dd9)} .xp>i{background:linear-gradient(90deg,#b7950b,#f2d79a)}
+/* ===== 布阵 ===== */
+.formation{display:grid;grid-template-columns:repeat(3,120px);gap:14px;justify-content:center;background:#00000033;border:1px dashed var(--line);border-radius:12px;padding:20px;}
+.slot{width:120px;height:130px;border:1px dashed var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#1a140e88;font-size:12px;color:var(--dim);}
+.slot.filled{border-style:solid;border-color:var(--gold);color:var(--txt);}
+.rowlbl{text-align:center;color:var(--gold);font-size:13px;letter-spacing:6px;margin:6px 0;}
+/* ===== 关卡地图 ===== */
+.stage-node{display:flex;align-items:center;gap:10px;}
+.stage-dot{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:bold;background:var(--panel2);cursor:pointer;flex-shrink:0;}
+.stage-dot.done{border-color:var(--green);color:var(--green);}
+.stage-dot.cur{border-color:var(--gold);color:var(--gold2);box-shadow:0 0 12px rgba(216,179,106,.6);animation:pulse 1.5s infinite;}
+.stage-dot.lock{border-color:#333;color:#555;}
+@keyframes pulse{50%{box-shadow:0 0 22px rgba(216,179,106,.9)}}
+/* ===== 职业树 ===== */
+.classline{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:8px 0;}
+.cnode{border:1px solid var(--line);border-radius:8px;padding:8px 12px;text-align:center;min-width:110px;background:var(--panel2);font-size:13px;}
+.cnode.top{border-color:var(--gold);color:var(--gold2);}
+.cnode .sub{font-size:11px;color:var(--dim);}
+.carrow{color:var(--gold);padding:0 6px;font-size:16px;}
+/* ===== 武功 ===== */
+.skill{display:flex;gap:10px;align-items:flex-start;background:#00000033;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;}
+.skill .ic{width:44px;height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--line);background:var(--panel2);flex-shrink:0;}
+.prio{display:flex;flex-direction:column;gap:2px;}
+.prio button{font-size:10px;padding:1px 6px;background:var(--panel2);border:1px solid var(--line);color:var(--dim);cursor:pointer;border-radius:4px;}
+.prio button:hover{color:var(--gold2);border-color:var(--gold);}
+.cd{font-size:11px;color:var(--blue);}
+/* ===== 弹窗 ===== */
+.modal-mask{position:fixed;inset:0;background:#000c;z-index:100;display:none;align-items:center;justify-content:center;}
+.modal-mask.show{display:flex;}
+.modal{width:760px;max-width:94vw;max-height:88vh;overflow:auto;background:var(--panel);border:2px solid var(--gold);border-radius:12px;padding:20px;position:relative;}
+.modal .x{position:absolute;top:10px;right:14px;cursor:pointer;color:var(--dim);font-size:20px;}
+.tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
+.tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);padding:6px 14px;cursor:pointer;font-size:14px;}
+.tabs button.active{color:var(--gold2);border-bottom-color:var(--gold);}
+/* misc */
+.note{font-size:12px;color:var(--dim);line-height:1.7;}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px dashed #ffffff11;}
+.logbox{background:#0d0a07;border:1px solid var(--line);border-radius:8px;padding:10px;height:180px;overflow:auto;font-size:12px;line-height:1.9;}
+.logbox .hurt{color:#e74c3c}.logbox .heal{color:var(--green)}.logbox .crit{color:var(--gold2);font-weight:bold}.logbox .sys{color:var(--blue)}
+.divider{height:1px;background:var(--line);margin:14px 0;}
+.equip-slot{width:64px;height:64px;border:1px dashed var(--line);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--dim);background:#00000033;cursor:pointer;}
+.equip-slot.filled{border-style:solid;color:var(--txt);}
+.pill{font-size:11px;border-radius:10px;padding:2px 10px;border:1px solid var(--gold);color:var(--gold2);}
+</style>
+</head>
+<body>
+
+<!-- ================= 顶栏 ================= -->
+<div class="topbar">
+  <div class="logo">⚔ 蛋蛋江湖</div>
+  <div style="font-size:12px;color:var(--dim)">大侠：蛋散掌门 · 战力 <b style="color:var(--gold2)">128,460</b></div>
+  <div class="res">
+    <span>💰 铜钱 <b>1,254,800</b></span>
+    <span>💎 元宝 <b>3,260</b></span>
+    <span>🍖 体力 <b>86/120</b></span>
+    <span>🎋 声望 <b>42,100</b></span>
+  </div>
+</div>
+
+<!-- ================= 导航 ================= -->
+<div class="nav" id="nav">
+  <button data-p="p-home" class="active">🏠 主界面</button>
+  <button data-p="p-formation">🛡 布阵队伍</button>
+  <button data-p="p-map">🗺 江湖关卡</button>
+  <button data-p="p-hero">🧑‍🤝‍🧑 侠客</button>
+  <button data-p="p-class">📜 职业</button>
+  <button data-p="p-bag">🎒 背包/装备</button>
+  <button data-p="p-more">✨ 更多玩法</button>
+</div>
+
+<!-- ================= 主界面（挂机） ================= -->
+<div class="page active" id="p-home">
+  <div class="row">
+    <div style="flex:2;min-width:380px">
+      <div class="panel">
+        <h2 class="sec">当前挂机 · 第12大关「襄阳城」第 7 小关 — 烽火渡口</h2>
+        <div class="note" style="margin-bottom:10px">推荐战力 95,000 · 难度 ★★★★☆ · 已挂机 <b style="color:var(--gold2)">02:41:33</b> · 战斗场次 <b style="color:var(--gold2)">487</b> · 胜率 <b style="color:var(--green)">98.4%</b></div>
+        <div class="row">
+          <div class="card" style="flex:1;min-width:110px;text-align:center"><div style="font-size:22px">💰</div><div class="note">铜钱/分</div><b style="color:var(--gold2)">1,240</b></div>
+          <div class="card" style="flex:1;min-width:110px;text-align:center"><div style="font-size:22px">✨</div><div class="note">经验/分</div><b style="color:var(--gold2)">860</b></div>
+          <div class="card" style="flex:1;min-width:110px;text-align:center"><div style="font-size:22px">⚒</div><div class="note">精铁/分</div><b style="color:var(--gold2)">12</b></div>
+          <div class="card" style="flex:1;min-width:110px;text-align:center"><div style="font-size:22px">📿</div><div class="note">残页/时</div><b style="color:var(--gold2)">3.2</b></div>
+          <div class="card" style="flex:1;min-width:110px;text-align:center"><div style="font-size:22px">🎁</div><div class="note">奇遇</div><b style="color:var(--purple)">待触发</b></div>
+        </div>
+        <div class="divider"></div>
+        <div class="row" style="align-items:center">
+          <button class="btn">⚡ 快速挂机（立即结算2小时）</button>
+          <button class="btn ghost">🛑 停止挂机</button>
+          <button class="btn ghost">⚙ 掉落筛选设置</button>
+          <span class="pill">离线收益已累积 6h12m（上限12h，VIP可提升）</span>
+        </div>
+      </div>
+
+      <h2 class="sec">实时战斗演算</h2>
+      <div class="panel">
+        <div class="row">
+          <div style="flex:1;min-width:300px">
+            <div class="note" style="margin-bottom:6px">我方阵型（前3后3）</div>
+            <div class="grid" style="grid-template-columns:repeat(3,1fr)" id="homeAlly"></div>
+          </div>
+          <div style="align-self:center;font-size:24px;color:var(--gold)">⚔</div>
+          <div style="flex:1;min-width:300px">
+            <div class="note" style="margin-bottom:6px">敌方 · 黑风寨刀客</div>
+            <div class="grid" style="grid-template-columns:repeat(3,1fr)" id="homeEnemy"></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="logbox" id="combatLog"></div>
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:300px">
+      <h2 class="sec">今日目标</h2>
+      <div class="panel">
+        <div class="kv"><span>通关 12-10「襄阳夜战」</span><span class="tag red">进行中</span></div>
+        <div class="kv"><span>丐帮日常任务 3/5</span><span class="tag gold">+40贡献</span></div>
+        <div class="kv"><span>强化装备 5 次</span><span class="tag green">已完成</span></div>
+        <div class="kv"><span>招募 1 名侠客</span><span class="tag green">已完成</span></div>
+        <div class="divider"></div>
+        <div class="note">活跃度 <b style="color:var(--gold2)">80/100</b></div>
+        <div class="bar xp" style="margin-top:6px"><i style="width:80%"></i></div>
+        <div style="margin-top:10px"><button class="btn" style="width:100%">领取活跃奖励</button></div>
+      </div>
+      <h2 class="sec">限时活动</h2>
+      <div class="panel">
+        <div class="card" style="margin-bottom:8px">🏔 <b>华山论剑</b> <span class="tag red">剩余 2天</span><div class="note">跨服比武，积分兑换「神·残页」</div></div>
+        <div class="card" style="margin-bottom:8px">🌙 <b>珍珑棋局</b> <span class="tag blue">每日</span><div class="note">解谜玩法，产出武学心得（突破武功等级上限）</div></div>
+        <div class="card">👹 <b>魔教入侵</b> <span class="tag purple">周末</span><div class="note">全服BOSS，按伤害排名发派系贡献</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 布阵 ================= -->
+<div class="page" id="p-formation">
+  <h2 class="sec">出战布阵 · 前排承伤 / 后排输出与辅助（拖拽换位）</h2>
+  <div class="row">
+    <div style="flex:1;min-width:420px">
+      <div class="panel">
+        <div class="rowlbl">—— 后 排 ——</div>
+        <div class="formation" id="backRow"></div>
+        <div class="rowlbl">—— 前 排 ——</div>
+        <div class="formation" id="frontRow"></div>
+        <div class="divider"></div>
+        <div class="note">阵法加成：<b style="color:var(--gold2)">「两仪微尘阵」Lv.6</b> — 前排减伤+12%，后排攻击+8%。阵法残卷由派系商店与奇遇产出。羁绊加成：上阵「郭靖+黄蓉」触发「侠侣同心」全体攻击+5%。</div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:320px">
+      <div class="panel">
+        <h2 class="sec" style="margin-top:0">替补席（点击上阵）</h2>
+        <div class="grid" style="grid-template-columns:repeat(3,1fr)" id="bench"></div>
+        <div class="divider"></div>
+        <div class="note">💡 设计说明：主力队用于推关；可保存 3 套阵容方案（推图/PVP/BOSS）。后排被攻击概率低，但敌方存在「刺客型」武功可直接攻击后排，需要布阵博弈。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 关卡 ================= -->
+<div class="page" id="p-map">
+  <div class="row">
+    <div style="width:260px;flex-shrink:0">
+      <div class="panel" style="max-height:72vh;overflow:auto" id="stageList"></div>
+    </div>
+    <div style="flex:1;min-width:400px">
+      <div class="panel">
+        <div class="tabs" id="mapTabs" style="margin-bottom:10px">
+          <button class="active" data-t="mapStages">⚔ 关卡挑战</button>
+          <button data-t="mapCity">🏯 <span id="cityTabName">城市 · 襄阳城</span></button>
+          <button data-t="mapFaction">🚩 派系</button>
+        </div>
+        <div id="mapStages">
+          <h2 class="sec" style="margin-top:0"><span id="stageTitle">第12大关 · 襄阳城</span> <span class="tag gold">普通</span><span class="tag red">精英未解锁</span></h2>
+          <div class="note" style="margin-bottom:12px">通关10/10解锁下一大关；每关三星条件：通关 / 无人阵亡 / 8回合内获胜。满星可领取关卡宝箱。通关大关后解锁本关城市全部设施。</div>
+          <div class="grid" style="grid-template-columns:repeat(5,1fr)" id="subStages"></div>
+          <div class="divider"></div>
+          <div class="row">
+            <div class="card" style="flex:1;min-width:200px">
+              <b style="color:var(--gold2)">12-7 烽火渡口</b> <span class="tag red">当前</span>
+              <div class="note" style="margin:6px 0">推荐战力 95,000 · 体力消耗 6/次<br>掉落：精铁、12阶装备、「烈焰刀法」残页</div>
+              <div class="row" style="margin-top:8px">
+                <button class="btn">▶ 开始挂机</button>
+                <button class="btn ghost">⚔ 手动挑战 ×10</button>
+              </div>
+            </div>
+            <div class="card" style="flex:1;min-width:200px">
+              <b>通关奖励预览</b>
+              <div class="note" style="margin-top:6px">首通：元宝×100 · 招募令×2<br>三星宝箱：本关特色侠客碎片×20<br>大关卡通关：解锁本关城市全部设施</div>
+            </div>
+          </div>
+          <h2 class="sec">难度模式</h2>
+          <div class="row">
+            <div class="card" style="flex:1"><b>普通</b><div class="note">主线推进，解锁城市与派系</div></div>
+            <div class="card" style="flex:1"><b style="color:var(--blue)">精英</b><div class="note">通关普通后开放，产出高阶装备图纸</div></div>
+            <div class="card" style="flex:1"><b style="color:var(--purple)">地狱</b><div class="note">通关精英后开放，产出「武功上限+1」天材地宝</div></div>
+          </div>
+        </div>
+        <div id="mapCity" style="display:none"></div>
+        <div id="mapFaction" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 侠客 ================= -->
+<div class="page" id="p-hero">
+  <div class="row" style="margin-bottom:12px">
+    <span class="pill">全部 86</span><span class="pill" style="border-color:var(--line);color:var(--dim)">神 2</span><span class="pill" style="border-color:var(--line);color:var(--dim)">绝 9</span><span class="pill" style="border-color:var(--line);color:var(--dim)">优 24</span><span class="pill" style="border-color:var(--line);color:var(--dim)">良 51</span>
+    <span style="margin-left:auto" class="note">排序：战力 ▾ ｜ 筛选：职业 / 派系 / 标签</span>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))" id="heroGrid"></div>
+</div>
+
+<!-- ================= 职业 ================= -->
+<div class="page" id="p-class">
+  <div class="note" style="margin-bottom:8px">共 <b style="color:var(--gold2)">6</b> 条职业路线。每 20 级可进阶一次，共 4 次进阶（Lv20/40/60/80），顶级职业 Lv100 满级。进阶继承并追加<b style="color:var(--gold2)">职业标签</b>——武功学习以标签为准：某武功要求标签 b，则拥有标签 b 的任意职业（含高阶）皆可学习。</div>
+  <div id="classLines"></div>
+  <h2 class="sec">标签体系说明</h2>
+  <div class="panel note" style="line-height:2">
+    例：刀系路线 <b>刀客(a) → 狂刀(a,b) → 刀皇(a,b,c) → 刀圣(a,b,c,d) → 刀神(a,b,c,d,e)</b>。<br>
+    武功「烈焰刀法」要求标签 <span class="tag red">b</span> —— 狂刀及以上可学；「天刀九问」要求标签 <span class="tag red">d</span> —— 仅刀圣/刀神可学。<br>
+    跨系高阶武功可能要求双标签（如 <span class="tag red">刀c</span>+<span class="tag blue">内x</span>），鼓励主副双修或依靠稀有「洗髓丹」重置职业路线。角色进阶不可逆，但可消耗洗髓丹退回初始职业重选路线。
+  </div>
+</div>
+
+<!-- ================= 背包 ================= -->
+<div class="page" id="p-bag">
+  <div class="row">
+    <div style="flex:1;min-width:320px">
+      <h2 class="sec">当前角色装备（郭破虏）</h2>
+      <div class="panel row" id="equipSlots"></div>
+    </div>
+    <div style="flex:2;min-width:400px">
+      <h2 class="sec">背包 · 装备</h2>
+      <div class="panel grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))" id="bagGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 更多玩法 ================= -->
+<div class="page" id="p-more">
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
+    <div class="card"><b style="color:var(--gold2)">🧬 经脉系统</b><div class="note" style="margin-top:6px">打通任督二脉等 8 条经脉，穴位提供全局属性；「冲穴」材料来自地狱难度与珍珑棋局。是长线数值养成轴。</div></div>
+    <div class="card"><b style="color:var(--gold2)">💞 侠客羁绊</b><div class="note" style="margin-top:6px">收集原著关联侠客激活羁绊（如「射雕三英」「武当七侠」），全队属性加成，驱动收集欲。</div></div>
+    <div class="card"><b style="color:var(--gold2)">🏔 华山论剑（PVP）</b><div class="note" style="margin-top:6px">异步对战他人挂机阵容，段位制赛季，奖励神品残页与限定外观。</div></div>
+    <div class="card"><b style="color:var(--gold2)">🗼 试剑塔</b><div class="note" style="margin-top:6px">无尽爬塔，每日重置层数奖励，检验极限战力的数值校验场。</div></div>
+    <div class="card"><b style="color:var(--gold2)">🌗 善恶系统</b><div class="note" style="margin-top:6px">奇遇选择累积善恶值：正道线解锁「浩然正气」类武功与正派侠客，魔道线解锁高爆发邪功，二周目重玩价值。</div></div>
+    <div class="card"><b style="color:var(--gold2)">🥚 蛋蛋图鉴</b><div class="note" style="margin-top:6px">收集向成就系统：侠客图鉴、武功图鉴、奇遇图鉴，完成度给全局百分比加成。</div></div>
+  </div>
+</div>
+
+<!-- ================= 角色详情弹窗 ================= -->
+<div class="modal-mask" id="heroModal">
+  <div class="modal">
+    <span class="x" onclick="closeModal()">✕</span>
+    <div class="row" style="align-items:center">
+      <div class="avatar q-绝" style="width:72px;height:72px;font-size:34px">郭</div>
+      <div style="flex:1">
+        <div style="font-size:20px"><b style="color:var(--gold2)">郭破虏</b> <span class="tag gold">绝品</span> <span class="tag red">刀系·刀皇</span> <span class="tag blue">丐帮</span></div>
+        <div class="note">Lv.62 · 战力 31,200 · 天赋：<b style="color:var(--gold2)">「忠烈血脉」——生命低于30%时，攻击+40%，并获得15%吸血（角色专属天赋，不可更换）</b></div>
+      </div>
+      <button class="btn">进阶（Lv60已满足）</button>
+    </div>
+    <div class="divider"></div>
+    <div class="tabs" id="heroTabs">
+      <button class="active" data-t="t-skill">武功配置</button>
+      <button data-t="t-attr">属性 / 装备</button>
+      <button data-t="t-class">职业进阶</button>
+      <button data-t="t-lib">武功库（已学 14/20）</button>
+    </div>
+
+    <div id="t-skill" class="htab">
+      <div class="note" style="margin-bottom:8px">出战最多装备 <b style="color:var(--gold2)">4</b> 门武功；数字为释放优先级（1最高），每门武功有独立回合CD，CD中自动顺延使用下一优先级武功，全CD则普攻。</div>
+      <div id="equippedSkills"></div>
+      <div class="divider"></div>
+      <div class="note">被动/心法不占 4 个装备位，但占用学习总数 20 的上限。合理搭配「主动输出 + 控制 + 回复 + 心法」是Build核心乐趣。</div>
+    </div>
+
+    <div id="t-attr" class="htab" style="display:none">
+      <div class="row">
+        <div style="flex:1;min-width:200px">
+          <div class="kv"><span>气血</span><span>48,200</span></div>
+          <div class="kv"><span>攻击</span><span>6,840</span></div>
+          <div class="kv"><span>防御</span><span>3,120</span></div>
+          <div class="kv"><span>速度（出手顺序）</span><span>412</span></div>
+          <div class="kv"><span>暴击 / 暴伤</span><span>28% / 175%</span></div>
+          <div class="kv"><span>命中 / 闪避</span><span>96% / 12%</span></div>
+        </div>
+        <div style="flex:1;min-width:200px" class="row" id="modalEquip"></div>
+      </div>
+    </div>
+
+    <div id="t-class" class="htab" style="display:none">
+      <div class="note" style="margin-bottom:8px">当前：刀皇（标签 <span class="tag red">a</span><span class="tag red">b</span><span class="tag red">c</span>）· 下一阶：刀圣（追加标签 <span class="tag red">d</span>，可学「天刀九问」）</div>
+      <div class="classline">
+        <div class="cnode">刀客<div class="sub">标签 a</div></div><span class="carrow">→</span>
+        <div class="cnode">狂刀<div class="sub">+b</div></div><span class="carrow">→</span>
+        <div class="cnode top" style="border-color:var(--blue);color:var(--blue)">刀皇 ✦当前<div class="sub">+c</div></div><span class="carrow">→</span>
+        <div class="cnode">刀圣<div class="sub">+d 需Lv60 ✔</div></div><span class="carrow">→</span>
+        <div class="cnode">刀神<div class="sub">+e 需Lv80</div></div>
+      </div>
+      <div class="note" style="margin-top:10px">进阶材料：「刀意结晶」×50（精英12章掉落）+ 铜钱 500,000。进阶提升成长率并解锁高阶武功学习资格。</div>
+      <div style="margin-top:10px"><button class="btn">⚔ 进阶为刀圣</button></div>
+    </div>
+
+    <div id="t-lib" class="htab" style="display:none">
+      <div class="note" style="margin-bottom:8px">学习总数上限 <b style="color:var(--gold2)">20</b>（「武学心得」已突破 +2）。遗忘武功返还 80% 残页。列表仅展示符合职业标签的可学武功。</div>
+      <div class="skill"><div class="ic">🔥</div><div style="flex:1"><b>烈焰刀法</b> Lv.12/20 <span class="tag red">需b</span><div class="note">主动 · CD 2回合 · 对前排造成180%伤害并灼烧</div></div><button class="btn ghost">升级（残页×45）</button></div>
+      <div class="skill"><div class="ic">🌪</div><div style="flex:1"><b>狂风快刀</b> Lv.8/20 <span class="tag red">需a</span><div class="note">主动 · CD 0 · 连击2次，每次70%</div></div><button class="btn ghost">升级</button></div>
+      <div class="skill"><div class="ic">🛡</div><div style="flex:1"><b>铁布衫（心法）</b> Lv.15/20 <span class="tag blue">需内x</span><div class="note">被动 · 受到伤害降低 18%</div></div><button class="btn ghost">升级</button></div>
+      <div class="skill" style="opacity:.5"><div class="ic">❓</div><div style="flex:1"><b>天刀九问</b> <span class="tag red">需d</span><div class="note">职业标签不足 —— 进阶「刀圣」后可学（地狱13章掉落）</div></div><button class="btn ghost">不可学</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= 数据 ================= */
+const heroes=[
+ {n:'郭破虏',q:'绝',c:'刀皇',fac:'丐帮',pos:'前',hp:82,mp:40},
+ {n:'穆念慈',q:'优',c:'枪豪',fac:'无',pos:'前',hp:74,mp:52},
+ {n:'石破天',q:'神',c:'拳圣',fac:'侠客岛',pos:'前',hp:95,mp:60},
+ {n:'黄蓉',q:'神',c:'奇门宗师',fac:'丐帮',pos:'后',hp:60,mp:90},
+ {n:'小龙女',q:'绝',c:'剑仙',fac:'古墓派',pos:'后',hp:58,mp:85},
+ {n:'虚竹',q:'绝',c:'禅师',fac:'少林',pos:'后',hp:70,mp:78},
+ {n:'阿朱',q:'良',c:'医者',fac:'无',pos:'',bench:1},
+ {n:'狄云',q:'优',c:'剑侠',fac:'无',pos:'',bench:1},
+ {n:'韦小宝',q:'优',c:'奇门',fac:'天地会',pos:'',bench:1},
+];
+const qColor={'凡':'#8a8a8a','良':'#7fb069','优':'#5b8dd9','绝':'#9b59b6','神':'#d8b36a'};
+const stages=['扬州城','牛家村','嘉兴府','桃花岛','终南山','少林寺','洛阳城','华山巅','姑苏城','大理国','丐帮总舵','襄阳城','绝情谷','光明顶','武当山','峨眉金顶','星宿海','灵鹫宫','雁门关','黑木崖','侠客岛','神龙岛','西域昆仑','辽东雪原','苗疆五毒','南海归墟','大都皇城','冰火岛','天外天','紫禁之巅'];
+const classLines=[
+ ['刀','刀客','狂刀','刀皇','刀圣','刀神','a b c d e','刚猛无前，单体爆发的物理巅峰'],
+ ['剑','剑童','剑侠','剑宗','剑仙','剑神','f g h i j','灵动连击，高暴击高速度'],
+ ['拳','武僧','拳师','拳霸','拳圣','拳神','k l m n o','近身控制，高生存的前排堡垒'],
+ ['内','居士','修士','真人','宗师','陆地神仙','x y z w v','以内力催动，群体伤害与增益'],
+ ['医','药童','医者','神医','药王','医仙','1 2 3 4 5','治疗驱散，团队续航核心'],
+ ['奇','杂役','奇门','异士','诡道','天机','6 7 8 9 0','减益、召唤与战术变化的万金油'],
+];
+const equipped=[
+ {ic:'🔥',n:'烈焰刀法',lv:'Lv.12/20',cd:'CD 2回合',prio:1,desc:'180%伤害+灼烧（回合-5%生命，持续2回合）',tag:'需b ✔'},
+ {ic:'🐉',n:'擒龙功',lv:'Lv.6/20',cd:'CD 4回合',prio:2,desc:'拉取敌方后排至前排并眩晕1回合',tag:'需c ✔'},
+ {ic:'🌪',n:'狂风快刀',lv:'Lv.8/20',cd:'无CD',prio:3,desc:'连击2次×70%，暴击率+15%',tag:'需a ✔'},
+ {ic:'🛡',n:'铁布衫（心法）',lv:'Lv.15/20',cd:'被动',prio:'—',desc:'受到伤害-18%，不占出手',tag:'需内x ✔'},
+];
+
+/* ================= 渲染 ================= */
+const $=s=>document.querySelector(s);
+function heroCard(h,mini){
+ return `<div class="card" style="text-align:center;cursor:pointer" onclick="openHero()">
+  <div class="avatar q-${h.q}" style="margin:0 auto 6px">${h.n[0]}</div>
+  <div style="font-size:14px"><b>${h.n}</b> <span class="tag ${h.q==='神'?'gold':h.q==='绝'?'purple':'blue'}">${h.q}</span></div>
+  <div class="note">${h.c} · ${h.fac}</div>
+  ${mini?'':`<div class="bar hp" style="margin-top:6px"><i style="width:${h.hp}%"></i></div><div class="bar mp" style="margin-top:3px"><i style="width:${h.mp}%"></i></div>`}
+ </div>`;
+}
+/* 主界面双方 */
+$('#homeAlly').innerHTML=heroes.filter(h=>h.pos).map(h=>heroCard(h)).join('');
+$('#homeEnemy').innerHTML=['黑风刀客','寨主夫人','黑风大当家','喽啰甲','黑风弓手','喽啰乙'].map((n,i)=>`
+ <div class="card" style="text-align:center;opacity:${i<4?1:.4}">
+  <div class="avatar" style="margin:0 auto 6px;border-color:#a33;color:#e88;background:#2a1010">${n[0]}</div>
+  <div style="font-size:12px">${n}</div>
+  <div class="bar hp" style="margin-top:6px"><i style="width:${[30,0,85,0,60,0][i]}%"></i></div>
+ </div>`).join('');
+/* 布阵 */
+function slot(h,pos){
+ return h?`<div class="slot filled" onclick="openHero()"><div class="avatar q-${h.q}" style="width:46px;height:46px;font-size:20px">${h.n[0]}</div><b style="font-size:13px">${h.n}</b><span class="note">${h.c}</span></div>`
+ :`<div class="slot">＋<br>${pos}</div>`;
+}
+const front=heroes.filter(h=>h.pos==='前'),back=heroes.filter(h=>h.pos==='后');
+$('#frontRow').innerHTML=[0,1,2].map(i=>slot(front[i],'前排')).join('');
+$('#backRow').innerHTML=[0,1,2].map(i=>slot(back[i],'后排')).join('');
+$('#bench').innerHTML=heroes.filter(h=>h.bench).map(h=>heroCard(h,1)).join('');
+/* 关卡 */
+/* ===== 每关特色城市数据（未列出的关卡用通用模板生成） ===== */
+const cityData={
+ 0:{heroes:['绝·韦春花','优·茅十八','良·史松'],skill:'「扬州快刀」',special:['🎰 丽春院 · 赌坊','掷骰小游戏，产出铜钱与奇遇线索，善恶值-']},
+ 4:{heroes:['绝·黄药师','优·黄蓉','良·哑仆'],skill:'「落英神剑掌」',special:['🌸 桃花阵 · 解谜','每日阵法解谜，产出阵法残卷与武学心得']},
+ 5:{heroes:['绝·扫地僧','优·玄慈','良·慧轮'],skill:'「罗汉拳」',special:['📿 藏经阁','参悟残页合成完整武功（通关本关后全账号解锁）']},
+ 7:{heroes:['绝·风清扬','优·令狐冲','良·陆大有'],skill:'「华山剑法」',special:['⛰ 思过崖 · 剑冢','挑战剑意试炼，产出剑系专属突破材料']},
+ 11:{heroes:['绝·郭破虏','优·耶律齐','良·武敦儒'],skill:'「烈焰刀法」',special:['🏹 校场 · 守城战','协力守城玩法：抵御蒙古军波次进攻，按波次发精铁与声望']},
+ 15:{heroes:['绝·灭绝师太','优·周芷若','良·静玄'],skill:'「峨眉九阳功」',special:['🐒 灵猿谷 · 采集','派遣侠客采集药材，产出经脉冲穴材料']},
+};
+function renderStageList(sel){
+ $('#stageList').innerHTML=stages.map((s,i)=>{
+  const st=i<11?'done':i===11?'cur':'lock';
+  const isSel=i===sel;
+  return `<div class="stage-node" data-i="${i}" style="cursor:pointer;${isSel?'background:#d8b36a22;border-radius:8px;':''}"><div class="stage-dot ${st}" ${isSel?'style="box-shadow:0 0 12px rgba(216,179,106,.8)"':''}>${i+1}</div><div style="font-size:13px;color:${isSel?'var(--gold2)':i<12?'var(--txt)':'#555'}">${s}${i===11?' <span class="tag gold">挂机中</span>':''}${isSel?' ◀':''}</div></div>${i<29?'<div style="width:2px;height:14px;background:var(--line);margin-left:21px"></div>':''}`;
+ }).join('');
+}
+function renderCity(i){
+ const name=stages[i],unlocked=i<11; // 前11关已通关
+ const d=cityData[i]||{heroes:['绝·'+name.slice(0,2)+'豪侠','优·'+name.slice(0,2)+'剑客','良·本地武师'],skill:'「'+name.slice(0,2)+'秘传武学」',special:['🏮 地方特色设施','每个大关城市拥有一处独有玩法设施，提供差异化养成产出']};
+ const lock=`<div class="note" style="margin-bottom:10px">${unlocked?`已通关，城市设施全部开放。本城特色武功：<b style="color:var(--gold2)">${d.skill}</b>`:`🔒 通关第${i+1}大关「${name}」10/10 后解锁城市设施（当前仅可预览）`}</div>`;
+ $('#mapCity').innerHTML=lock+`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));${unlocked?'':'opacity:.55'}">
+  <div class="card">
+   <div style="font-size:17px">🏮 <b style="color:var(--gold2)">酒馆 · 招募</b></div>
+   <div class="note" style="margin:8px 0">本关特色侠客：<span class="tag gold">${d.heroes[0]}</span><span class="tag purple">${d.heroes[1]}</span><span class="tag blue">${d.heroes[2]}</span><br>普通招募令 9 枚 · 高级招募令 2 枚</div>
+   <div class="row"><button class="btn">招募×1</button><button class="btn">招募×10</button><button class="btn ghost">预览卡池</button></div>
+   <div class="note" style="margin-top:6px">保底：10连必出「良」以上，90抽必出本关「绝」品侠客</div>
+  </div>
+  <div class="card">
+   <div style="font-size:17px">⚒ <b style="color:var(--gold2)">铁匠铺 · 打造强化</b></div>
+   <div class="note" style="margin:8px 0">打造：图纸+精铁 → 随机品质装备（本关产出 ${i+1} 阶装备）<br>强化：+12 屠龙刀（成功率 65%，失败不掉级，+10以上需护符）<br>洗炼：重置装备附加词条</div>
+   <div class="row"><button class="btn">打造</button><button class="btn">强化</button><button class="btn ghost">洗炼</button></div>
+  </div>
+  <div class="card">
+   <div style="font-size:17px">🥋 <b style="color:var(--gold2)">武馆</b></div>
+   <div class="note" style="margin:8px 0">· 出师招募：铜钱招募普通侠客（无特色侠客）<br>· 传授武功：本城特色 <b style="color:var(--gold2)">${d.skill}</b> + 通用基础武学<br>· 武功突破：消耗「武学心得」提升武功等级上限（20→25）</div>
+   <div class="row"><button class="btn">进入武馆</button></div>
+  </div>
+  <div class="card">
+   <div style="font-size:17px">${d.special[0].includes('丽春院')||d.special[0].includes('藏经阁')||d.special[0].includes('剑冢')||d.special[0].includes('桃花阵')||d.special[0].includes('校场')||d.special[0].includes('灵猿谷')?d.special[0]:'🏪 市集 & 镖局'}</div>
+   <div class="note" style="margin:8px 0">${d.special[1]}<br>市集：每日刷新材料/残页 ｜ 镖局：派遣闲置侠客走镖，4小时一轮产出铜钱与侠义值</div>
+   <div class="row"><button class="btn ghost">进入</button><button class="btn ghost">派镖</button></div>
+  </div>
+  <div class="card">
+   <div style="font-size:17px">🏠 <b style="color:var(--gold2)">客栈 · 奇遇</b></div>
+   <div class="note" style="margin:8px 0">挂机时随机触发奇遇事件（选择分支）：神秘剑客切磋 / 山洞秘笈 / 受伤老者求助……不同选择影响奖励与「善恶值」，善恶值解锁隐藏武功与隐藏侠客。</div>
+   <div class="row"><button class="btn ghost">查看奇遇图鉴 37/120</button></div>
+  </div>
+ </div>`;
+}
+/* ===== 每关派系（2~3个） ===== */
+const stageFactions={
+ 0:[{n:'天地会',ic:'🗡',desc:'反清复明，擅长暗器与奇门。特色：凝血神爪、神行百变。',shop:['神行百变','招募「绝·陈近南」']},{n:'盐帮',ic:'🧂',desc:'漕运盐枭，刀法系地方流派。特色：私盐刀法。',shop:['私盐刀法','招募「优·盐帮香主」']}],
+ 4:[{n:'桃花岛',ic:'🌸',desc:'东邪一脉，奇门遁甲。特色：弹指神通、落英神剑掌。',shop:['弹指神通','招募「神·黄药师」']},{n:'归云庄',ic:'🏯',desc:'太湖群豪之首，水军战阵。特色：太湖擒拿法。',shop:['太湖擒拿法','招募「优·陆冠英」']}],
+ 5:[{n:'少林',ic:'🙏',desc:'禅宗祖庭，内功心法天下第一。特色：易筋经、七十二绝技。',shop:['易筋经','招募「神·扫地僧」'],join:1,prog:62,rank:'达摩院首座'},{n:'嵩山派',ic:'⛰',desc:'五岳剑派盟主，剑掌双绝。特色：大嵩阳神掌。',shop:['大嵩阳神掌','招募「绝·左冷禅」']},{n:'金刚门',ic:'🔱',desc:'西域外门硬功，刚猛无俦。特色：大力金刚指。',shop:['大力金刚指','招募「优·火工头陀」']}],
+ 7:[{n:'华山派',ic:'⚔',desc:'剑气两宗之争。特色：独孤九剑（需善恶>0）、紫霞神功。',shop:['独孤九剑','招募「神·风清扬」']},{n:'日月神教',ic:'🌙',desc:'邪派至尊（需善恶<0加入）。特色：吸星大法。',shop:['吸星大法','招募「绝·任我行」']}],
+ 10:[{n:'丐帮',ic:'🥖',desc:'天下第一大帮，掌棍双绝。特色：打狗棒法、降龙十八掌。',shop:['打狗棒法','降龙十八掌','招募「神·洪七公」'],join:1,prog:62,rank:'八袋长老'},{n:'铁掌帮',ic:'✋',desc:'水上帮派，铁掌神功威震湘西。特色：铁掌功。',shop:['铁掌功','招募「绝·裘千仞」']}],
+ 11:[{n:'丐帮·襄阳分舵',ic:'🥖',desc:'助守襄阳，侠之大者。特色：降龙十八掌传承、守城义军。',shop:['降龙十八掌','招募「神·郭靖」'],join:1,prog:62,rank:'八袋长老'},{n:'全真教',ic:'☯',desc:'玄门正宗，阵法见长。特色：天罡北斗阵、全真剑法。',shop:['天罡北斗阵阵卷','招募「绝·丘处机」']},{n:'蒙古密宗',ic:'🕉',desc:'敌对潜伏势力（需善恶<-20）。特色：龙象般若功。',shop:['龙象般若功','招募「绝·金轮法王」']}],
+ 14:[{n:'武当',ic:'☯',desc:'以柔克刚。特色：太极剑、纯阳无极功。',shop:['太极剑','招募「神·张三丰」']},{n:'明教',ic:'🔥',desc:'圣火燎原。特色：乾坤大挪移、圣火令武功。',shop:['乾坤大挪移','招募「神·张无忌」']},{n:'峨眉派',ic:'🌸',desc:'巾帼剑派。特色：峨眉九阳功、灭绝剑法。',shop:['灭绝剑法','招募「绝·周芷若」']}],
+};
+function renderFaction(i){
+ const unlocked=i<11;
+ const fs=stageFactions[i]||[
+  {n:stages[i].slice(0,2)+'盟',ic:'🚩',desc:'本地正道联盟。特色武功：'+stages[i].slice(0,2)+'镇派绝学。',shop:[stages[i].slice(0,2)+'镇派绝学','招募「绝·'+stages[i].slice(0,2)+'盟主」']},
+  {n:stages[i].slice(0,2)+'寨',ic:'🏴',desc:'本地绿林势力（需善恶<0）。特色：'+stages[i].slice(0,2)+'霸刀。',shop:[stages[i].slice(0,2)+'霸刀','招募「优·'+stages[i].slice(0,2)+'寨主」']}
+ ];
+ $('#mapFaction').innerHTML=`<div class="note" style="margin-bottom:10px">本大关有 <b style="color:var(--gold2)">${fs.length}</b> 个派系（每关2~3个，正邪各异）。同时可加入 <b style="color:var(--gold2)">1</b> 个主派系（叛出冷却7天，保留贡献点）。派系任务每日刷新，贡献点用于学习派系武功、招募派系专属侠客、兑换阵法残卷。${unlocked?'':' 🔒 通关本大关后开放加入。'}</div>
+ <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));${unlocked?'':'opacity:.55'}">`+
+ fs.map(f=>`
+  <div class="card" ${f.join?'style="border-color:var(--gold)"':''}>
+   <div style="font-size:16px">${f.ic} <b style="color:var(--gold2)">${f.n}</b> ${f.join?'<span class="tag gold">已加入</span>':''}</div>
+   <div class="note" style="margin:6px 0">${f.desc}</div>
+   ${f.join?`<div class="bar xp"><i style="width:${f.prog}%"></i></div><div class="note" style="margin-top:4px">贡献 12,400 · ${f.rank}</div>`:`<button class="btn ghost" style="margin-top:4px">加入派系</button>`}
+   <div class="divider"></div>
+   <div class="note"><b style="color:var(--txt)">派系传承：</b>${f.shop.map(s=>`<span class="tag gold">${s}</span>`).join('')}</div>
+  </div>`).join('')+`</div>`+
+ (fs.some(f=>f.join)?`
+ <div class="divider"></div>
+ <div class="row">
+  <div style="flex:1;min-width:260px">
+   <b>今日派系任务（${fs.find(f=>f.join).n}）</b>
+   <div class="kv"><span>讨伐本地匪患（本大关挂机 50 场）</span><span class="tag gold">+20</span></div>
+   <div class="kv"><span>捐赠精铁 ×200</span><span class="tag gold">+10</span></div>
+   <div class="kv"><span>派系演武获胜 3 场</span><span class="tag green">已完成</span></div>
+  </div>
+  <div style="flex:1;min-width:260px">
+   <b>派系商店 / 传承</b>
+   <div class="skill"><div class="ic">🐉</div><div style="flex:1"><b style="color:var(--gold2)">镇派神功</b> <span class="tag purple">派系·神品</span><div class="note">需本派最高职位｜80,000 贡献</div></div><button class="btn ghost">未达成</button></div>
+   <div class="skill"><div class="ic">📜</div><div style="flex:1"><b>进阶武学</b> <span class="tag blue">派系·绝品</span><div class="note">需中级职位｜8,000 贡献</div></div><button class="btn">学习</button></div>
+  </div>
+ </div>`:'');
+}
+let curStage=11;
+function selectStage(i){
+ curStage=i;
+ renderStageList(i);
+ $('#stageTitle').textContent=`第${i+1}大关 · ${stages[i]}`;
+ $('#cityTabName').textContent=`城市 · ${stages[i]}`;
+ renderCity(i);renderFaction(i);
+}
+renderStageList(11);renderCity(11);renderFaction(11);
+$('#stageList').addEventListener('click',e=>{
+ const n=e.target.closest('.stage-node');if(n)selectStage(+n.dataset.i);
+});
+$('#mapTabs').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ document.querySelectorAll('#mapTabs button').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');
+ $('#mapStages').style.display=b.dataset.t==='mapStages'?'':'none';
+ $('#mapCity').style.display=b.dataset.t==='mapCity'?'':'none';
+ $('#mapFaction').style.display=b.dataset.t==='mapFaction'?'':'none';
+});
+$('#subStages').innerHTML=Array.from({length:10},(_,i)=>{
+ const done=i<6,cur=i===6;
+ return `<div class="card" style="text-align:center;${cur?'border-color:var(--gold);box-shadow:0 0 12px rgba(216,179,106,.3)':''};${!done&&!cur?'opacity:.5':''}">
+  <div style="font-size:20px">${done?'✅':cur?'⚔':'🔒'}</div>
+  <div style="font-size:13px;margin:4px 0">12-${i+1}</div>
+  <div class="note">${done?'★★★':cur?'烽火渡口':'未解锁'}</div></div>`;
+}).join('');
+/* 侠客列表 */
+const more=[['郭靖','神','刀神','丐帮'],['杨过','神','剑仙','古墓派'],['张无忌','神','拳圣','明教'],['王语嫣','优','医者','无'],['段誉','绝','剑宗','大理'],['乔峰','神','掌尊','丐帮'],['令狐冲','绝','剑仙','华山'],['任我行','绝','狂刀','日月神教']];
+$('#heroGrid').innerHTML=heroes.concat(more.map(m=>({n:m[0],q:m[1],c:m[2],fac:m[3],hp:80,mp:60}))).map(h=>heroCard(h)).join('');
+/* 职业路线 */
+$('#classLines').innerHTML=classLines.map(l=>{
+ const tags=l[6].split(' ');
+ return `<div class="panel" style="margin-bottom:10px">
+  <b style="color:var(--gold2)">${l[0]}系</b> <span class="note">${l[7]}</span>
+  <div class="classline">${l.slice(1,6).map((c,i)=>`<div class="cnode ${i===4?'top':''}">${c}<div class="sub">${i===0?'标签 '+tags[0]:'+'+tags[i]}${i>0?` · Lv${i*20}进阶`:''}</div></div>${i<4?'<span class="carrow">→</span>':''}`).join('')}</div>
+ </div>`;
+}).join('');
+/* 装备 */
+const eqs=[['武器','屠龙刀 +12','atk'],['头盔','玄铁盔 +9'],['护甲','金丝软甲 +10'],['靴子','追星踏月 +8'],['饰品','和田玉佩 +7'],['心法位','易筋经·残']];
+$('#equipSlots').innerHTML=eqs.map(e=>`<div class="equip-slot filled" style="border-color:${e[2]?'var(--gold)':'var(--line)'}"><div style="font-size:20px">🗡</div><div>${e[0]}</div><div style="color:var(--gold2);font-size:10px">${e[1]}</div></div>`).join('');
+$('#modalEquip').innerHTML=$('#equipSlots').innerHTML;
+$('#bagGrid').innerHTML=['青钢剑 +3','镔铁刀','乌蚕衣','鹿皮靴','狼牙链','暴雨梨花针图纸','玄铁重剑图纸','精铁×340','武学心得×12','洗髓丹×1','高级招募令×2','「天刀九问」残页 3/50'].map(n=>`<div class="card" style="text-align:center;font-size:12px;padding:14px 6px">${n.includes('图纸')||n.includes('残页')?'📜':n.includes('丹')||n.includes('心得')?'🧪':'🎒'}<br>${n}</div>`).join('');
+/* 已装备武功 */
+$('#equippedSkills').innerHTML=equipped.map(s=>`
+ <div class="skill">
+  <div class="prio"><span class="pill">${s.prio==='—'?'被动':'优先级 '+s.prio}</span><button>▲</button><button>▼</button></div>
+  <div class="ic">${s.ic}</div>
+  <div style="flex:1"><b>${s.n}</b> <span class="tag gold">${s.lv}</span> <span class="tag">${s.tag}</span><div class="note">${s.desc}</div></div>
+  <span class="cd">${s.cd}</span>
+  <button class="btn ghost">卸下</button>
+ </div>`).join('');
+
+/* ================= 交互 ================= */
+document.getElementById('nav').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById(b.dataset.p).classList.add('active');
+});
+function openHero(){$('#heroModal').classList.add('show');}
+function closeModal(){$('#heroModal').classList.remove('show');}
+$('#heroModal').addEventListener('click',e=>{if(e.target.id==='heroModal')closeModal();});
+$('#heroTabs').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ document.querySelectorAll('#heroTabs button').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');
+ document.querySelectorAll('.htab').forEach(t=>t.style.display='none');
+ document.getElementById(b.dataset.t).style.display='block';
+});
+/* 模拟战斗日志 */
+const logs=[
+ ['sys','第 488 场战斗开始 —— 烽火渡口'],
+ ['','石破天 使用「烈焰拳」对 黑风刀客 造成 <span class="hurt">8,412</span> 伤害'],
+ ['','敌方 黑风弓手 射击 郭破虏，造成 <span class="hurt">1,203</span> 伤害'],
+ ['crit','郭破虏 触发「擒龙功」！将 黑风弓手 拉至前排并眩晕'],
+ ['','小龙女 使用「玉女剑法」连击 ×2，造成 <span class="hurt">6,876</span> 伤害'],
+ ['heal','虚竹 施放「天山六阳掌·回春」，全队恢复 4,520 生命'],
+ ['crit','石破天 暴击！「烈焰拳」造成 <span class="crit">21,030</span> 伤害，黑风大当家 被击败！'],
+ ['sys','战斗胜利！获得 铜钱×7,440 · 经验×5,160 · 精铁×72 · 「烈焰刀法」残页×1'],
+];
+const lb=$('#combatLog');let li=0;
+setInterval(()=>{const [c,t]=logs[li++%logs.length];const d=document.createElement('div');if(c)d.className=c;d.innerHTML=t;lb.appendChild(d);lb.scrollTop=lb.scrollHeight;if(lb.children.length>60)lb.removeChild(lb.firstChild);},1600);
+logs.slice(0,4).forEach(([c,t])=>{const d=document.createElement('div');if(c)d.className=c;d.innerHTML=t;lb.appendChild(d);});
+</script>
+</body>
+</html>

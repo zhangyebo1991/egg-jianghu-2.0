@@ -1,5 +1,21 @@
 @layer reset, theme, layout, components, responsive;
 
+@font-face {
+  font-family: "Source Han Serif SC Game";
+  src: url("./assets/fonts/SourceHanSerifSC-Bold.otf") format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Source Han Serif SC Game Heavy";
+  src: url("./assets/fonts/SourceHanSerifSC-Heavy.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 @layer reset {
   *, *::before, *::after { box-sizing: border-box; }
   html { min-width: 320px; background: #100e0b; }
@@ -14,7 +30,8 @@
   :root {
     color: #e9dfcb;
     background: #100e0b;
-    font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+    font-family: "Source Han Serif SC Game", "Noto Serif SC", "Songti SC", SimSun, serif;
+    font-weight: 700;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     --ink: #17130e;
@@ -94,7 +111,7 @@
     color: #f4e9d1;
     border: 1px solid #d17b68;
     box-shadow: inset 0 0 0 3px rgba(58, 16, 11, .3), 0 5px 18px rgba(119, 35, 26, .3);
-    font-family: KaiTi, STKaiti, serif;
+    font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif;
     font-size: 23px;
     transform: rotate(-2deg);
   }
@@ -172,7 +189,7 @@
   .page-heading h1 {
     margin: 5px 0 9px;
     color: #f3e8d2;
-    font-family: KaiTi, STKaiti, "Songti SC", serif;
+    font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif;
     font-size: clamp(36px, 4vw, 56px);
     font-weight: 500;
     letter-spacing: .12em;
@@ -276,7 +293,7 @@
     place-items: center;
     color: var(--paper-dim);
     border-right: 1px solid var(--line);
-    font-family: KaiTi, STKaiti, serif;
+    font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif;
     font-size: 11px;
     writing-mode: vertical-rl;
     letter-spacing: .25em;
@@ -315,7 +332,7 @@
     border: 1px solid var(--line-strong);
     background: #34302a;
     box-shadow: inset 0 0 24px rgba(0,0,0,.34), 0 7px 18px rgba(0,0,0,.2);
-    font-family: KaiTi, STKaiti, serif;
+    font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif;
     font-size: 30px;
     clip-path: polygon(50% 0, 95% 16%, 90% 88%, 50% 100%, 10% 88%, 5% 16%);
   }
@@ -349,9 +366,9 @@
     transform: rotate(45deg);
   }
   .enemy-portrait::after { transform: rotate(-45deg); }
-  .enemy-portrait > span { z-index: 1; font-family: KaiTi, STKaiti, serif; font-size: 58px; text-shadow: 0 0 25px rgba(166,64,50,.25); }
+  .enemy-portrait > span { z-index: 1; font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 58px; text-shadow: 0 0 25px rgba(166,64,50,.25); }
   .enemy-portrait small { z-index: 1; color: var(--paper-muted); font-size: 11px; }
-  .versus-mark { display: grid; place-items: center; gap: 5px; color: var(--gold-dark); font-family: KaiTi, STKaiti, serif; }
+  .versus-mark { display: grid; place-items: center; gap: 5px; color: var(--gold-dark); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; }
   .versus-mark span { font-size: 24px; }
   .versus-mark small { font-size: 12px; }
   .versus-mark i { width: 1px; height: 42px; background: linear-gradient(transparent, var(--gold-dark), transparent); }
@@ -376,10 +393,10 @@
     animation: combo-reveal .85s ease-out both;
   }
   .combo-flash span { color: var(--gold); font-size: 11px; letter-spacing: .5em; }
-  .combo-flash strong { color: #f5d28c; font-family: KaiTi, STKaiti, serif; font-size: 36px; font-weight: 400; letter-spacing: .2em; text-shadow: 0 3px 18px #000; }
+  .combo-flash strong { color: #f5d28c; font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 36px; font-weight: 400; letter-spacing: .2em; text-shadow: 0 3px 18px #000; }
   .skill-flash { background: radial-gradient(circle, rgba(98,136,121,.24), transparent 48%); animation: combo-reveal .7s ease-out both; }
   .skill-flash span { color: #91b6a3; font-size: 10px; letter-spacing: .45em; }
-  .skill-flash strong { color: #cbdccf; font-family: KaiTi, STKaiti, serif; font-size: 30px; font-weight: 400; letter-spacing: .14em; text-shadow: 0 3px 18px #000; }
+  .skill-flash strong { color: #cbdccf; font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 30px; font-weight: 400; letter-spacing: .14em; text-shadow: 0 3px 18px #000; }
 
   .battle-result {
     position: absolute;
@@ -394,7 +411,7 @@
     background: rgba(15,12,9,.86);
     backdrop-filter: blur(5px);
   }
-  .battle-result > span { color: var(--gold-bright); font-family: KaiTi, STKaiti, serif; font-size: 52px; letter-spacing: .18em; }
+  .battle-result > span { color: var(--gold-bright); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 52px; letter-spacing: .18em; }
   .battle-result.defeat > span { color: #c57566; }
   .battle-result strong { margin-bottom: 8px; color: var(--paper-muted); font-size: 13px; font-weight: 400; }
 
@@ -418,7 +435,7 @@
   .region-card.locked { opacity: .48; filter: grayscale(.55); }
   .region-card-head { display: flex; justify-content: space-between; color: var(--paper-dim); font-size: 8px; letter-spacing: .12em; }
   .region-card-head b { color: var(--gold); font-weight: 400; }
-  .region-card h3 { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 23px; font-weight: 400; }
+  .region-card h3 { color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 23px; font-weight: 400; }
   .region-card > p { min-height: 58px; color: var(--paper-muted); font-size: 9px; line-height: 1.65; }
   .region-rewards { padding-block: 7px; color: #91ab9d; border-block: 1px solid var(--line); font-size: 9px; }
   .region-boss { display: grid; gap: 3px; min-height: 77px; }
@@ -458,7 +475,7 @@
   .martial-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
   .martial-item { position: relative; display: grid; grid-template-columns: 38px 1fr; gap: 10px; min-height: 132px; padding: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.15); }
   .martial-item.locked { filter: saturate(.55); opacity: .72; }
-  .martial-glyph { display: grid; place-items: center; width: 36px; height: 44px; color: #f0e3c9; border: 1px solid var(--line-strong); font-family: KaiTi, STKaiti, serif; font-size: 18px; }
+  .martial-glyph { display: grid; place-items: center; width: 36px; height: 44px; color: #f0e3c9; border: 1px solid var(--line-strong); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 18px; }
   .martial-item > div { display: grid; align-content: start; gap: 2px; }
   .martial-item strong { color: var(--paper); font-size: 12px; }
   .martial-item small { color: var(--gold); font-size: 8px; }
@@ -473,7 +490,7 @@
   .hero-card-head { gap: 12px; }
   .hero-card-head > div:nth-child(2) { min-width: 0; flex: 1; }
   .hero-card-head span { color: var(--gold); font-size: 8px; letter-spacing: .08em; }
-  .hero-card h3 { margin-top: 2px; color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 21px; font-weight: 400; letter-spacing: .08em; }
+  .hero-card h3 { margin-top: 2px; color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 21px; font-weight: 400; letter-spacing: .08em; }
   .hero-card h3 small { margin-left: 7px; color: var(--paper-dim); font-family: Georgia, serif; font-size: 9px; }
   .hero-card > p { min-height: 44px; margin: 13px 0 11px; color: var(--paper-dim); font-size: 10px; line-height: 1.65; }
   .power-number { display: grid; color: var(--gold-bright); font-family: Georgia, serif; font-size: 17px; text-align: right; }
@@ -503,7 +520,7 @@
   .formation-editor-row.front { border-color: rgba(199,161,91,.32); }
   .formation-editor-row.back { margin-inline: 42px 0; }
   .formation-row-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-  .formation-row-heading span { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 18px; }
+  .formation-row-heading span { color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 18px; }
   .formation-row-heading small { color: var(--paper-dim); font-size: 8px; }
   .party-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .party-slots:has(.party-slot:only-child) { grid-template-columns: minmax(260px, 420px); justify-content: center; }
@@ -511,7 +528,7 @@
   .party-slot.row-front { border-color: rgba(199,161,91,.28); }
   .party-slot.row-back { border-color: rgba(98,136,121,.3); }
   .slot-index { position: absolute; top: 8px; left: 10px; color: var(--paper-dim); font-size: 8px; }
-  .party-slot > strong { display: block; color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 20px; font-weight: 400; }
+  .party-slot > strong { display: block; color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 20px; font-weight: 400; }
   .party-slot > small { display: block; margin: 2px 0 10px; color: var(--gold); font-size: 8px; }
   .slot-power { margin-bottom: 10px; color: var(--paper-dim); font-size: 9px; }
   .position-button { width: 100%; margin-top: 8px; }
@@ -523,13 +540,13 @@
   .synergy-card { display: flex; align-items: center; gap: 14px; padding: 17px; border: 1px solid var(--line); background: rgba(0,0,0,.18); opacity: .62; }
   .synergy-card.active { opacity: 1; border-color: rgba(98,136,121,.42); background: rgba(98,136,121,.07); }
   .synergy-card.active.combo { border-color: rgba(199,161,91,.45); background: rgba(199,161,91,.06); }
-  .seal-icon { display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; color: var(--gold); border: 1px solid var(--gold-dark); font-family: KaiTi, STKaiti, serif; font-size: 20px; transform: rotate(-2deg); }
+  .seal-icon { display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; color: var(--gold); border: 1px solid var(--gold-dark); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 20px; transform: rotate(-2deg); }
   .synergy-card > div { display: grid; gap: 2px; }
   .synergy-card small { color: var(--paper-dim); font-size: 8px; }
   .synergy-card strong { color: var(--paper); font-size: 14px; }
   .synergy-card p { color: var(--paper-dim); font-size: 9px; line-height: 1.5; }
   .decision-note { gap: 14px; margin-top: 14px; padding: 14px 18px; }
-  .decision-note > span { color: var(--cinnabar-bright); font-family: KaiTi, STKaiti, serif; font-size: 19px; }
+  .decision-note > span { color: var(--cinnabar-bright); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 19px; }
   .decision-note p { color: var(--paper-dim); font-size: 10px; line-height: 1.7; }
   .bond-atlas, .combo-codex { margin-top: 14px; padding: 20px; }
   .bond-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
@@ -537,7 +554,7 @@
   .bond-card.known { opacity: .78; }
   .bond-card.active { opacity: 1; border-color: rgba(98,136,121,.5); background: rgba(98,136,121,.08); }
   .bond-card > span { color: var(--gold); font-size: 8px; letter-spacing: .16em; }
-  .bond-card strong { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 17px; font-weight: 400; }
+  .bond-card strong { color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 17px; font-weight: 400; }
   .bond-card small { color: var(--paper-dim); font-size: 8px; }
   .bond-card p { color: var(--paper-dim); font-size: 8px; line-height: 1.6; }
   .bond-card em { color: #93ad9f; font-size: 8px; font-style: normal; line-height: 1.55; }
@@ -547,7 +564,7 @@
   .combo-card { display: flex; gap: 11px; min-height: 150px; padding: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.14); opacity: .55; }
   .combo-card.known { opacity: .78; }
   .combo-card.active { opacity: 1; border-color: rgba(199,161,91,.48); background: rgba(199,161,91,.06); }
-  .combo-card > span { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; color: var(--gold); border: 1px solid var(--gold-dark); font-family: KaiTi, STKaiti, serif; font-size: 18px; }
+  .combo-card > span { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; color: var(--gold); border: 1px solid var(--gold-dark); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 18px; }
   .combo-card > div { display: grid; align-content: start; gap: 4px; }
   .combo-card strong { color: var(--paper); font-size: 12px; }
   .combo-card small, .combo-card p { color: var(--paper-dim); font-size: 8px; line-height: 1.55; }
@@ -576,17 +593,17 @@
   .counter-dossier strong { color: #91ab9d; }
   .boss-intel p { color: var(--paper-dim); font-size: 8px; line-height: 1.55; }
   .boss-preview { display: grid; place-items: center; min-height: 270px; padding: 28px; text-align: center; background: radial-gradient(circle, rgba(166,64,50,.09), transparent 58%); }
-  .boss-preview > span { display: grid; place-items: center; width: 82px; height: 82px; color: var(--cinnabar-bright); border: 1px solid rgba(166,64,50,.4); font-family: KaiTi, STKaiti, serif; font-size: 42px; transform: rotate(-2deg); }
-  .boss-preview strong { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 25px; font-weight: 400; }
+  .boss-preview > span { display: grid; place-items: center; width: 82px; height: 82px; color: var(--cinnabar-bright); border: 1px solid rgba(166,64,50,.4); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 42px; transform: rotate(-2deg); }
+  .boss-preview strong { color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 25px; font-weight: 400; }
   .boss-preview p { color: var(--paper-dim); font-size: 9px; }
   .combat-hints { display: flex; justify-content: center; flex-wrap: wrap; gap: 22px; color: var(--paper-dim); font-size: 9px; }
   .combat-hints span { display: flex; align-items: center; gap: 7px; }
   .combat-hints i { display: grid; place-items: center; width: 20px; height: 20px; color: var(--gold); border: 1px solid var(--gold-dark); border-radius: 50%; font-style: normal; }
 
   .mystery-entry { display: grid; justify-items: center; gap: 8px; min-height: 290px; padding: 42px; text-align: center; background: radial-gradient(circle at 50% 35%, rgba(98,136,121,.12), transparent 45%); }
-  .mystery-seal { display: grid; place-items: center; width: 76px; height: 76px; color: #9bb9aa; border: 1px solid rgba(98,136,121,.55); font-family: KaiTi, STKaiti, serif; font-size: 38px; transform: rotate(-3deg); }
+  .mystery-seal { display: grid; place-items: center; width: 76px; height: 76px; color: #9bb9aa; border: 1px solid rgba(98,136,121,.55); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 38px; transform: rotate(-3deg); }
   .mystery-entry > small { color: #91ab9d; font-size: 8px; letter-spacing: .2em; }
-  .mystery-entry h2 { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 25px; font-weight: 400; }
+  .mystery-entry h2 { color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 25px; font-weight: 400; }
   .mystery-entry p { max-width: 680px; color: var(--paper-dim); font-size: 10px; line-height: 1.8; }
   .mystery-entry button { margin-top: 10px; }
   .mystery-route { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; margin: 14px 0; border: 1px solid var(--line); background: var(--line); }
@@ -609,7 +626,7 @@
   .blessing-stack small, .blessing-stack p { color: var(--paper-dim); font-size: 7px; }
   .mystery-choice-panel { margin-top: 12px; padding: 20px; }
   .next-encounter, .mystery-encounter { display: flex; align-items: center; gap: 13px; margin-bottom: 14px; padding: 13px; border: 1px solid var(--line); background: rgba(0,0,0,.13); }
-  .next-encounter > span, .mystery-encounter > span { display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; color: var(--cinnabar-bright); border: 1px solid rgba(166,64,50,.45); font-family: KaiTi, STKaiti, serif; font-size: 20px; }
+  .next-encounter > span, .mystery-encounter > span { display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; color: var(--cinnabar-bright); border: 1px solid rgba(166,64,50,.45); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 20px; }
   .next-encounter > div, .mystery-encounter > div { display: grid; gap: 3px; }
   .next-encounter small, .mystery-encounter small { color: var(--gold); font-size: 8px; }
   .next-encounter strong, .mystery-encounter strong { color: var(--paper); font-size: 13px; }
@@ -617,7 +634,7 @@
   .mystery-choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .mystery-choice-grid > button { display: flex; align-items: flex-start; gap: 12px; min-height: 145px; padding: 17px; text-align: left; border: 1px solid var(--line-strong); background: rgba(98,136,121,.05); }
   .mystery-choice-grid > button:hover { border-color: rgba(98,136,121,.65); background: rgba(98,136,121,.1); transform: translateY(-1px); }
-  .mystery-choice-grid > button > span { display: grid; place-items: center; flex: 0 0 auto; width: 38px; height: 38px; color: #a9c7b6; border: 1px solid rgba(98,136,121,.5); font-family: KaiTi, STKaiti, serif; font-size: 18px; }
+  .mystery-choice-grid > button > span { display: grid; place-items: center; flex: 0 0 auto; width: 38px; height: 38px; color: #a9c7b6; border: 1px solid rgba(98,136,121,.5); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 18px; }
   .mystery-choice-grid button > div { display: grid; gap: 5px; }
   .mystery-choice-grid strong { color: var(--paper); font-size: 14px; }
   .mystery-choice-grid p { color: var(--paper-dim); font-size: 9px; line-height: 1.6; }
@@ -625,9 +642,9 @@
   .mystery-battle-layout { margin-top: 12px; }
   .mystery-encounter { margin: 0 0 10px; }
   .mystery-result { display: grid; justify-items: center; gap: 10px; margin-top: 12px; padding: 38px; text-align: center; }
-  .mystery-result > span { color: var(--gold-bright); font-family: KaiTi, STKaiti, serif; font-size: 44px; letter-spacing: .18em; }
+  .mystery-result > span { color: var(--gold-bright); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 44px; letter-spacing: .18em; }
   .mystery-result.failed > span { color: #c57566; }
-  .mystery-result h2 { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 24px; font-weight: 400; }
+  .mystery-result h2 { color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 24px; font-weight: 400; }
   .mystery-result > p { max-width: 680px; color: var(--paper-dim); font-size: 10px; line-height: 1.75; }
   .mystery-result .settlement-grid { width: min(620px, 100%); margin: 8px 0; }
 

@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>江湖挂机录 · 高保真原型</title>
+<style>
+/* ============ 基础与变量 ============ */
+:root{
+  --bg:#131009; --bg2:#1b1610; --panel:#221b12; --panel2:#2a2115;
+  --line:#3d3220; --line2:#55452a;
+  --gold:#c9a45c; --gold2:#e8cf9a; --gold-dim:#8a7444;
+  --red:#b04a38; --red2:#d4694f;
+  --ink:#ece3cd; --muted:#9c8f74; --dim:#6f6350;
+  --green:#7fb069; --blue:#5b8dd9; --purple:#a06ee0; --orange:#e0a53a;
+  --r-n:#8f8f8f; --r-r:#4a90d9; --r-sr:#a06ee0; --r-ssr:#e0a53a; --r-ur:#e05252;
+  --shadow:0 8px 24px rgba(0,0,0,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:"霞鹜文楷","LXGW WenKai","STKaiti","KaiTi",serif;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(201,164,92,.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(176,74,56,.07), transparent 60%),
+    var(--bg);
+  color:var(--ink);
+  overflow:hidden;
+}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#4a3d26;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+button{font-family:inherit;cursor:pointer}
+/* ============ 整体布局 ============ */
+#app{display:grid;grid-template-rows:56px 1fr;grid-template-columns:196px 1fr;
+  grid-template-areas:"top top" "nav main";height:100vh}
+/* ---- 顶栏 ---- */
+#topbar{grid-area:top;display:flex;align-items:center;gap:18px;padding:0 18px;
+  background:linear-gradient(180deg,#241c11,#1a1409);
+  border-bottom:1px solid var(--line2);z-index:20}
+#logo{display:flex;align-items:center;gap:10px}
+#logo .seal{width:36px;height:36px;border-radius:6px;background:linear-gradient(135deg,#b04a38,#7e2f22);
+  display:flex;align-items:center;justify-content:center;font-size:19px;color:#f5e6c8;
+  box-shadow:inset 0 0 0 2px rgba(245,230,200,.35);font-weight:bold}
+#logo h1{font-size:20px;letter-spacing:4px;color:var(--gold2);font-weight:bold}
+#logo small{color:var(--dim);font-size:11px;letter-spacing:1px;margin-left:2px}
+#resources{display:flex;gap:8px;margin-left:auto;align-items:center}
+.res{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.35);border:1px solid var(--line);
+  padding:4px 12px;border-radius:16px;font-size:13px}
+.res b{color:var(--gold2);font-weight:normal}
+.res .ic{font-size:14px}
+.btn{border:1px solid var(--gold-dim);background:linear-gradient(180deg,#3a2d18,#2a2113);
+  color:var(--gold2);padding:6px 16px;border-radius:4px;font-size:14px;letter-spacing:2px;
+  transition:.15s;position:relative}
+.btn:hover{border-color:var(--gold);color:#fff;box-shadow:0 0 10px rgba(201,164,92,.25)}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn.primary{background:linear-gradient(180deg,#8a5a1e,#5f3d12);border-color:var(--gold)}
+.btn.danger{border-color:#7e3a2c;color:#e8a08e}
+.btn.small{padding:3px 10px;font-size:12px;letter-spacing:1px}
+/* ---- 左侧导航 ---- */
+#nav{grid-area:nav;background:linear-gradient(180deg,#1d1710,#16110a);
+  border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:6px;
+  color:var(--muted);font-size:15px;letter-spacing:3px;cursor:pointer;border:1px solid transparent;
+  transition:.15s;user-select:none}
+.nav-item .ic{font-size:17px;width:22px;text-align:center}
+.nav-item:hover{color:var(--ink);background:rgba(201,164,92,.06)}
+.nav-item.active{color:var(--gold2);background:linear-gradient(90deg,rgba(201,164,92,.16),transparent);
+  border-color:var(--line2);box-shadow:inset 3px 0 0 var(--gold)}
+.nav-item .badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;
+  border-radius:8px;padding:1px 6px;letter-spacing:0}
+#nav .ver{margin-top:auto;color:var(--dim);font-size:11px;text-align:center;letter-spacing:1px}
+/* ---- 主区域 ---- */
+#main{grid-area:main;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:18px 22px;display:none}
+.screen.active{display:block}
+.screen h2.stitle{font-size:18px;color:var(--gold2);letter-spacing:3px;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px}
+.screen h2.stitle::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+/* ============ 通用组件 ============ */
+.panel{background:linear-gradient(180deg,var(--panel),#1c1610);border:1px solid var(--line);
+  border-radius:8px;box-shadow:var(--shadow)}
+.panel .ph{padding:10px 14px;border-bottom:1px solid var(--line);font-size:15px;color:var(--gold2);
+  letter-spacing:2px;display:flex;align-items:center;gap:8px}
+.panel .pb{padding:14px}
+.tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:11px;letter-spacing:1px;
+  border:1px solid var(--line2);color:var(--muted);background:rgba(0,0,0,.3)}
+.tag.gold{color:var(--gold2);border-color:var(--gold-dim)}
+.tag.red{color:#eba592;border-color:#7e3a2c}
+.tag.green{color:#a9d193;border-color:#4a6b3a}
+.tag.blue{color:#9cc2ef;border-color:#3a5a8a}
+.tag.purple{color:#cdb0f0;border-color:#5f4390}
+.bar{height:8px;border-radius:4px;background:rgba(0,0,0,.5);overflow:hidden;border:1px solid rgba(0,0,0,.6)}
+.bar>i{display:block;height:100%;border-radius:4px;transition:width .3s}
+.bar.hp>i{background:linear-gradient(90deg,#7fb069,#5a8a48)}
+.bar.hp.enemy>i{background:linear-gradient(90deg,#d4694f,#a03b2e)}
+.bar.exp>i{background:linear-gradient(90deg,#c9a45c,#8a7444)}
+.bar.mp>i{background:linear-gradient(90deg,#5b8dd9,#3a5a8a)}
+.rarity-N{color:var(--r-n)} .rarity-R{color:var(--r-r)} .rarity-SR{color:var(--r-sr)}
+.rarity-SSR{color:var(--r-ssr)} .rarity-UR{color:var(--r-ur)}
+.bdr-N{border-color:#555!important} .bdr-R{border-color:#3a5a8a!important}
+.bdr-SR{border-color:#5f4390!important} .bdr-SSR{border-color:#8a6a2a!important}
+.bdr-UR{border-color:#8a3a3a!important}
+/* ============ 挂机战斗屏 ============ */
+#screen-battle{display:none;grid-template-rows:auto 1fr auto;gap:14px}
+#screen-battle.active{display:grid}
+#stage-bar{display:flex;align-items:center;gap:16px;padding:12px 18px;flex-wrap:wrap}
+#stage-bar .sname{font-size:17px;color:var(--gold2);letter-spacing:2px}
+#stage-bar .sname small{color:var(--muted);font-size:12px;margin-left:8px}
+#sub-dots{display:flex;gap:5px;align-items:center}
+.sub-dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--dim);
+  background:rgba(0,0,0,.4);cursor:pointer}
+.sub-dot.done{background:var(--gold-dim);color:#1a1409;border-color:var(--gold)}
+.sub-dot.cur{background:var(--red);color:#fff;border-color:var(--red2);box-shadow:0 0 8px rgba(176,74,56,.6)}
+.sub-dot.lock{opacity:.35;cursor:not-allowed}
+.income{display:flex;gap:14px;margin-left:auto;font-size:12px;color:var(--muted)}
+.income b{color:var(--gold2);font-weight:normal}
+#arena-wrap{display:grid;grid-template-columns:1fr 300px;gap:14px;min-height:0}
+#arena{position:relative;overflow:hidden;
+  background:
+    radial-gradient(700px 260px at 50% 108%, rgba(201,164,92,.12), transparent 65%),
+    linear-gradient(180deg,#191410 0%,#241c12 78%,#2e2412 100%);
+  border:1px solid var(--line);border-radius:8px}
+#arena::before{content:"";position:absolute;left:0;right:0;bottom:22%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,164,92,.25),transparent)}
+#arena .deco{position:absolute;font-size:64px;opacity:.06;pointer-events:none;user-select:none}
+#vs{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:34px;
+  color:rgba(201,164,92,.18);letter-spacing:6px;pointer-events:none}
+.side{position:absolute;top:0;bottom:0;width:44%;display:grid;
+  grid-template-rows:1fr 1fr;grid-template-columns:repeat(3,1fr);padding:26px 10px;gap:4px}
+.side.ally{left:0}.side.enemy{right:0}
+.side .rowlabel{position:absolute;font-size:10px;color:var(--dim);letter-spacing:2px}
+.cell{position:relative;display:flex;align-items:center;justify-content:center}
+.unit{width:86px;text-align:center;position:relative;transition:transform .12s;cursor:pointer}
+.unit .ava{width:52px;height:52px;margin:0 auto;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:24px;border:2px solid var(--line2);position:relative;
+  background:radial-gradient(circle at 35% 30%,#3a2f1c,#1c1610)}
+.unit .nm{font-size:12px;margin-top:3px;letter-spacing:1px;white-space:nowrap}
+.unit .lv{font-size:10px;color:var(--dim)}
+.unit .bar{margin-top:2px}
+.unit .hptxt{font-size:9px;color:var(--muted)}
+.unit .cast{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:11px;
+  color:var(--gold2);white-space:nowrap;opacity:0;pointer-events:none}
+.unit.casting .cast{animation:castpop .8s ease-out}
+@keyframes castpop{0%{opacity:0;transform:translate(-50%,4px)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-14px)}}
+.unit.hit{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.unit.attack{animation:lunge .3s}
+.side.enemy .unit.attack{animation:lungeR .3s}
+@keyframes lunge{50%{transform:translateX(14px)}}
+@keyframes lungeR{50%{transform:translateX(-14px)}}
+.unit.dead{filter:grayscale(1);opacity:.3}
+.unit.selected .ava{box-shadow:0 0 0 2px var(--gold2),0 0 14px rgba(201,164,92,.6)}
+.unit .buffs{position:absolute;top:-6px;right:6px;display:flex;gap:2px;font-size:9px}
+.cell.front .unit .pos{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);
+  font-size:9px;color:var(--dim);letter-spacing:2px}
+.dmg{position:absolute;font-size:16px;font-weight:bold;pointer-events:none;z-index:5;
+  animation:floatup .9s ease-out forwards;text-shadow:0 1px 3px #000}
+.dmg.crit{color:#ffb347;font-size:21px}
+.dmg.heal{color:#8fd07a}
+.dmg.miss{color:#9c8f74;font-size:12px}
+.dmg.normal{color:#f0e6d0}
+@keyframes floatup{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}
+#battle-side{display:flex;flex-direction:column;gap:10px;min-height:0}
+#battle-ctrl{padding:12px 14px}
+#battle-ctrl .row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+#battle-ctrl .row:last-child{margin-bottom:0}
+#battle-ctrl .lbl{font-size:12px;color:var(--muted);letter-spacing:1px}
+#wave-info{font-size:12px;color:var(--muted);flex:1}
+#battle-log{flex:1;min-height:0;display:flex;flex-direction:column}
+#log-list{flex:1;overflow-y:auto;padding:8px 12px;font-size:12px;line-height:1.9}
+#log-list .l-ally{color:#cfe0b8}#log-list .l-enemy{color:#e0b3a3}
+#log-list .l-sys{color:var(--gold2)}#log-list .l-dim{color:var(--dim)}
+#battle-stat{padding:10px 14px;font-size:12px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+#battle-stat b{color:var(--gold2);font-weight:normal}
+/* ============ 关卡屏 ============ */
+#stage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+.stage-card{padding:12px 14px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.stage-card:hover{border-color:var(--gold-dim);transform:translateY(-2px)}
+.stage-card.locked{opacity:.45;cursor:not-allowed}
+.stage-card .no{position:absolute;right:8px;top:4px;font-size:26px;color:rgba(201,164,92,.12);font-weight:bold}
+.stage-card .nm{font-size:15px;color:var(--ink);letter-spacing:2px}
+.stage-card .dif{font-size:11px;color:var(--muted);margin:2px 0 6px}
+.stage-card .feat{font-size:11px;margin-top:6px;color:var(--dim)}
+.stage-card .feat b{font-weight:normal}
+.stage-card .mini{display:flex;gap:3px;margin-top:4px}
+.stage-card .mini i{width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)}
+.stage-card .mini i.d{background:var(--gold-dim)}
+.stage-card .citymark{position:absolute;right:10px;bottom:10px;font-size:16px;opacity:.8}
+.stage-card.cur-stage{box-shadow:0 0 0 1px var(--gold),0 0 18px rgba(201,164,92,.25)}
+/* ============ 角色屏 ============ */
+#screen-heroes.active{display:grid;grid-template-columns:340px 1fr;gap:14px;align-content:start}
+#roster{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start}
+.hcard{padding:10px 6px;text-align:center;cursor:pointer;transition:.15s;position:relative}
+.hcard:hover{transform:translateY(-2px)}
+.hcard.sel{box-shadow:0 0 0 1px var(--gold),0 0 14px rgba(201,164,92,.3)}
+.hcard .ava{width:54px;height:54px;margin:0 auto 6px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:26px;border:2px solid var(--line2);
+  background:radial-gradient(circle at 35% 30%,#3a2f1c,#1c1610)}
+.hcard .nm{font-size:13px;letter-spacing:1px}
+.hcard .cls{font-size:10px;color:var(--muted)}
+.hcard .lvpill{position:absolute;top:6px;right:6px;font-size:10px;color:var(--gold2);
+  background:rgba(0,0,0,.5);padding:0 5px;border-radius:6px;border:1px solid var(--line)}
+.hcard .onteam{position:absolute;top:6px;left:6px;font-size:9px;color:#a9d193;
+  background:rgba(60,90,40,.5);padding:0 5px;border-radius:6px;border:1px solid #4a6b3a}
+#hero-detail{min-height:640px}
+#hd-head{display:flex;gap:16px;padding:16px;border-bottom:1px solid var(--line)}
+#hd-ava{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:42px;border:3px solid var(--gold-dim);background:radial-gradient(circle at 35% 30%,#3a2f1c,#1c1610);
+  box-shadow:0 0 20px rgba(201,164,92,.2)}
+#hd-info{flex:1}
+#hd-info .nm{font-size:20px;letter-spacing:2px}
+#hd-info .nm .tag{margin-left:8px;vertical-align:3px}
+#hd-info .title{font-size:12px;color:var(--muted);margin:2px 0 6px}
+#hd-stats{display:grid;grid-template-columns:repeat(5,auto);gap:4px 18px;font-size:12px;color:var(--muted);margin-top:6px}
+#hd-stats b{color:var(--ink);font-weight:normal}
+#hd-talent{margin-top:8px;font-size:12px;color:var(--gold2);background:rgba(201,164,92,.07);
+  border:1px dashed var(--gold-dim);border-radius:5px;padding:6px 10px}
+#hd-path{display:flex;align-items:center;gap:6px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.path-node{text-align:center;position:relative}
+.path-node .pn{border:1px solid var(--line2);border-radius:5px;padding:4px 10px;font-size:13px;
+  letter-spacing:1px;background:rgba(0,0,0,.3);color:var(--dim)}
+.path-node.on .pn{border-color:var(--gold);color:var(--gold2);background:rgba(201,164,92,.1)}
+.path-node .tg{font-size:10px;color:var(--dim);margin-top:3px;letter-spacing:1px}
+.path-node.on .tg{color:var(--gold-dim)}
+.path-arrow{color:var(--dim);font-size:12px}
+#hd-tabs{display:flex;border-bottom:1px solid var(--line)}
+#hd-tabs .t{padding:9px 22px;font-size:14px;letter-spacing:3px;color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent}
+#hd-tabs .t.on{color:var(--gold2);border-bottom-color:var(--gold)}
+#hd-body{padding:14px 16px}
+/* 武功槽 */
+#equip-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.eslot{border:1px dashed var(--line2);border-radius:6px;min-height:104px;padding:8px;position:relative;
+  background:rgba(0,0,0,.25)}
+.eslot.filled{border-style:solid}
+.eslot .pri{position:absolute;top:-9px;left:-7px;width:20px;height:20px;border-radius:50%;
+  background:var(--gold-dim);color:#14100a;font-size:11px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--gold);font-weight:bold}
+.eslot .sk-nm{font-size:13px;letter-spacing:1px}
+.eslot .sk-info{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.6}
+.eslot .sk-ops{display:flex;gap:4px;margin-top:6px}
+.learned-head{display:flex;align-items:center;gap:10px;margin:6px 0 8px;font-size:13px;color:var(--muted)}
+.skill-row{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--line);
+  border-radius:6px;margin-bottom:6px;background:rgba(0,0,0,.2);font-size:13px;transition:.12s}
+.skill-row:hover{border-color:var(--gold-dim)}
+.skill-row .nm{letter-spacing:1px;min-width:110px}
+.skill-row .ds{flex:1;font-size:11px;color:var(--muted)}
+.skill-row.equipped{opacity:.55}
+/* 装备 */
+#equip-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.eq-slot{border:1px solid var(--line);border-radius:6px;padding:12px;background:rgba(0,0,0,.25);
+  display:flex;gap:12px;align-items:center}
+.eq-slot .ic{width:46px;height:46px;border-radius:6px;background:rgba(201,164,92,.08);
+  border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:22px}
+.eq-slot .nm{font-size:14px}
+.eq-slot .attr{font-size:11px;color:var(--muted);margin-top:2px}
+/* ============ 武功图鉴屏 ============ */
+#skill-filter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.fchip{padding:4px 14px;border:1px solid var(--line2);border-radius:14px;font-size:13px;color:var(--muted);
+  cursor:pointer;letter-spacing:1px}
+.fchip.on{color:var(--gold2);border-color:var(--gold);background:rgba(201,164,92,.1)}
+#skill-lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.lib-card{padding:12px 14px;cursor:pointer;transition:.15s}
+.lib-card:hover{border-color:var(--gold-dim);transform:translateY(-2px)}
+.lib-card .hd{display:flex;align-items:center;gap:8px}
+.lib-card .nm{font-size:15px;letter-spacing:1px}
+.lib-card .ds{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.7}
+.lib-card .req{font-size:11px;margin-top:6px}
+/* ============ 城市屏 ============ */
+#city-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+#city-head .cn{font-size:22px;color:var(--gold2);letter-spacing:4px}
+#city-head .cd{font-size:12px;color:var(--muted)}
+#bld-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.bld{overflow:hidden}
+.bld .banner{height:74px;display:flex;align-items:center;gap:12px;padding:0 16px;position:relative;
+  background:linear-gradient(90deg,rgba(201,164,92,.14),transparent)}
+.bld .banner .ic{font-size:34px}
+.bld .banner .nm{font-size:17px;letter-spacing:3px;color:var(--gold2)}
+.bld .banner .ds{font-size:11px;color:var(--muted);margin-top:2px}
+.bld .pb{display:flex;flex-direction:column;gap:8px}
+.shop-item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:6px;
+  padding:8px 10px;font-size:13px;background:rgba(0,0,0,.2)}
+.shop-item .ic{font-size:20px}
+.shop-item .nm{letter-spacing:1px}
+.shop-item .ds{flex:1;font-size:11px;color:var(--muted)}
+.shop-item .cost{font-size:12px;color:var(--gold2)}
+/* ============ 派系屏 ============ */
+#screen-factions.active{display:grid;grid-template-columns:270px 1fr;gap:14px;align-content:start}
+.fac-item{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;margin-bottom:8px;transition:.15s}
+.fac-item:hover{border-color:var(--gold-dim)}
+.fac-item.sel{box-shadow:0 0 0 1px var(--gold)}
+.fac-item .ic{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:22px;border:2px solid var(--line2);background:radial-gradient(circle at 35% 30%,#3a2f1c,#1c1610)}
+.fac-item .nm{font-size:15px;letter-spacing:2px}
+.fac-item .ct{font-size:11px;color:var(--muted)}
+#sd-fac-detail .cover{height:88px;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:14px;
+  padding:0 20px;background:linear-gradient(90deg,rgba(176,74,56,.25),rgba(201,164,92,.08),transparent)}
+#sd-fac-detail .cover .ic{font-size:44px}
+#sd-fac-detail .cover .nm{font-size:22px;letter-spacing:4px;color:var(--gold2)}
+#sd-fac-detail .cover .sl{font-size:12px;color:var(--muted)}
+.task-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:6px;
+  padding:9px 12px;margin-bottom:8px;font-size:13px;background:rgba(0,0,0,.2)}
+.task-row .ds{flex:1}.task-row .ds .t{letter-spacing:1px}.task-row .ds .p{font-size:11px;color:var(--muted);margin-top:2px}
+.task-row .rw{font-size:11px;color:var(--gold2)}
+/* ============ 大关卡详情页 ============ */
+#stage-detail{display:grid;grid-template-rows:auto 1fr;gap:14px}
+#sd-head{display:flex;align-items:center;gap:12px;padding:12px 16px;flex-wrap:wrap}
+#sd-head .tt{font-size:19px;color:var(--gold2);letter-spacing:3px}
+#sd-body{display:grid;grid-template-columns:300px 1fr 1fr;gap:14px;align-items:start}
+#sd-city .bld{margin-bottom:12px}
+#sd-city .bld:last-child{margin-bottom:0}
+.sub-node{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:6px;
+  padding:9px 12px;margin-bottom:7px;font-size:13px;background:rgba(0,0,0,.2);cursor:pointer;transition:.12s}
+.sub-node:hover{border-color:var(--gold-dim)}
+.sub-node.lock{opacity:.4;cursor:not-allowed}
+.sub-node.cur{border-color:var(--gold);box-shadow:0 0 10px rgba(201,164,92,.25)}
+.sub-node .no{width:24px;height:24px;border-radius:50%;background:rgba(201,164,92,.12);
+  border:1px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--gold2);flex-shrink:0}
+.sub-node .nm{letter-spacing:1px;white-space:nowrap}
+.sub-node .pw{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
+.fac-item{cursor:pointer}
+/* ============ 弹窗与提示 ============ */
+#modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;
+  justify-content:center;z-index:100;backdrop-filter:blur(2px)}
+#modal-mask.show{display:flex}
+.modal{width:560px;max-width:92vw;max-height:84vh;overflow-y:auto;background:linear-gradient(180deg,#262014,#1a1409);
+  border:1px solid var(--line2);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.modal .mh{display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);
+  font-size:16px;color:var(--gold2);letter-spacing:3px}
+.modal .mh .x{margin-left:auto;cursor:pointer;color:var(--muted);font-size:18px;padding:0 4px}
+.modal .mh .x:hover{color:#fff}
+.modal .mb{padding:16px 18px}
+.modal .mf{padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+#toast-wrap{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;display:flex;
+  flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:rgba(30,24,14,.95);border:1px solid var(--gold-dim);color:var(--gold2);
+  padding:8px 22px;border-radius:20px;font-size:14px;letter-spacing:1px;box-shadow:var(--shadow);
+  animation:toastin .25s ease-out}
+@keyframes toastin{from{opacity:0;transform:translateY(-8px)}to{opacity:1}}
+/* 离线收益弹窗 */
+#offline-list{font-size:14px;line-height:2.2;letter-spacing:1px}
+#offline-list b{color:var(--gold2);font-weight:normal}
+/* 招募结果 */
+#recruit-result{text-align:center;padding:10px 0}
+#recruit-result .ava{width:84px;height:84px;border-radius:50%;margin:0 auto 10px;display:flex;
+  align-items:center;justify-content:center;font-size:40px;border:3px solid var(--gold);
+  background:radial-gradient(circle at 35% 30%,#3a2f1c,#1c1610);animation:recpop .4s ease-out}
+@keyframes recpop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+#recruit-result .nm{font-size:20px;letter-spacing:2px}
+#recruit-result .tl{font-size:12px;color:var(--muted);margin-top:6px}
+.hint{font-size:11px;color:var(--dim);letter-spacing:1px}
+/* ============ 可读性增强（字号与对比度） ============ */
+:root{--muted:#b8ac8f;--dim:#9a8d72}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.hint{font-size:13px;color:var(--muted)}
+.tag{font-size:12px;padding:2px 9px}
+.res{font-size:14px}
+.btn.small{font-size:13px;padding:4px 12px}
+#logo small,#nav .ver{font-size:12px}
+.nav-item{font-size:16px}
+.sub-dot{width:20px;height:20px;font-size:11px}
+.income{font-size:13px}
+.unit .nm{font-size:14px}
+.unit .lv{font-size:11px}
+.unit .hptxt{font-size:11px}
+.unit .cast{font-size:13px}
+.cell.front .unit .pos{font-size:11px}
+#battle-ctrl .lbl,#wave-info,#battle-stat{font-size:13px}
+#log-list{font-size:14px;line-height:2}
+.stage-card .nm{font-size:16px}
+.stage-card .dif,.stage-card .feat{font-size:13px}
+.hcard .nm{font-size:14px}
+.hcard .cls{font-size:12px}
+.hcard .lvpill,.hcard .onteam{font-size:11px}
+#hd-info .title,#hd-stats,#hd-talent{font-size:14px}
+.path-node .pn{font-size:14px}
+.path-node .tg{font-size:12px}
+.eslot .sk-nm{font-size:14px}
+.eslot .sk-info{font-size:12px;line-height:1.7}
+.learned-head{font-size:14px}
+.skill-row{font-size:14px;padding:9px 12px}
+.skill-row .ds{font-size:13px}
+.eq-slot .attr{font-size:13px}
+.lib-card .nm{font-size:16px}
+.lib-card .ds,.lib-card .req{font-size:13px}
+.fchip{font-size:14px;padding:5px 16px}
+.bld .banner .nm{font-size:18px}
+.bld .banner .ds{font-size:13px}
+.shop-item{font-size:14px;padding:10px 12px}
+.shop-item .ds{font-size:13px}
+.shop-item .cost{font-size:13px}
+.fac-item .nm{font-size:16px}
+.fac-item .ct{font-size:13px}
+.task-row{font-size:14px;padding:10px 14px}
+.task-row .ds .p,.task-row .rw{font-size:13px}
+.sub-node{font-size:14px;padding:10px 14px}
+.sub-node .pw{font-size:12px}
+.toast{font-size:15px}
+#offline-list{font-size:15px}
+.dmg{font-size:18px}
+.dmg.crit{font-size:23px}
+.dmg.miss{font-size:13px}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ===== 顶栏 ===== -->
+  <header id="topbar">
+    <div id="logo">
+      <div class="seal">俠</div>
+      <h1>江湖挂机录</h1><small>高保真原型 · 研究C</small>
+    </div>
+    <div id="resources">
+      <span class="res"><span class="ic">💰</span>银两 <b id="r-silver">0</b></span>
+      <span class="res"><span class="ic">💎</span>元宝 <b id="r-yuanbao">0</b></span>
+      <span class="res"><span class="ic">📿</span>修为 <b id="r-xiu">0</b></span>
+      <span class="res"><span class="ic">📜</span>秘籍残页 <b id="r-page">0</b></span>
+      <button class="btn" id="btn-offline">🏮 离线收益</button>
+    </div>
+  </header>
+
+  <!-- ===== 左侧导航 ===== -->
+  <aside id="nav">
+    <div class="nav-item active" data-screen="battle"><span class="ic">⚔️</span>挂机战斗</div>
+    <div class="nav-item" data-screen="stages"><span class="ic">🗺️</span>江湖关卡</div>
+    <div class="nav-item" data-screen="heroes"><span class="ic">🧑‍🤝‍🧑</span>侠客阵容<span class="badge" id="hero-badge">6</span></div>
+    <div class="nav-item" data-screen="skills"><span class="ic">📖</span>武功秘籍</div>
+    <div class="ver">v0.1 · 单机放置原型</div>
+  </aside>
+
+  <!-- ===== 主区域 ===== -->
+  <main id="main">
+
+    <!-- 挂机战斗 -->
+    <section class="screen active" id="screen-battle">
+      <div class="panel" id="stage-bar">
+        <span class="sname" id="cur-stage-name">第一关 · 牛家村<small>挂机中 · 难度 ★</small></span>
+        <div id="sub-dots"></div>
+        <div class="income">
+          <span>预计收益/小时:</span>
+          <span>银两 <b id="inc-silver">0</b></span>
+          <span>经验 <b id="inc-exp">0</b></span>
+          <span>修为 <b id="inc-xiu">0</b></span>
+        </div>
+        <button class="btn small" id="btn-goto-stages">本关详情</button>
+      </div>
+      <div id="arena-wrap">
+        <div id="arena">
+          <span class="deco" style="left:30px;top:20px">山</span>
+          <span class="deco" style="right:40px;top:60px">雲</span>
+          <span class="deco" style="left:45%;bottom:30px">水</span>
+          <div id="vs">— 自 动 战 斗 —</div>
+          <div class="side ally" id="side-ally"></div>
+          <div class="side enemy" id="side-enemy"></div>
+        </div>
+        <div id="battle-side">
+          <div class="panel" id="battle-ctrl">
+            <div class="row">
+              <span class="lbl">战斗速度</span>
+              <button class="btn small spd" data-spd="1">x1</button>
+              <button class="btn small spd" data-spd="2">x2</button>
+              <button class="btn small spd" data-spd="4">x4</button>
+            </div>
+            <div class="row">
+              <span id="wave-info">第 3 小关 · 已击杀 4/10 波</span>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="btn-boss" style="flex:1">👹 挑战守关BOSS</button>
+            </div>
+            <div class="row hint">提示：点击己方两名侠客可交换阵位（前排受击概率高、伤害+10%，后排被保护、技能冷却-10%）</div>
+          </div>
+          <div class="panel" id="battle-stat">
+            <span>本场银两 <b id="st-silver">0</b></span>
+            <span>本场修为 <b id="st-xiu">0</b></span>
+            <span>本场经验 <b id="st-exp">0</b></span>
+            <span>掉宝 <b id="st-drop">0</b> 件</span>
+          </div>
+          <div class="panel" id="battle-log">
+            <div class="ph">战斗记录</div>
+            <div id="log-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 江湖关卡 -->
+    <section class="screen" id="screen-stages">
+      <h2 class="stitle">🗺️ 三十大关 · 点击进入大关卡（内含 10 个小关卡、城市、本地势力）</h2>
+      <div id="stage-grid"></div>
+    </section>
+
+    <!-- 侠客阵容 -->
+    <section class="screen" id="screen-heroes">
+      <div>
+        <h2 class="stitle">🧑‍🤝‍🧑 已收录侠客 <span class="hint" id="roster-count"></span></h2>
+        <div id="roster"></div>
+      </div>
+      <div class="panel" id="hero-detail"></div>
+    </section>
+
+    <!-- 武功秘籍 -->
+    <section class="screen" id="screen-skills">
+      <h2 class="stitle">📖 武功秘籍阁 · 武功上限20级，秘籍残页可突破上限</h2>
+      <div id="skill-filter"></div>
+      <div id="skill-lib"></div>
+    </section>
+
+    <!-- 大关卡详情（小关卡 / 城市 / 本地势力） -->
+    <section class="screen" id="screen-stage">
+      <div id="stage-detail"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- 弹窗与提示 -->
+<div id="modal-mask"><div class="modal" id="modal-box"></div></div>
+<div id="toast-wrap"></div>
+
+<script>
+/* =====================================================
+   数据层 · 原型数值仅作演示
+===================================================== */
+
+/* ---- 六条职业路线：每条5阶，20级可进阶，标签逐阶累积 ---- */
+const PATHS = {
+  jian : {name:'剑修', tiers:['剑客','剑侠','剑宗','剑圣','剑神'], tags:['剑','侠','宗','圣','神'], ic:'🗡️'},
+  dao  : {name:'刀修', tiers:['刀客','狂刀','刀霸','刀皇','刀神'], tags:['刀','狂','霸','皇','神'], ic:'🔪'},
+  quan : {name:'拳掌', tiers:['武徒','拳师','掌宗','武尊','武圣'], tags:['武','拳','掌','尊','圣'], ic:'👊'},
+  ci   : {name:'刺隐', tiers:['刺客','影刺','毒手','阎罗','幽冥'], tags:['刺','影','毒','阎','幽'], ic:'🗡'},
+  yi   : {name:'医毒', tiers:['药童','医师','神医','药王','医仙'], tags:['药','医','神','王','仙'], ic:'🌿'},
+  qi   : {name:'气道', tiers:['道士','真人','天师','玄尊','道祖'], tags:['道','真','天','玄','祖'], ic:'☯️'},
+};
+const tierTags = (p,t)=> PATHS[p].tags.slice(0,t+1); // 当前拥有的职业标签
+
+/* ---- 武功库：reqPath/reqTier = 学习所需的职业标签 ----
+   type: 主动(有CD) / 心法(常驻加成) / 被动(概率触发) */
+const SKILLS = [
+  {id:'jx_jian',  name:'基础剑法',   type:'主动', cd:0, pin:'黄', reqPath:'jian',reqTier:0, desc:'剑随意动，对单体造成 120% 攻击伤害。'},
+  {id:'hs_jian',  name:'华山剑法',   type:'主动', cd:2, pin:'玄', reqPath:'jian',reqTier:1, desc:'苍松迎客，对单体造成 180% 伤害并附带 20% 破甲。'},
+  {id:'dg_jian',  name:'独孤九剑',   type:'主动', cd:3, pin:'地', reqPath:'jian',reqTier:2, desc:'破尽天下武学，对单体造成 260% 伤害，暴击率+25%。'},
+  {id:'wj_jian',  name:'万剑归宗',   type:'主动', cd:5, pin:'天', reqPath:'jian',reqTier:4, desc:'万剑齐发，对敌方全体造成 320% 伤害。【剑神】方可参悟。'},
+  {id:'ly_dao',   name:'烈焰刀法',   type:'主动', cd:0, pin:'黄', reqPath:'dao', reqTier:0, desc:'刀势如火，造成 130% 攻击伤害。'},
+  {id:'kl_dao',   name:'狂龙斩',     type:'主动', cd:2, pin:'玄', reqPath:'dao', reqTier:1, desc:'对前排横排敌人造成 200% 伤害。'},
+  {id:'bh_dao',   name:'霸刀横空',   type:'主动', cd:4, pin:'地', reqPath:'dao', reqTier:3, desc:'对单体造成 380% 伤害，若击杀则重置冷却。'},
+  {id:'tj_quan',  name:'太极拳',     type:'主动', cd:0, pin:'玄', reqPath:'quan',reqTier:0, desc:'以柔克刚，造成 110% 伤害并回复自身 5% 气血。'},
+  {id:'yy_quan',  name:'一阳指',     type:'主动', cd:2, pin:'地', reqPath:'quan',reqTier:1, desc:'凌空点穴，造成 220% 伤害并封印目标技能 1 回合。'},
+  {id:'xl_quan',  name:'降龙十八掌', type:'主动', cd:4, pin:'天', reqPath:'quan',reqTier:3, desc:'龙战于野，对敌方全体造成 280% 伤害并击退。【武尊】绝学。'},
+  {id:'mt_ci',    name:'漫天花雨',   type:'主动', cd:1, pin:'黄', reqPath:'ci',  reqTier:0, desc:'暗器如雨，对后排随机 2 人造成 140% 伤害。'},
+  {id:'hs_ci',    name:'含沙射影',   type:'主动', cd:3, pin:'玄', reqPath:'ci',  reqTier:2, desc:'淬毒暗器，造成 200% 伤害并附加 3 回合剧毒。'},
+  {id:'sm_ci',    name:'瞬狱影杀',   type:'主动', cd:5, pin:'天', reqPath:'ci',  reqTier:4, desc:'瞬移至敌后排，造成 450% 伤害。【幽冥】杀招。'},
+  {id:'jz_yi',    name:'金针渡穴',   type:'主动', cd:2, pin:'黄', reqPath:'yi',  reqTier:0, desc:'金针刺穴，治疗己方气血最低者 180% 攻击等量气血。'},
+  {id:'jh_yi',    name:'九转回魂',   type:'主动', cd:6, pin:'地', reqPath:'yi',  reqTier:2, desc:'群体治疗 150% 并驱散减益，【神医】方可施展。'},
+  {id:'hd_yi',    name:'化毒绵掌',   type:'主动', cd:3, pin:'玄', reqPath:'yi',  reqTier:1, desc:'绵里藏针，造成 160% 伤害并使目标中毒。'},
+  {id:'ty_qi',    name:'太极神功',   type:'心法', cd:-1,pin:'地', reqPath:'qi',  reqTier:1, desc:'常驻：气血上限+15%，受击时 30% 概率化解一半伤害。'},
+  {id:'jy_qi',    name:'九阳神功',   type:'心法', cd:-1,pin:'天', reqPath:'qi',  reqTier:3, desc:'常驻：攻击+20%，每回合回复 4% 气血。【玄尊】心法。'},
+  {id:'bm_qi',    name:'北冥神功',   type:'主动', cd:4, pin:'天', reqPath:'qi',  reqTier:2, desc:'吸纳内力，造成 240% 伤害并吸取目标 30% 当前内力转化为治疗。'},
+  {id:'ty_zong',  name:'梯云纵',     type:'被动', cd:-1,pin:'玄', reqPath:null,  reqTier:0, desc:'身法轻灵：闪避+12%。武馆可学，不限职业。'},
+  {id:'jz_zhao',  name:'金钟罩',     type:'被动', cd:-1,pin:'玄', reqPath:null,  reqTier:0, desc:'刀枪不入：受到伤害-15%。武馆可学，不限职业。'},
+  {id:'jm_xin',   name:'静心诀',     type:'心法', cd:-1,pin:'黄', reqPath:null,  reqTier:0, desc:'常驻：技能冷却-1回合（最低为1）。武馆可学。'},
+  {id:'lx_bu',    name:'凌波微步',   type:'被动', cd:-1,pin:'地', reqPath:null,  reqTier:0, desc:'出手速度+20%，闪避成功后反击。大理世家秘传。'},
+];
+const PIN_COLOR = {'黄':'#c9b458','玄':'#5b8dd9','地':'#a06ee0','天':'#e0a53a'};
+
+/* ---- 侠客库 ---- */
+const HEROES = [
+  {id:'shen',  name:'沈孤鸿', path:'jian', tier:2, lv:42, rarity:'SSR', fac:'华山派', ic:'🤺',
+   talent:'剑心通明：剑系武功伤害 +18%', atk:186, hp:1480, def:62, spd:88,
+   skills:['jx_jian','hs_jian','dg_jian'], equips:['dg_jian','hs_jian','jx_jian',null]},
+  {id:'ye',    name:'叶倾城', path:'jian', tier:1, lv:36, rarity:'SR', fac:'峨眉派', ic:'⚔️',
+   talent:'回风拂柳：闪避 +10%，闪避后回复 5% 气血', atk:142, hp:1320, def:55, spd:96,
+   skills:['jx_jian','hs_jian','ty_zong'], equips:['hs_jian','jx_jian','ty_zong',null]},
+  {id:'chu',   name:'楚狂歌', path:'dao',  tier:1, lv:38, rarity:'SR', fac:'无', ic:'🔪',
+   talent:'狂战之血：气血每降低 10%，攻击 +4%', atk:172, hp:1580, def:60, spd:80,
+   skills:['ly_dao','kl_dao'], equips:['kl_dao','ly_dao',null,null]},
+  {id:'shi',   name:'石破天', path:'quan', tier:2, lv:40, rarity:'SSR', fac:'丐帮', ic:'👊',
+   talent:'钢筋铁骨：受到伤害 -12%，免疫击退', atk:158, hp:2050, def:88, spd:70,
+   skills:['tj_quan','yy_quan','jz_zhao'], equips:['yy_quan','tj_quan','jz_zhao',null]},
+  {id:'guo',   name:'郭大山', path:'quan', tier:0, lv:30, rarity:'R', fac:'无', ic:'🥊',
+   talent:'憨厚：气血上限 +15%', atk:118, hp:1880, def:76, spd:62,
+   skills:['tj_quan','jz_zhao'], equips:['tj_quan','jz_zhao',null,null]},
+  {id:'liu',   name:'柳随风', path:'ci',   tier:2, lv:39, rarity:'SR', fac:'唐门', ic:'🎯',
+   talent:'见血封喉：对中毒目标伤害 +25%', atk:168, hp:1260, def:50, spd:102,
+   skills:['mt_ci','hs_ci','ty_zong'], equips:['hs_ci','mt_ci','ty_zong',null]},
+  {id:'tang',  name:'唐小婉', path:'ci',   tier:1, lv:33, rarity:'SR', fac:'唐门', ic:'🌂',
+   talent:'机关算尽：战斗开始时，敌方全体中毒 2 回合', atk:150, hp:1180, def:48, spd:98,
+   skills:['mt_ci','hs_ci'], equips:['mt_ci','hs_ci',null,null]},
+  {id:'su',    name:'苏挽月', path:'yi',   tier:2, lv:40, rarity:'SSR', fac:'峨眉派', ic:'🌸',
+   talent:'仁心仁术：治疗量 +20%，治疗溢出转为护盾', atk:132, hp:1420, def:58, spd:90,
+   skills:['jz_yi','jh_yi','hd_yi'], equips:['jh_yi','jz_yi','hd_yi',null]},
+  {id:'hua',   name:'花弄影', path:'yi',   tier:1, lv:34, rarity:'R', fac:'无', ic:'🌺',
+   talent:'药香：每回合为己方气血最低者回复 3%', atk:112, hp:1360, def:54, spd:86,
+   skills:['jz_yi','hd_yi'], equips:['jz_yi','hd_yi',null,null]},
+  {id:'xuan',  name:'玄诚道长', path:'qi', tier:2, lv:41, rarity:'SSR', fac:'武当派', ic:'☯️',
+   talent:'道法自然：每回合 20% 概率清除自身减益', atk:150, hp:1620, def:70, spd:78,
+   skills:['ty_qi','bm_qi','jm_xin'], equips:['bm_qi','ty_qi','jm_xin',null]},
+  {id:'leng',  name:'冷无尘', path:'jian', tier:3, lv:55, rarity:'UR', fac:'无', ic:'🗡️',
+   talent:'一剑霜寒：暴击伤害 +50%，击杀后行动提前 30%', atk:238, hp:1680, def:66, spd:108,
+   skills:['jx_jian','hs_jian','dg_jian','lx_bu'], equips:['dg_jian','hs_jian','lx_bu','jx_jian']},
+  {id:'azi',   name:'阿紫',   path:'ci',   tier:1, lv:31, rarity:'R', fac:'星宿派', ic:'🕷️',
+   talent:'毒娘子：普通攻击 30% 概率使目标中毒', atk:136, hp:1120, def:46, spd:94,
+   skills:['mt_ci'], equips:['mt_ci',null,null,null]},
+];
+const RARITY_ORDER = {UR:5,SSR:4,SR:3,R:2,N:1};
+
+/* ---- 六大派系 ---- */
+const FACTIONS = [
+  {id:'sl', name:'少林派', ic:'🛕', slogan:'天下武功出少林', contrib:1260,
+   desc:'禅宗祖庭，讲究根基与防御。贡献可换【金钟罩】残篇与棍僧侠客。',
+   tasks:[{t:'护送镖车 3 次',p:'0/3',rw:'贡献+120',done:false},{t:'击败 50 名山贼',p:'32/50',rw:'贡献+80',done:false},{t:'捐献 10000 银两',p:'',rw:'贡献+60',done:true}],
+   shop:[{kind:'hero',name:'棍僧·慧空',cost:800,ic:'🧑‍🦲',ds:'SR · 拳掌系 · 天赋「伏魔」对邪派增伤20%'},{kind:'skill',name:'金钟罩·残篇',cost:500,ic:'📖',ds:'被动：受到伤害-15%'},{kind:'skill',name:'易筋经·残篇',cost:1500,ic:'📕',ds:'心法：气血+20%（需标签【尊】）'}]},
+  {id:'wd', name:'武当派', ic:'⛰️', slogan:'太极两仪，以柔克刚', contrib:860,
+   desc:'内家正宗，擅长内功与卸力。贡献可换【太极神功】与道士侠客。',
+   tasks:[{t:'演武场切磋 5 次',p:'2/5',rw:'贡献+100',done:false},{t:'采集 20 株草药',p:'20/20',rw:'贡献+50',done:true}],
+   shop:[{kind:'hero',name:'道童·清风',cost:600,ic:'👦',ds:'R · 气道系 · 天赋「打坐」每回合回内'},{kind:'skill',name:'太极神功·残篇',cost:900,ic:'📖',ds:'心法：气血+15%，概率化解伤害'}]},
+  {id:'em', name:'峨眉派', ic:'🏔️', slogan:'秀甲天下，慈悲为怀', contrib:1540,
+   desc:'女侠之宗，医术剑法双绝。贡献可换【九转回魂】与医仙侠客。',
+   tasks:[{t:'救治 10 名伤员',p:'10/10',rw:'贡献+90',done:true},{t:'讨伐黑风寨',p:'0/1',rw:'贡献+200',done:false}],
+   shop:[{kind:'hero',name:'医女·纪晓芙',cost:800,ic:'👩‍⚕️',ds:'SR · 医毒系 · 天赋「妙手」治疗+15%'},{kind:'skill',name:'九转回魂·残篇',cost:1200,ic:'📖',ds:'主动：群体治疗+驱散（需标签【神】）'}]},
+  {id:'gb', name:'丐帮', ic:'🥖', slogan:'天下第一帮', contrib:640,
+   desc:'遍布天下的消息网，擅长群战。贡献可换【降龙十八掌】残篇。',
+   tasks:[{t:'打探 5 条情报',p:'3/5',rw:'贡献+70',done:false},{t:'救济灾民 5000 银两',p:'',rw:'贡献+50',done:false}],
+   shop:[{kind:'hero',name:'九袋长老',cost:1000,ic:'🧔',ds:'SSR · 拳掌系 · 天赋「帮众」在场时全员攻击+8%'},{kind:'skill',name:'降龙十八掌·残篇',cost:2000,ic:'📕',ds:'主动：全体280%伤害（需标签【尊】）'}]},
+  {id:'tm', name:'唐门', ic:'🎭', slogan:'暗器毒药，例无虚发', contrib:920,
+   desc:'蜀中世家，暗器淬毒独步武林。贡献可换【含沙射影】与毒经。',
+   tasks:[{t:'炼制 10 枚毒镖',p:'6/10',rw:'贡献+80',done:false},{t:'刺杀目标·恶霸',p:'1/1',rw:'贡献+150',done:true}],
+   shop:[{kind:'hero',name:'唐门死士',cost:700,ic:'🥷',ds:'SR · 刺隐系 · 天赋「隐匿」首回合闪避+50%'},{kind:'skill',name:'含沙射影·残篇',cost:800,ic:'📖',ds:'主动：200%伤害+剧毒（需标签【毒】）'}]},
+  {id:'mj', name:'明教', ic:'🔥', slogan:'焚我残躯，熊熊圣火', contrib:300,
+   desc:'行事亦正亦邪，武功刚猛霸道。贡献可换【圣火令】神功。',
+   tasks:[{t:'圣火令·夺取',p:'0/1',rw:'贡献+300',done:false},{t:'击退围剿官兵',p:'12/30',rw:'贡献+100',done:false}],
+   shop:[{kind:'hero',name:'光明左使',cost:1500,ic:'🦅',ds:'UR · 气道系 · 天赋「乾坤」受致命伤时免死一次'},{kind:'skill',name:'圣火令神功',cost:2500,ic:'📕',ds:'主动：灼烧全体3回合（需标签【天】）'}]},
+];
+
+/* ---- 三十大关 ---- */
+const STAGE_NAMES = ['牛家村','桃花岛','临安城','终南山','华山之巅','嵩山少林','武当金殿','峨眉金顶','丐帮总舵','姑苏燕子坞',
+  '大理段氏','星宿海','白驼山','昆仑仙境','天山灵鹫宫','绝情谷','襄阳城','黑木崖','光明顶','唐家堡',
+  '西夏冰窖','辽国上京','金国中都','蒙古草原','神龙岛','侠客岛','大都皇城','五岳剑冢','紫禁城','海外仙山'];
+const STAGE_FEAT = [
+  ['郭大山','花弄影'],['叶倾城','阿紫'],['楚狂歌','沈孤鸿'],['玄诚道长','冷无尘'],['沈孤鸿','岳灵珊'],['慧空','玄诚道长'],
+  ['玄诚道长','清风'],['苏挽月','纪晓芙'],['石破天','九袋长老'],['慕容复','王语嫣'],['段誉','木婉清'],['阿紫','摘星子'],
+  ['欧阳锋','欧阳克'],['何足道','昆仑三圣'],['童姥','虚竹'],['公孙止','小龙女'],['郭靖','黄蓉'],['东方不败','任我行'],
+  ['光明左使','谢逊'],['唐小婉','柳随风'],['虚竹','李清露'],['萧峰','耶律洪基'],['完颜洪烈','杨康'],['哲别','华筝'],
+  ['龙木岛主','洪安通'],['石破天','白自在'],['赵敏','汝阳王'],['风清扬','岳不群'],['韦小宝','康熙'],['黄衫女','神秘剑客']];
+const STAGES = STAGE_NAMES.map((n,i)=>({
+  no:i+1, name:n, diff:'★'.repeat(Math.min(5,1+Math.floor(i/6))),
+  pow: 500*(i+1)*(i+1), feat:STAGE_FEAT[i], unlocked: i<3, cleared: i<1, cur: i===1, subs: i===0?10:(i===1?2:0),
+}));
+/* =====================================================
+   状态层
+===================================================== */
+const $ = s=>document.querySelector(s);
+const $$ = s=>document.querySelectorAll(s);
+const clone = o=>JSON.parse(JSON.stringify(o));
+const rnd = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick = arr=>arr[Math.floor(Math.random()*arr.length)];
+const fmt = n=> n>=1e8?(n/1e8).toFixed(1)+'亿' : n>=1e4?(n/1e4).toFixed(1)+'万' : String(Math.floor(n));
+
+const state = {
+  silver: 128600, yuanbao: 2680, xiu: 8450, page: 12,
+  stageIdx: 1, viewStage: 1, sub: 3, wave: 4, speed: 1,
+  team: ['shi','shen','chu','su','liu','xuan'],   // 前3=前排，后3=后排
+  heroes: clone(HEROES),
+  skillLv: {},          // 武功等级（全局，满级20）
+  skillCapEx: {},       // 残页突破的额外上限
+  selHero: 'shen', selFaction: 'sl', hdTab: 'wu',
+  eq: {},               // 每侠客4件装备
+  sesStat: {silver:0, xiu:0, exp:0, drop:0},
+  bossMode: false,
+};
+HEROES.forEach(h=>{ state.skillLv[h.id]={}; });
+state.heroes.forEach(h=>{
+  h.skills.forEach(s=>{ state.skillLv[s] = state.skillLv[s]|| rnd(3,9); });
+  state.eq[h.id] = [
+    {ic:'🗡️', name: h.path==='yi'?'银针囊':h.path==='ci'?'袖里箭':'精铁剑', lv:rnd(3,8), attr:'攻击 +'+rnd(40,120)},
+    {ic:'🥋', name:'云锦护袍', lv:rnd(3,8), attr:'气血 +'+rnd(200,600)},
+    {ic:'🥾', name:'疾风靴', lv:rnd(2,6), attr:'速度 +'+rnd(5,15)},
+    {ic:'📿', name:'菩提念珠', lv:rnd(2,6), attr:'防御 +'+rnd(20,60)},
+  ];
+});
+const heroById = id=>state.heroes.find(h=>h.id===id);
+const skillById = id=>SKILLS.find(s=>s.id===id);
+const heroLv = h=>h.lv;
+const canLearn = (h,sk)=> !sk.reqPath || (h.path===sk.reqPath && h.tier>=sk.reqTier);
+const reqText = sk=> sk.reqPath? `需标签【${PATHS[sk.reqPath].tags[sk.reqTier]}】（${PATHS[sk.reqPath].tiers[sk.reqTier]}起）` : '不限职业';
+
+/* =====================================================
+   提示与弹窗
+===================================================== */
+function toast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.innerHTML=msg;
+  $('#toast-wrap').appendChild(t);
+  setTimeout(()=>{t.style.opacity=0;t.style.transition='.4s';setTimeout(()=>t.remove(),400)},2200);
+}
+function openModal(html){
+  $('#modal-box').innerHTML = html;
+  $('#modal-mask').classList.add('show');
+}
+function closeModal(){ $('#modal-mask').classList.remove('show'); }
+$('#modal-mask').addEventListener('click', e=>{ if(e.target.id==='modal-mask') closeModal(); });
+
+/* =====================================================
+   战斗引擎（原型演示用简化数值）
+===================================================== */
+const AOE = new Set(['wj_jian','xl_quan','kl_dao']);
+const HEAL = new Set(['jz_yi','jh_yi']);
+let battle = {allies:[], enemies:[], round:0, timer:null, busy:false};
+
+function mkUnit(h, side, row, idx){
+  return {ref:h.id, name:h.name, ic:h.ic, side, row, idx,
+    maxhp:h.hp*10, hp:h.hp*10, atk:h.atk*10, def:h.def, spd:h.spd,
+    skills:h.equips.filter(Boolean).map(id=>({id, cd:0})), alive:true};
+}
+const ENEMY_POOL = ['山贼','恶霸','邪教教徒','黑衣杀手','叛军刀客','蛮族武士'];
+function mkEnemies(){
+  const st = STAGES[state.stageIdx], base = st.pow/18, boss = state.bossMode;
+  const n = boss? 3 : 6;
+  const arr=[];
+  for(let i=0;i<n;i++){
+    const isBoss = boss && i===0;
+    arr.push({name: isBoss? `【BOSS】${pick(['铁掌','血刀','鬼面'])}${pick(['恶贼','魔头','枭雄'])}` : pick(ENEMY_POOL),
+      ic: isBoss?'👹':pick(['🥷','🗡','👺','💀']), side:'enemy', row: boss? (i===0?0:1) : (i<3?0:1), idx:i,
+      maxhp: Math.floor(base*(isBoss?30:8)*rnd(8,12)/10), hp:0, atk:Math.floor(base*(isBoss?2.4:1.1)), def:8+state.stageIdx*3,
+      spd:rnd(55,85), skills:[], alive:true});
+    arr[i].hp = arr[i].maxhp;
+  }
+  return arr;
+}
+function rebuildAllies(){
+  battle.allies = state.team.map((id,i)=>{
+    const old = battle.allies[i];
+    const u = mkUnit(heroById(id),'ally', i<3?0:1, i);
+    if(old) u.hp = Math.min(old.hp, u.maxhp);
+    return u;
+  });
+}
+function startBattle(){
+  rebuildAllies(); battle.enemies = mkEnemies(); battle.round=0;
+  renderArena(); renderSubDots(); renderIncome(); renderWaveInfo(); renderSesStat();
+  if(battle.timer) clearInterval(battle.timer);
+  battle.timer = setInterval(tick, 900/state.speed);
+}
+function alive(u){return u.alive && u.hp>0;}
+function sideUnits(side){ return (side==='ally'?battle.allies:battle.enemies).filter(alive); }
+
+function tick(){
+  if(battle.busy) return;
+  const order = [...battle.allies, ...battle.enemies].filter(alive).sort((a,b)=>b.spd-a.spd);
+  if(!order.length) return;
+  battle.round++;
+  const actor = order[battle.round % order.length];
+  act(actor);
+  renderArena();
+  checkEnd();
+}
+
+function act(u){
+  if(!alive(u)) return;
+  const foes = sideUnits(u.side==='ally'?'enemy':'ally');
+  if(!foes.length) return;
+  const friends = sideUnits(u.side);
+  // 选技能：按优先级找冷却就绪的主动技
+  let sk=null;
+  if(u.skills){
+    for(const s of u.skills){
+      const def = skillById(s.id);
+      if(def.type!=='主动') continue;
+      if(s.cd<=0){ sk={def,slot:s}; break; }
+    }
+  }
+  const el = unitEl(u);
+  if(sk){
+    const def = sk.def;
+    sk.slot.cd = def.cd + 1; // 本回合+冷却回合
+    if(HEAL.has(def.id)){
+      const tgt = friends.slice().sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0];
+      const amt = Math.floor(u.atk * (def.id==='jh_yi'?1.5:1.8) * (0.9+Math.random()*0.2));
+      tgt.hp = Math.min(tgt.maxhp, tgt.hp+amt);
+      popCast(el, def.name); popDmg(tgt, '+'+fmt(amt), 'heal');
+      addLog(`${u.name} 施展 <b>【${def.name}】</b>，为 ${tgt.name} 回复 ${fmt(amt)} 点气血`, u.side==='ally'?'l-ally':'l-enemy');
+    }else if(AOE.has(def.id)){
+      popCast(el, def.name);
+      foes.forEach(f=> dealDmg(u, f, multOf(def)));
+      addLog(`${u.name} 施展 <b>【${def.name}】</b>，剑气/掌风席卷敌方全体！`, u.side==='ally'?'l-ally':'l-enemy');
+    }else{
+      const tgt = pickTarget(foes);
+      popCast(el, def.name);
+      dealDmg(u, tgt, multOf(def));
+    }
+    lunge(el);
+  }else{
+    const tgt = pickTarget(foes);
+    dealDmg(u, tgt, 1.0);
+    lunge(el);
+  }
+  // 冷却递减
+  (u.skills||[]).forEach(s=>{ if(s.cd>0) s.cd--; });
+}
+function multOf(def){ return ({wj_jian:3.2,xl_quan:2.8,kl_dao:2.0,bh_dao:3.8,dg_jian:2.6,hs_jian:1.8,jx_jian:1.2,
+  ly_dao:1.3,tj_quan:1.1,yy_quan:2.2,mt_ci:1.4,hs_ci:2.0,sm_ci:4.5,hd_yi:1.6,bm_qi:2.4})[def.id] || 1.5; }
+function pickTarget(foes){
+  const front = foes.filter(f=>f.row===0);
+  const pool = front.length? front : foes;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function dealDmg(u, tgt, mult){
+  let dmg = Math.floor(u.atk*mult*(100/(100+tgt.def))*(0.9+Math.random()*0.2));
+  if(u.row===0) dmg = Math.floor(dmg*1.1);          // 前排增伤
+  const crit = Math.random()<0.15;
+  if(crit) dmg = Math.floor(dmg*1.5);
+  if(Math.random()<0.06){ popDmg(tgt,'闪避','miss'); addLog(`${tgt.name} 身法轻灵，闪过了 ${u.name} 的一击`,'l-dim'); return; }
+  tgt.hp = Math.max(0, tgt.hp-dmg);
+  popDmg(tgt, (crit?'暴击 -':'-')+fmt(dmg), crit?'crit':'normal');
+  const tel = unitEl(tgt); if(tel){tel.classList.remove('hit'); void tel.offsetWidth; tel.classList.add('hit');}
+  if(tgt.hp<=0){ tgt.alive=false; addLog(`☠️ ${tgt.name} 倒下了`,'l-dim'); }
+  if(!crit && Math.random()<0.5) addLog(`${u.name} 攻击 ${tgt.name}，造成 ${fmt(dmg)} 点伤害`, u.side==='ally'?'l-ally':'l-enemy');
+}
+function unitEl(u){
+  const list = u.side==='ally'? '#side-ally' : '#side-enemy';
+  return document.querySelector(`${list} .unit[data-idx="${u.idx}"]`);
+}
+function popCast(el, txt){
+  if(!el) return; const c = el.querySelector('.cast'); if(!c) return;
+  c.textContent = '【'+txt+'】';
+  el.classList.remove('casting'); void el.offsetWidth; el.classList.add('casting');
+}
+function popDmg(u, txt, cls){
+  const el = unitEl(u); if(!el) return;
+  const arena = $('#arena'), r = el.getBoundingClientRect(), ar = arena.getBoundingClientRect();
+  const d = document.createElement('div');
+  d.className = 'dmg '+cls; d.textContent = txt;
+  d.style.left = (r.left-ar.left + r.width/2 - 20 + rnd(-14,14))+'px';
+  d.style.top = (r.top-ar.top + 6)+'px';
+  arena.appendChild(d); setTimeout(()=>d.remove(), 950);
+}
+function lunge(el){ if(!el) return; el.classList.remove('attack'); void el.offsetWidth; el.classList.add('attack'); }
+
+function checkEnd(){
+  if(!sideUnits('enemy').length){
+    battle.busy = true;
+    const st = STAGES[state.stageIdx];
+    const gainS = Math.floor(st.pow/12), gainX = Math.floor(st.pow/60), gainE = Math.floor(st.pow/8);
+    state.silver+=gainS; state.xiu+=gainX;
+    state.sesStat.silver+=gainS; state.sesStat.xiu+=gainX; state.sesStat.exp+=gainE;
+    if(Math.random()<0.25) state.sesStat.drop++;
+    if(state.bossMode){
+      addLog(`🏆 击败守关BOSS！第 ${state.sub} 小关已通关`,'l-sys');
+      state.bossMode=false;
+      if(state.sub<10){ state.sub++; state.wave=0; STAGES[state.stageIdx].subs=state.sub-1; }
+      else {
+        addLog(`🎉 大关卡【${st.name}】全部通关！解锁下一关`,'l-sys');
+        STAGES[state.stageIdx].cleared=true; STAGES[state.stageIdx].subs=10;
+        if(STAGES[state.stageIdx+1]) STAGES[state.stageIdx+1].unlocked=true;
+      }
+      toast('🏆 BOSS 已击败，关卡进度推进！');
+    }else{
+      state.wave = Math.min(10, state.wave+1);
+      addLog(`✅ 第 ${state.wave}/10 波敌人已清剿`,'l-sys');
+    }
+    renderTop(); renderSesStat(); renderWaveInfo(); renderSubDots();
+    setTimeout(()=>{ battle.enemies = mkEnemies(); battle.busy=false; renderArena(); }, 700/state.speed);
+  }
+  if(!sideUnits('ally').length){
+    battle.busy = true;
+    addLog(`💀 我方全员战败……3秒后重整旗鼓（挂机不掉进度）`,'l-sys');
+    setTimeout(()=>{ rebuildAllies(); battle.busy=false; renderArena(); addLog(`🔄 侠客们休整完毕，再战！`,'l-sys'); }, 3000/state.speed);
+  }
+}
+function addLog(html, cls){
+  const list = $('#log-list');
+  const div = document.createElement('div'); div.className = cls||''; div.innerHTML = html;
+  list.appendChild(div);
+  while(list.children.length>80) list.firstChild.remove();
+  list.scrollTop = list.scrollHeight;
+}
+/* =====================================================
+   渲染层
+===================================================== */
+function renderTop(){
+  $('#r-silver').textContent = fmt(state.silver);
+  $('#r-yuanbao').textContent = fmt(state.yuanbao);
+  $('#r-xiu').textContent = fmt(state.xiu);
+  $('#r-page').textContent = state.page;
+  $('#hero-badge').textContent = state.heroes.filter(h=>h.owned).length;
+}
+function renderIncome(){
+  const p = STAGES[state.stageIdx].pow;
+  $('#inc-silver').textContent = fmt(p*3);
+  $('#inc-exp').textContent = fmt(p*2);
+  $('#inc-xiu').textContent = fmt(Math.floor(p/5));
+}
+function renderWaveInfo(){
+  $('#wave-info').textContent = state.bossMode
+    ? `👹 守关BOSS战 · 第 ${state.sub} 小关`
+    : `第 ${state.sub} 小关 · 已击杀 ${state.wave}/10 波`;
+}
+function renderSesStat(){
+  $('#st-silver').textContent = fmt(state.sesStat.silver);
+  $('#st-xiu').textContent = fmt(state.sesStat.xiu);
+  $('#st-exp').textContent = fmt(state.sesStat.exp);
+  $('#st-drop').textContent = state.sesStat.drop;
+}
+function renderSubDots(){
+  const st = STAGES[state.stageIdx];
+  $('#cur-stage-name').innerHTML = `第${st.no}关 · ${st.name}<small>挂机中 · 难度 ${st.diff}</small>`;
+  const box = $('#sub-dots'); box.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const d=document.createElement('div');
+    d.className='sub-dot '+(i<state.sub?'done':i===state.sub?'cur':'lock');
+    d.textContent=i;
+    d.title = i<state.sub?`第${i}小关（已通关）`:i===state.sub?`第${i}小关（当前）`:'未解锁';
+    box.appendChild(d);
+  }
+}
+function unitHTML(u){
+  const pct = Math.max(0, u.hp/u.maxhp*100);
+  const lvTxt = u.side==='ally'? `<span class="lv">Lv.${heroById(u.ref).lv}</span>`:'';
+  const pos = u.side==='ally'? `<span class="pos">${u.row===0?'前排':'后排'}</span>`:'';
+  return `<div class="unit ${u.alive?'':'dead'} ${u.row===0?'front':''}" data-idx="${u.idx}">
+    <div class="cast"></div>
+    <div class="ava">${u.ic}</div>
+    <div class="nm">${u.name}</div>${lvTxt}
+    <div class="bar hp ${u.side==='enemy'?'enemy':''}"><i style="width:${pct}%"></i></div>
+    <div class="hptxt">${fmt(Math.max(0,u.hp))}/${fmt(u.maxhp)}</div>${pos}
+  </div>`;
+}
+function renderArena(){
+  $('#side-ally').innerHTML = battle.allies.map(u=>`<div class="cell ${u.row===0?'front':''}">${unitHTML(u)}</div>`).join('');
+  $('#side-enemy').innerHTML = battle.enemies.map(u=>`<div class="cell ${u.row===0?'front':''}">${unitHTML(u)}</div>`).join('');
+}
+$('#sub-dots').addEventListener('click', e=>{
+  const d = e.target.closest('.sub-dot'); if(!d) return;
+  const no = +d.textContent;
+  if(no>state.sub){ toast('🔒 需先通关前一小关'); return; }
+  state.sub=no; state.wave=0; state.bossMode=false;
+  STAGES[state.stageIdx].subs = Math.max(STAGES[state.stageIdx].subs, no-1);
+  startBattle();
+});
+
+/* ---- 阵型交换 ---- */
+let swapSel = null;
+$('#side-ally').addEventListener('click', e=>{
+  const el = e.target.closest('.unit'); if(!el) return;
+  const idx = +el.dataset.idx;
+  if(swapSel===null){ swapSel=idx; el.classList.add('selected'); toast('已选中，点击另一名侠客交换阵位'); }
+  else if(swapSel===idx){ swapSel=null; renderArena(); }
+  else{
+    const a = state.team[swapSel], b = state.team[idx];
+    [state.team[swapSel], state.team[idx]] = [b, a];
+    swapSel=null; rebuildAllies(); renderArena();
+    addLog(`🔀 调整阵型：${heroById(a).name} 与 ${heroById(b).name} 交换阵位`,'l-sys');
+  }
+});
+
+/* ---- 关卡屏 ---- */
+function renderStages(){
+  $('#stage-grid').innerHTML = STAGES.map((st,i)=>`
+    <div class="panel stage-card ${st.unlocked?'':'locked'} ${i===state.stageIdx?'cur-stage':''}" data-i="${i}">
+      <div class="no">${String(st.no).padStart(2,'0')}</div>
+      <div class="nm">${st.name}</div>
+      <div class="dif">难度 ${st.diff} · 推荐战力 ${fmt(st.pow*8)}</div>
+      <div class="mini">${Array.from({length:10},(_,k)=>`<i class="${k<st.subs?'d':''}"></i>`).join('')}</div>
+      <div class="feat">本地侠客：<b class="rarity-SR">${st.feat[0]}</b> · <b class="rarity-SSR">${st.feat[1]}</b></div>
+      <span class="citymark">${st.unlocked?'🏯':'🔒'}</span>
+    </div>`).join('');
+}
+$('#stage-grid').addEventListener('click', e=>{
+  const c = e.target.closest('.stage-card'); if(!c) return;
+  const st = STAGES[+c.dataset.i];
+  if(!st.unlocked){ toast('🔒 通关前一大关卡后解锁'); return; }
+  openStage(+c.dataset.i);
+});
+
+/* ---- 角色屏 ---- */
+function renderRoster(){
+  const list = state.heroes.slice().sort((a,b)=>RARITY_ORDER[b.rarity]-RARITY_ORDER[a.rarity]);
+  $('#roster-count').textContent = `（${state.heroes.filter(h=>h.owned).length}/${state.heroes.length}）`;
+  $('#roster').innerHTML = list.map(h=>`
+    <div class="panel hcard bdr-${h.rarity} ${h.id===state.selHero?'sel':''}" data-id="${h.id}" style="${h.owned?'':'opacity:.45'}">
+      <span class="lvpill">${h.owned?'Lv.'+h.lv:'未收录'}</span>
+      ${state.team.includes(h.id)?'<span class="onteam">出战中</span>':''}
+      <div class="ava">${h.ic}</div>
+      <div class="nm rarity-${h.rarity}">${h.name}</div>
+      <div class="cls">${PATHS[h.path].tiers[h.tier]} · ${h.rarity}</div>
+    </div>`).join('');
+}
+$('#roster').addEventListener('click', e=>{
+  const c = e.target.closest('.hcard'); if(!c) return;
+  state.selHero = c.dataset.id; state.hdTab='wu';
+  renderRoster(); renderHeroDetail();
+});
+function powOf(h){ return fmt(h.atk*5 + h.hp + h.def*8 + h.spd*3); }
+function renderHeroDetail(){
+  const h = heroById(state.selHero);
+  const P = PATHS[h.path];
+  const nextNeed = 20*(h.tier+1);
+  const canUp = h.tier<4 && h.lv>=nextNeed;
+  const tabs = {wu:'武功配置', eq:'装备强化'};
+  $('#hero-detail').innerHTML = `
+    <div id="hd-head">
+      <div id="hd-ava">${h.ic}</div>
+      <div id="hd-info">
+        <div class="nm rarity-${h.rarity}">${h.name}
+          <span class="tag gold">${h.rarity}</span><span class="tag">${h.fac}</span>
+          <span class="tag blue">Lv.${h.lv}</span>
+        </div>
+        <div class="title">${P.name}路线 · 当前【${P.tiers[h.tier]}】 ${h.tier<4?`· 进阶需 Lv.${nextNeed}`:'· 已达顶级职业'}</div>
+        <div id="hd-stats">
+          <span>攻击 <b>${h.atk}</b></span><span>气血 <b>${h.hp}</b></span><span>防御 <b>${h.def}</b></span>
+          <span>速度 <b>${h.spd}</b></span><span>战力 <b style="color:var(--gold2)">${powOf(h)}</b></span>
+        </div>
+        <div id="hd-talent">✨ 天赋 · ${h.talent}</div>
+      </div>
+    </div>
+    <div id="hd-path">
+      <span class="hint" style="margin-right:4px">职业路线（标签逐阶累积）：</span>
+      ${P.tiers.map((t,i)=>`
+        ${i?'<span class="path-arrow">➤</span>':''}
+        <div class="path-node ${i<=h.tier?'on':''}">
+          <div class="pn">${t}</div>
+          <div class="tg">+标签【${P.tags[i]}】</div>
+        </div>`).join('')}
+      <button class="btn small ${canUp?'primary':''}" id="btn-advance" style="margin-left:auto" ${canUp?'':'disabled'}>
+        ${h.tier>=4?'已臻化境':`进阶${P.tiers[h.tier+1]}（需Lv.${nextNeed}）`}
+      </button>
+    </div>
+    <div id="hd-tabs">${Object.entries(tabs).map(([k,v])=>`<div class="t ${state.hdTab===k?'on':''}" data-t="${k}">${v}</div>`).join('')}</div>
+    <div id="hd-body">${state.hdTab==='wu'? heroWuHTML(h) : heroEqHTML(h)}</div>`;
+  const adv = $('#btn-advance');
+  if(adv && canUp) adv.onclick = ()=>{
+    h.tier++; h.atk=Math.floor(h.atk*1.25); h.hp=Math.floor(h.hp*1.25);
+    toast(`🎉 ${h.name} 进阶为【${P.tiers[h.tier]}】，获得标签【${P.tags[h.tier]}】！`);
+    renderHeroDetail(); renderRoster(); rebuildAllies(); renderArena();
+  };
+  $$('#hd-tabs .t').forEach(t=> t.onclick = ()=>{ state.hdTab=t.dataset.t; renderHeroDetail(); });
+  if(state.hdTab==='wu') bindWuEvents(h); else bindEqEvents(h);
+}
+function heroWuHTML(h){
+  const lv = id=>state.skillLv[id]||1;
+  return `
+  <div class="learned-head">
+    <span>⚔️ 出战武功（最多装备 4 个，<b style="color:var(--gold2)">数字为出手优先级</b>，武功按各自回合CD轮转）</span>
+  </div>
+  <div id="equip-slots">
+    ${[0,1,2,3].map(i=>{
+      const id = h.equips[i];
+      if(!id) return `<div class="eslot"><div class="pri">${i+1}</div><div class="sk-nm" style="color:var(--dim)">空槽位</div><div class="sk-info">从下方已学武功中装备</div></div>`;
+      const sk = skillById(id);
+      return `<div class="eslot filled bdr-${({黄:'N',玄:'R',地:'SR',天:'SSR'})[sk.pin]}">
+        <div class="pri">${i+1}</div>
+        <div class="sk-nm" style="color:${PIN_COLOR[sk.pin]}">${sk.name} <small style="color:var(--muted)">Lv.${lv(id)}</small></div>
+        <div class="sk-info">${sk.type} · ${sk.cd<0?'常驻':sk.cd===0?'无冷却':'冷却'+sk.cd+'回合'} · ${sk.pin}阶</div>
+        <div class="sk-ops">
+          <button class="btn small" data-op="up" data-i="${i}" title="提高优先级">↑</button>
+          <button class="btn small" data-op="down" data-i="${i}" title="降低优先级">↓</button>
+          <button class="btn small danger" data-op="rm" data-i="${i}">卸下</button>
+        </div>
+      </div>`;}).join('')}
+  </div>
+  <div class="learned-head"><span>📚 已学武功（${h.skills.length}/20，上限可由奇遇提升）</span>
+    <span class="hint">前往【关卡城市·武馆】或【派系商店】学习新武功</span></div>
+  <div>${h.skills.map(id=>{
+      const sk = skillById(id); const L = lv(id); const cap = 20+(state.skillCapEx[id]||0);
+      const equipped = h.equips.includes(id);
+      return `<div class="skill-row ${equipped?'equipped':''}">
+        <span class="nm" style="color:${PIN_COLOR[sk.pin]}">${sk.name}</span>
+        <span class="tag">${sk.type}${sk.cd>0?' CD'+sk.cd:''}</span>
+        <span class="tag gold">Lv.${L}/${cap}</span>
+        <span class="ds">${sk.desc}</span>
+        ${equipped?'<span class="tag green">已装备</span>'
+          :`<button class="btn small" data-op="eq" data-id="${id}">装备</button>`}
+        <button class="btn small" data-op="lv" data-id="${id}" ${L>=cap?'disabled':''}>升级(${L*100}修为)</button>
+        ${L>=cap?`<button class="btn small" data-op="cap" data-id="${id}">残页突破</button>`:''}
+      </div>`;}).join('')}
+  </div>`;
+}
+function heroEqHTML(h){
+  return `<div id="equip-grid">
+    ${state.eq[h.id].map((e,i)=>`
+    <div class="eq-slot">
+      <div class="ic">${e.ic}</div>
+      <div style="flex:1">
+        <div class="nm">${e.name} <span style="color:var(--gold2)">+${e.lv}</span></div>
+        <div class="attr">${e.attr}</div>
+      </div>
+      <button class="btn small" data-i="${i}">强化(${(e.lv+1)*500}银两)</button>
+    </div>`).join('')}
+  </div>
+  <p class="hint" style="margin-top:12px">装备可在【关卡城市·铁匠铺】打造；强化每级提升约10%属性，+10 后需消耗玄铁。</p>`;
+}
+function bindWuEvents(h){
+  $$('#hd-body [data-op]').forEach(b=> b.onclick = ()=>{
+    const op=b.dataset.op;
+    if(op==='eq'){
+      const id=b.dataset.id, i=h.equips.indexOf(null);
+      if(i<0){ toast('出战武功已满（4个），请先卸下'); return; }
+      h.equips[i]=id; toast(`已装备【${skillById(id).name}】，优先级 ${i+1}`);
+    }
+    if(op==='rm'){ h.equips[+b.dataset.i]=null; }
+    if(op==='up'||op==='down'){
+      const i=+b.dataset.i, j= op==='up'? i-1 : i+1;
+      if(j<0||j>3||!h.equips[j]){ toast(h.equips[j]===undefined||j<0||j>3?'已到边界':'目标槽为空'); return; }
+      [h.equips[i],h.equips[j]]=[h.equips[j],h.equips[i]];
+    }
+    if(op==='lv'){ upgradeSkill(b.dataset.id); }
+    if(op==='cap'){ breakthrough(b.dataset.id); }
+    renderHeroDetail(); rebuildAllies();
+  });
+}
+function bindEqEvents(h){
+  $$('#equip-grid button').forEach(b=> b.onclick = ()=>{
+    const e = state.eq[h.id][+b.dataset.i], cost=(e.lv+1)*500;
+    if(state.silver<cost){ toast('银两不足'); return; }
+    state.silver-=cost; e.lv++;
+    e.attr = e.attr.replace(/\d+/, n=>Math.floor(+n*1.1));
+    toast(`🔨 ${e.name} 强化至 +${e.lv}`); renderTop(); renderHeroDetail();
+  });
+}
+function upgradeSkill(id){
+  const L = state.skillLv[id]||1, cap = 20+(state.skillCapEx[id]||0), cost=L*100;
+  if(L>=cap){ toast('已达当前上限，可用秘籍残页突破'); return; }
+  if(state.xiu<cost){ toast('修为不足'); return; }
+  state.xiu-=cost; state.skillLv[id]=L+1;
+  toast(`📖【${skillById(id).name}】升至 Lv.${L+1}`); renderTop(); renderSkillLib();
+}
+function breakthrough(id){
+  if((state.skillCapEx[id]||0)>=10){ toast('该武功上限已突破至极致（30级）'); return; }
+  if(state.page<3){ toast('秘籍残页不足（需3张）'); return; }
+  state.page-=3; state.skillCapEx[id]=(state.skillCapEx[id]||0)+5;
+  toast(`📜【${skillById(id).name}】等级上限 +5（现 ${20+state.skillCapEx[id]} 级）`);
+  renderTop(); renderHeroDetail(); renderSkillLib();
+}
+
+/* ---- 武功图鉴屏 ---- */
+let skillFilter = '全部';
+function renderSkillFilter(){
+  const cats = ['全部','主动','被动','心法', ...Object.values(PATHS).map(p=>p.name)];
+  $('#skill-filter').innerHTML = cats.map(c=>`<span class="fchip ${c===skillFilter?'on':''}" data-c="${c}">${c}</span>`).join('');
+  $$('#skill-filter .fchip').forEach(c=> c.onclick=()=>{ skillFilter=c.dataset.c; renderSkillFilter(); renderSkillLib(); });
+}
+function renderSkillLib(){
+  const pathName = sk=> sk.reqPath? PATHS[sk.reqPath].name : null;
+  const list = SKILLS.filter(sk=>{
+    if(skillFilter==='全部') return true;
+    if(['主动','被动','心法'].includes(skillFilter)) return sk.type===skillFilter;
+    return pathName(sk)===skillFilter;
+  });
+  $('#skill-lib').innerHTML = list.map(sk=>{
+    const L = state.skillLv[sk.id], cap = 20+(state.skillCapEx[sk.id]||0);
+    const owners = state.heroes.filter(h=>h.skills.includes(sk.id)).length;
+    return `<div class="panel lib-card" data-id="${sk.id}">
+      <div class="hd"><span class="nm" style="color:${PIN_COLOR[sk.pin]}">${sk.name}</span>
+        <span class="tag">${sk.pin}阶</span><span class="tag">${sk.type}${sk.cd>0?' · CD'+sk.cd:''}</span>
+        ${L?`<span class="tag gold">Lv.${L}/${cap}</span>`:'<span class="tag">未习得</span>'}
+        ${owners?`<span class="tag green" style="margin-left:auto">${owners}人已学</span>`:''}
+      </div>
+      <div class="ds">${sk.desc}</div>
+      <div class="req"><span class="tag ${sk.reqPath?'red':'blue'}">${reqText(sk)}</span></div>
+    </div>`;}).join('');
+}
+$('#skill-lib').addEventListener('click', e=>{
+  const c = e.target.closest('.lib-card'); if(!c) return;
+  const sk = skillById(c.dataset.id), L = state.skillLv[sk.id]||0, cap=20+(state.skillCapEx[sk.id]||0);
+  openModal(`
+    <div class="mh">📖 ${sk.name}<span class="x" onclick="closeModal()">✕</span></div>
+    <div class="mb">
+      <p style="margin-bottom:10px">
+        <span class="tag" style="color:${PIN_COLOR[sk.pin]}">${sk.pin}阶</span>
+        <span class="tag">${sk.type}</span>
+        ${sk.cd>0?`<span class="tag">冷却 ${sk.cd} 回合</span>`:sk.cd===0?'<span class="tag">无冷却</span>':''}
+        <span class="tag red">${reqText(sk)}</span></p>
+      <p style="font-size:14px;line-height:1.9">${sk.desc}</p>
+      <p style="margin-top:12px;font-size:13px;color:var(--muted)">
+        当前等级：${L?`Lv.${L} / ${cap}`:'未习得'}<br>
+        升级效果：每级提升约 8% 威力；满级 20 级，秘籍残页可突破至 30 级。</p>
+    </div>
+    <div class="mf">
+      ${L?`<button class="btn" onclick="upgradeSkill('${sk.id}');closeModal()">升级（${L*100} 修为）</button>
+           <button class="btn" onclick="breakthrough('${sk.id}');closeModal()">残页突破上限</button>`
+        :`<span class="hint" style="margin-right:auto">获取途径：武馆 / 派系商店 / 关卡掉落</span>`}
+      <button class="btn" onclick="closeModal()">关闭</button>
+    </div>`);
+});
+
+/* ---- 城市建筑（嵌入大关卡详情页） ---- */
+function cityHTML(st){
+  return `
+    <div class="panel bld">
+      <div class="banner"><span class="ic">🍶</span><div><div class="nm">酒馆 · 招募侠客</div>
+        <div class="ds">本关UP：${st.feat.join('、')}（招募本地特色侠客概率提升）</div></div></div>
+      <div class="pb">
+        <div class="shop-item"><span class="ic">🎲</span><span class="nm">寻侠一次</span>
+          <span class="ds">R 60% · SR 30% · SSR 8% · UR 2%</span>
+          <span class="cost">💎288</span><button class="btn small" data-rec="1">招募</button></div>
+        <div class="shop-item"><span class="ic">🎰</span><span class="nm">寻侠十次</span>
+          <span class="ds">必得 SR 以上侠客，重复侠客转为修为</span>
+          <span class="cost">💎2688</span><button class="btn small" data-rec="10">十连</button></div>
+      </div>
+    </div>
+    <div class="panel bld">
+      <div class="banner"><span class="ic">⚒️</span><div><div class="nm">铁匠铺 · 打造强化</div>
+        <div class="ds">为当前选中侠客打造装备，关卡越高品质越好</div></div></div>
+      <div class="pb">
+        <div class="shop-item"><span class="ic">🗡️</span><span class="nm">打造兵器</span>
+          <span class="ds">随机部位装备，品质 良品~绝品</span>
+          <span class="cost">💰5,000</span><button class="btn small" data-forge="n">打造</button></div>
+        <div class="shop-item"><span class="ic">⚔️</span><span class="nm">神兵锻造</span>
+          <span class="ds">必出 绝品 以上，10% 出神品</span>
+          <span class="cost">💎300</span><button class="btn small" data-forge="g">锻造</button></div>
+      </div>
+    </div>
+    <div class="panel bld">
+      <div class="banner"><span class="ic">🥋</span><div><div class="nm">武馆 · 传授武功</div>
+        <div class="ds">通用武功不限职业标签，学后进入侠客已学列表（每侠最多20门）</div></div></div>
+      <div class="pb">
+        ${SKILLS.filter(s=>!s.reqPath).map(s=>`
+        <div class="shop-item"><span class="ic">📖</span>
+          <span class="nm" style="color:${PIN_COLOR[s.pin]}">${s.name}</span>
+          <span class="ds">${s.type} · ${s.desc.slice(0,14)}…</span>
+          <span class="cost">📿${({'黄':300,'玄':800,'地':2000,'天':5000})[s.pin]}</span>
+          <button class="btn small" data-learn="${s.id}">学习</button></div>`).join('')}
+      </div>
+    </div>`;
+}
+function bindCityEvents(root){
+  root.querySelectorAll('[data-rec]').forEach(b=> b.onclick=()=>doRecruit(+b.dataset.rec));
+  root.querySelectorAll('[data-forge]').forEach(b=> b.onclick=()=>{
+    const cost = b.dataset.forge==='g'? ['yuanbao',300] : ['silver',5000];
+    if(state[cost[0]]<cost[1]){ toast(cost[0]==='yuanbao'?'元宝不足':'银两不足'); return; }
+    state[cost[0]]-=cost[1];
+    const eq = pick(state.eq[state.selHero]); eq.lv++;
+    toast(`⚒️ 打造出【${eq.name} +${eq.lv}】，已装入 ${heroById(state.selHero).name} 背包`);
+    renderTop();
+  });
+  root.querySelectorAll('[data-learn]').forEach(b=> b.onclick=()=>{
+    const sk = skillById(b.dataset.learn), h = heroById(state.selHero);
+    const cost = ({'黄':300,'玄':800,'地':2000,'天':5000})[sk.pin];
+    if(h.skills.includes(sk.id)){ toast(`${h.name} 已习得【${sk.name}】`); return; }
+    if(h.skills.length>=20){ toast(`${h.name} 已学武功达 20 门上限`); return; }
+    if(state.xiu<cost){ toast('修为不足'); return; }
+    state.xiu-=cost; h.skills.push(sk.id); state.skillLv[sk.id]=state.skillLv[sk.id]||1;
+    toast(`📚 ${h.name} 习得【${sk.name}】！可在角色界面装备`);
+    renderTop(); renderHeroDetail(); renderSkillLib();
+  });
+}
+function doRecruit(n){
+  const cost = n===10?2688:288;
+  if(state.yuanbao<cost){ toast('元宝不足'); return; }
+  state.yuanbao-=cost;
+  const roll = ()=>{
+    const r=Math.random()*100;
+    const rarity = r<2?'UR':r<10?'SSR':r<40?'SR':'R';
+    return pick(state.heroes.filter(h=>h.rarity===rarity));
+  };
+  const results = Array.from({length:n}, roll);
+  const best = results.slice().sort((a,b)=>RARITY_ORDER[b.rarity]-RARITY_ORDER[a.rarity])[0];
+  let msg;
+  if(!best.owned){ best.owned=true; msg=`<span class="rarity-${best.rarity}">${best.name}</span> 加入队伍！`; }
+  else { state.xiu+=200*n; msg=`${best.name} 已收录，转化为 修为×${200*n}`; }
+  renderTop(); renderRoster();
+  openModal(`
+    <div class="mh">🍶 酒馆寻侠<span class="x" onclick="closeModal()">✕</span></div>
+    <div class="mb"><div id="recruit-result">
+      <div class="ava">${best.ic}</div>
+      <div class="nm rarity-${best.rarity}">${best.name} · ${best.rarity}</div>
+      <div class="tl">${PATHS[best.path].tiers[best.tier]} · ${best.talent}</div>
+      <p style="margin-top:12px;color:var(--gold2)">${msg}</p>
+      ${n>1?`<p class="hint" style="margin-top:8px">其余 ${n-1} 次：${results.slice(1).map(h=>h.name).join('、')}</p>`:''}
+    </div></div>
+    <div class="mf"><button class="btn" onclick="closeModal()">收入麾下</button></div>`);
+}
+
+/* ---- 大关卡详情页（小关卡 + 城市 + 本地势力） ---- */
+const SUB_NAMES = ['郊野','密林','山道','渡口','废墟','寨门','内寨','后山','腹地','巢穴'];
+const FAC_HQ = {5:'sl', 6:'wd', 7:'em', 8:'gb', 18:'mj', 19:'tm'};   // 派系总舵所在大关卡
+function stageFactions(i){ return [{ id: FAC_HQ[i] || ['sl','wd','em','gb','tm','mj'][i%6], hq: !!FAC_HQ[i] }]; }
+function openStage(i){ state.viewStage = i; renderStageDetail(); switchScreen('stage'); }
+function renderStageDetail(){
+  const i = state.viewStage, st = STAGES[i];
+  const cleared = i===state.stageIdx ? Math.max(st.subs, state.sub-1) : st.subs;
+  const facs = stageFactions(i);
+  if(!facs.some(f=>f.id===state.selFaction)) state.selFaction = facs[0].id;
+  $('#stage-detail').innerHTML = `
+    <div class="panel" id="sd-head">
+      <button class="btn small" id="sd-back">← 返回关卡列表</button>
+      <span class="tt">第${st.no}关 · ${st.name}</span>
+      <span class="tag">难度 ${st.diff}</span>
+      <span class="hint">通关 10 小关并击败守关BOSS，解锁下一关</span>
+      ${i===state.stageIdx?'<span class="tag gold" style="margin-left:auto">⚔️ 当前挂机关卡</span>':''}
+    </div>
+    <div id="sd-body">
+      <div class="panel">
+        <div class="ph">⚔️ 小关卡 · 点击开始挂机</div>
+        <div class="pb">
+          ${SUB_NAMES.map((nm,k)=>{
+            const no = k+1, locked = no>cleared+1, cur = i===state.stageIdx && no===state.sub;
+            return `<div class="sub-node ${locked?'lock':''} ${cur?'cur':''}" data-sub="${no}">
+              <span class="no">${locked?'🔒':no}</span>
+              <span class="nm">${st.name}·${nm}</span>
+              ${no<=cleared?'<span class="tag green">已通关</span>':''}
+              <span class="pw">战力 ${fmt(st.pow*(2+no))}</span>
+            </div>`;}).join('')}
+          <div class="hint">每小关清剿 10 波小怪后，可在挂机页挑战守关BOSS推进进度</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph">🏯 ${st.name} · 城市</div>
+        <div class="pb" id="sd-city">${cityHTML(st)}</div>
+      </div>
+      <div class="panel">
+        <div class="ph">🏴 本地势力</div>
+        <div class="pb">
+          ${facs.map(f0=>{ const f = FACTIONS.find(x=>x.id===f0.id); return `
+            <div class="fac-item panel ${f.id===state.selFaction?'sel':''}" data-fac="${f.id}">
+              <div class="ic">${f.ic}</div>
+              <div><div class="nm">${f.name} <span class="tag ${f0.hq?'gold':'blue'}">${f0.hq?'总舵':'分舵'}</span></div>
+              <div class="ct">${f.slogan} · 贡献 ${fmt(f.contrib)}</div></div>
+            </div>`;}).join('')}
+          <div id="sd-fac-detail"></div>
+        </div>
+      </div>
+    </div>`;
+  $('#sd-back').onclick = ()=>{ switchScreen('stages'); renderStages(); };
+  bindCityEvents($('#sd-city'));
+  $$('#sd-body .sub-node').forEach(n=> n.onclick = ()=>{
+    const no = +n.dataset.sub;
+    if(no>cleared+1){ toast('🔒 需先通关前一小关'); return; }
+    state.stageIdx = i; state.sub = no; state.wave = 0; state.bossMode = false;
+    STAGES[i].subs = Math.max(STAGES[i].subs, no-1);
+    startBattle(); renderStages(); switchScreen('battle');
+    addLog(`⚔️ 队伍进入【${st.name}·${SUB_NAMES[no-1]}】，开始挂机战斗`,'l-sys');
+  });
+  $$('#sd-body [data-fac]').forEach(c=> c.onclick = ()=>{ state.selFaction = c.dataset.fac; renderStageDetail(); });
+  renderFacDetailInto($('#sd-fac-detail'), state.selFaction);
+}
+function renderFacDetailInto(root, fid){
+  const f = FACTIONS.find(x=>x.id===fid);
+  root.innerHTML = `
+    <div class="cover"><span class="ic">${f.ic}</span>
+      <div><div class="nm">${f.name}</div><div class="sl">${f.slogan} · 当前贡献 <b style="color:var(--gold2)">${fmt(f.contrib)}</b> 点</div></div>
+    </div>
+    <div class="pb">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.8">${f.desc}</p>
+      <div class="ph" style="border:1px solid var(--line);border-radius:6px 6px 0 0;margin-bottom:0">📜 派系任务（每日刷新）</div>
+      <div style="border:1px solid var(--line);border-top:none;border-radius:0 0 6px 6px;padding:10px;margin-bottom:14px">
+        ${f.tasks.map((t,i)=>`
+        <div class="task-row">
+          <div class="ds"><div class="t">${t.t}</div>${t.p?`<div class="p">进度 ${t.p}</div>`:''}</div>
+          <span class="rw">${t.rw}</span>
+          ${t.done&&!t.claimed?`<button class="btn small primary" data-task="${i}">领取</button>`
+            :t.claimed?'<span class="tag green">已领取</span>':'<span class="tag">进行中</span>'}
+        </div>`).join('')}
+      </div>
+      <div class="ph" style="border:1px solid var(--line);border-radius:6px 6px 0 0;margin-bottom:0">🏪 贡献商店（派系特色侠客与武功）</div>
+      <div style="border:1px solid var(--line);border-top:none;border-radius:0 0 6px 6px;padding:10px">
+        ${f.shop.map((s,i)=>`
+        <div class="shop-item" style="margin-bottom:8px"><span class="ic">${s.ic}</span>
+          <span class="nm">${s.name}</span><span class="ds">${s.ds}</span>
+          <span class="cost">贡献 ${s.cost}</span>
+          <button class="btn small" data-shop="${i}" ${f.contrib<s.cost?'disabled':''}>兑换</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  root.querySelectorAll('[data-task]').forEach(b=> b.onclick=()=>{
+    const t = f.tasks[+b.dataset.task];
+    t.claimed=true; f.contrib += +t.rw.replace(/\D/g,'');
+    toast(`📜 完成任务「${t.t}」，${f.name} ${t.rw}`); renderStageDetail();
+  });
+  root.querySelectorAll('[data-shop]').forEach(b=> b.onclick=()=>{
+    const s = f.shop[+b.dataset.shop];
+    if(f.contrib<s.cost) return;
+    f.contrib -= s.cost;
+    const h = heroById(state.selHero);
+    const sk = SKILLS.find(x=> s.name.startsWith(x.name));
+    if(sk && !h.skills.includes(sk.id) && canLearn(h,sk) && h.skills.length<20){
+      h.skills.push(sk.id); state.skillLv[sk.id]=state.skillLv[sk.id]||1;
+      toast(`📖 ${h.name} 习得派系武功【${sk.name}】！`);
+    } else if(sk && h.skills.includes(sk.id)) toast('已习得该武功，兑换转为秘籍残页×2'), state.page+=2;
+    else if(sk) toast(`兑换成功！但 ${h.name} 职业标签不符，武功已收入秘籍阁`);
+    else toast(`🎉 兑换【${s.name}】成功！（侠客将于正式版加入阵容）`);
+    renderTop(); renderStageDetail(); renderHeroDetail(); renderSkillLib();
+  });
+}
+
+/* ---- 离线收益 ---- */
+$('#btn-offline').onclick = ()=>{
+  const p = STAGES[state.stageIdx].pow, h = rnd(5,11);
+  const s=p*3*h, e=p*2*h, x=Math.floor(p/5)*h;
+  openModal(`
+    <div class="mh">🏮 离线挂机收益<span class="x" onclick="closeModal()">✕</span></div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px">您离线期间，侠客们仍在【${STAGES[state.stageIdx].name}】日夜苦练（离线收益上限12小时，VIP可提升）</p>
+      <div id="offline-list">
+        ⏱️ 离线时长：<b>${h} 小时 23 分钟</b><br>
+        💰 银两：<b>+${fmt(s)}</b><br>
+        ✨ 经验：<b>+${fmt(e)}</b>（全队侠客）<br>
+        📿 修为：<b>+${fmt(x)}</b><br>
+        🎁 额外掉落：<b>玄铁×${rnd(2,6)} · 秘籍残页×${rnd(1,3)}</b>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn" id="off-double">💎50 双倍领取</button>
+      <button class="btn primary" id="off-claim">领取收益</button>
+    </div>`);
+  const claim = (m)=>{
+    state.silver+=s*m; state.xiu+=x*m; state.page+=1;
+    closeModal(); toast(`🏮 离线收益已入库${m>1?'（双倍）':''}`); renderTop();
+  };
+  $('#off-claim').onclick = ()=>claim(1);
+  $('#off-double').onclick = ()=>{ if(state.yuanbao<50){toast('元宝不足');return;} state.yuanbao-=50; claim(2); };
+};
+
+/* ---- 屏幕切换 / 速度 / BOSS ---- */
+function switchScreen(name){
+  $$('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.screen===name));
+  $$('.screen').forEach(s=> s.classList.toggle('active', s.id==='screen-'+name));
+}
+$$('.nav-item').forEach(n=> n.onclick = ()=>{
+  switchScreen(n.dataset.screen);
+  if(n.dataset.screen==='stages') renderStages();
+  if(n.dataset.screen==='heroes'){ renderRoster(); renderHeroDetail(); }
+  if(n.dataset.screen==='skills'){ renderSkillFilter(); renderSkillLib(); }
+});
+$('#btn-goto-stages').onclick = ()=> openStage(state.stageIdx);
+$$('.spd').forEach(b=> b.onclick = ()=>{
+  state.speed = +b.dataset.spd;
+  $$('.spd').forEach(x=> x.classList.toggle('primary', x===b));
+  clearInterval(battle.timer); battle.timer = setInterval(tick, 900/state.speed);
+});
+$('#btn-boss').onclick = ()=>{
+  if(state.wave<10 && !state.bossMode){ toast('需先清剿 10 波小怪，方可挑战守关BOSS（原型可直接连点）'); state.wave=10; renderWaveInfo(); return; }
+  state.bossMode = true; battle.enemies = mkEnemies(); renderArena(); renderWaveInfo();
+  addLog(`👹 守关BOSS现身！全员集火！`,'l-sys');
+};
+
+/* =====================================================
+   初始化
+===================================================== */
+['leng','azi','tang','guo'].forEach(id=> heroById(id).owned=false);
+state.heroes.forEach(h=>{ if(h.owned===undefined) h.owned=true; });
+renderTop(); renderStages(); renderRoster(); renderHeroDetail();
+renderSkillFilter(); renderSkillLib();
+startBattle();
+addLog('🍶 侠客队伍已进入【桃花岛】，挂机战斗开始……','l-sys');
+addLog('💡 在【江湖关卡】点击大关卡，可进入该关的小关卡/城市/势力','l-dim');
+</script>
+</body>
+</html>

@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蛋蛋江湖·挂机版 — 高保真玩法原型</title>
+<style>
+/* ============================================================
+   蛋蛋江湖·挂机版 — 全局样式
+   水墨武侠风：深墨底 + 宣纸米黄 + 朱红点缀 + 鎏金描边
+   ============================================================ */
+* { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --ink:#17130e;
+  --ink2:#221c14;
+  --ink3:#2e261b;
+  --paper:#efe3c8;
+  --paper2:#e4d5b4;
+  --paper-dark:#d8c69e;
+  --red:#b03a2e;
+  --red2:#8e2b21;
+  --gold:#c9a227;
+  --gold2:#e8c95a;
+  --jade:#3f7d5d;
+  --blue:#4a7fa5;
+  --purple:#8e5ba6;
+  --orange:#e07b39;
+  --gray:#8a8175;
+}
+html,body{ height:100%; }
+body{
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(176,58,46,.12), transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(201,162,39,.08), transparent 50%),
+    var(--ink);
+  color:var(--paper);
+  font-family:"STKaiti","KaiTi","SimSun",serif;
+  padding:18px 0 40px;
+  user-select:none;
+}
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-track{ background:var(--ink2); }
+::-webkit-scrollbar-thumb{ background:#4a3f2c; border-radius:4px; }
+::-webkit-scrollbar-thumb:hover{ background:var(--gold); }
+
+/* ---------- 游戏窗口外框 ---------- */
+.game-window{
+  width:1200px;
+  margin:0 auto;
+  background:linear-gradient(180deg,#241d13 0%, #1b150e 100%);
+  border:2px solid #5a4a2c;
+  border-radius:10px;
+  box-shadow:0 0 0 1px #0c0906, 0 0 60px rgba(0,0,0,.8), inset 0 0 120px rgba(0,0,0,.45);
+  overflow:hidden;
+  position:relative;
+}
+.game-window::before{
+  content:"";
+  position:absolute; inset:6px;
+  border:1px solid rgba(201,162,39,.25);
+  border-radius:6px;
+  pointer-events:none;
+  z-index:5;
+}
+
+/* ---------- 设计说明条 ---------- */
+.design-note{
+  width:1200px; margin:0 auto 12px;
+  background:#201a12;
+  border:1px solid #4a3f2c;
+  border-radius:8px;
+  overflow:hidden;
+}
+.design-note-bar{
+  padding:8px 16px;
+  cursor:pointer;
+  display:flex; align-items:center; gap:10px;
+  color:var(--gold2);
+  font-size:14px;
+  letter-spacing:2px;
+  transition:background .2s;
+}
+.design-note-bar:hover{ background:#2a2216; }
+.design-note-bar .arrow{ transition:transform .25s; display:inline-block; }
+.design-note.open .design-note-bar .arrow{ transform:rotate(90deg); }
+.design-note-body{
+  display:none;
+  padding:6px 20px 16px;
+  color:#cfc2a2;
+  font-size:13.5px;
+  line-height:1.9;
+}
+.design-note.open .design-note-body{ display:block; }
+.design-note-body p{ margin-bottom:8px; text-indent:2em; }
+.design-note-body b{ color:var(--gold2); }
+
+/* ---------- 顶部标题栏 ---------- */
+.topbar{
+  height:64px;
+  display:flex; align-items:center;
+  padding:0 20px;
+  background:linear-gradient(180deg,#33291a 0%, #241d12 100%);
+  border-bottom:2px solid #5a4a2c;
+  position:relative;
+}
+.topbar::after{
+  content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:.5;
+}
+.game-title{
+  font-size:30px;
+  font-weight:bold;
+  letter-spacing:6px;
+  color:var(--gold2);
+  text-shadow:0 2px 4px #000, 0 0 18px rgba(201,162,39,.35);
+  display:flex; align-items:center; gap:10px;
+}
+.game-title .seal{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px;
+  background:var(--red);
+  color:#fff;
+  font-size:16px;
+  border-radius:5px;
+  box-shadow:inset 0 0 6px rgba(0,0,0,.5), 0 0 8px rgba(176,58,46,.6);
+  transform:rotate(-4deg);
+}
+.game-title small{ font-size:13px; color:#a5946f; letter-spacing:3px; margin-left:4px; }
+.currency-bar{ margin-left:auto; display:flex; gap:10px; align-items:center; }
+.currency{
+  display:flex; align-items:center; gap:6px;
+  background:rgba(0,0,0,.4);
+  border:1px solid #4a3f2c;
+  border-radius:20px;
+  padding:4px 14px 4px 6px;
+  font-size:14px;
+  color:var(--paper);
+}
+.currency .icon{
+  width:24px; height:24px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px;
+}
+.currency.yb .icon{ background:radial-gradient(circle at 35% 30%, #ffe9a0, var(--gold)); color:#5a4300; }
+.currency.yl .icon{ background:radial-gradient(circle at 35% 30%, #eee, #9aa0a6); color:#333; }
+.currency.tl .icon{ background:radial-gradient(circle at 35% 30%, #ffb27d, var(--orange)); color:#4d2400; }
+.currency .add{
+  color:var(--jade); font-weight:bold; cursor:pointer; font-size:16px; margin-left:2px;
+}
+.currency .add:hover{ transform:scale(1.2); }
+.player-mini{
+  display:flex; align-items:center; gap:8px; margin-right:14px;
+  border-right:1px solid #4a3f2c; padding-right:14px;
+}
+.player-mini .avatar{
+  width:38px; height:38px; border-radius:50%;
+  background:linear-gradient(135deg,#7a2e22,#b03a2e);
+  border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; color:#fff;
+}
+.player-mini .info{ font-size:12px; line-height:1.4; color:#b8a983; }
+.player-mini .info b{ color:var(--paper); font-size:13px; }
+
+/* ---------- 功能导航 ---------- */
+.navbar{
+  display:flex;
+  background:#1d1710;
+  border-bottom:1px solid #4a3f2c;
+  padding:0 12px;
+}
+.nav-item{
+  padding:11px 26px;
+  cursor:pointer;
+  font-size:16px;
+  letter-spacing:3px;
+  color:#9c8f6e;
+  position:relative;
+  transition:color .2s;
+  display:flex; align-items:center; gap:7px;
+}
+.nav-item .nicon{ font-size:15px; filter:grayscale(.6); }
+.nav-item:hover{ color:var(--paper); }
+.nav-item.active{
+  color:var(--gold2);
+  background:linear-gradient(180deg,rgba(201,162,39,.12),transparent);
+}
+.nav-item.active::after{
+  content:""; position:absolute; left:18%; right:18%; bottom:0; height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  border-radius:2px;
+}
+.nav-item .dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--red);
+  box-shadow:0 0 6px var(--red);
+}
+
+/* ---------- 页面容器 ---------- */
+.pages{ min-height:640px; position:relative; }
+.page{ display:none; padding:18px 20px 24px; animation:pageIn .3s ease; }
+.page.active{ display:block; }
+@keyframes pageIn{ from{ opacity:0; transform:translateY(8px);} to{ opacity:1; transform:none;} }
+
+/* ---------- 卷轴标题 ---------- */
+.scroll-title{
+  display:flex; align-items:center; gap:14px;
+  margin-bottom:14px;
+}
+.scroll-title::before,.scroll-title::after{
+  content:""; flex:1; height:1px;
+  background:linear-gradient(90deg,transparent,#5a4a2c);
+}
+.scroll-title::after{ background:linear-gradient(90deg,#5a4a2c,transparent); }
+.scroll-title h2{
+  font-size:22px; letter-spacing:6px; color:var(--gold2);
+  padding:2px 18px;
+  border-top:1px solid #5a4a2c; border-bottom:1px solid #5a4a2c;
+  text-shadow:0 1px 3px #000;
+  white-space:nowrap;
+}
+.scroll-title .sub{ font-size:12px; color:#8a8175; letter-spacing:2px; }
+
+/* ---------- 通用卡片 ---------- */
+.card{
+  background:linear-gradient(160deg,#262016 0%, #1e1810 100%);
+  border:1px solid #4a3f2c;
+  border-radius:8px;
+  padding:14px;
+  position:relative;
+}
+.card.paper{
+  background:linear-gradient(160deg,#efe3c8 0%, #e2d3ae 100%);
+  color:#3a2f1d;
+  border:1px solid #b8a06a;
+  box-shadow:inset 0 0 30px rgba(120,90,40,.15);
+}
+.panel-title{
+  font-size:16px; letter-spacing:3px; color:var(--gold2);
+  border-left:4px solid var(--red);
+  padding-left:10px; margin-bottom:12px;
+}
+.card.paper .panel-title{ color:#7a2e22; }
+
+/* ---------- 通用小元素 ---------- */
+.btn{
+  display:inline-block;
+  padding:6px 18px;
+  background:linear-gradient(180deg,#8e2b21,#6e1f17);
+  color:#f5e6cf;
+  border:1px solid #b0543f;
+  border-radius:5px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:14px;
+  letter-spacing:2px;
+  transition:all .15s;
+  box-shadow:0 2px 4px rgba(0,0,0,.4);
+}
+.btn:hover{ filter:brightness(1.2); transform:translateY(-1px); }
+.btn:active{ transform:translateY(0); }
+.btn.gold{ background:linear-gradient(180deg,#b8923a,#8a6c22); border-color:#e0c060; color:#2b2106; }
+.btn.ghost{ background:transparent; border-color:#5a4a2c; color:#b8a983; box-shadow:none; }
+.btn.ghost:hover{ border-color:var(--gold); color:var(--gold2); }
+.btn.small{ padding:3px 12px; font-size:12px; }
+.btn.disabled, .btn:disabled{
+  background:#3a352c; border-color:#4a453b; color:#7a7263; cursor:not-allowed;
+  filter:none; transform:none;
+}
+.tag{
+  display:inline-block; padding:1px 8px; border-radius:3px;
+  font-size:11px; letter-spacing:1px; margin-right:4px;
+  border:1px solid;
+}
+.tag.sword{ color:#7fb3d5; border-color:#3a5a75; background:rgba(74,127,165,.15); }
+.tag.blade{ color:#e5987a; border-color:#7a4a35; background:rgba(224,123,57,.15); }
+.tag.fist{ color:#d4b45e; border-color:#7a6a30; background:rgba(201,162,39,.15); }
+.tag.med{ color:#7dc494; border-color:#35604a; background:rgba(63,125,93,.15); }
+.tag.dart{ color:#c08ad4; border-color:#5e3a6e; background:rgba(142,91,166,.15); }
+.tag.tao{ color:#9aa7c9; border-color:#4a5578; background:rgba(90,110,160,.15); }
+.tag.neutral{ color:#b8a983; border-color:#5a4a2c; background:rgba(120,100,60,.1); }
+.bar{
+  height:12px; background:#0d0a07; border-radius:6px; overflow:hidden;
+  border:1px solid #3a3226; position:relative;
+}
+.bar > i{
+  display:block; height:100%;
+  transition:width .35s ease;
+  border-radius:6px;
+}
+.bar.hp > i{ background:linear-gradient(180deg,#d65a4a,#9c2f22); }
+.bar.mp > i{ background:linear-gradient(180deg,#5a9ad6,#2f5a9c); }
+.bar.exp > i{ background:linear-gradient(180deg,#e0c060,#a8842a); }
+.bar .txt{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:9px; color:#fff; text-shadow:0 1px 2px #000; letter-spacing:1px;
+  transform:scale(.92);
+}
+.rarity{ font-size:11px; padding:1px 7px; border-radius:3px; letter-spacing:2px; }
+.rarity.r5{ background:linear-gradient(90deg,#e07b39,#f5b04a); color:#3a1c00; }
+.rarity.r4{ background:linear-gradient(90deg,#8e5ba6,#b586cc); color:#2a0a3a; }
+.rarity.r3{ background:linear-gradient(90deg,#4a7fa5,#6aa5cc); color:#0a2030; }
+.rarity.r2{ background:linear-gradient(90deg,#3f7d5d,#63a583); color:#0a2418; }
+.rarity.r1{ background:linear-gradient(90deg,#8a8175,#aaa195); color:#222; }
+.dim{ color:#7a7263; }
+.gold-t{ color:var(--gold2); }
+.red-t{ color:#e0705f; }
+.green-t{ color:#7dc494; }
+.blue-t{ color:#7fb3d5; }
+.flex{ display:flex; }
+.gap8{ gap:8px; } .gap12{ gap:12px; } .gap16{ gap:16px; }
+.mt8{ margin-top:8px; } .mt12{ margin-top:12px; } .mt16{ margin-top:16px; }
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+</style>
+<style>
+/* ============================================================
+   页面一：挂机战斗
+   ============================================================ */
+.battle-wrap{ display:grid; grid-template-columns:340px 1fr; gap:16px; }
+.battle-field{
+  background:
+    radial-gradient(ellipse at 50% 110%, rgba(201,162,39,.1), transparent 60%),
+    linear-gradient(180deg,#2a2115 0%, #1a140d 70%);
+  border:1px solid #4a3f2c;
+  border-radius:8px;
+  padding:16px 18px;
+  min-height:430px;
+  position:relative;
+  overflow:hidden;
+}
+.battle-field .scene{
+  position:absolute; right:14px; top:10px;
+  font-size:12px; color:#8a8175; letter-spacing:2px;
+}
+.battle-field .vs-round{
+  position:absolute; left:50%; top:44%; transform:translate(-50%,-50%);
+  font-size:15px; letter-spacing:4px; color:#6a5f4a;
+  text-align:center;
+}
+.battle-field .vs-round b{ display:block; font-size:30px; color:var(--gold2); letter-spacing:2px; }
+.formation{ display:flex; gap:14px; }
+.formation .col{ display:flex; flex-direction:column; gap:14px; }
+.unit{
+  width:118px; padding:8px;
+  background:rgba(0,0,0,.35);
+  border:1px solid #4a3f2c;
+  border-radius:7px;
+  position:relative;
+  transition:box-shadow .2s, transform .15s;
+}
+.unit.front{ border-color:#6a5a35; }
+.unit.acting{ box-shadow:0 0 14px rgba(232,201,90,.55); border-color:var(--gold2); transform:scale(1.04); }
+.unit.hit{ animation:shake .3s; }
+.unit.dead{ filter:grayscale(1); opacity:.35; }
+@keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
+.unit .uhead{ display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+.unit .uavatar{
+  width:30px; height:30px; border-radius:5px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; color:#fff; font-weight:bold;
+  border:1px solid rgba(255,255,255,.25);
+}
+.unit .uname{ font-size:12px; line-height:1.25; }
+.unit .uname small{ display:block; font-size:9.5px; color:#9c8f6e; transform:scale(.95); transform-origin:left; }
+.unit .bar{ height:9px; margin-top:4px; }
+.unit .pos{
+  position:absolute; top:-8px; left:-6px;
+  font-size:10px; background:#3a3226; color:#b8a983;
+  padding:0 5px; border-radius:3px; border:1px solid #5a4a2c;
+}
+.enemy-side .unit .uavatar{ background:#5a2a20 !important; }
+.dmg-float{
+  position:absolute;
+  font-size:17px; font-weight:bold; color:#ffd24a;
+  text-shadow:0 2px 3px #000;
+  pointer-events:none;
+  animation:floatUp 1s forwards;
+  z-index:9; letter-spacing:1px;
+}
+.dmg-float.crit{ color:#ff5a3c; font-size:22px; }
+.dmg-float.heal{ color:#6fdc8f; }
+@keyframes floatUp{
+  0%{ opacity:0; transform:translateY(6px) scale(.6);}
+  20%{ opacity:1; transform:translateY(-4px) scale(1.1);}
+  100%{ opacity:0; transform:translateY(-42px) scale(1);}
+}
+.skill-flash{
+  position:absolute; left:50%; top:34%; transform:translate(-50%,-50%);
+  padding:8px 26px;
+  background:rgba(20,14,8,.85);
+  border:1px solid var(--gold);
+  border-radius:6px;
+  color:var(--gold2);
+  font-size:19px; letter-spacing:6px;
+  animation:skillPop 1.1s forwards;
+  pointer-events:none; z-index:10;
+  box-shadow:0 0 30px rgba(201,162,39,.4);
+  white-space:nowrap;
+}
+.skill-flash small{ display:block; text-align:center; font-size:11px; letter-spacing:2px; color:#c8b586; margin-top:3px; }
+@keyframes skillPop{
+  0%{ opacity:0; transform:translate(-50%,-50%) scale(.6);}
+  18%{ opacity:1; transform:translate(-50%,-50%) scale(1.05);}
+  75%{ opacity:1; }
+  100%{ opacity:0; transform:translate(-50%,-58%) scale(1);}
+}
+.battle-status{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 4px 0; font-size:13px; color:#b8a983;
+}
+.battle-status b{ color:var(--gold2); font-size:16px; }
+.idle-income{ display:flex; gap:10px; margin-top:10px; }
+.idle-income .inc{
+  flex:1; text-align:center; padding:8px 4px;
+  background:rgba(0,0,0,.3); border:1px solid #3a3226; border-radius:6px;
+  font-size:12px; color:#b8a983;
+}
+.idle-income .inc b{ display:block; color:var(--gold2); font-size:15px; margin-top:2px; }
+.battle-log-box{
+  display:flex; flex-direction:column;
+  background:#141009;
+  border:1px solid #4a3f2c;
+  border-radius:8px;
+  overflow:hidden;
+  min-height:430px;
+}
+.battle-log-head{
+  padding:8px 14px; background:#201a10;
+  border-bottom:1px solid #4a3f2c;
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:14px; letter-spacing:3px; color:var(--gold2);
+}
+.battle-log-head .speed{ display:flex; gap:6px; }
+.battle-log{
+  flex:1; overflow-y:auto; padding:10px 14px;
+  font-size:13px; line-height:1.85;
+  max-height:430px;
+}
+.battle-log p{ border-bottom:1px dashed rgba(90,74,44,.25); padding:2px 0; }
+.battle-log .turn{ color:#8a8175; letter-spacing:2px; }
+.battle-log .cast{ color:var(--gold2); }
+.battle-log .dmg{ color:#e0705f; }
+.battle-log .heal{ color:#6fdc8f; }
+.battle-log .sys{ color:#7fb3d5; }
+.battle-log .win{ color:#ffd24a; font-size:14px; }
+.settlement{
+  position:absolute; inset:0; z-index:20;
+  background:rgba(12,9,5,.9);
+  display:none; align-items:center; justify-content:center;
+}
+.settlement.show{ display:flex; animation:pageIn .3s; }
+.settlement .inner{
+  width:380px; text-align:center;
+  background:linear-gradient(180deg,#efe3c8,#e0d0a8);
+  color:#3a2f1d;
+  border:2px solid var(--gold);
+  border-radius:10px;
+  padding:24px 30px;
+  box-shadow:0 0 50px rgba(201,162,39,.35);
+}
+.settlement h3{ font-size:26px; letter-spacing:8px; color:#8e2b21; margin-bottom:12px; }
+.settlement .reward-line{ font-size:14px; line-height:2.1; }
+.settlement .reward-line b{ color:#8e2b21; }
+</style>
+<style>
+/* ============================================================
+   页面二：关卡（两层结构：章节列表 → 章节内部）
+   ============================================================ */
+.chapter-layout{ display:grid; grid-template-columns:1fr 380px; gap:16px; }
+.chapter-item{
+  border:1px solid #4a3f2c;
+  border-radius:7px;
+  margin-bottom:8px;
+  background:linear-gradient(90deg,#241d13,#1c1610);
+  overflow:hidden;
+  transition:all .2s;
+  cursor:pointer;
+}
+.chapter-item:hover{ border-color:#7a6a45; transform:translateX(3px); }
+.chapter-item.locked{ opacity:.55; cursor:not-allowed; }
+.chapter-item.locked:hover{ transform:none; }
+.chapter-item.current{ border-color:var(--gold); box-shadow:0 0 12px rgba(201,162,39,.25); }
+.chapter-head{
+  display:flex; align-items:center; gap:12px;
+  padding:10px 14px;
+}
+.chapter-head .ch-icon{
+  width:40px; height:40px; border-radius:6px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+  background:radial-gradient(circle at 35% 30%, #4a3f2c, #262016);
+  border:1px solid #5a4a2c;
+}
+.chapter-head .ch-name{ font-size:16px; letter-spacing:2px; flex:1; }
+.chapter-head .ch-name small{ display:block; font-size:11px; color:#8a8175; letter-spacing:1px; margin-top:2px; }
+.chapter-head .ch-state{ font-size:12px; padding:2px 10px; border-radius:10px; }
+.chapter-head .ch-state.done{ background:rgba(63,125,93,.2); color:#7dc494; border:1px solid #35604a; }
+.chapter-head .ch-state.cur{ background:rgba(201,162,39,.18); color:var(--gold2); border:1px solid var(--gold); }
+.chapter-head .ch-state.lock{ background:rgba(0,0,0,.3); color:#7a7263; border:1px solid #4a453b; }
+.chapter-head .enter-arrow{ color:#7a6a45; font-size:14px; }
+.chapter-item:not(.locked):hover .enter-arrow{ color:var(--gold2); }
+.progress-summary .big-progress{
+  display:flex; align-items:baseline; gap:10px; margin-bottom:10px;
+}
+.progress-summary .big-progress b{ font-size:30px; color:var(--gold2); letter-spacing:2px; }
+.boss-tip{
+  margin-top:12px; padding:10px 12px;
+  background:rgba(142,43,33,.12); border:1px solid #7a3a30; border-radius:6px;
+  font-size:12.5px; color:#d8a89a; line-height:1.8;
+}
+/* --- 第二层：大关卡内部 --- */
+.chapter-detail-head{
+  border-radius:8px;
+  background:
+    radial-gradient(ellipse at 85% 20%, rgba(232,201,90,.12), transparent 50%),
+    linear-gradient(120deg,#33291a,#241d13 60%,#2e2016);
+  border:1px solid #5a4a2c;
+  display:flex; align-items:center; padding:16px 22px; gap:20px;
+  margin-bottom:14px; position:relative; overflow:hidden;
+}
+.chapter-detail-head .cd-icon{
+  width:56px; height:56px; border-radius:8px; flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:28px;
+  background:radial-gradient(circle at 35% 30%, #4a3f2c, #221b11);
+  border:1px solid var(--gold);
+}
+.chapter-detail-head .cd-name{ font-size:24px; letter-spacing:6px; color:var(--gold2); text-shadow:0 2px 4px #000; }
+.chapter-detail-head .cd-name small{ display:block; font-size:12px; color:#9c8f6e; letter-spacing:2px; margin-top:4px; }
+.chapter-detail-head .cd-meta{ font-size:12.5px; color:#b8a983; line-height:1.9; }
+.chapter-detail-head .back-btn{ margin-left:auto; }
+.sub-grid{
+  display:grid; grid-template-columns:repeat(5,1fr); gap:8px;
+}
+.sub-level{
+  text-align:center; padding:8px 4px;
+  border:1px solid #3a3226; border-radius:6px;
+  background:rgba(0,0,0,.3);
+  font-size:12px; cursor:pointer;
+  transition:all .15s;
+  position:relative;
+}
+.sub-level:hover{ border-color:var(--gold); }
+.sub-level .sl-num{ font-size:15px; color:var(--paper); }
+.sub-level .sl-name{ color:#9c8f6e; font-size:10.5px; margin-top:2px; letter-spacing:1px; }
+.sub-level .sl-income{ color:#6a5f4a; font-size:9.5px; margin-top:2px; transform:scale(.95); }
+.sub-level.done .sl-num{ color:#5a8a6a; }
+.sub-level.done::after{
+  content:"✓"; position:absolute; top:2px; right:5px;
+  color:#7dc494; font-size:11px;
+}
+.sub-level.cur{ border-color:var(--gold); background:rgba(201,162,39,.12); box-shadow:0 0 8px rgba(201,162,39,.25); }
+.sub-level.cur .sl-num{ color:var(--gold2); }
+.sub-level.lock{ opacity:.45; cursor:not-allowed; }
+.sub-level.lock::after{ content:"🔒"; position:absolute; top:1px; right:4px; font-size:9px; }
+.no-faction{
+  text-align:center; padding:36px 20px;
+  border:1px dashed #4a3f2c; border-radius:8px;
+  color:#8a8175; font-size:14px; letter-spacing:2px; line-height:2.2;
+}
+.faction-home{ display:flex; justify-content:center; gap:14px; margin-top:14px; flex-wrap:wrap; }
+.faction-home .fh{
+  padding:8px 16px; border:1px solid #4a3f2c; border-radius:20px;
+  background:rgba(0,0,0,.3); font-size:12.5px; color:#b8a983;
+  display:flex; align-items:center; gap:8px;
+}
+.faction-home .fh b{ color:var(--gold2); }
+</style>
+<style>
+/* ============================================================
+   页面三：侠客（角色）— 详情内含武功
+   ============================================================ */
+.hero-layout{ display:grid; grid-template-columns:1fr 520px; gap:16px; }
+.hero-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-content:start; }
+.hero-card{
+  border:1px solid #4a3f2c;
+  border-radius:8px;
+  padding:12px 10px 10px;
+  text-align:center;
+  cursor:pointer;
+  background:linear-gradient(180deg,#282114,#1d1710);
+  transition:all .18s;
+  position:relative;
+}
+.hero-card:hover{ transform:translateY(-3px); border-color:var(--gold); box-shadow:0 6px 16px rgba(0,0,0,.5); }
+.hero-card.selected{ border-color:var(--gold2); box-shadow:0 0 14px rgba(232,201,90,.35); }
+.hero-card .havatar{
+  width:62px; height:62px; margin:0 auto 8px;
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; font-weight:bold; color:#fff;
+  border:2px solid rgba(255,255,255,.25);
+  text-shadow:0 2px 3px rgba(0,0,0,.5);
+}
+.hero-card .hname{ font-size:16px; letter-spacing:2px; }
+.hero-card .hmeta{ font-size:11px; color:#9c8f6e; margin:4px 0 6px; line-height:1.6; }
+.hero-card .stars{ color:var(--gold2); font-size:12px; letter-spacing:2px; }
+.hero-card .in-team{
+  position:absolute; top:6px; left:6px;
+  font-size:10px; background:var(--red); color:#fff;
+  padding:1px 6px; border-radius:3px; letter-spacing:1px;
+}
+.hero-card .q-frame{ position:absolute; inset:0; border-radius:8px; pointer-events:none; }
+.hero-card[data-q="5"] .q-frame{ box-shadow:inset 0 0 0 1px rgba(224,123,57,.7); }
+.hero-card[data-q="4"] .q-frame{ box-shadow:inset 0 0 0 1px rgba(142,91,166,.6); }
+.hero-detail{ position:sticky; top:0; }
+.hero-detail .hd-head{ display:flex; gap:14px; align-items:center; margin-bottom:12px; }
+.hero-detail .hd-avatar{
+  width:76px; height:76px; border-radius:10px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; font-weight:bold; color:#fff;
+  border:2px solid var(--gold);
+}
+.hero-detail .hd-title{ flex:1; }
+.hero-detail .hd-title h3{ font-size:22px; letter-spacing:3px; display:flex; align-items:center; gap:8px; }
+.hero-detail .hd-title .career-line{ font-size:12.5px; color:#9c8f6e; margin-top:4px; letter-spacing:1px; }
+.attr-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:10px 0; }
+.attr-grid .attr{
+  text-align:center; padding:7px 2px;
+  background:rgba(0,0,0,.3); border:1px solid #3a3226; border-radius:6px;
+}
+.attr-grid .attr small{ display:block; font-size:11px; color:#9c8f6e; letter-spacing:2px; }
+.attr-grid .attr b{ font-size:16px; color:var(--paper); }
+.talent-box{
+  background:rgba(201,162,39,.08); border:1px solid #6a5a35; border-radius:6px;
+  padding:8px 12px; font-size:12.5px; line-height:1.8; color:#d8c9a5;
+}
+.talent-box b{ color:var(--gold2); }
+.skill-slot-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.learned-slot{
+  border:1px dashed #4a3f2c; border-radius:6px;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+  font-size:11px; color:#b8a983; padding:6px 8px;
+  background:rgba(0,0,0,.25); line-height:1.5;
+  min-height:56px;
+}
+.learned-slot.filled{ border-style:solid; border-color:#6a5a35; cursor:default; }
+.learned-slot.filled:hover{ border-color:var(--gold2); }
+.learned-slot .ls-name{ font-size:12.5px; color:var(--paper); letter-spacing:1px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.learned-slot .ls-info{ color:#8a8175; font-size:10px; margin-top:2px; }
+.learned-slot .lv{ color:var(--gold2); font-size:10.5px; }
+.learned-slot.empty{ color:#5a5244; align-items:center; }
+/* 武功图鉴 */
+.skill-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.skill-table th{
+  text-align:left; padding:6px 8px;
+  background:#201a10; color:var(--gold2);
+  letter-spacing:2px; font-weight:normal; font-size:12px;
+  border-bottom:1px solid #4a3f2c;
+}
+.skill-table td{ padding:6px 8px; border-bottom:1px solid rgba(74,63,44,.4); vertical-align:middle; }
+.skill-table tr:hover td{ background:rgba(201,162,39,.05); }
+.skill-table tr.locked td{ opacity:.45; }
+.cd-badge{
+  display:inline-block; min-width:52px; text-align:center;
+  padding:1px 7px; border-radius:10px;
+  background:rgba(74,127,165,.15); border:1px solid #3a5a75;
+  color:#7fb3d5; font-size:11px;
+}
+.learn-state{ font-size:12px; white-space:nowrap; }
+.learn-state.ok{ color:#7dc494; }
+.learn-state.no{ color:#e0705f; }
+.codex-note{ font-size:11.5px; color:#8a8175; line-height:1.8; margin-bottom:8px; }
+.codex-scroll{ max-height:280px; overflow-y:auto; border:1px solid #3a3226; border-radius:6px; }
+</style>
+<style>
+/* ============================================================
+   页面四：职业树
+   ============================================================ */
+.career-tree{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.career-path{
+  border:1px solid #4a3f2c; border-radius:8px;
+  background:linear-gradient(180deg,#262016,#1c1610);
+  padding:12px;
+}
+.career-path .cp-head{
+  display:flex; align-items:center; gap:10px; margin-bottom:12px;
+  padding-bottom:8px; border-bottom:1px solid #3a3226;
+}
+.career-path .cp-icon{
+  width:38px; height:38px; border-radius:8px; flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:19px;
+  border:1px solid rgba(255,255,255,.2);
+}
+.career-path .cp-name{ font-size:17px; letter-spacing:3px; }
+.career-path .cp-name small{ display:block; font-size:10.5px; color:#9c8f6e; letter-spacing:1px; margin-top:2px; }
+.cp-stage{ display:flex; align-items:center; gap:8px; padding:6px 6px; border-radius:6px; transition:background .15s; }
+.cp-stage:hover{ background:rgba(201,162,39,.06); }
+.cp-stage .stage-node{
+  width:30px; height:30px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; border:2px solid #4a3f2c;
+  background:#141009; color:#7a7263;
+}
+.cp-stage.unlocked .stage-node{ border-color:var(--gold); color:var(--gold2); background:rgba(201,162,39,.12); }
+.cp-stage.current .stage-node{ border-color:var(--red); color:#fff; background:var(--red); box-shadow:0 0 10px rgba(176,58,46,.6); }
+.cp-stage .stage-info{ flex:1; font-size:13.5px; }
+.cp-stage .stage-info small{ display:block; font-size:10.5px; color:#8a8175; margin-top:1px; }
+.cp-stage .stage-tags{ display:flex; gap:3px; flex-wrap:wrap; max-width:110px; justify-content:flex-end; }
+.cp-stage .mini-tag{
+  font-size:9.5px; padding:0 5px; border-radius:3px;
+  background:rgba(74,127,165,.15); border:1px solid #3a5a75; color:#7fb3d5;
+  letter-spacing:1px;
+}
+.cp-stage .stage-node-lock{ font-size:10px; color:#5a5244; }
+.cp-connector{ color:#4a3f2c; font-size:11px; line-height:1; margin:1px 0 1px 14px; }
+.tag-explain{
+  margin-top:16px;
+  background:rgba(74,127,165,.08); border:1px solid #3a5a75; border-radius:8px;
+  padding:12px 16px; font-size:13px; line-height:2; color:#b8c9d8;
+}
+.tag-explain b{ color:var(--gold2); }
+.tag-explain .ex-flow{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin-top:6px; font-size:12.5px;
+}
+.tag-explain .ex-flow .step{
+  padding:3px 10px; background:rgba(0,0,0,.3); border:1px solid #4a3f2c; border-radius:5px;
+}
+</style>
+<style>
+/* ============================================================
+   关卡内部板块：城市 / 派系（通用样式）
+   ============================================================ */
+.inner-tabs{ display:flex; gap:10px; margin-bottom:14px; }
+.inner-tab{
+  flex:1; text-align:center; padding:12px 8px;
+  border:1px solid #4a3f2c; border-radius:8px;
+  background:#1d1710; cursor:pointer;
+  transition:all .18s;
+}
+.inner-tab:hover{ border-color:#7a6a45; transform:translateY(-2px); }
+.inner-tab.active{
+  border-color:var(--gold);
+  background:linear-gradient(180deg,rgba(201,162,39,.15),rgba(201,162,39,.03));
+  box-shadow:0 0 14px rgba(201,162,39,.2);
+}
+.inner-tab .bt-icon{ font-size:24px; }
+.inner-tab .bt-name{ font-size:15px; letter-spacing:3px; margin-top:5px; }
+.inner-tab .bt-desc{ font-size:11px; color:#9c8f6e; margin-top:3px; letter-spacing:1px; }
+.inner-panel{ display:none; animation:pageIn .25s; }
+.inner-panel.active{ display:block; }
+.building-tabs{ display:flex; gap:10px; margin-bottom:14px; }
+.building-tab{
+  flex:1; text-align:center; padding:12px 8px;
+  border:1px solid #4a3f2c; border-radius:8px;
+  background:#1d1710; cursor:pointer;
+  transition:all .18s;
+}
+.building-tab:hover{ border-color:#7a6a45; transform:translateY(-2px); }
+.building-tab.active{
+  border-color:var(--gold);
+  background:linear-gradient(180deg,rgba(201,162,39,.15),rgba(201,162,39,.03));
+  box-shadow:0 0 14px rgba(201,162,39,.2);
+}
+.building-tab .bt-icon{ font-size:26px; }
+.building-tab .bt-name{ font-size:16px; letter-spacing:4px; margin-top:5px; }
+.building-tab .bt-desc{ font-size:11px; color:#9c8f6e; margin-top:3px; letter-spacing:1px; }
+.building-panel{ display:none; animation:pageIn .25s; }
+.building-panel.active{ display:block; }
+.recruit-list{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.recruit-card{
+  border:1px solid #4a3f2c; border-radius:8px; padding:12px;
+  background:linear-gradient(180deg,#282114,#1d1710); text-align:center;
+}
+.recruit-card .rc-avatar{
+  width:54px; height:54px; margin:0 auto 8px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:bold; color:#fff;
+  border:2px solid rgba(255,255,255,.2);
+}
+.recruit-card .rc-name{ font-size:15px; letter-spacing:2px; }
+.recruit-card .rc-desc{ font-size:11px; color:#9c8f6e; line-height:1.7; margin:6px 0 8px; min-height:36px; }
+.equip-forge{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.equip-row{
+  display:flex; align-items:center; gap:10px;
+  padding:8px 10px; border:1px solid #3a3226; border-radius:6px;
+  margin-bottom:8px; background:rgba(0,0,0,.25);
+}
+.equip-row .eq-icon{
+  width:38px; height:38px; border-radius:6px; flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:19px;
+  border:1.5px solid;
+}
+.equip-row .eq-info{ flex:1; font-size:13px; }
+.equip-row .eq-info small{ display:block; font-size:10.5px; color:#9c8f6e; margin-top:2px; }
+.q-white{ color:#cfcfcf; border-color:#8a8a8a !important; }
+.q-green{ color:#63c583; border-color:#3f7d5d !important; }
+.q-blue{ color:#6aa5cc; border-color:#4a7fa5 !important; }
+.q-purple{ color:#b586cc; border-color:#8e5ba6 !important; }
+.q-orange{ color:#f5a04a; border-color:#e07b39 !important; }
+.forge-target{
+  border:1px dashed #6a5a35; border-radius:8px; padding:14px; text-align:center;
+  background:rgba(201,162,39,.05);
+}
+.forge-target .ft-icon{
+  width:64px; height:64px; margin:6px auto; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+  border:2px solid #e07b39; color:#f5a04a;
+  background:rgba(0,0,0,.3);
+}
+.enhance-bar{ display:flex; gap:3px; justify-content:center; margin:8px 0; flex-wrap:wrap; }
+.enhance-bar i{
+  width:14px; height:8px; border-radius:2px; background:#3a3226;
+}
+.enhance-bar i.on{ background:var(--gold); box-shadow:0 0 4px rgba(201,162,39,.6); }
+.gym-layout{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.gym-skill-row{
+  display:flex; align-items:center; gap:10px;
+  padding:8px 10px; border:1px solid #3a3226; border-radius:6px;
+  margin-bottom:8px; background:rgba(0,0,0,.25); font-size:13px;
+}
+.gym-skill-row .gs-info{ flex:1; }
+.gym-skill-row .gs-info small{ display:block; font-size:10.5px; color:#9c8f6e; margin-top:2px; }
+/* 派系板块 */
+.faction-head-banner{
+  display:flex; align-items:center; gap:14px;
+  padding:12px 16px; margin-bottom:12px;
+  background:rgba(201,162,39,.08); border:1px solid #6a5a35; border-radius:8px;
+}
+.faction-head-banner .fh-icon{
+  width:46px; height:46px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:23px; border:2px solid rgba(255,255,255,.25);
+}
+.faction-head-banner .fh-name{ font-size:19px; letter-spacing:4px; }
+.faction-head-banner .fh-name small{ display:block; font-size:11px; color:#9c8f6e; letter-spacing:1px; margin-top:3px; }
+.faction-head-banner .fh-contrib{ margin-left:auto; font-size:13px; color:#b8a983; }
+.faction-head-banner .fh-contrib b{ font-size:21px; color:var(--gold2); }
+.faction-cols{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.task-row{
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px; border:1px solid #3a3226; border-radius:6px;
+  margin-bottom:8px; background:rgba(0,0,0,.25); font-size:13px;
+}
+.task-row .tk-info{ flex:1; }
+.task-row .tk-info small{ display:block; font-size:11px; color:#9c8f6e; margin-top:2px; }
+.task-row .tk-prog{ width:110px; }
+.task-row .tk-prog .bar{ height:9px; }
+.task-row .tk-prog small{ font-size:10px; color:#9c8f6e; display:block; text-align:center; margin-top:2px; }
+.shop-row{
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px; border:1px solid #3a3226; border-radius:6px;
+  margin-bottom:8px; background:rgba(0,0,0,.25); font-size:13px;
+}
+.shop-row .sp-icon{
+  width:36px; height:36px; border-radius:6px; flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:17px;
+  border:1px solid #5a4a2c; background:#141009;
+}
+.shop-row .sp-info{ flex:1; }
+.shop-row .sp-info small{ display:block; font-size:10.5px; color:#9c8f6e; margin-top:2px; }
+.shop-row .cost{ color:var(--gold2); font-size:12px; white-space:nowrap; }
+</style>
+<style>
+/* ============================================================
+   页面五：背包 + 补充玩法
+   ============================================================ */
+.bag-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+.bag-tab{
+  padding:7px 20px; border:1px solid #4a3f2c; border-radius:20px;
+  background:#1d1710; cursor:pointer; font-size:13.5px; letter-spacing:2px;
+  color:#9c8f6e; transition:all .15s;
+}
+.bag-tab:hover{ color:var(--paper); }
+.bag-tab.active{ border-color:var(--gold); color:var(--gold2); background:rgba(201,162,39,.1); }
+.bag-grid{ display:grid; grid-template-columns:repeat(8,1fr); gap:8px; }
+.bag-item{
+  aspect-ratio:.92; border:1px solid #3a3226; border-radius:6px;
+  background:rgba(0,0,0,.3);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .15s; position:relative;
+  padding:4px;
+}
+.bag-item:hover{ border-color:var(--gold); transform:translateY(-2px); }
+.bag-item .bi-icon{ font-size:24px; }
+.bag-item .bi-name{ font-size:10px; color:#b8a983; margin-top:3px; text-align:center; line-height:1.3; transform:scale(.92); }
+.bag-item .bi-count{
+  position:absolute; right:3px; bottom:2px;
+  font-size:10px; color:var(--paper); text-shadow:0 1px 2px #000;
+}
+.bag-item.empty{ opacity:.35; cursor:default; }
+.bag-item.empty:hover{ transform:none; border-color:#3a3226; }
+.extra-panels{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:16px; }
+.offline-pop{
+  background:linear-gradient(180deg,#efe3c8,#e0d0a8);
+  color:#3a2f1d; border:2px solid var(--gold); border-radius:10px;
+  padding:18px; text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.offline-pop h4{ font-size:19px; letter-spacing:5px; color:#8e2b21; margin-bottom:8px; }
+.offline-pop .op-time{ font-size:12.5px; color:#6a5a40; margin-bottom:10px; }
+.offline-pop .op-rewards{ font-size:13.5px; line-height:2.2; }
+.offline-pop .op-rewards b{ color:#8e2b21; }
+.meridian-wrap{ text-align:center; }
+.meridian-stars{ font-size:22px; letter-spacing:6px; color:var(--gold2); margin:6px 0; }
+.meridian-stars .off{ color:#4a4236; }
+.meridian-diagram{
+  display:flex; justify-content:center; gap:6px; margin:10px 0;
+}
+.meridian-diagram i{
+  width:26px; height:26px; border-radius:50%;
+  border:1.5px solid #5a4a2c; background:#141009;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; color:#7a7263;
+}
+.meridian-diagram i.open{ border-color:var(--gold); color:var(--gold2); background:rgba(201,162,39,.12); }
+.adv-event{
+  border:1px solid #5a4a2c; border-radius:8px; padding:12px;
+  background:linear-gradient(160deg,#262016,#1c1610); margin-bottom:10px;
+}
+.adv-event .ae-head{ display:flex; align-items:center; gap:8px; font-size:14.5px; letter-spacing:2px; color:var(--gold2); }
+.adv-event .ae-body{ font-size:12px; color:#b8a983; line-height:1.8; margin-top:6px; }
+.adv-event .ae-choices{ display:flex; gap:8px; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<!-- ==================== 设计说明（默认折叠） ==================== -->
+<div class="design-note" id="designNote">
+  <div class="design-note-bar" onclick="document.getElementById('designNote').classList.toggle('open')">
+    <span class="arrow">▶</span> 📜 设计说明 · 核心循环与系统设计意图（点击展开 / 收起）
+  </div>
+  <div class="design-note-body">
+    <p><b>核心循环：</b>「挂机战斗 → 获得经验/银两/掉落 → 招募侠客、学习武功、强化装备 → 推关解锁新城市与更强收益 → 更强的队伍挑战更高关卡」。战斗全自动进行，玩家的乐趣来自<b>战前Build搭配</b>（阵型前后排、每个侠客20格已学武功池与职业标签匹配）与<b>战后资源分配</b>（招募谁、学什么、强化哪件）。</p>
+    <p><b>职业标签体系</b>是本作的深度核心：6条职业路线各5阶，进阶后累积「剑一、剑二……」职业标签；武功学习校验标签而非等级，让"进阶"直接决定"能学什么武功"，形成清晰的成长目标与收集驱动。每个侠客最多学20门武功，战斗中按已学顺序循环释放、CD 未好则普通攻击——武功池的广度与等级就是战力本身。</p>
+    <p><b>关卡即世界：</b>30个大关卡构成江湖地图，每个大关卡内部包含「10个小关卡 + 本章城市 + 驻扎派系」三位一体：小关卡产出挂机收益；城市承接落脚点仪式感（客栈招募本章特色侠客、铁匠铺打造强化、武馆学通用武功）；派系按地域驻扎（如少林驻少林寺、丐帮驻襄阳城），提供日常任务→贡献点→兑换限定侠客与武功的活跃目标。离线收益、经脉升星、奇遇秘境、背包分别覆盖放置、长线养成、随机惊喜与资源管理。</p>
+    <p><b>原型说明：</b>本页面为纯前端高保真原型，战斗为写死数据的自动模拟（血条扣减、日志滚动、武功特效提示、胜负循环），关卡两层视图、侠客详情、背包筛选均可交互，用于验证 UI 信息密度与玩法表达。</p>
+  </div>
+</div>
+
+<!-- ==================== 游戏窗口 ==================== -->
+<div class="game-window">
+
+  <!-- 顶部标题栏 -->
+  <div class="topbar">
+    <div class="game-title"><span class="seal">蛋</span>蛋蛋江湖<small>·挂机版·高保真原型</small></div>
+    <div class="currency-bar">
+      <div class="player-mini">
+        <div class="avatar">侠</div>
+        <div class="info"><b>蛋蛋掌门</b><br>Lv.42 · 战力 128,600</div>
+      </div>
+      <div class="currency yb"><span class="icon">宝</span><span id="curYb">6,888</span><span class="add">+</span></div>
+      <div class="currency yl"><span class="icon">银</span><span id="curYl">1,286,000</span><span class="add">+</span></div>
+      <div class="currency tl"><span class="icon">体</span><span id="curTl">118/120</span><span class="add">+</span></div>
+    </div>
+  </div>
+
+  <!-- 功能导航 -->
+  <div class="navbar" id="navbar">
+    <div class="nav-item active" data-page="battle"><span class="nicon">⚔️</span>挂机战斗</div>
+    <div class="nav-item" data-page="chapter"><span class="nicon">🗺️</span>关卡</div>
+    <div class="nav-item" data-page="hero"><span class="nicon">🦸</span>侠客</div>
+    <div class="nav-item" data-page="career"><span class="nicon">🌳</span>职业</div>
+    <div class="nav-item" data-page="bag"><span class="nicon">🎒</span>背包</div>
+  </div>
+
+  <div class="pages">
+
+    <!-- ============ 页面一：挂机战斗 ============ -->
+    <div class="page active" id="page-battle">
+      <div class="scroll-title"><h2>挂 机 战 斗</h2><span class="sub">自动战斗 · 前排放逐 · 后排输出</span></div>
+      <div class="battle-wrap">
+        <!-- 左：战场 -->
+        <div>
+          <div class="battle-field" id="battleField">
+            <div class="scene" id="battleScene">第三章·临安城 第7关 · 西湖断桥</div>
+            <div class="vs-round">第<b id="roundNum">1</b>回合</div>
+            <!-- 我方（左） -->
+            <div class="formation" id="myFormation" style="position:absolute;left:20px;top:56px;"></div>
+            <!-- 敌方（右） -->
+            <div class="formation enemy-side" id="foeFormation" style="position:absolute;right:20px;top:56px;"></div>
+            <!-- 结算浮层 -->
+            <div class="settlement" id="settlement">
+              <div class="inner">
+                <h3 id="settleTitle">胜 利</h3>
+                <div class="reward-line" id="settleRewards"></div>
+                <div class="mt12"><span class="btn" onclick="Battle.nextBattle()">继续挂机</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="battle-status">
+            <span>当前进度：<b id="battleProgress">第三章 · 第7关</b></span>
+            <span>今日已挂机：<b id="battleCount">37</b> 场</span>
+            <span><span class="btn small ghost" id="pauseBtn" onclick="Battle.toggle()">⏸ 暂停</span></span>
+          </div>
+          <div class="idle-income">
+            <div class="inc">挂机经验<b id="incExp">+1,240/分</b></div>
+            <div class="inc">挂机银两<b id="incYl">+3,600/分</b></div>
+            <div class="inc">装备掉落<b>约 2 件/时</b></div>
+          </div>
+        </div>
+        <!-- 右：战斗日志 -->
+        <div class="battle-log-box">
+          <div class="battle-log-head">
+            <span>⚔ 战斗日志</span>
+            <span class="speed">
+              <span class="btn small ghost" id="speedBtn" onclick="Battle.toggleSpeed()">速度 ×1</span>
+            </span>
+          </div>
+          <div class="battle-log" id="battleLog"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 页面二：关卡（两层结构） ============ -->
+    <div class="page" id="page-chapter">
+
+      <!-- 第一层：大关卡列表 -->
+      <div id="chapterListView">
+        <div class="scroll-title"><h2>江 湖 关 卡</h2><span class="sub">三十章 · 点击进入章节内部：小关卡 / 城市 / 派系</span></div>
+        <div class="chapter-layout">
+          <div id="chapterList"></div>
+          <div>
+            <div class="card progress-summary">
+              <div class="panel-title">当前进度</div>
+              <div class="big-progress"><b id="progText">第三章 · 第 7 关</b></div>
+              <div class="bar exp" style="height:14px;"><i id="progBar" style="width:11%"></i><span class="txt" id="progBarTxt">总进度 67/300 关</span></div>
+              <div class="mt12" style="font-size:12.5px;color:#b8a983;line-height:2;">
+                当前挂机点：<span class="gold-t">西湖断桥</span><br>
+                经验收益：<span class="gold-t">+1,240 / 分钟</span><br>
+                银两收益：<span class="gold-t">+3,600 / 分钟</span><br>
+                特色掉落：<span class="blue-t">精铁剑穗 · 蓝装备 · 招募令碎片</span>
+              </div>
+              <div class="boss-tip">
+                ⚠ 大关卡通关条件：击败每章 <b>第10关</b> 的守关 BOSS。已通关章节收益减半，可随时回刷材料。克制型 BOSS 需要使用对应派系武功方可破防。每章内部含城市与驻扎派系，点击进入查看。
+              </div>
+              <div class="mt12 flex gap8">
+                <span class="btn gold" style="flex:1;text-align:center;" onclick="ChapterDetail.open(3)">进入第三章</span>
+                <span class="btn ghost">扫荡已通关卡</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第二层：大关卡内部 -->
+      <div id="chapterDetailView" style="display:none;">
+        <div class="chapter-detail-head">
+          <div class="cd-icon" id="cdIcon">🏯</div>
+          <div class="cd-name" id="cdName">第三章 · 临安城<small id="cdSub">商旅繁华之地</small></div>
+          <div class="cd-meta" id="cdMeta"></div>
+          <span class="btn ghost back-btn" onclick="ChapterDetail.close()">◀ 返回关卡列表</span>
+        </div>
+        <div class="inner-tabs" id="chapterInnerTabs">
+          <div class="inner-tab active" data-itab="levels"><div class="bt-icon">⚔️</div><div class="bt-name">小关卡</div><div class="bt-desc">本章 10 关 · 挂机挑战</div></div>
+          <div class="inner-tab" data-itab="city"><div class="bt-icon">🏯</div><div class="bt-name">城市</div><div class="bt-desc">客栈 · 铁匠铺 · 武馆</div></div>
+          <div class="inner-tab" data-itab="faction"><div class="bt-icon">🏴</div><div class="bt-name">派系</div><div class="bt-desc">日常任务 · 贡献兑换</div></div>
+        </div>
+        <!-- 小关卡 -->
+        <div class="inner-panel active" id="ip-levels">
+          <div class="card">
+            <div class="panel-title" id="levelsTitle">本章小关卡</div>
+            <div class="sub-grid" id="detailSubGrid"></div>
+            <div class="mt12 flex gap8">
+              <span class="btn gold">挑战当前关</span>
+              <span class="btn">挑战守关 BOSS</span>
+              <span class="btn ghost">扫荡已通关 ×10</span>
+            </div>
+          </div>
+        </div>
+        <!-- 城市 -->
+        <div class="inner-panel" id="ip-city">
+          <div class="building-tabs" id="buildingTabs">
+            <div class="building-tab active" data-building="inn"><div class="bt-icon">🍶</div><div class="bt-name">客栈 · 酒馆</div><div class="bt-desc">招募本章特色侠客</div></div>
+            <div class="building-tab" data-building="forge"><div class="bt-icon">⚒️</div><div class="bt-name">铁匠铺</div><div class="bt-desc">打造 / 强化装备 +1~+15</div></div>
+            <div class="building-tab" data-building="gym"><div class="bt-icon">🥋</div><div class="bt-name">武馆</div><div class="bt-desc">招募侠客 · 学习通用武功</div></div>
+          </div>
+          <div id="buildingPanels"></div>
+        </div>
+        <!-- 派系 -->
+        <div class="inner-panel" id="ip-faction">
+          <div id="factionPanel"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 页面三：侠客 ============ -->
+    <div class="page" id="page-hero">
+      <div class="scroll-title"><h2>侠 客 录</h2><span class="sub">点击卡片查看详情与武功 · 共收集 9/86</span></div>
+      <div class="hero-layout">
+        <div class="hero-grid" id="heroGrid"></div>
+        <div class="hero-detail" id="heroDetail"></div>
+      </div>
+    </div>
+
+    <!-- ============ 页面四：职业 ============ -->
+    <div class="page" id="page-career">
+      <div class="scroll-title"><h2>职 业 路 线</h2><span class="sub">六条路线 · 每条五阶 · 20级满可进阶</span></div>
+      <div class="career-tree" id="careerTree"></div>
+      <div class="tag-explain">
+        <b>🏷 职业标签机制说明</b><br>
+        每条职业路线拥有独立标签体系（如剑系：剑一 → 剑五）。侠客进阶后<b>累积</b>标签：例如「剑客」拥有标签
+        <b>[剑一, 剑二]</b>，「剑圣」拥有 <b>[剑一, 剑二, 剑三, 剑四]</b>。<br>
+        武功学习校验标签而非等级：《独孤九剑》要求标签 <b>[剑四]</b>，即侠客至少进阶至「剑圣」方可学习；多系武功可要求复合标签。
+        <div class="ex-flow">
+          <span class="step">剑童 <span class="tag sword">剑一</span></span> ➜
+          <span class="step">剑客 <span class="tag sword">剑一·二</span></span> ➜
+          <span class="step">剑侠 <span class="tag sword">剑一·二·三</span></span> ➜
+          <span class="step">剑圣 <span class="tag sword">剑一~四</span></span> ➜
+          <span class="step">剑神 <span class="tag sword">剑一~五</span></span>
+          <span style="color:#8a8175;">—— 当前「蛋蛋侠客」为 <b class="gold-t">剑侠（3阶）</b>，可学需 [剑三] 及以下标签的剑法</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 页面五：背包 + 补充玩法 ============ -->
+    <div class="page" id="page-bag">
+      <div class="scroll-title"><h2>行 囊 背 包</h2><span class="sub">装备 · 材料 · 招募令 · 武学心得</span></div>
+      <div class="bag-tabs" id="bagTabs">
+        <div class="bag-tab active" data-bag="all">全部</div>
+        <div class="bag-tab" data-bag="equip">装备</div>
+        <div class="bag-tab" data-bag="mat">材料</div>
+        <div class="bag-tab" data-bag="token">招募令</div>
+        <div class="bag-tab" data-bag="book">武学心得</div>
+      </div>
+      <div class="bag-grid" id="bagGrid"></div>
+
+      <div class="extra-panels">
+        <!-- 离线收益结算 -->
+        <div class="offline-pop">
+          <h4>🌙 离 线 结 算</h4>
+          <div class="op-time">你离线了 <b>8 小时 23 分钟</b>，侠客们仍在江湖奋战……</div>
+          <div class="op-rewards">
+            挂机经验 <b>+596,400</b><br>
+            银两 <b>+1,728,000</b><br>
+            装备掉落 <b>蓝装 ×4 · 绿装 ×11</b><br>
+            奇遇触发 <b>2 次</b>（详见奇遇录）
+          </div>
+          <div class="mt8"><span class="btn gold small">双倍领取（元宝×20）</span> <span class="btn small">直接领取</span></div>
+        </div>
+        <!-- 经脉 / 突破 -->
+        <div class="card meridian-wrap">
+          <div class="panel-title" style="text-align:left;">经脉突破 · 蛋蛋侠客</div>
+          <div class="meridian-stars">★★★★<span class="off">★</span></div>
+          <div style="font-size:12px;color:#9c8f6e;">四星侠客 · 打通 5/8 奇经八脉</div>
+          <div class="meridian-diagram">
+            <i class="open">任</i><i class="open">督</i><i class="open">冲</i><i class="open">带</i><i class="open">阴</i><i>阳</i><i>维</i><i>跷</i>
+          </div>
+          <div style="font-size:12px;color:#b8a983;line-height:1.9;">
+            下一脉「阳维脉」：气血 <span class="green-t">+12%</span> 攻击 <span class="green-t">+8%</span><br>
+            消耗：经脉丹 ×30 · 银两 ×200,000
+          </div>
+          <div class="mt8"><span class="btn small">打通经脉</span> <span class="btn small gold">突破升星</span></div>
+        </div>
+        <!-- 奇遇 / 秘境 -->
+        <div>
+          <div class="adv-event">
+            <div class="ae-head">🎲 奇遇 · 悬崖下的山洞</div>
+            <div class="ae-body">蛋蛋侠客追赶一只偷烧鸡的黄狗，意外跌落悬崖，发现一处刻满剑痕的古老山洞……</div>
+            <div class="ae-choices"><span class="btn small gold">进洞探查（获剑法秘籍）</span><span class="btn small ghost">安全离开</span></div>
+          </div>
+          <div class="adv-event">
+            <div class="ae-head">🏔 秘境 · 琅嬛福地 <span class="tag neutral">限时 2 天</span></div>
+            <div class="ae-body">每层守卫掉落「武学心得」，通关 10 层可获橙色武功残页。当前进度：第 6 层。</div>
+            <div class="ae-choices"><span class="btn small">继续挑战</span><span class="btn small ghost">扫荡 1-5 层</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   蛋蛋江湖·挂机版 — 数据层（全部写死的示例数据）
+   ============================================================ */
+
+/* ---------- 30 个大关卡 ---------- */
+const CHAPTERS = [
+  "牛家村","嘉兴烟雨楼","临安城","少林寺","华山脚下",
+  "终南山","襄阳城","桃花岛","白驼山庄","姑苏燕子坞",
+  "曼陀山庄","无量山","大理皇宫","擂鼓山","缥缈峰灵鹫宫",
+  "雁门关","黑木崖","梅庄","嵩山","武当山",
+  "峨眉山","青城山","昆仑山","光明顶","侠客岛",
+  "神龙岛","辽国上京","西夏皇宫","泰山之巅","紫禁之巅"
+];
+const CHAPTER_BLURBS = [
+  "故事开始的小村庄","江南水乡 · 烟雨朦胧","商旅繁华之地","千年古刹 · 武学圣地","奇险天下第一山",
+  "古墓派隐居之所","兵家必争的雄城","东邪的海上桃源","白驼山毒蛇横行","慕容氏的燕子坞",
+  "茶花漫山的山庄","无量剑派禁地","大理段氏所在","珍珑棋局之地","天山灵鹫宫",
+  "雁门关上胡笳声","日月神教总坛","江南四友隐居处","五岳剑派之首","太极两仪之山",
+  "巾帼不让须眉","蜀中险地 · 暗器横行","昆仑三圣坳","明教光明圣火","赏善罚恶之岛",
+  "神龙教盘踞之地","北国铁骑之都","大漠孤烟皇城","登泰山而小天下","月圆之夜 · 决战之巅"
+];
+const SUB_NAMES = ["村口","官道","市集","渡口","山林","古寺","峡谷","断桥","城楼","BOSS·总坛"];
+const CHAPTER_ICONS = ["🏡","🌧","🏯","🛕","⛰","🌲","🏰","🌸","🐍","🛶","🏞","🕳","👑","🥁","🦅","🏹","🌑","♣","⛩","☯","🙏","⚔","❄","🔥","🏝","🐉","🐎","🏜","🌄","🌆"];
+const CURRENT_CHAPTER = 3;   // 当前打到第三章
+const CURRENT_SUB = 7;       // 第7关
+const CH_NUM = ["一","二","三","四","五","六","七","八","九","十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十","二十一","二十二","二十三","二十四","二十五","二十六","二十七","二十八","二十九","三十"];
+const SUB_NUM = ["一","二","三","四","五","六","七","八","九","十"];
+
+/* ---------- 派系驻扎分布：章节号 → 派系 ---------- */
+const FACTION_BY_CHAPTER = { 4:"shaolin", 7:"gaibang", 20:"wudang", 22:"tangmen" };
+
+/* ---------- 职业路线（6条 × 5阶） ---------- */
+const CAREERS = [
+  { key:"sword", name:"剑系", icon:"🗡", color:"#4a7fa5", stages:["剑童","剑客","剑侠","剑圣","剑神"], tag:"剑" },
+  { key:"blade", name:"刀系", icon:"🔪", color:"#e07b39", stages:["刀徒","刀客","刀霸","刀皇","刀神"], tag:"刀" },
+  { key:"fist",  name:"拳系", icon:"👊", color:"#c9a227", stages:["武僧","拳师","宗师","武圣","拳神"], tag:"拳" },
+  { key:"med",   name:"医毒系", icon:"🌿", color:"#3f7d5d", stages:["药童","医师","神医","圣手","药王"], tag:"医" },
+  { key:"dart",  name:"暗器系", icon:"🎯", color:"#8e5ba6", stages:["飞贼","刺客","影杀","夜帝","魅影天尊"], tag:"影" },
+  { key:"tao",   name:"玄门系", icon:"☯", color:"#5a6ea0", stages:["道童","道士","真人","天师","玄尊"], tag:"玄" }
+];
+const CN_NUM = ["一","二","三","四","五"];
+
+/* ---------- 武功库（15门） ---------- */
+/* req: 需要的标签（任一满足即可）；tc 对应 tag 样式 */
+const SKILLS = [
+  { id:1,  name:"罗汉拳",     school:"少林",   type:"拳法", tc:"fist",  coef:"攻×1.2 单体",  cd:1, req:["拳一"], maxLv:20, desc:"少林入门拳法，刚猛朴实，拳拳到肉。" },
+  { id:2,  name:"烈火刀法",   school:"铁刀门", type:"刀法", tc:"blade", coef:"攻×1.35 单体", cd:2, req:["刀一"], maxLv:20, desc:"刀势如火，附带灼烧，每回合损失少量气血。" },
+  { id:3,  name:"金针渡穴",   school:"药王谷", type:"医术", tc:"med",   coef:"回复 气血×0.25",cd:3, req:["医一"], maxLv:20, desc:"以金针刺激穴位，治疗气血最低的友方。" },
+  { id:4,  name:"唐门飞刀",   school:"唐门",   type:"暗器", tc:"dart",  coef:"攻×1.1 后排",  cd:2, req:["影一"], maxLv:20, desc:"百步之外取人首级，优先攻击敌方后排。" },
+  { id:5,  name:"梯云纵",     school:"武当",   type:"轻功", tc:"tao",   coef:"速度+30% 2回合",cd:4, req:["玄一"], maxLv:20, desc:"纵身如登云梯，大幅提升自身出手速度。" },
+  { id:6,  name:"打狗棒法",   school:"丐帮",   type:"拳法", tc:"fist",  coef:"攻×1.5 单体",  cd:3, req:["拳二"], maxLv:20, desc:"丐帮镇帮绝技，招式刁钻，专打破绽。" },
+  { id:7,  name:"血刀刀法",   school:"血刀门", type:"刀法", tc:"blade", coef:"攻×1.8 吸血20%",cd:3, req:["刀二"], maxLv:20, desc:"刀刀见血，将部分伤害转化为自身气血。" },
+  { id:8,  name:"满天花雨",   school:"唐门",   type:"暗器", tc:"dart",  coef:"攻×0.9 全体",  cd:4, req:["影二"], maxLv:20, desc:"暗器如花雨洒落，同时攻击敌方全体。" },
+  { id:9,  name:"千蛛万毒手", school:"五毒教", type:"毒功", tc:"med",   coef:"攻×1.2 中毒",  cd:3, req:["医二"], maxLv:20, desc:"掌带剧毒，令目标每回合持续损失气血。" },
+  { id:10, name:"太极剑法",   school:"武当",   type:"剑法", tc:"sword", coef:"攻×1.4 减伤",  cd:3, req:["剑二"], maxLv:20, desc:"以柔克刚，出剑后获得减伤护盾一回合。" },
+  { id:11, name:"辟邪剑法",   school:"福威镖局",type:"剑法",tc:"sword", coef:"攻×2.0 单体",  cd:4, req:["剑三"], maxLv:20, desc:"剑走偏锋，快若鬼魅，代价是…你懂的。" },
+  { id:12, name:"降龙十八掌", school:"丐帮",   type:"拳法", tc:"fist",  coef:"攻×2.2 前排",  cd:4, req:["拳三"], maxLv:20, desc:"至刚至猛，掌风横扫敌方前排三人。" },
+  { id:13, name:"九阳神功",   school:"少林",   type:"内功", tc:"tao",   coef:"全属性+15%",   cd:5, req:["玄三"], maxLv:20, desc:"生生不息，提升全队攻防并缓慢回血。" },
+  { id:14, name:"独孤九剑",   school:"华山",   type:"剑法", tc:"sword", coef:"攻×2.6 破防",  cd:5, req:["剑四"], maxLv:20, desc:"无招胜有招，无视目标 40% 防御。" },
+  { id:15, name:"六脉神剑",   school:"大理段氏",type:"剑法",tc:"sword", coef:"攻×3.0 随机6段",cd:6, req:["剑五"], maxLv:20, desc:"剑气纵横，六道剑气随机轰击敌阵。" }
+];
+
+/* ---------- 侠客库（9人） ---------- */
+/* career: 路线key, stage: 1-5 阶；tags 由 stage 推导；skills: 已学武功（上限20） */
+const HEROES = [
+  { id:1, name:"蛋蛋侠客", rarity:5, career:"sword", stage:3, level:42,
+    avatar:"蛋", color:"#b03a2e", inTeam:true, pos:"前排·中",
+    talent:"【蛋定自若】气血低于30%时，受到伤害降低25%，并立即回复10%气血（每场一次）。",
+    attrs:{ hp:12860, atk:2360, def:1180, spd:96 },
+    skills:[{id:1,lv:15},{id:10,lv:12},{id:11,lv:8},{id:5,lv:6},{id:2,lv:10},{id:3,lv:5},{id:6,lv:3},{id:12,lv:1}] },
+  { id:2, name:"令狐葱", rarity:4, career:"sword", stage:2, level:38,
+    avatar:"葱", color:"#3f7d5d", inTeam:true, pos:"后排·左",
+    talent:"【葱明绝顶】每次闪避成功后，下一次攻击必定暴击。",
+    attrs:{ hp:9420, atk:2680, def:720, spd:118 },
+    skills:[{id:10,lv:14},{id:5,lv:10},{id:1,lv:8},{id:2,lv:4}] },
+  { id:3, name:"铁牛大侠", rarity:3, career:"blade", stage:2, level:36,
+    avatar:"牛", color:"#4a7fa5", inTeam:true, pos:"前排·左",
+    talent:"【铁布衫】永久提升防御15%，受击时10%概率反击。",
+    attrs:{ hp:15200, atk:1820, def:1680, spd:72 },
+    skills:[{id:2,lv:16},{id:7,lv:9},{id:1,lv:6}] },
+  { id:4, name:"老叫花", rarity:3, career:"fist", stage:2, level:35,
+    avatar:"丐", color:"#c9a227", inTeam:true, pos:"前排·右",
+    talent:"【讨饭神功】战斗胜利时额外获得10%银两。",
+    attrs:{ hp:13800, atk:1960, def:1420, spd:84 },
+    skills:[{id:6,lv:15},{id:1,lv:12},{id:12,lv:2}] },
+  { id:5, name:"杏子林神医", rarity:4, career:"med", stage:2, level:37,
+    avatar:"医", color:"#63a583", inTeam:true, pos:"后排·中",
+    talent:"【妙手回春】治疗量提升20%，治疗时驱散一个减益。",
+    attrs:{ hp:10200, atk:1580, def:860, spd:90 },
+    skills:[{id:3,lv:18},{id:9,lv:11},{id:1,lv:5}] },
+  { id:6, name:"唐小小", rarity:4, career:"dart", stage:2, level:34,
+    avatar:"唐", color:"#8e5ba6", inTeam:true, pos:"后排·右",
+    talent:"【袖里乾坤】暗器类武功CD-1回合（最低1回合）。",
+    attrs:{ hp:8860, atk:2420, def:640, spd:126 },
+    skills:[{id:4,lv:16},{id:8,lv:12},{id:2,lv:3}] },
+  { id:7, name:"玄慈方丈", rarity:5, career:"fist", stage:3, level:40,
+    avatar:"慈", color:"#d4a017", inTeam:false, pos:"未上阵",
+    talent:"【慈悲为怀】全队受治疗效果+15%，自身免疫眩晕。",
+    attrs:{ hp:16900, atk:2180, def:1900, spd:78 },
+    skills:[{id:1,lv:20},{id:12,lv:10},{id:13,lv:6},{id:6,lv:8}] },
+  { id:8, name:"白衣秀才", rarity:2, career:"tao", stage:1, level:25,
+    avatar:"秀", color:"#8a9bb5", inTeam:false, pos:"未上阵",
+    talent:"【过目不忘】战斗获得经验+8%。",
+    attrs:{ hp:6800, atk:1280, def:560, spd:88 },
+    skills:[{id:5,lv:8},{id:13,lv:2}] },
+  { id:9, name:"包打听", rarity:2, career:"dart", stage:1, level:22,
+    avatar:"包", color:"#a08a5a", inTeam:false, pos:"未上阵",
+    talent:"【消息灵通】秘境掉落率+5%（无需上阵）。",
+    attrs:{ hp:5900, atk:1420, def:480, spd:110 },
+    skills:[{id:4,lv:6}] }
+];
+/* 由职业+阶数推导标签 */
+function heroTags(h){
+  const c = CAREERS.find(c=>c.key===h.career);
+  const tags = [];
+  for(let i=1;i<=h.stage;i++) tags.push(c.tag + CN_NUM[i-1]);
+  return tags;
+}
+function careerStageName(h){
+  const c = CAREERS.find(c=>c.key===h.career);
+  return c.stages[h.stage-1];
+}
+function rarityName(r){ return {5:"传说",4:"绝世",3:"稀有",2:"优良",1:"普通"}[r]; }
+function starsOf(r){ return "★★★★★".slice(0,r); }
+function skillById(id){ return SKILLS.find(s=>s.id===id); }
+function canLearn(h, sk){
+  const tags = heroTags(h);
+  return sk.req.some(r=>tags.includes(r));
+}
+
+/* ---------- 派系 ---------- */
+const FACTIONS = [
+  { key:"shaolin", name:"少林", icon:"🛕", color:"#c9a227", slogan:"天下武功出少林", home:"第四章 · 少林寺",
+    contrib:1260,
+    tasks:[
+      { name:"晨钟暮鼓", desc:"完成 10 场挂机战斗", prog:"10/10", done:true,  reward:"贡献+120" },
+      { name:"抄经百遍", desc:"学习或升级武功 1 次",   prog:"0/1",  done:false, reward:"贡献+80" },
+      { name:"寺门历练", desc:"通关任意小关卡 5 次",   prog:"3/5",  done:false, reward:"贡献+100" }
+    ],
+    shop:[
+      { icon:"🦸", name:"玄慈方丈（限定侠客）", desc:"拳系·传说 | 慈悲为怀", cost:3000 },
+      { icon:"📖", name:"《易筋经》", desc:"内功·需[玄四] | 全属性+20%", cost:2200 },
+      { icon:"💊", name:"大还丹 ×5", desc:"立即回复全体 50% 气血", cost:300 }
+    ] },
+  { key:"wudang", name:"武当", icon:"☯", color:"#5a6ea0", slogan:"以柔克刚 · 道法自然", home:"第二十章 · 武当山",
+    contrib:1260,
+    tasks:[
+      { name:"太极晨练", desc:"完成 10 场挂机战斗", prog:"10/10", done:true, reward:"贡献+120" },
+      { name:"采集灵芝", desc:"秘境挑战 3 层",       prog:"1/3",  done:false, reward:"贡献+90" },
+      { name:"论剑切磋", desc:"战胜 BOSS 1 次",       prog:"0/1",  done:false, reward:"贡献+150" }
+    ],
+    shop:[
+      { icon:"🦸", name:"清虚道长（限定侠客）", desc:"玄门系·绝世 | 太极宗师", cost:2800 },
+      { icon:"📖", name:"《太极拳经》", desc:"拳法·需[拳四] | 攻×2.0 反击", cost:2400 },
+      { icon:"🗡", name:"真武剑（图纸）", desc:"橙色武器打造图纸", cost:1800 }
+    ] },
+  { key:"tangmen", name:"唐门", icon:"🎯", color:"#8e5ba6", slogan:"蜀中唐门 · 暗器无双", home:"第二十二章 · 青城山",
+    contrib:1260,
+    tasks:[
+      { name:"暗器试射", desc:"释放暗器武功 20 次", prog:"14/20", done:false, reward:"贡献+100" },
+      { name:"护送商队", desc:"完成 10 场挂机战斗", prog:"10/10", done:true,  reward:"贡献+120" },
+      { name:"机关拆解", desc:"铁匠铺强化 3 次",     prog:"3/3",  done:true,  reward:"贡献+80" }
+    ],
+    shop:[
+      { icon:"🦸", name:"唐老太太（限定侠客）", desc:"暗器系·传说 | 千手观音", cost:3000 },
+      { icon:"📖", name:"《暴雨梨花针》", desc:"暗器·需[影四] | 攻×2.4 全体", cost:2600 },
+      { icon:"🎯", name:"淬毒针囊 ×10", desc:"暗器伤害+10%（消耗品）", cost:250 }
+    ] },
+  { key:"gaibang", name:"丐帮", icon:"🍚", color:"#3f7d5d", slogan:"天下第一帮 · 义薄云天", home:"第七章 · 襄阳城",
+    contrib:1260,
+    tasks:[
+      { name:"行乞四方", desc:"获得银两 50,000",    prog:"50,000/50,000", done:true,  reward:"贡献+120" },
+      { name:"打狗护道", desc:"完成 10 场挂机战斗", prog:"7/10",  done:false, reward:"贡献+120" },
+      { name:"英雄宴",   desc:"招募侠客 1 次",       prog:"0/1",  done:false, reward:"贡献+100" }
+    ],
+    shop:[
+      { icon:"🦸", name:"洪九指（限定侠客）", desc:"拳系·传说 | 降龙传人", cost:3000 },
+      { icon:"📖", name:"《降龙十八掌》残页", desc:"集齐 10 页合成绝学", cost:500 },
+      { icon:"🍗", name:"叫花鸡 ×3", desc:"体力+20（香喷喷）", cost:150 }
+    ] }
+];
+
+/* ---------- 城市：前 6 章差异化特色侠客，其余章节模板生成 ---------- */
+const CITY_RECRUITS_FIXED = {
+  1: [
+    { name:"放牛娃二蛋", rarity:1, color:"#8a8175", avatar:"蛋", desc:"拳系。放牛时自创「赶牛十八鞭」，全村最能打的孩子。", cost:"银两 ×10,000" },
+    { name:"村口铁匠之女", rarity:2, color:"#3f7d5d", avatar:"兰", desc:"刀系。抡得动四十斤铁锤，相亲对象全被吓跑。", cost:"银两 ×25,000" },
+    { name:"落魄教书先生", rarity:3, color:"#4a7fa5", avatar:"儒", desc:"玄门系。手无缚鸡之力，但阵法谋略全村第一。", cost:"银两 ×40,000" }
+  ],
+  2: [
+    { name:"烟雨楼歌姬", rarity:3, color:"#8e5ba6", avatar:"琴", desc:"医毒系。一曲《断肠散》，听者落泪、闻者掉血。", cost:"银两 ×60,000" },
+    { name:"醉拳船夫", rarity:2, color:"#4a7fa5", avatar:"舟", desc:"拳系。划船不用桨，全靠一身醉意浪。", cost:"银两 ×50,000" },
+    { name:"嘉兴小旋风", rarity:4, color:"#c9a227", avatar:"旋", desc:"剑系。出场自带旋风特效，其实是轻功太差收不住。", cost:"招募令 ×2" }
+  ],
+  3: [
+    { name:"白衣秀才", rarity:2, color:"#8a9bb5", avatar:"秀", desc:"临安城特色·玄门系。会背《论语》，打架时也在背。", cost:"银两 ×80,000" },
+    { name:"断桥渔夫", rarity:3, color:"#4a7fa5", avatar:"渔", desc:"刀系。据说他的鱼叉上串过一条会武功的青鱼。", cost:"银两 ×150,000" },
+    { name:"灵隐小和尚", rarity:4, color:"#c9a227", avatar:"弥", desc:"拳系。偷跑下山吃叫花鸡被方丈通缉中。", cost:"招募令 ×3" }
+  ],
+  4: [
+    { name:"扫地杂役僧", rarity:4, color:"#c9a227", avatar:"扫", desc:"拳系。扫了四十年地，没人见过他出手，也没人敢试。", cost:"招募令 ×4" },
+    { name:"烧火头陀", rarity:2, color:"#8a8175", avatar:"火", desc:"拳系。一手火头功出神入化，柴火灶里练出的真功夫。", cost:"银两 ×120,000" },
+    { name:"藏经阁学徒", rarity:3, color:"#4a7fa5", avatar:"经", desc:"玄门系。背得出阁内三成书名，会其中零本。", cost:"银两 ×180,000" }
+  ],
+  5: [
+    { name:"华山小师妹", rarity:4, color:"#8e5ba6", avatar:"灵", desc:"剑系。剑法学得比谁都快，下山买酱油比谁都慢。", cost:"招募令 ×4" },
+    { name:"挑山工老秦", rarity:2, color:"#3f7d5d", avatar:"秦", desc:"拳系。一日三上华山，脚力天下无双。", cost:"银两 ×160,000" },
+    { name:"观棋不语客", rarity:3, color:"#5a6ea0", avatar:"棋", desc:"玄门系。在华山看了十年棋，悟出一套「不语心法」。", cost:"银两 ×220,000" }
+  ],
+  6: [
+    { name:"古墓派传人", rarity:5, color:"#e07b39", avatar:"龙", desc:"剑系。睡绳子、养玉蜂，社交能力约等于零。", cost:"高级招募令 ×2" },
+    { name:"终南猎户", rarity:2, color:"#3f7d5d", avatar:"猎", desc:"暗器系。弓箭指哪打哪，就是总打到隔壁道观的鸡。", cost:"银两 ×200,000" },
+    { name:"采药童子", rarity:3, color:"#63a583", avatar:"药", desc:"医毒系。认得八百种草药，其中三种能救人，其余能放倒人。", cost:"银两 ×260,000" }
+  ]
+};
+/* 其余章节模板化生成（名字随章节变化） */
+const CITY_TPL = [
+  { suffix:"镖师", career:"刀系",  rarity:3, color:"#4a7fa5", desc:"在此地走了十年镖，熟门熟路，刀也快。", costBase:180000 },
+  { suffix:"隐士", career:"玄门系", rarity:4, color:"#5a6ea0", desc:"隐居多年的高人，出山的原因仅仅是房租到期。", costBase:3 },
+  { suffix:"少侠", career:"剑系",  rarity:2, color:"#3f7d5d", desc:"本地出了名的热心肠，剑法一般但嗓门极大。", costBase:120000 }
+];
+function cityRecruitsFor(chIdx){
+  if(CITY_RECRUITS_FIXED[chIdx]) return CITY_RECRUITS_FIXED[chIdx];
+  const place = CHAPTERS[chIdx-1];
+  return CITY_TPL.map((t,i)=>{
+    const name = place.length>4 ? place.slice(0,3)+t.suffix : place+t.suffix;
+    const cost = t.rarity===4 ? `招募令 ×${t.costBase}` : `银两 ×${(t.costBase + chIdx*8000).toLocaleString()}`;
+    return { name, rarity:t.rarity, color:t.color, avatar:t.suffix[0], desc:`${place}特色·${t.career}。${t.desc}`, cost };
+  });
+}
+
+/* ---------- 铁匠铺（通用，随章节微调品质） ---------- */
+const CITY_EQUIPS = [
+  { name:"精铁长剑", q:"blue",   icon:"🗡", lv:"+6",  desc:"攻击 +320 · 剑系伤害+5%" },
+  { name:"玄铁重刀", q:"purple", icon:"🔪", lv:"+9",  desc:"攻击 +580 · 暴击率+6%" },
+  { name:"金丝软甲", q:"orange", icon:"🥋", lv:"+12", desc:"防御 +460 · 气血+1200" },
+  { name:"疾风靴",   q:"green",  icon:"🥾", lv:"+3",  desc:"速度 +18" },
+  { name:"白玉扳指", q:"purple", icon:"💍", lv:"+7",  desc:"攻击 +210 · 内力上限+10%" }
+];
+const GYM_SKILLS = [
+  { name:"太祖长拳", type:"拳法", desc:"通用拳法·无标签要求 | 攻×1.1", cost:"银两 ×20,000" },
+  { name:"吐纳功",   type:"内功", desc:"通用内功·无标签要求 | 每回合回血3%", cost:"银两 ×35,000" },
+  { name:"草上飞",   type:"轻功", desc:"通用轻功·无标签要求 | 速度+15%", cost:"银两 ×28,000" },
+  { name:"铁线拳",   type:"拳法", desc:"需[拳一] | 攻×1.3 破甲10%", cost:"银两 ×50,000" }
+];
+const GYM_RECRUITS = [
+  { name:"武馆教头", rarity:2, color:"#8a8175", avatar:"教", desc:"拳系。教了三十年拳，学生都出名了他没有。", cost:"银两 ×60,000" },
+  { name:"镖局趟子手", rarity:3, color:"#4a7fa5", avatar:"镖", desc:"刀系。走镖十年，最大的敌人是山路的蚊子。", cost:"银两 ×120,000" }
+];
+
+/* ---------- 背包 ---------- */
+const BAG_ITEMS = [
+  { icon:"🗡", name:"精铁长剑+6",  count:1,  cat:"equip", q:"q-blue" },
+  { icon:"🔪", name:"玄铁重刀+9",  count:1,  cat:"equip", q:"q-purple" },
+  { icon:"🥋", name:"金丝软甲+12", count:1,  cat:"equip", q:"q-orange" },
+  { icon:"🥾", name:"疾风靴+3",    count:1,  cat:"equip", q:"q-green" },
+  { icon:"💍", name:"白玉扳指+7",  count:1,  cat:"equip", q:"q-purple" },
+  { icon:"🪖", name:"皮盔+1",      count:1,  cat:"equip", q:"q-white" },
+  { icon:"🧤", name:"豹皮护腕+4",  count:1,  cat:"equip", q:"q-green" },
+  { icon:"⛓", name:"寒铁锁链",   count:1,  cat:"equip", q:"q-blue" },
+  { icon:"⚙️", name:"精铁",       count:326, cat:"mat", q:"" },
+  { icon:"🪨", name:"玄铁矿石",    count:58,  cat:"mat", q:"" },
+  { icon:"🌿", name:"千年灵芝",    count:7,   cat:"mat", q:"" },
+  { icon:"💊", name:"经脉丹",      count:42,  cat:"mat", q:"" },
+  { icon:"🧵", name:"天蚕丝",      count:15,  cat:"mat", q:"" },
+  { icon:"🦴", name:"虎骨",       count:23,  cat:"mat", q:"" },
+  { icon:"📜", name:"装备图纸残页", count:9,   cat:"mat", q:"" },
+  { icon:"🧪", name:"淬毒液",      count:6,   cat:"mat", q:"" },
+  { icon:"🎫", name:"招募令",      count:5,   cat:"token", q:"" },
+  { icon:"🎟", name:"高级招募令",  count:2,   cat:"token", q:"" },
+  { icon:"📕", name:"武学心得",    count:12,  cat:"book", q:"" },
+  { icon:"📗", name:"剑法心得",    count:4,   cat:"book", q:"" },
+  { icon:"📘", name:"内功心得",    count:3,   cat:"book", q:"" },
+  { icon:"🍗", name:"叫花鸡",      count:9,   cat:"mat", q:"" },
+  { icon:"🍶", name:"竹叶青",      count:14,  cat:"mat", q:"" },
+  { icon:"🗝", name:"秘境钥匙",    count:2,   cat:"mat", q:"" }
+];
+</script>
+
+<script>
+/* ============================================================
+   渲染层 — 导航 & 各页面
+   ============================================================ */
+
+/* ---------- 导航切换 ---------- */
+document.querySelectorAll('#navbar .nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('#navbar .nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('page-'+item.dataset.page).classList.add('active');
+  });
+});
+
+/* ---------- 关卡 · 第一层：大关卡列表 ---------- */
+function chapterState(idx){ // idx 1-based
+  if(idx < CURRENT_CHAPTER) return 'done';
+  if(idx === CURRENT_CHAPTER) return 'cur';
+  return 'lock';
+}
+function renderChapters(){
+  const wrap = document.getElementById('chapterList');
+  wrap.innerHTML = '';
+  CHAPTERS.forEach((name,i)=>{
+    const idx = i+1, st = chapterState(idx);
+    const item = document.createElement('div');
+    item.className = 'chapter-item' + (st==='lock'?' locked':'') + (st==='cur'?' current':'');
+    const factionKey = FACTION_BY_CHAPTER[idx];
+    const faction = factionKey ? FACTIONS.find(f=>f.key===factionKey) : null;
+    const stateHtml = st==='done'
+      ? '<span class="ch-state done">✓ 已通关</span>'
+      : st==='cur'
+        ? '<span class="ch-state cur">⚔ 当前进度 '+CURRENT_SUB+'/10</span>'
+        : '<span class="ch-state lock">🔒 未解锁</span>';
+    const income = st!=='lock'
+      ? `经验 +${(idx*420).toLocaleString()}/分 · 银两 +${(idx*1180).toLocaleString()}/分${faction?' · '+faction.icon+faction.name+'驻扎':''}`
+      : '通关上一章后解锁';
+    item.innerHTML = `
+      <div class="chapter-head">
+        <div class="ch-icon">${CHAPTER_ICONS[i]}</div>
+        <div class="ch-name">第${CH_NUM[i]}章 · ${name}<small>${income}</small></div>
+        ${stateHtml}
+        <span class="enter-arrow">▶</span>
+      </div>`;
+    if(st!=='lock'){
+      item.addEventListener('click', ()=> ChapterDetail.open(idx));
+    }
+    wrap.appendChild(item);
+  });
+  // 总进度
+  const total = (CURRENT_CHAPTER-1)*10 + CURRENT_SUB;
+  document.getElementById('progBar').style.width = (total/300*100).toFixed(1)+'%';
+  document.getElementById('progBarTxt').textContent = `总进度 ${total}/300 关`;
+  document.getElementById('progText').textContent = `第${CH_NUM[CURRENT_CHAPTER-1]}章 · 第 ${CURRENT_SUB} 关`;
+}
+
+/* ---------- 关卡 · 第二层：大关卡内部 ---------- */
+const ChapterDetail = {
+  cur: CURRENT_CHAPTER,
+  open(idx){
+    this.cur = idx;
+    this.renderHead();
+    this.renderLevels();
+    renderCityFor(idx);
+    renderFactionFor(idx);
+    // 重置内部 Tab 到「小关卡」，建筑 Tab 到「客栈」
+    this.switchTab('levels');
+    switchBuilding('inn');
+    document.getElementById('chapterListView').style.display = 'none';
+    const dv = document.getElementById('chapterDetailView');
+    dv.style.display = 'block';
+    dv.style.animation = 'none'; void dv.offsetWidth; dv.style.animation = '';
+  },
+  close(){
+    document.getElementById('chapterDetailView').style.display = 'none';
+    document.getElementById('chapterListView').style.display = 'block';
+  },
+  switchTab(key){
+    document.querySelectorAll('#chapterInnerTabs .inner-tab').forEach(t=>
+      t.classList.toggle('active', t.dataset.itab===key));
+    document.querySelectorAll('#page-chapter .inner-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('ip-'+key).classList.add('active');
+  },
+  renderHead(){
+    const idx = this.cur, i = idx-1;
+    const st = chapterState(idx);
+    const factionKey = FACTION_BY_CHAPTER[idx];
+    const faction = factionKey ? FACTIONS.find(f=>f.key===factionKey) : null;
+    document.getElementById('cdIcon').textContent = CHAPTER_ICONS[i];
+    document.getElementById('cdName').innerHTML = `第${CH_NUM[i]}章 · ${CHAPTERS[i]}<small>${CHAPTER_BLURBS[i]}</small>`;
+    document.getElementById('cdMeta').innerHTML =
+      `状态：${st==='done'?'<span class="green-t">✓ 已通关（收益减半，可回刷）</span>':st==='cur'?`<span class="gold-t">⚔ 当前进度 第${CURRENT_SUB}关</span>`:'—'}<br>`+
+      `挂机收益：经验 <span class="gold-t">+${(idx*420).toLocaleString()}/分</span> · 银两 <span class="gold-t">+${(idx*1180).toLocaleString()}/分</span><br>`+
+      `驻扎派系：${faction?`${faction.icon} <span class="gold-t">${faction.name}</span>`:'<span class="dim">无</span>'}`;
+    document.getElementById('levelsTitle').textContent = `第${CH_NUM[i]}章 · ${CHAPTERS[i]} — 小关卡（10 关）`;
+  },
+  renderLevels(){
+    const grid = document.getElementById('detailSubGrid');
+    grid.innerHTML = '';
+    const idx = this.cur;
+    const st = chapterState(idx);
+    SUB_NAMES.forEach((sn,j)=>{
+      const s = j+1;
+      const div = document.createElement('div');
+      let cls = 'sub-level', income = `+${(idx*42+s*8)}/分`;
+      if(st==='done') cls += ' done';
+      else if(st==='cur'){
+        if(s < CURRENT_SUB) cls += ' done';
+        else if(s === CURRENT_SUB) cls += ' cur';
+        else cls += ' lock';
+      }
+      div.className = cls;
+      div.innerHTML = `<div class="sl-num">第${SUB_NUM[j]}关</div>
+        <div class="sl-name">${j===9?'BOSS · '+CHAPTERS[idx-1]+'主':sn}</div>
+        <div class="sl-income">${cls.includes('lock')?'未解锁':'经验 '+income}</div>`;
+      grid.appendChild(div);
+    });
+  }
+};
+document.querySelectorAll('#chapterInnerTabs .inner-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=> ChapterDetail.switchTab(tab.dataset.itab));
+});
+
+/* ---------- 关卡内部 · 城市板块 ---------- */
+function renderCityFor(idx){
+  const panels = document.getElementById('buildingPanels');
+  const place = CHAPTERS[idx-1];
+  const recruits = cityRecruitsFor(idx);
+  const innCards = recruits.map(r=>`
+    <div class="recruit-card">
+      <div class="rc-avatar" style="background:linear-gradient(135deg,${r.color},#222)">${r.avatar}</div>
+      <div class="rc-name">${r.name}</div>
+      <span class="rarity r${r.rarity}">${rarityName(r.rarity)}</span>
+      <div class="rc-desc">${r.desc}</div>
+      <div style="font-size:12px;color:#c9a227;margin-bottom:6px;">${r.cost}</div>
+      <span class="btn small gold">招 募</span>
+    </div>`).join('');
+  const eqRows = CITY_EQUIPS.map(e=>`
+    <div class="equip-row">
+      <div class="eq-icon q-${e.q}">${e.icon}</div>
+      <div class="eq-info"><span class="q-${e.q}">${e.name} <b>${e.lv}</b></span><small>${e.desc}</small></div>
+      <span class="btn small ghost">强化</span>
+    </div>`).join('');
+  const gymSkills = GYM_SKILLS.map(g=>`
+    <div class="gym-skill-row">
+      <div class="gs-info">${g.name} <small>${g.desc}</small></div>
+      <div style="text-align:right;"><div style="font-size:11px;color:#c9a227;margin-bottom:4px;">${g.cost}</div><span class="btn small">学 习</span></div>
+    </div>`).join('');
+  const gymRecruits = GYM_RECRUITS.map(r=>`
+    <div class="recruit-card">
+      <div class="rc-avatar" style="background:linear-gradient(135deg,${r.color},#222)">${r.avatar}</div>
+      <div class="rc-name">${r.name}</div>
+      <span class="rarity r${r.rarity}">${rarityName(r.rarity)}</span>
+      <div class="rc-desc">${r.desc}</div>
+      <div style="font-size:12px;color:#c9a227;margin-bottom:6px;">${r.cost}</div>
+      <span class="btn small gold">招 募</span>
+    </div>`).join('');
+  const pips = Array.from({length:15},(_,i)=>`<i class="${i<12?'on':''}"></i>`).join('');
+  panels.innerHTML = `
+    <div class="building-panel active" id="bp-inn">
+      <div class="card">
+        <div class="panel-title">🍶 ${place}客栈 · 招募本章特色侠客</div>
+        <div class="recruit-list">${innCards}</div>
+        <div class="mt12" style="font-size:12px;color:#9c8f6e;line-height:1.9;">
+          🎫 高级招募（消耗高级招募令×1）：必出 <span class="q-purple">绝世</span> 以上侠客，每 30 次保底 <span class="q-orange">传说</span>。
+          <span class="btn small gold" style="margin-left:8px;">高级招募 ×1</span> <span class="btn small">十连招募</span>
+        </div>
+      </div>
+    </div>
+    <div class="building-panel" id="bp-forge">
+      <div class="equip-forge">
+        <div class="card">
+          <div class="panel-title">⚒ ${place}铁匠铺 · 装备列表（白/绿/蓝/紫/橙）</div>
+          ${eqRows}
+        </div>
+        <div class="card">
+          <div class="panel-title">🔥 强化台</div>
+          <div class="forge-target">
+            <div style="font-size:13px;color:#9c8f6e;">当前强化目标</div>
+            <div class="ft-icon">🥋</div>
+            <div class="q-orange" style="font-size:16px;">金丝软甲 +12</div>
+            <div class="enhance-bar">${pips}</div>
+            <div style="font-size:12px;color:#b8a983;line-height:1.9;">
+              强化 +12 → +13：防御 <span class="green-t">+42</span> · 成功率 <span class="gold-t">65%</span><br>
+              消耗：玄铁矿石 ×6 · 银两 ×48,000<br>
+              <span class="dim">+10 以上失败可能掉级，使用「护符」可保底</span>
+            </div>
+            <div class="mt8"><span class="btn gold">强化一次</span> <span class="btn ghost">自动强化至+13</span></div>
+          </div>
+          <div class="mt12" style="font-size:12.5px;color:#b8a983;line-height:2;">
+            📜 打造新装备：图纸 + 精铁×50 + 玄铁矿石×10<br>
+            <span class="btn small">打造 精铁长剑（蓝）</span> <span class="btn small">打造 真武剑（橙·需图纸）</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="building-panel" id="bp-gym">
+      <div class="gym-layout">
+        <div class="card">
+          <div class="panel-title">🥋 ${place}武馆 · 通用武功传授</div>
+          ${gymSkills}
+        </div>
+        <div class="card">
+          <div class="panel-title">🧑‍🤝‍🧑 ${place}武馆 · 常驻侠客招募</div>
+          <div class="recruit-list" style="grid-template-columns:1fr 1fr;">${gymRecruits}</div>
+          <div class="mt12" style="font-size:12px;color:#9c8f6e;line-height:1.9;">武馆侠客无派系加成但价格亲民，适合前期凑阵。每章城市武馆常驻侠客不同。</div>
+        </div>
+      </div>
+    </div>`;
+}
+function switchBuilding(key){
+  document.querySelectorAll('#buildingTabs .building-tab').forEach(t=>
+    t.classList.toggle('active', t.dataset.building===key));
+  document.querySelectorAll('.building-panel').forEach(p=>p.classList.remove('active'));
+  const p = document.getElementById('bp-'+key);
+  if(p) p.classList.add('active');
+}
+document.querySelectorAll('#buildingTabs .building-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=> switchBuilding(tab.dataset.building));
+});
+
+/* ---------- 关卡内部 · 派系板块 ---------- */
+function renderFactionFor(idx){
+  const box = document.getElementById('factionPanel');
+  const key = FACTION_BY_CHAPTER[idx];
+  if(!key){
+    const homes = FACTIONS.map(f=>`<span class="fh">${f.icon} <b>${f.name}</b> 驻扎于 ${f.home}</span>`).join('');
+    box.innerHTML = `
+      <div class="no-faction">
+        🏴 本章无派系驻扎<br>
+        <span style="font-size:12.5px;">四大派系分别驻扎在以下章节，通关后可前往接取日常任务、兑换限定侠客与武功：</span>
+        <div class="faction-home">${homes}</div>
+      </div>`;
+    return;
+  }
+  const f = FACTIONS.find(x=>x.key===key);
+  const tasks = f.tasks.map(t=>`
+    <div class="task-row">
+      <div class="tk-info">${t.name} <small>${t.desc} · 奖励：${t.reward}</small></div>
+      <div class="tk-prog"><div class="bar exp"><i style="width:${t.done?'100':(parseInt(t.prog)/parseInt(t.prog.split('/')[1])*100)||0}%"></i></div><small>${t.prog}</small></div>
+      ${t.done ? '<span class="btn small gold">领取</span>' : '<span class="btn small disabled">未完成</span>'}
+    </div>`).join('');
+  const shop = f.shop.map(s=>`
+    <div class="shop-row">
+      <div class="sp-icon">${s.icon}</div>
+      <div class="sp-info">${s.name}<small>${s.desc}</small></div>
+      <div style="text-align:right;"><div class="cost">贡献 ${s.cost.toLocaleString()}</div>
+      <span class="btn small ${s.cost<=f.contrib?'gold':'disabled'} mt8">兑 换</span></div>
+    </div>`).join('');
+  box.innerHTML = `
+    <div class="faction-head-banner">
+      <div class="fh-icon" style="background:linear-gradient(135deg,${f.color},#1a140d)">${f.icon}</div>
+      <div class="fh-name">${f.name}<small>${f.slogan} · 驻扎于 ${f.home}</small></div>
+      <div class="fh-contrib">贡献点余额 <b>${f.contrib.toLocaleString()}</b></div>
+    </div>
+    <div class="faction-cols">
+      <div class="card">
+        <div class="panel-title">📜 日常任务（每日 4:00 刷新）</div>
+        ${tasks}
+        <div class="mt8" style="font-size:12px;color:#9c8f6e;">完成全部日常额外奖励：贡献 +200 · 派系宝箱 ×1</div>
+      </div>
+      <div class="card">
+        <div class="panel-title">🏪 ${f.name} · 贡献兑换商店</div>
+        ${shop}
+        <div class="mt8" style="font-size:12px;color:#9c8f6e;line-height:1.8;">限定侠客与派系专属武功仅可通过贡献兑换获得，兑换后绑定。每周限购商品会在周一重置。</div>
+      </div>
+    </div>`;
+}
+
+/* ---------- 侠客页 ---------- */
+let selectedHero = HEROES[0];
+function tagLabel(t){
+  const c = CAREERS.find(c=>t.startsWith(c.tag));
+  const cls = c ? c.key : 'neutral';
+  return `<span class="tag ${cls}">${t}</span>`;
+}
+function renderHeroGrid(){
+  const grid = document.getElementById('heroGrid');
+  grid.innerHTML = '';
+  HEROES.forEach(h=>{
+    const c = CAREERS.find(c=>c.key===h.career);
+    const card = document.createElement('div');
+    card.className = 'hero-card' + (selectedHero.id===h.id?' selected':'');
+    card.dataset.q = h.rarity;
+    card.innerHTML = `
+      ${h.inTeam?'<span class="in-team">出战中</span>':''}
+      <div class="havatar" style="background:linear-gradient(135deg,${h.color},#222)">${h.avatar}</div>
+      <div class="hname">${h.name}</div>
+      <div class="hmeta">
+        <span class="rarity r${h.rarity}">${rarityName(h.rarity)}</span><br>
+        ${c.name} · ${careerStageName(h)} · Lv.${h.level}
+      </div>
+      <div class="stars">${starsOf(h.rarity)}</div>
+      <div class="q-frame"></div>`;
+    card.addEventListener('click', ()=>{ selectedHero = h; renderHeroGrid(); renderHeroDetail(); });
+    grid.appendChild(card);
+  });
+}
+function renderHeroDetail(){
+  const h = selectedHero;
+  const box = document.getElementById('heroDetail');
+  const tags = heroTags(h).map(tagLabel).join('');
+  // 已学武功 20 格：名称 / 类型 / 等级 / CD / 系数
+  let learned = '';
+  for(let i=0;i<20;i++){
+    const ls = h.skills[i];
+    if(ls){
+      const sk = skillById(ls.id);
+      learned += `<div class="learned-slot filled" title="${sk.desc}">
+        <span class="ls-name">${sk.name}<span class="tag ${sk.tc}">${sk.type}</span></span>
+        <span class="ls-info"><span class="lv">Lv.${ls.lv}/${sk.maxLv}${ls.lv>=sk.maxLv?' <span class="red-t">可突破</span>':''}</span> · CD ${sk.cd}回合</span>
+        <span class="ls-info">${sk.coef}</span>
+      </div>`;
+    } else {
+      learned += `<div class="learned-slot empty">空</div>`;
+    }
+  }
+  // 武功图鉴：该角色标签能学的武功（不满足的置灰）
+  const learnedIds = h.skills.map(s=>s.id);
+  const myTags = heroTags(h);
+  const codexRows = SKILLS.map(sk=>{
+    const ok = canLearn(h, sk);
+    const isLearned = learnedIds.includes(sk.id);
+    let state;
+    if(isLearned) state = '<span class="learn-state ok">✓ 已学习</span>';
+    else if(ok) state = '<span class="learn-state ok blue-t">可学习</span>';
+    else state = '<span class="learn-state no">✕ 不可学习</span>';
+    const reqHtml = sk.req.map(r=>`<span class="tag ${myTags.includes(r)?sk.tc:'neutral'}">${r}${myTags.includes(r)?' ✓':' ✕'}</span>`).join('');
+    return `<tr class="${ok||isLearned?'':'locked'}" title="${sk.desc}">
+      <td>${sk.name}<br><small style="color:#8a8175;">${sk.school}</small></td>
+      <td><span class="tag ${sk.tc}">${sk.type}</span></td>
+      <td>${sk.coef}</td>
+      <td><span class="cd-badge">CD ${sk.cd}</span></td>
+      <td>${reqHtml}</td>
+      <td>${state}</td>
+    </tr>`;
+  }).join('');
+  box.innerHTML = `
+    <div class="hd-head">
+      <div class="hd-avatar" style="background:linear-gradient(135deg,${h.color},#222)">${h.avatar}</div>
+      <div class="hd-title">
+        <h3>${h.name} <span class="rarity r${h.rarity}">${rarityName(h.rarity)}</span></h3>
+        <div class="career-line">${CAREERS.find(c=>c.key===h.career).name}路线 · ${careerStageName(h)}（${h.stage}阶）· Lv.${h.level} · ${h.pos}</div>
+        <div class="mt8">${tags}</div>
+      </div>
+    </div>
+    <div class="attr-grid">
+      <div class="attr"><small>气血</small><b>${h.attrs.hp.toLocaleString()}</b></div>
+      <div class="attr"><small>攻击</small><b>${h.attrs.atk.toLocaleString()}</b></div>
+      <div class="attr"><small>防御</small><b>${h.attrs.def.toLocaleString()}</b></div>
+      <div class="attr"><small>速度</small><b>${h.attrs.spd}</b></div>
+    </div>
+    <div class="talent-box"><b>天赋</b> ${h.talent}</div>
+    <div class="mt12"><div class="panel-title">已学武功 · ${h.skills.length}/20（满级可用「武学心得」突破至25级）</div>
+      <div class="skill-slot-grid">${learned}</div>
+    </div>
+    <div class="mt12"><div class="panel-title">武功图鉴 · 可学习武功</div>
+      <div class="codex-note">「${h.name}」当前标签 [${myTags.join(', ')}]；进阶职业可解锁更高阶标签。不满足标签要求的武功<span class="red-t">不可学习</span>（置灰）。</div>
+      <div class="codex-scroll">
+        <table class="skill-table">
+          <thead><tr><th>武功</th><th>类型</th><th>系数</th><th>CD</th><th>标签要求</th><th>状态</th></tr></thead>
+          <tbody>${codexRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ---------- 职业页 ---------- */
+function renderCareers(){
+  const tree = document.getElementById('careerTree');
+  tree.innerHTML = '';
+  // 当前侠客(蛋蛋侠客)的剑系3阶作为演示进度；其它路线给不同演示进度
+  const demoStage = { sword:3, blade:2, fist:2, med:2, dart:1, tao:1 };
+  CAREERS.forEach(c=>{
+    const cur = demoStage[c.key];
+    const div = document.createElement('div');
+    div.className = 'career-path';
+    let stagesHtml = '';
+    c.stages.forEach((sn,i)=>{
+      const st = i+1;
+      const cls = st < cur ? 'unlocked' : st === cur ? 'current' : '';
+      const tagList = [];
+      for(let t=1;t<=st;t++) tagList.push(`<span class="mini-tag">${c.tag}${CN_NUM[t-1]}</span>`);
+      stagesHtml += `
+        <div class="cp-stage ${cls}">
+          <div class="stage-node">${st<=cur ? st : '<span class="stage-node-lock">🔒</span>'}</div>
+          <div class="stage-info">${sn}<small>${st===1?'初始职业':'20级满可进阶 · 需突破丹×'+(st*5)}</small></div>
+          <div class="stage-tags">${st<=cur?tagList.join(''):''}</div>
+        </div>
+        ${st<5?'<div class="cp-connector">│</div>':''}`;
+    });
+    div.innerHTML = `
+      <div class="cp-head">
+        <div class="cp-icon" style="background:linear-gradient(135deg,${c.color},#1a140d)">${c.icon}</div>
+        <div class="cp-name">${c.name}<small>当前：${c.stages[cur-1]}（${cur}阶）· 共进阶4次至顶级</small></div>
+      </div>
+      ${stagesHtml}`;
+    tree.appendChild(div);
+  });
+}
+
+/* ---------- 背包页 ---------- */
+function renderBag(cat='all'){
+  const grid = document.getElementById('bagGrid');
+  grid.innerHTML = '';
+  const items = BAG_ITEMS.filter(i=>cat==='all'||i.cat===cat);
+  items.forEach(i=>{
+    const div = document.createElement('div');
+    div.className = 'bag-item';
+    div.innerHTML = `<div class="bi-icon ${i.q}">${i.icon}</div><div class="bi-name ${i.q}">${i.name}</div><span class="bi-count">×${i.count}</span>`;
+    grid.appendChild(div);
+  });
+  // 补足空格，显得像真实背包
+  const blanks = Math.max(0, 24 - items.length);
+  for(let i=0;i<blanks;i++){
+    const div = document.createElement('div');
+    div.className = 'bag-item empty';
+    div.innerHTML = '<div class="bi-name">空</div>';
+    grid.appendChild(div);
+  }
+}
+document.querySelectorAll('#bagTabs .bag-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('#bagTabs .bag-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    renderBag(tab.dataset.bag);
+  });
+});
+</script>
+
+<script>
+/* ============================================================
+   战斗模拟引擎 — setInterval 驱动的自动挂机战斗
+   规则：每个侠客按自己「已学武功」列表顺序循环释放，
+   内力不足或 CD 未好则使用普通攻击。数据为写死的模拟。
+   ============================================================ */
+const Battle = {
+  running: true,
+  speed: 1,
+  timer: null,
+  round: 1,
+  turnQueue: [],
+  battleCount: 37,
+  units: [],   // {uid,name,avatar,color,side('my'|'foe'),row,idx,hp,maxHp,mp,maxMp,atk,def,skills:[{id,cd}],el}
+
+  /* ---------- 构建双方阵容 ---------- */
+  buildUnits(){
+    this.units = [];
+    const teamHeroes = HEROES.filter(h=>h.inTeam);
+    // 阵型：前排 铁牛(左) 蛋蛋(中) 老叫花(右)；后排 令狐葱(左) 神医(中) 唐小小(右)
+    const frontOrder = ['铁牛大侠','蛋蛋侠客','老叫花'];
+    const backOrder  = ['令狐葱','杏子林神医','唐小小'];
+    const addHero = (n, row, i)=>{
+      const h = teamHeroes.find(x=>x.name===n); if(!h) return;
+      this.units.push({ uid:'my-'+row+i, name:h.name, avatar:h.avatar, color:h.color, side:'my', row, idx:i,
+        hp:h.attrs.hp, maxHp:h.attrs.hp, mp:60, maxMp:100, atk:h.attrs.atk, def:h.attrs.def,
+        skills:h.skills.map(s=>({id:s.id, cd:0})) });
+    };
+    frontOrder.forEach((n,i)=>addHero(n,'front',i));
+    backOrder.forEach((n,i)=>addHero(n,'back',i));
+    // 敌方：第三章第7关 · 西湖水贼一伙
+    const foes = [
+      { name:'水贼头目·翻江鳄', avatar:'鳄', hp:14500, atk:1980, def:1150, row:'front', idx:1 },
+      { name:'水贼刀客',        avatar:'贼', hp:9800,  atk:1560, def:820,  row:'front', idx:0 },
+      { name:'水贼拳师',        avatar:'拳', hp:10200, atk:1490, def:860,  row:'front', idx:2 },
+      { name:'水贼弓手',        avatar:'弓', hp:7200,  atk:1880, def:520,  row:'back',  idx:0 },
+      { name:'水贼弓手',        avatar:'弓', hp:7200,  atk:1880, def:520,  row:'back',  idx:2 },
+      { name:'贼窝军师',        avatar:'谋', hp:8600,  atk:1420, def:680,  row:'back',  idx:1 }
+    ];
+    foes.forEach(f=>{
+      this.units.push({ uid:'foe-'+f.row+f.idx, name:f.name, avatar:f.avatar, color:'#6e3524', side:'foe', row:f.row, idx:f.idx,
+        hp:f.hp, maxHp:f.hp, mp:50, maxMp:100, atk:f.atk, def:f.def,
+        skills:[{id:0, name:'泼风刀法', cd:0, maxCd:2}] });
+    });
+    this.round = 1;
+    this.turnQueue = this.units.filter(u=>u.hp>0);
+    this.renderField();
+    document.getElementById('roundNum').textContent = '1';
+  },
+
+  /* ---------- 渲染战场 ---------- */
+  renderField(){
+    const myF = document.getElementById('myFormation');
+    const foeF = document.getElementById('foeFormation');
+    myF.innerHTML = ''; foeF.innerHTML = '';
+    const mkCol = (side,row)=>{
+      const col = document.createElement('div'); col.className='col';
+      for(let i=0;i<3;i++){
+        const u = this.units.find(x=>x.side===side&&x.row===row&&x.idx===i);
+        if(u){ col.appendChild(this.unitEl(u)); }
+        else {
+          const ph = document.createElement('div');
+          ph.className='unit'; ph.style.visibility='hidden'; ph.innerHTML='&nbsp;';
+          col.appendChild(ph);
+        }
+      }
+      return col;
+    };
+    myF.appendChild(mkCol('my','front'));
+    myF.appendChild(mkCol('my','back'));
+    foeF.appendChild(mkCol('foe','front'));
+    foeF.appendChild(mkCol('foe','back'));
+  },
+  unitEl(u){
+    const div = document.createElement('div');
+    div.className = 'unit' + (u.row==='front'?' front':'');
+    div.id = 'unit-'+u.uid;
+    div.innerHTML = `
+      <span class="pos">${u.row==='front'?'前':'后'}${['一','二','三'][u.idx]}</span>
+      <div class="uhead">
+        <div class="uavatar" style="background:linear-gradient(135deg,${u.color},#222)">${u.avatar}</div>
+        <div class="uname">${u.name}<small>${u.side==='my'?'侠客':'敌人'}</small></div>
+      </div>
+      <div class="bar hp"><i style="width:100%"></i><span class="txt">${u.hp.toLocaleString()}</span></div>
+      <div class="bar mp"><i style="width:${u.mp}%"></i><span class="txt">内力 ${u.mp}</span></div>`;
+    u.el = div;
+    return div;
+  },
+  refreshUnit(u){
+    if(!u.el) return;
+    u.el.querySelector('.bar.hp i').style.width = Math.max(0,u.hp/u.maxHp*100)+'%';
+    u.el.querySelector('.bar.hp .txt').textContent = Math.max(0,Math.round(u.hp)).toLocaleString();
+    u.el.querySelector('.bar.mp i').style.width = (u.mp/u.maxMp*100)+'%';
+    u.el.querySelector('.bar.mp .txt').textContent = '内力 '+Math.round(u.mp);
+    if(u.hp<=0) u.el.classList.add('dead');
+  },
+
+  /* ---------- 日志 ---------- */
+  log(html){
+    const box = document.getElementById('battleLog');
+    const p = document.createElement('p');
+    p.innerHTML = html;
+    box.appendChild(p);
+    while(box.children.length>60) box.removeChild(box.firstChild);
+    box.scrollTop = box.scrollHeight;
+  },
+
+  /* ---------- 伤害飘字 ---------- */
+  floatDmg(u, text, cls=''){
+    if(!u.el) return;
+    const field = document.getElementById('battleField');
+    const f = document.createElement('div');
+    f.className = 'dmg-float '+cls;
+    f.textContent = text;
+    const fr = field.getBoundingClientRect();
+    const ur = u.el.getBoundingClientRect();
+    f.style.left = (ur.left - fr.left + ur.width/2 - 14 + (Math.random()*24-12)) + 'px';
+    f.style.top  = (ur.top - fr.top - 6) + 'px';
+    field.appendChild(f);
+    setTimeout(()=>f.remove(), 1000);
+  },
+
+  /* ---------- 武功释放提示 ---------- */
+  skillFlash(text, sub){
+    const field = document.getElementById('battleField');
+    const old = field.querySelector('.skill-flash');
+    if(old) old.remove();
+    const d = document.createElement('div');
+    d.className = 'skill-flash';
+    d.innerHTML = `✦ ${text} ✦${sub?`<small>${sub}</small>`:''}`;
+    field.appendChild(d);
+    setTimeout(()=>d.remove(), 1100);
+  },
+
+  /* ---------- 选择目标：先打前排 ---------- */
+  pickTarget(attacker){
+    const foes = this.units.filter(u=>u.side!==attacker.side && u.hp>0);
+    if(!foes.length) return null;
+    const front = foes.filter(u=>u.row==='front');
+    const pool = front.length?front:foes;
+    return pool[Math.floor(Math.random()*pool.length)];
+  },
+
+  /* ---------- 单个单位行动 ---------- */
+  act(u){
+    if(u.hp<=0) return;
+    // 回合开始：CD 递减 + 内力回复
+    u.skills.forEach(s=>{ if(s.cd>0) s.cd--; });
+    u.mp = Math.min(u.maxMp, u.mp + 25);
+
+    const target = this.pickTarget(u);
+    if(!target){ return; }
+
+    // 按已学武功顺序，找到第一个 CD 就绪且内力足够的武功；否则普通攻击
+    let cast = null;
+    if(u.side==='my'){
+      cast = u.skills.find(s=>s.cd===0 && u.mp>=40 && skillById(s.id)) || null;
+    } else {
+      if(u.mp>=40 && u.skills[0].cd===0) cast = u.skills[0];
+    }
+
+    u.el && u.el.classList.add('acting');
+    setTimeout(()=>u.el && u.el.classList.remove('acting'), 500);
+
+    if(cast){
+      const skRef = u.side==='my' ? skillById(cast.id) : null;
+      const isHeal = skRef && skRef.type==='医术';
+      const sname = skRef ? skRef.name : cast.name;
+      u.mp -= 40;
+      cast.cd = skRef ? skRef.cd : cast.maxCd;
+
+      if(isHeal){
+        const allies = this.units.filter(x=>x.side===u.side && x.hp>0).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp);
+        const healed = allies[0];
+        const amount = Math.round(healed.maxHp*0.22);
+        healed.hp = Math.min(healed.maxHp, healed.hp+amount);
+        this.skillFlash(sname, u.name+' · 悬壶济世');
+        this.log(`<span class="turn">[第${this.round}回合]</span> <b>${u.name}</b> 施展 <span class="cast">《${sname}》</span>，为 <b>${healed.name}</b> <span class="heal">回复 ${amount.toLocaleString()} 气血</span>`);
+        this.floatDmg(healed, '+'+amount.toLocaleString(), 'heal');
+        this.refreshUnit(healed);
+      } else {
+        const coef = 1.4 + Math.random()*1.2;
+        let dmg = Math.max(80, Math.round(u.atk*coef - target.def*0.6));
+        const crit = Math.random()<0.18;
+        if(crit) dmg = Math.round(dmg*1.6);
+        target.hp -= dmg;
+        target.el && target.el.classList.add('hit');
+        setTimeout(()=>target.el && target.el.classList.remove('hit'), 320);
+        this.skillFlash(sname, u.name+' 出手');
+        this.log(`<span class="turn">[第${this.round}回合]</span> <b>${u.name}</b> 释放 <span class="cast">《${sname}》</span>命中 <b>${target.name}</b>，造成 <span class="dmg">${dmg.toLocaleString()} 点伤害${crit?'（暴击！）':''}</span>${target.hp<=0?'，<span class="red-t">将其击败！</span>':''}`);
+        this.floatDmg(target, (crit?'暴击 -':'-')+dmg.toLocaleString(), crit?'crit':'');
+        this.refreshUnit(target);
+      }
+    } else {
+      // 武功都在 CD 或内力不足 → 普通攻击
+      let dmg = Math.max(50, Math.round(u.atk*(0.8+Math.random()*0.4) - target.def*0.5));
+      target.hp -= dmg;
+      target.el && target.el.classList.add('hit');
+      setTimeout(()=>target.el && target.el.classList.remove('hit'), 320);
+      this.log(`<span class="turn">[第${this.round}回合]</span> <b>${u.name}</b> 武功调息中，普通攻击 <b>${target.name}</b>，造成 <span class="dmg">${dmg.toLocaleString()} 点伤害</span>${target.hp<=0?'，<span class="red-t">将其击败！</span>':''}`);
+      this.floatDmg(target, '-'+dmg.toLocaleString());
+      this.refreshUnit(target);
+    }
+    this.refreshUnit(u);
+  },
+
+  /* ---------- 主循环：每次 tick 由一个单位出手 ---------- */
+  tick(){
+    if(!this.running) return;
+    if(!this.turnQueue.length){
+      this.round++;
+      document.getElementById('roundNum').textContent = this.round;
+      this.log(`<span class="sys">—— 第 ${this.round} 回合开始 ——</span>`);
+      this.turnQueue = this.units.filter(u=>u.hp>0);
+      if(this.round>20){ this.end(false); return; }
+    }
+    const u = this.turnQueue.shift();
+    this.act(u);
+    const myAlive = this.units.some(x=>x.side==='my'&&x.hp>0);
+    const foeAlive = this.units.some(x=>x.side==='foe'&&x.hp>0);
+    if(!foeAlive) this.end(true);
+    else if(!myAlive) this.end(false);
+  },
+
+  /* ---------- 结算 & 循环 ---------- */
+  end(win){
+    clearInterval(this.timer);
+    this.timer = null;
+    this.battleCount++;
+    document.getElementById('battleCount').textContent = this.battleCount;
+    const exp = 800 + Math.round(Math.random()*300);
+    const gold = 2400 + Math.round(Math.random()*800);
+    const drop = Math.random()<0.35 ? '<br>掉落奖励 <b>精铁 ×'+(2+Math.floor(Math.random()*4))+'</b>' : '';
+    if(win){
+      this.log(`<span class="win">★ 战斗胜利！获得经验 ${exp} · 银两 ${gold}</span>`);
+      document.getElementById('settleTitle').textContent = '胜 利';
+      document.getElementById('settleRewards').innerHTML =
+        `战斗经验 <b>+${exp.toLocaleString()}</b><br>银两 <b>+${gold.toLocaleString()}</b>${drop}<br><span style="font-size:12px;color:#6a5a40;">3 秒后自动挑战下一场……</span>`;
+    } else {
+      this.log(`<span class="dmg">✖ 战斗失败……侠客们休整后卷土重来。</span>`);
+      document.getElementById('settleTitle').textContent = '败 北';
+      document.getElementById('settleRewards').innerHTML =
+        `安慰经验 <b>+${Math.round(exp/3).toLocaleString()}</b><br><span style="font-size:12px;color:#6a5a40;">建议提升装备强化或学习更多武功<br>3 秒后自动重试……</span>`;
+    }
+    document.getElementById('settlement').classList.add('show');
+    setTimeout(()=>{ this.nextBattle(); }, 3000);
+  },
+  nextBattle(){
+    document.getElementById('settlement').classList.remove('show');
+    this.log(`<span class="sys">▶ 新一轮挂机战斗开始：第三章·临安城 第7关</span>`);
+    this.buildUnits();
+    this.start();
+  },
+
+  /* ---------- 控制 ---------- */
+  start(){
+    clearInterval(this.timer);
+    this.timer = setInterval(()=>this.tick(), 900/this.speed);
+  },
+  toggle(){
+    this.running = !this.running;
+    document.getElementById('pauseBtn').textContent = this.running ? '⏸ 暂停' : '▶ 继续';
+    this.log(`<span class="sys">${this.running?'▶ 挂机继续':'⏸ 挂机已暂停'}</span>`);
+  },
+  toggleSpeed(){
+    this.speed = this.speed>=3 ? 1 : this.speed+1;
+    document.getElementById('speedBtn').textContent = '速度 ×'+this.speed;
+    this.start();
+  }
+};
+
+/* ============================================================
+   初始化
+   ============================================================ */
+renderChapters();
+renderHeroGrid();
+renderHeroDetail();
+renderCareers();
+renderBag('all');
+
+Battle.buildUnits();
+Battle.log('<span class="sys">▶ 挂机战斗开始：第三章·临安城 第7关「西湖断桥」</span>');
+Battle.log('<span class="sys">我方阵容：前排 铁牛大侠·蛋蛋侠客·老叫花 ／ 后排 令狐葱·杏子林神医·唐小小</span>');
+Battle.log('<span class="sys">侠客将按各自已学武功循环释放，CD 未好则以普通攻击补位。</span>');
+Battle.start();
+</script>
+</body>
+</html>
