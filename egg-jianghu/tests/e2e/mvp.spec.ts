@@ -41,8 +41,9 @@ test('启动后先选择大关卡和小关卡，再开始挂机战斗', async ({
   await expect(page.getByText(/第 1 关 · 挂机战斗中/)).toBeVisible()
 
   await page.getByRole('button', { name: /侠客/ }).click()
-  await expect(page.locator('.hero-card')).toHaveCount(9)
-  await expect(page.locator('.martial-item')).toHaveCount(5)
+  await expect(page.getByTestId('hero-roster').locator('.hero-roster-card')).toHaveCount(3)
+  await expect(page.getByTestId('martial-slots').locator('.martial-slot')).toHaveCount(4)
+  await expect(page.locator('.martial-item')).toHaveCount(0)
 
   await page.getByRole('button', { name: /队伍/ }).click()
   await expect(page.locator('.party-slot')).toHaveCount(3)
@@ -118,44 +119,85 @@ test('可进入秘境、选择临时祝福并完成首层探索', async ({ page 
   await expect(page.getByRole('button', { name: '踏入无相秘境' })).toBeVisible()
 })
 
-test('挂机所得可用于招募同门并激活羁绊', async ({ page }) => {
-  await page.getByRole('button', { name: '进入青石古道' }).click()
-  await page.getByTestId('stage-card-1').getByRole('button', { name: '开始挂机' }).click()
-  await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(160))
+test('侠客页只显示已拥有侠客并提供四槽武功工作台', async ({ page }) => {
   await page.getByRole('button', { name: /侠客/ }).click()
-  await page.getByRole('button', { name: /以 220 银两结识/ }).click()
-  await expect(page.getByText('燕秋声应邀加入江湖名册')).toBeVisible()
+  await expect(page.getByTestId('hero-roster').locator('.hero-roster-card')).toHaveCount(3)
+  await expect(page.getByText('藏经阁 · 五门武学')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /银两结识/ })).toHaveCount(0)
+  await expect(page.getByTestId('martial-slots').locator('.martial-slot')).toHaveCount(4)
+  await expect(page.getByTestId('learned-martials')).toContainText('已学武功')
 
-  await page.getByRole('button', { name: /队伍/ }).click()
-  await page.locator('select[data-action="party-slot"][data-slot="1"]').selectOption('yan_qiusheng')
-  await expect(page.getByText('丐帮共鸣')).toBeVisible()
-  await expect(page.getByText(/门派攻势 \+12%/)).toBeVisible()
-  await expect(page.getByTestId('bond-atlas').locator('.bond-card')).toHaveCount(5)
-  await expect(page.locator('[data-bond-id="green_hill_iron_oath"]')).toHaveClass(/active/)
-  await expect(page.locator('[data-bond-id="green_hill_iron_oath"]')).toContainText('并肩生效')
-
-  await page.getByRole('button', { name: /侠客/ }).click()
-  await page.getByRole('button', { name: /以 360 银两结识/ }).click()
-  await page.getByRole('button', { name: /队伍/ }).click()
-  await page.locator('select[data-action="party-slot"][data-slot="1"]').selectOption('jiang_wan')
-  await expect(page.getByTestId('combo-codex').locator('.combo-card')).toHaveCount(4)
-  await expect(page.locator('[data-combo-id="mountain_river_reflection"]')).toHaveClass(/active/)
-  await expect(page.locator('[data-combo-id="mountain_river_reflection"]')).toContainText('当前阵容已激活')
+  const cards = page.getByTestId('hero-roster').locator('.hero-roster-card')
+  expect(await cards.count()).toBe(3)
+  await cards.nth(1).click()
+  await expect(page.getByTestId('hero-detail')).toContainText('Lv.1')
 })
 
-test('武学招式会展示预案并在自动战斗中施展', async ({ page }) => {
+test('侠客可卸下、重新装备并确认遗忘返还 80% 资源', async ({ page }) => {
+  const seeded = await page.evaluate(() => {
+    const state = window.__EGG_JIANGHU__.getState()
+    const heroId = state.formation[0].heroId
+    const martialId = state.heroes[heroId].equippedMartialIds[0]!
+    state.heroes[heroId].learnedMartials[martialId].invested = {
+      silver: 101,
+      experience: 9,
+      pages: 11,
+      reputation: 1,
+    }
+    return { heroId, martialId, silver: state.resources.silver, serialized: JSON.stringify(state) }
+  })
+  await page.locator('body > input[type="file"]').setInputFiles({
+    name: '侠客测试存档.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(seeded.serialized),
+  })
   await page.getByRole('button', { name: /侠客/ }).click()
-  await expect(page.locator('.skill-summary')).toHaveCount(3)
-  await expect(page.locator('.martial-item').first()).toContainText('赤浪断岳')
+
+  await page.getByTestId('martial-slot-0').getByRole('button', { name: '卸下' }).click()
+  await page.getByTestId(`learned-${seeded.martialId}`).getByRole('button', { name: '装备' }).click()
+  page.once('dialog', (dialog) => dialog.dismiss())
+  await page.getByTestId(`learned-${seeded.martialId}`).getByRole('button', { name: '遗忘' }).click()
+  await expect(page.getByTestId(`learned-${seeded.martialId}`)).toHaveCount(1)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().resources.silver)).toBe(seeded.silver)
+
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('返还：80 银两、7 阅历、8 残页、0 声望')
+    await dialog.accept()
+  })
+  await page.getByTestId(`learned-${seeded.martialId}`).getByRole('button', { name: '遗忘' }).click()
+
+  await expect(page.getByTestId(`learned-${seeded.martialId}`)).toHaveCount(0)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().resources.silver)).toBe(seeded.silver + 80)
+})
+
+test('BOSS 挑战期间侠客配置会锁定并说明原因', async ({ page }) => {
+  await page.getByRole('button', { name: /战斗/ }).click()
+  await page.getByRole('button', { name: /挑战断碑手/ }).click()
+  await page.getByRole('button', { name: /侠客/ }).click()
+
+  await expect(page.getByTestId('hero-build-lock')).toContainText('BOSS 挑战期间')
+  await expect(page.getByTestId('martial-slot-0').getByRole('button', { name: '卸下' })).toBeDisabled()
+})
+
+test('四槽武功会展示预案并按优先级在自动战斗中施展', async ({ page }) => {
+  await page.getByRole('button', { name: /侠客/ }).click()
+  await expect(page.getByTestId('martial-slots').locator('.martial-slot')).toHaveCount(4)
+  await expect(page.getByTestId('learned-martials').locator('.learned-martial-row')).toHaveCount(1)
 
   await page.getByRole('button', { name: /战斗/ }).click()
-  await expect(page.getByTestId('skill-plan').locator('.skill-plan-grid > span')).toHaveCount(3)
+  const plans = page.getByTestId('skill-plan').locator('.skill-plan-grid > span')
+  await expect(plans).toHaveCount(3)
+  await expect(plans.nth(0)).toContainText('1. 赤浪断岳')
+  await expect(plans.nth(1)).toContainText('1. 寒江听雪')
+  await expect(plans.nth(2)).toContainText('1. 抱元守一')
   await page.getByRole('button', { name: /挑战断碑手/ }).click()
   await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(4))
 
   await expect(page.locator('.log-skill').first()).toBeVisible()
   await expect(page.locator('.fighter-skill')).toHaveCount(3)
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().combat.logs.some((event) => event.kind === 'skill'))).toBe(true)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().combat.logs
+    .filter((event) => event.kind === 'skill')
+    .every((event) => Boolean(event.abilityId)))).toBe(true)
 })
 
 test('可切换前后排阵型且战斗按阵位展示', async ({ page }, testInfo) => {
@@ -254,4 +296,9 @@ test('移动端布局保持可操作', async ({ page }, testInfo) => {
   await expect(page.locator('.party-slot').first()).toBeVisible()
   await expect(page.getByTestId('idle-combat-return')).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('mobile-party.png'), fullPage: true })
+  await page.getByRole('button', { name: /侠客/ }).click()
+  await expect(page.getByTestId('hero-roster')).toBeVisible()
+  await expect(page.getByTestId('martial-slots').locator('.martial-slot')).toHaveCount(4)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('mobile-heroes.png'), fullPage: true })
 })

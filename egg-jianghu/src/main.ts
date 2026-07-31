@@ -3,7 +3,6 @@ import {
   BONDS,
   COMBOS,
   HEROES,
-  MARTIALS,
   MYSTERY_BLESSINGS,
   MYSTERY_ENCOUNTERS,
   REGIONS,
@@ -20,17 +19,19 @@ import {
   createInitialState,
   equipMartial,
   finishMystery,
+  forgetMartial,
   getActiveBonds,
   getActiveCombos,
   getFormationSummary,
   getHeroStats,
+  getMartialForgetPreview,
   getPartyPower,
   getPartySynergy,
   getSelectedRegion,
   getUpgradeCost,
   isRegionUnlocked,
   chooseMysteryBlessing,
-  recruitHero,
+  moveMartial,
   returnToIdle,
   setFormationRow,
   setPartySlot,
@@ -38,11 +39,10 @@ import {
   startIdleStage,
   startChallenge,
   stepCombat,
-  trainMartial,
-  unlockMartial,
+  unequipMartial,
   upgradeHero,
 } from './game'
-import { getLearnedMartialRank, getPrimaryMartialId } from './martials'
+import { formatMartialPassive, getPassiveBonuses, MAX_LEARNED_MARTIALS } from './martials'
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
 import type { ActionResult, CombatEvent, CombatHeroState, CombatStatus, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
 
@@ -58,6 +58,7 @@ let state = loaded.state
 let activeTab: TabId = 'idle'
 let levelView: LevelView = 'regions'
 let chapterRegionId: RegionId | null = null
+let selectedHeroId: string | null = null
 let toast = loaded.recoveredFromError ? '旧存档无法读取，已安全恢复为新档' : ''
 let toastKind: 'success' | 'warning' = loaded.recoveredFromError ? 'warning' : 'success'
 let toastTimer = 0
@@ -78,8 +79,14 @@ const escapeHtml = (value: string): string => value.replace(/[&<>'"]/g, (char) =
 })[char] ?? char)
 
 const formatNumber = (value: number): string => Math.floor(value).toLocaleString('zh-CN')
-const isBuildUiLocked = (): boolean => Boolean(state.mystery.run)
-  || (state.combat.mode === 'challenge' && state.combat.status === 'fighting')
+const getBuildUiLockMessage = (): string => {
+  if (state.mystery.run) return '秘境探索期间侠客配置已锁定，请先完成或离开本轮秘境。'
+  if (state.combat.mode === 'challenge' && state.combat.status === 'fighting') {
+    return 'BOSS 挑战期间侠客配置已锁定，请先完成本场战斗。'
+  }
+  return ''
+}
+const isBuildUiLocked = (): boolean => Boolean(getBuildUiLockMessage())
 
 const renderStatusChips = (statuses: CombatStatus[]): string => statuses.length
   ? `<div class="status-chips">${statuses.map((status) => `
@@ -356,76 +363,142 @@ const renderIdle = (): string => {
   return renderRegionList()
 }
 
-const renderMartialSelect = (heroId: string): string => {
-  const equipped = getPrimaryMartialId(state.heroes[heroId])
-  return `
-    <label class="field-label">所习武学
-      <select data-action="equip-martial" data-hero-id="${heroId}" ${isBuildUiLocked() ? 'disabled' : ''}>
-        ${state.unlockedMartials.map((martialId) => {
-          const martial = martialById(martialId)
-          return martial ? `<option value="${martial.id}" ${equipped === martial.id ? 'selected' : ''}>${martial.name}</option>` : ''
-        }).join('')}
-      </select>
-    </label>`
+const getOwnedHeroes = () => HEROES.filter((hero) => state.heroes[hero.id]?.unlocked)
+
+const getSelectedHeroId = (): string => {
+  const owned = getOwnedHeroes()
+  const fallback = state.formation.find((slot) => state.heroes[slot.heroId]?.unlocked)?.heroId ?? owned[0]?.id ?? ''
+  if (!selectedHeroId || !state.heroes[selectedHeroId]?.unlocked) selectedHeroId = fallback
+  return selectedHeroId
 }
 
-const renderHeroCard = (heroId: string): string => {
+const renderHeroRosterCard = (heroId: string, activeHeroId: string): string => {
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
-  if (!hero || !progress) return ''
-  const stats = getHeroStats(state, heroId)
-  if (!progress.unlocked) {
-    return `
-      <article class="hero-card locked">
-        <div class="hero-card-head"><div class="portrait muted">?</div><div><span>${hero.sect} · ${hero.epithet}</span><h3>${hero.name}</h3></div></div>
-        <p>${hero.description}</p>
-        <div class="tag-row"><span>${hero.element}行</span><span>${hero.style}劲</span></div>
-        <button class="primary-button full" data-action="recruit" data-hero-id="${hero.id}" ${isBuildUiLocked() ? 'disabled' : ''}>以 ${hero.recruitCost} 银两结识</button>
-      </article>`
-  }
-  const martialId = getPrimaryMartialId(progress)
-  const martial = martialId ? martialById(martialId) : undefined
-  const rank = martial ? getLearnedMartialRank(progress, martial.id) : 0
-  const upgradeCost = getUpgradeCost(progress.level)
-  const trainSilver = rank * 55
-  const trainPages = rank * 12
+  if (!hero || !progress?.unlocked) return ''
+  const inFormation = state.formation.some((slot) => slot.heroId === heroId)
   return `
-    <article class="hero-card unlocked">
-      <div class="hero-card-head">
-        <div class="portrait element-${hero.element}">${hero.name.slice(-1)}</div>
-        <div><span>${hero.sect} · ${hero.epithet}</span><h3>${hero.name}<small>Lv.${progress.level}</small></h3></div>
-        <b class="power-number">${stats.power}<small>战力</small></b>
-      </div>
-      <p>${hero.description}</p>
-      <div class="stat-line"><span>攻 <b>${stats.attack}</b></span><span>御 <b>${stats.defense}</b></span><span>气血 <b>${stats.hp}</b></span></div>
-      <div class="tag-row"><span>${hero.element}行</span><span>${hero.style}劲</span><span class="affinity">${stats.affinityText}</span></div>
-      ${renderMartialSelect(heroId)}
-      ${martial ? `<div class="skill-summary"><small>自动招式 · ${martial.skill.cooldown} 次行动冷却</small><strong>${martial.skill.name}</strong><p>${martial.skill.description}</p></div>` : ''}
-      <div class="card-actions">
-        <button class="secondary-button" data-action="upgrade" data-hero-id="${hero.id}" ${isBuildUiLocked() ? 'disabled' : ''}>升级 <small>${upgradeCost.silver}银 / ${upgradeCost.experience}历</small></button>
-        <button class="secondary-button" data-action="train" data-hero-id="${hero.id}" ${rank >= 3 || isBuildUiLocked() ? 'disabled' : ''}>${rank >= 3 ? '武学圆满' : `武学进阶 · ${trainSilver}银/${trainPages}卷`}</button>
-      </div>
-    </article>`
+    <button type="button" class="hero-roster-card ${heroId === activeHeroId ? 'selected' : ''}"
+      data-action="select-hero" data-hero-id="${heroId}" aria-pressed="${heroId === activeHeroId}">
+      ${inFormation ? '<span class="roster-status">出战</span>' : ''}
+      <span class="roster-level">Lv.${progress.level}</span>
+      <span class="roster-portrait element-${hero.element}">${hero.name.slice(-1)}</span>
+      <strong>${hero.name}</strong>
+      <small>${hero.sect} · ${hero.epithet}</small>
+    </button>`
 }
 
-const renderHeroes = (): string => `
-  <div class="page-heading compact-heading">
-    <div><span class="eyebrow">Heroes &amp; Martial Arts</span><h1>江湖名册</h1><p>阅历用于精进境界；武学与侠客五行、刚柔相合时，威力更盛。</p></div>
-  </div>
-  <section class="martial-library panel">
-    <div class="section-title"><span>藏经阁 · 五门武学</span><small>残页可参悟，单侠客可修至三重</small></div>
-    <div class="martial-strip">
-      ${MARTIALS.map((martial) => {
-        const unlocked = state.unlockedMartials.includes(martial.id)
-        return `<article class="martial-item ${unlocked ? '' : 'locked'}">
-          <span class="martial-glyph element-${martial.element}">${martial.element}</span>
-          <div><strong>${martial.name}</strong><small>${martial.element}行 · ${martial.style}劲</small><p>${martial.description}</p><em>${martial.skill.name}：${martial.skill.description}</em></div>
-          ${unlocked ? '<b class="learned">已参悟</b>' : `<button class="text-button" data-action="unlock-martial" data-martial-id="${martial.id}" ${isBuildUiLocked() ? 'disabled' : ''}>${martial.unlockCost} 残页</button>`}
-        </article>`
-      }).join('')}
+const renderMartialSlots = (heroId: string): string => {
+  const progress = state.heroes[heroId]
+  const locked = isBuildUiLocked()
+  return `
+    <section class="martial-slot-section">
+      <div class="section-title"><span>出战武功</span><small>按 1 → 4 的优先级自动施展</small></div>
+      <div class="martial-slots" data-testid="martial-slots">
+        ${progress.equippedMartialIds.map((martialId, slot) => {
+          const martial = martialId ? martialById(martialId) : undefined
+          const learned = martialId ? progress.learnedMartials[martialId] : undefined
+          return `
+            <article class="martial-slot ${martial ? 'filled' : 'empty'}" data-testid="martial-slot-${slot}">
+              <span class="slot-priority">${slot + 1}</span>
+              ${martial && learned ? `
+                <div class="slot-martial-copy">
+                  <small>${martial.element}行 · ${martial.style}劲 · ${martial.rankNames[learned.rank - 1]}</small>
+                  <strong>${martial.name}</strong>
+                  <span>${martial.skill.name} · 冷却 ${martial.skill.cooldown}</span>
+                </div>
+                <div class="slot-controls">
+                  <button type="button" class="text-button" data-action="move-martial" data-hero-id="${heroId}" data-slot="${slot}" data-direction="-1" aria-label="上移" ${locked || slot === 0 ? 'disabled' : ''}>↑</button>
+                  <button type="button" class="text-button" data-action="move-martial" data-hero-id="${heroId}" data-slot="${slot}" data-direction="1" aria-label="下移" ${locked || slot === 3 ? 'disabled' : ''}>↓</button>
+                  <button type="button" class="text-button danger" data-action="unequip-martial" data-hero-id="${heroId}" data-slot="${slot}" ${locked ? 'disabled' : ''}>卸下</button>
+                </div>` : '<em>空槽位<small>从下方已学武功中装备</small></em>'}
+            </article>`
+        }).join('')}
+      </div>
+    </section>`
+}
+
+const renderLearnedMartials = (heroId: string): string => {
+  const progress = state.heroes[heroId]
+  const learnedEntries = Object.entries(progress.learnedMartials)
+    .map(([martialId, learned]) => ({ martial: martialById(martialId), learned }))
+    .filter((entry): entry is { martial: NonNullable<ReturnType<typeof martialById>>; learned: typeof entry.learned } => Boolean(entry.martial))
+  const locked = isBuildUiLocked()
+  return `
+    <section class="learned-martials" data-testid="learned-martials">
+      <div class="section-title"><span>已学武功</span><small>${learnedEntries.length} / ${MAX_LEARNED_MARTIALS} · 全部被动永久叠加</small></div>
+      <div class="learned-martial-list">
+        ${learnedEntries.map(({ martial, learned }) => {
+          const equippedSlot = progress.equippedMartialIds.indexOf(martial.id)
+          const canEquip = equippedSlot < 0 && progress.equippedMartialIds.includes(null)
+          return `
+            <article class="learned-martial-row" data-testid="learned-${martial.id}">
+              <span class="martial-glyph element-${martial.element}">${martial.element}</span>
+              <div class="learned-martial-copy">
+                <div><strong>${martial.name}</strong><small>${martial.rankNames[learned.rank - 1]} · ${martial.style}劲</small></div>
+                <p>${martial.skill.name}：${martial.skill.description}</p>
+                <em>被动 · ${formatMartialPassive(martial.id, learned.rank)}</em>
+              </div>
+              <div class="learned-martial-actions">
+                ${equippedSlot >= 0
+                  ? `<span>槽位 ${equippedSlot + 1}</span>`
+                  : `<button type="button" class="secondary-button" data-action="equip-martial" data-hero-id="${heroId}" data-martial-id="${martial.id}" ${locked || !canEquip ? 'disabled' : ''}>${canEquip ? '装备' : '槽位已满'}</button>`}
+                <button type="button" class="text-button danger" data-action="forget-martial" data-hero-id="${heroId}" data-martial-id="${martial.id}" ${locked ? 'disabled' : ''}>遗忘</button>
+              </div>
+            </article>`
+        }).join('') || '<div class="empty-martial-state">尚未学会武功；武功获取方式将在后续玩法中开放。</div>'}
+      </div>
+    </section>`
+}
+
+const renderHeroDetail = (heroId: string): string => {
+  const hero = heroById(heroId)
+  const progress = state.heroes[heroId]
+  if (!hero || !progress?.unlocked) return '<section class="hero-detail panel">暂无已拥有侠客</section>'
+  const stats = getHeroStats(state, heroId)
+  const passives = getPassiveBonuses(progress.learnedMartials)
+  const upgradeCost = getUpgradeCost(progress.level)
+  return `
+    <section class="hero-detail panel" data-testid="hero-detail">
+      <div class="hero-detail-head">
+        <span class="hero-detail-portrait element-${hero.element}">${hero.name.slice(-1)}</span>
+        <div class="hero-detail-identity">
+          <small>${hero.sect} · ${hero.epithet}</small>
+          <h2>${hero.name}<span>Lv.${progress.level}</span></h2>
+          <p>${hero.description}</p>
+          <div class="tag-row"><span>${hero.element}行</span><span>${hero.style}劲</span><span class="affinity">${stats.affinityText}</span></div>
+        </div>
+        <b class="power-number">${stats.power}<small>战力</small></b>
+      </div>
+      <div class="hero-detail-stats">
+        <span><small>攻击</small><strong>${stats.attack}</strong></span>
+        <span><small>防御</small><strong>${stats.defense}</strong></span>
+        <span><small>气血</small><strong>${stats.hp}</strong></span>
+        <span class="passive-total"><small>已学被动</small><strong>攻 +${Math.round(passives.attack * 100)}% · 御 +${Math.round(passives.defense * 100)}% · 气血 +${Math.round(passives.hp * 100)}%</strong></span>
+        <button type="button" class="secondary-button realm-upgrade" data-action="upgrade" data-hero-id="${hero.id}" ${isBuildUiLocked() ? 'disabled' : ''}>提升境界 <small>${upgradeCost.silver} 银两 / ${upgradeCost.experience} 阅历</small></button>
+      </div>
+      ${renderMartialSlots(heroId)}
+      ${renderLearnedMartials(heroId)}
+    </section>`
+}
+
+const renderHeroes = (): string => {
+  const owned = getOwnedHeroes()
+  const heroId = getSelectedHeroId()
+  const lockMessage = getBuildUiLockMessage()
+  return `
+    <div class="page-heading compact-heading heroes-heading">
+      <div><span class="eyebrow">Heroes &amp; Loadout</span><h1>江湖名册</h1><p>查看已拥有侠客，配置四门出战武功；全部已学武功的被动效果都会叠加。</p></div>
     </div>
-  </section>
-  <section class="hero-grid">${HEROES.map((hero) => renderHeroCard(hero.id)).join('')}</section>`
+    ${lockMessage ? `<aside class="hero-build-lock" data-testid="hero-build-lock"><b>配置锁定</b><span>${lockMessage}</span></aside>` : ''}
+    <div class="heroes-workbench">
+      <aside class="hero-roster-panel panel">
+        <div class="section-title"><span>侠客阵容</span><small>已拥有 ${owned.length} 人</small></div>
+        <div class="hero-roster" data-testid="hero-roster">${owned.map((hero) => renderHeroRosterCard(hero.id, heroId)).join('')}</div>
+      </aside>
+      ${renderHeroDetail(heroId)}
+    </div>`
+}
 
 const renderParty = (): string => {
   const synergy = getPartySynergy(state)
@@ -690,18 +763,42 @@ app.addEventListener('click', (event) => {
   }
   const button = target.closest<HTMLButtonElement>('button[data-action]')
   if (!button) return
-  const { action, blessingId, heroId, martialId, regionId, row, slot, stage } = button.dataset
+  const { action, blessingId, direction, heroId, martialId, regionId, row, slot, stage } = button.dataset
   if (toastTimer) window.clearTimeout(toastTimer)
 
   switch (action) {
+    case 'select-hero': selectedHeroId = heroId ?? null; break
     case 'upgrade': notify(upgradeHero(state, heroId ?? '')); break
-    case 'recruit': notify(recruitHero(state, heroId ?? '')); break
-    case 'train': {
-      const progress = state.heroes[heroId ?? '']
-      notify(trainMartial(state, heroId ?? '', progress ? getPrimaryMartialId(progress) ?? '' : ''))
+    case 'equip-martial': notify(equipMartial(state, heroId ?? '', martialId ?? '')); break
+    case 'unequip-martial': notify(unequipMartial(state, heroId ?? '', Number(slot))); break
+    case 'move-martial': {
+      const offset = Number(direction)
+      if (offset !== -1 && offset !== 1) return
+      notify(moveMartial(state, heroId ?? '', Number(slot), offset))
       break
     }
-    case 'unlock-martial': notify(unlockMartial(state, martialId ?? '')); break
+    case 'forget-martial': {
+      const targetHeroId = heroId ?? ''
+      const targetMartialId = martialId ?? ''
+      const preview = getMartialForgetPreview(state, targetHeroId, targetMartialId)
+      if (!preview) {
+        notify('没有可遗忘的武功', 'warning')
+        break
+      }
+      const equipped = state.heroes[targetHeroId]?.equippedMartialIds.includes(targetMartialId)
+      const refund = preview.refund
+      const confirmed = window.confirm([
+        `确定遗忘「${preview.martial.name}」？`,
+        `当前重数：${preview.martial.rankNames[preview.rank - 1]}`,
+        `消失被动：${preview.passiveText}`,
+        equipped ? '该武功已装备，确认后将自动卸下。' : '',
+        `返还：${refund.silver} 银两、${refund.experience} 阅历、${refund.pages} 残页、${refund.reputation} 声望`,
+        '遗忘后无法撤销。',
+      ].filter(Boolean).join('\n'))
+      if (!confirmed) return
+      notify(forgetMartial(state, targetHeroId, targetMartialId))
+      break
+    }
     case 'open-region': {
       if (!REGIONS.some((region) => region.id === regionId)) return
       chapterRegionId = regionId as RegionId
@@ -774,6 +871,7 @@ app.addEventListener('click', (event) => {
       activeTab = 'idle'
       levelView = 'regions'
       chapterRegionId = null
+      selectedHeroId = null
       lastRuntimeAt = Date.now()
       notify('江湖已重开')
       break
@@ -787,9 +885,8 @@ app.addEventListener('change', (event) => {
   const select = event.target as HTMLSelectElement
   if (!(select instanceof HTMLSelectElement)) return
   const action = select.dataset.action
-  if (action === 'equip-martial') notify(equipMartial(state, select.dataset.heroId ?? '', select.value))
-  else if (action === 'party-slot') notify(setPartySlot(state, Number(select.dataset.slot), select.value))
-  else return
+  if (action !== 'party-slot') return
+  notify(setPartySlot(state, Number(select.dataset.slot), select.value))
   persistAndRender()
 })
 
@@ -801,6 +898,7 @@ importInput.addEventListener('change', async () => {
     state = imported.state
     levelView = 'regions'
     chapterRegionId = null
+    selectedHeroId = null
     lastRuntimeAt = Date.now()
     saveGame(window.localStorage, state)
     notify('存档导入成功')
@@ -849,6 +947,7 @@ window.__EGG_JIANGHU__ = {
     state = createInitialState()
     levelView = 'regions'
     chapterRegionId = null
+    selectedHeroId = null
     lastRuntimeAt = Date.now()
     render()
   },

@@ -474,44 +474,74 @@
   .challenge-away strong { color: var(--paper); }
   .challenge-away p { margin-top: 3px; color: var(--paper-dim); font-size: 11px; }
 
-  .martial-library { margin-bottom: 20px; padding: 20px; }
-  .martial-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .martial-item { position: relative; display: grid; grid-template-columns: 38px 1fr; gap: 10px; min-height: 132px; padding: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.15); }
-  .martial-item.locked { filter: saturate(.55); opacity: .72; }
-  .martial-glyph { display: grid; place-items: center; width: 36px; height: 44px; color: #f0e3c9; border: 1px solid var(--line-strong); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 18px; }
-  .martial-item > div { display: grid; align-content: start; gap: 2px; }
-  .martial-item strong { color: var(--paper); font-size: 12px; }
-  .martial-item small { color: var(--gold); font-size: 8px; }
-  .martial-item p { margin-top: 5px; color: var(--paper-dim); font-size: 9px; line-height: 1.55; }
-  .martial-item em { margin-top: 5px; color: #9bb6a8; font-size: 8px; font-style: normal; line-height: 1.5; }
-  .learned { position: absolute; right: 10px; bottom: 8px; color: #688f80; font-size: 9px; font-weight: 400; }
-  .martial-item > .text-button { position: absolute; right: 7px; bottom: 5px; color: var(--gold); }
+  .heroes-heading { margin-bottom: 20px; }
+  .hero-build-lock { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding: 11px 15px; color: #d7c8ab; border: 1px solid rgba(166,64,50,.48); background: rgba(112,39,31,.14); font-size: 10px; line-height: 1.6; }
+  .hero-build-lock b { flex: 0 0 auto; color: var(--cinnabar-bright); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 13px; font-weight: 400; }
+  .heroes-workbench { display: grid; grid-template-columns: 340px minmax(0, 1fr); align-items: start; gap: 14px; }
+  .hero-roster-panel { min-width: 0; padding: 16px; }
+  .hero-roster { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; gap: 9px; }
+  .hero-roster-card { position: relative; display: grid; justify-items: center; min-width: 0; min-height: 128px; padding: 22px 6px 9px; color: var(--paper); border: 1px solid var(--line); border-radius: 0; background: rgba(8,7,5,.26); cursor: pointer; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
+  .hero-roster-card:hover { border-color: var(--gold-dark); background: rgba(199,161,91,.06); transform: translateY(-2px); }
+  .hero-roster-card.selected { border-color: var(--gold); background: linear-gradient(145deg, rgba(199,161,91,.13), rgba(17,14,10,.4)); box-shadow: 0 0 0 1px rgba(199,161,91,.2), 0 0 18px rgba(199,161,91,.24); }
+  .roster-status, .roster-level { position: absolute; top: 6px; padding: 1px 4px; font-size: 7px; line-height: 1.4; }
+  .roster-status { left: 5px; color: #a7c6b5; border: 1px solid rgba(98,136,121,.34); background: rgba(42,67,57,.26); }
+  .roster-level { right: 5px; color: var(--gold); font-family: Georgia, serif; }
+  .roster-portrait { display: grid; place-items: center; width: 50px; height: 54px; margin-bottom: 6px; color: #f0e3c9; border: 1px solid var(--line-strong); border-radius: 48% 48% 42% 42%; font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 25px; box-shadow: inset 0 0 18px rgba(0,0,0,.34); }
+  .hero-roster-card strong { overflow: hidden; max-width: 100%; font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 13px; font-weight: 400; letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
+  .hero-roster-card > small { overflow: hidden; max-width: 100%; margin-top: 2px; color: var(--paper-dim); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
 
-  .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .hero-card { min-width: 0; padding: 18px; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 12px 34px rgba(0,0,0,.18); }
-  .hero-card.locked { background: rgba(24,20,15,.7); }
-  .hero-card-head { gap: 12px; }
-  .hero-card-head > div:nth-child(2) { min-width: 0; flex: 1; }
-  .hero-card-head span { color: var(--gold); font-size: 8px; letter-spacing: .08em; }
-  .hero-card h3 { margin-top: 2px; color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 21px; font-weight: 400; letter-spacing: .08em; }
-  .hero-card h3 small { margin-left: 7px; color: var(--paper-dim); font-family: Georgia, serif; font-size: 9px; }
-  .hero-card > p { min-height: 44px; margin: 13px 0 11px; color: var(--paper-dim); font-size: 10px; line-height: 1.65; }
+  .hero-detail { min-width: 0; padding: 22px; }
+  .hero-detail-head { display: grid; grid-template-columns: 82px minmax(0, 1fr) auto; align-items: start; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .hero-detail-portrait { display: grid; place-items: center; width: 82px; height: 88px; color: #f0e3c9; border: 2px solid var(--gold-dark); border-radius: 48% 48% 42% 42%; font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 40px; box-shadow: inset 0 0 24px rgba(0,0,0,.35), 0 0 20px rgba(199,161,91,.12); }
+  .hero-detail-identity { min-width: 0; }
+  .hero-detail-identity > small { color: var(--gold); font-size: 8px; letter-spacing: .12em; }
+  .hero-detail-identity h2 { margin: 2px 0 6px; color: var(--paper); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 24px; font-weight: 400; letter-spacing: .09em; }
+  .hero-detail-identity h2 span { margin-left: 8px; color: var(--paper-dim); font-family: Georgia, serif; font-size: 10px; letter-spacing: 0; }
+  .hero-detail-identity p { max-width: 700px; color: var(--paper-dim); font-size: 9px; line-height: 1.7; }
   .power-number { display: grid; color: var(--gold-bright); font-family: Georgia, serif; font-size: 17px; text-align: right; }
   .power-number small { color: var(--paper-dim); font-size: 7px; font-weight: 400; }
-  .stat-line { display: flex; justify-content: space-between; padding: 8px 10px; color: var(--paper-dim); border-block: 1px solid var(--line); font-size: 9px; }
-  .stat-line b { color: var(--paper-muted); font-family: Georgia, serif; font-weight: 400; }
   .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
   .tag-row span { padding: 3px 7px; color: var(--paper-muted); border: 1px solid var(--line); font-size: 8px; }
   .tag-row .affinity { color: #86a294; border-color: rgba(98,136,121,.3); }
-  .field-label { display: grid; gap: 5px; margin-bottom: 10px; color: var(--paper-dim); font-size: 8px; }
-  .skill-summary { display: grid; gap: 3px; margin: 0 0 10px; padding: 9px 10px; border: 1px solid rgba(98,136,121,.3); background: rgba(98,136,121,.06); }
-  .skill-summary small { color: #86a294; font-size: 8px; }
-  .skill-summary strong { color: var(--paper); font-size: 11px; }
-  .skill-summary p { color: var(--paper-dim); font-size: 8px; line-height: 1.5; }
+  .hero-detail-stats { display: grid; grid-template-columns: repeat(3, minmax(74px, .55fr)) minmax(220px, 1.5fr) auto; align-items: stretch; gap: 1px; margin: 14px 0 22px; border: 1px solid var(--line); background: var(--line); }
+  .hero-detail-stats > span { display: grid; align-content: center; gap: 2px; min-width: 0; padding: 10px 12px; background: #1b1712; }
+  .hero-detail-stats small { color: var(--paper-dim); font-size: 7px; }
+  .hero-detail-stats strong { color: var(--paper-muted); font-family: Georgia, serif; font-size: 15px; font-weight: 400; }
+  .hero-detail-stats .passive-total strong { color: #96b6a5; font-family: inherit; font-size: 9px; line-height: 1.5; }
+  .realm-upgrade { min-width: 132px; border: 0; }
+  .realm-upgrade small { display: block; margin-top: 2px; }
+
+  .martial-slot-section, .learned-martials { min-width: 0; }
+  .martial-slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .martial-slot { position: relative; display: grid; align-content: space-between; min-width: 0; min-height: 142px; padding: 14px 12px 10px 34px; border: 1px solid var(--line); background: rgba(0,0,0,.15); }
+  .martial-slot.filled { border-color: rgba(199,161,91,.28); background: linear-gradient(150deg, rgba(199,161,91,.08), rgba(0,0,0,.13)); }
+  .slot-priority { position: absolute; top: 0; left: 0; display: grid; place-items: center; width: 25px; height: 100%; color: var(--gold); border-right: 1px solid var(--line); font-family: Georgia, serif; font-size: 14px; }
+  .slot-martial-copy { display: grid; align-content: start; gap: 4px; min-width: 0; }
+  .slot-martial-copy small { color: var(--gold); font-size: 7px; }
+  .slot-martial-copy strong { overflow: hidden; color: var(--paper); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+  .slot-martial-copy span { color: #8fac9d; font-size: 8px; line-height: 1.45; }
+  .martial-slot > em { display: grid; align-self: center; gap: 3px; color: var(--paper-dim); font-size: 10px; font-style: normal; line-height: 1.4; }
+  .martial-slot > em small { font-size: 7px; }
+  .slot-controls { display: flex; align-items: center; gap: 2px; margin-top: 9px; }
+  .slot-controls button { min-width: 25px; padding: 3px 5px; font-size: 8px; }
+  .slot-controls .danger { margin-left: auto; }
+  .text-button.danger { color: #c37a6f; }
+
+  .learned-martials { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .learned-martial-list { display: grid; gap: 7px; }
+  .learned-martial-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-width: 0; padding: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.14); }
+  .martial-glyph { display: grid; place-items: center; width: 40px; height: 48px; color: #f0e3c9; border: 1px solid var(--line-strong); font-family: "Source Han Serif SC Game Heavy", "Noto Serif SC", serif; font-size: 19px; }
+  .learned-martial-copy { display: grid; gap: 3px; min-width: 0; }
+  .learned-martial-copy > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+  .learned-martial-copy strong { color: var(--paper); font-size: 12px; }
+  .learned-martial-copy small { color: var(--gold); font-size: 8px; }
+  .learned-martial-copy p { color: var(--paper-dim); font-size: 8px; line-height: 1.55; }
+  .learned-martial-copy em { color: #94b2a2; font-size: 8px; font-style: normal; }
+  .learned-martial-actions { display: grid; justify-items: stretch; gap: 4px; min-width: 78px; }
+  .learned-martial-actions > span { padding: 5px 8px; color: var(--gold); border: 1px solid var(--gold-dark); font-size: 8px; text-align: center; }
+  .learned-martial-actions button { min-height: 28px; padding: 5px 8px; font-size: 8px; }
+  .empty-martial-state { padding: 24px; color: var(--paper-dim); border: 1px dashed var(--line); font-size: 9px; text-align: center; }
   select { width: 100%; padding: 8px 29px 8px 9px; color: var(--paper); border: 1px solid var(--line-strong); border-radius: 0; background: #1a1611; font-size: 10px; }
-  .card-actions { gap: 6px; }
-  .card-actions button { flex: 1; min-height: 39px; padding: 7px; font-size: 9px; }
-  .card-actions small { display: block; margin-top: 2px; color: var(--paper-dim); font-size: 7px; }
 
   .power-plaque, .stage-plaque { flex: 0 0 auto; min-width: 150px; padding: 12px 18px; text-align: center; border-block: 1px solid var(--gold-dark); }
   .power-plaque small, .stage-plaque small { display: block; color: var(--paper-dim); font-size: 9px; }
@@ -711,8 +741,13 @@
     .resource-row { grid-row: 2; grid-column: 1 / -1; width: 100%; }
     .resource-pill { flex: 1; }
     .idle-layout, .battle-page-layout { grid-template-columns: minmax(0, 1fr) 270px; }
-    .hero-grid { grid-template-columns: repeat(2, 1fr); }
-    .martial-strip { grid-template-columns: repeat(3, 1fr); }
+    .hero-detail-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .hero-detail-stats .passive-total { grid-column: 1 / 3; }
+  }
+
+  @media (max-width: 980px) {
+    .heroes-workbench { grid-template-columns: 1fr; }
+    .hero-roster { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   }
 
   @media (max-width: 820px) {
@@ -745,7 +780,16 @@
     .synergy-grid { grid-template-columns: 1fr; }
     .bond-grid { grid-template-columns: repeat(2, 1fr); }
     .combo-grid { grid-template-columns: repeat(2, 1fr); }
-    .martial-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 700px) {
+    .hero-roster { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .hero-detail-head { grid-template-columns: 72px minmax(0, 1fr); }
+    .hero-detail-portrait { width: 72px; height: 78px; font-size: 34px; }
+    .hero-detail-head > .power-number { grid-column: 2; justify-self: start; display: flex; align-items: baseline; gap: 5px; }
+    .hero-detail-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero-detail-stats .passive-total, .realm-upgrade { grid-column: 1 / -1; }
+    .martial-slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 580px) {
@@ -769,7 +813,7 @@
     .enemy-portrait { min-height: 110px; }
     .enemy-portrait > span { font-size: 40px; }
     .battle-result { inset: 43px 0 0; }
-    .hero-grid, .party-slots, .synergy-grid { grid-template-columns: 1fr; }
+    .party-slots, .synergy-grid { grid-template-columns: 1fr; }
     .bond-grid, .combo-grid { grid-template-columns: 1fr; }
     .mystery-choice-grid { grid-template-columns: 1fr; }
     .mystery-run-head { align-items: flex-start; flex-wrap: wrap; }
@@ -783,8 +827,11 @@
     .stage-number { padding-right: 10px; }
     .stage-card > button { grid-column: 1 / -1; width: 100%; }
     .party-slots:has(.party-slot:only-child) { grid-template-columns: 1fr; }
-    .martial-strip { grid-template-columns: 1fr; }
-    .martial-item { min-height: 105px; }
+    .hero-detail { padding: 15px; }
+    .hero-build-lock { align-items: flex-start; }
+    .learned-martial-row { grid-template-columns: 40px minmax(0, 1fr); }
+    .learned-martial-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; min-width: 0; }
+    .learned-martial-actions > * { min-width: 82px; }
     .party-slot { display: grid; grid-template-columns: 76px 1fr; align-items: center; text-align: left; }
     .party-slot .portrait { grid-row: 1 / 5; }
     .party-slot select { grid-column: 2; }
@@ -802,6 +849,14 @@
       width: min(330px, calc(100vw - 28px));
       min-width: 0;
     }
+  }
+
+  @media (max-width: 480px) {
+    .martial-slots { grid-template-columns: 1fr; }
+    .hero-roster-card { min-height: 120px; }
+    .hero-detail-head { grid-template-columns: 62px minmax(0, 1fr); gap: 11px; }
+    .hero-detail-portrait { width: 62px; height: 68px; font-size: 30px; }
+    .hero-detail-identity h2 { font-size: 20px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
