@@ -1,5 +1,5 @@
 import { martialById } from './data'
-import type { LearnedMartialProgress, Resources } from './types'
+import type { EquippedMartialIds, HeroProgress, LearnedMartialProgress, Resources } from './types'
 
 export const MAX_LEARNED_MARTIALS = 20
 export const MAX_EQUIPPED_MARTIALS = 4
@@ -16,6 +16,19 @@ export const zeroResources = (): Resources => ({
   pages: 0,
   reputation: 0,
 })
+
+export const emptyEquippedMartialIds = (): EquippedMartialIds => [null, null, null, null]
+
+export const createLearnedMartial = (
+  rank = 1,
+  invested: Resources = zeroResources(),
+): LearnedMartialProgress => ({ rank, invested: { ...invested } })
+
+export const getPrimaryMartialId = (progress: HeroProgress): string | null =>
+  progress.equippedMartialIds.find((id): id is string => Boolean(id)) ?? null
+
+export const getLearnedMartialRank = (progress: HeroProgress, martialId: string): number =>
+  Math.max(1, progress.learnedMartials[martialId]?.rank ?? 1)
 
 export function getLegacyInvestment(rank: number): Resources {
   const safeRank = Math.max(1, Math.min(3, Math.floor(rank)))

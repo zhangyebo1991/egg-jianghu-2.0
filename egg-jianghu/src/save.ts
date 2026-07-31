@@ -1,5 +1,11 @@
 import { HEROES, MARTIALS, MYSTERY_BLESSINGS, MYSTERY_ENCOUNTERS, REGIONS, regionById } from './data'
 import { createInitialState, getMysteryChoices, resumeMysteryCombat, returnToIdle } from './game'
+import {
+  MAX_LEARNED_MARTIALS,
+  createLearnedMartial,
+  emptyEquippedMartialIds,
+  getLegacyInvestment,
+} from './martials'
 import type { FormationRow, FormationSlot, GameState, MysteryBlessingId } from './types'
 
 export const SAVE_KEY = 'egg-jianghu-2-save-v1'
@@ -21,8 +27,66 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const safeNumber = (value: unknown, fallback: number, max = Number.MAX_SAFE_INTEGER): number =>
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : fallback
 
+const safeInvestment = (value: unknown) => {
+  const source = isRecord(value) ? value : {}
+  return {
+    silver: safeNumber(source.silver, 0),
+    experience: safeNumber(source.experience, 0),
+    pages: safeNumber(source.pages, 0),
+    reputation: safeNumber(source.reputation, 0),
+  }
+}
+
+const hydrateVersion7Martials = (
+  imported: Record<string, unknown>,
+  allowedMartials: Set<string>,
+) => {
+  const learnedMartials: GameState['heroes'][string]['learnedMartials'] = {}
+  if (isRecord(imported.learnedMartials)) {
+    for (const [martialId, value] of Object.entries(imported.learnedMartials)) {
+      if (!allowedMartials.has(martialId) || !isRecord(value)) continue
+      learnedMartials[martialId] = createLearnedMartial(
+        Math.max(1, Math.floor(safeNumber(value.rank, 1, 3))),
+        safeInvestment(value.invested),
+      )
+      if (Object.keys(learnedMartials).length >= MAX_LEARNED_MARTIALS) break
+    }
+  }
+  const equippedMartialIds = emptyEquippedMartialIds()
+  const importedSlots = Array.isArray(imported.equippedMartialIds) ? imported.equippedMartialIds : []
+  for (let slot = 0; slot < equippedMartialIds.length; slot += 1) {
+    const martialId = importedSlots[slot]
+    if (typeof martialId !== 'string' || !learnedMartials[martialId]) continue
+    if (equippedMartialIds.includes(martialId)) continue
+    equippedMartialIds[slot] = martialId
+  }
+  return { learnedMartials, equippedMartialIds }
+}
+
+const hydrateLegacyMartials = (
+  imported: Record<string, unknown>,
+  allowedMartials: Set<string>,
+) => {
+  const learnedMartials: GameState['heroes'][string]['learnedMartials'] = {}
+  if (isRecord(imported.martialRanks)) {
+    for (const [martialId, value] of Object.entries(imported.martialRanks)) {
+      if (!allowedMartials.has(martialId)) continue
+      const rank = Math.max(1, Math.floor(safeNumber(value, 1, 3)))
+      learnedMartials[martialId] = createLearnedMartial(rank, getLegacyInvestment(rank))
+      if (Object.keys(learnedMartials).length >= MAX_LEARNED_MARTIALS) break
+    }
+  }
+  const equipped = typeof imported.equippedMartialId === 'string' && allowedMartials.has(imported.equippedMartialId)
+    ? imported.equippedMartialId
+    : null
+  if (equipped) learnedMartials[equipped] ??= createLearnedMartial()
+  const equippedMartialIds = emptyEquippedMartialIds()
+  equippedMartialIds[0] = equipped
+  return { learnedMartials, equippedMartialIds }
+}
+
 export function hydrateState(raw: unknown, now = Date.now()): GameState {
-  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5 && raw.version !== 6)) {
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5 && raw.version !== 6 && raw.version !== 7)) {
     throw new Error('存档版本不受支持或格式无效')
   }
   const state = createInitialState(now)
@@ -50,17 +114,11 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
       const progress = state.heroes[hero.id]
       progress.unlocked = hero.initial || imported.unlocked === true
       progress.level = Math.floor(safeNumber(imported.level, 1, 999)) || 1
-      const equipped = typeof imported.equippedMartialId === 'string' ? imported.equippedMartialId : null
-      progress.equippedMartialId = equipped && state.unlockedMartials.includes(equipped)
-        ? equipped
-        : progress.unlocked ? state.unlockedMartials[0] ?? null : null
-      progress.martialRanks = {}
-      if (isRecord(imported.martialRanks)) {
-        for (const [martialId, rank] of Object.entries(imported.martialRanks)) {
-          if (allowedMartials.has(martialId)) progress.martialRanks[martialId] = Math.max(1, Math.floor(safeNumber(rank, 1, 3)))
-        }
-      }
-      if (progress.equippedMartialId) progress.martialRanks[progress.equippedMartialId] ??= 1
+      const martialProgress = raw.version === 7
+        ? hydrateVersion7Martials(imported, allowedMartials)
+        : hydrateLegacyMartials(imported, allowedMartials)
+      progress.learnedMartials = martialProgress.learnedMartials
+      progress.equippedMartialIds = martialProgress.equippedMartialIds
     }
   }
 
@@ -167,7 +225,9 @@ export function loadGame(storage: StorageLike, now = Date.now()): LoadResult {
   const serialized = storage.getItem(SAVE_KEY)
   if (!serialized) return { state: createInitialState(now), recoveredFromError: false }
   try {
-    const state = hydrateState(JSON.parse(serialized) as unknown, now)
+    const raw = JSON.parse(serialized) as unknown
+    const state = hydrateState(raw, now)
+    if (isRecord(raw) && raw.version !== 7) saveGame(storage, state, now)
     return { state, recoveredFromError: false }
   } catch {
     return { state: createInitialState(now), recoveredFromError: true }

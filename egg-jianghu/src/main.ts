@@ -42,6 +42,7 @@ import {
   unlockMartial,
   upgradeHero,
 } from './game'
+import { getLearnedMartialRank, getPrimaryMartialId } from './martials'
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
 import type { ActionResult, CombatHeroState, CombatStatus, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
 
@@ -151,7 +152,7 @@ const renderHeroFighter = (member: CombatHeroState, index: number): string => {
   const targeted = lastEvent?.targetId === member.heroId && lastEvent.kind === 'enemy'
   const hpPercent = Math.max(0, Math.round((member.hp / member.maxHp) * 100))
   if (!hero || !progress) return ''
-  const martial = martialById(progress.equippedMartialId ?? '')
+  const martial = martialById(getPrimaryMartialId(progress) ?? '')
   return `
     <article class="fighter-card hero-fighter ${acting ? 'is-acting' : ''} ${targeted ? 'is-targeted' : ''} ${member.hp <= 0 ? 'is-defeated' : ''}" style="--fighter-delay:${index * 80}ms" data-hero-id="${hero.id}">
       <span class="fighter-position">${member.row === 'front' ? '前排 · 减伤' : '后排 · 增伤'}</span>
@@ -215,7 +216,7 @@ const renderCombatArena = (compact = false): string => {
           ${enemyHit ? `<b class="damage-float enemy-damage ${hitEvent?.kind === 'combo' ? 'combo-damage' : ''}">-${hitEvent?.amount ?? 0}</b>` : ''}
         </div>
         ${hitEvent?.kind === 'combo' ? `<div class="combo-flash"><span>合击</span><strong>${COMBOS.find((combo) => combo.id === hitEvent.abilityId)?.name ?? '联手武学'}</strong></div>` : ''}
-        ${hitEvent?.kind === 'skill' ? `<div class="skill-flash"><span>绝技</span><strong>${martialById(state.heroes[hitEvent.actorId ?? '']?.equippedMartialId ?? '')?.skill.name ?? '武学招式'}</strong></div>` : ''}
+        ${hitEvent?.kind === 'skill' ? `<div class="skill-flash"><span>绝技</span><strong>${state.heroes[hitEvent.actorId ?? ''] ? martialById(getPrimaryMartialId(state.heroes[hitEvent.actorId ?? '']) ?? '')?.skill.name ?? '武学招式' : '武学招式'}</strong></div>` : ''}
       </div>
       ${combat.status !== 'fighting' ? `
         <div class="battle-result ${combat.status}">
@@ -333,7 +334,7 @@ const renderIdle = (): string => {
 }
 
 const renderMartialSelect = (heroId: string): string => {
-  const equipped = state.heroes[heroId].equippedMartialId
+  const equipped = getPrimaryMartialId(state.heroes[heroId])
   return `
     <label class="field-label">所习武学
       <select data-action="equip-martial" data-hero-id="${heroId}" ${isBuildUiLocked() ? 'disabled' : ''}>
@@ -359,8 +360,9 @@ const renderHeroCard = (heroId: string): string => {
         <button class="primary-button full" data-action="recruit" data-hero-id="${hero.id}" ${isBuildUiLocked() ? 'disabled' : ''}>以 ${hero.recruitCost} 银两结识</button>
       </article>`
   }
-  const martial = progress.equippedMartialId ? martialById(progress.equippedMartialId) : undefined
-  const rank = martial ? progress.martialRanks[martial.id] ?? 1 : 0
+  const martialId = getPrimaryMartialId(progress)
+  const martial = martialId ? martialById(martialId) : undefined
+  const rank = martial ? getLearnedMartialRank(progress, martial.id) : 0
   const upgradeCost = getUpgradeCost(progress.level)
   const trainSilver = rank * 55
   const trainPages = rank * 12
@@ -514,7 +516,8 @@ const renderBattle = (): string => {
           <div class="section-title"><span>本阵招式预案</span><small>${activeBonds.length} 条关系羁绊 · ${activeCombos.length} 式合击</small></div>
           <div class="skill-plan-grid">${state.formation.map(({ heroId }) => {
             const hero = heroById(heroId)
-            const martial = martialById(state.heroes[heroId]?.equippedMartialId ?? '')
+            const progress = state.heroes[heroId]
+            const martial = martialById(progress ? getPrimaryMartialId(progress) ?? '' : '')
             return martial ? `<span><b>${hero?.name}</b><i>${martial.skill.name}</i><small>${martial.skill.description}</small></span>` : ''
           }).join('')}</div>
           <p class="battle-bond-summary">${activeBonds.length ? `羁绊：${activeBonds.map((bond) => `${bond.name}（${bond.effectText}）`).join('；')}` : '当前没有关系羁绊生效'}${activeCombos.length ? ` · 合击：${activeCombos.map((combo) => combo.name).join('、')}` : ''}</p>

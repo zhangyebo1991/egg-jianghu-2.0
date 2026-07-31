@@ -49,10 +49,70 @@ describe('本地存档', () => {
     state.resources.reputation = 42
     const imported = importSave(exportSave(state))
     expect(imported.state.resources.reputation).toBe(42)
-    expect(() => hydrateState({ version: 7 })).toThrow(/版本/)
+    expect(() => hydrateState({ version: 8 })).toThrow(/版本/)
   })
 
-  it('能够把 version 1 的队伍和关卡进度迁移为 version 6 区域进度', () => {
+  it('把 version 6 单武功字段迁移为 version 7 学习账本和四槽', () => {
+    const current = createInitialState(10_000)
+    const heroId = current.formation[0].heroId
+    const legacy = structuredClone(current) as unknown as Record<string, unknown>
+    legacy.version = 6
+    const heroes = legacy.heroes as Record<string, Record<string, unknown>>
+    heroes[heroId] = {
+      unlocked: true,
+      level: 9,
+      equippedMartialId: 'dragon_palm',
+      martialRanks: { dragon_palm: 3, frost_sword: 2 },
+    }
+
+    const migrated = hydrateState(legacy, 10_000)
+    expect(migrated.version).toBe(7)
+    expect(migrated.heroes[heroId].equippedMartialIds).toEqual(['dragon_palm', null, null, null])
+    expect(migrated.heroes[heroId].learnedMartials.dragon_palm.invested)
+      .toEqual({ silver: 165, experience: 0, pages: 36, reputation: 0 })
+    expect(migrated.heroes[heroId].learnedMartials.frost_sword.rank).toBe(2)
+  })
+
+  it('旧存档只迁移一次并立即写回 version 7', () => {
+    const storage = new MemoryStorage()
+    const raw = structuredClone(createInitialState(10_000)) as unknown as Record<string, unknown>
+    raw.version = 6
+    const heroId = createInitialState(10_000).formation[0].heroId
+    const heroes = raw.heroes as Record<string, Record<string, unknown>>
+    heroes[heroId] = {
+      unlocked: true,
+      level: 1,
+      equippedMartialId: 'dragon_palm',
+      martialRanks: { dragon_palm: 3 },
+    }
+    storage.setItem(SAVE_KEY, JSON.stringify(raw))
+
+    const first = loadGame(storage, 10_000).state
+    expect(JSON.parse(storage.getItem(SAVE_KEY)!).version).toBe(7)
+    const second = loadGame(storage, 10_000).state
+    expect(second.heroes[heroId].learnedMartials).toEqual(first.heroes[heroId].learnedMartials)
+  })
+
+  it('清洗 version 7 的负数账本、无效武功、重复槽位和超长槽位', () => {
+    const raw = structuredClone(createInitialState(10_000))
+    const heroId = raw.formation[0].heroId
+    raw.heroes[heroId].learnedMartials = {
+      dragon_palm: {
+        rank: 99,
+        invested: { silver: -50, experience: Number.NaN, pages: 12, reputation: 3 },
+      },
+    }
+    raw.heroes[heroId].equippedMartialIds = ['dragon_palm', 'dragon_palm', 'missing', null]
+
+    const hydrated = hydrateState(raw, 10_000)
+    expect(hydrated.heroes[heroId].learnedMartials.dragon_palm).toEqual({
+      rank: 3,
+      invested: { silver: 0, experience: 0, pages: 12, reputation: 3 },
+    })
+    expect(hydrated.heroes[heroId].equippedMartialIds).toEqual(['dragon_palm', null, null, null])
+  })
+
+  it('能够把 version 1 的队伍和关卡进度迁移为 version 7 区域进度', () => {
     const current = createInitialState(10_000)
     const { formation, selectedRegionId, defeatedBossIds, regionDefeats, ...legacyBase } = current
     void selectedRegionId
@@ -66,7 +126,7 @@ describe('本地存档', () => {
     }
 
     const migrated = hydrateState(legacy, 10_000)
-    expect(migrated.version).toBe(6)
+    expect(migrated.version).toBe(7)
     expect(migrated.formation.map((slot) => slot.heroId)).toEqual(formation.map((slot) => slot.heroId))
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['front', 'front', 'back'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker', 'boss_blackwind_chief'])
@@ -83,7 +143,7 @@ describe('本地存档', () => {
     legacyBase.formation[2].row = 'front'
     const migrated = hydrateState({ ...legacyBase, version: 2, clearedStage: 1 }, 10_000)
 
-    expect(migrated.version).toBe(6)
+    expect(migrated.version).toBe(7)
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker'])
   })

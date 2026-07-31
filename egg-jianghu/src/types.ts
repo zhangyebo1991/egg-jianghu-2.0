@@ -121,9 +121,16 @@ export interface MysteryProgress {
 export interface HeroProgress {
   unlocked: boolean
   level: number
-  equippedMartialId: string | null
-  martialRanks: Record<string, number>
+  learnedMartials: Record<string, LearnedMartialProgress>
+  equippedMartialIds: EquippedMartialIds
 }
+
+export type EquippedMartialIds = [
+  string | null,
+  string | null,
+  string | null,
+  string | null,
+]
 
 export interface Resources {
   silver: number
@@ -219,7 +226,7 @@ export interface GameStatistics {
 }
 
 export interface GameState {
-  version: 6
+  version: 7
   resources: Resources
   heroes: Record<string, HeroProgress>
   unlockedMartials: string[]

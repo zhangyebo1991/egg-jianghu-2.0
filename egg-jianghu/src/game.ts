@@ -13,6 +13,12 @@ import {
   nextRegionAfter,
   regionById,
 } from './data'
+import {
+  createLearnedMartial,
+  emptyEquippedMartialIds,
+  getLearnedMartialRank,
+  getPrimaryMartialId,
+} from './martials'
 import type {
   ActionResult,
   CombatStatus,
@@ -39,11 +45,11 @@ const MAX_LOGS = 36
 export const FRONT_ATTACK_MULTIPLIER = 0.9
 export const FRONT_DAMAGE_TAKEN_MULTIPLIER = 0.8
 export const BACK_ATTACK_MULTIPLIER = 1.15
-const emptyHeroProgress = (unlocked: boolean, equippedMartialId: string | null): HeroProgress => ({
+const emptyHeroProgress = (unlocked: boolean, martialId: string | null): HeroProgress => ({
   unlocked,
   level: 1,
-  equippedMartialId,
-  martialRanks: equippedMartialId ? { [equippedMartialId]: 1 } : {},
+  learnedMartials: martialId ? { [martialId]: createLearnedMartial() } : {},
+  equippedMartialIds: martialId ? [martialId, null, null, null] : emptyEquippedMartialIds(),
 })
 
 export function createInitialState(now = Date.now()): GameState {
@@ -56,7 +62,7 @@ export function createInitialState(now = Date.now()): GameState {
   )
 
   const state: GameState = {
-    version: 6,
+    version: 7,
     resources: { silver: 180, experience: 90, pages: 15, reputation: 0 },
     heroes,
     unlockedMartials: startingMartials,
@@ -102,8 +108,9 @@ export function getHeroStats(state: GameState, heroId: string): HeroStats {
     return { attack: 0, defense: 0, hp: 0, power: 0, affinityText: '无' }
   }
 
-  const martial = progress.equippedMartialId ? martialById(progress.equippedMartialId) : undefined
-  const rank = martial ? Math.max(1, progress.martialRanks[martial.id] ?? 1) : 0
+  const martialId = getPrimaryMartialId(progress)
+  const martial = martialId ? martialById(martialId) : undefined
+  const rank = martial ? getLearnedMartialRank(progress, martial.id) : 0
   const elementMatch = martial?.element === hero.element
   const styleMatch = martial?.style === hero.style
   const martialPower = martial?.basePower ?? 1
@@ -407,7 +414,8 @@ function resolveCombatVictory(state: GameState): void {
 function getEnemyTraitAttackMultiplier(state: GameState, combat: CombatState, member: CombatHeroState): number {
   if (combat.enemyTraitId === 'iron_armor') return member.row === 'back' ? 1.25 : 0.65
   if (combat.enemyTraitId === 'frost_aura') {
-    const martialId = state.heroes[member.heroId]?.equippedMartialId
+    const progress = state.heroes[member.heroId]
+    const martialId = progress ? getPrimaryMartialId(progress) : null
     return martialById(martialId ?? '')?.element === '火' ? 1.55 : 0.72
   }
   return 1
@@ -479,7 +487,7 @@ function performMartialSkill(
   const combat = state.combat
   const actor = heroById(member.heroId)
   const stats = getHeroStats(state, member.heroId)
-  const rank = Math.max(1, state.heroes[member.heroId]?.martialRanks[martial.id] ?? 1)
+  const rank = getLearnedMartialRank(state.heroes[member.heroId], martial.id)
   const { damage: attackBase, traitMultiplier } = getAttackBase(state, member, synergy)
   let damage = attackBase
   let effectText = ''
@@ -612,7 +620,8 @@ export function stepCombat(state: GameState): void {
       abilityId: combo.id,
     })
   } else {
-    const martialId = state.heroes[actorId]?.equippedMartialId
+    const progress = state.heroes[actorId]
+    const martialId = progress ? getPrimaryMartialId(progress) : null
     const martial = martialId ? martialById(martialId) : undefined
     if (martial && actorMember.skillCooldown <= 0) {
       performMartialSkill(state, actorMember, martial, synergy)
@@ -833,8 +842,9 @@ export function recruitHero(state: GameState, heroId: string): ActionResult {
   if (state.resources.silver < hero.recruitCost) return { ok: false, message: `还需 ${hero.recruitCost} 银两才能结识` }
   state.resources.silver -= hero.recruitCost
   progress.unlocked = true
-  progress.equippedMartialId = state.unlockedMartials[0] ?? null
-  if (progress.equippedMartialId) progress.martialRanks[progress.equippedMartialId] = 1
+  const martialId = state.unlockedMartials[0] ?? null
+  progress.learnedMartials = martialId ? { [martialId]: createLearnedMartial() } : {}
+  progress.equippedMartialIds = martialId ? [martialId, null, null, null] : emptyEquippedMartialIds()
   return { ok: true, message: `${hero.name}应邀加入江湖名册` }
 }
 
@@ -857,8 +867,8 @@ export function equipMartial(state: GameState, heroId: string, martialId: string
   if (!hero || !progress?.unlocked || !martial || !state.unlockedMartials.includes(martialId)) {
     return { ok: false, message: '无法装备这门武学' }
   }
-  progress.equippedMartialId = martialId
-  progress.martialRanks[martialId] ??= 1
+  progress.learnedMartials[martialId] ??= createLearnedMartial()
+  progress.equippedMartialIds[0] = martialId
   return { ok: true, message: `${hero.name}改习「${martial.name}」` }
 }
 
@@ -866,9 +876,11 @@ export function trainMartial(state: GameState, heroId: string): ActionResult {
   if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可调整养成' }
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
-  const martial = progress?.equippedMartialId ? martialById(progress.equippedMartialId) : undefined
+  const martialId = progress ? getPrimaryMartialId(progress) : null
+  const martial = martialId ? martialById(martialId) : undefined
   if (!hero || !progress?.unlocked || !martial) return { ok: false, message: '请先为侠客配置武学' }
-  const rank = Math.max(1, progress.martialRanks[martial.id] ?? 1)
+  const learned = progress.learnedMartials[martial.id]
+  const rank = Math.max(1, learned?.rank ?? 1)
   if (rank >= 3) return { ok: false, message: '这门武学已修至圆满' }
   const silver = rank * 55
   const pages = rank * 12
@@ -877,7 +889,8 @@ export function trainMartial(state: GameState, heroId: string): ActionResult {
   }
   state.resources.silver -= silver
   state.resources.pages -= pages
-  progress.martialRanks[martial.id] = rank + 1
+  progress.learnedMartials[martial.id] ??= createLearnedMartial(rank)
+  progress.learnedMartials[martial.id].rank = rank + 1
   return { ok: true, message: `${hero.name}的「${martial.name}」进阶至${martial.rankNames[rank]}` }
 }
 
