@@ -157,6 +157,7 @@ export const MARTIALS: readonly MartialDefinition[] = [
       description: '重掌造成高额伤害，并施加持续 2 回合的灼伤。',
       cooldown: 2,
     },
+    passive: { type: 'attack', valuePerRank: 0.03 },
   },
   {
     id: 'frost_sword',
@@ -174,6 +175,7 @@ export const MARTIALS: readonly MartialDefinition[] = [
       description: '连续两剑追击，并使敌人迟滞 2 回合，降低反击伤害。',
       cooldown: 2,
     },
+    passive: { type: 'defense', valuePerRank: 0.03 },
   },
   {
     id: 'taiji_breath',
@@ -191,6 +193,7 @@ export const MARTIALS: readonly MartialDefinition[] = [
       description: '以柔劲伤敌，同时治疗气血最低的同伴并为其护体。',
       cooldown: 3,
     },
+    passive: { type: 'hp', valuePerRank: 0.04 },
   },
   {
     id: 'vajra_staff',
@@ -208,6 +211,7 @@ export const MARTIALS: readonly MartialDefinition[] = [
       description: '以重棍震裂敌人护体，使其 2 回合内承受更多伤害。',
       cooldown: 2,
     },
+    passive: { type: 'attack', valuePerRank: 0.04 },
   },
   {
     id: 'earth_origin',
@@ -225,6 +229,7 @@ export const MARTIALS: readonly MartialDefinition[] = [
       description: '稳守反击，并为全队生成可吸收伤害的护体真气。',
       cooldown: 3,
     },
+    passive: { type: 'defense', valuePerRank: 0.04 },
   },
 ] as const
 

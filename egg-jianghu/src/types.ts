@@ -10,6 +10,19 @@ export type BondEffectType = 'attack' | 'damage_reduction' | 'healing' | 'skill_
 export type ComboEffectKind = 'damage' | 'restore' | 'guard' | 'sunder'
 export type MysteryBlessingId = 'keen_edge' | 'golden_guard' | 'spring_breath' | 'cloud_steps' | 'mountain_body' | 'fortune_seal'
 export type MysteryBlessingEffectType = 'attack' | 'damage_reduction' | 'healing' | 'skill_haste' | 'max_hp' | 'rewards'
+export type MartialPassiveEffectType = 'attack' | 'defense' | 'hp'
+
+export interface ResourceInvestment extends Resources {}
+
+export interface LearnedMartialProgress {
+  rank: number
+  invested: ResourceInvestment
+}
+
+export interface MartialPassiveEffect {
+  type: MartialPassiveEffectType
+  valuePerRank: number
+}
 
 export interface HeroDefinition {
   id: string
@@ -42,6 +55,7 @@ export interface MartialDefinition {
     description: string
     cooldown: number
   }
+  passive: MartialPassiveEffect
 }
 
 export interface BondDefinition {
