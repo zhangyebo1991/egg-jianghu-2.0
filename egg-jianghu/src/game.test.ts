@@ -17,6 +17,7 @@ import {
   getPartySynergy,
   isRegionUnlocked,
   recruitHero,
+  returnToIdle,
   selectRegion,
   setFormationRow,
   setPartySlot,
@@ -53,6 +54,23 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(state.resources.silver).toBeGreaterThan(beforeSilver)
     expect(state.resources.experience).toBeGreaterThan(beforeExperience)
     expect(state.combat.logs.some((event) => event.kind === 'reward')).toBe(true)
+  })
+
+  it('停止挂机会保留既得收益且不会结算当前敌人', () => {
+    const state = createInitialState()
+    expect(startIdleStage(state, 'bluestone_path', 2).ok).toBe(true)
+    for (let index = 0; index < 100 && state.statistics.idleEnemiesDefeated === 0; index += 1) stepCombat(state)
+
+    const resourcesAfterVictory = { ...state.resources }
+    const defeatsAfterVictory = state.statistics.idleEnemiesDefeated
+    expect(defeatsAfterVictory).toBe(1)
+    expect(returnToIdle(state)).toEqual({ ok: true, message: '已停止战斗并返回关卡选择' })
+    expect(state.combat.status).toBe('ready')
+    expect(state.combat.stage).toBeNull()
+
+    for (let index = 0; index < 100; index += 1) stepCombat(state)
+    expect(state.resources).toEqual(resourcesAfterVictory)
+    expect(state.statistics.idleEnemiesDefeated).toBe(defeatsAfterVictory)
   })
 
   it('未点击小关卡时不会战斗，并拒绝未解锁或不存在的关卡', () => {

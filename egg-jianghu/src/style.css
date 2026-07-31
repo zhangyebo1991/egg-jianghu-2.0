@@ -260,6 +260,9 @@
   }
   .location-status > span { display: grid; gap: 3px; color: var(--paper-muted); font-size: 11px; }
   .location-status strong { color: #91ab9d; font-weight: 400; }
+  .combat-heading-actions { display: grid; flex: 0 0 auto; gap: 9px; }
+  .stop-idle-button { color: #e38372; border-color: rgba(166,64,50,.55); background: rgba(116,37,28,.08); }
+  .stop-idle-button:hover { color: #f1a292; border-color: rgba(227,131,114,.8); background: rgba(116,37,28,.18); }
 
   .battle-arena { position: relative; overflow: hidden; }
   .battle-arena::before {
@@ -753,7 +756,7 @@
     .resource-pill { min-width: 69px; justify-content: center; }
     .page-heading { display: grid; align-items: start; gap: 18px; }
     .page-heading h1 { font-size: 32px; letter-spacing: .06em; }
-    .location-status, .power-plaque, .stage-plaque { justify-self: stretch; text-align: left; }
+    .location-status, .power-plaque, .stage-plaque, .combat-heading-actions { justify-self: stretch; text-align: left; }
     .battle-stage { grid-template-columns: 1fr; gap: 13px; padding: 18px 13px 24px; }
     .versus-mark { display: flex; justify-content: center; }
     .versus-mark i { width: 42px; height: 1px; }

@@ -80,6 +80,24 @@ test('可从其他页面通过悬浮入口返回正在进行的挂机战斗', as
   })).toEqual({ mode: 'idle', status: 'fighting', regionId: 'bluestone_path', stage: 3 })
 })
 
+test('可从挂机战斗页立即停止挂机并返回当前章节', async ({ page }) => {
+  await page.getByRole('button', { name: '进入青石古道' }).click()
+  await page.getByTestId('stage-card-2').getByRole('button', { name: '开始挂机' }).click()
+
+  const stopButton = page.getByRole('button', { name: '停止挂机' })
+  await expect(stopButton).toBeVisible()
+  await stopButton.click()
+
+  await expect(page.getByTestId('stage-map')).toBeVisible()
+  await expect(page.getByRole('heading', { name: '青石古道', exact: true })).toBeVisible()
+  await expect(page.getByTestId('battle-arena')).toHaveCount(0)
+  await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
+  expect(await page.evaluate(() => {
+    const combat = window.__EGG_JIANGHU__.getState().combat
+    return { mode: combat.mode, status: combat.status, stage: combat.stage }
+  })).toEqual({ mode: 'idle', status: 'ready', stage: null })
+})
+
 test('可进入秘境、选择临时祝福并完成首层探索', async ({ page }) => {
   await page.getByRole('button', { name: /秘境/ }).click()
   await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)

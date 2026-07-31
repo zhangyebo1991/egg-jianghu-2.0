@@ -304,7 +304,10 @@ const renderStageCombat = (): string => {
     <div class="level-breadcrumb"><button class="text-button" data-action="back-stages">← 返回小关卡</button><span>${region.name} / 第 ${stage} 关</span></div>
     <div class="page-heading">
       <div><span class="eyebrow">Idle Combat</span><h1>${region.name} · 第 ${stage} 关</h1><p>本关挂机战斗仅在游戏打开时进行；退出游戏后不会继续结算收益。</p></div>
-      <div class="location-status"><i></i><span>队伍正在战斗<strong>${region.rewardText}</strong></span></div>
+      <div class="combat-heading-actions">
+        <div class="location-status"><i></i><span>队伍正在战斗<strong>${region.rewardText}</strong></span></div>
+        <button class="secondary-button stop-idle-button" type="button" data-action="stop-idle">停止挂机</button>
+      </div>
     </div>
     <div class="idle-layout">
       <div class="main-column">
@@ -697,6 +700,15 @@ app.addEventListener('click', (event) => {
       activeTab = 'idle'
       chapterRegionId = state.combat.regionId
       levelView = 'combat'
+      break
+    }
+    case 'stop-idle': {
+      if (state.combat.mode !== 'idle' || state.combat.status !== 'fighting') break
+      const combatRegionId = state.combat.regionId
+      notify(returnToIdle(state))
+      activeTab = 'idle'
+      chapterRegionId = combatRegionId
+      levelView = 'stages'
       break
     }
     case 'set-row': {
