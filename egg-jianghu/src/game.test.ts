@@ -1,16 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { BONDS, COMBOS, HEROES, MARTIALS, REGIONS } from './data'
+import { BONDS, COMBOS, HEROES, MARTIALS, MYSTERY_BLESSINGS, MYSTERY_ENCOUNTERS, REGIONS } from './data'
 import {
   BACK_ATTACK_MULTIPLIER,
+  abandonMystery,
+  chooseMysteryBlessing,
   FRONT_ATTACK_MULTIPLIER,
   FRONT_DAMAGE_TAKEN_MULTIPLIER,
   createInitialState,
   equipMartial,
+  finishMystery,
   getActiveBonds,
   getActiveCombos,
   getFormationSummary,
   getHeroStats,
   getIdleRewardRates,
+  getMysteryChoices,
   getPartySynergy,
   isRegionUnlocked,
   recruitHero,
@@ -18,6 +22,7 @@ import {
   setFormationRow,
   setPartySlot,
   startChallenge,
+  startMystery,
   stepCombat,
 } from './game'
 
@@ -29,6 +34,8 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(REGIONS).toHaveLength(3)
     expect(BONDS).toHaveLength(5)
     expect(COMBOS).toHaveLength(4)
+    expect(MYSTERY_BLESSINGS).toHaveLength(6)
+    expect(MYSTERY_ENCOUNTERS).toHaveLength(5)
     expect(state.formation).toHaveLength(3)
     expect(state.formation.map((slot) => slot.row)).toEqual(['front', 'front', 'back'])
     expect(state.formation.every((slot) => state.heroes[slot.heroId].unlocked)).toBe(true)
@@ -372,5 +379,83 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
       'boss_blackwind_chief',
       'boss_frost_arbiter',
     ])
+  })
+
+  it('相同秘境种子会生成稳定且互不相同的双岔路选择', () => {
+    expect(getMysteryChoices(42, 0)).toEqual(getMysteryChoices(42, 0))
+    expect(getMysteryChoices(42, 0)).toHaveLength(2)
+    expect(new Set(getMysteryChoices(42, 0)).size).toBe(2)
+    expect(getMysteryChoices(42, 1)).not.toEqual(getMysteryChoices(42, 0))
+  })
+
+  it('进入秘境后选择祝福会创建专属战斗并锁定本轮 build', () => {
+    const state = createInitialState()
+    expect(startMystery(state, 4).ok).toBe(true)
+    expect(state.mystery.run?.choiceIds[0]).toBe('mountain_body')
+    expect(setFormationRow(state, 0, 'back')).toEqual({ ok: false, message: '秘境探索期间不可换位' })
+
+    expect(chooseMysteryBlessing(state, 'mountain_body').ok).toBe(true)
+    expect(state.combat.mode).toBe('mystery')
+    expect(state.mystery.run?.status).toBe('fighting')
+    for (const member of state.combat.partyMembers) {
+      expect(member.maxHp).toBeGreaterThan(getHeroStats(state, member.heroId).hp)
+    }
+  })
+
+  it('寻珍灵印会提高秘境层奖励，离开时保留已经获得的战利品', () => {
+    const state = createInitialState()
+    const beforeSilver = state.resources.silver
+    expect(startMystery(state, 5).ok).toBe(true)
+    expect(state.mystery.run?.choiceIds[0]).toBe('fortune_seal')
+    expect(chooseMysteryBlessing(state, 'fortune_seal').ok).toBe(true)
+    state.combat.enemyHp = 1
+    stepCombat(state)
+
+    expect(state.mystery.run?.earned.silver).toBe(Math.round(MYSTERY_ENCOUNTERS[0].rewards.silver * 1.3))
+    expect(state.resources.silver).toBe(beforeSilver + (state.mystery.run?.earned.silver ?? 0))
+    expect(abandonMystery(state).ok).toBe(true)
+    expect(state.mystery.run).toBeNull()
+    expect(state.combat.mode).toBe('idle')
+  })
+
+  it('秘境战败会结束本轮并允许结算离开', () => {
+    const state = createInitialState()
+    expect(startMystery(state, 1).ok).toBe(true)
+    expect(chooseMysteryBlessing(state, state.mystery.run!.choiceIds[0]).ok).toBe(true)
+    for (const [index, member] of state.combat.partyMembers.entries()) member.hp = index === 0 ? 1 : 0
+    state.combat.enemyHp = 100_000
+    state.combat.enemyMaxHp = 100_000
+    state.combat.enemyAttack = 999
+    stepCombat(state)
+
+    expect(state.mystery.run?.status).toBe('failed')
+    expect(state.combat.status).toBe('defeat')
+    expect(finishMystery(state).ok).toBe(true)
+    expect(state.mystery.run).toBeNull()
+    expect(state.combat.mode).toBe('idle')
+  })
+
+  it('高阶队伍可以连续选择祝福并贯通五层秘境', () => {
+    const state = createInitialState()
+    for (const { heroId } of state.formation) state.heroes[heroId].level = 50
+    expect(startMystery(state, 17).ok).toBe(true)
+
+    for (let guard = 0; guard < 10_000 && state.mystery.run?.status !== 'completed'; guard += 1) {
+      const run = state.mystery.run
+      if (!run) break
+      if (run.status === 'choosing') {
+        expect(chooseMysteryBlessing(state, run.choiceIds[0]).ok).toBe(true)
+      } else if (run.status === 'fighting') {
+        stepCombat(state)
+      } else {
+        break
+      }
+    }
+
+    expect(state.mystery.run?.status).toBe('completed')
+    expect(state.mystery.run?.floor).toBe(MYSTERY_ENCOUNTERS.length)
+    expect(state.mystery.runsCompleted).toBe(1)
+    expect(state.mystery.bestFloor).toBe(MYSTERY_ENCOUNTERS.length)
+    expect(state.mystery.run?.earned.reputation).toBeGreaterThan(0)
   })
 })

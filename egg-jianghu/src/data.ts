@@ -5,6 +5,8 @@ import type {
   EnemyTraitId,
   HeroDefinition,
   MartialDefinition,
+  MysteryBlessingDefinition,
+  MysteryEncounterDefinition,
   RegionDefinition,
   RegionId,
 } from './types'
@@ -313,6 +315,104 @@ export const COMBOS: readonly ComboDefinition[] = [
   },
 ] as const
 
+export const MYSTERY_BLESSINGS: readonly MysteryBlessingDefinition[] = [
+  {
+    id: 'keen_edge',
+    name: '凌厉锋芒',
+    description: '石壁剑痕中残留着前人一往无前的战意。',
+    effectText: '本轮秘境造成伤害提高 20%。',
+    effect: { type: 'attack', value: 0.2 },
+  },
+  {
+    id: 'golden_guard',
+    name: '金钟护体',
+    description: '残破金钟仍有回响，真气随钟声凝于周身。',
+    effectText: '本轮秘境受到伤害降低 15%。',
+    effect: { type: 'damage_reduction', value: 0.15 },
+  },
+  {
+    id: 'spring_breath',
+    name: '回春真气',
+    description: '石隙灵泉温润经脉，让枯竭真气重新流转。',
+    effectText: '本轮秘境治疗与回复效果提高 40%。',
+    effect: { type: 'healing', value: 0.4 },
+  },
+  {
+    id: 'cloud_steps',
+    name: '流云身法',
+    description: '云气在足下聚散，招式衔接再无滞涩。',
+    effectText: '本轮秘境武学招式冷却减少 1 次行动。',
+    effect: { type: 'skill_haste', value: 1 },
+  },
+  {
+    id: 'mountain_body',
+    name: '山岳真身',
+    description: '地脉厚重之气灌注骨血，身躯如山岳难撼。',
+    effectText: '本轮秘境最大气血提高 25%。',
+    effect: { type: 'max_hp', value: 0.25 },
+  },
+  {
+    id: 'fortune_seal',
+    name: '寻珍灵印',
+    description: '旧日寻宝人的灵印指向被尘封的暗格。',
+    effectText: '本轮秘境每层战利品提高 30%。',
+    effect: { type: 'rewards', value: 0.3 },
+  },
+] as const
+
+export const MYSTERY_ENCOUNTERS: readonly MysteryEncounterDefinition[] = [
+  {
+    id: 'mist_wolf_pack',
+    name: '雾隐苍狼',
+    description: '狼群借浓雾轮番扑杀，是秘境对来客的第一场试探。',
+    traitId: 'none',
+    baseHp: 480,
+    baseAttack: 20,
+    boss: false,
+    rewards: { silver: 70, experience: 55, pages: 5, reputation: 0 },
+  },
+  {
+    id: 'bronze_mirror_guard',
+    name: '铜镜守卫',
+    description: '无名甲士从古镜中踏出，甲胄只在侧后露出缝隙。',
+    traitId: 'iron_armor',
+    baseHp: 760,
+    baseAttack: 27,
+    boss: false,
+    rewards: { silver: 95, experience: 85, pages: 8, reputation: 0 },
+  },
+  {
+    id: 'frozen_sword_shadow',
+    name: '玄冰剑影',
+    description: '冰封剑意凝成昔日高手的残影，寒罡不散。',
+    traitId: 'frost_aura',
+    baseHp: 1_100,
+    baseAttack: 34,
+    boss: false,
+    rewards: { silver: 125, experience: 120, pages: 12, reputation: 1 },
+  },
+  {
+    id: 'broken_array_general',
+    name: '破阵残将',
+    description: '执念未消的残将专攻阵势薄弱处，逼人重新审视站位。',
+    traitId: 'formation_breaker',
+    baseHp: 1_520,
+    baseAttack: 44,
+    boss: false,
+    rewards: { silver: 170, experience: 165, pages: 17, reputation: 1 },
+  },
+  {
+    id: 'mystery_cave_lord',
+    name: '无相洞主',
+    description: '秘境最深处的守关人，借历代来客的招式淬炼无相真身。',
+    traitId: 'iron_armor',
+    baseHp: 2_300,
+    baseAttack: 55,
+    boss: true,
+    rewards: { silver: 260, experience: 240, pages: 26, reputation: 8 },
+  },
+] as const
+
 export const ENEMY_TRAITS: Record<EnemyTraitId, EnemyTraitDefinition> = {
   none: {
     id: 'none',
@@ -405,6 +505,7 @@ export const REGIONS: readonly RegionDefinition[] = [
 
 export const heroById = (id: string) => HEROES.find((hero) => hero.id === id)
 export const martialById = (id: string) => MARTIALS.find((martial) => martial.id === id)
+export const mysteryBlessingById = (id: string) => MYSTERY_BLESSINGS.find((blessing) => blessing.id === id)
 export const regionById = (id: string) => REGIONS.find((region) => region.id === id)
 export const enemyTraitById = (id: EnemyTraitId) => ENEMY_TRAITS[id]
 export const bossById = (id: string) => REGIONS.map((region) => region.boss).find((boss) => boss.id === id)

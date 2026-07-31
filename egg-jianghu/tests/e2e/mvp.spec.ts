@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => window.__EGG_JIANGHU__.reset())
 })
 
-test('启动后可见挂机战斗并能访问四个核心 Tab', async ({ page }, testInfo) => {
+test('启动后可见挂机战斗并能访问五个核心 Tab', async ({ page }, testInfo) => {
   await expect(page).toHaveTitle(/蛋蛋江湖 2\.0/)
   await expect(page.locator('h1')).toHaveText('青石古道')
   await expect(page.getByTestId('battle-arena')).toBeVisible()
@@ -25,6 +25,25 @@ test('启动后可见挂机战斗并能访问四个核心 Tab', async ({ page },
 
   await page.getByRole('button', { name: /挂机/ }).click()
   await page.screenshot({ path: testInfo.outputPath('desktop-idle.png'), fullPage: true })
+})
+
+test('可进入秘境、选择临时祝福并完成首层探索', async ({ page }) => {
+  await page.getByRole('button', { name: /秘境/ }).click()
+  await expect(page.getByRole('heading', { name: '无相秘境' })).toBeVisible()
+  await expect(page.getByTestId('mystery-route').locator(':scope > span')).toHaveCount(5)
+  await page.getByRole('button', { name: '踏入无相秘境' }).click()
+  await expect(page.getByTestId('mystery-choices').locator('.mystery-choice-grid > button')).toHaveCount(2)
+
+  await page.getByTestId('mystery-choices').locator('.mystery-choice-grid > button').first().click()
+  await expect(page.getByTestId('battle-arena')).toBeVisible()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().combat.mode)).toBe('mystery')
+  await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(240))
+
+  await expect(page.getByTestId('mystery-choices')).toBeVisible()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().mystery.run?.floor)).toBe(1)
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: '离开秘境' }).click()
+  await expect(page.getByRole('button', { name: '踏入无相秘境' })).toBeVisible()
 })
 
 test('挂机所得可用于招募同门并激活羁绊', async ({ page }) => {

@@ -568,6 +568,54 @@
   .combat-hints span { display: flex; align-items: center; gap: 7px; }
   .combat-hints i { display: grid; place-items: center; width: 20px; height: 20px; color: var(--gold); border: 1px solid var(--gold-dark); border-radius: 50%; font-style: normal; }
 
+  .mystery-entry { display: grid; justify-items: center; gap: 8px; min-height: 290px; padding: 42px; text-align: center; background: radial-gradient(circle at 50% 35%, rgba(98,136,121,.12), transparent 45%); }
+  .mystery-seal { display: grid; place-items: center; width: 76px; height: 76px; color: #9bb9aa; border: 1px solid rgba(98,136,121,.55); font-family: KaiTi, STKaiti, serif; font-size: 38px; transform: rotate(-3deg); }
+  .mystery-entry > small { color: #91ab9d; font-size: 8px; letter-spacing: .2em; }
+  .mystery-entry h2 { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 25px; font-weight: 400; }
+  .mystery-entry p { max-width: 680px; color: var(--paper-dim); font-size: 10px; line-height: 1.8; }
+  .mystery-entry button { margin-top: 10px; }
+  .mystery-route { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; margin: 14px 0; border: 1px solid var(--line); background: var(--line); }
+  .mystery-route > span { position: relative; display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; gap: 2px 8px; min-width: 0; padding: 12px; background: #1c1813; opacity: .52; }
+  .mystery-route > span.cleared { opacity: .78; background: rgba(98,136,121,.1); }
+  .mystery-route > span.active { opacity: 1; background: rgba(199,161,91,.08); }
+  .mystery-route i { grid-row: 1 / 3; display: grid; place-items: center; width: 28px; height: 28px; color: var(--gold); border: 1px solid var(--gold-dark); border-radius: 50%; font-family: Georgia, serif; font-size: 10px; font-style: normal; }
+  .mystery-route b { overflow: hidden; color: var(--paper); font-size: 10px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+  .mystery-route small { color: var(--paper-dim); font-size: 7px; }
+  .mystery-run-head { display: flex; align-items: center; gap: 18px; padding: 16px 20px; }
+  .mystery-run-head > div:first-child { display: grid; gap: 2px; }
+  .mystery-run-head small { color: var(--paper-dim); font-size: 8px; }
+  .mystery-run-head strong { color: var(--paper); font-size: 15px; }
+  .mystery-earned { display: flex; flex: 1; flex-wrap: wrap; gap: 7px; }
+  .mystery-earned span { padding: 5px 8px; color: var(--gold); border: 1px solid var(--line); font-size: 8px; }
+  .blessing-stack { margin-top: 10px; padding: 16px 20px; }
+  .blessing-stack > div:last-child { display: flex; flex-wrap: wrap; gap: 7px; }
+  .blessing-stack > div:last-child > span { display: grid; gap: 2px; padding: 7px 9px; border: 1px solid rgba(98,136,121,.32); background: rgba(98,136,121,.06); }
+  .blessing-stack b { color: #a9c7b6; font-size: 9px; font-weight: 400; }
+  .blessing-stack small, .blessing-stack p { color: var(--paper-dim); font-size: 7px; }
+  .mystery-choice-panel { margin-top: 12px; padding: 20px; }
+  .next-encounter, .mystery-encounter { display: flex; align-items: center; gap: 13px; margin-bottom: 14px; padding: 13px; border: 1px solid var(--line); background: rgba(0,0,0,.13); }
+  .next-encounter > span, .mystery-encounter > span { display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; color: var(--cinnabar-bright); border: 1px solid rgba(166,64,50,.45); font-family: KaiTi, STKaiti, serif; font-size: 20px; }
+  .next-encounter > div, .mystery-encounter > div { display: grid; gap: 3px; }
+  .next-encounter small, .mystery-encounter small { color: var(--gold); font-size: 8px; }
+  .next-encounter strong, .mystery-encounter strong { color: var(--paper); font-size: 13px; }
+  .next-encounter p, .mystery-encounter p { color: var(--paper-dim); font-size: 8px; line-height: 1.55; }
+  .mystery-choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .mystery-choice-grid > button { display: flex; align-items: flex-start; gap: 12px; min-height: 145px; padding: 17px; text-align: left; border: 1px solid var(--line-strong); background: rgba(98,136,121,.05); }
+  .mystery-choice-grid > button:hover { border-color: rgba(98,136,121,.65); background: rgba(98,136,121,.1); transform: translateY(-1px); }
+  .mystery-choice-grid > button > span { display: grid; place-items: center; flex: 0 0 auto; width: 38px; height: 38px; color: #a9c7b6; border: 1px solid rgba(98,136,121,.5); font-family: KaiTi, STKaiti, serif; font-size: 18px; }
+  .mystery-choice-grid button > div { display: grid; gap: 5px; }
+  .mystery-choice-grid strong { color: var(--paper); font-size: 14px; }
+  .mystery-choice-grid p { color: var(--paper-dim); font-size: 9px; line-height: 1.6; }
+  .mystery-choice-grid b { color: #9fc8b1; font-size: 9px; font-weight: 400; }
+  .mystery-battle-layout { margin-top: 12px; }
+  .mystery-encounter { margin: 0 0 10px; }
+  .mystery-result { display: grid; justify-items: center; gap: 10px; margin-top: 12px; padding: 38px; text-align: center; }
+  .mystery-result > span { color: var(--gold-bright); font-family: KaiTi, STKaiti, serif; font-size: 44px; letter-spacing: .18em; }
+  .mystery-result.failed > span { color: #c57566; }
+  .mystery-result h2 { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 24px; font-weight: 400; }
+  .mystery-result > p { max-width: 680px; color: var(--paper-dim); font-size: 10px; line-height: 1.75; }
+  .mystery-result .settlement-grid { width: min(620px, 100%); margin: 8px 0; }
+
   .modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(7,6,4,.78); backdrop-filter: blur(7px); }
   .offline-modal { position: relative; width: min(480px, 100%); padding: 36px; text-align: center; border: 1px solid var(--gold-dark); background: #201a13; box-shadow: 0 28px 80px rgba(0,0,0,.55); }
   .offline-modal::before { content: ""; position: absolute; inset: 8px; pointer-events: none; border: 1px solid var(--line); }
@@ -625,6 +673,7 @@
     .region-grid { grid-template-columns: repeat(3, minmax(210px, 1fr)); overflow-x: auto; padding-bottom: 6px; }
     .boss-intel { grid-template-columns: 1fr; }
     .skill-plan-grid { grid-template-columns: 1fr; }
+    .mystery-route { grid-template-columns: repeat(5, minmax(150px, 1fr)); overflow-x: auto; }
     .party-board { padding: 18px; }
     .formation-editor-row.back { margin-inline: 22px 0; }
     .synergy-grid { grid-template-columns: 1fr; }
@@ -656,6 +705,10 @@
     .battle-result { inset: 43px 0 0; }
     .hero-grid, .party-slots, .synergy-grid { grid-template-columns: 1fr; }
     .bond-grid, .combo-grid { grid-template-columns: 1fr; }
+    .mystery-choice-grid { grid-template-columns: 1fr; }
+    .mystery-run-head { align-items: flex-start; flex-wrap: wrap; }
+    .mystery-run-head > button { width: 100%; }
+    .mystery-entry, .mystery-result { padding: 28px 18px; }
     .region-grid { grid-template-columns: 1fr; overflow: visible; }
     .region-card { min-height: 0; }
     .region-card > p, .region-boss { min-height: 0; }

@@ -3,10 +3,13 @@ import {
   COMBOS,
   HEROES,
   MARTIALS,
+  MYSTERY_BLESSINGS,
+  MYSTERY_ENCOUNTERS,
   REGIONS,
   enemyTraitById,
   heroById,
   martialById,
+  mysteryBlessingById,
   nextRegionAfter,
   regionById,
 } from './data'
@@ -23,6 +26,9 @@ import type {
   HeroProgress,
   HeroStats,
   MartialDefinition,
+  MysteryBlessingEffectType,
+  MysteryBlessingId,
+  MysteryEncounterDefinition,
   OfflineSettlement,
   PartySynergy,
   RegionDefinition,
@@ -56,7 +62,7 @@ export function createInitialState(now = Date.now()): GameState {
   )
 
   const state: GameState = {
-    version: 5,
+    version: 6,
     resources: { silver: 180, experience: 90, pages: 15, reputation: 0 },
     heroes,
     unlockedMartials: startingMartials,
@@ -71,6 +77,7 @@ export function createInitialState(now = Date.now()): GameState {
       blackwind_fort: 0,
       frost_temple: 0,
     },
+    mystery: { runsCompleted: 0, bestFloor: 0, run: null },
     combat: {} as CombatState,
     statistics: {
       idleEnemiesDefeated: 0,
@@ -142,6 +149,20 @@ export const getActiveCombos = (state: GameState) => {
   return COMBOS.filter((combo) => combo.heroIds.every((heroId) => heroIds.includes(heroId)))
 }
 
+export function getMysteryChoices(seed: number, floor: number): MysteryBlessingId[] {
+  const length = MYSTERY_BLESSINGS.length
+  const firstIndex = Math.abs(Math.floor(seed + floor * 7)) % length
+  let secondIndex = Math.abs(Math.floor(seed * 3 + floor * 11 + 2)) % length
+  if (secondIndex === firstIndex) secondIndex = (secondIndex + 1) % length
+  return [MYSTERY_BLESSINGS[firstIndex].id, MYSTERY_BLESSINGS[secondIndex].id]
+}
+
+export const getMysteryBonusValue = (state: GameState, type: MysteryBlessingEffectType): number =>
+  (state.mystery.run?.blessingIds ?? [])
+    .map((id) => mysteryBlessingById(id))
+    .filter((blessing) => blessing?.effect.type === type)
+    .reduce((total, blessing) => total + (blessing?.effect.value ?? 0), 0)
+
 export function getPartySynergy(state: GameState): PartySynergy {
   const sectCounts = new Map<Sect, number>()
   const heroIds = state.formation.map((slot) => slot.heroId)
@@ -158,13 +179,15 @@ export function getPartySynergy(state: GameState): PartySynergy {
   const bondValue = (type: (typeof BONDS)[number]['effect']['type']): number => activeBonds
     .filter((bond) => bond.effect.type === type)
     .reduce((total, bond) => total + bond.effect.value, 0)
-  const attackMultiplier = sectMultiplier * (1 + bondValue('attack'))
+  const mysteryActive = state.combat.mode === 'mystery'
+  const mysteryValue = (type: MysteryBlessingEffectType): number => mysteryActive ? getMysteryBonusValue(state, type) : 0
+  const attackMultiplier = sectMultiplier * (1 + bondValue('attack')) * (1 + mysteryValue('attack'))
 
   return {
     attackMultiplier,
-    damageTakenMultiplier: Math.max(0.5, 1 - bondValue('damage_reduction')),
-    healingMultiplier: 1 + bondValue('healing'),
-    skillCooldownReduction: Math.floor(bondValue('skill_haste')),
+    damageTakenMultiplier: Math.max(0.35, 1 - bondValue('damage_reduction') - mysteryValue('damage_reduction')),
+    healingMultiplier: 1 + bondValue('healing') + mysteryValue('healing'),
+    skillCooldownReduction: Math.floor(bondValue('skill_haste') + mysteryValue('skill_haste')),
     sectName,
     sectCount,
     sectText: sectName
@@ -262,6 +285,33 @@ function createChallengeCombat(state: GameState, region: RegionDefinition): Comb
   }
 }
 
+function createMysteryCombat(state: GameState, encounter: MysteryEncounterDefinition): CombatState {
+  const hpMultiplier = 1 + getMysteryBonusValue(state, 'max_hp')
+  const partyMembers = createCombatParty(state).map((member) => {
+    const maxHp = Math.round(member.maxHp * hpMultiplier)
+    return { ...member, hp: maxHp, maxHp }
+  })
+  return {
+    mode: 'mystery',
+    status: 'fighting',
+    regionId: state.selectedRegionId,
+    enemyId: encounter.id,
+    enemyTraitId: encounter.traitId,
+    boss: encounter.boss,
+    enemyName: encounter.name,
+    enemyHp: encounter.baseHp,
+    enemyMaxHp: encounter.baseHp,
+    enemyAttack: encounter.baseAttack,
+    enemyStatuses: [],
+    partyMembers,
+    comboIndex: 0,
+    turnIndex: 0,
+    round: 0,
+    logs: [],
+    lastEvent: null,
+  }
+}
+
 function addLog(
   combat: CombatState,
   kind: CombatEvent['kind'],
@@ -321,6 +371,49 @@ function rewardChallengeVictory(state: GameState): void {
     'victory',
     `击败${region.boss.name}！声望 +${rewards.reputation}${unlockedRegion ? `，新区域「${unlockedRegion.name}」已经解锁` : firstClear ? '，此地强敌已尽数折服' : '，再次夺得战利品'}。`,
   )
+}
+
+function rewardMysteryVictory(state: GameState): void {
+  const run = state.mystery.run
+  const encounter = run ? MYSTERY_ENCOUNTERS[run.floor] : undefined
+  if (!run || !encounter) return
+  const multiplier = 1 + getMysteryBonusValue(state, 'rewards')
+  const rewards = {
+    silver: Math.round(encounter.rewards.silver * multiplier),
+    experience: Math.round(encounter.rewards.experience * multiplier),
+    pages: Math.round(encounter.rewards.pages * multiplier),
+    reputation: Math.round(encounter.rewards.reputation * multiplier),
+  }
+  state.resources.silver += rewards.silver
+  state.resources.experience += rewards.experience
+  state.resources.pages += rewards.pages
+  state.resources.reputation += rewards.reputation
+  state.statistics.silverEarned += rewards.silver
+  run.earned.silver += rewards.silver
+  run.earned.experience += rewards.experience
+  run.earned.pages += rewards.pages
+  run.earned.reputation += rewards.reputation
+  run.floor += 1
+  state.mystery.bestFloor = Math.max(state.mystery.bestFloor, run.floor)
+  state.combat.status = 'victory'
+
+  if (run.floor >= MYSTERY_ENCOUNTERS.length) {
+    run.status = 'completed'
+    run.choiceIds = []
+    state.mystery.runsCompleted += 1
+    addLog(state.combat, 'victory', `问鼎秘境！击败${encounter.name}，本轮共带回 ${run.earned.silver} 银两、${run.earned.pages} 残页与 ${run.earned.reputation} 声望。`)
+    return
+  }
+
+  run.status = 'choosing'
+  run.choiceIds = getMysteryChoices(run.seed, run.floor)
+  addLog(state.combat, 'victory', `击败${encounter.name}，秘境第 ${run.floor} 层已经肃清，前方岔路再次显现。`)
+}
+
+function resolveCombatVictory(state: GameState): void {
+  if (state.combat.mode === 'challenge') rewardChallengeVictory(state)
+  else if (state.combat.mode === 'mystery') rewardMysteryVictory(state)
+  else rewardIdleVictory(state)
 }
 
 function getEnemyTraitAttackMultiplier(state: GameState, combat: CombatState, member: CombatHeroState): number {
@@ -469,8 +562,7 @@ function processEnemyStatuses(state: GameState): boolean {
     addLog(combat, 'status', `${combat.enemyName}受灼伤侵蚀，损失 ${damage} 气血。`, { amount: damage })
   }
   if (combat.enemyHp > 0) return false
-  if (combat.mode === 'challenge') rewardChallengeVictory(state)
-  else rewardIdleVictory(state)
+  resolveCombatVictory(state)
   return true
 }
 
@@ -549,8 +641,7 @@ export function stepCombat(state: GameState): void {
   }
 
   if (combat.enemyHp <= 0) {
-    if (combat.mode === 'challenge') rewardChallengeVictory(state)
-    else rewardIdleVictory(state)
+    resolveCombatVictory(state)
     return
   }
 
@@ -597,9 +688,10 @@ export function stepCombat(state: GameState): void {
   for (const member of combat.partyMembers) tickStatuses(member.statuses)
 
   if (combat.partyMembers.some((member) => member.hp > 0)) return
-  if (combat.mode === 'challenge') {
+  if (combat.mode === 'challenge' || combat.mode === 'mystery') {
     combat.status = 'defeat'
-    addLog(combat, 'defeat', `此战落败。破局建议：${enemyTraitById(combat.enemyTraitId).counterHint}`)
+    if (combat.mode === 'mystery' && state.mystery.run) state.mystery.run.status = 'failed'
+    addLog(combat, 'defeat', `${combat.mode === 'mystery' ? '秘境探索止步于此。' : '此战落败。'}破局建议：${enemyTraitById(combat.enemyTraitId).counterHint}`)
     return
   }
 
@@ -610,7 +702,71 @@ export function stepCombat(state: GameState): void {
   addLog(state.combat, 'system', '众人暂退古亭调息，片刻后重新上路。')
 }
 
+export function startMystery(state: GameState, seed = Date.now()): ActionResult {
+  if (state.mystery.run) return { ok: false, message: '已有一轮秘境探索尚未结算' }
+  if (state.combat.mode === 'challenge' && state.combat.status === 'fighting') {
+    return { ok: false, message: '请先结束当前区域 BOSS 挑战' }
+  }
+  returnToIdle(state)
+  const normalizedSeed = Math.abs(Math.floor(seed)) || 1
+  state.mystery.run = {
+    seed: normalizedSeed,
+    floor: 0,
+    status: 'choosing',
+    blessingIds: [],
+    choiceIds: getMysteryChoices(normalizedSeed, 0),
+    earned: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+  }
+  return { ok: true, message: '秘境入口已经开启，请选择第一条岔路' }
+}
+
+export function chooseMysteryBlessing(state: GameState, blessingId: MysteryBlessingId): ActionResult {
+  const run = state.mystery.run
+  const blessing = mysteryBlessingById(blessingId)
+  const encounter = run ? MYSTERY_ENCOUNTERS[run.floor] : undefined
+  if (!run || run.status !== 'choosing' || !blessing || !run.choiceIds.includes(blessingId) || !encounter) {
+    return { ok: false, message: '这条秘境岔路当前不可选择' }
+  }
+  run.blessingIds.push(blessingId)
+  run.choiceIds = []
+  run.status = 'fighting'
+  state.combat = createMysteryCombat(state, encounter)
+  addLog(state.combat, 'system', `获得秘境祝福「${blessing.name}」，遭遇${encounter.name}。`)
+  return { ok: true, message: `选择「${blessing.name}」，进入秘境第 ${run.floor + 1} 层` }
+}
+
+export function resumeMysteryCombat(state: GameState): ActionResult {
+  const run = state.mystery.run
+  const encounter = run ? MYSTERY_ENCOUNTERS[run.floor] : undefined
+  if (!run || run.status !== 'fighting' || !encounter) return { ok: false, message: '没有需要恢复的秘境战斗' }
+  state.combat = createMysteryCombat(state, encounter)
+  addLog(state.combat, 'system', `从存档恢复秘境第 ${run.floor + 1} 层，对阵${encounter.name}。`)
+  return { ok: true, message: '秘境战斗已恢复' }
+}
+
+export function abandonMystery(state: GameState): ActionResult {
+  if (!state.mystery.run) return { ok: false, message: '当前没有进行中的秘境探索' }
+  state.mystery.run = null
+  returnToIdle(state)
+  return { ok: true, message: '已离开秘境，本轮已获得的战利品仍会保留' }
+}
+
+export function finishMystery(state: GameState): ActionResult {
+  const run = state.mystery.run
+  if (!run || (run.status !== 'completed' && run.status !== 'failed')) {
+    return { ok: false, message: '秘境探索尚未结束' }
+  }
+  const completed = run.status === 'completed'
+  state.mystery.run = null
+  returnToIdle(state)
+  return { ok: true, message: completed ? '秘境战利品已经清点完毕' : '本轮秘境探索已经结算' }
+}
+
+const isBuildLocked = (state: GameState): boolean => Boolean(state.mystery.run)
+  || (state.combat.mode === 'challenge' && state.combat.status === 'fighting')
+
 export function startChallenge(state: GameState): ActionResult {
+  if (state.mystery.run) return { ok: false, message: '请先完成或离开当前秘境探索' }
   if (state.combat.mode === 'challenge' && state.combat.status === 'fighting') {
     return { ok: false, message: '挑战正在进行中' }
   }
@@ -631,9 +787,7 @@ export function returnToIdle(state: GameState): ActionResult {
 export function selectRegion(state: GameState, regionId: RegionId): ActionResult {
   const region = regionById(regionId)
   if (!region) return { ok: false, message: '江湖区域不存在' }
-  if (state.combat.mode === 'challenge' && state.combat.status === 'fighting') {
-    return { ok: false, message: '挑战中不可更换历练区域' }
-  }
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可更换历练区域' }
   if (!isRegionUnlocked(state, region.id)) return { ok: false, message: '尚未击败前一区域 BOSS' }
   if (state.selectedRegionId === region.id) return { ok: false, message: `队伍已在${region.name}历练` }
 
@@ -648,6 +802,7 @@ export function getUpgradeCost(level: number): { silver: number; experience: num
 }
 
 export function upgradeHero(state: GameState, heroId: string): ActionResult {
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可调整养成' }
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
   if (!hero || !progress?.unlocked) return { ok: false, message: '尚未结识这位侠客' }
@@ -669,6 +824,7 @@ export function upgradeHero(state: GameState, heroId: string): ActionResult {
 }
 
 export function recruitHero(state: GameState, heroId: string): ActionResult {
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可调整养成' }
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
   if (!hero || !progress) return { ok: false, message: '侠客资料不存在' }
@@ -682,6 +838,7 @@ export function recruitHero(state: GameState, heroId: string): ActionResult {
 }
 
 export function unlockMartial(state: GameState, martialId: string): ActionResult {
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可调整养成' }
   const martial = martialById(martialId)
   if (!martial) return { ok: false, message: '武学资料不存在' }
   if (state.unlockedMartials.includes(martialId)) return { ok: false, message: '这门武学已参悟' }
@@ -692,6 +849,7 @@ export function unlockMartial(state: GameState, martialId: string): ActionResult
 }
 
 export function equipMartial(state: GameState, heroId: string, martialId: string): ActionResult {
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可更换武学' }
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
   const martial = martialById(martialId)
@@ -704,6 +862,7 @@ export function equipMartial(state: GameState, heroId: string, martialId: string
 }
 
 export function trainMartial(state: GameState, heroId: string): ActionResult {
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可调整养成' }
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
   const martial = progress?.equippedMartialId ? martialById(progress.equippedMartialId) : undefined
@@ -726,9 +885,7 @@ export function setPartySlot(state: GameState, slot: number, heroId: string): Ac
   if (!hero || !state.heroes[heroId]?.unlocked || slot < 0 || slot >= state.formation.length) {
     return { ok: false, message: '无法调整这个队伍位置' }
   }
-  if (state.combat.mode === 'challenge' && state.combat.status === 'fighting') {
-    return { ok: false, message: '挑战中不可换阵，请先完成或退出本场战斗' }
-  }
+  if (isBuildLocked(state)) return { ok: false, message: state.mystery.run ? '秘境探索期间不可换阵' : '挑战中不可换阵，请先完成或退出本场战斗' }
   const oldHero = state.formation[slot].heroId
   const existingSlot = state.formation.findIndex((candidate) => candidate.heroId === heroId)
   state.formation[slot].heroId = heroId
@@ -741,9 +898,7 @@ export function setPartySlot(state: GameState, slot: number, heroId: string): Ac
 export function setFormationRow(state: GameState, slot: number, row: FormationRow): ActionResult {
   const formationSlot = state.formation[slot]
   if (!formationSlot || (row !== 'front' && row !== 'back')) return { ok: false, message: '无法调整这个阵位' }
-  if (state.combat.mode === 'challenge' && state.combat.status === 'fighting') {
-    return { ok: false, message: '挑战中不可换位，请先完成或退出本场战斗' }
-  }
+  if (isBuildLocked(state)) return { ok: false, message: state.mystery.run ? '秘境探索期间不可换位' : '挑战中不可换位，请先完成或退出本场战斗' }
   if (formationSlot.row === row) return { ok: false, message: '侠客已在这一排' }
 
   const nextRows = state.formation.map((candidate, index) => index === slot ? row : candidate.row)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { OFFLINE_CAP_SECONDS, createInitialState } from './game'
+import { OFFLINE_CAP_SECONDS, chooseMysteryBlessing, createInitialState, startMystery } from './game'
 import { SAVE_KEY, exportSave, hydrateState, importSave, loadGame, saveGame, type StorageLike } from './save'
 
 class MemoryStorage implements StorageLike {
@@ -77,10 +77,10 @@ describe('本地存档与离线结算', () => {
     state.resources.reputation = 42
     const imported = importSave(exportSave(state))
     expect(imported.state.resources.reputation).toBe(42)
-    expect(() => hydrateState({ version: 6 })).toThrow(/版本/)
+    expect(() => hydrateState({ version: 7 })).toThrow(/版本/)
   })
 
-  it('能够把 version 1 的队伍和关卡进度迁移为 version 5 区域进度', () => {
+  it('能够把 version 1 的队伍和关卡进度迁移为 version 6 区域进度', () => {
     const current = createInitialState(10_000)
     const { formation, selectedRegionId, defeatedBossIds, regionDefeats, ...legacyBase } = current
     void selectedRegionId
@@ -94,7 +94,7 @@ describe('本地存档与离线结算', () => {
     }
 
     const migrated = hydrateState(legacy, 10_000)
-    expect(migrated.version).toBe(5)
+    expect(migrated.version).toBe(6)
     expect(migrated.formation.map((slot) => slot.heroId)).toEqual(formation.map((slot) => slot.heroId))
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['front', 'front', 'back'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker', 'boss_blackwind_chief'])
@@ -111,9 +111,29 @@ describe('本地存档与离线结算', () => {
     legacyBase.formation[2].row = 'front'
     const migrated = hydrateState({ ...legacyBase, version: 2, clearedStage: 1 }, 10_000)
 
-    expect(migrated.version).toBe(5)
+    expect(migrated.version).toBe(6)
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker'])
+  })
+
+  it('秘境路线、祝福和进行中的层战斗可以随存档恢复', () => {
+    const storage = new MemoryStorage()
+    const state = createInitialState(10_000)
+    expect(startMystery(state, 4).ok).toBe(true)
+    const choices = [...state.mystery.run!.choiceIds]
+    saveGame(storage, state, 10_000)
+
+    const choosing = loadGame(storage, 10_000).state
+    expect(choosing.mystery.run?.status).toBe('choosing')
+    expect(choosing.mystery.run?.choiceIds).toEqual(choices)
+    expect(chooseMysteryBlessing(choosing, choices[0]).ok).toBe(true)
+    saveGame(storage, choosing, 10_000)
+
+    const fighting = loadGame(storage, 10_000).state
+    expect(fighting.mystery.run?.status).toBe('fighting')
+    expect(fighting.mystery.run?.blessingIds).toEqual([choices[0]])
+    expect(fighting.combat.mode).toBe('mystery')
+    expect(fighting.combat.enemyId).toBe('mist_wolf_pack')
   })
 
   it('损坏的 localStorage 存档不会阻断游戏启动', () => {

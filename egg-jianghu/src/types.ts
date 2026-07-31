@@ -8,6 +8,8 @@ export type MartialSkillKind = 'blazing_palm' | 'frost_flurry' | 'taiji_restore'
 export type CombatStatusId = 'burn' | 'slow' | 'sunder' | 'guard'
 export type BondEffectType = 'attack' | 'damage_reduction' | 'healing' | 'skill_haste'
 export type ComboEffectKind = 'damage' | 'restore' | 'guard' | 'sunder'
+export type MysteryBlessingId = 'keen_edge' | 'golden_guard' | 'spring_breath' | 'cloud_steps' | 'mountain_body' | 'fortune_seal'
+export type MysteryBlessingEffectType = 'attack' | 'damage_reduction' | 'healing' | 'skill_haste' | 'max_hp' | 'rewards'
 
 export interface HeroDefinition {
   id: string
@@ -63,6 +65,43 @@ export interface ComboDefinition {
   multiplier: number
   effect: ComboEffectKind
   effectValue: number
+}
+
+export interface MysteryBlessingDefinition {
+  id: MysteryBlessingId
+  name: string
+  description: string
+  effectText: string
+  effect: {
+    type: MysteryBlessingEffectType
+    value: number
+  }
+}
+
+export interface MysteryEncounterDefinition {
+  id: string
+  name: string
+  description: string
+  traitId: EnemyTraitId
+  baseHp: number
+  baseAttack: number
+  boss: boolean
+  rewards: Resources
+}
+
+export interface MysteryRun {
+  seed: number
+  floor: number
+  status: 'choosing' | 'fighting' | 'completed' | 'failed'
+  blessingIds: MysteryBlessingId[]
+  choiceIds: MysteryBlessingId[]
+  earned: Resources
+}
+
+export interface MysteryProgress {
+  runsCompleted: number
+  bestFloor: number
+  run: MysteryRun | null
 }
 
 export interface HeroProgress {
@@ -139,7 +178,7 @@ export interface CombatEvent {
 }
 
 export interface CombatState {
-  mode: 'idle' | 'challenge'
+  mode: 'idle' | 'challenge' | 'mystery'
   status: 'fighting' | 'victory' | 'defeat'
   regionId: RegionId
   enemyId: string
@@ -166,7 +205,7 @@ export interface GameStatistics {
 }
 
 export interface GameState {
-  version: 5
+  version: 6
   resources: Resources
   heroes: Record<string, HeroProgress>
   unlockedMartials: string[]
@@ -174,6 +213,7 @@ export interface GameState {
   selectedRegionId: RegionId
   defeatedBossIds: string[]
   regionDefeats: Record<RegionId, number>
+  mystery: MysteryProgress
   combat: CombatState
   statistics: GameStatistics
   lastTickAt: number

@@ -4,18 +4,23 @@ import {
   COMBOS,
   HEROES,
   MARTIALS,
+  MYSTERY_BLESSINGS,
+  MYSTERY_ENCOUNTERS,
   REGIONS,
   enemyTraitById,
   heroById,
   martialById,
+  mysteryBlessingById,
   nextRegionAfter,
   regionById,
 } from './data'
 import {
   COMBAT_STATUS_NAMES,
+  abandonMystery,
   applyOfflineProgress,
   createInitialState,
   equipMartial,
+  finishMystery,
   getActiveBonds,
   getActiveCombos,
   getFormationSummary,
@@ -26,11 +31,13 @@ import {
   getSelectedRegion,
   getUpgradeCost,
   isRegionUnlocked,
+  chooseMysteryBlessing,
   recruitHero,
   returnToIdle,
   selectRegion,
   setFormationRow,
   setPartySlot,
+  startMystery,
   startChallenge,
   stepCombat,
   trainMartial,
@@ -38,9 +45,9 @@ import {
   upgradeHero,
 } from './game'
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
-import type { ActionResult, CombatHeroState, CombatStatus, FormationRow, GameState, OfflineSettlement, RegionId } from './types'
+import type { ActionResult, CombatHeroState, CombatStatus, FormationRow, GameState, MysteryBlessingId, OfflineSettlement, RegionId } from './types'
 
-type TabId = 'idle' | 'heroes' | 'party' | 'battle'
+type TabId = 'idle' | 'heroes' | 'party' | 'battle' | 'mystery'
 
 const appElement = document.querySelector<HTMLDivElement>('#app')
 if (!appElement) throw new Error('缺少 #app 根节点')
@@ -72,6 +79,8 @@ const escapeHtml = (value: string): string => value.replace(/[&<>'"]/g, (char) =
 })[char] ?? char)
 
 const formatNumber = (value: number): string => Math.floor(value).toLocaleString('zh-CN')
+const isBuildUiLocked = (): boolean => Boolean(state.mystery.run)
+  || (state.combat.mode === 'challenge' && state.combat.status === 'fighting')
 
 const renderStatusChips = (statuses: CombatStatus[]): string => statuses.length
   ? `<div class="status-chips">${statuses.map((status) => `
@@ -132,6 +141,7 @@ const getTabItems = (): { id: TabId; label: string; note: string }[] => [
   { id: 'heroes', label: '侠客', note: `${HEROES.filter((hero) => state.heroes[hero.id].unlocked).length}/${HEROES.length}` },
   { id: 'party', label: '队伍', note: '前后列阵' },
   { id: 'battle', label: '战斗', note: `已破 ${state.defeatedBossIds.length}/${REGIONS.length}` },
+  { id: 'mystery', label: '秘境', note: state.mystery.run ? `第 ${Math.min(state.mystery.run.floor + 1, MYSTERY_ENCOUNTERS.length)} 层` : `通关 ${state.mystery.runsCompleted}` },
 ]
 
 const renderNav = (): string => `
@@ -188,7 +198,9 @@ const renderCombatArena = (compact = false): string => {
   const trait = enemyTraitById(combat.enemyTraitId)
   const modeLabel = combat.mode === 'idle'
     ? `${region.name} · 自动历练中`
-    : `${region.name} BOSS · ${combat.status === 'fighting' ? '交锋中' : combat.status === 'victory' ? '胜利' : '落败'}`
+    : combat.mode === 'mystery'
+      ? `无相秘境 · 第 ${(state.mystery.run?.floor ?? 0) + 1} 层交锋`
+      : `${region.name} BOSS · ${combat.status === 'fighting' ? '交锋中' : combat.status === 'victory' ? '胜利' : '落败'}`
 
   return `
     <section class="battle-arena ${compact ? 'compact' : ''}" data-testid="battle-arena">
@@ -293,7 +305,7 @@ const renderMartialSelect = (heroId: string): string => {
   const equipped = state.heroes[heroId].equippedMartialId
   return `
     <label class="field-label">所习武学
-      <select data-action="equip-martial" data-hero-id="${heroId}">
+      <select data-action="equip-martial" data-hero-id="${heroId}" ${isBuildUiLocked() ? 'disabled' : ''}>
         ${state.unlockedMartials.map((martialId) => {
           const martial = martialById(martialId)
           return martial ? `<option value="${martial.id}" ${equipped === martial.id ? 'selected' : ''}>${martial.name}</option>` : ''
@@ -313,7 +325,7 @@ const renderHeroCard = (heroId: string): string => {
         <div class="hero-card-head"><div class="portrait muted">?</div><div><span>${hero.sect} · ${hero.epithet}</span><h3>${hero.name}</h3></div></div>
         <p>${hero.description}</p>
         <div class="tag-row"><span>${hero.element}行</span><span>${hero.style}劲</span></div>
-        <button class="primary-button full" data-action="recruit" data-hero-id="${hero.id}">以 ${hero.recruitCost} 银两结识</button>
+        <button class="primary-button full" data-action="recruit" data-hero-id="${hero.id}" ${isBuildUiLocked() ? 'disabled' : ''}>以 ${hero.recruitCost} 银两结识</button>
       </article>`
   }
   const martial = progress.equippedMartialId ? martialById(progress.equippedMartialId) : undefined
@@ -334,8 +346,8 @@ const renderHeroCard = (heroId: string): string => {
       ${renderMartialSelect(heroId)}
       ${martial ? `<div class="skill-summary"><small>自动招式 · ${martial.skill.cooldown} 次行动冷却</small><strong>${martial.skill.name}</strong><p>${martial.skill.description}</p></div>` : ''}
       <div class="card-actions">
-        <button class="secondary-button" data-action="upgrade" data-hero-id="${hero.id}">升级 <small>${upgradeCost.silver}银 / ${upgradeCost.experience}历</small></button>
-        <button class="secondary-button" data-action="train" data-hero-id="${hero.id}" ${rank >= 3 ? 'disabled' : ''}>${rank >= 3 ? '武学圆满' : `武学进阶 · ${trainSilver}银/${trainPages}卷`}</button>
+        <button class="secondary-button" data-action="upgrade" data-hero-id="${hero.id}" ${isBuildUiLocked() ? 'disabled' : ''}>升级 <small>${upgradeCost.silver}银 / ${upgradeCost.experience}历</small></button>
+        <button class="secondary-button" data-action="train" data-hero-id="${hero.id}" ${rank >= 3 || isBuildUiLocked() ? 'disabled' : ''}>${rank >= 3 ? '武学圆满' : `武学进阶 · ${trainSilver}银/${trainPages}卷`}</button>
       </div>
     </article>`
 }
@@ -352,7 +364,7 @@ const renderHeroes = (): string => `
         return `<article class="martial-item ${unlocked ? '' : 'locked'}">
           <span class="martial-glyph element-${martial.element}">${martial.element}</span>
           <div><strong>${martial.name}</strong><small>${martial.element}行 · ${martial.style}劲</small><p>${martial.description}</p><em>${martial.skill.name}：${martial.skill.description}</em></div>
-          ${unlocked ? '<b class="learned">已参悟</b>' : `<button class="text-button" data-action="unlock-martial" data-martial-id="${martial.id}">${martial.unlockCost} 残页</button>`}
+          ${unlocked ? '<b class="learned">已参悟</b>' : `<button class="text-button" data-action="unlock-martial" data-martial-id="${martial.id}" ${isBuildUiLocked() ? 'disabled' : ''}>${martial.unlockCost} 残页</button>`}
         </article>`
       }).join('')}
     </div>
@@ -365,7 +377,7 @@ const renderParty = (): string => {
   const activeCombos = getActiveCombos(state)
   const formation = getFormationSummary(state)
   const unlocked = HEROES.filter((hero) => state.heroes[hero.id].unlocked)
-  const challengeActive = state.combat.mode === 'challenge' && state.combat.status === 'fighting'
+  const challengeActive = isBuildUiLocked()
   const renderFormationRow = (row: FormationRow): string => {
     const rowSlots = state.formation
       .map((slot, index) => ({ slot, index }))
@@ -391,7 +403,7 @@ const renderParty = (): string => {
                 ${unlocked.map((candidate) => `<option value="${candidate.id}" ${candidate.id === hero.id ? 'selected' : ''}>${candidate.name} · ${candidate.sect}</option>`).join('')}
               </select>
               <button class="position-button secondary-button" data-action="set-row" data-slot="${index}" data-row="${targetRow}" ${challengeActive || lastInRow ? 'disabled' : ''}>
-                ${challengeActive ? '交锋中不可换位' : lastInRow ? `需保留${row === 'front' ? '前排' : '后排'}` : `调至${targetRow === 'front' ? '前排' : '后排'}`}
+                ${challengeActive ? state.mystery.run ? '秘境中不可换位' : '交锋中不可换位' : lastInRow ? `需保留${row === 'front' ? '前排' : '后排'}` : `调至${targetRow === 'front' ? '前排' : '后排'}`}
               </button>
             </article>`
           }).join('')}
@@ -485,6 +497,86 @@ const renderBattle = (): string => {
     </div>`
 }
 
+const renderMystery = (): string => {
+  const run = state.mystery.run
+  const route = `
+    <div class="mystery-route" data-testid="mystery-route">
+      ${MYSTERY_ENCOUNTERS.map((encounter, index) => `<span class="${run && index < run.floor ? 'cleared' : run && index === run.floor && run.status !== 'completed' ? 'active' : ''}">
+        <i>${index + 1}</i><b>${encounter.name}</b><small>${encounter.boss ? '秘境之主' : enemyTraitById(encounter.traitId).name}</small>
+      </span>`).join('')}
+    </div>`
+  const heading = `
+    <div class="page-heading compact-heading">
+      <div><span class="eyebrow">Roguelike Expedition</span><h1>无相秘境</h1><p>每层从两条岔路中选择一项临时祝福。祝福只在本轮生效，路线与 build 共同决定你能走多深。</p></div>
+      <div class="stage-plaque"><small>秘境记录</small><strong>${state.mystery.bestFloor}/${MYSTERY_ENCOUNTERS.length}</strong><span>已通关 ${state.mystery.runsCompleted} 次</span></div>
+    </div>`
+
+  if (!run) {
+    return `${heading}
+      <section class="mystery-entry panel" data-testid="mystery-page">
+        <span class="mystery-seal">秘</span><small>五层连续探索</small><h2>雾门之后，机缘与杀机并存</h2>
+        <p>每次进入都会重新排列祝福选项。战败会结束本轮，但已经取得的银两、阅历、残页与声望不会丢失。</p>
+        <button class="primary-button" data-action="start-mystery">踏入无相秘境</button>
+      </section>${route}`
+  }
+
+  const blessingSummary = MYSTERY_BLESSINGS.map((blessing) => ({
+    blessing,
+    count: run.blessingIds.filter((id) => id === blessing.id).length,
+  })).filter(({ count }) => count > 0)
+  const encounter = MYSTERY_ENCOUNTERS[Math.min(run.floor, MYSTERY_ENCOUNTERS.length - 1)]
+  const runHeader = `
+    <section class="mystery-run-head panel">
+      <div><small>本轮进度</small><strong>${run.status === 'completed' ? '秘境问鼎' : run.status === 'failed' ? `止步第 ${run.floor + 1} 层` : `第 ${run.floor + 1} / ${MYSTERY_ENCOUNTERS.length} 层`}</strong></div>
+      <div class="mystery-earned"><span>银 ${run.earned.silver}</span><span>历 ${run.earned.experience}</span><span>卷 ${run.earned.pages}</span><span>名 ${run.earned.reputation}</span></div>
+      <button class="text-button danger" data-action="abandon-mystery" ${run.status === 'completed' || run.status === 'failed' ? 'hidden' : ''}>离开秘境</button>
+    </section>
+    <section class="blessing-stack panel">
+      <div class="section-title"><span>本轮祝福</span><small>${run.blessingIds.length} 层加持，可重复叠加</small></div>
+      <div>${blessingSummary.length ? blessingSummary.map(({ blessing, count }) => `<span><b>${blessing.name}${count > 1 ? ` ×${count}` : ''}</b><small>${blessing.effectText}</small></span>`).join('') : '<p>尚未取得祝福。</p>'}</div>
+    </section>`
+
+  if (run.status === 'choosing') {
+    return `${heading}${route}${runHeader}
+      <section class="mystery-choice-panel panel" data-testid="mystery-choices">
+        <div class="section-title"><span>前方岔路</span><small>选择后立即进入第 ${run.floor + 1} 层战斗</small></div>
+        <div class="next-encounter"><span>敌</span><div><small>${enemyTraitById(encounter.traitId).name}</small><strong>${encounter.name}</strong><p>${encounter.description}</p></div></div>
+        <div class="mystery-choice-grid">${run.choiceIds.map((id) => {
+          const blessing = mysteryBlessingById(id)!
+          return `<button data-action="choose-mystery" data-blessing-id="${blessing.id}">
+            <span>择</span><div><strong>${blessing.name}</strong><p>${blessing.description}</p><b>${blessing.effectText}</b></div>
+          </button>`
+        }).join('')}</div>
+      </section>`
+  }
+
+  if (run.status === 'fighting') {
+    return `${heading}${route}${runHeader}
+      <div class="battle-page-layout mystery-battle-layout">
+        <div class="main-column">
+          <section class="mystery-encounter panel"><span>战</span><div><small>第 ${run.floor + 1} 层 · ${enemyTraitById(encounter.traitId).name}</small><strong>${encounter.name}</strong><p>${encounter.description}</p></div></section>
+          ${renderCombatArena()}
+        </div>
+        ${renderLogs()}
+      </div>`
+  }
+
+  const completed = run.status === 'completed'
+  return `${heading}${route}${runHeader}
+    <section class="mystery-result panel ${completed ? 'completed' : 'failed'}" data-testid="mystery-result">
+      <span>${completed ? '问鼎' : '归来'}</span>
+      <h2>${completed ? '无相秘境已经贯通' : '此轮探索止步于此'}</h2>
+      <p>${completed ? '五层守关者尽数落败，所有祝福化作一段新的江湖传闻。' : '重新调整阵型、武学与羁绊，再来时或许能走得更远。'}本轮战利品已经永久收入存档。</p>
+      <div class="settlement-grid">
+        <div><span>银</span><strong>+${run.earned.silver}</strong><small>银两</small></div>
+        <div><span>历</span><strong>+${run.earned.experience}</strong><small>阅历</small></div>
+        <div><span>卷</span><strong>+${run.earned.pages}</strong><small>残页</small></div>
+        <div><span>名</span><strong>+${run.earned.reputation}</strong><small>声望</small></div>
+      </div>
+      <button class="primary-button" data-action="finish-mystery">收下战利品并离开</button>
+    </section>`
+}
+
 const renderOfflineModal = (): string => {
   if (!offlineSettlement) return ''
   const region = regionById(offlineSettlement.regionId) ?? REGIONS[0]
@@ -506,12 +598,20 @@ const renderOfflineModal = (): string => {
 }
 
 const renderFooter = (): string => `
-  <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 5</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
+  <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 6</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
 
 function render(): void {
   const focused = document.activeElement
   if (focused instanceof HTMLSelectElement) return
-  const content = activeTab === 'idle' ? renderIdle() : activeTab === 'heroes' ? renderHeroes() : activeTab === 'party' ? renderParty() : renderBattle()
+  const content = activeTab === 'idle'
+    ? renderIdle()
+    : activeTab === 'heroes'
+      ? renderHeroes()
+      : activeTab === 'party'
+        ? renderParty()
+        : activeTab === 'battle'
+          ? renderBattle()
+          : renderMystery()
   app.innerHTML = `
     ${renderHeader()}
     ${renderNav()}
@@ -536,7 +636,7 @@ app.addEventListener('click', (event) => {
   }
   const button = target.closest<HTMLButtonElement>('button[data-action]')
   if (!button) return
-  const { action, heroId, martialId, regionId, row, slot } = button.dataset
+  const { action, blessingId, heroId, martialId, regionId, row, slot } = button.dataset
   if (toastTimer) window.clearTimeout(toastTimer)
 
   switch (action) {
@@ -555,6 +655,19 @@ app.addEventListener('click', (event) => {
       break
     }
     case 'challenge': notify(startChallenge(state)); activeTab = 'battle'; break
+    case 'start-mystery': notify(startMystery(state)); activeTab = 'mystery'; break
+    case 'choose-mystery': {
+      if (!MYSTERY_BLESSINGS.some((blessing) => blessing.id === blessingId)) return
+      notify(chooseMysteryBlessing(state, blessingId as MysteryBlessingId))
+      activeTab = 'mystery'
+      break
+    }
+    case 'abandon-mystery': {
+      if (!window.confirm('确定离开秘境？本轮祝福与路线进度会清空，已获得的战利品仍会保留。')) return
+      notify(abandonMystery(state))
+      break
+    }
+    case 'finish-mystery': notify(finishMystery(state)); break
     case 'return-idle': notify(returnToIdle(state)); break
     case 'close-offline': offlineSettlement = null; notify('离线收益已收入囊中'); break
     case 'export': {

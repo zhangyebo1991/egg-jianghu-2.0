@@ -1,6 +1,6 @@
-import { HEROES, MARTIALS, REGIONS, regionById } from './data'
-import { applyOfflineProgress, createInitialState, returnToIdle } from './game'
-import type { FormationRow, FormationSlot, GameState, OfflineSettlement } from './types'
+import { HEROES, MARTIALS, MYSTERY_BLESSINGS, MYSTERY_ENCOUNTERS, REGIONS, regionById } from './data'
+import { applyOfflineProgress, createInitialState, getMysteryChoices, resumeMysteryCombat, returnToIdle } from './game'
+import type { FormationRow, FormationSlot, GameState, MysteryBlessingId, OfflineSettlement } from './types'
 
 export const SAVE_KEY = 'egg-jianghu-2-save-v1'
 
@@ -23,7 +23,7 @@ const safeNumber = (value: unknown, fallback: number, max = Number.MAX_SAFE_INTE
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : fallback
 
 export function hydrateState(raw: unknown, now = Date.now()): GameState {
-  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5)) {
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5 && raw.version !== 6)) {
     throw new Error('存档版本不受支持或格式无效')
   }
   const state = createInitialState(now)
@@ -121,9 +121,47 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
     state.statistics.offlineSeconds = Math.floor(safeNumber(raw.statistics.offlineSeconds, 0))
   }
 
+  if (isRecord(raw.mystery)) {
+    state.mystery.runsCompleted = Math.floor(safeNumber(raw.mystery.runsCompleted, 0))
+    state.mystery.bestFloor = Math.floor(safeNumber(raw.mystery.bestFloor, 0, MYSTERY_ENCOUNTERS.length))
+    if (isRecord(raw.mystery.run)) {
+      const importedRun = raw.mystery.run
+      const seed = Math.floor(safeNumber(importedRun.seed, 1)) || 1
+      const floor = Math.floor(safeNumber(importedRun.floor, 0, MYSTERY_ENCOUNTERS.length))
+      const allowedBlessings = new Set(MYSTERY_BLESSINGS.map((blessing) => blessing.id))
+      const blessingIds = Array.isArray(importedRun.blessingIds)
+        ? importedRun.blessingIds.filter((id): id is MysteryBlessingId => typeof id === 'string' && allowedBlessings.has(id as MysteryBlessingId))
+        : []
+      const importedStatus = importedRun.status
+      const status = floor >= MYSTERY_ENCOUNTERS.length
+        ? 'completed'
+        : importedStatus === 'fighting'
+          ? 'fighting'
+          : importedStatus === 'failed'
+            ? 'failed'
+            : 'choosing'
+      const earned = isRecord(importedRun.earned) ? importedRun.earned : {}
+      state.mystery.run = {
+        seed,
+        floor,
+        status,
+        blessingIds,
+        choiceIds: status === 'choosing' ? getMysteryChoices(seed, floor) : [],
+        earned: {
+          silver: safeNumber(earned.silver, 0),
+          experience: safeNumber(earned.experience, 0),
+          pages: safeNumber(earned.pages, 0),
+          reputation: safeNumber(earned.reputation, 0),
+        },
+      }
+      state.mystery.bestFloor = Math.max(state.mystery.bestFloor, floor)
+    }
+  }
+
   state.lastTickAt = Math.min(now, safeNumber(raw.lastTickAt, now))
   state.lastSavedAt = Math.min(now, safeNumber(raw.lastSavedAt, now))
   returnToIdle(state)
+  if (state.mystery.run?.status === 'fighting') resumeMysteryCombat(state)
   return state
 }
 
