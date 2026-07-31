@@ -62,6 +62,8 @@ out/
 bin/
 obj/
 coverage/
+test-results/
+playwright-report/
 .cache/
 *.tsbuildinfo
 package-lock.json.bak
