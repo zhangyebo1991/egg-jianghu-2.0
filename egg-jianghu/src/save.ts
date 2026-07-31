@@ -1,6 +1,6 @@
-import { HEROES, MARTIALS } from './data'
+import { HEROES, MARTIALS, REGIONS, regionById } from './data'
 import { applyOfflineProgress, createInitialState, returnToIdle } from './game'
-import type { GameState, OfflineSettlement } from './types'
+import type { FormationRow, FormationSlot, GameState, OfflineSettlement } from './types'
 
 export const SAVE_KEY = 'egg-jianghu-2-save-v1'
 
@@ -23,7 +23,9 @@ const safeNumber = (value: unknown, fallback: number, max = Number.MAX_SAFE_INTE
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : fallback
 
 export function hydrateState(raw: unknown, now = Date.now()): GameState {
-  if (!isRecord(raw) || raw.version !== 1) throw new Error('存档版本不受支持或格式无效')
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3)) {
+    throw new Error('存档版本不受支持或格式无效')
+  }
   const state = createInitialState(now)
 
   if (isRecord(raw.resources)) {
@@ -64,16 +66,53 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
   }
 
   const availableHeroIds = HEROES.filter((hero) => state.heroes[hero.id].unlocked).map((hero) => hero.id)
-  const importedParty = Array.isArray(raw.party)
-    ? raw.party.filter((id): id is string => typeof id === 'string' && availableHeroIds.includes(id))
-    : []
-  state.party = [...new Set(importedParty)]
-  for (const heroId of availableHeroIds) {
-    if (state.party.length >= 3) break
-    if (!state.party.includes(heroId)) state.party.push(heroId)
+  const importedFormation: FormationSlot[] = []
+  if (Array.isArray(raw.formation)) {
+    for (const entry of raw.formation) {
+      if (!isRecord(entry) || typeof entry.heroId !== 'string' || !availableHeroIds.includes(entry.heroId)) continue
+      if (importedFormation.some((slot) => slot.heroId === entry.heroId)) continue
+      const row: FormationRow = entry.row === 'back' ? 'back' : 'front'
+      importedFormation.push({ heroId: entry.heroId, row })
+    }
+  } else if (Array.isArray(raw.party)) {
+    for (const heroId of raw.party) {
+      if (typeof heroId !== 'string' || !availableHeroIds.includes(heroId)) continue
+      if (importedFormation.some((slot) => slot.heroId === heroId)) continue
+      importedFormation.push({ heroId, row: importedFormation.length < 2 ? 'front' : 'back' })
+    }
   }
-  state.party = state.party.slice(0, 3)
-  state.clearedStage = Math.floor(safeNumber(raw.clearedStage, 0, 9999))
+
+  state.formation = importedFormation.slice(0, 3)
+  for (const heroId of availableHeroIds) {
+    if (state.formation.length >= 3) break
+    if (!state.formation.some((slot) => slot.heroId === heroId)) {
+      state.formation.push({ heroId, row: state.formation.length < 2 ? 'front' : 'back' })
+    }
+  }
+  if (!state.formation.some((slot) => slot.row === 'front')) state.formation[0].row = 'front'
+  if (!state.formation.some((slot) => slot.row === 'back')) state.formation.at(-1)!.row = 'back'
+  const allowedBossIds = new Set(REGIONS.map((region) => region.boss.id))
+  if (Array.isArray(raw.defeatedBossIds)) {
+    state.defeatedBossIds = [...new Set(raw.defeatedBossIds.filter(
+      (id): id is string => typeof id === 'string' && allowedBossIds.has(id),
+    ))]
+  } else {
+    const legacyClears = Math.floor(safeNumber(raw.clearedStage, 0, REGIONS.length))
+    state.defeatedBossIds = REGIONS.slice(0, legacyClears).map((region) => region.boss.id)
+  }
+
+  if (isRecord(raw.regionDefeats)) {
+    for (const region of REGIONS) {
+      state.regionDefeats[region.id] = Math.floor(safeNumber(raw.regionDefeats[region.id], 0))
+    }
+  } else if (isRecord(raw.statistics)) {
+    state.regionDefeats.bluestone_path = Math.floor(safeNumber(raw.statistics.idleEnemiesDefeated, 0))
+  }
+
+  const importedRegion = typeof raw.selectedRegionId === 'string' ? regionById(raw.selectedRegionId) : undefined
+  if (importedRegion && (importedRegion.requiredBossId === null || state.defeatedBossIds.includes(importedRegion.requiredBossId))) {
+    state.selectedRegionId = importedRegion.id
+  }
 
   if (isRecord(raw.statistics)) {
     state.statistics.idleEnemiesDefeated = Math.floor(safeNumber(raw.statistics.idleEnemiesDefeated, 0))

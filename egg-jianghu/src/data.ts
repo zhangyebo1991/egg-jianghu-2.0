@@ -1,4 +1,11 @@
-import type { HeroDefinition, MartialDefinition } from './types'
+import type {
+  EnemyTraitDefinition,
+  EnemyTraitId,
+  HeroDefinition,
+  MartialDefinition,
+  RegionDefinition,
+  RegionId,
+} from './types'
 
 export const HEROES: readonly HeroDefinition[] = [
   {
@@ -195,14 +202,102 @@ export const COMBO = {
   multiplier: 1.72,
 }
 
-export const IDLE_LOCATION = {
-  id: 'bluestone_path',
-  name: '青石古道',
-  description: '山雨初歇，商旅与流寇都沿这条古道往来。适合初入江湖者积累阅历。',
-  rewardText: '银两 · 阅历 · 秘籍残页',
+export const ENEMY_TRAITS: Record<EnemyTraitId, EnemyTraitDefinition> = {
+  none: {
+    id: 'none',
+    name: '寻常身手',
+    description: '没有额外战斗规则，以基础攻防检验队伍实力。',
+    counterHint: '稳步提升侠客、武学和羁绊即可应对。',
+  },
+  formation_breaker: {
+    id: 'formation_breaker',
+    name: '破阵重击',
+    description: '仅有一名前排存活时，反击伤害提高 45%；两名前排存活时，反击伤害降低 20%。',
+    counterHint: '使用两前一后的「磐石阵」，让两名侠客共同稳住前排。',
+  },
+  iron_armor: {
+    id: 'iron_armor',
+    name: '黑铁重甲',
+    description: '正面强攻只能造成 65% 伤害；后排侠客可攻击甲胄薄弱处，造成 125% 伤害。',
+    counterHint: '改用一前两后的「雁行阵」，把主力输出放在后排。',
+  },
+  frost_aura: {
+    id: 'frost_aura',
+    name: '寒罡护体',
+    description: '非火系武学只能造成 72% 伤害；火系武学可融解寒罡，造成 155% 伤害。',
+    counterHint: '让主力改习火系「沧浪降龙掌」，以火劲破开寒罡。',
+  },
 }
 
-export const ENEMY_NAMES = ['剪径悍匪', '黑风寨哨探', '负伤刀客', '拦路恶霸', '蒙面剑手'] as const
+export const REGIONS: readonly RegionDefinition[] = [
+  {
+    id: 'bluestone_path',
+    name: '青石古道',
+    description: '山雨初歇，商旅与流寇都沿这条古道往来。适合初入江湖者积累根基。',
+    rewardText: '均衡产出 · 银两与阅历',
+    rewardMultipliers: { silver: 1, experience: 1, pages: 1 },
+    requiredBossId: null,
+    enemies: [
+      { id: 'road_bandit', name: '剪径悍匪', traitId: 'none', baseHp: 72, baseAttack: 13 },
+      { id: 'stone_fist_brute', name: '断碑恶徒', traitId: 'formation_breaker', baseHp: 86, baseAttack: 15 },
+    ],
+    boss: {
+      id: 'boss_stonebreaker',
+      name: '断碑手 · 罗震',
+      traitId: 'formation_breaker',
+      baseHp: 420,
+      baseAttack: 32,
+      rewards: { silver: 90, experience: 70, pages: 6, reputation: 8 },
+    },
+  },
+  {
+    id: 'blackwind_fort',
+    name: '黑风寨',
+    description: '寨墙依山而筑，披甲悍匪扼守险道。此地阅历丰厚，却会压制正面强攻。',
+    rewardText: '阅历专精 · 残页略增',
+    rewardMultipliers: { silver: 0.8, experience: 1.55, pages: 1.2 },
+    requiredBossId: 'boss_stonebreaker',
+    enemies: [
+      { id: 'armored_raider', name: '披甲寨兵', traitId: 'iron_armor', baseHp: 152, baseAttack: 23 },
+      { id: 'blackwind_scout', name: '黑风寨哨探', traitId: 'none', baseHp: 132, baseAttack: 27 },
+    ],
+    boss: {
+      id: 'boss_blackwind_chief',
+      name: '黑风寨主 · 裘霸',
+      traitId: 'iron_armor',
+      baseHp: 1_050,
+      baseAttack: 50,
+      rewards: { silver: 260, experience: 320, pages: 16, reputation: 24 },
+    },
+  },
+  {
+    id: 'frost_temple',
+    name: '寒潭古寺',
+    description: '古寺临潭，寒气终年不散。残卷散落其间，守寺高手以寒罡隔绝寻常劲力。',
+    rewardText: '残页专精 · 高阶历练',
+    rewardMultipliers: { silver: 0.7, experience: 1.15, pages: 2.5 },
+    requiredBossId: 'boss_blackwind_chief',
+    enemies: [
+      { id: 'frost_monk', name: '寒潭武僧', traitId: 'frost_aura', baseHp: 248, baseAttack: 34 },
+      { id: 'temple_swordsman', name: '古寺剑侍', traitId: 'none', baseHp: 220, baseAttack: 39 },
+    ],
+    boss: {
+      id: 'boss_frost_arbiter',
+      name: '寒潭判官 · 凌沧',
+      traitId: 'frost_aura',
+      baseHp: 1_900,
+      baseAttack: 70,
+      rewards: { silver: 520, experience: 620, pages: 36, reputation: 48 },
+    },
+  },
+] as const
 
 export const heroById = (id: string) => HEROES.find((hero) => hero.id === id)
 export const martialById = (id: string) => MARTIALS.find((martial) => martial.id === id)
+export const regionById = (id: string) => REGIONS.find((region) => region.id === id)
+export const enemyTraitById = (id: EnemyTraitId) => ENEMY_TRAITS[id]
+export const bossById = (id: string) => REGIONS.map((region) => region.boss).find((boss) => boss.id === id)
+export const nextRegionAfter = (regionId: RegionId) => {
+  const index = REGIONS.findIndex((region) => region.id === regionId)
+  return index >= 0 ? REGIONS[index + 1] : undefined
+}
