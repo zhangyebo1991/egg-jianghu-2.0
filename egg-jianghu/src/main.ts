@@ -44,7 +44,7 @@ import {
 } from './game'
 import { getLearnedMartialRank, getPrimaryMartialId } from './martials'
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
-import type { ActionResult, CombatHeroState, CombatStatus, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
+import type { ActionResult, CombatEvent, CombatHeroState, CombatStatus, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
 
 type TabId = 'idle' | 'heroes' | 'party' | 'battle' | 'mystery'
 type LevelView = 'regions' | 'stages' | 'combat'
@@ -144,6 +144,28 @@ const renderNav = (): string => `
       </button>`).join('')}
   </nav>`
 
+const getEquippedMartialView = (heroId: string) => state.heroes[heroId].equippedMartialIds
+  .map((id, index) => id ? { martial: martialById(id), priority: index + 1 } : null)
+  .filter((entry): entry is { martial: NonNullable<ReturnType<typeof martialById>>; priority: number } => Boolean(entry?.martial))
+
+const getFighterMartialText = (heroId: string, member: CombatHeroState): string => {
+  const equipped = getEquippedMartialView(heroId)
+  const ready = equipped.find(({ martial }) => (member.martialCooldowns[martial.id] ?? 0) <= 0)
+  if (ready) return `${ready.martial.skill.name} · 蓄势已成`
+  const waiting = equipped
+    .map(({ martial }) => ({ martial, cooldown: member.martialCooldowns[martial.id] ?? 0 }))
+    .sort((left, right) => left.cooldown - right.cooldown)[0]
+  return waiting ? `${waiting.martial.skill.name} · ${waiting.cooldown} 次行动后` : '普通攻击'
+}
+
+const getSkillFlashName = (event: CombatEvent | null): string =>
+  event?.abilityId ? martialById(event.abilityId)?.skill.name ?? '武学招式' : '武学招式'
+
+const renderSkillPlanForHero = (heroId: string): string => `
+  <span><b>${heroById(heroId)?.name ?? '侠客'}</b>
+    ${getEquippedMartialView(heroId).map(({ martial, priority }) => `<i>${priority}. ${martial.skill.name}</i>`).join('') || '<i>普通攻击</i>'}
+  </span>`
+
 const renderHeroFighter = (member: CombatHeroState, index: number): string => {
   const hero = heroById(member.heroId)
   const progress = state.heroes[member.heroId]
@@ -152,18 +174,19 @@ const renderHeroFighter = (member: CombatHeroState, index: number): string => {
   const targeted = lastEvent?.targetId === member.heroId && lastEvent.kind === 'enemy'
   const hpPercent = Math.max(0, Math.round((member.hp / member.maxHp) * 100))
   if (!hero || !progress) return ''
-  const martial = martialById(getPrimaryMartialId(progress) ?? '')
+  const equipped = getEquippedMartialView(member.heroId)
+  const martialText = getFighterMartialText(member.heroId, member)
   return `
     <article class="fighter-card hero-fighter ${acting ? 'is-acting' : ''} ${targeted ? 'is-targeted' : ''} ${member.hp <= 0 ? 'is-defeated' : ''}" style="--fighter-delay:${index * 80}ms" data-hero-id="${hero.id}">
       <span class="fighter-position">${member.row === 'front' ? '前排 · 减伤' : '后排 · 增伤'}</span>
       <div class="fighter-avatar element-${hero.element}">${hero.name.slice(-1)}</div>
       <div class="fighter-copy">
         <strong>${hero.name}</strong>
-        <span>Lv.${progress.level} · ${martial?.name ?? '拳脚'}</span>
+        <span>Lv.${progress.level} · ${equipped.length ? `${equipped.length} 门武功` : '拳脚'}</span>
       </div>
       <div class="fighter-health health-track"><i style="width:${hpPercent}%"></i></div>
       <small class="fighter-hp">${member.hp} / ${member.maxHp}</small>
-      ${martial ? `<small class="fighter-skill ${member.skillCooldown <= 0 ? 'ready' : ''}">${martial.skill.name} · ${member.skillCooldown <= 0 ? '蓄势已成' : `${member.skillCooldown} 次行动后`}</small>` : ''}
+      <small class="fighter-skill ${martialText.includes('蓄势已成') ? 'ready' : ''}">${martialText}</small>
       ${renderStatusChips(member.statuses)}
     </article>`
 }
@@ -216,7 +239,7 @@ const renderCombatArena = (compact = false): string => {
           ${enemyHit ? `<b class="damage-float enemy-damage ${hitEvent?.kind === 'combo' ? 'combo-damage' : ''}">-${hitEvent?.amount ?? 0}</b>` : ''}
         </div>
         ${hitEvent?.kind === 'combo' ? `<div class="combo-flash"><span>合击</span><strong>${COMBOS.find((combo) => combo.id === hitEvent.abilityId)?.name ?? '联手武学'}</strong></div>` : ''}
-        ${hitEvent?.kind === 'skill' ? `<div class="skill-flash"><span>绝技</span><strong>${state.heroes[hitEvent.actorId ?? ''] ? martialById(getPrimaryMartialId(state.heroes[hitEvent.actorId ?? '']) ?? '')?.skill.name ?? '武学招式' : '武学招式'}</strong></div>` : ''}
+        ${hitEvent?.kind === 'skill' ? `<div class="skill-flash"><span>绝技</span><strong>${getSkillFlashName(hitEvent)}</strong></div>` : ''}
       </div>
       ${combat.status !== 'fighting' ? `
         <div class="battle-result ${combat.status}">
@@ -514,12 +537,7 @@ const renderBattle = (): string => {
         </section>
         <section class="skill-plan panel" data-testid="skill-plan">
           <div class="section-title"><span>本阵招式预案</span><small>${activeBonds.length} 条关系羁绊 · ${activeCombos.length} 式合击</small></div>
-          <div class="skill-plan-grid">${state.formation.map(({ heroId }) => {
-            const hero = heroById(heroId)
-            const progress = state.heroes[heroId]
-            const martial = martialById(progress ? getPrimaryMartialId(progress) ?? '' : '')
-            return martial ? `<span><b>${hero?.name}</b><i>${martial.skill.name}</i><small>${martial.skill.description}</small></span>` : ''
-          }).join('')}</div>
+          <div class="skill-plan-grid">${state.formation.map(({ heroId }) => renderSkillPlanForHero(heroId)).join('')}</div>
           <p class="battle-bond-summary">${activeBonds.length ? `羁绊：${activeBonds.map((bond) => `${bond.name}（${bond.effectText}）`).join('；')}` : '当前没有关系羁绊生效'}${activeCombos.length ? ` · 合击：${activeCombos.map((combo) => combo.name).join('、')}` : ''}</p>
         </section>
         ${inChallenge ? renderCombatArena() : `<section class="boss-preview panel"><span>战</span><strong>${boss.name}</strong><p>整备完成后发出挑战，战斗不会损失资源。</p></section>`}

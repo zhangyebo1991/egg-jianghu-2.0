@@ -222,7 +222,9 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(getPartySynergy(hasteState).skillCooldownReduction).toBe(1)
     expect(startChallenge(hasteState).ok).toBe(true)
     for (let index = 0; index < 3; index += 1) stepCombat(hasteState)
-    expect(hasteState.combat.partyMembers.find((member) => member.heroId === 'gu_changfeng')?.skillCooldown).toBe(2)
+    const hasteMember = hasteState.combat.partyMembers.find((member) => member.heroId === 'gu_changfeng')!
+    const hasteMartialId = hasteState.heroes.gu_changfeng.equippedMartialIds[0]!
+    expect(hasteMember.martialCooldowns[hasteMartialId]).toBe(2)
 
     const restoreState = createInitialState()
     restoreState.resources.silver = 5_000
@@ -338,6 +340,58 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(forgetMartial(mystery, heroId, mystery.heroes[heroId].equippedMartialIds[0]!).ok).toBe(false)
   })
 
+  it('按槽位选择第一门冷却完毕的武功并记录 abilityId', () => {
+    const state = createInitialState()
+    const heroId = state.formation[0].heroId
+    state.heroes[heroId].learnedMartials.frost_sword = {
+      rank: 1,
+      invested: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+    }
+    expect(equipMartial(state, heroId, 'frost_sword').ok).toBe(true)
+    expect(startChallenge(state).ok).toBe(true)
+    const member = state.combat.partyMembers[0]
+    const firstId = state.heroes[heroId].equippedMartialIds[0]!
+    member.martialCooldowns[firstId] = 2
+    member.martialCooldowns.frost_sword = 0
+
+    stepCombat(state)
+
+    expect(state.combat.logs.at(-1)).toMatchObject({ kind: 'skill', abilityId: 'frost_sword' })
+    expect(member.martialCooldowns.frost_sword).toBe(2)
+    expect(member.martialCooldowns[firstId]).toBe(1)
+  })
+
+  it('所有装备武功冷却时使用普通攻击', () => {
+    const state = createInitialState()
+    expect(startChallenge(state).ok).toBe(true)
+    const member = state.combat.partyMembers[0]
+    for (const martialId of state.heroes[member.heroId].equippedMartialIds.filter(Boolean) as string[]) {
+      member.martialCooldowns[martialId] = 3
+    }
+    stepCombat(state)
+    expect(state.combat.logs.at(-1)?.kind).toBe('attack')
+  })
+
+  it('挂机中调整顺序不重置冷却，新装备武功从完整冷却开始', () => {
+    const state = createInitialState()
+    const heroId = state.formation[0].heroId
+    state.heroes[heroId].learnedMartials.frost_sword = {
+      rank: 1,
+      invested: { silver: 0, experience: 0, pages: 0, reputation: 0 },
+    }
+    expect(startIdleStage(state, 'bluestone_path', 1).ok).toBe(true)
+    expect(equipMartial(state, heroId, 'frost_sword').ok).toBe(true)
+    const member = state.combat.partyMembers.find((candidate) => candidate.heroId === heroId)!
+    expect(member.martialCooldowns.frost_sword).toBe(2)
+    expect(moveMartial(state, heroId, 1, -1).ok).toBe(true)
+    expect(member.martialCooldowns.frost_sword).toBe(2)
+    expect(unequipMartial(state, heroId, 0).ok).toBe(true)
+    expect(equipMartial(state, heroId, 'frost_sword').ok).toBe(true)
+    expect(member.martialCooldowns.frost_sword).toBe(2)
+    expect(forgetMartial(state, heroId, 'frost_sword').ok).toBe(true)
+    expect(member.martialCooldowns.frost_sword).toBeUndefined()
+  })
+
   it.each([
     ['dragon_palm', 'burn', 'enemy'],
     ['frost_sword', 'slow', 'enemy'],
@@ -359,7 +413,7 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     stepCombat(state)
 
     expect(state.combat.logs.at(-1)?.kind).toBe('skill')
-    expect(state.combat.partyMembers[0].skillCooldown).toBe(MARTIALS.find((martial) => martial.id === martialId)?.skill.cooldown)
+    expect(state.combat.partyMembers[0].martialCooldowns[martialId]).toBe(MARTIALS.find((martial) => martial.id === martialId)?.skill.cooldown)
     if (target === 'enemy') expect(state.combat.enemyStatuses.some((status) => status.id === statusId)).toBe(true)
     if (target === 'hero') expect(state.combat.partyMembers.some((member) => member.statuses.some((status) => status.id === statusId))).toBe(true)
     if (target === 'party') expect(state.combat.partyMembers.every((member) => member.statuses.some((status) => status.id === statusId))).toBe(true)

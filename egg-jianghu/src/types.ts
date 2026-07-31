@@ -147,7 +147,7 @@ export interface FormationSlot {
 export interface CombatHeroState extends FormationSlot {
   hp: number
   maxHp: number
-  skillCooldown: number
+  martialCooldowns: Record<string, number>
   statuses: CombatStatus[]
 }
 

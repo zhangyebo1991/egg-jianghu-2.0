@@ -20,7 +20,6 @@ import {
   getLearnedMartialRank,
   getMartialRefund,
   getPassiveBonuses,
-  getPrimaryMartialId,
 } from './martials'
 import type {
   ActionResult,
@@ -222,7 +221,12 @@ export function getPartyPower(state: GameState): number {
 
 const createCombatParty = (state: GameState): CombatHeroState[] => state.formation.map((slot) => {
   const maxHp = getHeroStats(state, slot.heroId).hp
-  return { ...slot, hp: maxHp, maxHp, skillCooldown: 0, statuses: [] }
+  const martialCooldowns = Object.fromEntries(
+    state.heroes[slot.heroId].equippedMartialIds
+      .filter((id): id is string => Boolean(id))
+      .map((id) => [id, 0]),
+  )
+  return { ...slot, hp: maxHp, maxHp, martialCooldowns, statuses: [] }
 })
 
 function createIdleCombat(state: GameState, stage: number | null = null, fighting = false): CombatState {
@@ -410,13 +414,13 @@ function resolveCombatVictory(state: GameState): void {
   else rewardIdleVictory(state)
 }
 
-function getEnemyTraitAttackMultiplier(state: GameState, combat: CombatState, member: CombatHeroState): number {
+function getEnemyTraitAttackMultiplier(
+  combat: CombatState,
+  member: CombatHeroState,
+  martial?: MartialDefinition,
+): number {
   if (combat.enemyTraitId === 'iron_armor') return member.row === 'back' ? 1.25 : 0.65
-  if (combat.enemyTraitId === 'frost_aura') {
-    const progress = state.heroes[member.heroId]
-    const martialId = progress ? getPrimaryMartialId(progress) : null
-    return martialById(martialId ?? '')?.element === '火' ? 1.55 : 0.72
-  }
+  if (combat.enemyTraitId === 'frost_aura') return martial?.element === '火' ? 1.55 : 0.72
   return 1
 }
 
@@ -464,9 +468,10 @@ function getAttackBase(
   state: GameState,
   member: CombatHeroState,
   synergy: PartySynergy,
+  martial?: MartialDefinition,
 ): { damage: number; traitMultiplier: number } {
   const stats = getHeroStats(state, member.heroId)
-  const traitMultiplier = getEnemyTraitAttackMultiplier(state, state.combat, member)
+  const traitMultiplier = getEnemyTraitAttackMultiplier(state.combat, member, martial)
   return {
     damage: stats.attack
       * attackMultiplierForRow(member.row)
@@ -487,8 +492,14 @@ function performMartialSkill(
   const actor = heroById(member.heroId)
   const stats = getHeroStats(state, member.heroId)
   const rank = getLearnedMartialRank(state.heroes[member.heroId], martial.id)
-  const { damage: attackBase, traitMultiplier } = getAttackBase(state, member, synergy)
-  let damage = attackBase
+  const elementMatch = actor?.element === martial.element
+  const styleMatch = actor?.style === martial.style
+  const martialMultiplier = martial.basePower
+    * (1 + (rank - 1) * 0.12)
+    * (elementMatch ? 1.18 : 1)
+    * (styleMatch ? 1.08 : 1)
+  const { damage: attackBase, traitMultiplier } = getAttackBase(state, member, synergy, martial)
+  let damage = attackBase * martialMultiplier
   let effectText = ''
 
   switch (martial.skill.kind) {
@@ -538,12 +549,12 @@ function performMartialSkill(
 
   const roundedDamage = Math.max(1, Math.round(damage))
   combat.enemyHp = Math.max(0, combat.enemyHp - roundedDamage)
-  member.skillCooldown = Math.max(1, martial.skill.cooldown - synergy.skillCooldownReduction)
+  member.martialCooldowns[martial.id] = Math.max(1, martial.skill.cooldown - synergy.skillCooldownReduction)
   addLog(
     combat,
     'skill',
     `${actor?.name ?? '侠客'}施展「${martial.skill.name}」，造成 ${roundedDamage} 伤害${describeTraitAdjustment(traitMultiplier)}${effectText}。`,
-    { actorId: member.heroId, amount: roundedDamage },
+    { actorId: member.heroId, amount: roundedDamage, abilityId: martial.id },
   )
   return roundedDamage
 }
@@ -589,7 +600,7 @@ export function stepCombat(state: GameState): void {
       if (!member) return sum
       return sum + getHeroStats(state, heroId).attack
         * attackMultiplierForRow(member.row)
-        * getEnemyTraitAttackMultiplier(state, combat, member)
+        * getEnemyTraitAttackMultiplier(combat, member)
     }, 0)
     const damage = Math.round(combinedAttack * combo.multiplier * synergy.attackMultiplier * getEnemyVulnerabilityMultiplier(combat))
     combat.enemyHp = Math.max(0, combat.enemyHp - damage)
@@ -620,16 +631,20 @@ export function stepCombat(state: GameState): void {
     })
   } else {
     const progress = state.heroes[actorId]
-    const martialId = progress ? getPrimaryMartialId(progress) : null
-    const martial = martialId ? martialById(martialId) : undefined
-    if (martial && actorMember.skillCooldown <= 0) {
-      performMartialSkill(state, actorMember, martial, synergy)
+    const equippedIds = progress.equippedMartialIds.filter((id): id is string => Boolean(id))
+    for (const martialId of equippedIds) {
+      const current = actorMember.martialCooldowns[martialId] ?? 0
+      if (current > 0) actorMember.martialCooldowns[martialId] = current - 1
+    }
+    const readyMartialId = equippedIds.find((martialId) => (actorMember.martialCooldowns[martialId] ?? 0) <= 0)
+    const readyMartial = readyMartialId ? martialById(readyMartialId) : undefined
+    if (readyMartial) {
+      performMartialSkill(state, actorMember, readyMartial, synergy)
     } else {
-      if (actorMember.skillCooldown > 0) actorMember.skillCooldown -= 1
       const { damage: attackBase, traitMultiplier } = getAttackBase(state, actorMember, synergy)
       const damage = Math.max(1, Math.round(attackBase))
       combat.enemyHp = Math.max(0, combat.enemyHp - damage)
-      addLog(combat, 'attack', `${actor?.name ?? '侠客'}施展${martial ? `「${martial.name}」` : '拳脚'}，造成 ${damage} 伤害${describeTraitAdjustment(traitMultiplier)}。`, {
+      addLog(combat, 'attack', `${actor?.name ?? '侠客'}施展拳脚，造成 ${damage} 伤害${describeTraitAdjustment(traitMultiplier)}。`, {
         actorId,
         amount: damage,
       })
@@ -862,6 +877,20 @@ export function unlockMartial(state: GameState, martialId: string): ActionResult
   return { ok: true, message: `成功参悟「${martial.name}」` }
 }
 
+const primeNewIdleMartialCooldown = (state: GameState, heroId: string, martialId: string): void => {
+  if (state.combat.mode !== 'idle' || state.combat.status !== 'fighting') return
+  const member = state.combat.partyMembers.find((candidate) => candidate.heroId === heroId)
+  const martial = martialById(martialId)
+  if (member && martial && member.martialCooldowns[martialId] === undefined) {
+    member.martialCooldowns[martialId] = martial.skill.cooldown
+  }
+}
+
+const clearMartialCooldown = (state: GameState, heroId: string, martialId: string): void => {
+  const member = state.combat.partyMembers.find((candidate) => candidate.heroId === heroId)
+  if (member) delete member.martialCooldowns[martialId]
+}
+
 export function equipMartial(state: GameState, heroId: string, martialId: string): ActionResult {
   if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可更换武功' }
   const hero = heroById(heroId)
@@ -873,6 +902,7 @@ export function equipMartial(state: GameState, heroId: string, martialId: string
   const slot = progress.equippedMartialIds.indexOf(null)
   if (slot < 0) return { ok: false, message: '出战武功已满，请先卸下一门' }
   progress.equippedMartialIds[slot] = martialId
+  primeNewIdleMartialCooldown(state, heroId, martialId)
   return { ok: true, message: `${hero.name}已将「${martialById(martialId)!.name}」设为优先级 ${slot + 1}` }
 }
 
@@ -946,6 +976,7 @@ export function forgetMartial(state: GameState, heroId: string, martialId: strin
   delete progress.learnedMartials[martialId]
   progress.equippedMartialIds = progress.equippedMartialIds
     .map((id) => id === martialId ? null : id) as EquippedMartialIds
+  clearMartialCooldown(state, heroId, martialId)
   refreshIdleMemberHp(state, heroId, oldMaxHp)
   return { ok: true, message: `${hero.name}已遗忘「${preview.martial.name}」，返还 80% 培养资源` }
 }
