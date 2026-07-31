@@ -77,10 +77,10 @@ describe('本地存档与离线结算', () => {
     state.resources.reputation = 42
     const imported = importSave(exportSave(state))
     expect(imported.state.resources.reputation).toBe(42)
-    expect(() => hydrateState({ version: 4 })).toThrow(/版本/)
+    expect(() => hydrateState({ version: 5 })).toThrow(/版本/)
   })
 
-  it('能够把 version 1 的队伍和关卡进度迁移为 version 3 区域进度', () => {
+  it('能够把 version 1 的队伍和关卡进度迁移为 version 4 区域进度', () => {
     const current = createInitialState(10_000)
     const { formation, selectedRegionId, defeatedBossIds, regionDefeats, ...legacyBase } = current
     void selectedRegionId
@@ -94,7 +94,7 @@ describe('本地存档与离线结算', () => {
     }
 
     const migrated = hydrateState(legacy, 10_000)
-    expect(migrated.version).toBe(3)
+    expect(migrated.version).toBe(4)
     expect(migrated.formation.map((slot) => slot.heroId)).toEqual(formation.map((slot) => slot.heroId))
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['front', 'front', 'back'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker', 'boss_blackwind_chief'])
@@ -111,7 +111,7 @@ describe('本地存档与离线结算', () => {
     legacyBase.formation[2].row = 'front'
     const migrated = hydrateState({ ...legacyBase, version: 2, clearedStage: 1 }, 10_000)
 
-    expect(migrated.version).toBe(3)
+    expect(migrated.version).toBe(4)
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker'])
   })

@@ -39,6 +39,21 @@ test('挂机所得可用于招募同门并激活羁绊', async ({ page }) => {
   await expect(page.getByText(/全队攻势 \+12%/)).toBeVisible()
 })
 
+test('武学招式会展示预案并在自动战斗中施展', async ({ page }) => {
+  await page.getByRole('button', { name: /侠客/ }).click()
+  await expect(page.locator('.skill-summary')).toHaveCount(3)
+  await expect(page.locator('.martial-item').first()).toContainText('赤浪断岳')
+
+  await page.getByRole('button', { name: /战斗/ }).click()
+  await expect(page.getByTestId('skill-plan').locator(':scope > div:last-child > span')).toHaveCount(3)
+  await page.getByRole('button', { name: /挑战断碑手/ }).click()
+  await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(4))
+
+  await expect(page.locator('.log-skill').first()).toBeVisible()
+  await expect(page.locator('.fighter-skill')).toHaveCount(3)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().combat.logs.some((event) => event.kind === 'skill'))).toBe(true)
+})
+
 test('可切换前后排阵型且战斗按阵位展示', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: /队伍/ }).click()
   await expect(page.getByRole('heading', { name: '前后列阵' })).toBeVisible()

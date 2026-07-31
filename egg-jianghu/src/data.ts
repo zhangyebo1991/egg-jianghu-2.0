@@ -147,6 +147,12 @@ export const MARTIALS: readonly MartialDefinition[] = [
     unlockCost: 0,
     initial: true,
     rankNames: ['起势', '翻江', '断岳'],
+    skill: {
+      kind: 'blazing_palm',
+      name: '赤浪断岳',
+      description: '重掌造成高额伤害，并施加持续 2 回合的灼伤。',
+      cooldown: 2,
+    },
   },
   {
     id: 'frost_sword',
@@ -158,6 +164,12 @@ export const MARTIALS: readonly MartialDefinition[] = [
     unlockCost: 0,
     initial: true,
     rankNames: ['听雪', '封江', '寒彻'],
+    skill: {
+      kind: 'frost_flurry',
+      name: '寒江听雪',
+      description: '连续两剑追击，并使敌人迟滞 2 回合，降低反击伤害。',
+      cooldown: 2,
+    },
   },
   {
     id: 'taiji_breath',
@@ -169,6 +181,12 @@ export const MARTIALS: readonly MartialDefinition[] = [
     unlockCost: 0,
     initial: true,
     rankNames: ['抱元', '化劲', '归一'],
+    skill: {
+      kind: 'taiji_restore',
+      name: '抱元守一',
+      description: '以柔劲伤敌，同时治疗气血最低的同伴并为其护体。',
+      cooldown: 3,
+    },
   },
   {
     id: 'vajra_staff',
@@ -180,6 +198,12 @@ export const MARTIALS: readonly MartialDefinition[] = [
     unlockCost: 48,
     initial: false,
     rankNames: ['横江', '镇恶', '伏魔'],
+    skill: {
+      kind: 'vajra_sunder',
+      name: '金刚镇恶',
+      description: '以重棍震裂敌人护体，使其 2 回合内承受更多伤害。',
+      cooldown: 2,
+    },
   },
   {
     id: 'earth_origin',
@@ -191,6 +215,12 @@ export const MARTIALS: readonly MartialDefinition[] = [
     unlockCost: 68,
     initial: false,
     rankNames: ['立桩', '承山', '归元'],
+    skill: {
+      kind: 'earth_guard',
+      name: '厚土承山',
+      description: '稳守反击，并为全队生成可吸收伤害的护体真气。',
+      cooldown: 3,
+    },
   },
 ] as const
 

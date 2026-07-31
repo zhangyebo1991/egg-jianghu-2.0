@@ -4,6 +4,8 @@ export type Sect = '丐帮' | '峨眉' | '武当'
 export type FormationRow = 'front' | 'back'
 export type RegionId = 'bluestone_path' | 'blackwind_fort' | 'frost_temple'
 export type EnemyTraitId = 'none' | 'formation_breaker' | 'iron_armor' | 'frost_aura'
+export type MartialSkillKind = 'blazing_palm' | 'frost_flurry' | 'taiji_restore' | 'vajra_sunder' | 'earth_guard'
+export type CombatStatusId = 'burn' | 'slow' | 'sunder' | 'guard'
 
 export interface HeroDefinition {
   id: string
@@ -30,6 +32,12 @@ export interface MartialDefinition {
   unlockCost: number
   initial: boolean
   rankNames: readonly [string, string, string]
+  skill: {
+    kind: MartialSkillKind
+    name: string
+    description: string
+    cooldown: number
+  }
 }
 
 export interface HeroProgress {
@@ -54,6 +62,15 @@ export interface FormationSlot {
 export interface CombatHeroState extends FormationSlot {
   hp: number
   maxHp: number
+  skillCooldown: number
+  statuses: CombatStatus[]
+}
+
+export interface CombatStatus {
+  id: CombatStatusId
+  turns: number
+  value: number
+  sourceId?: string
 }
 
 export interface EnemyTraitDefinition {
@@ -88,7 +105,7 @@ export interface RegionDefinition {
 
 export interface CombatEvent {
   id: number
-  kind: 'attack' | 'enemy' | 'combo' | 'victory' | 'defeat' | 'reward' | 'system'
+  kind: 'attack' | 'skill' | 'status' | 'enemy' | 'combo' | 'victory' | 'defeat' | 'reward' | 'system'
   actorId?: string
   targetId?: string
   amount?: number
@@ -106,6 +123,7 @@ export interface CombatState {
   enemyHp: number
   enemyMaxHp: number
   enemyAttack: number
+  enemyStatuses: CombatStatus[]
   partyMembers: CombatHeroState[]
   turnIndex: number
   round: number
@@ -121,7 +139,7 @@ export interface GameStatistics {
 }
 
 export interface GameState {
-  version: 3
+  version: 4
   resources: Resources
   heroes: Record<string, HeroProgress>
   unlockedMartials: string[]

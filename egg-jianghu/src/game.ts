@@ -11,6 +11,8 @@ import {
 } from './data'
 import type {
   ActionResult,
+  CombatStatus,
+  CombatStatusId,
   CombatHeroState,
   CombatEvent,
   CombatState,
@@ -19,6 +21,7 @@ import type {
   GameState,
   HeroProgress,
   HeroStats,
+  MartialDefinition,
   OfflineSettlement,
   PartySynergy,
   RegionDefinition,
@@ -52,7 +55,7 @@ export function createInitialState(now = Date.now()): GameState {
   )
 
   const state: GameState = {
-    version: 3,
+    version: 4,
     resources: { silver: 180, experience: 90, pages: 15, reputation: 0 },
     heroes,
     unlockedMartials: startingMartials,
@@ -186,7 +189,7 @@ export function getPartyPower(state: GameState): number {
 
 const createCombatParty = (state: GameState): CombatHeroState[] => state.formation.map((slot) => {
   const maxHp = getHeroStats(state, slot.heroId).hp
-  return { ...slot, hp: maxHp, maxHp }
+  return { ...slot, hp: maxHp, maxHp, skillCooldown: 0, statuses: [] }
 })
 
 function createIdleCombat(state: GameState): CombatState {
@@ -206,6 +209,7 @@ function createIdleCombat(state: GameState): CombatState {
     enemyHp: enemyMaxHp,
     enemyMaxHp,
     enemyAttack: enemy.baseAttack + tier * 2,
+    enemyStatuses: [],
     partyMembers: createCombatParty(state),
     turnIndex: 0,
     round: 0,
@@ -227,6 +231,7 @@ function createChallengeCombat(state: GameState, region: RegionDefinition): Comb
     enemyHp: boss.baseHp,
     enemyMaxHp: boss.baseHp,
     enemyAttack: boss.baseAttack,
+    enemyStatuses: [],
     partyMembers: createCombatParty(state),
     turnIndex: 0,
     round: 0,
@@ -308,6 +313,142 @@ function getEnemyTraitAttackMultiplier(state: GameState, combat: CombatState, me
 const describeTraitAdjustment = (multiplier: number): string =>
   multiplier > 1 ? '，克制生效' : multiplier < 1 ? '，受敌方特性压制' : ''
 
+export const COMBAT_STATUS_NAMES: Record<CombatStatusId, string> = {
+  burn: '灼伤',
+  slow: '迟滞',
+  sunder: '破甲',
+  guard: '护体',
+}
+
+const statusById = (statuses: CombatStatus[], id: CombatStatusId): CombatStatus | undefined =>
+  statuses.find((status) => status.id === id)
+
+function applyStatus(
+  statuses: CombatStatus[],
+  id: CombatStatusId,
+  turns: number,
+  value: number,
+  sourceId?: string,
+): void {
+  const current = statusById(statuses, id)
+  if (current) {
+    current.turns = Math.max(current.turns, turns)
+    current.value = Math.max(current.value, value)
+    current.sourceId = sourceId ?? current.sourceId
+    return
+  }
+  statuses.push({ id, turns, value, sourceId })
+}
+
+const tickStatuses = (statuses: CombatStatus[]): void => {
+  for (const status of statuses) status.turns -= 1
+  for (let index = statuses.length - 1; index >= 0; index -= 1) {
+    if (statuses[index].turns <= 0 || statuses[index].value <= 0) statuses.splice(index, 1)
+  }
+}
+
+const getEnemyVulnerabilityMultiplier = (combat: CombatState): number =>
+  1 + (statusById(combat.enemyStatuses, 'sunder')?.value ?? 0)
+
+function getAttackBase(
+  state: GameState,
+  member: CombatHeroState,
+  synergy: PartySynergy,
+): { damage: number; traitMultiplier: number } {
+  const stats = getHeroStats(state, member.heroId)
+  const traitMultiplier = getEnemyTraitAttackMultiplier(state, state.combat, member)
+  return {
+    damage: stats.attack
+      * attackMultiplierForRow(member.row)
+      * synergy.attackMultiplier
+      * traitMultiplier
+      * getEnemyVulnerabilityMultiplier(state.combat),
+    traitMultiplier,
+  }
+}
+
+function performMartialSkill(
+  state: GameState,
+  member: CombatHeroState,
+  martial: MartialDefinition,
+  synergy: PartySynergy,
+): number {
+  const combat = state.combat
+  const actor = heroById(member.heroId)
+  const stats = getHeroStats(state, member.heroId)
+  const rank = Math.max(1, state.heroes[member.heroId]?.martialRanks[martial.id] ?? 1)
+  const { damage: attackBase, traitMultiplier } = getAttackBase(state, member, synergy)
+  let damage = attackBase
+  let effectText = ''
+
+  switch (martial.skill.kind) {
+    case 'blazing_palm': {
+      damage *= 1.6 + rank * 0.1
+      const burnDamage = Math.max(1, Math.round(stats.attack * (0.2 + rank * 0.05)))
+      applyStatus(combat.enemyStatuses, 'burn', 2, burnDamage, member.heroId)
+      effectText = `，灼伤每回合造成 ${burnDamage} 伤害`
+      break
+    }
+    case 'frost_flurry':
+      damage *= 1.3 + rank * 0.08
+      applyStatus(combat.enemyStatuses, 'slow', 2, 0.18 + rank * 0.03, member.heroId)
+      effectText = '，寒气使敌人迟滞 2 回合'
+      break
+    case 'taiji_restore': {
+      damage *= 0.8 + rank * 0.04
+      const target = combat.partyMembers
+        .filter((candidate) => candidate.hp > 0)
+        .sort((left, right) => left.hp / left.maxHp - right.hp / right.maxHp)[0]
+      const healing = target ? Math.min(target.maxHp - target.hp, Math.round(stats.attack * (0.55 + rank * 0.12))) : 0
+      if (target) {
+        target.hp += healing
+        applyStatus(target.statuses, 'guard', 2, Math.round(stats.attack * (0.28 + rank * 0.06)), member.heroId)
+      }
+      effectText = target ? `，为${heroById(target.heroId)?.name ?? '同伴'}回复 ${healing} 气血并护体` : ''
+      break
+    }
+    case 'vajra_sunder':
+      damage *= 1.35 + rank * 0.08
+      applyStatus(combat.enemyStatuses, 'sunder', 2, 0.16 + rank * 0.03, member.heroId)
+      effectText = `，震裂护体使后续伤害 +${Math.round((0.16 + rank * 0.03) * 100)}%`
+      break
+    case 'earth_guard': {
+      damage *= 0.72 + rank * 0.04
+      const guardValue = Math.round(stats.attack * (0.38 + rank * 0.08))
+      for (const ally of combat.partyMembers.filter((candidate) => candidate.hp > 0)) {
+        applyStatus(ally.statuses, 'guard', 2, guardValue, member.heroId)
+      }
+      effectText = `，全队获得可化解 ${guardValue} 伤害的护体真气`
+      break
+    }
+  }
+
+  const roundedDamage = Math.max(1, Math.round(damage))
+  combat.enemyHp = Math.max(0, combat.enemyHp - roundedDamage)
+  member.skillCooldown = martial.skill.cooldown
+  addLog(
+    combat,
+    'skill',
+    `${actor?.name ?? '侠客'}施展「${martial.skill.name}」，造成 ${roundedDamage} 伤害${describeTraitAdjustment(traitMultiplier)}${effectText}。`,
+    { actorId: member.heroId, amount: roundedDamage },
+  )
+  return roundedDamage
+}
+
+function processEnemyStatuses(state: GameState): boolean {
+  const combat = state.combat
+  const burn = statusById(combat.enemyStatuses, 'burn')
+  if (burn) {
+    const damage = Math.max(1, Math.round(burn.value))
+    combat.enemyHp = Math.max(0, combat.enemyHp - damage)
+    addLog(combat, 'status', `${combat.enemyName}受灼伤侵蚀，损失 ${damage} 气血。`, { amount: damage })
+  }
+  if (combat.enemyHp > 0) return false
+  if (combat.mode === 'challenge') rewardChallengeVictory(state)
+  else rewardIdleVictory(state)
+  return true
+}
+
 export function stepCombat(state: GameState): void {
   const combat = state.combat
   if (combat.status !== 'fighting' || combat.partyMembers.length === 0) return
@@ -322,7 +463,6 @@ export function stepCombat(state: GameState): void {
   const actorMember = combat.partyMembers[actorIndex]
   const actorId = actorMember.heroId
   const actor = heroById(actorId)
-  const stats = getHeroStats(state, actorId)
   const livingHeroIds = combat.partyMembers.filter((member) => member.hp > 0).map((member) => member.heroId)
   const comboTurn = synergy.comboActive
     && COMBO.heroIds.every((heroId) => livingHeroIds.includes(heroId))
@@ -338,19 +478,24 @@ export function stepCombat(state: GameState): void {
         * attackMultiplierForRow(member.row)
         * getEnemyTraitAttackMultiplier(state, combat, member)
     }, 0)
-    const damage = Math.round(combinedAttack * COMBO.multiplier * synergy.attackMultiplier)
+    const damage = Math.round(combinedAttack * COMBO.multiplier * synergy.attackMultiplier * getEnemyVulnerabilityMultiplier(combat))
     combat.enemyHp = Math.max(0, combat.enemyHp - damage)
     addLog(combat, 'combo', `合击「${COMBO.name}」贯穿敌阵，造成 ${damage} 伤害！`, { amount: damage })
   } else {
-    const martial = state.heroes[actorId]?.equippedMartialId
-    const martialName = martial ? martialById(martial)?.name : undefined
-    const traitMultiplier = getEnemyTraitAttackMultiplier(state, combat, actorMember)
-    const damage = Math.max(1, Math.round(stats.attack * attackMultiplierForRow(actorMember.row) * synergy.attackMultiplier * traitMultiplier))
-    combat.enemyHp = Math.max(0, combat.enemyHp - damage)
-    addLog(combat, 'attack', `${actor?.name ?? '侠客'}施展${martialName ? `「${martialName}」` : '拳脚'}，造成 ${damage} 伤害${describeTraitAdjustment(traitMultiplier)}。`, {
-      actorId,
-      amount: damage,
-    })
+    const martialId = state.heroes[actorId]?.equippedMartialId
+    const martial = martialId ? martialById(martialId) : undefined
+    if (martial && actorMember.skillCooldown <= 0) {
+      performMartialSkill(state, actorMember, martial, synergy)
+    } else {
+      if (actorMember.skillCooldown > 0) actorMember.skillCooldown -= 1
+      const { damage: attackBase, traitMultiplier } = getAttackBase(state, actorMember, synergy)
+      const damage = Math.max(1, Math.round(attackBase))
+      combat.enemyHp = Math.max(0, combat.enemyHp - damage)
+      addLog(combat, 'attack', `${actor?.name ?? '侠客'}施展${martial ? `「${martial.name}」` : '拳脚'}，造成 ${damage} 伤害${describeTraitAdjustment(traitMultiplier)}。`, {
+        actorId,
+        amount: damage,
+      })
+    }
   }
 
   if (combat.enemyHp <= 0) {
@@ -367,6 +512,7 @@ export function stepCombat(state: GameState): void {
 
   combat.turnIndex = livingIndices[0]
   combat.round += 1
+  if (processEnemyStatuses(state)) return
   const livingMembers = combat.partyMembers.filter((member) => member.hp > 0)
   const frontTargets = livingMembers.filter((member) => member.row === 'front')
   const targets = frontTargets.length > 0 ? frontTargets : livingMembers
@@ -377,17 +523,24 @@ export function stepCombat(state: GameState): void {
   const formationBreakerMultiplier = combat.enemyTraitId === 'formation_breaker'
     ? frontCount >= 2 ? 0.8 : 1.45
     : 1
-  const enemyDamage = Math.max(5, Math.round(
-    (combat.enemyAttack - targetStats.defense * 0.45) * positionReduction * formationBreakerMultiplier,
+  const slowMultiplier = 1 - (statusById(combat.enemyStatuses, 'slow')?.value ?? 0)
+  const rawEnemyDamage = Math.max(5, Math.round(
+    (combat.enemyAttack - targetStats.defense * 0.45) * positionReduction * formationBreakerMultiplier * slowMultiplier,
   ))
+  const guard = statusById(target.statuses, 'guard')
+  const absorbed = guard ? Math.min(rawEnemyDamage, Math.round(guard.value)) : 0
+  if (guard) guard.value -= absorbed
+  const enemyDamage = rawEnemyDamage - absorbed
   target.hp = Math.max(0, target.hp - enemyDamage)
   const targetName = heroById(target.heroId)?.name ?? '侠客'
   addLog(
     combat,
     'enemy',
-    `${combat.enemyName}反击${target.row === 'front' ? '前排' : '后排'}${targetName}，造成 ${enemyDamage} 伤害${combat.enemyTraitId === 'formation_breaker' ? frontCount >= 2 ? '（双前排化解破阵）' : '（单前排遭受重击）' : ''}${target.hp === 0 ? '，其已无力再战' : ''}。`,
+    `${combat.enemyName}反击${target.row === 'front' ? '前排' : '后排'}${targetName}，造成 ${enemyDamage} 伤害${absorbed ? `（护体化解 ${absorbed}）` : ''}${slowMultiplier < 1 ? '（迟滞削弱攻势）' : ''}${combat.enemyTraitId === 'formation_breaker' ? frontCount >= 2 ? '（双前排化解破阵）' : '（单前排遭受重击）' : ''}${target.hp === 0 ? '，其已无力再战' : ''}。`,
     { targetId: target.heroId, amount: enemyDamage },
   )
+  tickStatuses(combat.enemyStatuses)
+  for (const member of combat.partyMembers) tickStatuses(member.statuses)
 
   if (combat.partyMembers.some((member) => member.hp > 0)) return
   if (combat.mode === 'challenge') {

@@ -74,8 +74,8 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     stepCombat(backState)
     const backAttack = backState.combat.logs.at(-1)
 
-    expect(frontAttack?.kind).toBe('attack')
-    expect(backAttack?.kind).toBe('attack')
+    expect(frontAttack?.kind).toBe('skill')
+    expect(backAttack?.kind).toBe('skill')
     expect(backAttack?.amount).toBeGreaterThan(frontAttack?.amount ?? 0)
     expect((backAttack?.amount ?? 0) / (frontAttack?.amount ?? 1)).toBeCloseTo(BACK_ATTACK_MULTIPLIER / FRONT_ATTACK_MULTIPLIER, 1)
 
@@ -130,6 +130,40 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(startChallenge(state).ok).toBe(true)
     for (let index = 0; index < 45 && state.combat.status === 'fighting'; index += 1) stepCombat(state)
     expect(state.combat.logs.some((event) => event.kind === 'combo' && event.text.includes(COMBO.name))).toBe(true)
+  })
+
+  it.each([
+    ['dragon_palm', 'burn', 'enemy'],
+    ['frost_sword', 'slow', 'enemy'],
+    ['taiji_breath', 'guard', 'hero'],
+    ['vajra_staff', 'sunder', 'enemy'],
+    ['earth_origin', 'guard', 'party'],
+  ] as const)('%s 会释放专属招式并施加 %s 状态', (martialId, statusId, target) => {
+    const state = createInitialState()
+    if (!state.unlockedMartials.includes(martialId)) state.unlockedMartials.push(martialId)
+    const actorId = state.formation[0].heroId
+    expect(equipMartial(state, actorId, martialId).ok).toBe(true)
+    expect(startChallenge(state).ok).toBe(true)
+
+    stepCombat(state)
+
+    expect(state.combat.logs.at(-1)?.kind).toBe('skill')
+    expect(state.combat.partyMembers[0].skillCooldown).toBe(MARTIALS.find((martial) => martial.id === martialId)?.skill.cooldown)
+    if (target === 'enemy') expect(state.combat.enemyStatuses.some((status) => status.id === statusId)).toBe(true)
+    if (target === 'hero') expect(state.combat.partyMembers.some((member) => member.statuses.some((status) => status.id === statusId))).toBe(true)
+    if (target === 'party') expect(state.combat.partyMembers.every((member) => member.statuses.some((status) => status.id === statusId))).toBe(true)
+  })
+
+  it('灼伤会在敌方回合结算，护体与迟滞会降低反击损失', () => {
+    const state = createInitialState()
+    expect(startChallenge(state).ok).toBe(true)
+    state.combat.partyMembers[1].hp -= 1
+    for (let index = 0; index < 3; index += 1) stepCombat(state)
+
+    expect(state.combat.logs.some((event) => event.kind === 'status' && event.text.includes('灼伤'))).toBe(true)
+    const enemyEvent = state.combat.logs.findLast((event) => event.kind === 'enemy')
+    expect(enemyEvent?.text).toContain('迟滞削弱攻势')
+    expect(enemyEvent?.text).toContain('护体化解')
   })
 
   it('击败区域 BOSS 后解锁下一处江湖区域', () => {

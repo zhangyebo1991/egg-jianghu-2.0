@@ -11,6 +11,7 @@ import {
   regionById,
 } from './data'
 import {
+  COMBAT_STATUS_NAMES,
   applyOfflineProgress,
   createInitialState,
   equipMartial,
@@ -34,7 +35,7 @@ import {
   upgradeHero,
 } from './game'
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
-import type { ActionResult, CombatHeroState, FormationRow, GameState, OfflineSettlement, RegionId } from './types'
+import type { ActionResult, CombatHeroState, CombatStatus, FormationRow, GameState, OfflineSettlement, RegionId } from './types'
 
 type TabId = 'idle' | 'heroes' | 'party' | 'battle'
 
@@ -68,6 +69,12 @@ const escapeHtml = (value: string): string => value.replace(/[&<>'"]/g, (char) =
 })[char] ?? char)
 
 const formatNumber = (value: number): string => Math.floor(value).toLocaleString('zh-CN')
+
+const renderStatusChips = (statuses: CombatStatus[]): string => statuses.length
+  ? `<div class="status-chips">${statuses.map((status) => `
+      <span class="status-${status.id}" title="剩余 ${status.turns} 回合">${COMBAT_STATUS_NAMES[status.id]} · ${status.turns}</span>`).join('')}
+    </div>`
+  : ''
 
 const formatDuration = (seconds: number): string => {
   const hours = Math.floor(seconds / 3600)
@@ -136,20 +143,23 @@ const renderHeroFighter = (member: CombatHeroState, index: number): string => {
   const hero = heroById(member.heroId)
   const progress = state.heroes[member.heroId]
   const lastEvent = state.combat.lastEvent
-  const acting = lastEvent?.actorId === member.heroId && lastEvent.kind === 'attack'
+  const acting = lastEvent?.actorId === member.heroId && (lastEvent.kind === 'attack' || lastEvent.kind === 'skill')
   const targeted = lastEvent?.targetId === member.heroId && lastEvent.kind === 'enemy'
   const hpPercent = Math.max(0, Math.round((member.hp / member.maxHp) * 100))
   if (!hero || !progress) return ''
+  const martial = martialById(progress.equippedMartialId ?? '')
   return `
     <article class="fighter-card hero-fighter ${acting ? 'is-acting' : ''} ${targeted ? 'is-targeted' : ''} ${member.hp <= 0 ? 'is-defeated' : ''}" style="--fighter-delay:${index * 80}ms" data-hero-id="${hero.id}">
       <span class="fighter-position">${member.row === 'front' ? '前排 · 减伤' : '后排 · 增伤'}</span>
       <div class="fighter-avatar element-${hero.element}">${hero.name.slice(-1)}</div>
       <div class="fighter-copy">
         <strong>${hero.name}</strong>
-        <span>Lv.${progress.level} · ${martialById(progress.equippedMartialId ?? '')?.name ?? '拳脚'}</span>
+        <span>Lv.${progress.level} · ${martial?.name ?? '拳脚'}</span>
       </div>
       <div class="fighter-health health-track"><i style="width:${hpPercent}%"></i></div>
       <small class="fighter-hp">${member.hp} / ${member.maxHp}</small>
+      ${martial ? `<small class="fighter-skill ${member.skillCooldown <= 0 ? 'ready' : ''}">${martial.skill.name} · ${member.skillCooldown <= 0 ? '蓄势已成' : `${member.skillCooldown} 次行动后`}</small>` : ''}
+      ${renderStatusChips(member.statuses)}
     </article>`
 }
 
@@ -169,7 +179,7 @@ const renderCombatArena = (compact = false): string => {
   const partyPercent = Math.max(0, Math.round((partyHp / partyMaxHp) * 100))
   const enemyPercent = Math.max(0, Math.round((combat.enemyHp / combat.enemyMaxHp) * 100))
   const hitEvent = combat.lastEvent
-  const enemyHit = hitEvent && (hitEvent.kind === 'attack' || hitEvent.kind === 'combo')
+  const enemyHit = hitEvent && (hitEvent.kind === 'attack' || hitEvent.kind === 'skill' || hitEvent.kind === 'status' || hitEvent.kind === 'combo')
   const partyHit = hitEvent?.kind === 'enemy'
   const region = regionById(combat.regionId) ?? REGIONS[0]
   const trait = enemyTraitById(combat.enemyTraitId)
@@ -195,9 +205,11 @@ const renderCombatArena = (compact = false): string => {
           <div class="side-label"><span>敌方</span><b>${combat.enemyHp} / ${combat.enemyMaxHp}</b></div>
           <div class="health-track enemy-health"><i style="width:${enemyPercent}%"></i></div>
           <div class="enemy-portrait"><span>敌</span><small>${escapeHtml(combat.enemyName)}</small></div>
+          ${renderStatusChips(combat.enemyStatuses)}
           ${enemyHit ? `<b class="damage-float enemy-damage ${hitEvent?.kind === 'combo' ? 'combo-damage' : ''}">-${hitEvent?.amount ?? 0}</b>` : ''}
         </div>
         ${hitEvent?.kind === 'combo' ? `<div class="combo-flash"><span>合击</span><strong>${COMBO.name}</strong></div>` : ''}
+        ${hitEvent?.kind === 'skill' ? `<div class="skill-flash"><span>绝技</span><strong>${martialById(state.heroes[hitEvent.actorId ?? '']?.equippedMartialId ?? '')?.skill.name ?? '武学招式'}</strong></div>` : ''}
       </div>
       ${combat.status !== 'fighting' ? `
         <div class="battle-result ${combat.status}">
@@ -317,6 +329,7 @@ const renderHeroCard = (heroId: string): string => {
       <div class="stat-line"><span>攻 <b>${stats.attack}</b></span><span>御 <b>${stats.defense}</b></span><span>气血 <b>${stats.hp}</b></span></div>
       <div class="tag-row"><span>${hero.element}行</span><span>${hero.style}劲</span><span class="affinity">${stats.affinityText}</span></div>
       ${renderMartialSelect(heroId)}
+      ${martial ? `<div class="skill-summary"><small>自动招式 · ${martial.skill.cooldown} 次行动冷却</small><strong>${martial.skill.name}</strong><p>${martial.skill.description}</p></div>` : ''}
       <div class="card-actions">
         <button class="secondary-button" data-action="upgrade" data-hero-id="${hero.id}">升级 <small>${upgradeCost.silver}银 / ${upgradeCost.experience}历</small></button>
         <button class="secondary-button" data-action="train" data-hero-id="${hero.id}" ${rank >= 3 ? 'disabled' : ''}>${rank >= 3 ? '武学圆满' : `武学进阶 · ${trainSilver}银/${trainPages}卷`}</button>
@@ -335,7 +348,7 @@ const renderHeroes = (): string => `
         const unlocked = state.unlockedMartials.includes(martial.id)
         return `<article class="martial-item ${unlocked ? '' : 'locked'}">
           <span class="martial-glyph element-${martial.element}">${martial.element}</span>
-          <div><strong>${martial.name}</strong><small>${martial.element}行 · ${martial.style}劲</small><p>${martial.description}</p></div>
+          <div><strong>${martial.name}</strong><small>${martial.element}行 · ${martial.style}劲</small><p>${martial.description}</p><em>${martial.skill.name}：${martial.skill.description}</em></div>
           ${unlocked ? '<b class="learned">已参悟</b>' : `<button class="text-button" data-action="unlock-martial" data-martial-id="${martial.id}">${martial.unlockCost} 残页</button>`}
         </article>`
       }).join('')}
@@ -424,6 +437,14 @@ const renderBattle = (): string => {
             ? '<button class="secondary-button" data-action="return-idle">退出挑战</button>'
             : `<button class="primary-button" data-action="challenge">${defeated ? '再次挑战' : '挑战'}${boss.name}</button>`}
         </section>
+        <section class="skill-plan panel" data-testid="skill-plan">
+          <div class="section-title"><span>本阵招式预案</span><small>招式全自动释放</small></div>
+          <div>${state.formation.map(({ heroId }) => {
+            const hero = heroById(heroId)
+            const martial = martialById(state.heroes[heroId]?.equippedMartialId ?? '')
+            return martial ? `<span><b>${hero?.name}</b><i>${martial.skill.name}</i><small>${martial.skill.description}</small></span>` : ''
+          }).join('')}</div>
+        </section>
         ${inChallenge ? renderCombatArena() : `<section class="boss-preview panel"><span>战</span><strong>${boss.name}</strong><p>整备完成后发出挑战，战斗不会损失资源。</p></section>`}
         <div class="combat-hints">
           <span><i>一</i>查看敌人特性</span><span><i>二</i>按提示调整 build</span><span><i>三</i>首胜解锁新区域</span>
@@ -454,7 +475,7 @@ const renderOfflineModal = (): string => {
 }
 
 const renderFooter = (): string => `
-  <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 3</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
+  <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 4</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
 
 function render(): void {
   const focused = document.activeElement

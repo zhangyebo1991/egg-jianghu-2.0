@@ -298,6 +298,14 @@
   .fighter-copy span { overflow: hidden; color: var(--paper-dim); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
   .fighter-health { width: 100%; height: 3px; margin: 1px 0 0; }
   .fighter-hp { color: var(--paper-dim); font-family: Georgia, serif; font-size: 7px; }
+  .fighter-skill { color: var(--paper-dim); font-size: 7px; text-align: center; }
+  .fighter-skill.ready { color: #dfb866; }
+  .status-chips { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; }
+  .status-chips span { padding: 2px 5px; color: var(--paper-muted); border: 1px solid var(--line); background: rgba(0,0,0,.32); font-size: 7px; }
+  .status-chips .status-burn { color: #dc846b; border-color: rgba(196,85,57,.45); }
+  .status-chips .status-slow { color: #8fb3c3; border-color: rgba(92,137,157,.45); }
+  .status-chips .status-sunder { color: #e0bd76; border-color: rgba(190,147,73,.45); }
+  .status-chips .status-guard { color: #91b6a3; border-color: rgba(98,136,121,.5); }
   .fighter-avatar, .portrait {
     display: grid;
     place-items: center;
@@ -356,7 +364,7 @@
   .party-damage { left: 50%; }
   .enemy-damage { right: 35%; }
   .combo-damage { color: #f3c56c; font-size: 34px; }
-  .combo-flash {
+  .combo-flash, .skill-flash {
     position: absolute;
     z-index: 10;
     inset: 0;
@@ -369,6 +377,9 @@
   }
   .combo-flash span { color: var(--gold); font-size: 11px; letter-spacing: .5em; }
   .combo-flash strong { color: #f5d28c; font-family: KaiTi, STKaiti, serif; font-size: 36px; font-weight: 400; letter-spacing: .2em; text-shadow: 0 3px 18px #000; }
+  .skill-flash { background: radial-gradient(circle, rgba(98,136,121,.24), transparent 48%); animation: combo-reveal .7s ease-out both; }
+  .skill-flash span { color: #91b6a3; font-size: 10px; letter-spacing: .45em; }
+  .skill-flash strong { color: #cbdccf; font-family: KaiTi, STKaiti, serif; font-size: 30px; font-weight: 400; letter-spacing: .14em; text-shadow: 0 3px 18px #000; }
 
   .battle-result {
     position: absolute;
@@ -394,6 +405,8 @@
   .log-list p { display: grid; grid-template-columns: 24px 1fr; gap: 8px; padding: 9px 0; color: var(--paper-muted); border-bottom: 1px solid rgba(211,183,129,.08); font-size: 10px; line-height: 1.65; }
   .log-list time { color: #5e5344; font-family: Georgia, serif; }
   .log-list .log-combo span, .log-list .log-victory span { color: var(--gold-bright); }
+  .log-list .log-skill span { color: #a9c7b6; }
+  .log-list .log-status span { color: #d58a72; }
   .log-list .log-defeat span { color: #c87a6b; }
   .log-list .log-reward span { color: #8fab9d; }
   .empty-copy { display: block !important; color: var(--paper-dim) !important; }
@@ -435,6 +448,7 @@
   .martial-item strong { color: var(--paper); font-size: 12px; }
   .martial-item small { color: var(--gold); font-size: 8px; }
   .martial-item p { margin-top: 5px; color: var(--paper-dim); font-size: 9px; line-height: 1.55; }
+  .martial-item em { margin-top: 5px; color: #9bb6a8; font-size: 8px; font-style: normal; line-height: 1.5; }
   .learned { position: absolute; right: 10px; bottom: 8px; color: #688f80; font-size: 9px; font-weight: 400; }
   .martial-item > .text-button { position: absolute; right: 7px; bottom: 5px; color: var(--gold); }
 
@@ -455,6 +469,10 @@
   .tag-row span { padding: 3px 7px; color: var(--paper-muted); border: 1px solid var(--line); font-size: 8px; }
   .tag-row .affinity { color: #86a294; border-color: rgba(98,136,121,.3); }
   .field-label { display: grid; gap: 5px; margin-bottom: 10px; color: var(--paper-dim); font-size: 8px; }
+  .skill-summary { display: grid; gap: 3px; margin: 0 0 10px; padding: 9px 10px; border: 1px solid rgba(98,136,121,.3); background: rgba(98,136,121,.06); }
+  .skill-summary small { color: #86a294; font-size: 8px; }
+  .skill-summary strong { color: var(--paper); font-size: 11px; }
+  .skill-summary p { color: var(--paper-dim); font-size: 8px; line-height: 1.5; }
   select { width: 100%; padding: 8px 29px 8px 9px; color: var(--paper); border: 1px solid var(--line-strong); border-radius: 0; background: #1a1611; font-size: 10px; }
   .card-actions { gap: 6px; }
   .card-actions button { flex: 1; min-height: 39px; padding: 7px; font-size: 9px; }
@@ -504,6 +522,12 @@
   .challenge-command > div > div { display: grid; gap: 2px; }
   .challenge-command small { color: var(--gold); font-size: 8px; }
   .challenge-command strong { color: var(--paper); font-size: 14px; }
+  .skill-plan { padding: 16px 18px; }
+  .skill-plan > div:last-child { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .skill-plan span { display: grid; gap: 3px; padding: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.12); }
+  .skill-plan b { color: var(--paper); font-size: 10px; font-weight: 400; }
+  .skill-plan i { color: #91b6a3; font-size: 10px; font-style: normal; }
+  .skill-plan small { color: var(--paper-dim); font-size: 8px; line-height: 1.5; }
   .boss-intel { display: grid; grid-template-columns: 1.1fr 1fr 1.35fr; gap: 12px; padding: 18px; }
   .boss-intel-title, .trait-dossier, .counter-dossier { min-width: 0; padding: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.14); }
   .boss-intel-title { display: flex; align-items: center; gap: 12px; }
@@ -577,6 +601,7 @@
     .yield-grid > div:last-child { grid-column: 1 / -1; border-bottom: 0; }
     .region-grid { grid-template-columns: repeat(3, minmax(210px, 1fr)); overflow-x: auto; padding-bottom: 6px; }
     .boss-intel { grid-template-columns: 1fr; }
+    .skill-plan > div:last-child { grid-template-columns: 1fr; }
     .party-board { padding: 18px; }
     .formation-editor-row.back { margin-inline: 22px 0; }
     .synergy-grid { grid-template-columns: 1fr; }
