@@ -179,8 +179,9 @@ export interface CombatEvent {
 
 export interface CombatState {
   mode: 'idle' | 'challenge' | 'mystery'
-  status: 'fighting' | 'victory' | 'defeat'
+  status: 'ready' | 'fighting' | 'victory' | 'defeat'
   regionId: RegionId
+  stage: number | null
   enemyId: string
   enemyTraitId: EnemyTraitId
   boss: boolean
@@ -201,7 +202,6 @@ export interface GameStatistics {
   idleEnemiesDefeated: number
   challengesWon: number
   silverEarned: number
-  offlineSeconds: number
 }
 
 export interface GameState {
@@ -245,16 +245,6 @@ export interface FormationSummary {
   backCount: number
   name: '磐石阵' | '雁行阵'
   effectText: string
-}
-
-export interface OfflineSettlement {
-  regionId: RegionId
-  seconds: number
-  silver: number
-  experience: number
-  pages: number
-  enemies: number
-  capped: boolean
 }
 
 export interface ActionResult {

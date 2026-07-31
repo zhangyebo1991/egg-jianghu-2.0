@@ -1,6 +1,6 @@
 import { HEROES, MARTIALS, MYSTERY_BLESSINGS, MYSTERY_ENCOUNTERS, REGIONS, regionById } from './data'
-import { applyOfflineProgress, createInitialState, getMysteryChoices, resumeMysteryCombat, returnToIdle } from './game'
-import type { FormationRow, FormationSlot, GameState, MysteryBlessingId, OfflineSettlement } from './types'
+import { createInitialState, getMysteryChoices, resumeMysteryCombat, returnToIdle } from './game'
+import type { FormationRow, FormationSlot, GameState, MysteryBlessingId } from './types'
 
 export const SAVE_KEY = 'egg-jianghu-2-save-v1'
 
@@ -12,7 +12,6 @@ export interface StorageLike {
 
 export interface LoadResult {
   state: GameState
-  settlement: OfflineSettlement | null
   recoveredFromError: boolean
 }
 
@@ -118,7 +117,6 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
     state.statistics.idleEnemiesDefeated = Math.floor(safeNumber(raw.statistics.idleEnemiesDefeated, 0))
     state.statistics.challengesWon = Math.floor(safeNumber(raw.statistics.challengesWon, 0))
     state.statistics.silverEarned = Math.floor(safeNumber(raw.statistics.silverEarned, 0))
-    state.statistics.offlineSeconds = Math.floor(safeNumber(raw.statistics.offlineSeconds, 0))
   }
 
   if (isRecord(raw.mystery)) {
@@ -167,13 +165,12 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
 
 export function loadGame(storage: StorageLike, now = Date.now()): LoadResult {
   const serialized = storage.getItem(SAVE_KEY)
-  if (!serialized) return { state: createInitialState(now), settlement: null, recoveredFromError: false }
+  if (!serialized) return { state: createInitialState(now), recoveredFromError: false }
   try {
     const state = hydrateState(JSON.parse(serialized) as unknown, now)
-    const settlement = applyOfflineProgress(state, now)
-    return { state, settlement, recoveredFromError: false }
+    return { state, recoveredFromError: false }
   } catch {
-    return { state: createInitialState(now), settlement: null, recoveredFromError: true }
+    return { state: createInitialState(now), recoveredFromError: true }
   }
 }
 
@@ -187,10 +184,9 @@ export function exportSave(state: GameState): string {
   return JSON.stringify({ ...state, lastSavedAt: Date.now(), lastTickAt: Date.now() }, null, 2)
 }
 
-export function importSave(serialized: string, now = Date.now()): { state: GameState; settlement: OfflineSettlement } {
+export function importSave(serialized: string, now = Date.now()): { state: GameState } {
   const state = hydrateState(JSON.parse(serialized) as unknown, now)
-  const settlement = applyOfflineProgress(state, now)
-  return { state, settlement }
+  return { state }
 }
 
 export function clearSave(storage: StorageLike): void {

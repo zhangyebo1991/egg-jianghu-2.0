@@ -29,7 +29,6 @@ import type {
   MysteryBlessingEffectType,
   MysteryBlessingId,
   MysteryEncounterDefinition,
-  OfflineSettlement,
   PartySynergy,
   RegionDefinition,
   RegionId,
@@ -37,14 +36,9 @@ import type {
 } from './types'
 
 const MAX_LOGS = 36
-export const OFFLINE_CAP_SECONDS = 12 * 60 * 60
 export const FRONT_ATTACK_MULTIPLIER = 0.9
 export const FRONT_DAMAGE_TAKEN_MULTIPLIER = 0.8
 export const BACK_ATTACK_MULTIPLIER = 1.15
-const BASE_IDLE_SILVER_PER_SECOND = 1.35
-const BASE_IDLE_EXPERIENCE_PER_SECOND = 0.82
-const BASE_IDLE_PAGES_PER_SECOND = 1 / 180
-
 const emptyHeroProgress = (unlocked: boolean, equippedMartialId: string | null): HeroProgress => ({
   unlocked,
   level: 1,
@@ -83,13 +77,12 @@ export function createInitialState(now = Date.now()): GameState {
       idleEnemiesDefeated: 0,
       challengesWon: 0,
       silverEarned: 0,
-      offlineSeconds: 0,
     },
     lastTickAt: now,
     lastSavedAt: now,
   }
   state.combat = createIdleCombat(state)
-  addLog(state.combat, 'system', '山雨初歇，三位少侠踏上青石古道。')
+  addLog(state.combat, 'system', '山雨初歇，三位少侠整装待发，请先选择关卡。')
   return state
 }
 
@@ -100,15 +93,6 @@ export function getSelectedRegion(state: GameState): RegionDefinition {
 export function isRegionUnlocked(state: GameState, regionId: string): boolean {
   const region = regionById(regionId)
   return Boolean(region && (region.requiredBossId === null || state.defeatedBossIds.includes(region.requiredBossId)))
-}
-
-export function getIdleRewardRates(state: GameState): { silver: number; experience: number; pages: number } {
-  const multipliers = getSelectedRegion(state).rewardMultipliers
-  return {
-    silver: BASE_IDLE_SILVER_PER_SECOND * multipliers.silver,
-    experience: BASE_IDLE_EXPERIENCE_PER_SECOND * multipliers.experience,
-    pages: BASE_IDLE_PAGES_PER_SECOND * multipliers.pages,
-  }
 }
 
 export function getHeroStats(state: GameState, heroId: string): HeroStats {
@@ -235,16 +219,17 @@ const createCombatParty = (state: GameState): CombatHeroState[] => state.formati
   return { ...slot, hp: maxHp, maxHp, skillCooldown: 0, statuses: [] }
 })
 
-function createIdleCombat(state: GameState): CombatState {
+function createIdleCombat(state: GameState, stage: number | null = null, fighting = false): CombatState {
   const region = getSelectedRegion(state)
-  const defeated = state.regionDefeats[region.id]
-  const enemy = region.enemies[defeated % region.enemies.length]
-  const tier = Math.floor(defeated / 8)
+  const stageNumber = stage ?? 1
+  const enemy = region.enemies[(stageNumber - 1) % region.enemies.length]
+  const tier = stageNumber - 1
   const enemyMaxHp = Math.round(enemy.baseHp * (1 + tier * 0.08))
   return {
     mode: 'idle',
-    status: 'fighting',
+    status: fighting ? 'fighting' : 'ready',
     regionId: region.id,
+    stage,
     enemyId: enemy.id,
     enemyTraitId: enemy.traitId,
     boss: false,
@@ -268,6 +253,7 @@ function createChallengeCombat(state: GameState, region: RegionDefinition): Comb
     mode: 'challenge',
     status: 'fighting',
     regionId: region.id,
+    stage: null,
     enemyId: boss.id,
     enemyTraitId: boss.traitId,
     boss: true,
@@ -295,6 +281,7 @@ function createMysteryCombat(state: GameState, encounter: MysteryEncounterDefini
     mode: 'mystery',
     status: 'fighting',
     regionId: state.selectedRegionId,
+    stage: null,
     enemyId: encounter.id,
     enemyTraitId: encounter.traitId,
     boss: encounter.boss,
@@ -327,9 +314,10 @@ function addLog(
 
 function rewardIdleVictory(state: GameState): void {
   const region = getSelectedRegion(state)
+  const stage = state.combat.stage ?? 1
   const defeated = state.regionDefeats[region.id]
   const nextDefeated = defeated + 1
-  const tier = Math.floor(nextDefeated / 8)
+  const tier = stage - 1
   const silver = Math.round((12 + tier * 2) * region.rewardMultipliers.silver)
   const experience = Math.round((9 + Math.floor(nextDefeated / 10)) * region.rewardMultipliers.experience)
   const pagesBefore = Math.floor((defeated / 4) * region.rewardMultipliers.pages)
@@ -343,7 +331,7 @@ function rewardIdleVictory(state: GameState): void {
   state.statistics.silverEarned += silver
 
   const oldLogs = state.combat.logs
-  const next = createIdleCombat(state)
+  const next = createIdleCombat(state, stage, true)
   next.logs = oldLogs
   state.combat = next
   addLog(
@@ -696,7 +684,7 @@ export function stepCombat(state: GameState): void {
   }
 
   const oldLogs = combat.logs
-  const next = createIdleCombat(state)
+  const next = createIdleCombat(state, combat.stage ?? 1, true)
   next.logs = oldLogs
   state.combat = next
   addLog(state.combat, 'system', '众人暂退古亭调息，片刻后重新上路。')
@@ -780,8 +768,21 @@ export function startChallenge(state: GameState): ActionResult {
 export function returnToIdle(state: GameState): ActionResult {
   const region = getSelectedRegion(state)
   state.combat = createIdleCombat(state)
-  addLog(state.combat, 'system', `队伍回到${region.name}继续历练。`)
-  return { ok: true, message: `已返回${region.name}挂机历练` }
+  addLog(state.combat, 'system', `队伍回到${region.name}整备，等待选择关卡。`)
+  return { ok: true, message: '已停止战斗并返回关卡选择' }
+}
+
+export function startIdleStage(state: GameState, regionId: RegionId, stage: number): ActionResult {
+  const region = regionById(regionId)
+  if (!region) return { ok: false, message: '江湖区域不存在' }
+  if (!Number.isInteger(stage) || stage < 1 || stage > 10) return { ok: false, message: '小关卡不存在' }
+  if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可开始挂机战斗' }
+  if (!isRegionUnlocked(state, region.id)) return { ok: false, message: '尚未击败前一区域 BOSS' }
+
+  state.selectedRegionId = region.id
+  state.combat = createIdleCombat(state, stage, true)
+  addLog(state.combat, 'system', `进入${region.name}第 ${stage} 关，队伍开始挂机战斗。`)
+  return { ok: true, message: `已开始${region.name}第 ${stage} 关挂机战斗` }
 }
 
 export function selectRegion(state: GameState, regionId: RegionId): ActionResult {
@@ -793,7 +794,7 @@ export function selectRegion(state: GameState, regionId: RegionId): ActionResult
 
   state.selectedRegionId = region.id
   state.combat = createIdleCombat(state)
-  addLog(state.combat, 'system', `众人转赴${region.name}，新的敌情已经出现。`)
+  addLog(state.combat, 'system', `众人转赴${region.name}，等待选择小关卡。`)
   return { ok: true, message: `已前往${region.name}` }
 }
 
@@ -910,34 +911,4 @@ export function setFormationRow(state: GameState, slot: number, row: FormationRo
   state.combat = createIdleCombat(state)
   addLog(state.combat, 'system', `阵型切换为「${getFormationSummary(state).name}」，众人重新列阵。`)
   return { ok: true, message: `${heroById(formationSlot.heroId)?.name ?? '侠客'}已调至${row === 'front' ? '前排' : '后排'}` }
-}
-
-export function applyOfflineProgress(state: GameState, now = Date.now()): OfflineSettlement {
-  const rawSeconds = Math.max(0, Math.floor((now - state.lastTickAt) / 1000))
-  const seconds = Math.min(rawSeconds, OFFLINE_CAP_SECONDS)
-  const region = getSelectedRegion(state)
-  const rates = getIdleRewardRates(state)
-  const settlement: OfflineSettlement = {
-    regionId: region.id,
-    seconds,
-    silver: Math.floor(seconds * rates.silver),
-    experience: Math.floor(seconds * rates.experience),
-    pages: Math.floor(seconds * rates.pages),
-    enemies: Math.floor(seconds / 12),
-    capped: rawSeconds > OFFLINE_CAP_SECONDS,
-  }
-  state.resources.silver += settlement.silver
-  state.resources.experience += settlement.experience
-  state.resources.pages += settlement.pages
-  state.regionDefeats[region.id] += settlement.enemies
-  state.statistics.idleEnemiesDefeated += settlement.enemies
-  state.statistics.silverEarned += settlement.silver
-  state.statistics.offlineSeconds += seconds
-  state.lastTickAt = now
-  return settlement
-}
-
-export function addIdleTimeRewards(state: GameState, seconds: number): OfflineSettlement {
-  state.lastTickAt -= Math.max(0, seconds) * 1000
-  return applyOfflineProgress(state, state.lastTickAt + Math.max(0, seconds) * 1000)
 }

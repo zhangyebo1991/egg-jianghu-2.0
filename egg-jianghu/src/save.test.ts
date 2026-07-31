@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { OFFLINE_CAP_SECONDS, chooseMysteryBlessing, createInitialState, startMystery } from './game'
+import { chooseMysteryBlessing, createInitialState, startMystery } from './game'
 import { SAVE_KEY, exportSave, hydrateState, importSave, loadGame, saveGame, type StorageLike } from './save'
 
 class MemoryStorage implements StorageLike {
@@ -9,7 +9,7 @@ class MemoryStorage implements StorageLike {
   removeItem(key: string): void { this.values.delete(key) }
 }
 
-describe('本地存档与离线结算', () => {
+describe('本地存档', () => {
   it('能够保存并恢复进度', () => {
     const storage = new MemoryStorage()
     const state = createInitialState(10_000)
@@ -31,45 +31,17 @@ describe('本地存档与离线结算', () => {
     expect(loaded.state.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
   })
 
-  it('离线后正确结算收益并显示败敌数量', () => {
+  it('离线后不会结算收益或自动开始挂机', () => {
     const storage = new MemoryStorage()
     const now = 10_000_000
     const state = createInitialState(now - 3_600_000)
+    state.resources.silver = 321
     storage.setItem(SAVE_KEY, JSON.stringify(state))
     const loaded = loadGame(storage, now)
 
-    expect(loaded.settlement?.seconds).toBe(3_600)
-    expect(loaded.settlement?.regionId).toBe('bluestone_path')
-    expect(loaded.settlement?.silver).toBe(Math.floor(3_600 * 1.35))
-    expect(loaded.settlement?.experience).toBe(Math.floor(3_600 * 0.82))
-    expect(loaded.settlement?.pages).toBe(20)
-    expect(loaded.settlement?.enemies).toBe(300)
-  })
-
-  it('离线结算最多累计十二小时', () => {
-    const storage = new MemoryStorage()
-    const now = 100_000_000
-    const state = createInitialState(now - 48 * 60 * 60 * 1000)
-    storage.setItem(SAVE_KEY, JSON.stringify(state))
-    const loaded = loadGame(storage, now)
-    expect(loaded.settlement?.seconds).toBe(OFFLINE_CAP_SECONDS)
-    expect(loaded.settlement?.capped).toBe(true)
-  })
-
-  it('离线结算使用离开时所选区域的收益倍率', () => {
-    const storage = new MemoryStorage()
-    const now = 10_000_000
-    const state = createInitialState(now - 3_600_000)
-    state.defeatedBossIds.push('boss_stonebreaker')
-    state.selectedRegionId = 'blackwind_fort'
-    storage.setItem(SAVE_KEY, JSON.stringify(state))
-
-    const loaded = loadGame(storage, now)
-    expect(loaded.settlement?.regionId).toBe('blackwind_fort')
-    expect(loaded.settlement?.silver).toBe(Math.floor(3_600 * 1.35 * 0.8))
-    expect(loaded.settlement?.experience).toBe(Math.floor(3_600 * 0.82 * 1.55))
-    expect(loaded.settlement?.pages).toBe(24)
-    expect(loaded.state.regionDefeats.blackwind_fort).toBe(300)
+    expect(loaded.state.resources.silver).toBe(321)
+    expect(loaded.state.regionDefeats.bluestone_path).toBe(0)
+    expect(loaded.state.combat.status).toBe('ready')
   })
 
   it('JSON 导出后可重新导入且会校验结构', () => {

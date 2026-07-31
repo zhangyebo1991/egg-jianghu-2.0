@@ -13,7 +13,6 @@ import {
   getActiveCombos,
   getFormationSummary,
   getHeroStats,
-  getIdleRewardRates,
   getMysteryChoices,
   getPartySynergy,
   isRegionUnlocked,
@@ -22,6 +21,7 @@ import {
   setFormationRow,
   setPartySlot,
   startChallenge,
+  startIdleStage,
   startMystery,
   stepCombat,
 } from './game'
@@ -39,17 +39,31 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(state.formation).toHaveLength(3)
     expect(state.formation.map((slot) => slot.row)).toEqual(['front', 'front', 'back'])
     expect(state.formation.every((slot) => state.heroes[slot.heroId].unlocked)).toBe(true)
+    expect(state.combat.status).toBe('ready')
   })
 
-  it('挂机战斗会自动击败敌人并产出银两与阅历', () => {
+  it('选择小关卡后挂机战斗会自动击败敌人并产出银两与阅历', () => {
     const state = createInitialState()
     const beforeSilver = state.resources.silver
     const beforeExperience = state.resources.experience
+    expect(startIdleStage(state, 'bluestone_path', 3)).toEqual({ ok: true, message: '已开始青石古道第 3 关挂机战斗' })
+    expect(state.combat.stage).toBe(3)
     for (let index = 0; index < 20; index += 1) stepCombat(state)
     expect(state.statistics.idleEnemiesDefeated).toBeGreaterThan(0)
     expect(state.resources.silver).toBeGreaterThan(beforeSilver)
     expect(state.resources.experience).toBeGreaterThan(beforeExperience)
     expect(state.combat.logs.some((event) => event.kind === 'reward')).toBe(true)
+  })
+
+  it('未点击小关卡时不会战斗，并拒绝未解锁或不存在的关卡', () => {
+    const state = createInitialState()
+    const beforeResources = { ...state.resources }
+    for (let index = 0; index < 100; index += 1) stepCombat(state)
+
+    expect(state.resources).toEqual(beforeResources)
+    expect(state.statistics.idleEnemiesDefeated).toBe(0)
+    expect(startIdleStage(state, 'blackwind_fort', 1)).toEqual({ ok: false, message: '尚未击败前一区域 BOSS' })
+    expect(startIdleStage(state, 'bluestone_path', 11)).toEqual({ ok: false, message: '小关卡不存在' })
   })
 
   it('调整同门阵容会激活门派羁绊', () => {
@@ -279,18 +293,6 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(state.selectedRegionId).toBe('blackwind_fort')
     expect(state.combat.regionId).toBe('blackwind_fort')
     expect(state.combat.enemyTraitId).toBe('iron_armor')
-  })
-
-  it('不同区域使用不同收益倍率且离线选区保持一致', () => {
-    const state = createInitialState()
-    const bluestoneRates = getIdleRewardRates(state)
-    state.defeatedBossIds.push('boss_stonebreaker')
-    expect(selectRegion(state, 'blackwind_fort').ok).toBe(true)
-    const blackwindRates = getIdleRewardRates(state)
-
-    expect(blackwindRates.silver).toBeLessThan(bluestoneRates.silver)
-    expect(blackwindRates.experience).toBeGreaterThan(bluestoneRates.experience)
-    expect(blackwindRates.pages).toBeGreaterThan(bluestoneRates.pages)
   })
 
   it('破阵重击会惩罚单前排，而双前排能降低 BOSS 反击', () => {

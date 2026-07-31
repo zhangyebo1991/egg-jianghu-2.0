@@ -85,7 +85,7 @@
   .brand-block strong { font-size: 18px; letter-spacing: .14em; color: #f4ead6; }
   .brand-block small { color: var(--paper-dim); font-size: 11px; letter-spacing: .12em; }
 
-  .brand-seal, .modal-seal {
+  .brand-seal {
     display: grid;
     place-items: center;
     width: 42px;
@@ -425,10 +425,25 @@
   .region-boss small { color: var(--paper-dim); font-size: 8px; }
   .region-boss strong { color: var(--gold); font-size: 12px; }
   .region-boss span { color: var(--paper-dim); font-size: 8px; line-height: 1.5; }
-  .region-card > button { align-self: end; }
+  .region-card > button { align-self: end; min-height: 44px; font-size: 10px; line-height: 1.4; }
+
+  .level-breadcrumb { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -18px 0 24px; color: var(--paper-dim); font-size: 10px; letter-spacing: .08em; }
+  .level-breadcrumb .text-button { padding-left: 0; color: var(--gold); }
+  .stage-map { padding: 20px; }
+  .stage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stage-card { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; align-items: center; gap: 16px; min-height: 94px; padding: 15px; border: 1px solid var(--line); background: rgba(0,0,0,.17); transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+  .stage-card:hover, .stage-card.active { border-color: var(--gold-dark); background: rgba(199,161,91,.06); transform: translateY(-1px); }
+  .stage-number { display: grid; justify-items: center; padding-right: 14px; border-right: 1px solid var(--line); }
+  .stage-number small { color: var(--paper-dim); font-family: Georgia, serif; font-size: 7px; letter-spacing: .16em; }
+  .stage-number strong { color: var(--gold-bright); font-family: Georgia, serif; font-size: 30px; font-weight: 400; }
+  .stage-copy { display: grid; gap: 4px; min-width: 0; }
+  .stage-copy small { color: var(--gold); font-size: 8px; }
+  .stage-copy strong { color: var(--paper); font-size: 14px; }
+  .stage-copy span { color: var(--paper-dim); font-size: 9px; line-height: 1.5; }
+  .stage-card > button { min-width: 106px; }
 
   .yield-panel { padding: 20px; }
-  .yield-grid { display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid var(--line); }
+  .yield-grid { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); }
   .yield-grid > div { display: grid; gap: 4px; padding: 17px; border-right: 1px solid var(--line); }
   .yield-grid > div:last-child { border-right: 0; }
   .yield-grid small { color: var(--paper-dim); font-size: 9px; }
@@ -616,13 +631,6 @@
   .mystery-result > p { max-width: 680px; color: var(--paper-dim); font-size: 10px; line-height: 1.75; }
   .mystery-result .settlement-grid { width: min(620px, 100%); margin: 8px 0; }
 
-  .modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(7,6,4,.78); backdrop-filter: blur(7px); }
-  .offline-modal { position: relative; width: min(480px, 100%); padding: 36px; text-align: center; border: 1px solid var(--gold-dark); background: #201a13; box-shadow: 0 28px 80px rgba(0,0,0,.55); }
-  .offline-modal::before { content: ""; position: absolute; inset: 8px; pointer-events: none; border: 1px solid var(--line); }
-  .offline-modal > small { color: var(--gold); font-size: 9px; letter-spacing: .24em; }
-  .offline-modal h2 { margin: 6px 0 10px; color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 31px; font-weight: 400; letter-spacing: .12em; }
-  .offline-modal > p { color: var(--paper-muted); font-size: 11px; line-height: 1.7; }
-  .modal-seal { position: absolute; top: -21px; left: calc(50% - 21px); }
   .settlement-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 24px 0; }
   .settlement-grid > div { display: grid; justify-items: center; gap: 2px; padding: 12px 6px; border: 1px solid var(--line); }
   .settlement-grid span { display: grid; place-items: center; width: 23px; height: 23px; margin-bottom: 3px; color: var(--gold); border: 1px solid var(--gold-dark); border-radius: 50%; font-size: 9px; }
@@ -671,6 +679,7 @@
     .yield-grid > div:nth-child(even) { border-right: 0; }
     .yield-grid > div:last-child { grid-column: 1 / -1; border-bottom: 0; }
     .region-grid { grid-template-columns: repeat(3, minmax(210px, 1fr)); overflow-x: auto; padding-bottom: 6px; }
+    .stage-grid { grid-template-columns: 1fr; }
     .boss-intel { grid-template-columns: 1fr; }
     .skill-plan-grid { grid-template-columns: 1fr; }
     .mystery-route { grid-template-columns: repeat(5, minmax(150px, 1fr)); overflow-x: auto; }
@@ -689,7 +698,7 @@
     .resource-mark { display: none; }
     .resource-pill { min-width: 69px; justify-content: center; }
     .page-heading { display: grid; align-items: start; gap: 18px; }
-    .page-heading h1 { font-size: 38px; }
+    .page-heading h1 { font-size: 32px; letter-spacing: .06em; }
     .location-status, .power-plaque, .stage-plaque { justify-self: stretch; text-align: left; }
     .battle-stage { grid-template-columns: 1fr; gap: 13px; padding: 18px 13px 24px; }
     .versus-mark { display: flex; justify-content: center; }
@@ -712,6 +721,10 @@
     .region-grid { grid-template-columns: 1fr; overflow: visible; }
     .region-card { min-height: 0; }
     .region-card > p, .region-boss { min-height: 0; }
+    .level-breadcrumb { margin-top: -10px; }
+    .stage-card { grid-template-columns: 58px minmax(0, 1fr); gap: 12px; }
+    .stage-number { padding-right: 10px; }
+    .stage-card > button { grid-column: 1 / -1; width: 100%; }
     .party-slots:has(.party-slot:only-child) { grid-template-columns: 1fr; }
     .martial-strip { grid-template-columns: 1fr; }
     .martial-item { min-height: 105px; }
@@ -723,7 +736,6 @@
     .formation-editor-row.back { margin-inline: 0; }
     .formation-row-heading { display: grid; }
     .settlement-grid { grid-template-columns: repeat(2, 1fr); }
-    .offline-modal { padding: 34px 22px 24px; }
     .challenge-command { align-items: stretch; }
     .challenge-command > button { flex: 0 0 auto; }
     .game-footer { padding-inline: 16px; }

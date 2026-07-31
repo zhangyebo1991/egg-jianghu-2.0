@@ -17,7 +17,6 @@ import {
 import {
   COMBAT_STATUS_NAMES,
   abandonMystery,
-  applyOfflineProgress,
   createInitialState,
   equipMartial,
   finishMystery,
@@ -25,7 +24,6 @@ import {
   getActiveCombos,
   getFormationSummary,
   getHeroStats,
-  getIdleRewardRates,
   getPartyPower,
   getPartySynergy,
   getSelectedRegion,
@@ -34,10 +32,10 @@ import {
   chooseMysteryBlessing,
   recruitHero,
   returnToIdle,
-  selectRegion,
   setFormationRow,
   setPartySlot,
   startMystery,
+  startIdleStage,
   startChallenge,
   stepCombat,
   trainMartial,
@@ -45,9 +43,10 @@ import {
   upgradeHero,
 } from './game'
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
-import type { ActionResult, CombatHeroState, CombatStatus, FormationRow, GameState, MysteryBlessingId, OfflineSettlement, RegionId } from './types'
+import type { ActionResult, CombatHeroState, CombatStatus, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
 
 type TabId = 'idle' | 'heroes' | 'party' | 'battle' | 'mystery'
+type LevelView = 'regions' | 'stages' | 'combat'
 
 const appElement = document.querySelector<HTMLDivElement>('#app')
 if (!appElement) throw new Error('缺少 #app 根节点')
@@ -56,9 +55,8 @@ const app = appElement
 const loaded = loadGame(window.localStorage)
 let state = loaded.state
 let activeTab: TabId = 'idle'
-let offlineSettlement: OfflineSettlement | null = loaded.settlement && loaded.settlement.seconds >= 30
-  ? loaded.settlement
-  : null
+let levelView: LevelView = 'regions'
+let chapterRegionId: RegionId | null = null
 let toast = loaded.recoveredFromError ? '旧存档无法读取，已安全恢复为新档' : ''
 let toastKind: 'success' | 'warning' = loaded.recoveredFromError ? 'warning' : 'success'
 let toastTimer = 0
@@ -87,15 +85,6 @@ const renderStatusChips = (statuses: CombatStatus[]): string => statuses.length
       <span class="status-${status.id}" title="剩余 ${status.turns} 回合">${COMBAT_STATUS_NAMES[status.id]} · ${status.turns}</span>`).join('')}
     </div>`
   : ''
-
-const formatDuration = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
-  if (hours) return `${hours}时 ${minutes}分`
-  if (minutes) return `${minutes}分 ${secs}秒`
-  return `${secs}秒`
-}
 
 const notify = (result: ActionResult | string, kind: 'success' | 'warning' = 'success'): void => {
   if (typeof result === 'string') {
@@ -137,7 +126,9 @@ const renderHeader = (): string => `
   </header>`
 
 const getTabItems = (): { id: TabId; label: string; note: string }[] => [
-  { id: 'idle', label: '挂机', note: getSelectedRegion(state).name },
+  { id: 'idle', label: '关卡', note: state.combat.mode === 'idle' && state.combat.status === 'fighting'
+    ? `${getSelectedRegion(state).name} · 第 ${state.combat.stage ?? 1} 关`
+    : '选择关卡' },
   { id: 'heroes', label: '侠客', note: `${HEROES.filter((hero) => state.heroes[hero.id].unlocked).length}/${HEROES.length}` },
   { id: 'party', label: '队伍', note: '前后列阵' },
   { id: 'battle', label: '战斗', note: `已破 ${state.defeatedBossIds.length}/${REGIONS.length}` },
@@ -197,7 +188,7 @@ const renderCombatArena = (compact = false): string => {
   const region = regionById(combat.regionId) ?? REGIONS[0]
   const trait = enemyTraitById(combat.enemyTraitId)
   const modeLabel = combat.mode === 'idle'
-    ? `${region.name} · 自动历练中`
+    ? `${region.name} · 第 ${combat.stage ?? 1} 关 · 挂机战斗中`
     : combat.mode === 'mystery'
       ? `无相秘境 · 第 ${(state.mystery.run?.floor ?? 0) + 1} 层交锋`
       : `${region.name} BOSS · ${combat.status === 'fighting' ? '交锋中' : combat.status === 'victory' ? '胜利' : '落败'}`
@@ -230,7 +221,7 @@ const renderCombatArena = (compact = false): string => {
         <div class="battle-result ${combat.status}">
           <span>${combat.status === 'victory' ? '破关' : '惜败'}</span>
           <strong>${combat.status === 'victory' ? '此役功成，江湖声名更进一步' : `破局建议：${trait.counterHint}`}</strong>
-          <button class="primary-button" data-action="return-idle">返回青石古道</button>
+          <button class="primary-button" data-action="return-idle">返回关卡选择</button>
         </div>` : ''}
     </section>`
 }
@@ -247,7 +238,7 @@ const renderLogs = (): string => `
 const renderRegionCard = (regionId: RegionId, index: number): string => {
   const region = regionById(regionId)!
   const unlocked = isRegionUnlocked(state, region.id)
-  const selected = state.selectedRegionId === region.id
+  const selected = state.combat.mode === 'idle' && state.combat.status === 'fighting' && state.combat.regionId === region.id
   const bossDefeated = state.defeatedBossIds.includes(region.boss.id)
   const requiredRegion = region.requiredBossId
     ? REGIONS.find((candidate) => candidate.boss.id === region.requiredBossId)
@@ -260,45 +251,82 @@ const renderRegionCard = (regionId: RegionId, index: number): string => {
       <p>${region.description}</p>
       <div class="region-rewards">${region.rewardText}</div>
       <div class="region-boss"><small>BOSS 特性</small><strong>${trait.name}</strong><span>${trait.counterHint}</span></div>
-      <button class="${selected ? 'secondary-button' : 'primary-button'} full" data-action="select-region" data-region-id="${region.id}" ${selected || !unlocked ? 'disabled' : ''}>
-        ${selected ? '正在此地历练' : unlocked ? `前往${region.name}` : `击败${requiredRegion?.boss.name ?? '前一区域 BOSS'}后解锁`}
+      <button class="${selected ? 'secondary-button' : 'primary-button'} full" data-action="open-region" data-region-id="${region.id}" ${!unlocked ? 'disabled' : ''}>
+        ${unlocked ? `进入${region.name}` : `击败${requiredRegion?.boss.name ?? '前一区域 BOSS'}后解锁`}
       </button>
     </article>`
 }
 
-const renderIdle = (): string => {
-  const region = getSelectedRegion(state)
-  const rates = getIdleRewardRates(state)
+const renderRegionList = (): string => `
+  <div class="page-heading">
+    <div><span class="eyebrow">Jianghu Chapters</span><h1>江湖关卡</h1><p>先选择一处大关卡，再从其中十个小关卡开始挂机战斗。进入游戏时不会自动开战。</p></div>
+    <div class="location-status idle"><i></i><span>队伍正在整备<strong>请选择大关卡</strong></span></div>
+  </div>
+  <section class="region-map panel">
+    <div class="section-title"><span>大关卡</span><small>击败区域 BOSS 后解锁下一处江湖</small></div>
+    <div class="region-grid">${REGIONS.map((candidate, index) => renderRegionCard(candidate.id, index)).join('')}</div>
+  </section>`
+
+const renderStageCard = (regionId: RegionId, stage: number): string => {
+  const region = regionById(regionId)!
+  const enemy = region.enemies[(stage - 1) % region.enemies.length]
+  const trait = enemyTraitById(enemy.traitId)
+  const active = state.combat.mode === 'idle' && state.combat.status === 'fighting'
+    && state.combat.regionId === region.id && state.combat.stage === stage
   return `
+    <article class="stage-card ${active ? 'active' : ''}" data-testid="stage-card-${stage}">
+      <div class="stage-number"><small>STAGE</small><strong>${String(stage).padStart(2, '0')}</strong></div>
+      <div class="stage-copy"><small>${trait.name}</small><strong>${enemy.name}</strong><span>敌人强度 ${100 + (stage - 1) * 8}% · ${region.rewardText}</span></div>
+      <button class="${active ? 'secondary-button' : 'primary-button'}" data-action="start-stage" data-region-id="${region.id}" data-stage="${stage}">
+        ${active ? '重新开始本关' : '开始挂机'}
+      </button>
+    </article>`
+}
+
+const renderStageList = (): string => {
+  const region = regionById(chapterRegionId ?? '') ?? REGIONS[0]
+  return `
+    <div class="level-breadcrumb"><button class="text-button" data-action="back-regions">← 返回大关卡</button><span>江湖关卡 / ${region.name}</span></div>
+    <div class="page-heading compact-heading">
+      <div><span class="eyebrow">${region.name} · Ten Stages</span><h1>${region.name}</h1><p>${region.description} 选择任一小关卡后，队伍才会开始挂机战斗。</p></div>
+      <div class="stage-plaque"><small>小关卡</small><strong>10</strong><span>${region.rewardText}</span></div>
+    </div>
+    <section class="stage-map panel" data-testid="stage-map">
+      <div class="section-title"><span>小关卡</span><small>点击后立即开始对应关卡的挂机战斗</small></div>
+      <div class="stage-grid">${Array.from({ length: 10 }, (_, index) => renderStageCard(region.id, index + 1)).join('')}</div>
+    </section>`
+}
+
+const renderStageCombat = (): string => {
+  const region = getSelectedRegion(state)
+  const stage = state.combat.stage ?? 1
+  return `
+    <div class="level-breadcrumb"><button class="text-button" data-action="back-stages">← 返回小关卡</button><span>${region.name} / 第 ${stage} 关</span></div>
     <div class="page-heading">
-      <div><span class="eyebrow">Jianghu Journey</span><h1>${region.name}</h1><p>${region.description}</p></div>
-      <div class="location-status"><i></i><span>队伍正在历练<strong>${region.rewardText}</strong></span></div>
+      <div><span class="eyebrow">Idle Combat</span><h1>${region.name} · 第 ${stage} 关</h1><p>本关挂机战斗仅在游戏打开时进行；退出游戏后不会继续结算收益。</p></div>
+      <div class="location-status"><i></i><span>队伍正在战斗<strong>${region.rewardText}</strong></span></div>
     </div>
     <div class="idle-layout">
       <div class="main-column">
-        ${state.combat.mode === 'idle' ? renderCombatArena() : `
-          <section class="challenge-away panel">
-            <span class="seal-icon">战</span>
-            <div><strong>队伍正在闯关</strong><p>前往「战斗」查看本场挑战。</p></div>
-            <button class="secondary-button" data-tab="battle">查看战况</button>
-          </section>`}
-        <section class="region-map panel">
-          <div class="section-title"><span>江湖行图</span><small>击败区域 BOSS 后解锁下一处历练地</small></div>
-          <div class="region-grid">${REGIONS.map((candidate, index) => renderRegionCard(candidate.id, index)).join('')}</div>
-        </section>
+        ${renderCombatArena()}
         <section class="yield-panel panel">
-          <div class="section-title"><span>${region.name}收益</span><small>在线与离线均按本区域倍率结算 · 离线最多 12 小时</small></div>
+          <div class="section-title"><span>当前挂机信息</span><small>只结算在线战斗击败敌人获得的奖励</small></div>
           <div class="yield-grid">
-            <div><small>每分钟银两</small><strong>+${formatNumber(rates.silver * 60)}</strong><span>${region.rewardMultipliers.silver}× 区域倍率</span></div>
-            <div><small>每分钟阅历</small><strong>+${formatNumber(rates.experience * 60)}</strong><span>${region.rewardMultipliers.experience}× 区域倍率</span></div>
-            <div><small>每小时残页</small><strong>+${formatNumber(rates.pages * 3600)}</strong><span>${region.rewardMultipliers.pages}× 区域倍率</span></div>
-            <div><small>本地败敌</small><strong>${formatNumber(state.regionDefeats[region.id])}</strong><span>决定敌人历练强度</span></div>
+            <div><small>当前小关卡</small><strong>${stage}/10</strong><span>${region.name}</span></div>
+            <div><small>敌人强度</small><strong>${100 + (stage - 1) * 8}%</strong><span>随小关卡递增</span></div>
+            <div><small>本章败敌</small><strong>${formatNumber(state.regionDefeats[region.id])}</strong><span>在线战斗累计</span></div>
             <div><small>队伍战力</small><strong>${formatNumber(getPartyPower(state))}</strong><span>羁绊已计入</span></div>
           </div>
         </section>
       </div>
       ${renderLogs()}
     </div>`
+}
+
+const renderIdle = (): string => {
+  if (levelView === 'combat' && state.combat.mode === 'idle' && state.combat.status === 'fighting') return renderStageCombat()
+  if (levelView === 'stages' && chapterRegionId) return renderStageList()
+  return renderRegionList()
 }
 
 const renderMartialSelect = (heroId: string): string => {
@@ -577,26 +605,6 @@ const renderMystery = (): string => {
     </section>`
 }
 
-const renderOfflineModal = (): string => {
-  if (!offlineSettlement) return ''
-  const region = regionById(offlineSettlement.regionId) ?? REGIONS[0]
-  return `
-    <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="offline-title">
-      <section class="offline-modal">
-        <span class="modal-seal">归</span>
-        <small>少侠归来</small><h2 id="offline-title">古道未曾停歇</h2>
-        <p>离开江湖的 ${formatDuration(offlineSettlement.seconds)} 里，队伍仍在${region.name}自行历练${offlineSettlement.capped ? '（已按 12 小时上限结算）' : ''}。</p>
-        <div class="settlement-grid">
-          <div><span>银</span><strong>+${formatNumber(offlineSettlement.silver)}</strong><small>银两</small></div>
-          <div><span>历</span><strong>+${formatNumber(offlineSettlement.experience)}</strong><small>阅历</small></div>
-          <div><span>卷</span><strong>+${formatNumber(offlineSettlement.pages)}</strong><small>残页</small></div>
-          <div><span>敌</span><strong>${formatNumber(offlineSettlement.enemies)}</strong><small>败敌</small></div>
-        </div>
-        <button class="primary-button full" data-action="close-offline">收下历练所得</button>
-      </section>
-    </div>`
-}
-
 const renderFooter = (): string => `
   <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 6</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
 
@@ -617,8 +625,7 @@ function render(): void {
     ${renderNav()}
     <main class="game-main">${content}</main>
     ${renderFooter()}
-    ${toast ? `<div class="toast ${toastKind}" role="status">${escapeHtml(toast)}</div>` : ''}
-    ${renderOfflineModal()}`
+    ${toast ? `<div class="toast ${toastKind}" role="status">${escapeHtml(toast)}</div>` : ''}`
 }
 
 const persistAndRender = (): void => {
@@ -631,12 +638,16 @@ app.addEventListener('click', (event) => {
   const tabButton = target.closest<HTMLElement>('[data-tab]')
   if (tabButton?.dataset.tab) {
     activeTab = tabButton.dataset.tab as TabId
+    if (activeTab === 'idle') {
+      levelView = 'regions'
+      chapterRegionId = null
+    }
     render()
     return
   }
   const button = target.closest<HTMLButtonElement>('button[data-action]')
   if (!button) return
-  const { action, blessingId, heroId, martialId, regionId, row, slot } = button.dataset
+  const { action, blessingId, heroId, martialId, regionId, row, slot, stage } = button.dataset
   if (toastTimer) window.clearTimeout(toastTimer)
 
   switch (action) {
@@ -644,9 +655,22 @@ app.addEventListener('click', (event) => {
     case 'recruit': notify(recruitHero(state, heroId ?? '')); break
     case 'train': notify(trainMartial(state, heroId ?? '')); break
     case 'unlock-martial': notify(unlockMartial(state, martialId ?? '')); break
-    case 'select-region': {
+    case 'open-region': {
       if (!REGIONS.some((region) => region.id === regionId)) return
-      notify(selectRegion(state, regionId as RegionId))
+      chapterRegionId = regionId as RegionId
+      levelView = 'stages'
+      break
+    }
+    case 'back-regions': chapterRegionId = null; levelView = 'regions'; break
+    case 'back-stages': chapterRegionId = state.combat.regionId; levelView = 'stages'; break
+    case 'start-stage': {
+      if (!REGIONS.some((region) => region.id === regionId)) return
+      const result = startIdleStage(state, regionId as RegionId, Number(stage))
+      notify(result)
+      if (result.ok) {
+        chapterRegionId = regionId as RegionId
+        levelView = 'combat'
+      }
       break
     }
     case 'set-row': {
@@ -668,8 +692,7 @@ app.addEventListener('click', (event) => {
       break
     }
     case 'finish-mystery': notify(finishMystery(state)); break
-    case 'return-idle': notify(returnToIdle(state)); break
-    case 'close-offline': offlineSettlement = null; notify('离线收益已收入囊中'); break
+    case 'return-idle': notify(returnToIdle(state)); levelView = 'regions'; chapterRegionId = null; break
     case 'export': {
       const blob = new Blob([exportSave(state)], { type: 'application/json' })
       const link = document.createElement('a')
@@ -685,8 +708,9 @@ app.addEventListener('click', (event) => {
       if (!window.confirm('确定重开存档？当前本地进度将被清除，建议先导出备份。')) return
       clearSave(window.localStorage)
       state = createInitialState()
-      offlineSettlement = null
       activeTab = 'idle'
+      levelView = 'regions'
+      chapterRegionId = null
       lastRuntimeAt = Date.now()
       notify('江湖已重开')
       break
@@ -712,7 +736,8 @@ importInput.addEventListener('change', async () => {
   try {
     const imported = importSave(await file.text())
     state = imported.state
-    offlineSettlement = imported.settlement.seconds >= 30 ? imported.settlement : null
+    levelView = 'regions'
+    chapterRegionId = null
     lastRuntimeAt = Date.now()
     saveGame(window.localStorage, state)
     notify('存档导入成功')
@@ -728,10 +753,8 @@ window.setInterval(() => {
   const elapsed = Math.floor((now - lastRuntimeAt) / 1000)
   if (elapsed <= 0) return
   if (elapsed > 10) {
-    state.lastTickAt = lastRuntimeAt
-    const settlement = applyOfflineProgress(state, now)
-    if (settlement.seconds >= 30) offlineSettlement = settlement
     lastRuntimeAt = now
+    state.lastTickAt = now
   } else {
     for (let index = 0; index < elapsed; index += 1) stepCombat(state)
     lastRuntimeAt += elapsed * 1000
@@ -758,7 +781,14 @@ window.__EGG_JIANGHU__ = {
   getState: () => structuredClone(state),
   setTab: (tab) => { activeTab = tab; render() },
   advanceCombat: (steps) => { for (let index = 0; index < steps; index += 1) stepCombat(state); persistAndRender() },
-  reset: () => { clearSave(window.localStorage); state = createInitialState(); lastRuntimeAt = Date.now(); render() },
+  reset: () => {
+    clearSave(window.localStorage)
+    state = createInitialState()
+    levelView = 'regions'
+    chapterRegionId = null
+    lastRuntimeAt = Date.now()
+    render()
+  },
 }
 
 render()
