@@ -102,5 +102,6 @@ TestResults/
 .ccg/
 .superccg/
 .superpowers/
+.worktrees/
 .playwright-mcp/
 .claude/settings.local.json
