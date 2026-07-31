@@ -608,6 +608,24 @@ const renderMystery = (): string => {
 const renderFooter = (): string => `
   <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 6</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
 
+const isViewingIdleCombat = (): boolean => activeTab === 'idle'
+  && levelView === 'combat'
+  && state.combat.mode === 'idle'
+  && state.combat.status === 'fighting'
+
+const renderIdleCombatReturn = (): string => {
+  if (state.combat.mode !== 'idle' || state.combat.status !== 'fighting' || isViewingIdleCombat()) return ''
+  const region = regionById(state.combat.regionId) ?? REGIONS[0]
+  const stage = state.combat.stage ?? 1
+  return `
+    <button class="idle-combat-return" type="button" data-action="return-idle-combat" data-testid="idle-combat-return"
+      aria-label="返回${region.name}第 ${stage} 关挂机界面">
+      <span class="idle-combat-return-status"><i></i>挂机战斗中</span>
+      <strong>${region.name} · 第 ${stage} 关</strong>
+      <small>返回战斗 <b aria-hidden="true">→</b></small>
+    </button>`
+}
+
 function render(): void {
   const focused = document.activeElement
   if (focused instanceof HTMLSelectElement) return
@@ -625,6 +643,7 @@ function render(): void {
     ${renderNav()}
     <main class="game-main">${content}</main>
     ${renderFooter()}
+    ${renderIdleCombatReturn()}
     ${toast ? `<div class="toast ${toastKind}" role="status">${escapeHtml(toast)}</div>` : ''}`
 }
 
@@ -671,6 +690,13 @@ app.addEventListener('click', (event) => {
         chapterRegionId = regionId as RegionId
         levelView = 'combat'
       }
+      break
+    }
+    case 'return-idle-combat': {
+      if (state.combat.mode !== 'idle' || state.combat.status !== 'fighting') break
+      activeTab = 'idle'
+      chapterRegionId = state.combat.regionId
+      levelView = 'combat'
       break
     }
     case 'set-row': {

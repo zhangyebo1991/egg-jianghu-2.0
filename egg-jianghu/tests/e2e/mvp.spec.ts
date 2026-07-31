@@ -54,8 +54,35 @@ test('启动后先选择大关卡和小关卡，再开始挂机战斗', async ({
   await page.screenshot({ path: testInfo.outputPath('desktop-idle.png'), fullPage: true })
 })
 
+test('可从其他页面通过悬浮入口返回正在进行的挂机战斗', async ({ page }) => {
+  await page.getByRole('button', { name: '进入青石古道' }).click()
+  await page.getByTestId('stage-card-3').getByRole('button', { name: '开始挂机' }).click()
+  await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
+
+  const defeatsBefore = await page.evaluate(() => window.__EGG_JIANGHU__.getState().statistics.idleEnemiesDefeated)
+  await page.getByRole('button', { name: /侠客/ }).click()
+  const returnButton = page.getByTestId('idle-combat-return')
+  await expect(returnButton).toBeVisible()
+  await expect(returnButton).toContainText('青石古道 · 第 3 关')
+  expect(await returnButton.evaluate((element) => getComputedStyle(element).animationName)).toBe('none')
+
+  await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(120))
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().statistics.idleEnemiesDefeated)).toBeGreaterThan(defeatsBefore)
+  await expect(page.getByRole('heading', { name: '江湖名册' })).toBeVisible()
+
+  await returnButton.click()
+  await expect(page.getByRole('heading', { name: '青石古道 · 第 3 关' })).toBeVisible()
+  await expect(page.getByTestId('battle-arena')).toBeVisible()
+  await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
+  expect(await page.evaluate(() => {
+    const combat = window.__EGG_JIANGHU__.getState().combat
+    return { mode: combat.mode, status: combat.status, regionId: combat.regionId, stage: combat.stage }
+  })).toEqual({ mode: 'idle', status: 'fighting', regionId: 'bluestone_path', stage: 3 })
+})
+
 test('可进入秘境、选择临时祝福并完成首层探索', async ({ page }) => {
   await page.getByRole('button', { name: /秘境/ }).click()
+  await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
   await expect(page.getByRole('heading', { name: '无相秘境' })).toBeVisible()
   await expect(page.getByTestId('mystery-route').locator(':scope > span')).toHaveCount(5)
   await page.getByRole('button', { name: '踏入无相秘境' }).click()
@@ -142,6 +169,7 @@ test('击败克制型 BOSS 后解锁区域并能在刷新后恢复', async ({ pa
   await page.getByRole('button', { name: /战斗/ }).click()
   await expect(page.getByTestId('boss-intel')).toContainText('磐石阵')
   await page.getByRole('button', { name: /挑战断碑手/ }).click()
+  await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
   await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(120))
   await expect(page.locator('.battle-result.victory')).toBeVisible()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().defeatedBossIds)).toContain('boss_stonebreaker')
@@ -206,5 +234,6 @@ test('移动端布局保持可操作', async ({ page }, testInfo) => {
   await page.getByTestId('boss-intel').screenshot({ path: testInfo.outputPath('mobile-boss-intel.png') })
   await page.getByRole('button', { name: /队伍/ }).click()
   await expect(page.locator('.party-slot').first()).toBeVisible()
+  await expect(page.getByTestId('idle-combat-return')).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('mobile-party.png'), fullPage: true })
 })
