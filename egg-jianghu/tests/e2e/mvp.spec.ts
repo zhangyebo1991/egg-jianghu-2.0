@@ -28,7 +28,7 @@ test('启动后可见挂机战斗并能访问四个核心 Tab', async ({ page },
 })
 
 test('挂机所得可用于招募同门并激活羁绊', async ({ page }) => {
-  await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(36))
+  await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(160))
   await page.getByRole('button', { name: /侠客/ }).click()
   await page.getByRole('button', { name: /以 220 银两结识/ }).click()
   await expect(page.getByText('燕秋声应邀加入江湖名册')).toBeVisible()
@@ -36,7 +36,18 @@ test('挂机所得可用于招募同门并激活羁绊', async ({ page }) => {
   await page.getByRole('button', { name: /队伍/ }).click()
   await page.locator('select[data-action="party-slot"][data-slot="1"]').selectOption('yan_qiusheng')
   await expect(page.getByText('丐帮共鸣')).toBeVisible()
-  await expect(page.getByText(/全队攻势 \+12%/)).toBeVisible()
+  await expect(page.getByText(/门派攻势 \+12%/)).toBeVisible()
+  await expect(page.getByTestId('bond-atlas').locator('.bond-card')).toHaveCount(5)
+  await expect(page.locator('[data-bond-id="green_hill_iron_oath"]')).toHaveClass(/active/)
+  await expect(page.locator('[data-bond-id="green_hill_iron_oath"]')).toContainText('并肩生效')
+
+  await page.getByRole('button', { name: /侠客/ }).click()
+  await page.getByRole('button', { name: /以 360 银两结识/ }).click()
+  await page.getByRole('button', { name: /队伍/ }).click()
+  await page.locator('select[data-action="party-slot"][data-slot="1"]').selectOption('jiang_wan')
+  await expect(page.getByTestId('combo-codex').locator('.combo-card')).toHaveCount(4)
+  await expect(page.locator('[data-combo-id="mountain_river_reflection"]')).toHaveClass(/active/)
+  await expect(page.locator('[data-combo-id="mountain_river_reflection"]')).toContainText('当前阵容已激活')
 })
 
 test('武学招式会展示预案并在自动战斗中施展', async ({ page }) => {
@@ -45,7 +56,7 @@ test('武学招式会展示预案并在自动战斗中施展', async ({ page }) 
   await expect(page.locator('.martial-item').first()).toContainText('赤浪断岳')
 
   await page.getByRole('button', { name: /战斗/ }).click()
-  await expect(page.getByTestId('skill-plan').locator(':scope > div:last-child > span')).toHaveCount(3)
+  await expect(page.getByTestId('skill-plan').locator('.skill-plan-grid > span')).toHaveCount(3)
   await page.getByRole('button', { name: /挑战断碑手/ }).click()
   await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(4))
 
@@ -56,7 +67,7 @@ test('武学招式会展示预案并在自动战斗中施展', async ({ page }) 
 
 test('可切换前后排阵型且战斗按阵位展示', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: /队伍/ }).click()
-  await expect(page.getByRole('heading', { name: '前后列阵' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '列阵与羁绊' })).toBeVisible()
   await expect(page.getByTestId('formation-front-row').locator('.party-slot')).toHaveCount(2)
   await expect(page.getByTestId('formation-back-row').locator('.party-slot')).toHaveCount(1)
   await expect(page.getByText('磐石阵', { exact: true })).toBeVisible()

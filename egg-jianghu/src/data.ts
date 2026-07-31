@@ -1,4 +1,6 @@
 import type {
+  BondDefinition,
+  ComboDefinition,
   EnemyTraitDefinition,
   EnemyTraitId,
   HeroDefinition,
@@ -224,13 +226,92 @@ export const MARTIALS: readonly MartialDefinition[] = [
   },
 ] as const
 
-export const COMBO = {
-  id: 'mountain_river_reflection',
-  name: '山河照影',
-  heroIds: ['lu_qingshan', 'jiang_wan'] as const,
-  description: '陆青山掌力开山，江晚剑光照影，对敌造成一次强力合击。',
-  multiplier: 1.72,
-}
+export const BONDS: readonly BondDefinition[] = [
+  {
+    id: 'green_hill_iron_oath',
+    name: '青山铁衣',
+    type: '结义',
+    heroIds: ['lu_qingshan', 'yan_qiusheng'],
+    story: '古道血战后，陆青山与燕秋声以残酒盟誓，约定同进同退。',
+    effectText: '二人同队时，全队受到伤害降低 10%。',
+    effect: { type: 'damage_reduction', value: 0.1 },
+  },
+  {
+    id: 'snow_qin_confidants',
+    name: '雪照素心',
+    type: '知音',
+    heroIds: ['shen_zhaoxue', 'ning_suyin'],
+    story: '医剑与琴音在寒江相和，沈照雪终于遇见能听懂剑意的人。',
+    effectText: '二人同队时，所有治疗与回复效果提高 35%。',
+    effect: { type: 'healing', value: 0.35 },
+  },
+  {
+    id: 'wudang_inheritance',
+    name: '归一传薪',
+    type: '师徒',
+    heroIds: ['gu_changfeng', 'zhou_xuanyi'],
+    story: '顾长风守住松间旧诺，周玄一则将赤霞心诀倾囊相授。',
+    effectText: '二人同队时，武学招式冷却减少 1 次行动。',
+    effect: { type: 'skill_haste', value: 1 },
+  },
+  {
+    id: 'evening_frost_rivals',
+    name: '晚霜争锋',
+    type: '宿敌',
+    heroIds: ['jiang_wan', 'bai_weishuang'],
+    story: '一剑如晚潮，一刺若惊鸿；二人谁也不肯承认对方更快。',
+    effectText: '二人同队时，全队造成伤害提高 15%。',
+    effect: { type: 'attack', value: 0.15 },
+  },
+  {
+    id: 'drunken_road_companions',
+    name: '醉掌同途',
+    type: '同道',
+    heroIds: ['lu_qingshan', 'qi_rumo'],
+    story: '一个掌势堂皇，一个步法颠倒，却都愿为不平事多管一回。',
+    effectText: '二人同队时，全队造成伤害提高 8%。',
+    effect: { type: 'attack', value: 0.08 },
+  },
+] as const
+
+export const COMBOS: readonly ComboDefinition[] = [
+  {
+    id: 'mountain_river_reflection',
+    name: '山河照影',
+    heroIds: ['lu_qingshan', 'jiang_wan'],
+    description: '陆青山掌力开山，江晚剑光照影，对敌造成一次强力合击。',
+    multiplier: 1.72,
+    effect: 'damage',
+    effectValue: 0,
+  },
+  {
+    id: 'cold_river_harmony',
+    name: '寒江和鸣',
+    heroIds: ['shen_zhaoxue', 'ning_suyin'],
+    description: '寒江剑意随素心琴音流转，攻敌之余调和全队气血。',
+    multiplier: 1.28,
+    effect: 'restore',
+    effectValue: 0.34,
+  },
+  {
+    id: 'true_wudang_duality',
+    name: '真武两仪',
+    heroIds: ['gu_changfeng', 'zhou_xuanyi'],
+    description: '松风与赤霞交汇成两仪护阵，合击后护住全队。',
+    multiplier: 1.38,
+    effect: 'guard',
+    effectValue: 0.3,
+  },
+  {
+    id: 'twin_blades_resonance',
+    name: '双锋争鸣',
+    heroIds: ['jiang_wan', 'bai_weishuang'],
+    description: '剑刺争锋化作同一瞬的寒芒，撕开敌手护体。',
+    multiplier: 1.55,
+    effect: 'sunder',
+    effectValue: 0.24,
+  },
+] as const
 
 export const ENEMY_TRAITS: Record<EnemyTraitId, EnemyTraitDefinition> = {
   none: {

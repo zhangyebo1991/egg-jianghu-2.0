@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { COMBO, HEROES, MARTIALS, REGIONS } from './data'
+import { BONDS, COMBOS, HEROES, MARTIALS, REGIONS } from './data'
 import {
   BACK_ATTACK_MULTIPLIER,
   FRONT_ATTACK_MULTIPLIER,
   FRONT_DAMAGE_TAKEN_MULTIPLIER,
   createInitialState,
   equipMartial,
+  getActiveBonds,
+  getActiveCombos,
   getFormationSummary,
   getHeroStats,
   getIdleRewardRates,
@@ -25,6 +27,8 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(HEROES).toHaveLength(9)
     expect(MARTIALS).toHaveLength(5)
     expect(REGIONS).toHaveLength(3)
+    expect(BONDS).toHaveLength(5)
+    expect(COMBOS).toHaveLength(4)
     expect(state.formation).toHaveLength(3)
     expect(state.formation.map((slot) => slot.row)).toEqual(['front', 'front', 'back'])
     expect(state.formation.every((slot) => state.heroes[slot.heroId].unlocked)).toBe(true)
@@ -121,15 +125,103 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(setFormationRow(state, 0, 'back')).toEqual({ ok: false, message: expect.stringContaining('挑战中不可换位') })
   })
 
-  it('陆青山与江晚同队时按轮次施展唯一合击技', () => {
+  it('陆青山与江晚同队时按轮次施展山河照影', () => {
     const state = createInitialState()
     state.resources.silver = 1_000
     expect(recruitHero(state, 'jiang_wan').ok).toBe(true)
     expect(setPartySlot(state, 1, 'jiang_wan').ok).toBe(true)
-    expect(getPartySynergy(state).comboActive).toBe(true)
+    expect(getPartySynergy(state).activeComboIds).toContain('mountain_river_reflection')
     expect(startChallenge(state).ok).toBe(true)
     for (let index = 0; index < 45 && state.combat.status === 'fighting'; index += 1) stepCombat(state)
-    expect(state.combat.logs.some((event) => event.kind === 'combo' && event.text.includes(COMBO.name))).toBe(true)
+    expect(state.combat.logs.some((event) => event.kind === 'combo' && event.text.includes(COMBOS[0].name))).toBe(true)
+  })
+
+  it('关系羁绊会按当前阵容激活并汇总不同被动效果', () => {
+    const state = createInitialState()
+    state.resources.silver = 5_000
+    expect(recruitHero(state, 'yan_qiusheng').ok).toBe(true)
+    expect(setPartySlot(state, 1, 'yan_qiusheng').ok).toBe(true)
+
+    expect(getActiveBonds(state).map((bond) => bond.id)).toContain('green_hill_iron_oath')
+    expect(getPartySynergy(state).damageTakenMultiplier).toBeCloseTo(0.9)
+
+    expect(recruitHero(state, 'qi_rumo').ok).toBe(true)
+    expect(setPartySlot(state, 2, 'qi_rumo').ok).toBe(true)
+    const synergy = getPartySynergy(state)
+    expect(synergy.activeBondIds).toEqual(expect.arrayContaining(['green_hill_iron_oath', 'drunken_road_companions']))
+    expect(synergy.attackMultiplier).toBeGreaterThan(1.25)
+  })
+
+  it('青山铁衣会实际降低敌方反击伤害', () => {
+    const prepare = (withBond: boolean) => {
+      const state = createInitialState()
+      state.resources.silver = 1_000
+      if (withBond) {
+        expect(recruitHero(state, 'yan_qiusheng').ok).toBe(true)
+        expect(setPartySlot(state, 1, 'yan_qiusheng').ok).toBe(true)
+      }
+      expect(startChallenge(state).ok).toBe(true)
+      for (const member of state.combat.partyMembers) {
+        member.maxHp = 9_999
+        member.hp = member.heroId === 'lu_qingshan' ? 9_999 : 0
+      }
+      stepCombat(state)
+      return state.combat.logs.findLast((event) => event.kind === 'enemy')?.amount ?? 0
+    }
+
+    expect(prepare(true)).toBeLessThan(prepare(false))
+  })
+
+  it('归一传薪会缩短武学冷却，寒江和鸣会在合击时回复全队', () => {
+    const hasteState = createInitialState()
+    hasteState.resources.silver = 5_000
+    expect(recruitHero(hasteState, 'zhou_xuanyi').ok).toBe(true)
+    expect(setPartySlot(hasteState, 1, 'zhou_xuanyi').ok).toBe(true)
+    expect(getPartySynergy(hasteState).skillCooldownReduction).toBe(1)
+    expect(startChallenge(hasteState).ok).toBe(true)
+    for (let index = 0; index < 3; index += 1) stepCombat(hasteState)
+    expect(hasteState.combat.partyMembers.find((member) => member.heroId === 'gu_changfeng')?.skillCooldown).toBe(2)
+
+    const restoreState = createInitialState()
+    restoreState.resources.silver = 5_000
+    expect(recruitHero(restoreState, 'ning_suyin').ok).toBe(true)
+    expect(setPartySlot(restoreState, 0, 'shen_zhaoxue').ok).toBe(true)
+    expect(setPartySlot(restoreState, 1, 'ning_suyin').ok).toBe(true)
+    expect(getActiveCombos(restoreState).map((combo) => combo.id)).toEqual(['cold_river_harmony'])
+    expect(startChallenge(restoreState).ok).toBe(true)
+    for (const member of restoreState.combat.partyMembers) {
+      member.maxHp = 9_999
+      member.hp = 8_000
+    }
+    restoreState.combat.enemyHp = 100_000
+    restoreState.combat.enemyMaxHp = 100_000
+    for (let index = 0; index < 15; index += 1) stepCombat(restoreState)
+    expect(restoreState.combat.logs.some((event) => event.kind === 'combo' && event.abilityId === 'cold_river_harmony' && event.text.includes('回复'))).toBe(true)
+  })
+
+  it('同时激活多式合击时会按顺序轮换施展', () => {
+    const state = createInitialState()
+    state.resources.silver = 5_000
+    expect(recruitHero(state, 'jiang_wan').ok).toBe(true)
+    expect(recruitHero(state, 'bai_weishuang').ok).toBe(true)
+    expect(setPartySlot(state, 1, 'jiang_wan').ok).toBe(true)
+    expect(setPartySlot(state, 2, 'bai_weishuang').ok).toBe(true)
+    expect(getActiveCombos(state).map((combo) => combo.id)).toEqual([
+      'mountain_river_reflection',
+      'twin_blades_resonance',
+    ])
+    expect(startChallenge(state).ok).toBe(true)
+    state.combat.enemyHp = 100_000
+    state.combat.enemyMaxHp = 100_000
+    state.combat.enemyAttack = 0
+    for (const member of state.combat.partyMembers) {
+      member.hp = 9_999
+      member.maxHp = 9_999
+    }
+    for (let index = 0; index < 30; index += 1) stepCombat(state)
+
+    const comboIds = state.combat.logs.filter((event) => event.kind === 'combo').map((event) => event.abilityId)
+    expect(comboIds).toEqual(expect.arrayContaining(['mountain_river_reflection', 'twin_blades_resonance']))
   })
 
   it.each([

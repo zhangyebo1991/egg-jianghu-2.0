@@ -1,5 +1,6 @@
 import {
-  COMBO,
+  BONDS,
+  COMBOS,
   HEROES,
   MARTIALS,
   REGIONS,
@@ -55,7 +56,7 @@ export function createInitialState(now = Date.now()): GameState {
   )
 
   const state: GameState = {
-    version: 4,
+    version: 5,
     resources: { silver: 180, experience: 90, pages: 15, reputation: 0 },
     heroes,
     unlockedMartials: startingMartials,
@@ -131,6 +132,16 @@ export function getHeroStats(state: GameState, heroId: string): HeroStats {
   }
 }
 
+export const getActiveBonds = (state: GameState) => {
+  const heroIds = state.formation.map((slot) => slot.heroId)
+  return BONDS.filter((bond) => bond.heroIds.every((heroId) => heroIds.includes(heroId)))
+}
+
+export const getActiveCombos = (state: GameState) => {
+  const heroIds = state.formation.map((slot) => slot.heroId)
+  return COMBOS.filter((combo) => combo.heroIds.every((heroId) => heroIds.includes(heroId)))
+}
+
 export function getPartySynergy(state: GameState): PartySynergy {
   const sectCounts = new Map<Sect, number>()
   const heroIds = state.formation.map((slot) => slot.heroId)
@@ -141,17 +152,26 @@ export function getPartySynergy(state: GameState): PartySynergy {
   const strongest = [...sectCounts.entries()].sort((a, b) => b[1] - a[1])[0]
   const sectName = strongest && strongest[1] >= 2 ? strongest[0] : null
   const sectCount = sectName ? strongest[1] : 0
-  const attackMultiplier = sectCount >= 3 ? 1.25 : sectCount >= 2 ? 1.12 : 1
-  const comboActive = COMBO.heroIds.every((heroId) => heroIds.includes(heroId))
+  const sectMultiplier = sectCount >= 3 ? 1.25 : sectCount >= 2 ? 1.12 : 1
+  const activeBonds = getActiveBonds(state)
+  const activeCombos = getActiveCombos(state)
+  const bondValue = (type: (typeof BONDS)[number]['effect']['type']): number => activeBonds
+    .filter((bond) => bond.effect.type === type)
+    .reduce((total, bond) => total + bond.effect.value, 0)
+  const attackMultiplier = sectMultiplier * (1 + bondValue('attack'))
 
   return {
     attackMultiplier,
+    damageTakenMultiplier: Math.max(0.5, 1 - bondValue('damage_reduction')),
+    healingMultiplier: 1 + bondValue('healing'),
+    skillCooldownReduction: Math.floor(bondValue('skill_haste')),
     sectName,
     sectCount,
     sectText: sectName
-      ? `${sectName}同门 ${sectCount} 人，全队攻势 +${Math.round((attackMultiplier - 1) * 100)}%`
+      ? `${sectName}同门 ${sectCount} 人，门派攻势 +${Math.round((sectMultiplier - 1) * 100)}%`
       : '队伍中尚无两位同门',
-    comboActive,
+    activeBondIds: activeBonds.map((bond) => bond.id),
+    activeComboIds: activeCombos.map((combo) => combo.id),
   }
 }
 
@@ -211,6 +231,7 @@ function createIdleCombat(state: GameState): CombatState {
     enemyAttack: enemy.baseAttack + tier * 2,
     enemyStatuses: [],
     partyMembers: createCombatParty(state),
+    comboIndex: 0,
     turnIndex: 0,
     round: 0,
     logs: [],
@@ -233,6 +254,7 @@ function createChallengeCombat(state: GameState, region: RegionDefinition): Comb
     enemyAttack: boss.baseAttack,
     enemyStatuses: [],
     partyMembers: createCombatParty(state),
+    comboIndex: 0,
     turnIndex: 0,
     round: 0,
     logs: [],
@@ -244,7 +266,7 @@ function addLog(
   combat: CombatState,
   kind: CombatEvent['kind'],
   text: string,
-  details: Pick<CombatEvent, 'actorId' | 'targetId' | 'amount'> = {},
+  details: Pick<CombatEvent, 'actorId' | 'targetId' | 'amount' | 'abilityId'> = {},
 ): CombatEvent {
   const lastId = combat.logs.at(-1)?.id ?? 0
   const event: CombatEvent = { id: lastId + 1, kind, text, ...details }
@@ -399,7 +421,10 @@ function performMartialSkill(
       const target = combat.partyMembers
         .filter((candidate) => candidate.hp > 0)
         .sort((left, right) => left.hp / left.maxHp - right.hp / right.maxHp)[0]
-      const healing = target ? Math.min(target.maxHp - target.hp, Math.round(stats.attack * (0.55 + rank * 0.12))) : 0
+      const healing = target ? Math.min(
+        target.maxHp - target.hp,
+        Math.round(stats.attack * (0.55 + rank * 0.12) * synergy.healingMultiplier),
+      ) : 0
       if (target) {
         target.hp += healing
         applyStatus(target.statuses, 'guard', 2, Math.round(stats.attack * (0.28 + rank * 0.06)), member.heroId)
@@ -425,7 +450,7 @@ function performMartialSkill(
 
   const roundedDamage = Math.max(1, Math.round(damage))
   combat.enemyHp = Math.max(0, combat.enemyHp - roundedDamage)
-  member.skillCooldown = martial.skill.cooldown
+  member.skillCooldown = Math.max(1, martial.skill.cooldown - synergy.skillCooldownReduction)
   addLog(
     combat,
     'skill',
@@ -464,23 +489,48 @@ export function stepCombat(state: GameState): void {
   const actorId = actorMember.heroId
   const actor = heroById(actorId)
   const livingHeroIds = combat.partyMembers.filter((member) => member.hp > 0).map((member) => member.heroId)
-  const comboTurn = synergy.comboActive
-    && COMBO.heroIds.every((heroId) => livingHeroIds.includes(heroId))
+  const activeCombos = getActiveCombos(state).filter((combo) => combo.heroIds.every((heroId) => livingHeroIds.includes(heroId)))
+  const comboTurn = activeCombos.length > 0
     && actorIndex === livingIndices[0]
     && combat.round > 0
     && combat.round % 3 === 0
 
   if (comboTurn) {
-    const combinedAttack = COMBO.heroIds.reduce((sum, heroId) => {
+    const combo = activeCombos[combat.comboIndex % activeCombos.length]
+    const combinedAttack = combo.heroIds.reduce((sum, heroId) => {
       const member = combat.partyMembers.find((candidate) => candidate.heroId === heroId)
       if (!member) return sum
       return sum + getHeroStats(state, heroId).attack
         * attackMultiplierForRow(member.row)
         * getEnemyTraitAttackMultiplier(state, combat, member)
     }, 0)
-    const damage = Math.round(combinedAttack * COMBO.multiplier * synergy.attackMultiplier * getEnemyVulnerabilityMultiplier(combat))
+    const damage = Math.round(combinedAttack * combo.multiplier * synergy.attackMultiplier * getEnemyVulnerabilityMultiplier(combat))
     combat.enemyHp = Math.max(0, combat.enemyHp - damage)
-    addLog(combat, 'combo', `合击「${COMBO.name}」贯穿敌阵，造成 ${damage} 伤害！`, { amount: damage })
+    let effectText = ''
+    if (combo.effect === 'restore') {
+      const healing = Math.max(1, Math.round(combinedAttack * combo.effectValue * synergy.healingMultiplier))
+      let restored = 0
+      for (const member of combat.partyMembers.filter((candidate) => candidate.hp > 0)) {
+        const recovered = Math.min(member.maxHp - member.hp, healing)
+        member.hp += recovered
+        restored += recovered
+      }
+      effectText = `，并为全队回复 ${restored} 气血`
+    } else if (combo.effect === 'guard') {
+      const guardValue = Math.max(1, Math.round(combinedAttack * combo.effectValue))
+      for (const member of combat.partyMembers.filter((candidate) => candidate.hp > 0)) {
+        applyStatus(member.statuses, 'guard', 2, guardValue)
+      }
+      effectText = `，全队获得 ${guardValue} 点护体`
+    } else if (combo.effect === 'sunder') {
+      applyStatus(combat.enemyStatuses, 'sunder', 2, combo.effectValue)
+      effectText = `，使敌人破甲 ${Math.round(combo.effectValue * 100)}%`
+    }
+    combat.comboIndex += 1
+    addLog(combat, 'combo', `合击「${combo.name}」贯穿敌阵，造成 ${damage} 伤害${effectText}！`, {
+      amount: damage,
+      abilityId: combo.id,
+    })
   } else {
     const martialId = state.heroes[actorId]?.equippedMartialId
     const martial = martialId ? martialById(martialId) : undefined
@@ -525,7 +575,11 @@ export function stepCombat(state: GameState): void {
     : 1
   const slowMultiplier = 1 - (statusById(combat.enemyStatuses, 'slow')?.value ?? 0)
   const rawEnemyDamage = Math.max(5, Math.round(
-    (combat.enemyAttack - targetStats.defense * 0.45) * positionReduction * formationBreakerMultiplier * slowMultiplier,
+    (combat.enemyAttack - targetStats.defense * 0.45)
+      * positionReduction
+      * formationBreakerMultiplier
+      * slowMultiplier
+      * synergy.damageTakenMultiplier,
   ))
   const guard = statusById(target.statuses, 'guard')
   const absorbed = guard ? Math.min(rawEnemyDamage, Math.round(guard.value)) : 0

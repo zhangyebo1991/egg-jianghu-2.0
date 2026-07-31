@@ -1,6 +1,7 @@
 import './style.css'
 import {
-  COMBO,
+  BONDS,
+  COMBOS,
   HEROES,
   MARTIALS,
   REGIONS,
@@ -15,6 +16,8 @@ import {
   applyOfflineProgress,
   createInitialState,
   equipMartial,
+  getActiveBonds,
+  getActiveCombos,
   getFormationSummary,
   getHeroStats,
   getIdleRewardRates,
@@ -208,7 +211,7 @@ const renderCombatArena = (compact = false): string => {
           ${renderStatusChips(combat.enemyStatuses)}
           ${enemyHit ? `<b class="damage-float enemy-damage ${hitEvent?.kind === 'combo' ? 'combo-damage' : ''}">-${hitEvent?.amount ?? 0}</b>` : ''}
         </div>
-        ${hitEvent?.kind === 'combo' ? `<div class="combo-flash"><span>合击</span><strong>${COMBO.name}</strong></div>` : ''}
+        ${hitEvent?.kind === 'combo' ? `<div class="combo-flash"><span>合击</span><strong>${COMBOS.find((combo) => combo.id === hitEvent.abilityId)?.name ?? '联手武学'}</strong></div>` : ''}
         ${hitEvent?.kind === 'skill' ? `<div class="skill-flash"><span>绝技</span><strong>${martialById(state.heroes[hitEvent.actorId ?? '']?.equippedMartialId ?? '')?.skill.name ?? '武学招式'}</strong></div>` : ''}
       </div>
       ${combat.status !== 'fighting' ? `
@@ -358,6 +361,8 @@ const renderHeroes = (): string => `
 
 const renderParty = (): string => {
   const synergy = getPartySynergy(state)
+  const activeBonds = getActiveBonds(state)
+  const activeCombos = getActiveCombos(state)
   const formation = getFormationSummary(state)
   const unlocked = HEROES.filter((hero) => state.heroes[hero.id].unlocked)
   const challengeActive = state.combat.mode === 'challenge' && state.combat.status === 'fighting'
@@ -395,7 +400,7 @@ const renderParty = (): string => {
   }
   return `
     <div class="page-heading compact-heading">
-      <div><span class="eyebrow">Formation &amp; Bonds</span><h1>前后列阵</h1><p>前排优先承伤并获得减伤；后排受保护且提高输出。保留两排，在守势与攻势间取舍。</p></div>
+      <div><span class="eyebrow">Formation &amp; Bonds</span><h1>列阵与羁绊</h1><p>站位决定攻守，侠客关系提供被动增益，特定二人同队还会自动施展联手武学。</p></div>
       <div class="power-plaque"><small>当前队伍战力</small><strong>${formatNumber(getPartyPower(state))}</strong></div>
     </div>
     <section class="party-board panel">
@@ -404,16 +409,41 @@ const renderParty = (): string => {
       <div class="synergy-grid">
         <article class="synergy-card active formation"><span class="seal-icon">阵</span><div><small>当前阵势</small><strong>${formation.name}</strong><p>${formation.effectText}</p></div></article>
         <article class="synergy-card ${synergy.sectName ? 'active' : ''}"><span class="seal-icon">门</span><div><small>门派羁绊</small><strong>${synergy.sectName ? `${synergy.sectName}共鸣` : '尚未激活'}</strong><p>${synergy.sectText}</p></div></article>
-        <article class="synergy-card ${synergy.comboActive ? 'active combo' : ''}"><span class="seal-icon">合</span><div><small>联手武学</small><strong>${COMBO.name}</strong><p>${synergy.comboActive ? '已激活：每三回合自动施展一次强力合击。' : `需 ${COMBO.heroIds.map((id) => heroById(id)?.name).join(' + ')} 同队。`}</p></div></article>
+        <article class="synergy-card ${activeBonds.length ? 'active' : ''}"><span class="seal-icon">缘</span><div><small>关系羁绊</small><strong>${activeBonds.length ? `${activeBonds.length} 条生效` : '尚未激活'}</strong><p>${activeBonds.length ? activeBonds.map((bond) => bond.name).join(' · ') : '按下方图谱安排有故事关联的侠客同队。'}</p></div></article>
+        <article class="synergy-card ${activeCombos.length ? 'active combo' : ''}"><span class="seal-icon">合</span><div><small>联手武学</small><strong>${activeCombos.length ? activeCombos.map((combo) => combo.name).join(' · ') : '尚未激活'}</strong><p>${activeCombos.length ? '每三回合轮换施展已激活的合击。' : '集齐合击所需的两位侠客并安排同队。'}</p></div></article>
       </div>
     </section>
+    <section class="bond-atlas panel" data-testid="bond-atlas">
+      <div class="section-title"><span>江湖羁绊图谱</span><small>${BONDS.filter((bond) => bond.heroIds.every((heroId) => state.heroes[heroId]?.unlocked)).length}/${BONDS.length} 条关系已结识</small></div>
+      <div class="bond-grid">${BONDS.map((bond) => {
+        const active = synergy.activeBondIds.includes(bond.id)
+        const known = bond.heroIds.every((heroId) => state.heroes[heroId]?.unlocked)
+        const missing = bond.heroIds.filter((heroId) => !state.heroes[heroId]?.unlocked).map((heroId) => heroById(heroId)?.name).join('、')
+        return `<article class="bond-card ${active ? 'active' : known ? 'known' : 'locked'}" data-bond-id="${bond.id}">
+          <span>${bond.type}</span><strong>${bond.name}</strong><small>${bond.heroIds.map((heroId) => heroById(heroId)?.name).join(' × ')}</small>
+          <p>${bond.story}</p><em>${bond.effectText}</em><b>${active ? '并肩生效' : known ? '已结识 · 安排同队可激活' : `尚缺 ${missing}`}</b>
+        </article>`
+      }).join('')}</div>
+    </section>
+    <section class="combo-codex panel" data-testid="combo-codex">
+      <div class="section-title"><span>联手武学录</span><small>${COMBOS.filter((combo) => combo.heroIds.every((heroId) => state.heroes[heroId]?.unlocked)).length}/${COMBOS.length} 式已收集</small></div>
+      <div class="combo-grid">${COMBOS.map((combo) => {
+        const active = synergy.activeComboIds.includes(combo.id)
+        const known = combo.heroIds.every((heroId) => state.heroes[heroId]?.unlocked)
+        return `<article class="combo-card ${active ? 'active' : known ? 'known' : 'locked'}" data-combo-id="${combo.id}">
+          <span>合</span><div><strong>${combo.name}</strong><small>${combo.heroIds.map((heroId) => heroById(heroId)?.name).join(' × ')}</small><p>${combo.description}</p><b>${active ? '当前阵容已激活' : known ? '侠客已齐 · 待同队' : '尚未集齐所需侠客'}</b></div>
+        </article>`
+      }).join('')}</div>
+    </section>
     <section class="decision-note panel">
-      <span>取舍</span><p>「磐石阵」由两名前排分担压力，适合持久战；「雁行阵」让两名后排获得增伤，但唯一前排倒下后，后排将直接受击。</p>
+      <span>取舍</span><p>关系羁绊可能让数值较低的侠客成为关键拼图；阵型、武学、门派、关系与合击共同决定最终 build。</p>
     </section>`
 }
 
 const renderBattle = (): string => {
   const inChallenge = state.combat.mode === 'challenge'
+  const activeBonds = getActiveBonds(state)
+  const activeCombos = getActiveCombos(state)
   const region = getSelectedRegion(state)
   const boss = region.boss
   const trait = enemyTraitById(boss.traitId)
@@ -438,12 +468,13 @@ const renderBattle = (): string => {
             : `<button class="primary-button" data-action="challenge">${defeated ? '再次挑战' : '挑战'}${boss.name}</button>`}
         </section>
         <section class="skill-plan panel" data-testid="skill-plan">
-          <div class="section-title"><span>本阵招式预案</span><small>招式全自动释放</small></div>
-          <div>${state.formation.map(({ heroId }) => {
+          <div class="section-title"><span>本阵招式预案</span><small>${activeBonds.length} 条关系羁绊 · ${activeCombos.length} 式合击</small></div>
+          <div class="skill-plan-grid">${state.formation.map(({ heroId }) => {
             const hero = heroById(heroId)
             const martial = martialById(state.heroes[heroId]?.equippedMartialId ?? '')
             return martial ? `<span><b>${hero?.name}</b><i>${martial.skill.name}</i><small>${martial.skill.description}</small></span>` : ''
           }).join('')}</div>
+          <p class="battle-bond-summary">${activeBonds.length ? `羁绊：${activeBonds.map((bond) => `${bond.name}（${bond.effectText}）`).join('；')}` : '当前没有关系羁绊生效'}${activeCombos.length ? ` · 合击：${activeCombos.map((combo) => combo.name).join('、')}` : ''}</p>
         </section>
         ${inChallenge ? renderCombatArena() : `<section class="boss-preview panel"><span>战</span><strong>${boss.name}</strong><p>整备完成后发出挑战，战斗不会损失资源。</p></section>`}
         <div class="combat-hints">
@@ -475,7 +506,7 @@ const renderOfflineModal = (): string => {
 }
 
 const renderFooter = (): string => `
-  <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 4</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
+  <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 5</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
 
 function render(): void {
   const focused = document.activeElement

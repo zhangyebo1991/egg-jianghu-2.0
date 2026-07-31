@@ -504,7 +504,7 @@
   .synergy-line i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-dark)); }
   .synergy-line i:last-child { background: linear-gradient(90deg, var(--gold-dark), transparent); }
   .synergy-line span { width: 8px; height: 8px; border: 1px solid var(--gold); transform: rotate(45deg); }
-  .synergy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 900px; margin: 0 auto; }
+  .synergy-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 1080px; margin: 0 auto; }
   .synergy-card { display: flex; align-items: center; gap: 14px; padding: 17px; border: 1px solid var(--line); background: rgba(0,0,0,.18); opacity: .62; }
   .synergy-card.active { opacity: 1; border-color: rgba(98,136,121,.42); background: rgba(98,136,121,.07); }
   .synergy-card.active.combo { border-color: rgba(199,161,91,.45); background: rgba(199,161,91,.06); }
@@ -516,6 +516,28 @@
   .decision-note { gap: 14px; margin-top: 14px; padding: 14px 18px; }
   .decision-note > span { color: var(--cinnabar-bright); font-family: KaiTi, STKaiti, serif; font-size: 19px; }
   .decision-note p { color: var(--paper-dim); font-size: 10px; line-height: 1.7; }
+  .bond-atlas, .combo-codex { margin-top: 14px; padding: 20px; }
+  .bond-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
+  .bond-card { display: grid; align-content: start; gap: 5px; min-height: 220px; padding: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.14); opacity: .55; }
+  .bond-card.known { opacity: .78; }
+  .bond-card.active { opacity: 1; border-color: rgba(98,136,121,.5); background: rgba(98,136,121,.08); }
+  .bond-card > span { color: var(--gold); font-size: 8px; letter-spacing: .16em; }
+  .bond-card strong { color: var(--paper); font-family: KaiTi, STKaiti, serif; font-size: 17px; font-weight: 400; }
+  .bond-card small { color: var(--paper-dim); font-size: 8px; }
+  .bond-card p { color: var(--paper-dim); font-size: 8px; line-height: 1.6; }
+  .bond-card em { color: #93ad9f; font-size: 8px; font-style: normal; line-height: 1.55; }
+  .bond-card b { align-self: end; margin-top: auto; color: var(--paper-muted); font-size: 8px; font-weight: 400; }
+  .bond-card.active b { color: #9fc8b1; }
+  .combo-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .combo-card { display: flex; gap: 11px; min-height: 150px; padding: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.14); opacity: .55; }
+  .combo-card.known { opacity: .78; }
+  .combo-card.active { opacity: 1; border-color: rgba(199,161,91,.48); background: rgba(199,161,91,.06); }
+  .combo-card > span { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; color: var(--gold); border: 1px solid var(--gold-dark); font-family: KaiTi, STKaiti, serif; font-size: 18px; }
+  .combo-card > div { display: grid; align-content: start; gap: 4px; }
+  .combo-card strong { color: var(--paper); font-size: 12px; }
+  .combo-card small, .combo-card p { color: var(--paper-dim); font-size: 8px; line-height: 1.55; }
+  .combo-card b { margin-top: 5px; color: var(--paper-muted); font-size: 8px; font-weight: 400; }
+  .combo-card.active b { color: var(--gold-bright); }
 
   .challenge-command { justify-content: space-between; gap: 16px; padding: 15px 18px; }
   .challenge-command > div { gap: 12px; }
@@ -523,11 +545,12 @@
   .challenge-command small { color: var(--gold); font-size: 8px; }
   .challenge-command strong { color: var(--paper); font-size: 14px; }
   .skill-plan { padding: 16px 18px; }
-  .skill-plan > div:last-child { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .skill-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .skill-plan span { display: grid; gap: 3px; padding: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.12); }
   .skill-plan b { color: var(--paper); font-size: 10px; font-weight: 400; }
   .skill-plan i { color: #91b6a3; font-size: 10px; font-style: normal; }
   .skill-plan small { color: var(--paper-dim); font-size: 8px; line-height: 1.5; }
+  .battle-bond-summary { margin-top: 10px; color: #91ab9d; font-size: 8px; line-height: 1.6; }
   .boss-intel { display: grid; grid-template-columns: 1.1fr 1fr 1.35fr; gap: 12px; padding: 18px; }
   .boss-intel-title, .trait-dossier, .counter-dossier { min-width: 0; padding: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.14); }
   .boss-intel-title { display: flex; align-items: center; gap: 12px; }
@@ -601,10 +624,12 @@
     .yield-grid > div:last-child { grid-column: 1 / -1; border-bottom: 0; }
     .region-grid { grid-template-columns: repeat(3, minmax(210px, 1fr)); overflow-x: auto; padding-bottom: 6px; }
     .boss-intel { grid-template-columns: 1fr; }
-    .skill-plan > div:last-child { grid-template-columns: 1fr; }
+    .skill-plan-grid { grid-template-columns: 1fr; }
     .party-board { padding: 18px; }
     .formation-editor-row.back { margin-inline: 22px 0; }
     .synergy-grid { grid-template-columns: 1fr; }
+    .bond-grid { grid-template-columns: repeat(2, 1fr); }
+    .combo-grid { grid-template-columns: repeat(2, 1fr); }
     .martial-strip { grid-template-columns: repeat(2, 1fr); }
   }
 
@@ -630,6 +655,7 @@
     .enemy-portrait > span { font-size: 40px; }
     .battle-result { inset: 43px 0 0; }
     .hero-grid, .party-slots, .synergy-grid { grid-template-columns: 1fr; }
+    .bond-grid, .combo-grid { grid-template-columns: 1fr; }
     .region-grid { grid-template-columns: 1fr; overflow: visible; }
     .region-card { min-height: 0; }
     .region-card > p, .region-boss { min-height: 0; }

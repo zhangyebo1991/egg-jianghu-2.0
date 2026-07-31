@@ -23,7 +23,7 @@ const safeNumber = (value: unknown, fallback: number, max = Number.MAX_SAFE_INTE
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : fallback
 
 export function hydrateState(raw: unknown, now = Date.now()): GameState {
-  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4)) {
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5)) {
     throw new Error('存档版本不受支持或格式无效')
   }
   const state = createInitialState(now)

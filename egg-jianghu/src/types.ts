@@ -6,6 +6,8 @@ export type RegionId = 'bluestone_path' | 'blackwind_fort' | 'frost_temple'
 export type EnemyTraitId = 'none' | 'formation_breaker' | 'iron_armor' | 'frost_aura'
 export type MartialSkillKind = 'blazing_palm' | 'frost_flurry' | 'taiji_restore' | 'vajra_sunder' | 'earth_guard'
 export type CombatStatusId = 'burn' | 'slow' | 'sunder' | 'guard'
+export type BondEffectType = 'attack' | 'damage_reduction' | 'healing' | 'skill_haste'
+export type ComboEffectKind = 'damage' | 'restore' | 'guard' | 'sunder'
 
 export interface HeroDefinition {
   id: string
@@ -38,6 +40,29 @@ export interface MartialDefinition {
     description: string
     cooldown: number
   }
+}
+
+export interface BondDefinition {
+  id: string
+  name: string
+  type: '师徒' | '结义' | '知音' | '宿敌' | '同道'
+  heroIds: readonly [string, string]
+  story: string
+  effectText: string
+  effect: {
+    type: BondEffectType
+    value: number
+  }
+}
+
+export interface ComboDefinition {
+  id: string
+  name: string
+  heroIds: readonly [string, string]
+  description: string
+  multiplier: number
+  effect: ComboEffectKind
+  effectValue: number
 }
 
 export interface HeroProgress {
@@ -109,6 +134,7 @@ export interface CombatEvent {
   actorId?: string
   targetId?: string
   amount?: number
+  abilityId?: string
   text: string
 }
 
@@ -125,6 +151,7 @@ export interface CombatState {
   enemyAttack: number
   enemyStatuses: CombatStatus[]
   partyMembers: CombatHeroState[]
+  comboIndex: number
   turnIndex: number
   round: number
   logs: CombatEvent[]
@@ -139,7 +166,7 @@ export interface GameStatistics {
 }
 
 export interface GameState {
-  version: 4
+  version: 5
   resources: Resources
   heroes: Record<string, HeroProgress>
   unlockedMartials: string[]
@@ -163,10 +190,14 @@ export interface HeroStats {
 
 export interface PartySynergy {
   attackMultiplier: number
+  damageTakenMultiplier: number
+  healingMultiplier: number
+  skillCooldownReduction: number
   sectName: Sect | null
   sectCount: number
   sectText: string
-  comboActive: boolean
+  activeBondIds: string[]
+  activeComboIds: string[]
 }
 
 export interface FormationSummary {
