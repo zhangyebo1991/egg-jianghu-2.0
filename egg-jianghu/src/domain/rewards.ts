@@ -7,6 +7,7 @@ import {
 } from '../content/equipment'
 import { addCareerExperience } from './careers'
 import { addEquipment } from './inventory'
+import { applyKillToQuests } from './quests'
 import type { EquipmentInstance, EquipmentQuality, GameStateV10 } from './types'
 
 export interface CombatSettlementResult {
@@ -97,6 +98,11 @@ export const settleCombatEvent = (
   if (event.type !== 'enemy-defeated') return { needsSave: false, addedEquipmentUids: [] }
 
   grantKillProgress(state, event)
+  applyKillToQuests(state, {
+    enemyId: event.enemyId,
+    rank: event.rank,
+    bossId: event.rank === 'boss' ? event.enemyId : null,
+  })
   const addedEquipmentUids: string[] = []
   for (const equipment of createEquipmentDrops(event)) {
     if (addEquipment(state, equipment).ok) addedEquipmentUids.push(equipment.uid)

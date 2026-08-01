@@ -34,4 +34,15 @@ describe('version 10 存档', () => {
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })
+
+  it('关闭期间不根据 lastSavedAt 推进悬榜倒计时', () => {
+    const storage = memoryStorage()
+    const state = createInitialStateV10(1000)
+    state.factionBoards.qingfeng_hall = { refreshRemainingMs: 1234, slots: [null, null, null, null, null, null] }
+    saveGameV10(storage, state, 1000)
+
+    const loaded = loadGameV10(storage, 99_999)
+
+    expect(loaded.state.factionBoards.qingfeng_hall.refreshRemainingMs).toBe(1234)
+  })
 })
