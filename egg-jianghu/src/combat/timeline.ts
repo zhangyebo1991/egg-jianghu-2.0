@@ -5,12 +5,17 @@ export const COMBAT_TICK_MS = 100
 export const actionIntervalMs = (agility: number): number =>
   Math.round(50_000 / Math.sqrt(Math.max(1, agility)))
 
-export const advanceUnitTime = (unit: CombatUnit, elapsedMs = COMBAT_TICK_MS): void => {
+export const advanceGaugeAndCooldowns = (unit: CombatUnit, elapsedMs = COMBAT_TICK_MS): void => {
   const safeElapsed = Math.max(0, elapsedMs)
   unit.gauge += safeElapsed / actionIntervalMs(unit.effectiveAgility) * 1000
   for (const id of Object.keys(unit.cooldowns)) {
     unit.cooldowns[id] = Math.max(0, unit.cooldowns[id] - safeElapsed)
   }
+}
+
+export const advanceUnitTime = (unit: CombatUnit, elapsedMs = COMBAT_TICK_MS): void => {
+  const safeElapsed = Math.max(0, elapsedMs)
+  advanceGaugeAndCooldowns(unit, safeElapsed)
   for (const status of unit.statuses) {
     status.remainingMs = Math.max(0, status.remainingMs - safeElapsed)
     if (status.nextTickMs !== undefined) status.nextTickMs = Math.max(0, status.nextTickMs - safeElapsed)
