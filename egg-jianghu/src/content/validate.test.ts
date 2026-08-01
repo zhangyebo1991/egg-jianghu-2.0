@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { createInitialStateV10 } from '../domain/state'
 import { CAREERS } from './careers'
 import { FACTIONS } from './factions'
 import { FACTION_MARTIALS } from './martials'
@@ -6,6 +7,18 @@ import { validateContent } from './validate'
 import { WORLDS } from './worlds'
 
 describe('首发内容目录', () => {
+  it('最终内容满足首发规模且不含明确排除资源', () => {
+    expect(WORLDS).toHaveLength(10)
+    expect(FACTIONS).toHaveLength(30)
+    expect(FACTION_MARTIALS).toHaveLength(240)
+    expect(CAREERS).toHaveLength(42)
+    expect(JSON.stringify(createInitialStateV10())).not.toMatch(/pages|秘籍残页|offline|combat/)
+  })
+
+  it('所有内容 id 和交叉引用唯一有效', () => {
+    expect(validateContent()).toEqual([])
+  })
+
   it('包含 6 初级、12 中级、12 高级和 12 顶级职业', () => {
     expect(CAREERS.filter((career) => career.tier === '初级')).toHaveLength(6)
     expect(CAREERS.filter((career) => career.tier === '中级')).toHaveLength(12)
