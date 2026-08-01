@@ -322,6 +322,7 @@ test('击败克制型 BOSS 后解锁区域并能在刷新后恢复', async ({ pa
 })
 
 test('可从界面导出 JSON，导入旧存档时不产生离线收益', async ({ page }) => {
+  await page.getByRole('button', { name: /设置/ }).click()
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: '导出' }).click(),

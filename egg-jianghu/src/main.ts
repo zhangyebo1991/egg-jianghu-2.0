@@ -50,7 +50,7 @@ import { formatMartialPassive, getPassiveBonuses, MAX_LEARNED_MARTIALS } from '.
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
 import type { ActionResult, CombatEvent, CombatHeroState, CombatStatus, FormationPosition, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
 
-type TabId = 'idle' | 'heroes' | 'party' | 'battle' | 'mystery'
+type TabId = 'idle' | 'heroes' | 'party' | 'battle' | 'mystery' | 'settings'
 type LevelView = 'regions' | 'stages' | 'combat'
 
 const appElement = document.querySelector<HTMLDivElement>('#app')
@@ -132,8 +132,6 @@ const renderHeader = (): string => `
     </div>
     <div class="save-tools">
       <span class="save-state"><i></i> 已自动存档</span>
-      <button class="text-button" data-action="export">导出</button>
-      <button class="text-button" data-action="import">导入</button>
     </div>
   </header>`
 
@@ -145,6 +143,7 @@ const getTabItems = (): { id: TabId; label: string; note: string; ic: string }[]
   { id: 'party', label: '羁绊', ic: '🪢', note: '缘分合击' },
   { id: 'battle', label: '战斗', ic: '👹', note: `已破 ${state.defeatedBossIds.length}/${REGIONS.length}` },
   { id: 'mystery', label: '秘境', ic: '🏮', note: state.mystery.run ? `第 ${Math.min(state.mystery.run.floor + 1, MYSTERY_ENCOUNTERS.length)} 层` : `通关 ${state.mystery.runsCompleted}` },
+  { id: 'settings', label: '设置', ic: '⚙️', note: '存档管理' },
 ]
 
 const renderNav = (): string => `
@@ -153,6 +152,7 @@ const renderNav = (): string => `
       <button class="nav-item ${activeTab === item.id ? 'active' : ''}" data-tab="${item.id}" aria-current="${activeTab === item.id ? 'page' : 'false'}">
         <span class="nav-ic" aria-hidden="true">${item.ic}</span><span class="nav-text"><span>${item.label}</span><small>${item.note}</small></span>
       </button>`).join('')}
+    <div class="nav-version">蛋蛋江湖 2.0 · 迭代 6</div>
   </nav>`
 
 const getEquippedMartialView = (heroId: string) => state.heroes[heroId].equippedMartialIds
@@ -549,7 +549,6 @@ const renderHeroes = (): string => {
       <div class="heroes-side">
         ${renderFormationPanel()}
         <aside class="hero-roster-panel panel" data-drop-roster>
-          <div class="section-title"><span>侠客名册</span><small>已拥有 ${owned.length} 人 · 点击配置武功 · 未出战者可拖入上方阵容</small></div>
           <div class="hero-roster" data-testid="hero-roster">${owned.map((hero) => renderHeroRosterCard(hero.id, heroId)).join('')}</div>
         </aside>
       </div>
@@ -712,8 +711,18 @@ const renderMystery = (): string => {
     </section>`
 }
 
-const renderFooter = (): string => `
-  <footer class="game-footer"><span>蛋蛋江湖 2.0 · 迭代 6</span><button class="text-button danger" data-action="reset">重开存档</button></footer>`
+const renderSettings = (): string => `
+  <div class="settings-layout">
+    <section class="panel settings-panel" data-testid="settings-panel">
+      <div class="section-title"><span>设置</span><small>存档与恢复</small></div>
+      <p class="settings-hint">本作所有进度仅保存在本地浏览器中。可将存档导出为 JSON 备份，或从备份文件导入继续江湖。</p>
+      <div class="settings-actions">
+        <button class="text-button" data-action="export">导出</button>
+        <button class="text-button" data-action="import">导入</button>
+        <button class="text-button danger" data-action="reset">重开存档</button>
+      </div>
+    </section>
+  </div>`
 
 const isViewingIdleCombat = (): boolean => activeTab === 'idle'
   && levelView === 'combat'
@@ -742,12 +751,13 @@ function render(): void {
         ? renderParty()
         : activeTab === 'battle'
           ? renderBattle()
-          : renderMystery()
+          : activeTab === 'settings'
+            ? renderSettings()
+            : renderMystery()
   app.innerHTML = `
     ${renderHeader()}
     ${renderNav()}
     <main class="game-main">${content}</main>
-    ${renderFooter()}
     ${renderIdleCombatReturn()}
     ${toast ? `<div class="toast ${toastKind}" role="status">${escapeHtml(toast)}</div>` : ''}`
 }
