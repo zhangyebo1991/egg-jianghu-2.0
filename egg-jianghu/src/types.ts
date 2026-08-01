@@ -217,6 +217,7 @@ export interface CombatState {
   comboIndex: number
   turnIndex: number
   round: number
+  stageKills: number
   logs: CombatEvent[]
   lastEvent: CombatEvent | null
 }
@@ -228,7 +229,7 @@ export interface GameStatistics {
 }
 
 export interface GameState {
-  version: 8
+  version: 9
   resources: Resources
   heroes: Record<string, HeroProgress>
   unlockedMartials: string[]
@@ -236,6 +237,7 @@ export interface GameState {
   selectedRegionId: RegionId
   defeatedBossIds: string[]
   regionDefeats: Record<RegionId, number>
+  regionCleared: Record<RegionId, number>
   mystery: MysteryProgress
   combat: CombatState
   statistics: GameStatistics

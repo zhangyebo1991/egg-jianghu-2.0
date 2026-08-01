@@ -21,6 +21,20 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => window.__EGG_JIANGHU__.reset())
 })
 
+// 通过导入带小关进度的存档解锁后续小关（reset 后的新档默认只能打第 1 关）
+const seedCleared = async (page: Page, regionId: string, cleared: number): Promise<void> => {
+  const seeded = await page.evaluate(([rid, n]) => {
+    const s = window.__EGG_JIANGHU__.getState()
+    s.regionCleared[rid] = n
+    return JSON.stringify(s)
+  }, [regionId, cleared] as [string, number])
+  await page.locator('body > input[type="file"]').setInputFiles({
+    name: 'seed.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(seeded),
+  })
+}
+
 test('页面使用原型风格的高对比楷体与深色烫金配色', async ({ page }) => {
   const styleState = await page.evaluate(() => {
     const root = getComputedStyle(document.documentElement)
@@ -42,12 +56,12 @@ test('启动后先选择大关卡和小关卡，再开始挂机战斗', async ({
   await expect(page).toHaveTitle(/蛋蛋江湖 2\.0/)
   await expect(page.locator('.region-map .section-title')).toContainText('大关卡')
   await expect(page.getByTestId('battle-arena')).toHaveCount(0)
-  await expect(page.locator('.region-card')).toHaveCount(3)
-  await expect(page.getByTestId('region-card-blackwind_fort').getByRole('button')).toBeDisabled()
+  await expect(page.locator('.stage-card')).toHaveCount(3)
+  await expect(page.getByTestId('region-card-blackwind_fort')).toHaveClass(/locked/)
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().combat.status)).toBe('ready')
 
-  await page.getByRole('button', { name: '进入青石古道' }).click()
-  await expect(page.getByTestId('stage-map').locator('.stage-card')).toHaveCount(10)
+  await page.getByTestId('region-card-bluestone_path').click()
+  await expect(page.getByTestId('stage-map').locator('.sub-node')).toHaveCount(10)
   await page.getByTestId('stage-card-1').getByRole('button', { name: '开始挂机' }).click()
   await expect(page.getByTestId('battle-arena')).toBeVisible()
   await expect(page.getByText(/第 1 关 · 挂机战斗中/)).toBeVisible()
@@ -68,7 +82,8 @@ test('启动后先选择大关卡和小关卡，再开始挂机战斗', async ({
 })
 
 test('可从其他页面通过悬浮入口返回正在进行的挂机战斗', async ({ page }) => {
-  await page.getByRole('button', { name: '进入青石古道' }).click()
+  await seedCleared(page, 'bluestone_path', 2)
+  await page.getByTestId('region-card-bluestone_path').click()
   await page.getByTestId('stage-card-3').getByRole('button', { name: '开始挂机' }).click()
   await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
 
@@ -94,8 +109,8 @@ test('可从其他页面通过悬浮入口返回正在进行的挂机战斗', as
 })
 
 test('可从挂机战斗页立即停止挂机并返回当前章节', async ({ page }) => {
-  await page.getByRole('button', { name: '进入青石古道' }).click()
-  await page.getByTestId('stage-card-2').getByRole('button', { name: '开始挂机' }).click()
+  await page.getByTestId('region-card-bluestone_path').click()
+  await page.getByTestId('stage-card-1').getByRole('button', { name: '开始挂机' }).click()
 
   const stopButton = page.getByRole('button', { name: '停止挂机' })
   await expect(stopButton).toBeVisible()
@@ -255,7 +270,7 @@ test('可在侠客页布阵（拖拽/按钮）且战斗按阵位展示', async (
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)).toHaveLength(3)
 
   await page.getByRole('button', { name: /关卡/ }).click()
-  await page.getByRole('button', { name: '进入青石古道' }).click()
+  await page.getByTestId('region-card-bluestone_path').click()
   await page.getByTestId('stage-card-1').getByRole('button', { name: '开始挂机' }).click()
   await expect(page.getByTestId('combat-front-row').locator('.fighter-card')).toHaveCount(1)
   await expect(page.getByTestId('combat-back-row').locator('.fighter-card')).toHaveCount(2)
@@ -307,8 +322,8 @@ test('击败克制型 BOSS 后解锁区域并能在刷新后恢复', async ({ pa
   await expect(page.getByRole('button', { name: /战斗/ })).toContainText('已破 1/3')
 
   await page.getByRole('button', { name: /关卡/ }).click()
-  await page.getByRole('button', { name: '进入黑风寨' }).click()
-  await expect(page.getByTestId('stage-map').locator('.stage-card')).toHaveCount(10)
+  await page.getByTestId('region-card-blackwind_fort').click()
+  await expect(page.getByTestId('stage-map').locator('.sub-node')).toHaveCount(10)
   await page.getByTestId('stage-map').screenshot({ path: testInfo.outputPath('desktop-regions-unlocked.png') })
   await page.getByTestId('stage-card-1').getByRole('button', { name: '开始挂机' }).click()
   await expect(page.getByText(/黑风寨 · 第 1 关 · 挂机战斗中/)).toBeVisible()
@@ -353,8 +368,8 @@ test('移动端布局保持可操作', async ({ page }, testInfo) => {
   await page.evaluate(() => window.__EGG_JIANGHU__.reset())
   await expect(page.getByRole('button', { name: /关卡/ })).toBeVisible()
   await expect(page.getByTestId('battle-arena')).toHaveCount(0)
-  await page.getByRole('button', { name: '进入青石古道' }).click()
-  await expect(page.getByTestId('stage-map').locator('.stage-card')).toHaveCount(10)
+  await page.getByTestId('region-card-bluestone_path').click()
+  await expect(page.getByTestId('stage-map').locator('.sub-node')).toHaveCount(10)
   await page.getByTestId('stage-card-1').getByRole('button', { name: '开始挂机' }).click()
   await expect(page.getByTestId('battle-arena')).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('mobile-idle.png'), fullPage: true })

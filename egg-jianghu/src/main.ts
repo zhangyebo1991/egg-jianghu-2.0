@@ -31,6 +31,8 @@ import {
   getSelectedRegion,
   getUpgradeCost,
   isRegionUnlocked,
+  KILLS_PER_STAGE,
+  STAGES_PER_REGION,
   chooseMysteryBlessing,
   moveFormationSlot,
   moveMartial,
@@ -48,7 +50,7 @@ import {
 } from './game'
 import { formatMartialPassive, getPassiveBonuses, MAX_LEARNED_MARTIALS } from './martials'
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
-import type { ActionResult, CombatEvent, CombatHeroState, CombatStatus, FormationPosition, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
+import type { ActionResult, CombatEvent, CombatHeroState, CombatStatus, FormationPosition, FormationRow, GameState, MysteryBlessingId, RegionDefinition, RegionId } from './types'
 
 type TabId = 'idle' | 'heroes' | 'party' | 'battle' | 'mystery' | 'settings'
 type LevelView = 'regions' | 'stages' | 'combat'
@@ -288,48 +290,78 @@ const renderRegionCard = (regionId: RegionId, index: number): string => {
     ? REGIONS.find((candidate) => candidate.boss.id === region.requiredBossId)
     : undefined
   const trait = enemyTraitById(region.boss.traitId)
+  // 进度点：挂机中的区域按当前小关点亮，否则按已通关小关数
+  const progress = selected ? (state.combat.stage ?? 0) : (state.regionCleared[region.id] ?? 0)
+  const statusText = bossDefeated ? '已问鼎' : unlocked ? '可历练' : `击败${requiredRegion?.boss.name ?? '前一区域 BOSS'}后解锁`
   return `
-    <article class="region-card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-testid="region-card-${region.id}">
-      <div class="region-card-head"><span>其 ${String(index + 1).padStart(2, '0')}</span><b>${bossDefeated ? '已问鼎' : unlocked ? '可历练' : '未解锁'}</b></div>
-      <h3>${region.name}</h3>
-      <p>${region.description}</p>
-      <div class="region-rewards">${region.rewardText}</div>
-      <div class="region-boss"><small>BOSS 特性</small><strong>${trait.name}</strong><span>${trait.counterHint}</span></div>
-      <button class="${selected ? 'secondary-button' : 'primary-button'} full" data-action="open-region" data-region-id="${region.id}" ${!unlocked ? 'disabled' : ''}>
-        ${unlocked ? `进入${region.name}` : `击败${requiredRegion?.boss.name ?? '前一区域 BOSS'}后解锁`}
-      </button>
+    <article class="stage-card ${selected ? 'cur-stage' : ''} ${unlocked ? '' : 'locked'}" data-testid="region-card-${region.id}"
+      data-action="open-region" data-region-id="${region.id}">
+      <div class="no">${String(index + 1).padStart(2, '0')}</div>
+      <div class="nm">${region.name}</div>
+      <div class="dif">${statusText} · 守关 BOSS「${trait.name}」</div>
+      <div class="mini">${Array.from({ length: 10 }, (_, k) => `<i class="${k < progress ? 'd' : ''}"></i>`).join('')}</div>
+      <div class="feat">产出 · <b>${region.rewardText}</b></div>
+      <span class="citymark">${unlocked ? '🏯' : '🔒'}</span>
     </article>`
 }
 
 const renderRegionList = (): string => `
   <section class="region-map panel">
     <div class="section-title"><span>大关卡</span><small>击败区域 BOSS 后解锁下一处江湖</small></div>
-    <div class="region-grid">${REGIONS.map((candidate, index) => renderRegionCard(candidate.id, index)).join('')}</div>
+    <div class="stage-grid">${REGIONS.map((candidate, index) => renderRegionCard(candidate.id, index)).join('')}</div>
   </section>`
 
-const renderStageCard = (regionId: RegionId, stage: number): string => {
-  const region = regionById(regionId)!
+const renderSubNode = (region: RegionDefinition, stage: number): string => {
+  const cleared = state.regionCleared[region.id] ?? 0
+  const locked = stage > cleared + 1
+  const current = state.combat.mode === 'idle' && state.combat.status === 'fighting'
+    && state.combat.regionId === region.id && state.combat.stage === stage
   const enemy = region.enemies[(stage - 1) % region.enemies.length]
   const trait = enemyTraitById(enemy.traitId)
-  const active = state.combat.mode === 'idle' && state.combat.status === 'fighting'
-    && state.combat.regionId === region.id && state.combat.stage === stage
   return `
-    <article class="stage-card ${active ? 'active' : ''}" data-testid="stage-card-${stage}">
-      <div class="stage-number"><small>STAGE</small><strong>${String(stage).padStart(2, '0')}</strong></div>
-      <div class="stage-copy"><small>${trait.name}</small><strong>${enemy.name}</strong><span>敌人强度 ${100 + (stage - 1) * 8}% · ${region.rewardText}</span></div>
-      <button class="${active ? 'secondary-button' : 'primary-button'}" data-action="start-stage" data-region-id="${region.id}" data-stage="${stage}">
-        ${active ? '重新开始本关' : '开始挂机'}
+    <div class="sub-node ${locked ? 'lock' : ''} ${current ? 'cur' : ''}" data-testid="stage-card-${stage}">
+      <span class="no">${locked ? '🔒' : String(stage).padStart(2, '0')}</span>
+      <span class="nm">
+        <span class="nm-title">${enemy.name}</span>
+        <span class="pw">${trait.name} · 强度 ${100 + (stage - 1) * 8}%</span>
+      </span>
+      ${stage <= cleared ? '<span class="tag green">已通关</span>' : ''}
+      <button class="${current ? 'secondary-button' : 'primary-button'} sub-start" data-action="start-stage"
+        data-region-id="${region.id}" data-stage="${stage}" ${locked ? 'disabled' : ''}>
+        ${locked ? '未解锁' : current ? '重新开始本关' : '开始挂机'}
       </button>
-    </article>`
+    </div>`
 }
 
 const renderStageList = (): string => {
   const region = regionById(chapterRegionId ?? '') ?? REGIONS[0]
+  const cleared = state.regionCleared[region.id] ?? 0
+  const bossDefeated = state.defeatedBossIds.includes(region.boss.id)
+  const farmingHere = state.combat.mode === 'idle' && state.combat.status === 'fighting' && state.combat.regionId === region.id
   return `
     <div class="level-breadcrumb"><button class="text-button" data-action="back-regions">← 返回大关卡</button><span>江湖关卡 / ${region.name}</span></div>
-    <section class="stage-map panel" data-testid="stage-map">
-      <div class="section-title"><span>小关卡</span><small>点击后立即开始对应关卡的挂机战斗</small></div>
-      <div class="stage-grid">${Array.from({ length: 10 }, (_, index) => renderStageCard(region.id, index + 1)).join('')}</div>
+    <section class="stage-detail panel" data-testid="stage-map">
+      <div class="sd-head">
+        <span class="tt">${region.name}</span>
+        <span class="tag">${bossDefeated ? 'BOSS 已败' : `守关 BOSS「${region.boss.name}」待战`}</span>
+        <span class="hint">每小关清剿 ${KILLS_PER_STAGE} 波后通关；通关全部 ${STAGES_PER_REGION} 小关并击败守关 BOSS，解锁下一处江湖</span>
+        ${farmingHere ? `<span class="tag gold">⚔️ 当前挂机 · 第 ${state.combat.stage ?? 1} 关</span>` : ''}
+      </div>
+      <div class="sd-body">
+        <div class="panel sub-list">
+          <div class="ph">⚔️ 小关卡 · 点击开始挂机</div>
+          <div class="pb">${Array.from({ length: STAGES_PER_REGION }, (_, index) => renderSubNode(region, index + 1)).join('')}</div>
+          <div class="pb hint-line">已通关 ${Math.min(cleared, STAGES_PER_REGION)} / ${STAGES_PER_REGION} · 须依次递进解锁</div>
+        </div>
+        <div class="panel city-panel">
+          <div class="ph">🏯 ${region.name} · 城市</div>
+          <div class="pb empty-state"><span class="empty-icon">🏘️</span><p>城市系统尚在营造中，后续版本将开放店铺、酒馆与奇遇。</p></div>
+        </div>
+        <div class="panel faction-panel">
+          <div class="ph">🏴 本地势力</div>
+          <div class="pb empty-state"><span class="empty-icon">🏮</span><p>本地势力尚未现世，后续版本将开放势力贡献与悬赏任务。</p></div>
+        </div>
+      </div>
     </section>`
 }
 
@@ -785,8 +817,8 @@ app.addEventListener('click', (event) => {
     render()
     return
   }
-  const button = target.closest<HTMLButtonElement>('button[data-action]')
-  if (!button) return
+  const button = target.closest<HTMLElement>('[data-action]')
+  if (!button || (button as HTMLButtonElement).disabled) return
   const { action, blessingId, direction, heroId, martialId, regionId, row, slot, stage } = button.dataset
 
   switch (action) {
@@ -823,8 +855,16 @@ app.addEventListener('click', (event) => {
       break
     }
     case 'open-region': {
-      if (!REGIONS.some((region) => region.id === regionId)) return
-      chapterRegionId = regionId as RegionId
+      const region = REGIONS.find((candidate) => candidate.id === regionId)
+      if (!region) return
+      if (!isRegionUnlocked(state, region.id)) {
+        const requiredRegion = region.requiredBossId
+          ? REGIONS.find((candidate) => candidate.boss.id === region.requiredBossId)
+          : undefined
+        notify(`尚未解锁：击败${requiredRegion?.boss.name ?? '前一区域 BOSS'}后解锁`, 'warning')
+        return
+      }
+      chapterRegionId = region.id
       levelView = 'stages'
       break
     }

@@ -432,44 +432,52 @@
   .log-list .log-reward span { color: #9cc2ef; }
   .empty-copy { display: block !important; color: var(--dim) !important; }
 
-  /* ---- 大关卡 ---- */
+  /* ---- 大关卡（设计稿风格） ---- */
   .region-map { padding: 0; overflow: hidden; }
   .region-map .section-title { padding: 10px 14px; margin-bottom: 0; border-bottom: 1px solid var(--line); }
-  .region-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 14px; }
-  .region-card { position: relative; display: grid; align-content: start; gap: 10px; min-height: 300px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: rgba(0, 0, 0, .2); overflow: hidden; transition: .15s; }
-  .region-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
-  .region-card.selected { border-color: var(--gold-dim); background: rgba(201, 164, 92, .07); box-shadow: 0 0 0 1px var(--gold), 0 0 18px rgba(201, 164, 92, .25); }
-  .region-card.locked { opacity: .45; filter: grayscale(.5); }
-  .region-card:hover.locked { transform: none; border-color: var(--line); }
-  .region-card-head { display: flex; justify-content: space-between; color: var(--dim); font-size: 13px; letter-spacing: 2px; }
-  .region-card-head b { color: var(--gold2); font-weight: normal; }
-  .region-card h3 { color: var(--ink); font-size: 20px; font-weight: bold; letter-spacing: 2px; }
-  .region-card > p { min-height: 58px; color: var(--muted); font-size: 13px; line-height: 1.7; }
-  .region-rewards { padding-block: 7px; color: #a9d193; border-block: 1px solid var(--line); font-size: 13px; }
-  .region-boss { display: grid; gap: 3px; min-height: 77px; }
-  .region-boss small { color: var(--dim); font-size: 13px; letter-spacing: 1px; }
-  .region-boss strong { color: var(--gold2); font-size: 14px; font-weight: normal; }
-  .region-boss span { color: var(--dim); font-size: 13px; line-height: 1.5; }
-  .region-card > button { align-self: end; min-height: 40px; font-size: 14px; line-height: 1.4; }
+  .stage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 12px; padding: 14px; }
+  .stage-card { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 128px; padding: 14px 16px 12px; border: 1px solid var(--line); border-radius: 8px; background: rgba(0, 0, 0, .2); overflow: hidden; transition: .15s; cursor: pointer; }
+  .stage-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+  .stage-card.locked { opacity: .45; filter: grayscale(.4); cursor: not-allowed; }
+  .stage-card:hover.locked { transform: none; border-color: var(--line); }
+  .stage-card.cur-stage { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 18px rgba(201, 164, 92, .25); }
+  .stage-card .no { position: absolute; right: 10px; top: 4px; font-size: 26px; color: rgba(201, 164, 92, .12); font-weight: bold; pointer-events: none; }
+  .stage-card .nm { font-size: 15px; color: var(--ink); letter-spacing: 2px; padding-right: 44px; }
+  .stage-card .dif { font-size: 11px; color: var(--muted); margin: 2px 0 6px; line-height: 1.5; }
+  .stage-card .mini { display: flex; gap: 3px; margin-top: 4px; }
+  .stage-card .mini i { width: 8px; height: 8px; border-radius: 2px; background: rgba(255, 255, 255, .08); }
+  .stage-card .mini i.d { background: var(--gold-dim); }
+  .stage-card .feat { font-size: 11px; margin-top: 6px; color: var(--dim); }
+  .stage-card .feat b { font-weight: normal; }
+  .stage-card .citymark { position: absolute; right: 12px; bottom: 10px; font-size: 16px; opacity: .8; pointer-events: none; }
 
   .level-breadcrumb { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -6px 0 16px; color: var(--dim); font-size: 13px; letter-spacing: 1px; }
   .level-breadcrumb .text-button { padding-left: 0; color: var(--gold); }
 
-  /* ---- 小关卡 ---- */
-  .stage-map { padding: 0; overflow: hidden; }
-  .stage-map .section-title { padding: 10px 14px; margin-bottom: 0; border-bottom: 1px solid var(--line); }
-  .stage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 14px; }
-  .stage-card { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; align-items: center; gap: 16px; min-height: 94px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: rgba(0, 0, 0, .2); transition: .15s; }
-  .stage-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
-  .stage-card.active { border-color: var(--gold); background: rgba(201, 164, 92, .08); box-shadow: 0 0 10px rgba(201, 164, 92, .25); }
-  .stage-number { display: grid; justify-items: center; padding-right: 14px; border-right: 1px solid var(--line); }
-  .stage-number small { color: var(--dim); font-size: 12px; letter-spacing: 2px; }
-  .stage-number strong { color: var(--gold2); font-size: 26px; font-weight: normal; }
-  .stage-copy { display: grid; gap: 4px; min-width: 0; }
-  .stage-copy small { color: var(--gold); font-size: 13px; letter-spacing: 1px; }
-  .stage-copy strong { color: var(--ink); font-size: 15px; font-weight: normal; letter-spacing: 1px; }
-  .stage-copy span { color: var(--dim); font-size: 13px; line-height: 1.5; }
-  .stage-card > button { min-width: 106px; }
+  /* ---- 大关卡详情（小关卡 + 城市 + 本地势力） ---- */
+  .stage-detail { padding: 0; overflow: hidden; }
+  .sd-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .sd-head .tt { font-size: 19px; color: var(--gold2); letter-spacing: 3px; }
+  .sd-head .tag { padding: 2px 8px; border: 1px solid var(--line2); border-radius: 3px; color: var(--muted); background: rgba(0, 0, 0, .3); font-size: 12px; letter-spacing: 1px; }
+  .sd-head .tag.gold { color: var(--gold2); border-color: var(--gold-dim); }
+  .sd-head .hint { margin-left: auto; color: var(--dim); font-size: 12px; line-height: 1.5; }
+  .sd-body { display: grid; grid-template-columns: 300px 1fr 1fr; gap: 14px; align-items: start; padding: 14px; }
+  .sd-body > .panel { padding: 0; overflow: hidden; }
+  .sd-body .ph { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); color: var(--gold2); font-size: 14px; letter-spacing: 1px; }
+  .sd-body .pb { padding: 12px 14px; }
+  .hint-line { color: var(--dim); font-size: 12px; padding-top: 0; }
+  .sub-node { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: rgba(0, 0, 0, .2); font-size: 13px; transition: .12s; }
+  .sub-node:hover { border-color: var(--gold-dim); }
+  .sub-node.lock { opacity: .4; }
+  .sub-node.cur { border-color: var(--gold); box-shadow: 0 0 10px rgba(201, 164, 92, .25); }
+  .sub-node .no { flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: var(--gold2); border: 1px solid var(--gold-dim); background: rgba(201, 164, 92, .12); font-size: 11px; }
+  .sub-node .nm { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+  .sub-node .nm-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 1px; color: var(--ink); }
+  .sub-node .pw { color: var(--dim); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub-node .tag.green { flex: 0 0 auto; padding: 1px 6px; color: #a9d193; border: 1px solid #4a6b3a; border-radius: 3px; font-size: 11px; }
+  .sub-node .sub-start { flex: 0 0 auto; min-height: 28px; padding: 3px 10px; font-size: 12px; }
+  .empty-state { display: grid; justify-items: center; gap: 8px; padding: 26px 14px; color: var(--dim); font-size: 13px; line-height: 1.7; text-align: center; }
+  .empty-state .empty-icon { font-size: 30px; opacity: .55; }
 
   /* ---- 挂机信息 ---- */
   .yield-panel { padding: 0; overflow: hidden; }
@@ -775,6 +783,8 @@
     .hero-detail-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .hero-detail-stats .passive-total { grid-column: 1 / 3; }
     .realm-upgrade { grid-column: 3; }
+    .sd-body { grid-template-columns: 280px 1fr; }
+    .sd-body .city-panel, .sd-body .faction-panel { grid-column: 2; }
   }
 
   @media (max-width: 980px) {
@@ -805,8 +815,9 @@
     .yield-grid { grid-template-columns: repeat(2, 1fr); }
     .yield-grid > div { border-bottom: 1px solid var(--line); }
     .yield-grid > div:nth-child(even) { border-right: 0; }
-    .region-grid { grid-template-columns: repeat(3, minmax(210px, 1fr)); overflow-x: auto; padding-bottom: 12px; }
-    .stage-grid { grid-template-columns: 1fr; }
+    .stage-grid { grid-template-columns: repeat(3, minmax(215px, 1fr)); overflow-x: auto; padding-bottom: 12px; }
+    .sd-body { grid-template-columns: 1fr; }
+    .sd-body .city-panel, .sd-body .faction-panel { grid-column: auto; }
     .boss-intel { grid-template-columns: 1fr; }
     .skill-plan-grid { grid-template-columns: 1fr; }
     .mystery-route { grid-template-columns: repeat(5, minmax(150px, 1fr)); overflow-x: auto; }
@@ -848,13 +859,11 @@
     .mystery-run-head { align-items: flex-start; flex-wrap: wrap; }
     .mystery-run-head > button { width: 100%; }
     .mystery-entry, .mystery-result { padding: 28px 18px; }
-    .region-grid { grid-template-columns: 1fr; overflow: visible; }
-    .region-card { min-height: 0; }
-    .region-card > p, .region-boss { min-height: 0; }
+    .stage-grid { grid-template-columns: 1fr; overflow: visible; }
     .level-breadcrumb { margin-top: -4px; }
-    .stage-card { grid-template-columns: 58px minmax(0, 1fr); gap: 12px; }
-    .stage-number { padding-right: 10px; }
-    .stage-card > button { grid-column: 1 / -1; width: 100%; }
+    .sub-node { flex-wrap: wrap; }
+    .sub-node .pw { width: 100%; }
+    .sub-node .sub-start { width: 100%; }
     .hero-build-lock { align-items: flex-start; }
     .learned-martial-row { grid-template-columns: 42px minmax(0, 1fr); }
     .learned-martial-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; min-width: 0; }

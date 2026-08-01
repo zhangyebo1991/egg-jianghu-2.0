@@ -1,5 +1,13 @@
 import { HEROES, MARTIALS, MYSTERY_BLESSINGS, MYSTERY_ENCOUNTERS, REGIONS, regionById } from './data'
-import { createInitialState, getMysteryChoices, MAX_FORMATION_ROW_SIZE, resumeMysteryCombat, returnToIdle } from './game'
+import {
+  KILLS_PER_STAGE,
+  STAGES_PER_REGION,
+  createInitialState,
+  getMysteryChoices,
+  MAX_FORMATION_ROW_SIZE,
+  resumeMysteryCombat,
+  returnToIdle,
+} from './game'
 import {
   MAX_LEARNED_MARTIALS,
   createLearnedMartial,
@@ -89,7 +97,7 @@ const hydrateLegacyMartials = (
 }
 
 export function hydrateState(raw: unknown, now = Date.now()): GameState {
-  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5 && raw.version !== 6 && raw.version !== 7 && raw.version !== 8)) {
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5 && raw.version !== 6 && raw.version !== 7 && raw.version !== 8 && raw.version !== 9)) {
     throw new Error('存档版本不受支持或格式无效')
   }
   const state = createInitialState(now)
@@ -117,7 +125,7 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
       const progress = state.heroes[hero.id]
       progress.unlocked = hero.initial || imported.unlocked === true
       progress.level = Math.floor(safeNumber(imported.level, 1, 999)) || 1
-      const martialProgress = raw.version === 7 || raw.version === 8
+      const martialProgress = raw.version === 7 || raw.version === 8 || raw.version === 9
         ? hydrateVersion7Martials(imported, allowedMartials)
         : hydrateLegacyMartials(imported, allowedMartials)
       progress.learnedMartials = martialProgress.learnedMartials
@@ -132,7 +140,7 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
       if (!isRecord(entry) || typeof entry.heroId !== 'string' || !availableHeroIds.includes(entry.heroId)) continue
       if (importedFormation.some((slot) => slot.heroId === entry.heroId)) continue
       const row: FormationRow = entry.row === 'back' ? 'back' : 'front'
-      const position = raw.version === 8 ? normalizePosition(entry.position) : 0
+      const position = raw.version === 8 || raw.version === 9 ? normalizePosition(entry.position) : 0
       importedFormation.push({ heroId: entry.heroId, row, position })
     }
   } else if (Array.isArray(raw.party)) {
@@ -156,8 +164,8 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
       state.formation.push({ heroId, row: state.formation.length < 2 ? 'front' : 'back', position: 0 })
     }
   }
-  // position 归一化：v8 保留存档站位并修复同排冲突；旧档按排内顺序紧凑分配
-  if (raw.version === 8) {
+  // position 归一化：v8/v9 保留存档站位并修复同排冲突；旧档按排内顺序紧凑分配
+  if (raw.version === 8 || raw.version === 9) {
     const usedByRow: Record<FormationRow, Set<FormationPosition>> = { front: new Set(), back: new Set() }
     for (const slot of state.formation) {
       const used = usedByRow[slot.row]
@@ -190,6 +198,16 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
     }
   } else if (isRecord(raw.statistics)) {
     state.regionDefeats.bluestone_path = Math.floor(safeNumber(raw.statistics.idleEnemiesDefeated, 0))
+  }
+
+  // 小关递进进度：v9 档保留原值；旧档按击杀数估算，并用当前挂机关兜底，避免"高关被锁"
+  for (const region of REGIONS) {
+    const rawValue = isRecord(raw.regionCleared) ? Math.floor(safeNumber(raw.regionCleared[region.id], 0)) : 0
+    const estimate = Math.floor(state.regionDefeats[region.id] / KILLS_PER_STAGE)
+    const activeStage = isRecord(raw.combat) && raw.combat.regionId === region.id
+      ? Math.floor(safeNumber(raw.combat.stage, 1))
+      : 1
+    state.regionCleared[region.id] = Math.min(STAGES_PER_REGION, Math.max(rawValue, estimate, activeStage - 1))
   }
 
   const importedRegion = typeof raw.selectedRegionId === 'string' ? regionById(raw.selectedRegionId) : undefined
@@ -253,7 +271,7 @@ export function loadGame(storage: StorageLike, now = Date.now()): LoadResult {
   try {
     const raw = JSON.parse(serialized) as unknown
     const state = hydrateState(raw, now)
-    if (isRecord(raw) && raw.version !== 8) saveGame(storage, state, now)
+    if (isRecord(raw) && raw.version !== 9) saveGame(storage, state, now)
     return { state, recoveredFromError: false }
   } catch {
     return { state: createInitialState(now), recoveredFromError: true }

@@ -17,6 +17,7 @@ describe('本地存档', () => {
     state.defeatedBossIds.push('boss_stonebreaker', 'boss_blackwind_chief')
     state.selectedRegionId = 'frost_temple'
     state.regionDefeats.frost_temple = 27
+    state.regionCleared.frost_temple = 7
     state.formation[0].row = 'back'
     state.formation[2].row = 'front'
     saveGame(storage, state, 20_000)
@@ -27,6 +28,7 @@ describe('本地存档', () => {
     expect(loaded.state.defeatedBossIds).toEqual(['boss_stonebreaker', 'boss_blackwind_chief'])
     expect(loaded.state.selectedRegionId).toBe('frost_temple')
     expect(loaded.state.regionDefeats.frost_temple).toBe(27)
+    expect(loaded.state.regionCleared.frost_temple).toBe(7)
     expect(loaded.state.formation).toHaveLength(3)
     expect(loaded.state.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
   })
@@ -49,7 +51,7 @@ describe('本地存档', () => {
     state.resources.reputation = 42
     const imported = importSave(exportSave(state))
     expect(imported.state.resources.reputation).toBe(42)
-    expect(() => hydrateState({ version: 9 })).toThrow(/版本/)
+    expect(() => hydrateState({ version: 10 })).toThrow(/版本/)
   })
 
   it('把 version 6 单武功字段迁移为 version 7 学习账本和四槽', () => {
@@ -66,7 +68,7 @@ describe('本地存档', () => {
     }
 
     const migrated = hydrateState(legacy, 10_000)
-    expect(migrated.version).toBe(8)
+    expect(migrated.version).toBe(9)
     expect(migrated.heroes[heroId].equippedMartialIds).toEqual(['dragon_palm', null, null, null])
     expect(migrated.heroes[heroId].learnedMartials.dragon_palm.invested)
       .toEqual({ silver: 165, experience: 0, pages: 36, reputation: 0 })
@@ -88,7 +90,7 @@ describe('本地存档', () => {
     storage.setItem(SAVE_KEY, JSON.stringify(raw))
 
     const first = loadGame(storage, 10_000).state
-    expect(JSON.parse(storage.getItem(SAVE_KEY)!).version).toBe(8)
+    expect(JSON.parse(storage.getItem(SAVE_KEY)!).version).toBe(9)
     const second = loadGame(storage, 10_000).state
     expect(second.heroes[heroId].learnedMartials).toEqual(first.heroes[heroId].learnedMartials)
   })
@@ -126,7 +128,7 @@ describe('本地存档', () => {
     }
 
     const migrated = hydrateState(legacy, 10_000)
-    expect(migrated.version).toBe(8)
+    expect(migrated.version).toBe(9)
     expect(migrated.formation.map((slot) => slot.heroId)).toEqual(formation.map((slot) => slot.heroId))
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['front', 'front', 'back'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker', 'boss_blackwind_chief'])
@@ -143,7 +145,7 @@ describe('本地存档', () => {
     legacyBase.formation[2].row = 'front'
     const migrated = hydrateState({ ...legacyBase, version: 2, clearedStage: 1 }, 10_000)
 
-    expect(migrated.version).toBe(8)
+    expect(migrated.version).toBe(9)
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker'])
   })
@@ -155,7 +157,7 @@ describe('本地存档', () => {
     const formation = legacy.formation as Array<Record<string, unknown>>
     for (const slot of formation) delete slot.position
     const migrated = hydrateState(legacy, 10_000)
-    expect(migrated.version).toBe(8)
+    expect(migrated.version).toBe(9)
     expect(migrated.formation.map((slot) => slot.position)).toEqual([0, 1, 0])
   })
 
@@ -163,8 +165,32 @@ describe('本地存档', () => {
     const current = createInitialState(10_000)
     current.formation[0].position = 2   // 前排侠客放到 3 号位，1、2 号位空
     const migrated = hydrateState(structuredClone(current), 10_000)
-    expect(migrated.version).toBe(8)
+    expect(migrated.version).toBe(9)
     expect(migrated.formation.find((slot) => slot.heroId === current.formation[0].heroId)?.position).toBe(2)
+  })
+
+  it('把 version 8 存档迁移为 version 9，并按击杀估算已通关小关数', () => {
+    const raw = structuredClone(createInitialState(10_000)) as unknown as Record<string, unknown>
+    raw.version = 8
+    delete raw.regionCleared
+    const regionDefeats = raw.regionDefeats as Record<string, number>
+    regionDefeats.bluestone_path = 27
+    regionDefeats.blackwind_fort = 45
+    regionDefeats.frost_temple = 0
+    const migrated = hydrateState(raw, 10_000)
+    expect(migrated.version).toBe(9)
+    expect(migrated.regionCleared).toEqual({ bluestone_path: 2, blackwind_fort: 4, frost_temple: 0 })
+  })
+
+  it('迁移时按当前挂机关卡兜底，避免高关被锁', () => {
+    const raw = structuredClone(createInitialState(10_000)) as unknown as Record<string, unknown>
+    raw.version = 8
+    delete raw.regionCleared
+    const regionDefeats = raw.regionDefeats as Record<string, number>
+    regionDefeats.bluestone_path = 3
+    raw.combat = { mode: 'idle', status: 'fighting', regionId: 'bluestone_path', stage: 10 }
+    const migrated = hydrateState(raw, 10_000)
+    expect(migrated.regionCleared.bluestone_path).toBe(9)
   })
 
   it('秘境路线、祝福和进行中的层战斗可以随存档恢复', () => {

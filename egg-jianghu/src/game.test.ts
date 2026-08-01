@@ -18,6 +18,7 @@ import {
   getMysteryChoices,
   getPartySynergy,
   isRegionUnlocked,
+  STAGES_PER_REGION,
   moveFormationSlot,
   moveMartial,
   recruitHero,
@@ -54,6 +55,7 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     const state = createInitialState()
     const beforeSilver = state.resources.silver
     const beforeExperience = state.resources.experience
+    state.regionCleared.bluestone_path = 2
     expect(startIdleStage(state, 'bluestone_path', 3)).toEqual({ ok: true, message: '已开始青石古道第 3 关挂机战斗' })
     expect(state.combat.stage).toBe(3)
     for (let index = 0; index < 20; index += 1) stepCombat(state)
@@ -65,6 +67,7 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
 
   it('停止挂机会保留既得收益且不会结算当前敌人', () => {
     const state = createInitialState()
+    state.regionCleared.bluestone_path = 1
     expect(startIdleStage(state, 'bluestone_path', 2).ok).toBe(true)
     for (let index = 0; index < 100 && state.statistics.idleEnemiesDefeated === 0; index += 1) stepCombat(state)
 
@@ -89,6 +92,42 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(state.statistics.idleEnemiesDefeated).toBe(0)
     expect(startIdleStage(state, 'blackwind_fort', 1)).toEqual({ ok: false, message: '尚未击败前一区域 BOSS' })
     expect(startIdleStage(state, 'bluestone_path', 11)).toEqual({ ok: false, message: '小关卡不存在' })
+    expect(startIdleStage(state, 'bluestone_path', 2)).toEqual({ ok: false, message: '需先通关前一关才能开始本关挂机' })
+  })
+
+  it('递进解锁：须先通关前一关才能开始下一关挂机', () => {
+    const state = createInitialState()
+    expect(startIdleStage(state, 'bluestone_path', 2).ok).toBe(false)
+    expect(startIdleStage(state, 'bluestone_path', 1)).toEqual({ ok: true, message: '已开始青石古道第 1 关挂机战斗' })
+    expect(state.combat.stageKills).toBe(0)
+    for (let index = 0; index < 2000 && state.regionCleared.bluestone_path < 1; index += 1) stepCombat(state)
+    expect(state.regionCleared.bluestone_path).toBe(1)
+    expect(state.combat.stageKills).toBe(0)
+    expect(state.combat.logs.some((event) => event.text.includes('第 1 关已通关'))).toBe(true)
+    expect(startIdleStage(state, 'bluestone_path', 2).ok).toBe(true)
+    expect(startIdleStage(state, 'bluestone_path', 3).ok).toBe(false)
+  })
+
+  it('中途击杀数在胜利重建战斗后保留，通关后清零', () => {
+    const state = createInitialState()
+    startIdleStage(state, 'bluestone_path', 1)
+    for (let index = 0; index < 2000 && state.statistics.idleEnemiesDefeated < 5; index += 1) stepCombat(state)
+    expect(state.statistics.idleEnemiesDefeated).toBe(5)
+    expect(state.combat.stageKills).toBe(5)
+    expect(state.regionCleared.bluestone_path).toBe(0)
+    for (let index = 0; index < 2000 && state.regionCleared.bluestone_path < 1; index += 1) stepCombat(state)
+    expect(state.regionCleared.bluestone_path).toBe(1)
+    expect(state.combat.stageKills).toBe(0)
+  })
+
+  it('通关全部小关后仍可重复挂机且不再解锁', () => {
+    const state = createInitialState()
+    state.regionCleared.bluestone_path = STAGES_PER_REGION - 1
+    expect(startIdleStage(state, 'bluestone_path', STAGES_PER_REGION).ok).toBe(true)
+    for (let index = 0; index < 2000 && state.regionCleared.bluestone_path < STAGES_PER_REGION; index += 1) stepCombat(state)
+    expect(state.regionCleared.bluestone_path).toBe(STAGES_PER_REGION)
+    expect(state.combat.logs.some((event) => event.text.includes('全部小关已通关'))).toBe(true)
+    expect(startIdleStage(state, 'bluestone_path', STAGES_PER_REGION).ok).toBe(true)
   })
 
   it('调整同门阵容会激活门派羁绊', () => {

@@ -51,6 +51,10 @@ export const MAX_FORMATION_ROW_SIZE = 3
 export const FRONT_ATTACK_MULTIPLIER = 0.9
 export const FRONT_DAMAGE_TAKEN_MULTIPLIER = 0.8
 export const BACK_ATTACK_MULTIPLIER = 1.15
+/** 每小关需清剿的敌人数，达标后判定通关并解锁下一小关 */
+export const KILLS_PER_STAGE = 10
+/** 每个大区域包含的小关卡数 */
+export const STAGES_PER_REGION = 10
 const emptyHeroProgress = (unlocked: boolean, martialId: string | null): HeroProgress => ({
   unlocked,
   level: 1,
@@ -68,7 +72,7 @@ export function createInitialState(now = Date.now()): GameState {
   )
 
   const state: GameState = {
-    version: 8,
+    version: 9,
     resources: { silver: 180, experience: 90, pages: 15, reputation: 0 },
     heroes,
     unlockedMartials: startingMartials,
@@ -80,6 +84,11 @@ export function createInitialState(now = Date.now()): GameState {
     selectedRegionId: REGIONS[0].id,
     defeatedBossIds: [],
     regionDefeats: {
+      bluestone_path: 0,
+      blackwind_fort: 0,
+      frost_temple: 0,
+    },
+    regionCleared: {
       bluestone_path: 0,
       blackwind_fort: 0,
       frost_temple: 0,
@@ -232,7 +241,7 @@ const createCombatParty = (state: GameState): CombatHeroState[] => state.formati
   return { ...slot, hp: maxHp, maxHp, martialCooldowns, statuses: [] }
 })
 
-function createIdleCombat(state: GameState, stage: number | null = null, fighting = false): CombatState {
+function createIdleCombat(state: GameState, stage: number | null = null, fighting = false, stageKills = 0): CombatState {
   const region = getSelectedRegion(state)
   const stageNumber = stage ?? 1
   const enemy = region.enemies[(stageNumber - 1) % region.enemies.length]
@@ -255,6 +264,7 @@ function createIdleCombat(state: GameState, stage: number | null = null, fightin
     comboIndex: 0,
     turnIndex: 0,
     round: 0,
+    stageKills,
     logs: [],
     lastEvent: null,
   }
@@ -279,6 +289,7 @@ function createChallengeCombat(state: GameState, region: RegionDefinition): Comb
     comboIndex: 0,
     turnIndex: 0,
     round: 0,
+    stageKills: 0,
     logs: [],
     lastEvent: null,
   }
@@ -307,6 +318,7 @@ function createMysteryCombat(state: GameState, encounter: MysteryEncounterDefini
     comboIndex: 0,
     turnIndex: 0,
     round: 0,
+    stageKills: 0,
     logs: [],
     lastEvent: null,
   }
@@ -343,14 +355,25 @@ function rewardIdleVictory(state: GameState): void {
   state.statistics.idleEnemiesDefeated += 1
   state.statistics.silverEarned += silver
 
+  // 小关递进：当前关累计击杀达标后判定通关并解锁下一小关
+  const nextStageKills = (state.combat.stageKills ?? 0) + 1
+  const reached = nextStageKills >= KILLS_PER_STAGE
+  let unlockNote = ''
+  if (reached && stage > (state.regionCleared[region.id] ?? 0)) {
+    state.regionCleared[region.id] = Math.min(STAGES_PER_REGION, Math.max(state.regionCleared[region.id] ?? 0, stage))
+    unlockNote = stage >= STAGES_PER_REGION
+      ? '全部小关已通关，可前往「战斗」页挑战守关 BOSS。'
+      : `第 ${stage} 关已通关，解锁第 ${stage + 1} 关。`
+  }
+
   const oldLogs = state.combat.logs
-  const next = createIdleCombat(state, stage, true)
+  const next = createIdleCombat(state, stage, true, reached ? 0 : nextStageKills)
   next.logs = oldLogs
   state.combat = next
   addLog(
     state.combat,
     'reward',
-    `肃清${region.name}一路敌手，获得 ${silver} 银两、${experience} 阅历${pages ? `、${pages} 残页` : ''}。`,
+    `肃清${region.name}一路敌手，获得 ${silver} 银两、${experience} 阅历${pages ? `、${pages} 残页` : ''}。${unlockNote ? ` ${unlockNote}` : ''}`,
   )
 }
 
@@ -710,7 +733,7 @@ export function stepCombat(state: GameState): void {
   }
 
   const oldLogs = combat.logs
-  const next = createIdleCombat(state, combat.stage ?? 1, true)
+  const next = createIdleCombat(state, combat.stage ?? 1, true, combat.stageKills ?? 0)
   next.logs = oldLogs
   state.combat = next
   addLog(state.combat, 'system', '众人暂退古亭调息，片刻后重新上路。')
@@ -804,6 +827,7 @@ export function startIdleStage(state: GameState, regionId: RegionId, stage: numb
   if (!Number.isInteger(stage) || stage < 1 || stage > 10) return { ok: false, message: '小关卡不存在' }
   if (isBuildLocked(state)) return { ok: false, message: '交锋或秘境探索期间不可开始挂机战斗' }
   if (!isRegionUnlocked(state, region.id)) return { ok: false, message: '尚未击败前一区域 BOSS' }
+  if (stage > (state.regionCleared[region.id] ?? 0) + 1) return { ok: false, message: '需先通关前一关才能开始本关挂机' }
 
   state.selectedRegionId = region.id
   state.combat = createIdleCombat(state, stage, true)
