@@ -32,6 +32,7 @@ import {
   getUpgradeCost,
   isRegionUnlocked,
   chooseMysteryBlessing,
+  moveFormationSlot,
   moveMartial,
   removeFromFormation,
   returnToIdle,
@@ -41,13 +42,13 @@ import {
   startIdleStage,
   startChallenge,
   stepCombat,
-  swapFormationRows,
+  swapFormationSlots,
   unequipMartial,
   upgradeHero,
 } from './game'
 import { formatMartialPassive, getPassiveBonuses, MAX_LEARNED_MARTIALS } from './martials'
 import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
-import type { ActionResult, CombatEvent, CombatHeroState, CombatStatus, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
+import type { ActionResult, CombatEvent, CombatHeroState, CombatStatus, FormationPosition, FormationRow, GameState, MysteryBlessingId, RegionId } from './types'
 
 type TabId = 'idle' | 'heroes' | 'party' | 'battle' | 'mystery'
 type LevelView = 'regions' | 'stages' | 'combat'
@@ -202,7 +203,9 @@ const renderHeroFighter = (member: CombatHeroState, index: number): string => {
 }
 
 const renderCombatRow = (row: FormationRow): string => {
-  const members = state.combat.partyMembers.filter((member) => member.row === row)
+  const members = state.combat.partyMembers
+    .filter((member) => member.row === row)
+    .sort((a, b) => a.position - b.position)
   return `
     <div class="combat-row ${row}" data-testid="combat-${row}-row">
       <span class="combat-row-label">${row === 'front' ? '前排' : '后排'}</span>
@@ -492,16 +495,18 @@ const renderFormationPanel = (): string => {
   const activeBonds = getActiveBonds(state)
   const activeCombos = getActiveCombos(state)
   const renderRow = (row: FormationRow): string => {
-    const members = state.formation.filter((slot) => slot.row === row)
-    const slots = [0, 1, 2].map((index) => {
-      const member = members[index]
-      if (!member) return '<div class="formation-slot empty"><em>＋<small>拖入侠客</small></em></div>'
+    const memberByPosition = new Map(
+      state.formation.filter((slot) => slot.row === row).map((slot) => [slot.position, slot]),
+    )
+    const slots = ([0, 1, 2] as const).map((position) => {
+      const member = memberByPosition.get(position)
+      if (!member) return `<div class="formation-slot empty" data-position="${position}"><em>＋<small>拖入侠客</small></em></div>`
       const hero = heroById(member.heroId)!
       const progress = state.heroes[member.heroId]
       const stats = getHeroStats(state, member.heroId)
       const targetRow: FormationRow = row === 'front' ? 'back' : 'front'
       return `
-        <article class="formation-slot filled row-${row}" data-drag-hero="${hero.id}" draggable="${locked ? 'false' : 'true'}" data-testid="formation-slot-${hero.id}">
+        <article class="formation-slot filled row-${row}" data-drag-hero="${hero.id}" data-position="${position}" draggable="${locked ? 'false' : 'true'}" data-testid="formation-slot-${hero.id}">
           <button type="button" class="slot-remove text-button danger" data-action="remove-formation" data-hero-id="${hero.id}"
             ${locked ? 'disabled' : ''} aria-label="让${hero.name}下阵" title="下阵">✕</button>
           <div class="portrait element-${hero.element}">${hero.name.slice(-1)}</div>
@@ -915,18 +920,21 @@ app.addEventListener('pointerdown', (event) => {
 app.addEventListener('pointerup', () => { dragCandidatePressed = false })
 app.addEventListener('pointercancel', () => { dragCandidatePressed = false })
 
-const placeHeroOnFormation = (heroId: string, row: FormationRow, occupantId?: string): ActionResult => {
+const placeHeroOnFormation = (heroId: string, row: FormationRow, position?: FormationPosition, occupantId?: string): ActionResult => {
   const slotIndex = state.formation.findIndex((candidate) => candidate.heroId === heroId)
   if (occupantId && occupantId !== heroId) {
-    // 落到已占用的格子：阵容内互换前后排；阵容外直接替换该格侠客
-    if (slotIndex >= 0) return swapFormationRows(state, heroId, occupantId)
-    return setPartySlot(state, state.formation.findIndex((candidate) => candidate.heroId === occupantId), heroId)
+    // 落到已占用的格子：阵容内互换阵位；阵容外顶替该格侠客
+    if (slotIndex >= 0) return swapFormationSlots(state, heroId, occupantId)
+    const occupantIndex = state.formation.findIndex((candidate) => candidate.heroId === occupantId)
+    if (occupantIndex < 0) return addToFormation(state, heroId, row, position)
+    return setPartySlot(state, occupantIndex, heroId)
   }
   if (slotIndex >= 0) {
-    if (state.formation[slotIndex].row === row) return { ok: true, message: '侠客已在这一排' }
-    return setFormationRow(state, slotIndex, row)
+    const currentSlot = state.formation[slotIndex]
+    if (currentSlot.row === row && currentSlot.position === position) return { ok: true, message: '侠客已在此阵位' }
+    return moveFormationSlot(state, heroId, row, position)
   }
-  return addToFormation(state, heroId, row)
+  return addToFormation(state, heroId, row, position)
 }
 
 app.addEventListener('dragstart', (event) => {
@@ -981,8 +989,12 @@ app.addEventListener('drop', (event) => {
     return
   }
   const row = rowEl.dataset.dropRow as FormationRow
-  const occupantId = target.closest<HTMLElement>('.formation-slot.filled')?.dataset.dragHero
-  notify(placeHeroOnFormation(heroId, row, occupantId))
+  const slotEl = target.closest<HTMLElement>('.formation-slot')
+  const position = slotEl?.dataset.position !== undefined
+    ? Number(slotEl.dataset.position) as FormationPosition
+    : undefined
+  const occupantId = slotEl?.classList.contains('filled') ? slotEl.dataset.dragHero : undefined
+  notify(placeHeroOnFormation(heroId, row, position, occupantId))
   persistAndRender()
 })
 

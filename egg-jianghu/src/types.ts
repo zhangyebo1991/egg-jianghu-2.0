@@ -2,6 +2,7 @@ export type Wuxing = '金' | '木' | '水' | '火' | '土'
 export type MartialStyle = '刚' | '柔'
 export type Sect = '丐帮' | '峨眉' | '武当'
 export type FormationRow = 'front' | 'back'
+export type FormationPosition = 0 | 1 | 2
 export type RegionId = 'bluestone_path' | 'blackwind_fort' | 'frost_temple'
 export type EnemyTraitId = 'none' | 'formation_breaker' | 'iron_armor' | 'frost_aura'
 export type MartialSkillKind = 'blazing_palm' | 'frost_flurry' | 'taiji_restore' | 'vajra_sunder' | 'earth_guard'
@@ -142,6 +143,7 @@ export interface Resources {
 export interface FormationSlot {
   heroId: string
   row: FormationRow
+  position: FormationPosition
 }
 
 export interface CombatHeroState extends FormationSlot {
@@ -226,7 +228,7 @@ export interface GameStatistics {
 }
 
 export interface GameState {
-  version: 7
+  version: 8
   resources: Resources
   heroes: Record<string, HeroProgress>
   unlockedMartials: string[]

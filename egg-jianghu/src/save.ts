@@ -6,7 +6,7 @@ import {
   emptyEquippedMartialIds,
   getLegacyInvestment,
 } from './martials'
-import type { FormationRow, FormationSlot, GameState, MysteryBlessingId } from './types'
+import type { FormationPosition, FormationRow, FormationSlot, GameState, MysteryBlessingId } from './types'
 
 export const SAVE_KEY = 'egg-jianghu-2-save-v1'
 
@@ -26,6 +26,9 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const safeNumber = (value: unknown, fallback: number, max = Number.MAX_SAFE_INTEGER): number =>
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : fallback
+
+const normalizePosition = (value: unknown): FormationPosition =>
+  value === 0 || value === 1 || value === 2 ? value : 0
 
 const safeInvestment = (value: unknown) => {
   const source = isRecord(value) ? value : {}
@@ -86,7 +89,7 @@ const hydrateLegacyMartials = (
 }
 
 export function hydrateState(raw: unknown, now = Date.now()): GameState {
-  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5 && raw.version !== 6 && raw.version !== 7)) {
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== 5 && raw.version !== 6 && raw.version !== 7 && raw.version !== 8)) {
     throw new Error('存档版本不受支持或格式无效')
   }
   const state = createInitialState(now)
@@ -114,7 +117,7 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
       const progress = state.heroes[hero.id]
       progress.unlocked = hero.initial || imported.unlocked === true
       progress.level = Math.floor(safeNumber(imported.level, 1, 999)) || 1
-      const martialProgress = raw.version === 7
+      const martialProgress = raw.version === 7 || raw.version === 8
         ? hydrateVersion7Martials(imported, allowedMartials)
         : hydrateLegacyMartials(imported, allowedMartials)
       progress.learnedMartials = martialProgress.learnedMartials
@@ -129,13 +132,14 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
       if (!isRecord(entry) || typeof entry.heroId !== 'string' || !availableHeroIds.includes(entry.heroId)) continue
       if (importedFormation.some((slot) => slot.heroId === entry.heroId)) continue
       const row: FormationRow = entry.row === 'back' ? 'back' : 'front'
-      importedFormation.push({ heroId: entry.heroId, row })
+      const position = raw.version === 8 ? normalizePosition(entry.position) : 0
+      importedFormation.push({ heroId: entry.heroId, row, position })
     }
   } else if (Array.isArray(raw.party)) {
     for (const heroId of raw.party) {
       if (typeof heroId !== 'string' || !availableHeroIds.includes(heroId)) continue
       if (importedFormation.some((slot) => slot.heroId === heroId)) continue
-      importedFormation.push({ heroId, row: importedFormation.length < 2 ? 'front' : 'back' })
+      importedFormation.push({ heroId, row: importedFormation.length < 2 ? 'front' : 'back', position: 0 })
     }
   }
 
@@ -149,12 +153,26 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
   if (state.formation.length === 0) {
     // 空阵容无法战斗：用已拥有侠客补一支默认队伍（前排两人、后排一人）
     for (const heroId of availableHeroIds.slice(0, 3)) {
-      state.formation.push({ heroId, row: state.formation.length < 2 ? 'front' : 'back' })
+      state.formation.push({ heroId, row: state.formation.length < 2 ? 'front' : 'back', position: 0 })
     }
   }
-  if (state.formation.length > 1) {
-    if (!state.formation.some((slot) => slot.row === 'front')) state.formation[0].row = 'front'
-    if (!state.formation.some((slot) => slot.row === 'back')) state.formation.at(-1)!.row = 'back'
+  // position 归一化：v8 保留存档站位并修复同排冲突；旧档按排内顺序紧凑分配
+  if (raw.version === 8) {
+    const usedByRow: Record<FormationRow, Set<FormationPosition>> = { front: new Set(), back: new Set() }
+    for (const slot of state.formation) {
+      const used = usedByRow[slot.row]
+      if (used.has(slot.position)) {
+        const fallback = ([0, 1, 2] as const).find((position) => !used.has(position))
+        slot.position = fallback ?? 0
+      }
+      used.add(slot.position)
+    }
+  } else {
+    const counters: Record<FormationRow, number> = { front: 0, back: 0 }
+    for (const slot of state.formation) {
+      slot.position = counters[slot.row] as FormationPosition
+      counters[slot.row] += 1
+    }
   }
   const allowedBossIds = new Set(REGIONS.map((region) => region.boss.id))
   if (Array.isArray(raw.defeatedBossIds)) {
@@ -235,7 +253,7 @@ export function loadGame(storage: StorageLike, now = Date.now()): LoadResult {
   try {
     const raw = JSON.parse(serialized) as unknown
     const state = hydrateState(raw, now)
-    if (isRecord(raw) && raw.version !== 7) saveGame(storage, state, now)
+    if (isRecord(raw) && raw.version !== 8) saveGame(storage, state, now)
     return { state, recoveredFromError: false }
   } catch {
     return { state: createInitialState(now), recoveredFromError: true }

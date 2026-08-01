@@ -18,6 +18,7 @@ import {
   getMysteryChoices,
   getPartySynergy,
   isRegionUnlocked,
+  moveFormationSlot,
   moveMartial,
   recruitHero,
   removeFromFormation,
@@ -29,7 +30,7 @@ import {
   startIdleStage,
   startMystery,
   stepCombat,
-  swapFormationRows,
+  swapFormationSlots,
   unequipMartial,
 } from './game'
 
@@ -101,14 +102,16 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(synergy.attackMultiplier).toBe(1.12)
   })
 
-  it('可在磐石阵与雁行阵之间换位，但前后排都必须保留侠客', () => {
+  it('可在磐石阵与雁行阵之间换位，也允许全部移入后排的单排阵容', () => {
     const state = createInitialState()
     expect(getFormationSummary(state).name).toBe('磐石阵')
 
     expect(setFormationRow(state, 0, 'back')).toEqual({ ok: true, message: expect.stringContaining('后排') })
     expect(state.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'back'])
     expect(getFormationSummary(state).name).toBe('雁行阵')
-    expect(setFormationRow(state, 1, 'back')).toEqual({ ok: false, message: '前后排都至少需要一位侠客' })
+    // 不再要求前后排各至少一位，允许前排全部后撤
+    expect(setFormationRow(state, 1, 'back')).toEqual({ ok: true, message: expect.stringContaining('后排') })
+    expect(state.formation.map((slot) => slot.row)).toEqual(['back', 'back', 'back'])
   })
 
   it('前排优先承受反击，前排减伤且后排提高伤害', () => {
@@ -188,13 +191,14 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(addToFormation(state, 'ning_suyin', 'front')).toEqual({ ok: false, message: expect.stringContaining('前排最多上阵 3 位侠客') })
   })
 
-  it('下阵需为前后排各保留至少一位侠客', () => {
+  it('下阵只要求场上保留至少一位侠客，不再强制前后排齐全', () => {
     const state = createInitialState()   // 初始：前排两人、后排一人
     const backHero = state.formation.find((slot) => slot.row === 'back')!.heroId
-    expect(removeFromFormation(state, backHero)).toEqual({ ok: false, message: '前后排都至少需要一位侠客' })
-    expect(removeFromFormation(state, state.formation[0].heroId).ok).toBe(true)
+    expect(removeFromFormation(state, backHero).ok).toBe(true)
     expect(state.formation).toHaveLength(2)
-    expect(removeFromFormation(state, state.formation[0].heroId)).toEqual({ ok: false, message: '前后排都至少需要一位侠客' })
+    expect(removeFromFormation(state, state.formation[0].heroId).ok).toBe(true)
+    expect(state.formation).toHaveLength(1)
+    expect(removeFromFormation(state, state.formation[0].heroId)).toEqual({ ok: false, message: '至少保留一位侠客出战' })
   })
 
   it('阵容至少保留一位侠客出战', () => {
@@ -203,14 +207,54 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     expect(removeFromFormation(state, state.formation[0].heroId)).toEqual({ ok: false, message: '至少保留一位侠客出战' })
   })
 
-  it('两名侠客可互换前后排阵位', () => {
+  it('两名侠客可互换阵位（含同排换左右位置）', () => {
     const state = createInitialState()
-    const frontHero = state.formation[0].heroId
-    const backHero = state.formation[2].heroId
-    expect(swapFormationRows(state, frontHero, state.formation[1].heroId)).toEqual({ ok: false, message: '两位侠客已在同一排' })
-    expect(swapFormationRows(state, frontHero, 'jiang_wan')).toEqual({ ok: false, message: '无法交换这两个阵位' })
-    expect(swapFormationRows(state, frontHero, backHero).ok).toBe(true)
-    expect(state.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
+    const frontHeroA = state.formation[0].heroId   // 前排 1 号位
+    const frontHeroB = state.formation[1].heroId   // 前排 2 号位
+    const backHero = state.formation[2].heroId     // 后排 1 号位
+    // 同排互换：交换左右位置
+    expect(swapFormationSlots(state, frontHeroA, frontHeroB).ok).toBe(true)
+    expect(state.formation.find((slot) => slot.heroId === frontHeroA)?.position).toBe(1)
+    expect(state.formation.find((slot) => slot.heroId === frontHeroB)?.position).toBe(0)
+    // 阵容外侠客无法交换
+    expect(swapFormationSlots(state, frontHeroA, 'jiang_wan')).toEqual({ ok: false, message: '无法交换这两个阵位' })
+    // 跨排互换：交换 row 与 position
+    expect(swapFormationSlots(state, frontHeroA, backHero).ok).toBe(true)
+    expect(state.formation.find((slot) => slot.heroId === frontHeroA)?.row).toBe('back')
+    expect(state.formation.find((slot) => slot.heroId === backHero)?.row).toBe('front')
+  })
+
+  it('一排只有一位侠客时也可把它移到 3 号位', () => {
+    const state = createInitialState()
+    const [frontHeroA, frontHeroB, backHero] = state.formation.map((slot) => slot.heroId)
+    expect(removeFromFormation(state, frontHeroB).ok).toBe(true)
+    expect(removeFromFormation(state, backHero).ok).toBe(true)
+    expect(state.formation).toHaveLength(1)
+    expect(moveFormationSlot(state, frontHeroA, 'front', 2).ok).toBe(true)
+    expect(state.formation.find((slot) => slot.heroId === frontHeroA)?.position).toBe(2)
+  })
+
+  it('同排可保留空洞：下阵后其他侠客位置不变', () => {
+    const state = createInitialState()
+    const frontHeroA = state.formation[0].heroId   // 前排 1 号位
+    const frontHeroB = state.formation[1].heroId   // 前排 2 号位
+    expect(moveFormationSlot(state, frontHeroA, 'front', 2).ok).toBe(true)   // A 移到 3 号位
+    expect(removeFromFormation(state, frontHeroB).ok).toBe(true)             // 下阵 B
+    expect(state.formation.find((slot) => slot.heroId === frontHeroA)?.position).toBe(2)
+    expect(state.formation.filter((slot) => slot.row === 'front')).toHaveLength(1)
+  })
+
+  it('addToFormation 指定已占用位置时自动落到空位', () => {
+    const state = createInitialState()
+    state.resources.silver = 1_000
+    expect(recruitHero(state, 'jiang_wan').ok).toBe(true)
+    // 后排已有 C(0)，指定 position 0 会被挤到空位 1
+    expect(addToFormation(state, 'jiang_wan', 'back', 0).ok).toBe(true)
+    expect(state.formation.find((slot) => slot.heroId === 'jiang_wan')?.position).toBe(1)
+    // 指定空位 2 则直接放置
+    expect(recruitHero(state, 'yan_qiusheng').ok).toBe(true)
+    expect(addToFormation(state, 'yan_qiusheng', 'back', 2).ok).toBe(true)
+    expect(state.formation.find((slot) => slot.heroId === 'yan_qiusheng')?.position).toBe(2)
   })
 
   it('挑战交锋期间不可上阵或下阵', () => {

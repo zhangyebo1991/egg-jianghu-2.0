@@ -232,6 +232,9 @@ test('可在侠客页布阵（拖拽/按钮）且战斗按阵位展示', async (
     page.getByTestId('formation-front-row').locator('.formation-slot.empty').first(),
   )
   await expect(page.getByTestId('synergy-strip')).toContainText('磐石阵')
+  // 拖入空位的侠客落在指定格子（position 0）
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation.map((slot) => `${slot.row}:${slot.position}`)))
+    .toEqual(['back:1', 'front:1', 'front:0'])
   await page.getByTestId('formation-panel').screenshot({ path: testInfo.outputPath('desktop-formation.png') })
 
   // 拖回名册下阵：阵容剩 2 人且前后排各一
@@ -262,6 +265,32 @@ test('可在侠客页布阵（拖拽/按钮）且战斗按阵位展示', async (
   await page.getByRole('button', { name: /侠客/ }).click()
   await expect(page.locator('.slot-move:not([disabled])')).toHaveCount(0)
   await expect(page.locator('.slot-remove:not([disabled])')).toHaveCount(0)
+})
+
+test('可在同排拖到指定格子并保留空洞', async ({ page }) => {
+  await page.getByRole('button', { name: /侠客/ }).click()
+  await expect(page.getByTestId('formation-panel')).toBeVisible()
+  // 初始前排两人（1、2 号位）、后排一人
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation.map((slot) => `${slot.row}:${slot.position}`)))
+    .toEqual(['front:0', 'front:1', 'back:0'])
+
+  // 前排 2 号位侠客拖到 3 号位（同排换位，形成 2 号位空洞）
+  await dragHero(
+    page,
+    page.getByTestId('formation-front-row').locator('.formation-slot.filled').nth(1),
+    page.getByTestId('formation-front-row').locator('.formation-slot.empty').first(),
+  )
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation.map((slot) => `${slot.row}:${slot.position}`).sort()))
+    .toEqual(['back:0', 'front:0', 'front:2'])
+
+  // 拖回名册下阵前排 1 号位，剩前排 3 号位一人，空洞保留
+  await dragHero(
+    page,
+    page.getByTestId('formation-front-row').locator('.formation-slot.filled').first(),
+    page.locator('.hero-roster-card').first(),
+  )
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation.map((slot) => `${slot.row}:${slot.position}`).sort()))
+    .toEqual(['back:0', 'front:2'])
 })
 
 test('击败克制型 BOSS 后解锁区域并能在刷新后恢复', async ({ page }, testInfo) => {

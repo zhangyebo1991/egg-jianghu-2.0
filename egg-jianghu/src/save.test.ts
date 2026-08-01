@@ -49,7 +49,7 @@ describe('本地存档', () => {
     state.resources.reputation = 42
     const imported = importSave(exportSave(state))
     expect(imported.state.resources.reputation).toBe(42)
-    expect(() => hydrateState({ version: 8 })).toThrow(/版本/)
+    expect(() => hydrateState({ version: 9 })).toThrow(/版本/)
   })
 
   it('把 version 6 单武功字段迁移为 version 7 学习账本和四槽', () => {
@@ -66,7 +66,7 @@ describe('本地存档', () => {
     }
 
     const migrated = hydrateState(legacy, 10_000)
-    expect(migrated.version).toBe(7)
+    expect(migrated.version).toBe(8)
     expect(migrated.heroes[heroId].equippedMartialIds).toEqual(['dragon_palm', null, null, null])
     expect(migrated.heroes[heroId].learnedMartials.dragon_palm.invested)
       .toEqual({ silver: 165, experience: 0, pages: 36, reputation: 0 })
@@ -88,7 +88,7 @@ describe('本地存档', () => {
     storage.setItem(SAVE_KEY, JSON.stringify(raw))
 
     const first = loadGame(storage, 10_000).state
-    expect(JSON.parse(storage.getItem(SAVE_KEY)!).version).toBe(7)
+    expect(JSON.parse(storage.getItem(SAVE_KEY)!).version).toBe(8)
     const second = loadGame(storage, 10_000).state
     expect(second.heroes[heroId].learnedMartials).toEqual(first.heroes[heroId].learnedMartials)
   })
@@ -126,7 +126,7 @@ describe('本地存档', () => {
     }
 
     const migrated = hydrateState(legacy, 10_000)
-    expect(migrated.version).toBe(7)
+    expect(migrated.version).toBe(8)
     expect(migrated.formation.map((slot) => slot.heroId)).toEqual(formation.map((slot) => slot.heroId))
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['front', 'front', 'back'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker', 'boss_blackwind_chief'])
@@ -143,9 +143,28 @@ describe('本地存档', () => {
     legacyBase.formation[2].row = 'front'
     const migrated = hydrateState({ ...legacyBase, version: 2, clearedStage: 1 }, 10_000)
 
-    expect(migrated.version).toBe(7)
+    expect(migrated.version).toBe(8)
     expect(migrated.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
     expect(migrated.defeatedBossIds).toEqual(['boss_stonebreaker'])
+  })
+
+  it('version 7 旧档会按排内顺序补齐 position 并升级为 version 8', () => {
+    const current = createInitialState(10_000)
+    const legacy = structuredClone(current) as unknown as Record<string, unknown>
+    legacy.version = 7
+    const formation = legacy.formation as Array<Record<string, unknown>>
+    for (const slot of formation) delete slot.position
+    const migrated = hydrateState(legacy, 10_000)
+    expect(migrated.version).toBe(8)
+    expect(migrated.formation.map((slot) => slot.position)).toEqual([0, 1, 0])
+  })
+
+  it('version 8 存档会保留空洞站位', () => {
+    const current = createInitialState(10_000)
+    current.formation[0].position = 2   // 前排侠客放到 3 号位，1、2 号位空
+    const migrated = hydrateState(structuredClone(current), 10_000)
+    expect(migrated.version).toBe(8)
+    expect(migrated.formation.find((slot) => slot.heroId === current.formation[0].heroId)?.position).toBe(2)
   })
 
   it('秘境路线、祝福和进行中的层战斗可以随存档恢复', () => {

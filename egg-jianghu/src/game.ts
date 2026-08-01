@@ -28,6 +28,7 @@ import type {
   CombatHeroState,
   CombatEvent,
   CombatState,
+  FormationPosition,
   FormationRow,
   FormationSummary,
   GameState,
@@ -67,13 +68,14 @@ export function createInitialState(now = Date.now()): GameState {
   )
 
   const state: GameState = {
-    version: 7,
+    version: 8,
     resources: { silver: 180, experience: 90, pages: 15, reputation: 0 },
     heroes,
     unlockedMartials: startingMartials,
     formation: HEROES.filter((hero) => hero.initial).slice(0, 3).map((hero, index) => ({
       heroId: hero.id,
       row: index < 2 ? 'front' : 'back',
+      position: index < 2 ? index as FormationPosition : 0,
     })),
     selectedRegionId: REGIONS[0].id,
     defeatedBossIds: [],
@@ -997,35 +999,50 @@ export function setPartySlot(state: GameState, slot: number, heroId: string): Ac
   return { ok: true, message: `${hero.name}已进入第 ${slot + 1} 位` }
 }
 
+const isFormationPosition = (value: number): value is FormationPosition =>
+  value === 0 || value === 1 || value === 2
+
+function findFreePosition(state: GameState, row: FormationRow, excludeHeroId?: string): FormationPosition | null {
+  const occupied = new Set(
+    state.formation
+      .filter((slot) => slot.row === row && slot.heroId !== excludeHeroId)
+      .map((slot) => slot.position),
+  )
+  for (const position of [0, 1, 2] as const) {
+    if (!occupied.has(position)) return position
+  }
+  return null
+}
+
 export function setFormationRow(state: GameState, slot: number, row: FormationRow): ActionResult {
   const formationSlot = state.formation[slot]
   if (!formationSlot || (row !== 'front' && row !== 'back')) return { ok: false, message: '无法调整这个阵位' }
   if (isBuildLocked(state)) return { ok: false, message: state.mystery.run ? '秘境探索期间不可换位' : '挑战中不可换位，请先完成或退出本场战斗' }
   if (formationSlot.row === row) return { ok: false, message: '侠客已在这一排' }
 
-  const nextRows = state.formation.map((candidate, index) => index === slot ? row : candidate.row)
-  if (!nextRows.includes('front') || !nextRows.includes('back')) {
-    return { ok: false, message: '前后排都至少需要一位侠客' }
-  }
-  if (state.formation.filter((candidate) => candidate.row === row).length >= MAX_FORMATION_ROW_SIZE) {
-    return { ok: false, message: `${row === 'front' ? '前排' : '后排'}最多 ${MAX_FORMATION_ROW_SIZE} 位侠客` }
-  }
+  const position = findFreePosition(state, row, formationSlot.heroId)
+  if (position === null) return { ok: false, message: `${row === 'front' ? '前排' : '后排'}最多 ${MAX_FORMATION_ROW_SIZE} 位侠客` }
 
   formationSlot.row = row
+  formationSlot.position = position
   state.combat = createIdleCombat(state)
   addLog(state.combat, 'system', `阵型切换为「${getFormationSummary(state).name}」，众人重新列阵。`)
   return { ok: true, message: `${heroById(formationSlot.heroId)?.name ?? '侠客'}已调至${row === 'front' ? '前排' : '后排'}` }
 }
 
-export function addToFormation(state: GameState, heroId: string, row: FormationRow): ActionResult {
+export function addToFormation(state: GameState, heroId: string, row: FormationRow, position?: FormationPosition): ActionResult {
   const hero = heroById(heroId)
   if (!hero || !state.heroes[heroId]?.unlocked) return { ok: false, message: '无法让这位侠客上阵' }
-  if (row !== 'front' && row !== 'back') return { ok: false, message: '无法调整这个阵位' }
+  if (row !== 'front' && row !== 'back' || (position !== undefined && !isFormationPosition(position))) {
+    return { ok: false, message: '无法调整这个阵位' }
+  }
   if (isBuildLocked(state)) return { ok: false, message: state.mystery.run ? '秘境探索期间不可换阵' : '挑战中不可换阵，请先完成或退出本场战斗' }
   if (state.formation.some((slot) => slot.heroId === heroId)) return { ok: false, message: `${hero.name}已在阵容中` }
-  if (state.formation.filter((slot) => slot.row === row).length >= MAX_FORMATION_ROW_SIZE) {
-    return { ok: false, message: `${row === 'front' ? '前排' : '后排'}最多上阵 ${MAX_FORMATION_ROW_SIZE} 位侠客` }
-  }  state.formation.push({ heroId, row })
+  const targetPosition = position !== undefined && !state.formation.some((slot) => slot.row === row && slot.position === position)
+    ? position
+    : findFreePosition(state, row)
+  if (targetPosition === null) return { ok: false, message: `${row === 'front' ? '前排' : '后排'}最多上阵 ${MAX_FORMATION_ROW_SIZE} 位侠客` }
+  state.formation.push({ heroId, row, position: targetPosition })
   state.combat = createIdleCombat(state)
   addLog(state.combat, 'system', `${hero.name}入列${row === 'front' ? '前排' : '后排'}，众人重新列阵。`)
   return { ok: true, message: `${hero.name}已上阵，位于${row === 'front' ? '前排' : '后排'}` }
@@ -1038,23 +1055,36 @@ export function removeFromFormation(state: GameState, heroId: string): ActionRes
   if (isBuildLocked(state)) return { ok: false, message: state.mystery.run ? '秘境探索期间不可换阵' : '挑战中不可换阵，请先完成或退出本场战斗' }
   const remaining = state.formation.filter((_, candidate) => candidate !== index)
   if (remaining.length === 0) return { ok: false, message: '至少保留一位侠客出战' }
-  if (!remaining.some((slot) => slot.row === 'front') || !remaining.some((slot) => slot.row === 'back')) {
-    return { ok: false, message: '前后排都至少需要一位侠客' }
-  }
   state.formation.splice(index, 1)
   state.combat = createIdleCombat(state)
   addLog(state.combat, 'system', `${hero.name}下阵休整，众人重新列阵。`)
   return { ok: true, message: `${hero.name}已下阵` }
 }
 
-export function swapFormationRows(state: GameState, heroIdA: string, heroIdB: string): ActionResult {
+export function moveFormationSlot(state: GameState, heroId: string, targetRow: FormationRow, targetPosition?: FormationPosition): ActionResult {
+  const slot = state.formation.find((candidate) => candidate.heroId === heroId)
+  if (!slot || (targetRow !== 'front' && targetRow !== 'back')) return { ok: false, message: '无法调整这个阵位' }
+  if (isBuildLocked(state)) return { ok: false, message: state.mystery.run ? '秘境探索期间不可换阵' : '挑战中不可换阵，请先完成或退出本场战斗' }
+  if (slot.row === targetRow && slot.position === targetPosition) return { ok: true, message: '侠客已在此阵位' }
+  const position = targetPosition !== undefined && !state.formation.some((candidate) => candidate.row === targetRow && candidate.position === targetPosition && candidate.heroId !== heroId)
+    ? targetPosition
+    : findFreePosition(state, targetRow, heroId)
+  if (position === null) return { ok: false, message: `${targetRow === 'front' ? '前排' : '后排'}最多 ${MAX_FORMATION_ROW_SIZE} 位侠客` }
+  slot.row = targetRow
+  slot.position = position
+  state.combat = createIdleCombat(state)
+  addLog(state.combat, 'system', `${heroById(heroId)?.name ?? '侠客'}调整阵位，众人重新列阵。`)
+  return { ok: true, message: `${heroById(heroId)?.name ?? '侠客'}已移至${targetRow === 'front' ? '前排' : '后排'}${position + 1}号位` }
+}
+
+export function swapFormationSlots(state: GameState, heroIdA: string, heroIdB: string): ActionResult {
   const slotA = state.formation.find((slot) => slot.heroId === heroIdA)
   const slotB = state.formation.find((slot) => slot.heroId === heroIdB)
   if (!slotA || !slotB || slotA === slotB) return { ok: false, message: '无法交换这两个阵位' }
   if (isBuildLocked(state)) return { ok: false, message: state.mystery.run ? '秘境探索期间不可换阵' : '挑战中不可换阵，请先完成或退出本场战斗' }
-  if (slotA.row === slotB.row) return { ok: false, message: '两位侠客已在同一排' }
   ;[slotA.row, slotB.row] = [slotB.row, slotA.row]
+  ;[slotA.position, slotB.position] = [slotB.position, slotA.position]
   state.combat = createIdleCombat(state)
   addLog(state.combat, 'system', `${heroById(heroIdA)?.name ?? '侠客'}与${heroById(heroIdB)?.name ?? '侠客'}互换阵位。`)
-  return { ok: true, message: `${heroById(heroIdA)?.name ?? '侠客'}与${heroById(heroIdB)?.name ?? '侠客'}已互换前后排` }
+  return { ok: true, message: `${heroById(heroIdA)?.name ?? '侠客'}与${heroById(heroIdB)?.name ?? '侠客'}已互换阵位` }
 }
