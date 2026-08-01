@@ -133,21 +133,21 @@ const renderHeader = (): string => `
     </div>
   </header>`
 
-const getTabItems = (): { id: TabId; label: string; note: string }[] => [
-  { id: 'idle', label: '关卡', note: state.combat.mode === 'idle' && state.combat.status === 'fighting'
+const getTabItems = (): { id: TabId; label: string; note: string; ic: string }[] => [
+  { id: 'idle', label: '关卡', ic: '🗺️', note: state.combat.mode === 'idle' && state.combat.status === 'fighting'
     ? `${getSelectedRegion(state).name} · 第 ${state.combat.stage ?? 1} 关`
     : '选择关卡' },
-  { id: 'heroes', label: '侠客', note: `${HEROES.filter((hero) => state.heroes[hero.id].unlocked).length}/${HEROES.length}` },
-  { id: 'party', label: '队伍', note: '前后列阵' },
-  { id: 'battle', label: '战斗', note: `已破 ${state.defeatedBossIds.length}/${REGIONS.length}` },
-  { id: 'mystery', label: '秘境', note: state.mystery.run ? `第 ${Math.min(state.mystery.run.floor + 1, MYSTERY_ENCOUNTERS.length)} 层` : `通关 ${state.mystery.runsCompleted}` },
+  { id: 'heroes', label: '侠客', ic: '🧑‍🤝‍🧑', note: `${HEROES.filter((hero) => state.heroes[hero.id].unlocked).length}/${HEROES.length}` },
+  { id: 'party', label: '队伍', ic: '⚔️', note: '前后列阵' },
+  { id: 'battle', label: '战斗', ic: '👹', note: `已破 ${state.defeatedBossIds.length}/${REGIONS.length}` },
+  { id: 'mystery', label: '秘境', ic: '🏮', note: state.mystery.run ? `第 ${Math.min(state.mystery.run.floor + 1, MYSTERY_ENCOUNTERS.length)} 层` : `通关 ${state.mystery.runsCompleted}` },
 ]
 
 const renderNav = (): string => `
   <nav class="game-nav" aria-label="游戏区域">
     ${getTabItems().map((item) => `
       <button class="nav-item ${activeTab === item.id ? 'active' : ''}" data-tab="${item.id}" aria-current="${activeTab === item.id ? 'page' : 'false'}">
-        <span>${item.label}</span><small>${item.note}</small>
+        <span class="nav-ic" aria-hidden="true">${item.ic}</span><span class="nav-text"><span>${item.label}</span><small>${item.note}</small></span>
       </button>`).join('')}
   </nav>`
 
