@@ -1,5 +1,6 @@
 import { CAREERS } from './careers'
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
+import { FACTION_MARTIALS } from './martials'
 import { WORLDS } from './worlds'
 
 export const validateContent = (): string[] => {
@@ -7,10 +8,12 @@ export const validateContent = (): string[] => {
   const careerIds = new Set(CAREERS.map((item) => item.id))
   const factionIds = new Set(FACTIONS.map((item) => item.id))
   const worldIds = new Set(WORLDS.map((item) => item.id))
+  const martialIds = new Set(FACTION_MARTIALS.map((item) => item.id))
 
   if (careerIds.size !== CAREERS.length) errors.push('职业 id 重复')
   if (factionIds.size !== FACTIONS.length) errors.push('势力 id 重复')
   if (worldIds.size !== WORLDS.length) errors.push('江湖卷 id 重复')
+  if (martialIds.size !== FACTION_MARTIALS.length) errors.push('势力武功 id 重复')
 
   for (const career of CAREERS) {
     if (career.previousId && !careerIds.has(career.previousId)) errors.push(`${career.id} 前置职业不存在`)
@@ -19,6 +22,17 @@ export const validateContent = (): string[] => {
 
   for (const faction of FACTIONS) {
     if (!worldIds.has(faction.worldId)) errors.push(`${faction.id} 引用了未知江湖卷 ${faction.worldId}`)
+    if (FACTION_MARTIALS.filter((martial) => martial.factionId === faction.id).length !== 8) {
+      errors.push(`${faction.id} 武功数不是 8`)
+    }
+  }
+
+  for (const martial of FACTION_MARTIALS) {
+    if (!factionIds.has(martial.factionId ?? '')) errors.push(`${martial.id} 引用了未知势力`)
+    if (martial.previousId && !martialIds.has(martial.previousId)) errors.push(`${martial.id} 前置武功不存在`)
+    if (martial.previousId && martial.previousId.slice(-1) !== martial.id.slice(-1)) {
+      errors.push(`${martial.id} 前置武功串线`)
+    }
   }
 
   for (const world of WORLDS) {

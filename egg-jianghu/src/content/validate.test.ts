@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CAREERS } from './careers'
 import { FACTIONS } from './factions'
+import { FACTION_MARTIALS } from './martials'
 import { validateContent } from './validate'
 import { WORLDS } from './worlds'
 
@@ -19,5 +20,16 @@ describe('首发内容目录', () => {
       expect(FACTIONS.filter((faction) => faction.category === category)).toHaveLength(5)
     }
     expect(validateContent()).toEqual([])
+  })
+
+  it('每个势力恰好提供两线各四门主动武功', () => {
+    expect(FACTION_MARTIALS).toHaveLength(240)
+    for (const faction of FACTIONS) {
+      const ids = FACTION_MARTIALS.filter((martial) => martial.factionId === faction.id).map((martial) => martial.id)
+      expect(ids).toEqual([
+        `${faction.id}_a1`, `${faction.id}_b1`, `${faction.id}_c1`, `${faction.id}_d1`,
+        `${faction.id}_a2`, `${faction.id}_b2`, `${faction.id}_c2`, `${faction.id}_d2`,
+      ])
+    }
   })
 })
