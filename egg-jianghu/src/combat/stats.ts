@@ -1,7 +1,8 @@
 import { careerById } from '../content/careers'
 import { heartMethodByIdV10 } from '../content/martials'
+import { equipmentDefinitionById, EQUIPMENT_QUALITIES } from '../content/equipment'
 import type { HeroDefinitionV10 } from '../content/heroes'
-import type { HeroProgressV10 } from '../domain/types'
+import type { EquipmentInstance, HeroProgressV10 } from '../domain/types'
 
 export interface CombatStats {
   maxHp: number
@@ -31,6 +32,7 @@ const tierMultiplier = { 初级: 1, 中级: 1.08, 高级: 1.17, 顶级: 1.28 } a
 export const buildCombatStats = (
   definition: HeroDefinitionV10,
   progress: HeroProgressV10,
+  equipment: EquipmentInstance[] = [],
 ): CombatStats => {
   const aptitude = definition.aptitudes
   const career = careerById(progress.currentCareerId)
@@ -48,7 +50,7 @@ export const buildCombatStats = (
   const internalCareerBonus = career && ['医', '内家'].includes(career.category) ? 1.15 : 1
   const heartMethod = progress.heartMethodId ? heartMethodByIdV10(progress.heartMethodId) : undefined
 
-  return {
+  const stats: CombatStats = {
     maxHp: Math.floor((100 + aptitude.constitution * 15 + aptitude.resolve * 4) * sharedScale),
     maxEnergy: 100,
     initialEnergy: 20,
@@ -69,4 +71,39 @@ export const buildCombatStats = (
     survivalBonus: heartMethod?.survivalBonus ?? 0,
     perfectedBonusPool,
   }
+
+  const qualityMultiplier = [1, 1.18, 1.42, 1.72, 2.08]
+  const applyBonus = (id: string, value: number): void => {
+    if (id === 'attack') {
+      stats.externalAttack += value
+      stats.internalAttack += value
+      return
+    }
+    if (id === 'externalAttack' || id === 'internalAttack' || id === 'maxHp'
+      || id === 'externalDefense' || id === 'internalDefense' || id === 'effectiveAgility') {
+      stats[id] += value
+      return
+    }
+    if (id === 'agility') {
+      stats.effectiveAgility += value
+      return
+    }
+    if (id === 'energyRecovery') stats.energyRecovery += value
+    if (id === 'cooldownRate') stats.cooldownRate = Math.min(0.6, stats.cooldownRate + value / 100)
+    if (id === 'criticalChance') stats.criticalChance = Math.min(1, stats.criticalChance + value / 100)
+    if (id === 'controlResistance') stats.controlResistance = Math.min(0.95, stats.controlResistance + value / 100)
+  }
+
+  for (const equipmentUid of Object.values(progress.equipmentBySlot)) {
+    if (!equipmentUid) continue
+    const instance = equipment.find((item) => item.uid === equipmentUid)
+    const equipmentDefinition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
+    if (!instance || !equipmentDefinition) continue
+    const qualityIndex = EQUIPMENT_QUALITIES.indexOf(instance.quality)
+    const baseValue = Math.floor((equipmentDefinition.baseValue + instance.level) * qualityMultiplier[qualityIndex])
+    applyBonus(equipmentDefinition.baseStatId, baseValue)
+    for (const affix of instance.affixes) applyBonus(affix.id, affix.value)
+  }
+
+  return stats
 }

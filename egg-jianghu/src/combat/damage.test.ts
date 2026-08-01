@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { HeroDefinitionV10 } from '../content/heroes'
 import { createHeroProgress } from '../domain/state'
+import type { EquipmentInstance } from '../domain/types'
 import { calculateDamage, evadeChance, hitChance } from './damage'
 import { buildCombatStats } from './stats'
 
@@ -47,5 +48,22 @@ describe('战斗面板与伤害乘区', () => {
     expect(hitChance(99)).toBe(1)
     expect(evadeChance(99)).toBe(0.7)
     expect(evadeChance(-1)).toBe(0)
+  })
+
+  it('已穿戴装备的基础属性与词条进入战斗面板', () => {
+    const definition: HeroDefinitionV10 = {
+      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
+      source: 'tavern', cost: 0, factionId: null,
+      aptitudes: { strength: 10, insight: 8, constitution: 8, agility: 8, resolve: 8 },
+    }
+    const progress = createHeroProgress('sword')
+    const baseline = buildCombatStats(definition, progress)
+    progress.equipmentBySlot.weapon = 'weapon_uid'
+    const equipment: EquipmentInstance[] = [{
+      uid: 'weapon_uid', definitionId: 'world_01_weapon', level: 1, quality: '上品',
+      affixes: [{ id: 'externalAttack', value: 12 }], locked: true,
+    }]
+
+    expect(buildCombatStats(definition, progress, equipment).externalAttack).toBeGreaterThan(baseline.externalAttack)
   })
 })

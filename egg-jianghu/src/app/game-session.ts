@@ -21,7 +21,7 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
     const progress = state.heroes[slot.heroId]
     const definition = heroByIdV10(slot.heroId)
     if (!progress?.recruited || !definition) return []
-    const stats = buildCombatStats(definition, progress)
+    const stats = buildCombatStats(definition, progress, state.inventory)
     return [{
       id: slot.heroId,
       name: definition.name,

@@ -52,6 +52,30 @@ export const learnFactionMartial = (
   return { ok: true, message: '学会武功' }
 }
 
+export const upgradeMartial = (
+  state: GameStateV10,
+  heroId: string,
+  martialId: string,
+): ActionResult => {
+  const hero = state.heroes[heroId]
+  const learned = hero?.learnedMartials[martialId]
+  const martial = martialByIdV10(martialId)
+  if (!hero?.recruited || !learned) return { ok: false, message: '尚未学会该武功' }
+  if (!martial) return { ok: false, message: '武功定义不存在' }
+  if (learned.level >= MAX_MARTIAL_LEVEL) return { ok: false, message: '武功已经达到 Lv.20' }
+  const cost = Math.ceil(martial.currencySource.amount * (1 + learned.level * 0.2))
+  const wallet = martial.currencySource.kind === 'contribution' ? state.contribution : state.worldCurrency
+  if ((wallet[martial.currencySource.id] ?? 0) < cost) return { ok: false, message: '升级资源不足' }
+
+  wallet[martial.currencySource.id] -= cost
+  const ledger = martial.currencySource.kind === 'contribution'
+    ? learned.invested.contribution
+    : learned.invested.worldCurrency
+  ledger[martial.currencySource.id] = (ledger[martial.currencySource.id] ?? 0) + cost
+  learned.level += 1
+  return { ok: true, message: `武功提升至 Lv.${learned.level}` }
+}
+
 export const equipMartial = (
   state: GameStateV10,
   heroId: string,
