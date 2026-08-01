@@ -1,1122 +1,572 @@
 import './style.css'
-import {
-  BONDS,
-  COMBOS,
-  HEROES,
-  MYSTERY_BLESSINGS,
-  MYSTERY_ENCOUNTERS,
-  REGIONS,
-  enemyTraitById,
-  heroById,
-  martialById,
-  mysteryBlessingById,
-  nextRegionAfter,
-  regionById,
-} from './data'
-import {
-  COMBAT_STATUS_NAMES,
-  abandonMystery,
-  addToFormation,
-  createInitialState,
-  equipMartial,
-  finishMystery,
-  forgetMartial,
-  getActiveBonds,
-  getActiveCombos,
-  getFormationSummary,
-  getHeroStats,
-  getMartialForgetPreview,
-  getPartyPower,
-  getPartySynergy,
-  getSelectedRegion,
-  getUpgradeCost,
-  isRegionUnlocked,
-  KILLS_PER_STAGE,
-  STAGES_PER_REGION,
-  chooseMysteryBlessing,
-  moveFormationSlot,
-  moveMartial,
-  removeFromFormation,
-  returnToIdle,
-  setFormationRow,
-  setPartySlot,
-  startMystery,
-  startIdleStage,
-  startChallenge,
-  stepCombat,
-  swapFormationSlots,
-  unequipMartial,
-  upgradeHero,
-} from './game'
-import { formatMartialPassive, getPassiveBonuses, MAX_LEARNED_MARTIALS } from './martials'
-import { clearSave, exportSave, importSave, loadGame, saveGame } from './save'
-import type { ActionResult, CombatEvent, CombatHeroState, CombatStatus, FormationPosition, FormationRow, GameState, MysteryBlessingId, RegionDefinition, RegionId } from './types'
+import { GameSession } from './app/game-session'
+import { createRng } from './combat/rng'
+import { COMBAT_TICK_MS } from './combat/timeline'
+import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
+import { createWave } from './combat/waves'
+import { CAREERS, careerById } from './content/careers'
+import { EQUIPMENT_AFFIXES, equipmentDefinitionById } from './content/equipment'
+import { FACTIONS } from './content/factions'
+import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10 } from './content/heroes'
+import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTIALS, martialByIdV10 } from './content/martials'
+import { WORLDS } from './content/worlds'
+import { changeCareer, perfectCareer } from './domain/careers'
+import { buyCareerToken, learnCityMartial } from './domain/city'
+import { equipEquipment, INVENTORY_CAPACITY, toggleEquipmentLock } from './domain/inventory'
+import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
+import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
+import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
+import { settleCombatEvent } from './domain/rewards'
+import { SAVE_KEY_V10 } from './domain/save-v10'
+import type { ActionResult, EquipmentInstance, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
+import { renderCityPage, type CityPageViewModel } from './ui/city-page'
+import { renderFactionsPage, type FactionsPageViewModel } from './ui/factions-page'
+import { renderHeroesPage, type HeroesPageViewModel } from './ui/heroes-page'
+import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
+import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
+import { renderShell, type TabId } from './ui/shell'
 
-type TabId = 'idle' | 'heroes' | 'party' | 'battle' | 'mystery' | 'settings'
-type LevelView = 'regions' | 'stages' | 'combat'
+const app = document.querySelector<HTMLDivElement>('#app')
+if (!app) throw new Error('缺少 #app 根节点')
 
-const appElement = document.querySelector<HTMLDivElement>('#app')
-if (!appElement) throw new Error('缺少 #app 根节点')
-const app = appElement
+const toast = document.createElement('div')
+toast.className = 'toast'
+toast.hidden = true
+toast.setAttribute('role', 'status')
+document.body.append(toast)
 
-const loaded = loadGame(window.localStorage)
-let state = loaded.state
+let session = GameSession.create(window.localStorage)
 let activeTab: TabId = 'idle'
-let levelView: LevelView = 'regions'
-let chapterRegionId: RegionId | null = null
-let selectedHeroId: string | null = null
+let selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
+let selectedStage = Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1)
+let selectedHeroId: string | null = Object.keys(session.state.heroes)[0] ?? null
+let selectedFactionId = FACTIONS.find((faction) => session.state.unlockedWorldIds.includes(faction.worldId))?.id ?? 'qingfeng_hall'
+let combatSpeed: 1 | 2 | 4 = 1
+let combatLogs: string[] = []
 let toastTimer = 0
-let lastRuntimeAt = Date.now()
 
-const importInput = document.createElement('input')
-importInput.type = 'file'
-importInput.accept = 'application/json,.json'
-importInput.hidden = true
-document.body.append(importInput)
-
-/* 全局 Toast：独立于 #app 挂载，避免整树重绘反复重建节点导致淡入动画重复播放 */
-const toastEl = document.createElement('div')
-toastEl.className = 'toast'
-toastEl.setAttribute('role', 'status')
-toastEl.hidden = true
-document.body.append(toastEl)
-
-const escapeHtml = (value: string): string => value.replace(/[&<>'"]/g, (char) => ({
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  "'": '&#39;',
-  '"': '&quot;',
-})[char] ?? char)
-
-const formatNumber = (value: number): string => Math.floor(value).toLocaleString('zh-CN')
-const getBuildUiLockMessage = (): string => {
-  if (state.mystery.run) return '秘境探索期间侠客配置已锁定，请先完成或离开本轮秘境。'
-  if (state.combat.mode === 'challenge' && state.combat.status === 'fighting') {
-    return 'BOSS 挑战期间侠客配置已锁定，请先完成本场战斗。'
-  }
-  return ''
-}
-const isBuildUiLocked = (): boolean => Boolean(getBuildUiLockMessage())
-
-const renderStatusChips = (statuses: CombatStatus[]): string => statuses.length
-  ? `<div class="status-chips">${statuses.map((status) => `
-      <span class="status-${status.id}" title="剩余 ${status.turns} 回合">${COMBAT_STATUS_NAMES[status.id]} · ${status.turns}</span>`).join('')}
-    </div>`
-  : ''
-
-const notify = (result: ActionResult | string, kind: 'success' | 'warning' = 'success'): void => {
-  const message = typeof result === 'string' ? result : result.message
-  const resolvedKind = typeof result === 'string' ? kind : result.ok ? 'success' : 'warning'
-  toastEl.textContent = message
-  toastEl.classList.toggle('warning', resolvedKind === 'warning')
-  toastEl.hidden = false
-  // 强制重启动画：即使连续提示相同文案也能重新淡入，而非沿用上一次的显示状态
-  toastEl.style.animation = 'none'
-  void toastEl.offsetWidth
-  toastEl.style.animation = ''
+const notify = (message: string, warning = false): void => {
+  toast.textContent = message
+  toast.classList.toggle('warning', warning)
+  toast.hidden = false
   if (toastTimer) window.clearTimeout(toastTimer)
-  toastTimer = window.setTimeout(() => {
-    toastEl.hidden = true
-  }, 2800)
+  toastTimer = window.setTimeout(() => { toast.hidden = true }, 2400)
 }
 
-const resourcePill = (label: string, value: number, mark: string): string => `
-  <div class="resource-pill" title="${label}">
-    <span class="resource-mark">${mark}</span>
-    <span><small>${label}</small><strong>${formatNumber(value)}</strong></span>
-  </div>`
-
-const renderHeader = (): string => `
-  <header class="topbar">
-    <div class="brand-block">
-      <span class="brand-seal" aria-hidden="true">蛋</span>
-      <span><strong>蛋蛋江湖</strong><small>一盏江湖 · 单机存档</small></span>
-    </div>
-    <div class="resource-row" aria-label="当前资源">
-      ${resourcePill('银两', state.resources.silver, '银')}
-      ${resourcePill('阅历', state.resources.experience, '历')}
-      ${resourcePill('残页', state.resources.pages, '卷')}
-      ${resourcePill('声望', state.resources.reputation, '名')}
-    </div>
-    <div class="save-tools">
-      <span class="save-state"><i></i> 已自动存档</span>
-    </div>
-  </header>`
-
-const getTabItems = (): { id: TabId; label: string; note: string; ic: string }[] => [
-  { id: 'idle', label: '关卡', ic: '🗺️', note: state.combat.mode === 'idle' && state.combat.status === 'fighting'
-    ? `${getSelectedRegion(state).name} · 第 ${state.combat.stage ?? 1} 关`
-    : '选择关卡' },
-  { id: 'heroes', label: '侠客', ic: '🧑‍🤝‍🧑', note: `${HEROES.filter((hero) => state.heroes[hero.id].unlocked).length}/${HEROES.length}` },
-  { id: 'party', label: '羁绊', ic: '🪢', note: '缘分合击' },
-  { id: 'battle', label: '战斗', ic: '👹', note: `已破 ${state.defeatedBossIds.length}/${REGIONS.length}` },
-  { id: 'mystery', label: '秘境', ic: '🏮', note: state.mystery.run ? `第 ${Math.min(state.mystery.run.floor + 1, MYSTERY_ENCOUNTERS.length)} 层` : `通关 ${state.mystery.runsCompleted}` },
-  { id: 'settings', label: '设置', ic: '⚙️', note: '存档管理' },
-]
-
-const renderNav = (): string => `
-  <nav class="game-nav" aria-label="游戏区域">
-    ${getTabItems().map((item) => `
-      <button class="nav-item ${activeTab === item.id ? 'active' : ''}" data-tab="${item.id}" aria-current="${activeTab === item.id ? 'page' : 'false'}">
-        <span class="nav-ic" aria-hidden="true">${item.ic}</span><span class="nav-text"><span>${item.label}</span><small>${item.note}</small></span>
-      </button>`).join('')}
-    <div class="nav-version">蛋蛋江湖 2.0 · 迭代 6</div>
-  </nav>`
-
-const getEquippedMartialView = (heroId: string) => state.heroes[heroId].equippedMartialIds
-  .map((id, index) => id ? { martial: martialById(id), priority: index + 1 } : null)
-  .filter((entry): entry is { martial: NonNullable<ReturnType<typeof martialById>>; priority: number } => Boolean(entry?.martial))
-
-const getFighterMartialText = (heroId: string, member: CombatHeroState): string => {
-  const equipped = getEquippedMartialView(heroId)
-  const ready = equipped.find(({ martial }) => (member.martialCooldowns[martial.id] ?? 0) <= 0)
-  if (ready) return `${ready.martial.skill.name} · 蓄势已成`
-  const waiting = equipped
-    .map(({ martial }) => ({ martial, cooldown: member.martialCooldowns[martial.id] ?? 0 }))
-    .sort((left, right) => left.cooldown - right.cooldown)[0]
-  return waiting ? `${waiting.martial.skill.name} · ${waiting.cooldown} 次行动后` : '普通攻击'
+const commitAction = (result: ActionResult, successMessage?: string): void => {
+  notify(result.ok ? successMessage ?? result.message : result.message, !result.ok)
+  if (result.ok) session.save()
 }
 
-const getSkillFlashName = (event: CombatEvent | null): string =>
-  event?.abilityId ? martialById(event.abilityId)?.skill.name ?? '武学招式' : '武学招式'
+const unitView = (unit: CombatUnit): IdleCombatUnitView => ({
+  id: unit.id,
+  name: unit.name,
+  rank: unit.rank,
+  row: unit.row,
+  position: unit.position,
+  hp: unit.hp,
+  maxHp: unit.maxHp,
+  energy: unit.energy,
+  maxEnergy: unit.maxEnergy,
+  gauge: unit.gauge,
+  cooldownMs: Math.max(0, ...Object.values(unit.cooldowns), 0),
+  alive: unit.alive,
+})
 
-const renderSkillPlanForHero = (heroId: string): string => `
-  <span><b>${heroById(heroId)?.name ?? '侠客'}</b>
-    ${getEquippedMartialView(heroId).map(({ martial, priority }) => `<i>${priority}. ${martial.skill.name}</i>`).join('') || '<i>普通攻击</i>'}
-  </span>`
-
-const renderHeroFighter = (member: CombatHeroState, index: number): string => {
-  const hero = heroById(member.heroId)
-  const progress = state.heroes[member.heroId]
-  const lastEvent = state.combat.lastEvent
-  const acting = lastEvent?.actorId === member.heroId && (lastEvent.kind === 'attack' || lastEvent.kind === 'skill')
-  const targeted = lastEvent?.targetId === member.heroId && lastEvent.kind === 'enemy'
-  const hpPercent = Math.max(0, Math.round((member.hp / member.maxHp) * 100))
-  if (!hero || !progress) return ''
-  const equipped = getEquippedMartialView(member.heroId)
-  const martialText = getFighterMartialText(member.heroId, member)
-  return `
-    <article class="fighter-card hero-fighter ${acting ? 'is-acting' : ''} ${targeted ? 'is-targeted' : ''} ${member.hp <= 0 ? 'is-defeated' : ''}" style="--fighter-delay:${index * 80}ms" data-hero-id="${hero.id}">
-      <span class="fighter-position">${member.row === 'front' ? '前排 · 减伤' : '后排 · 增伤'}</span>
-      <div class="fighter-avatar element-${hero.element}">${hero.name.slice(-1)}</div>
-      <div class="fighter-copy">
-        <strong>${hero.name}</strong>
-        <span>Lv.${progress.level} · ${equipped.length ? `${equipped.length} 门武功` : '拳脚'}</span>
-      </div>
-      <div class="fighter-health health-track"><i style="width:${hpPercent}%"></i></div>
-      <small class="fighter-hp">${member.hp} / ${member.maxHp}</small>
-      <small class="fighter-skill ${martialText.includes('蓄势已成') ? 'ready' : ''}">${martialText}</small>
-      ${renderStatusChips(member.statuses)}
-    </article>`
+const idleViewModel = (): IdlePageViewModel => {
+  const cleared = session.state.clearedStageByWorld[selectedWorldId] ?? 0
+  const combat = session.combat?.state
+  return {
+    worlds: WORLDS.map((world) => ({
+      id: world.id,
+      name: world.name,
+      unlocked: session.state.unlockedWorldIds.includes(world.id),
+    })),
+    selectedWorldId,
+    stages: Array.from({ length: 10 }, (_, index) => ({
+      stage: index + 1,
+      unlocked: index + 1 <= Math.max(1, cleared + 1),
+      cleared: index + 1 <= cleared,
+    })),
+    selectedStage,
+    worldCurrency: session.state.worldCurrency[selectedWorldId] ?? 0,
+    inventoryCount: session.state.inventory.length,
+    inventoryCapacity: INVENTORY_CAPACITY,
+    combatSpeed,
+    combat: combat ? {
+      mode: combat.mode,
+      wave: combat.wave,
+      party: combat.party.map(unitView),
+      enemies: combat.enemies.map(unitView),
+    } : null,
+    logs: combatLogs,
+  }
 }
 
-const renderCombatRow = (row: FormationRow): string => {
-  const members = state.combat.partyMembers
-    .filter((member) => member.row === row)
-    .sort((a, b) => a.position - b.position)
-  return `
-    <div class="combat-row ${row}" data-testid="combat-${row}-row">
-      <span class="combat-row-label">${row === 'front' ? '前排' : '后排'}</span>
-      <div class="fighter-stack">${members.map(renderHeroFighter).join('')}</div>
-    </div>`
-}
+const recruitedHeroes = () => HEROES_V10.flatMap((definition) => {
+  const progress = session.state.heroes[definition.id]
+  return progress?.recruited ? [{ definition, progress }] : []
+})
 
-const renderCombatArena = (compact = false): string => {
-  const combat = state.combat
-  const partyHp = combat.partyMembers.reduce((total, member) => total + member.hp, 0)
-  const partyMaxHp = combat.partyMembers.reduce((total, member) => total + member.maxHp, 0)
-  const partyPercent = Math.max(0, Math.round((partyHp / partyMaxHp) * 100))
-  const enemyPercent = Math.max(0, Math.round((combat.enemyHp / combat.enemyMaxHp) * 100))
-  const hitEvent = combat.lastEvent
-  const enemyHit = hitEvent && (hitEvent.kind === 'attack' || hitEvent.kind === 'skill' || hitEvent.kind === 'status' || hitEvent.kind === 'combo')
-  const partyHit = hitEvent?.kind === 'enemy'
-  const region = regionById(combat.regionId) ?? REGIONS[0]
-  const trait = enemyTraitById(combat.enemyTraitId)
-  const modeLabel = combat.mode === 'idle'
-    ? `${region.name} · 第 ${combat.stage ?? 1} 关 · 挂机战斗中`
-    : combat.mode === 'mystery'
-      ? `无相秘境 · 第 ${(state.mystery.run?.floor ?? 0) + 1} 层交锋`
-      : `${region.name} BOSS · ${combat.status === 'fighting' ? '交锋中' : combat.status === 'victory' ? '胜利' : '落败'}`
-
-  return `
-    <section class="battle-arena ${compact ? 'compact' : ''}" data-testid="battle-arena">
-      <div class="arena-heading">
-        <span class="live-dot"><i></i>${modeLabel}</span>
-        <span class="arena-meta"><i class="enemy-trait-chip">${trait.name}</i>第 ${combat.round + 1} 回合</span>
-      </div>
-      <div class="battle-stage">
-        <div class="side party-side ${partyHit ? 'takes-hit' : ''}">
-          <div class="side-label"><span>我方</span><b>${partyHp} / ${partyMaxHp}</b></div>
-          <div class="health-track"><i style="width:${partyPercent}%"></i></div>
-          <div class="combat-formation">${renderCombatRow('back')}${renderCombatRow('front')}</div>
-          ${partyHit ? `<b class="damage-float party-damage">-${hitEvent?.amount ?? 0}</b>` : ''}
-        </div>
-        <div class="versus-mark"><span>交</span><i></i><small>锋</small></div>
-        <div class="side enemy-side ${enemyHit ? 'takes-hit' : ''}">
-          <div class="side-label"><span>敌方</span><b>${combat.enemyHp} / ${combat.enemyMaxHp}</b></div>
-          <div class="health-track enemy-health"><i style="width:${enemyPercent}%"></i></div>
-          <div class="enemy-portrait"><span>敌</span><small>${escapeHtml(combat.enemyName)}</small></div>
-          ${renderStatusChips(combat.enemyStatuses)}
-          ${enemyHit ? `<b class="damage-float enemy-damage ${hitEvent?.kind === 'combo' ? 'combo-damage' : ''}">-${hitEvent?.amount ?? 0}</b>` : ''}
-        </div>
-        ${hitEvent?.kind === 'combo' ? `<div class="combo-flash"><span>合击</span><strong>${COMBOS.find((combo) => combo.id === hitEvent.abilityId)?.name ?? '联手武学'}</strong></div>` : ''}
-        ${hitEvent?.kind === 'skill' ? `<div class="skill-flash"><span>绝技</span><strong>${getSkillFlashName(hitEvent)}</strong></div>` : ''}
-      </div>
-      ${combat.status !== 'fighting' ? `
-        <div class="battle-result ${combat.status}">
-          <span>${combat.status === 'victory' ? '破关' : '惜败'}</span>
-          <strong>${combat.status === 'victory' ? '此役功成，江湖声名更进一步' : `破局建议：${trait.counterHint}`}</strong>
-          <button class="primary-button" data-action="return-idle">返回关卡选择</button>
-        </div>` : ''}
-    </section>`
-}
-
-const renderLogs = (): string => `
-  <aside class="battle-log">
-    <div class="section-title"><span>江湖纪事</span><small>实时</small></div>
-    <div class="log-list" aria-live="polite">
-      ${state.combat.logs.length ? state.combat.logs.slice(-12).reverse().map((event) => `
-        <p class="log-${event.kind}"><time>${String(event.id).padStart(2, '0')}</time><span>${escapeHtml(event.text)}</span></p>`).join('') : '<p class="empty-copy">风过古道，尚无战事。</p>'}
-    </div>
-  </aside>`
-
-const renderRegionCard = (regionId: RegionId, index: number): string => {
-  const region = regionById(regionId)!
-  const unlocked = isRegionUnlocked(state, region.id)
-  const selected = state.combat.mode === 'idle' && state.combat.status === 'fighting' && state.combat.regionId === region.id
-  const bossDefeated = state.defeatedBossIds.includes(region.boss.id)
-  const requiredRegion = region.requiredBossId
-    ? REGIONS.find((candidate) => candidate.boss.id === region.requiredBossId)
-    : undefined
-  const trait = enemyTraitById(region.boss.traitId)
-  // 进度点：挂机中的区域按当前小关点亮，否则按已通关小关数
-  const progress = selected ? (state.combat.stage ?? 0) : (state.regionCleared[region.id] ?? 0)
-  const statusText = bossDefeated ? '已问鼎' : unlocked ? '可历练' : `击败${requiredRegion?.boss.name ?? '前一区域 BOSS'}后解锁`
-  return `
-    <article class="stage-card ${selected ? 'cur-stage' : ''} ${unlocked ? '' : 'locked'}" data-testid="region-card-${region.id}"
-      data-action="open-region" data-region-id="${region.id}">
-      <div class="no">${String(index + 1).padStart(2, '0')}</div>
-      <div class="nm">${region.name}</div>
-      <div class="dif">${statusText} · 守关 BOSS「${trait.name}」</div>
-      <div class="mini">${Array.from({ length: 10 }, (_, k) => `<i class="${k < progress ? 'd' : ''}"></i>`).join('')}</div>
-      <div class="feat">产出 · <b>${region.rewardText}</b></div>
-      <span class="citymark">${unlocked ? '🏯' : '🔒'}</span>
-    </article>`
-}
-
-const renderRegionList = (): string => `
-  <section class="region-map panel">
-    <div class="section-title"><span>大关卡</span><small>击败区域 BOSS 后解锁下一处江湖</small></div>
-    <div class="stage-grid">${REGIONS.map((candidate, index) => renderRegionCard(candidate.id, index)).join('')}</div>
-  </section>`
-
-const renderSubNode = (region: RegionDefinition, stage: number): string => {
-  const cleared = state.regionCleared[region.id] ?? 0
-  const locked = stage > cleared + 1
-  const current = state.combat.mode === 'idle' && state.combat.status === 'fighting'
-    && state.combat.regionId === region.id && state.combat.stage === stage
-  const enemy = region.enemies[(stage - 1) % region.enemies.length]
-  const trait = enemyTraitById(enemy.traitId)
-  return `
-    <div class="sub-node ${locked ? 'lock' : ''} ${current ? 'cur' : ''}" data-testid="stage-card-${stage}">
-      <span class="no">${locked ? '🔒' : String(stage).padStart(2, '0')}</span>
-      <span class="nm">
-        <span class="nm-title">${enemy.name}</span>
-        <span class="pw">${trait.name} · 强度 ${100 + (stage - 1) * 8}%</span>
-      </span>
-      ${stage <= cleared ? '<span class="tag green">已通关</span>' : ''}
-      <button class="${current ? 'secondary-button' : 'primary-button'} sub-start" data-action="start-stage"
-        data-region-id="${region.id}" data-stage="${stage}" ${locked ? 'disabled' : ''}>
-        ${locked ? '未解锁' : current ? '重新开始本关' : '开始挂机'}
-      </button>
-    </div>`
-}
-
-const renderStageList = (): string => {
-  const region = regionById(chapterRegionId ?? '') ?? REGIONS[0]
-  const cleared = state.regionCleared[region.id] ?? 0
-  const bossDefeated = state.defeatedBossIds.includes(region.boss.id)
-  const farmingHere = state.combat.mode === 'idle' && state.combat.status === 'fighting' && state.combat.regionId === region.id
-  return `
-    <div class="level-breadcrumb"><button class="text-button" data-action="back-regions">← 返回大关卡</button><span>江湖关卡 / ${region.name}</span></div>
-    <section class="stage-detail panel" data-testid="stage-map">
-      <div class="sd-head">
-        <span class="tt">${region.name}</span>
-        <span class="tag">${bossDefeated ? 'BOSS 已败' : `守关 BOSS「${region.boss.name}」待战`}</span>
-        <span class="hint">每小关清剿 ${KILLS_PER_STAGE} 波后通关；通关全部 ${STAGES_PER_REGION} 小关并击败守关 BOSS，解锁下一处江湖</span>
-        ${farmingHere ? `<span class="tag gold">⚔️ 当前挂机 · 第 ${state.combat.stage ?? 1} 关</span>` : ''}
-      </div>
-      <div class="sd-body">
-        <div class="panel sub-list">
-          <div class="ph">⚔️ 小关卡 · 点击开始挂机</div>
-          <div class="pb">${Array.from({ length: STAGES_PER_REGION }, (_, index) => renderSubNode(region, index + 1)).join('')}</div>
-          <div class="pb hint-line">已通关 ${Math.min(cleared, STAGES_PER_REGION)} / ${STAGES_PER_REGION} · 须依次递进解锁</div>
-        </div>
-        <div class="panel city-panel">
-          <div class="ph">🏯 ${region.name} · 城市</div>
-          <div class="pb empty-state"><span class="empty-icon">🏘️</span><p>城市系统尚在营造中，后续版本将开放店铺、酒馆与奇遇。</p></div>
-        </div>
-        <div class="panel faction-panel">
-          <div class="ph">🏴 本地势力</div>
-          <div class="pb empty-state"><span class="empty-icon">🏮</span><p>本地势力尚未现世，后续版本将开放势力贡献与悬赏任务。</p></div>
-        </div>
-      </div>
-    </section>`
-}
-
-const renderStageCombat = (): string => {
-  const region = getSelectedRegion(state)
-  const stage = state.combat.stage ?? 1
-  return `
-    <div class="level-breadcrumb">
-      <button class="text-button" data-action="back-stages">← 返回小关卡</button><span>${region.name} / 第 ${stage} 关</span>
-      <span class="breadcrumb-actions">
-        <span class="location-status"><i></i><span>队伍正在战斗<strong>${region.rewardText}</strong></span></span>
-        <button class="secondary-button stop-idle-button" type="button" data-action="stop-idle">停止挂机</button>
-      </span>
-    </div>
-    <div class="idle-layout">
-      <div class="main-column">
-        ${renderCombatArena()}
-        <section class="yield-panel panel">
-          <div class="section-title"><span>当前挂机信息</span><small>只结算在线战斗击败敌人获得的奖励</small></div>
-          <div class="yield-grid">
-            <div><small>当前小关卡</small><strong>${stage}/10</strong><span>${region.name}</span></div>
-            <div><small>敌人强度</small><strong>${100 + (stage - 1) * 8}%</strong><span>随小关卡递增</span></div>
-            <div><small>本章败敌</small><strong>${formatNumber(state.regionDefeats[region.id])}</strong><span>在线战斗累计</span></div>
-            <div><small>队伍战力</small><strong>${formatNumber(getPartyPower(state))}</strong><span>羁绊已计入</span></div>
-          </div>
-        </section>
-      </div>
-      ${renderLogs()}
-    </div>`
-}
-
-const renderIdle = (): string => {
-  if (levelView === 'combat' && state.combat.mode === 'idle' && state.combat.status === 'fighting') return renderStageCombat()
-  if (levelView === 'stages' && chapterRegionId) return renderStageList()
-  return renderRegionList()
-}
-
-const getOwnedHeroes = () => HEROES.filter((hero) => state.heroes[hero.id]?.unlocked)
-
-const getSelectedHeroId = (): string => {
-  const owned = getOwnedHeroes()
-  const fallback = state.formation.find((slot) => state.heroes[slot.heroId]?.unlocked)?.heroId ?? owned[0]?.id ?? ''
-  if (!selectedHeroId || !state.heroes[selectedHeroId]?.unlocked) selectedHeroId = fallback
+const normalizeSelectedHero = (): string | null => {
+  const recruited = recruitedHeroes()
+  if (!selectedHeroId || !session.state.heroes[selectedHeroId]?.recruited) selectedHeroId = recruited[0]?.definition.id ?? null
   return selectedHeroId
 }
 
-const renderHeroRosterCard = (heroId: string, activeHeroId: string): string => {
-  const hero = heroById(heroId)
-  const progress = state.heroes[heroId]
-  if (!hero || !progress?.unlocked) return ''
-  const formationSlot = state.formation.find((slot) => slot.heroId === heroId)
-  // 已出战的侠客不能再从名册拖动：换位/下阵请直接操作上方阵容格
-  const draggable = !formationSlot && !isBuildUiLocked()
-  return `
-    <button type="button" class="hero-roster-card ${heroId === activeHeroId ? 'selected' : ''} ${formationSlot ? 'on-duty' : ''}"
-      data-action="select-hero" data-hero-id="${heroId}" ${draggable ? `data-drag-hero="${heroId}" draggable="true"` : ''}
-      aria-pressed="${heroId === activeHeroId}">
-      ${formationSlot ? `<span class="roster-status">${formationSlot.row === 'front' ? '前排' : '后排'}</span>` : ''}
-      <span class="roster-level">Lv.${progress.level}</span>
-      <span class="roster-portrait element-${hero.element}">${hero.name.slice(-1)}</span>
-      <strong>${hero.name}</strong>
-      <small>${hero.sect} · ${hero.epithet}</small>
-    </button>`
-}
+const heroesViewModel = (): HeroesPageViewModel => {
+  const selectedId = normalizeSelectedHero()
+  const selectedProgress = selectedId ? session.state.heroes[selectedId] : undefined
+  const currentCareer = selectedProgress ? careerById(selectedProgress.currentCareerId) : undefined
+  const learned = selectedProgress ? Object.entries(selectedProgress.learnedMartials).map(([id, record]) => {
+    const martial = martialByIdV10(id)
+    return { id, name: martial?.name ?? id, rarity: martial?.rarity ?? '粗浅', level: record.level }
+  }) : []
+  const compatibleCareers = currentCareer
+    ? CAREERS.filter((career) => career.category === currentCareer.category && career.id !== currentCareer.id)
+    : []
+  const compatibleHeartMethods = selectedProgress
+    ? [...FACTION_HEART_METHODS, ...CITY_HEART_METHODS].filter((method) =>
+      session.state.unlockedWorldIds.includes(method.worldId) && method.careerIds.includes(selectedProgress.currentCareerId))
+    : []
 
-const renderMartialSlots = (heroId: string): string => {
-  const progress = state.heroes[heroId]
-  const locked = isBuildUiLocked()
-  return `
-    <section class="martial-slot-section">
-      <div class="section-title"><span>出战武功</span><small>按 1 → 4 的优先级自动施展</small></div>
-      <div class="martial-slots" data-testid="martial-slots">
-        ${progress.equippedMartialIds.map((martialId, slot) => {
-          const martial = martialId ? martialById(martialId) : undefined
-          const learned = martialId ? progress.learnedMartials[martialId] : undefined
-          return `
-            <article class="martial-slot ${martial ? 'filled' : 'empty'}" data-testid="martial-slot-${slot}">
-              <span class="slot-priority">${slot + 1}</span>
-              ${martial && learned ? `
-                <div class="slot-martial-copy">
-                  <small>${martial.element}行 · ${martial.style}劲 · ${martial.rankNames[learned.rank - 1]}</small>
-                  <strong>${martial.name}</strong>
-                  <span>${martial.skill.name} · 冷却 ${martial.skill.cooldown}</span>
-                </div>
-                <div class="slot-controls">
-                  <button type="button" class="text-button" data-action="move-martial" data-hero-id="${heroId}" data-slot="${slot}" data-direction="-1" aria-label="上移" ${locked || slot === 0 ? 'disabled' : ''}>↑</button>
-                  <button type="button" class="text-button" data-action="move-martial" data-hero-id="${heroId}" data-slot="${slot}" data-direction="1" aria-label="下移" ${locked || slot === 3 ? 'disabled' : ''}>↓</button>
-                  <button type="button" class="text-button danger" data-action="unequip-martial" data-hero-id="${heroId}" data-slot="${slot}" ${locked ? 'disabled' : ''}>卸下</button>
-                </div>` : '<em>空槽位<small>从下方已学武功中装备</small></em>'}
-            </article>`
-        }).join('')}
-      </div>
-    </section>`
-}
-
-const renderLearnedMartials = (heroId: string): string => {
-  const progress = state.heroes[heroId]
-  const learnedEntries = Object.entries(progress.learnedMartials)
-    .map(([martialId, learned]) => ({ martial: martialById(martialId), learned }))
-    .filter((entry): entry is { martial: NonNullable<ReturnType<typeof martialById>>; learned: typeof entry.learned } => Boolean(entry.martial))
-  const locked = isBuildUiLocked()
-  return `
-    <section class="learned-martials" data-testid="learned-martials">
-      <div class="section-title"><span>已学武功</span><small>${learnedEntries.length} / ${MAX_LEARNED_MARTIALS} · 全部被动永久叠加</small></div>
-      <div class="learned-martial-list">
-        ${learnedEntries.map(({ martial, learned }) => {
-          const equippedSlot = progress.equippedMartialIds.indexOf(martial.id)
-          const canEquip = equippedSlot < 0 && progress.equippedMartialIds.includes(null)
-          return `
-            <article class="learned-martial-row" data-testid="learned-${martial.id}">
-              <span class="martial-glyph element-${martial.element}">${martial.element}</span>
-              <div class="learned-martial-copy">
-                <div><strong>${martial.name}</strong><small>${martial.rankNames[learned.rank - 1]} · ${martial.style}劲</small></div>
-                <p>${martial.skill.name}：${martial.skill.description}</p>
-                <em>被动 · ${formatMartialPassive(martial.id, learned.rank)}</em>
-              </div>
-              <div class="learned-martial-actions">
-                ${equippedSlot >= 0
-                  ? `<span>槽位 ${equippedSlot + 1}</span>`
-                  : `<button type="button" class="secondary-button" data-action="equip-martial" data-hero-id="${heroId}" data-martial-id="${martial.id}" ${locked || !canEquip ? 'disabled' : ''}>${canEquip ? '装备' : '槽位已满'}</button>`}
-                <button type="button" class="text-button danger" data-action="forget-martial" data-hero-id="${heroId}" data-martial-id="${martial.id}" ${locked ? 'disabled' : ''}>遗忘</button>
-              </div>
-            </article>`
-        }).join('') || '<div class="empty-martial-state">尚未学会武功；武功获取方式将在后续玩法中开放。</div>'}
-      </div>
-    </section>`
-}
-
-const renderHeroDetail = (heroId: string): string => {
-  const hero = heroById(heroId)
-  const progress = state.heroes[heroId]
-  if (!hero || !progress?.unlocked) return '<section class="hero-detail panel">暂无已拥有侠客</section>'
-  const stats = getHeroStats(state, heroId)
-  const passives = getPassiveBonuses(progress.learnedMartials)
-  const upgradeCost = getUpgradeCost(progress.level)
-  const inFormation = state.formation.some((slot) => slot.heroId === heroId)
-  return `
-    <section class="hero-detail panel" data-testid="hero-detail">
-      <div class="hero-detail-head">
-        <span class="hero-detail-portrait element-${hero.element}">${hero.name.slice(-1)}</span>
-        <div class="hero-detail-identity">
-          <small>${hero.sect} · ${hero.epithet}</small>
-          <h2>${hero.name}<span>Lv.${progress.level}</span></h2>
-          <p>${hero.description}</p>
-          <div class="tag-row"><span>${hero.element}行</span><span>${hero.style}劲</span><span class="affinity">${stats.affinityText}</span></div>
-        </div>
-        <div class="hero-head-side">
-          <b class="power-number">${stats.power}<small>战力</small></b>
-          <button type="button" class="secondary-button formation-toggle" data-action="toggle-formation" data-hero-id="${hero.id}"
-            ${isBuildUiLocked() ? 'disabled' : ''} data-testid="formation-toggle">${inFormation ? '下阵休整' : '邀其上阵'}</button>
-        </div>
-      </div>
-      <div class="hero-detail-stats">
-        <span><small>攻击</small><strong>${stats.attack}</strong></span>
-        <span><small>防御</small><strong>${stats.defense}</strong></span>
-        <span><small>气血</small><strong>${stats.hp}</strong></span>
-        <span class="passive-total"><small>已学被动</small><strong>攻 +${Math.round(passives.attack * 100)}% · 御 +${Math.round(passives.defense * 100)}% · 气血 +${Math.round(passives.hp * 100)}%</strong></span>
-        <button type="button" class="secondary-button realm-upgrade" data-action="upgrade" data-hero-id="${hero.id}" ${isBuildUiLocked() ? 'disabled' : ''}>提升境界 <small>${upgradeCost.silver} 银两 / ${upgradeCost.experience} 阅历</small></button>
-      </div>
-      ${renderMartialSlots(heroId)}
-      ${renderLearnedMartials(heroId)}
-    </section>`
-}
-
-/* ---- 出战阵容面板（前 3 后 3，拖拽布阵） ---- */
-const renderFormationPanel = (): string => {
-  const locked = isBuildUiLocked()
-  const formation = getFormationSummary(state)
-  const synergy = getPartySynergy(state)
-  const activeBonds = getActiveBonds(state)
-  const activeCombos = getActiveCombos(state)
-  const renderRow = (row: FormationRow): string => {
-    const memberByPosition = new Map(
-      state.formation.filter((slot) => slot.row === row).map((slot) => [slot.position, slot]),
-    )
-    const slots = ([0, 1, 2] as const).map((position) => {
-      const member = memberByPosition.get(position)
-      if (!member) return `<div class="formation-slot empty" data-position="${position}"><em>＋<small>拖入侠客</small></em></div>`
-      const hero = heroById(member.heroId)!
-      const progress = state.heroes[member.heroId]
-      const stats = getHeroStats(state, member.heroId)
-      const targetRow: FormationRow = row === 'front' ? 'back' : 'front'
-      return `
-        <article class="formation-slot filled row-${row}" data-drag-hero="${hero.id}" data-position="${position}" draggable="${locked ? 'false' : 'true'}" data-testid="formation-slot-${hero.id}">
-          <button type="button" class="slot-remove text-button danger" data-action="remove-formation" data-hero-id="${hero.id}"
-            ${locked ? 'disabled' : ''} aria-label="让${hero.name}下阵" title="下阵">✕</button>
-          <div class="portrait element-${hero.element}">${hero.name.slice(-1)}</div>
-          <strong>${hero.name}</strong>
-          <small>Lv.${progress.level} · 战力 ${stats.power}</small>
-          <button type="button" class="slot-move text-button" data-action="set-row" data-hero-id="${hero.id}" data-row="${targetRow}" ${locked ? 'disabled' : ''}>
-            调至${targetRow === 'front' ? '前排' : '后排'}
-          </button>
-        </article>`
-    })
-    return `
-      <div class="formation-row ${row}" data-drop-row="${row}" data-testid="formation-${row}-row">
-        <div class="formation-row-heading">
-          <span>${row === 'front' ? '前排' : '后排'}</span>
-          <small>${row === 'front' ? '优先承伤 · 受到伤害 -20% · 造成伤害 -10%' : '受前排保护 · 造成伤害 +15%'}</small>
-        </div>
-        <div class="formation-slots">${slots.join('')}</div>
-      </div>`
+  return {
+    selectedHeroId: selectedId,
+    formation: session.state.formation,
+    heroes: recruitedHeroes().map(({ definition, progress }) => {
+      const career = careerById(progress.currentCareerId)
+      const record = progress.careers[progress.currentCareerId]
+      return {
+        id: definition.id,
+        name: definition.name,
+        grade: definition.grade,
+        recruited: progress.recruited,
+        level: progress.level,
+        careerId: progress.currentCareerId,
+        careerName: career?.name ?? progress.currentCareerId,
+        careerLevel: record?.level ?? 1,
+        careerPerfected: record?.perfected ?? false,
+        availableCareerIds: compatibleCareers.map((item) => item.id),
+        learnedMartials: Object.entries(progress.learnedMartials).map(([id, learnedRecord]) => {
+          const martial = martialByIdV10(id)
+          return { id, name: martial?.name ?? id, rarity: martial?.rarity ?? '粗浅', level: learnedRecord.level }
+        }),
+        equippedMartialIds: progress.equippedMartialIds,
+        heartMethodId: progress.heartMethodId,
+      }
+    }),
+    careers: compatibleCareers.map((career) => ({
+      id: career.id,
+      name: career.name,
+      tier: career.tier,
+      owned: Boolean(selectedProgress?.careers[career.id]),
+      tokenOwned: session.state.careerTokens.includes(`token_${career.id}`),
+    })),
+    martials: learned.map((martial) => ({ ...martial, learned: true })),
+    heartMethods: compatibleHeartMethods.map((method) => ({
+      id: method.id,
+      name: method.name,
+      equipped: selectedProgress?.heartMethodId === method.id,
+    })),
   }
-  return `
-    <section class="formation-panel panel" data-testid="formation-panel">
-      <div class="section-title"><span>出战阵容</span><small>总战力 ${formatNumber(getPartyPower(state))} · 拖入侠客上阵</small></div>
-      <div class="formation-rows">${renderRow('front')}${renderRow('back')}</div>
-      <div class="synergy-strip" data-testid="synergy-strip">
-        <span class="active"><b>阵</b>${formation.name}</span>
-        <span class="${synergy.sectName ? 'active' : ''}"><b>门</b>${synergy.sectName ? `${synergy.sectName} ×${synergy.sectCount}` : '未共鸣'}</span>
-        <span class="${activeBonds.length ? 'active' : ''}"><b>缘</b>${activeBonds.length ? `${activeBonds.length} 条羁绊` : '无羁绊'}</span>
-        <span class="${activeCombos.length ? 'active' : ''}"><b>合</b>${activeCombos.length ? activeCombos.map((combo) => combo.name).join('、') : '无合击'}</span>
-      </div>
-    </section>`
 }
 
-const renderHeroes = (): string => {
-  const owned = getOwnedHeroes()
-  const heroId = getSelectedHeroId()
-  const lockMessage = getBuildUiLockMessage()
-  return `
-    ${lockMessage ? `<aside class="hero-build-lock" data-testid="hero-build-lock"><b>配置锁定</b><span>${lockMessage}</span></aside>` : ''}
-    <div class="heroes-workbench">
-      <div class="heroes-side">
-        ${renderFormationPanel()}
-        <aside class="hero-roster-panel panel" data-drop-roster>
-          <div class="hero-roster" data-testid="hero-roster">${owned.map((hero) => renderHeroRosterCard(hero.id, heroId)).join('')}</div>
-        </aside>
-      </div>
-      ${renderHeroDetail(heroId)}
-    </div>`
-}
-
-const renderParty = (): string => {
-  const synergy = getPartySynergy(state)
-  const activeBonds = getActiveBonds(state)
-  const activeCombos = getActiveCombos(state)
-  const formation = getFormationSummary(state)
-  return `
-    <section class="party-board panel">
-      <div class="section-title"><span>阵势与共鸣</span><small>列阵调整请前往「侠客」页拖拽完成</small></div>
-      <div class="synergy-grid">
-        <article class="synergy-card active formation"><span class="seal-icon">阵</span><div><small>当前阵势</small><strong>${formation.name}</strong><p>${formation.effectText}</p></div></article>
-        <article class="synergy-card ${synergy.sectName ? 'active' : ''}"><span class="seal-icon">门</span><div><small>门派羁绊</small><strong>${synergy.sectName ? `${synergy.sectName}共鸣` : '尚未激活'}</strong><p>${synergy.sectText}</p></div></article>
-        <article class="synergy-card ${activeBonds.length ? 'active' : ''}"><span class="seal-icon">缘</span><div><small>关系羁绊</small><strong>${activeBonds.length ? `${activeBonds.length} 条生效` : '尚未激活'}</strong><p>${activeBonds.length ? activeBonds.map((bond) => bond.name).join(' · ') : '按下方图谱安排有故事关联的侠客同队。'}</p></div></article>
-        <article class="synergy-card ${activeCombos.length ? 'active combo' : ''}"><span class="seal-icon">合</span><div><small>联手武学</small><strong>${activeCombos.length ? activeCombos.map((combo) => combo.name).join(' · ') : '尚未激活'}</strong><p>${activeCombos.length ? '每三回合轮换施展已激活的合击。' : '集齐合击所需的两位侠客并安排同队。'}</p></div></article>
-      </div>
-    </section>
-    <section class="bond-atlas panel" data-testid="bond-atlas">
-      <div class="section-title"><span>江湖羁绊图谱</span><small>${BONDS.filter((bond) => bond.heroIds.every((heroId) => state.heroes[heroId]?.unlocked)).length}/${BONDS.length} 条关系已结识</small></div>
-      <div class="bond-grid">${BONDS.map((bond) => {
-        const active = synergy.activeBondIds.includes(bond.id)
-        const known = bond.heroIds.every((heroId) => state.heroes[heroId]?.unlocked)
-        const missing = bond.heroIds.filter((heroId) => !state.heroes[heroId]?.unlocked).map((heroId) => heroById(heroId)?.name).join('、')
-        return `<article class="bond-card ${active ? 'active' : known ? 'known' : 'locked'}" data-bond-id="${bond.id}">
-          <span>${bond.type}</span><strong>${bond.name}</strong><small>${bond.heroIds.map((heroId) => heroById(heroId)?.name).join(' × ')}</small>
-          <p>${bond.story}</p><em>${bond.effectText}</em><b>${active ? '并肩生效' : known ? '已结识 · 安排同队可激活' : `尚缺 ${missing}`}</b>
-        </article>`
-      }).join('')}</div>
-    </section>
-    <section class="combo-codex panel" data-testid="combo-codex">
-      <div class="section-title"><span>联手武学录</span><small>${COMBOS.filter((combo) => combo.heroIds.every((heroId) => state.heroes[heroId]?.unlocked)).length}/${COMBOS.length} 式已收集</small></div>
-      <div class="combo-grid">${COMBOS.map((combo) => {
-        const active = synergy.activeComboIds.includes(combo.id)
-        const known = combo.heroIds.every((heroId) => state.heroes[heroId]?.unlocked)
-        return `<article class="combo-card ${active ? 'active' : known ? 'known' : 'locked'}" data-combo-id="${combo.id}">
-          <span>合</span><div><strong>${combo.name}</strong><small>${combo.heroIds.map((heroId) => heroById(heroId)?.name).join(' × ')}</small><p>${combo.description}</p><b>${active ? '当前阵容已激活' : known ? '侠客已齐 · 待同队' : '尚未集齐所需侠客'}</b></div>
-        </article>`
-      }).join('')}</div>
-    </section>
-    <section class="decision-note panel">
-      <span>取舍</span><p>关系羁绊可能让数值较低的侠客成为关键拼图；阵型、武学、门派、关系与合击共同决定最终 build。</p>
-    </section>`
-}
-
-const renderBattle = (): string => {
-  const inChallenge = state.combat.mode === 'challenge'
-  const activeBonds = getActiveBonds(state)
-  const activeCombos = getActiveCombos(state)
-  const region = getSelectedRegion(state)
-  const boss = region.boss
-  const trait = enemyTraitById(boss.traitId)
-  const defeated = state.defeatedBossIds.includes(boss.id)
-  const unlocks = nextRegionAfter(region.id)
-  return `
-    <div class="battle-page-layout">
-      <div class="main-column">
-        <section class="boss-intel panel" data-testid="boss-intel">
-          <div class="boss-intel-title"><span class="seal-icon">敌</span><div><small>${region.name}镇守强敌</small><strong>${boss.name}</strong></div></div>
-          <div class="trait-dossier"><small>敌人特性</small><strong>${trait.name}</strong><p>${trait.description}</p></div>
-          <div class="counter-dossier"><small>破局提示</small><strong>${trait.counterHint}</strong><p>首胜奖励：${boss.rewards.silver} 银两 · ${boss.rewards.experience} 阅历 · ${boss.rewards.pages} 残页 · ${boss.rewards.reputation} 声望${unlocks ? `；并解锁「${unlocks.name}」` : ''}</p></div>
-        </section>
-        <section class="challenge-command panel">
-          <div><span class="seal-icon">令</span><div><small>${region.name} · ${trait.name}</small><strong>${inChallenge && state.combat.status === 'fighting' ? '本场交锋进行中' : defeated ? '可再次切磋' : '强敌候战'}</strong></div></div>
-          ${inChallenge && state.combat.status === 'fighting'
-            ? '<button class="secondary-button" data-action="return-idle">退出挑战</button>'
-            : `<button class="primary-button" data-action="challenge">${defeated ? '再次挑战' : '挑战'}${boss.name}</button>`}
-        </section>
-        <section class="skill-plan panel" data-testid="skill-plan">
-          <div class="section-title"><span>本阵招式预案</span><small>${activeBonds.length} 条关系羁绊 · ${activeCombos.length} 式合击</small></div>
-          <div class="skill-plan-grid">${state.formation.map(({ heroId }) => renderSkillPlanForHero(heroId)).join('')}</div>
-          <p class="battle-bond-summary">${activeBonds.length ? `羁绊：${activeBonds.map((bond) => `${bond.name}（${bond.effectText}）`).join('；')}` : '当前没有关系羁绊生效'}${activeCombos.length ? ` · 合击：${activeCombos.map((combo) => combo.name).join('、')}` : ''}</p>
-        </section>
-        ${inChallenge ? renderCombatArena() : `<section class="boss-preview panel"><span>战</span><strong>${boss.name}</strong><p>整备完成后发出挑战，战斗不会损失资源。</p></section>`}
-        <div class="combat-hints">
-          <span><i>一</i>查看敌人特性</span><span><i>二</i>按提示调整 build</span><span><i>三</i>首胜解锁新区域</span>
-        </div>
-      </div>
-      ${renderLogs()}
-    </div>`
-}
-
-const renderMystery = (): string => {
-  const run = state.mystery.run
-  const route = `
-    <div class="mystery-route" data-testid="mystery-route">
-      ${MYSTERY_ENCOUNTERS.map((encounter, index) => `<span class="${run && index < run.floor ? 'cleared' : run && index === run.floor && run.status !== 'completed' ? 'active' : ''}">
-        <i>${index + 1}</i><b>${encounter.name}</b><small>${encounter.boss ? '秘境之主' : enemyTraitById(encounter.traitId).name}</small>
-      </span>`).join('')}
-    </div>`
-  const heading = ''
-
-  if (!run) {
-    return `${heading}
-      <section class="mystery-entry panel" data-testid="mystery-page">
-        <span class="mystery-seal">秘</span><small>五层连续探索</small><h2>雾门之后，机缘与杀机并存</h2>
-        <p>每次进入都会重新排列祝福选项。战败会结束本轮，但已经取得的银两、阅历、残页与声望不会丢失。</p>
-        <button class="primary-button" data-action="start-mystery">踏入无相秘境</button>
-      </section>${route}`
+const factionsViewModel = (): FactionsPageViewModel => {
+  const availableFactions = FACTIONS.filter((faction) => session.state.unlockedWorldIds.includes(faction.worldId))
+  if (!availableFactions.some((faction) => faction.id === selectedFactionId)) selectedFactionId = availableFactions[0]?.id ?? 'qingfeng_hall'
+  const faction = availableFactions.find((item) => item.id === selectedFactionId) ?? availableFactions[0]
+  const board = session.state.factionBoards[selectedFactionId]
+  const heroProgress = selectedHeroId ? session.state.heroes[selectedHeroId] : undefined
+  const factionMartials = FACTION_MARTIALS.filter((martial) => martial.factionId === selectedFactionId)
+  const factionHero = FACTION_HEROES.find((hero) => hero.factionId === selectedFactionId)
+  return {
+    selectedFactionId,
+    factions: availableFactions.map((item) => ({
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      contribution: session.state.contribution[item.id] ?? 0,
+      selected: item.id === selectedFactionId,
+    })),
+    refreshRemainingMs: board?.refreshRemainingMs ?? 0,
+    quests: Array.from({ length: 6 }, (_, slot) => ({ slot, quest: board?.slots[slot] ?? null })),
+    branches: (faction?.branchLabels ?? []).map((branch) => ({
+      name: branch,
+      martials: factionMartials.filter((martial) => martial.branch === branch).map((martial) => ({
+        id: martial.id,
+        name: martial.name,
+        stage: martial.stage,
+        rarity: martial.rarity,
+        cost: martial.currencySource.amount,
+        learned: Boolean(heroProgress?.learnedMartials[martial.id]),
+        level: heroProgress?.learnedMartials[martial.id]?.level ?? 0,
+      })),
+    })),
+    factionHero: factionHero ? {
+      id: factionHero.id,
+      name: factionHero.name,
+      grade: factionHero.grade,
+      cost: factionHero.cost,
+      recruited: Boolean(session.state.heroes[factionHero.id]?.recruited),
+    } : null,
+    selectedHeroId: normalizeSelectedHero(),
   }
-
-  const blessingSummary = MYSTERY_BLESSINGS.map((blessing) => ({
-    blessing,
-    count: run.blessingIds.filter((id) => id === blessing.id).length,
-  })).filter(({ count }) => count > 0)
-  const encounter = MYSTERY_ENCOUNTERS[Math.min(run.floor, MYSTERY_ENCOUNTERS.length - 1)]
-  const runHeader = `
-    <section class="mystery-run-head panel">
-      <div><small>本轮进度</small><strong>${run.status === 'completed' ? '秘境问鼎' : run.status === 'failed' ? `止步第 ${run.floor + 1} 层` : `第 ${run.floor + 1} / ${MYSTERY_ENCOUNTERS.length} 层`}</strong></div>
-      <div class="mystery-earned"><span>银 ${run.earned.silver}</span><span>历 ${run.earned.experience}</span><span>卷 ${run.earned.pages}</span><span>名 ${run.earned.reputation}</span></div>
-      <button class="text-button danger" data-action="abandon-mystery" ${run.status === 'completed' || run.status === 'failed' ? 'hidden' : ''}>离开秘境</button>
-    </section>
-    <section class="blessing-stack panel">
-      <div class="section-title"><span>本轮祝福</span><small>${run.blessingIds.length} 层加持，可重复叠加</small></div>
-      <div>${blessingSummary.length ? blessingSummary.map(({ blessing, count }) => `<span><b>${blessing.name}${count > 1 ? ` ×${count}` : ''}</b><small>${blessing.effectText}</small></span>`).join('') : '<p>尚未取得祝福。</p>'}</div>
-    </section>`
-
-  if (run.status === 'choosing') {
-    return `${heading}${route}${runHeader}
-      <section class="mystery-choice-panel panel" data-testid="mystery-choices">
-        <div class="section-title"><span>前方岔路</span><small>选择后立即进入第 ${run.floor + 1} 层战斗</small></div>
-        <div class="next-encounter"><span>敌</span><div><small>${enemyTraitById(encounter.traitId).name}</small><strong>${encounter.name}</strong><p>${encounter.description}</p></div></div>
-        <div class="mystery-choice-grid">${run.choiceIds.map((id) => {
-          const blessing = mysteryBlessingById(id)!
-          return `<button data-action="choose-mystery" data-blessing-id="${blessing.id}">
-            <span>择</span><div><strong>${blessing.name}</strong><p>${blessing.description}</p><b>${blessing.effectText}</b></div>
-          </button>`
-        }).join('')}</div>
-      </section>`
-  }
-
-  if (run.status === 'fighting') {
-    return `${heading}${route}${runHeader}
-      <div class="battle-page-layout mystery-battle-layout">
-        <div class="main-column">
-          <section class="mystery-encounter panel"><span>战</span><div><small>第 ${run.floor + 1} 层 · ${enemyTraitById(encounter.traitId).name}</small><strong>${encounter.name}</strong><p>${encounter.description}</p></div></section>
-          ${renderCombatArena()}
-        </div>
-        ${renderLogs()}
-      </div>`
-  }
-
-  const completed = run.status === 'completed'
-  return `${heading}${route}${runHeader}
-    <section class="mystery-result panel ${completed ? 'completed' : 'failed'}" data-testid="mystery-result">
-      <span>${completed ? '问鼎' : '归来'}</span>
-      <h2>${completed ? '无相秘境已经贯通' : '此轮探索止步于此'}</h2>
-      <p>${completed ? '五层守关者尽数落败，所有祝福化作一段新的江湖传闻。' : '重新调整阵型、武学与羁绊，再来时或许能走得更远。'}本轮战利品已经永久收入存档。</p>
-      <div class="settlement-grid">
-        <div><span>银</span><strong>+${run.earned.silver}</strong><small>银两</small></div>
-        <div><span>历</span><strong>+${run.earned.experience}</strong><small>阅历</small></div>
-        <div><span>卷</span><strong>+${run.earned.pages}</strong><small>残页</small></div>
-        <div><span>名</span><strong>+${run.earned.reputation}</strong><small>声望</small></div>
-      </div>
-      <button class="primary-button" data-action="finish-mystery">收下战利品并离开</button>
-    </section>`
 }
 
-const renderSettings = (): string => `
-  <div class="settings-layout">
-    <section class="panel settings-panel" data-testid="settings-panel">
-      <div class="section-title"><span>设置</span><small>存档与恢复</small></div>
-      <p class="settings-hint">本作所有进度仅保存在本地浏览器中。可将存档导出为 JSON 备份，或从备份文件导入继续江湖。</p>
-      <div class="settings-actions">
-        <button class="text-button" data-action="export">导出</button>
-        <button class="text-button" data-action="import">导入</button>
-        <button class="text-button danger" data-action="reset">重开存档</button>
-      </div>
-    </section>
-  </div>`
+const tokenCost = (tier: string): number => tier === '中级' ? 300 : tier === '高级' ? 800 : tier === '顶级' ? 2000 : 0
 
-const isViewingIdleCombat = (): boolean => activeTab === 'idle'
-  && levelView === 'combat'
-  && state.combat.mode === 'idle'
-  && state.combat.status === 'fighting'
-
-const renderIdleCombatReturn = (): string => {
-  if (state.combat.mode !== 'idle' || state.combat.status !== 'fighting' || isViewingIdleCombat()) return ''
-  const region = regionById(state.combat.regionId) ?? REGIONS[0]
-  const stage = state.combat.stage ?? 1
-  return `
-    <button class="idle-combat-return" type="button" data-action="return-idle-combat" data-testid="idle-combat-return"
-      aria-label="返回${region.name}第 ${stage} 关挂机界面">
-      <span class="idle-combat-return-status"><i></i>挂机战斗中</span>
-      <strong>${region.name} · 第 ${stage} 关</strong>
-      <small>返回战斗 <b aria-hidden="true">→</b></small>
-    </button>`
+const cityViewModel = (): CityPageViewModel => {
+  const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
+  const selectedId = normalizeSelectedHero()
+  const selectedProgress = selectedId ? session.state.heroes[selectedId] : undefined
+  const selectedCareer = selectedProgress ? careerById(selectedProgress.currentCareerId) : undefined
+  const worldIndex = Number(world.id.slice(-2)) || 1
+  const tierAvailable = (tier: string): boolean => tier === '中级' || tier === '高级' && worldIndex >= 4 || tier === '顶级' && worldIndex >= 7
+  return {
+    worldId: world.id,
+    worldName: world.name,
+    worldCurrency: session.state.worldCurrency[world.id] ?? 0,
+    selectedHeroId: selectedId,
+    heroes: recruitedHeroes().map(({ definition }) => ({ id: definition.id, name: definition.name })),
+    tavernHeroes: TAVERN_HEROES.filter((hero) => hero.worldId === world.id).map((hero) => ({
+      id: hero.id,
+      name: hero.name,
+      grade: hero.grade,
+      cost: hero.cost,
+      recruited: Boolean(session.state.heroes[hero.id]?.recruited),
+    })),
+    martials: CITY_MARTIALS.filter((martial) => martial.worldId === world.id).map((martial) => ({
+      id: martial.id,
+      name: martial.name.replace(world.id, world.name),
+      rarity: martial.rarity,
+      cost: martial.currencySource.amount,
+      learned: Boolean(selectedProgress?.learnedMartials[martial.id]),
+    })),
+    careerTokens: CAREERS.filter((career) => career.previousId && tierAvailable(career.tier) && (!selectedCareer || career.category === selectedCareer.category)).map((career) => ({
+      id: `token_${career.id}`,
+      name: `${career.name}信物`,
+      tier: career.tier,
+      cost: tokenCost(career.tier),
+      owned: session.state.careerTokens.includes(`token_${career.id}`),
+    })),
+  }
 }
 
-function render(): void {
+const inventoryViewModel = (): InventoryPageViewModel => {
+  const selectedId = normalizeSelectedHero()
+  const heroes = recruitedHeroes().map(({ definition }) => ({ id: definition.id, name: definition.name }))
+  const equippedBy = (uid: string): string | null => Object.entries(session.state.heroes)
+    .find(([, progress]) => Object.values(progress.equipmentBySlot).includes(uid))?.[0] ?? null
+  return {
+    selectedHeroId: selectedId,
+    heroes,
+    capacity: INVENTORY_CAPACITY,
+    items: session.state.inventory.map((item) => {
+      const definition = equipmentDefinitionById(item.definitionId)
+      return {
+        uid: item.uid,
+        name: definition?.name ?? item.definitionId,
+        slot: definition?.slot ?? 'weapon',
+        slotName: definition?.slot === 'weapon' ? '兵刃' : definition?.slot === 'head' ? '冠巾' : definition?.slot === 'armor' ? '衣甲' : definition?.slot === 'wrist' ? '护腕' : definition?.slot === 'waist' ? '腰佩' : definition?.slot === 'boots' ? '履靴' : '信物',
+        level: item.level,
+        quality: item.quality,
+        locked: item.locked,
+        equippedByHeroId: equippedBy(item.uid),
+        affixes: item.affixes.map((affix) => ({
+          name: EQUIPMENT_AFFIXES.find((definitionAffix) => definitionAffix.id === affix.id)?.name ?? affix.id,
+          value: affix.value,
+        })),
+      }
+    }),
+  }
+}
+
+const render = (): void => {
+  const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
+  const contribution = Object.values(session.state.contribution).reduce((sum, value) => sum + value, 0)
   const content = activeTab === 'idle'
-    ? renderIdle()
+    ? renderIdlePage(idleViewModel())
     : activeTab === 'heroes'
-      ? renderHeroes()
-      : activeTab === 'party'
-        ? renderParty()
-        : activeTab === 'battle'
-          ? renderBattle()
-          : activeTab === 'settings'
-            ? renderSettings()
-            : renderMystery()
-  app.innerHTML = `
-    ${renderHeader()}
-    ${renderNav()}
-    <main class="game-main">${content}</main>
-    ${renderIdleCombatReturn()}`
+      ? renderHeroesPage(heroesViewModel())
+      : activeTab === 'factions'
+        ? renderFactionsPage(factionsViewModel())
+        : activeTab === 'city'
+          ? renderCityPage(cityViewModel())
+          : renderInventoryPage(inventoryViewModel())
+  app.innerHTML = renderShell({
+    activeTab,
+    worldName: world.name,
+    worldCurrency: session.state.worldCurrency[selectedWorldId] ?? 0,
+    contribution,
+    inventoryCount: session.state.inventory.length,
+    inventoryCapacity: INVENTORY_CAPACITY,
+    content,
+  })
 }
 
-const persistAndRender = (): void => {
-  saveGame(window.localStorage, state)
+const logEvents = (events: CombatEvent[]): void => {
+  for (const event of events) {
+    if (event.type === 'enemy-defeated') combatLogs.push(`击败${event.rank === 'boss' ? ' Boss' : event.rank === 'elite' ? '精英' : '敌人'}，收益即时入账`)
+    if (event.type === 'wave-started') combatLogs.push(`敌势再起，进入第 ${event.wave} 波`)
+    if (event.type === 'stage-cleared') combatLogs.push('本关十波尽破')
+    if (event.type === 'party-defeated') combatLogs.push('队伍败退，按规则回到驻守')
+    if (event.type === 'skill-skipped') combatLogs.push(`${event.skillId}跳过：${event.reason}`)
+  }
+  combatLogs = combatLogs.slice(-40)
+}
+
+const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => {
+  const result = session.startStage({ worldId: selectedWorldId, stage: selectedStage, mode, seed })
+  notify(result.message, !result.ok)
   render()
 }
 
+const placeFormation = (heroId: string, row: FormationRow, position: FormationPosition): ActionResult => {
+  if (!session.state.heroes[heroId]?.recruited) return { ok: false, message: '请先选择已加入的侠客' }
+  session.state.formation = session.state.formation.filter((slot) => slot.heroId !== heroId && !(slot.row === row && slot.position === position))
+  session.state.formation.push({ heroId, row, position })
+  return { ok: true, message: '侠客已入阵' }
+}
+
+const removeFormation = (heroId: string): ActionResult => {
+  const before = session.state.formation.length
+  session.state.formation = session.state.formation.filter((slot) => slot.heroId !== heroId)
+  return session.state.formation.length < before ? { ok: true, message: '侠客已下阵' } : { ok: false, message: '侠客不在阵中' }
+}
+
+const dataNumber = (button: HTMLElement, key: string): number => Number(button.dataset[key])
+
+const performAction = (button: HTMLButtonElement): void => {
+  const action = button.dataset.action
+  const heroId = button.dataset.heroId ?? selectedHeroId ?? ''
+  if (action === 'formation-place') commitAction(placeFormation(heroId, button.dataset.targetRow as FormationRow, dataNumber(button, 'position') as FormationPosition))
+  else if (action === 'formation-remove') commitAction(removeFormation(heroId))
+  else if (action === 'career-change') commitAction(changeCareer(session.state.heroes[heroId], button.dataset.careerId ?? '', session.state.careerTokens))
+  else if (action === 'career-perfect') commitAction(perfectCareer(session.state.heroes[heroId], button.dataset.careerId ?? ''))
+  else if (action === 'career-buy-token') commitAction(buyCareerToken(session.state, button.dataset.worldId ?? selectedWorldId, button.dataset.tokenId ?? ''))
+  else if (action === 'martial-learn') commitAction(learnFactionMartial(session.state, heroId, button.dataset.martialId ?? ''))
+  else if (action === 'martial-upgrade') commitAction(upgradeMartial(session.state, heroId, button.dataset.martialId ?? ''))
+  else if (action === 'martial-equip') commitAction(equipMartial(session.state, heroId, button.dataset.martialId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'martial-unequip') commitAction(unequipMartial(session.state, heroId, dataNumber(button, 'slot')))
+  else if (action === 'martial-forget') commitAction(forgetMartial(session.state, heroId, button.dataset.martialId ?? ''))
+  else if (action === 'heart-method-equip') commitAction(equipHeartMethod(session.state, heroId, button.dataset.heartMethodId ?? ''))
+  else if (action === 'quest-accept') commitAction(acceptQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'quest-cancel') commitAction(cancelQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'quest-claim') commitAction(claimQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'tavern-recruit') {
+    const result = recruitFromTavern(session.state, heroId)
+    if (result.ok) {
+      selectedHeroId = result.heroId
+      session.save()
+      notify('邀请成功')
+    } else notify(result.message, true)
+  } else if (action === 'faction-recruit') commitAction(recruitFromFaction(session.state, button.dataset.factionId ?? '', heroId))
+  else if (action === 'city-martial-learn') commitAction(learnCityMartial(session.state, heroId, button.dataset.martialId ?? ''))
+  else if (action === 'equipment-equip') commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
+  else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
+}
+
+app.addEventListener('change', (event) => {
+  const select = (event.target as HTMLElement).closest<HTMLSelectElement>('[data-action="select-hero-input"]')
+  if (!select) return
+  selectedHeroId = select.value || null
+  render()
+})
+
 app.addEventListener('click', (event) => {
   const target = event.target as HTMLElement
-  const tabButton = target.closest<HTMLElement>('[data-tab]')
-  if (tabButton?.dataset.tab) {
-    activeTab = tabButton.dataset.tab as TabId
-    if (activeTab === 'idle') {
-      levelView = 'regions'
-      chapterRegionId = null
-    }
+  const tab = target.closest<HTMLElement>('[data-tab]')?.dataset.tab as TabId | undefined
+  if (tab) {
+    activeTab = tab
     render()
     return
   }
-  const button = target.closest<HTMLElement>('[data-action]')
-  if (!button || (button as HTMLButtonElement).disabled) return
-  const { action, blessingId, direction, heroId, martialId, regionId, row, slot, stage } = button.dataset
-
-  switch (action) {
-    case 'select-hero': selectedHeroId = heroId ?? null; break
-    case 'upgrade': notify(upgradeHero(state, heroId ?? '')); break
-    case 'equip-martial': notify(equipMartial(state, heroId ?? '', martialId ?? '')); break
-    case 'unequip-martial': notify(unequipMartial(state, heroId ?? '', Number(slot))); break
-    case 'move-martial': {
-      const offset = Number(direction)
-      if (offset !== -1 && offset !== 1) return
-      notify(moveMartial(state, heroId ?? '', Number(slot), offset))
-      break
-    }
-    case 'forget-martial': {
-      const targetHeroId = heroId ?? ''
-      const targetMartialId = martialId ?? ''
-      const preview = getMartialForgetPreview(state, targetHeroId, targetMartialId)
-      if (!preview) {
-        notify('没有可遗忘的武功', 'warning')
-        break
-      }
-      const equipped = state.heroes[targetHeroId]?.equippedMartialIds.includes(targetMartialId)
-      const refund = preview.refund
-      const confirmed = window.confirm([
-        `确定遗忘「${preview.martial.name}」？`,
-        `当前重数：${preview.martial.rankNames[preview.rank - 1]}`,
-        `消失被动：${preview.passiveText}`,
-        equipped ? '该武功已装备，确认后将自动卸下。' : '',
-        `返还：${refund.silver} 银两、${refund.experience} 阅历、${refund.pages} 残页、${refund.reputation} 声望`,
-        '遗忘后无法撤销。',
-      ].filter(Boolean).join('\n'))
-      if (!confirmed) return
-      notify(forgetMartial(state, targetHeroId, targetMartialId))
-      break
-    }
-    case 'open-region': {
-      const region = REGIONS.find((candidate) => candidate.id === regionId)
-      if (!region) return
-      if (!isRegionUnlocked(state, region.id)) {
-        const requiredRegion = region.requiredBossId
-          ? REGIONS.find((candidate) => candidate.boss.id === region.requiredBossId)
-          : undefined
-        notify(`尚未解锁：击败${requiredRegion?.boss.name ?? '前一区域 BOSS'}后解锁`, 'warning')
-        return
-      }
-      chapterRegionId = region.id
-      levelView = 'stages'
-      break
-    }
-    case 'back-regions': chapterRegionId = null; levelView = 'regions'; break
-    case 'back-stages': chapterRegionId = state.combat.regionId; levelView = 'stages'; break
-    case 'start-stage': {
-      if (!REGIONS.some((region) => region.id === regionId)) return
-      const result = startIdleStage(state, regionId as RegionId, Number(stage))
-      notify(result)
-      if (result.ok) {
-        chapterRegionId = regionId as RegionId
-        levelView = 'combat'
-      }
-      break
-    }
-    case 'return-idle-combat': {
-      if (state.combat.mode !== 'idle' || state.combat.status !== 'fighting') break
-      activeTab = 'idle'
-      chapterRegionId = state.combat.regionId
-      levelView = 'combat'
-      break
-    }
-    case 'stop-idle': {
-      if (state.combat.mode !== 'idle' || state.combat.status !== 'fighting') break
-      const combatRegionId = state.combat.regionId
-      notify(returnToIdle(state))
-      activeTab = 'idle'
-      chapterRegionId = combatRegionId
-      levelView = 'stages'
-      break
-    }
-    case 'set-row': {
-      if (row !== 'front' && row !== 'back') return
-      const slotIndex = state.formation.findIndex((candidate) => candidate.heroId === heroId)
-      if (slotIndex < 0) return
-      notify(setFormationRow(state, slotIndex, row))
-      break
-    }
-    case 'toggle-formation': {
-      const targetId = heroId ?? ''
-      if (state.formation.some((candidate) => candidate.heroId === targetId)) {
-        notify(removeFromFormation(state, targetId))
-        break
-      }
-      const frontCount = state.formation.filter((candidate) => candidate.row === 'front').length
-      const targetRow: FormationRow = state.formation.length - frontCount <= frontCount ? 'back' : 'front'
-      notify(addToFormation(state, targetId, targetRow))
-      break
-    }
-    case 'remove-formation': notify(removeFromFormation(state, heroId ?? '')); break
-    case 'challenge': notify(startChallenge(state)); activeTab = 'battle'; break
-    case 'start-mystery': notify(startMystery(state)); activeTab = 'mystery'; break
-    case 'choose-mystery': {
-      if (!MYSTERY_BLESSINGS.some((blessing) => blessing.id === blessingId)) return
-      notify(chooseMysteryBlessing(state, blessingId as MysteryBlessingId))
-      activeTab = 'mystery'
-      break
-    }
-    case 'abandon-mystery': {
-      if (!window.confirm('确定离开秘境？本轮祝福与路线进度会清空，已获得的战利品仍会保留。')) return
-      notify(abandonMystery(state))
-      break
-    }
-    case 'finish-mystery': notify(finishMystery(state)); break
-    case 'return-idle': notify(returnToIdle(state)); levelView = 'regions'; chapterRegionId = null; break
-    case 'export': {
-      const blob = new Blob([exportSave(state)], { type: 'application/json' })
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = `蛋蛋江湖存档-${new Date().toISOString().slice(0, 10)}.json`
-      link.click()
-      URL.revokeObjectURL(link.href)
-      notify('存档已导出为 JSON 文件')
-      break
-    }
-    case 'import': importInput.click(); return
-    case 'reset': {
-      if (!window.confirm('确定重开存档？当前本地进度将被清除，建议先导出备份。')) return
-      clearSave(window.localStorage)
-      state = createInitialState()
-      activeTab = 'idle'
-      levelView = 'regions'
-      chapterRegionId = null
-      selectedHeroId = null
-      lastRuntimeAt = Date.now()
-      notify('江湖已重开')
-      break
-    }
-    default: return
-  }
-  persistAndRender()
-})
-
-/* ---- 阵容拖拽（侠客页：名册 ⇄ 阵容格，前 3 后 3） ---- */
-let dragHeroId: string | null = null
-let dragFromFormation = false
-let dragCandidatePressed = false   // 按下可拖拽元素期间同样暂停重绘，保护 mousedown → dragstart 窗口
-
-const clearFormationDrag = (): void => {
-  dragHeroId = null
-  dragFromFormation = false
-  app.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'))
-}
-
-app.addEventListener('pointerdown', (event) => {
-  dragCandidatePressed = Boolean((event.target as HTMLElement).closest('[data-drag-hero]'))
-})
-app.addEventListener('pointerup', () => { dragCandidatePressed = false })
-app.addEventListener('pointercancel', () => { dragCandidatePressed = false })
-
-const placeHeroOnFormation = (heroId: string, row: FormationRow, position?: FormationPosition, occupantId?: string): ActionResult => {
-  const slotIndex = state.formation.findIndex((candidate) => candidate.heroId === heroId)
-  if (occupantId && occupantId !== heroId) {
-    // 落到已占用的格子：阵容内互换阵位；阵容外顶替该格侠客
-    if (slotIndex >= 0) return swapFormationSlots(state, heroId, occupantId)
-    const occupantIndex = state.formation.findIndex((candidate) => candidate.heroId === occupantId)
-    if (occupantIndex < 0) return addToFormation(state, heroId, row, position)
-    return setPartySlot(state, occupantIndex, heroId)
-  }
-  if (slotIndex >= 0) {
-    const currentSlot = state.formation[slotIndex]
-    if (currentSlot.row === row && currentSlot.position === position) return { ok: true, message: '侠客已在此阵位' }
-    return moveFormationSlot(state, heroId, row, position)
-  }
-  return addToFormation(state, heroId, row, position)
-}
-
-app.addEventListener('dragstart', (event) => {
-  const el = (event.target as HTMLElement).closest<HTMLElement>('[data-drag-hero]')
-  if (!el || !event.dataTransfer) return
-  dragHeroId = el.dataset.dragHero ?? null
-  dragFromFormation = Boolean(el.closest('.formation-slot'))
-  event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('text/plain', dragHeroId ?? '')
-  el.classList.add('dragging')
-})
-
-app.addEventListener('dragover', (event) => {
-  if (!dragHeroId || !event.dataTransfer) return
-  const target = event.target as HTMLElement
-  const rowEl = target.closest<HTMLElement>('[data-drop-row]')
-  if (rowEl) {
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'move'
-    rowEl.classList.add('drag-over')
+  const button = target.closest<HTMLButtonElement>('[data-action]')
+  if (!button || button.disabled) return
+  const { action } = button.dataset
+  if (action === 'select-world' && button.dataset.worldId) {
+    selectedWorldId = button.dataset.worldId
+    selectedStage = Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1)
+  } else if (action === 'select-stage') selectedStage = Number(button.dataset.stage) || 1
+  else if (action === 'select-hero') selectedHeroId = button.dataset.heroId ?? null
+  else if (action === 'select-faction') selectedFactionId = button.dataset.factionId ?? selectedFactionId
+  else if (action === 'start-guard') {
+    startSelectedStage('guard')
     return
-  }
-  const rosterEl = target.closest<HTMLElement>('[data-drop-roster]')
-  if (rosterEl && dragFromFormation) {
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'move'
-    rosterEl.classList.add('drag-over')
-  }
-})
-
-app.addEventListener('dragleave', (event) => {
-  const related = event.relatedTarget as Node | null
-  const target = event.target as HTMLElement
-  const rowEl = target.closest<HTMLElement>('[data-drop-row]')
-  if (rowEl && !rowEl.contains(related)) rowEl.classList.remove('drag-over')
-  const rosterEl = target.closest<HTMLElement>('[data-drop-roster]')
-  if (rosterEl && !rosterEl.contains(related)) rosterEl.classList.remove('drag-over')
-})
-
-app.addEventListener('drop', (event) => {
-  if (!dragHeroId) return
-  const target = event.target as HTMLElement
-  const rowEl = target.closest<HTMLElement>('[data-drop-row]')
-  const rosterEl = target.closest<HTMLElement>('[data-drop-roster]')
-  if (!rowEl && !(rosterEl && dragFromFormation)) return
-  event.preventDefault()
-  const heroId = dragHeroId
-  clearFormationDrag()
-  if (!rowEl) {
-    notify(removeFromFormation(state, heroId))
-    persistAndRender()
+  } else if (action === 'start-roam') {
+    startSelectedStage('roam')
     return
-  }
-  const row = rowEl.dataset.dropRow as FormationRow
-  const slotEl = target.closest<HTMLElement>('.formation-slot')
-  const position = slotEl?.dataset.position !== undefined
-    ? Number(slotEl.dataset.position) as FormationPosition
-    : undefined
-  const occupantId = slotEl?.classList.contains('filled') ? slotEl.dataset.dragHero : undefined
-  notify(placeHeroOnFormation(heroId, row, position, occupantId))
-  persistAndRender()
-})
-
-app.addEventListener('dragend', () => { clearFormationDrag() })
-
-importInput.addEventListener('change', async () => {
-  const file = importInput.files?.[0]
-  if (!file) return
-  try {
-    const imported = importSave(await file.text())
-    state = imported.state
-    levelView = 'regions'
-    chapterRegionId = null
-    selectedHeroId = null
-    lastRuntimeAt = Date.now()
-    saveGame(window.localStorage, state)
-    notify('存档导入成功')
-  } catch (error) {
-    notify(error instanceof Error ? `导入失败：${error.message}` : '导入失败：文件格式无效', 'warning')
-  }
-  importInput.value = ''
+  } else if (action === 'stop-combat') {
+    session.stopCombat()
+    combatLogs.push('主动停止战斗，临时战斗状态已清除')
+    notify('已停止战斗')
+  } else if (action?.startsWith('speed-')) {
+    const speed = Number(action.slice(-1))
+    if (speed === 1 || speed === 2 || speed === 4) combatSpeed = speed
+  } else performAction(button)
   render()
 })
 
 window.setInterval(() => {
-  const now = Date.now()
-  const elapsed = Math.floor((now - lastRuntimeAt) / 1000)
-  if (elapsed <= 0) return
-  if (elapsed > 10) {
-    lastRuntimeAt = now
-    state.lastTickAt = now
-  } else {
-    for (let index = 0; index < elapsed; index += 1) stepCombat(state)
-    lastRuntimeAt += elapsed * 1000
-    state.lastTickAt = now
-  }
-  if (!dragHeroId && !dragCandidatePressed) render()   // 拖拽布阵期间跳过整树重绘，避免拖源被销毁
-}, 500)
+  if (session.combat) logEvents(session.advanceTicks(combatSpeed))
+  session.advanceRuntime(COMBAT_TICK_MS)
+  render()
+}, COMBAT_TICK_MS)
 
-window.setInterval(() => saveGame(window.localStorage, state), 5000)
-window.addEventListener('beforeunload', () => saveGame(window.localStorage, state))
+window.addEventListener('beforeunload', () => session.save())
+
+const debugRecruit = (heroId: string): void => {
+  const definition = heroByIdV10(heroId)
+  if (!definition) throw new Error('侠客不存在')
+  if (definition.source === 'tavern') {
+    session.state.worldCurrency[definition.worldId] = Math.max(session.state.worldCurrency[definition.worldId] ?? 0, definition.cost)
+    const result = recruitFromTavern(session.state, heroId)
+    if (!result.ok) throw new Error(result.message)
+  } else {
+    session.state.contribution[definition.factionId!] = Math.max(session.state.contribution[definition.factionId!] ?? 0, definition.cost)
+    const result = recruitFromFaction(session.state, definition.factionId!, heroId)
+    if (!result.ok) throw new Error(result.message)
+  }
+  selectedHeroId = heroId
+  session.save()
+  render()
+}
+
+const debugFillInventory = (count: number): void => {
+  session.state.inventory = Array.from({ length: Math.max(0, Math.min(INVENTORY_CAPACITY, Math.floor(count))) }, (_, index): EquipmentInstance => ({
+    uid: `debug-equipment-${index}`,
+    definitionId: 'world_01_weapon',
+    level: 1,
+    quality: '凡品',
+    affixes: [],
+    locked: false,
+  }))
+  session.save()
+  render()
+}
+
+const debugSettleEnemy = (seed: number, rank: CombatRank = 'normal'): string[] => {
+  const result = settleCombatEvent(session.state, {
+    type: 'enemy-defeated',
+    atMs: 0,
+    enemyId: `world_01_stage_01_${rank === 'boss' ? 'boss' : rank === 'elite' ? 'elite_1' : 'normal_1'}`,
+    rank,
+    worldId: 'world_01',
+    stage: 1,
+    seed,
+  })
+  session.save()
+  render()
+  return result.addedEquipmentUids
+}
 
 declare global {
   interface Window {
     __EGG_JIANGHU__: {
-      getState: () => GameState
+      getState: () => GameStateV10
+      getCombat: () => ReturnType<typeof structuredClone>
+      getSelection: () => ReturnType<typeof structuredClone>
       setTab: (tab: TabId) => void
-      advanceCombat: (steps: number) => void
+      startStage: (worldId: string, stage: number, mode: 'guard' | 'roam', seed: number) => void
+      advanceCombat: (ticks: number) => CombatEvent[]
+      advanceRuntime: (elapsedMs: number) => void
+      grantWorldCurrency: (worldId: string, amount: number) => void
+      grantContribution: (factionId: string, amount: number) => void
+      recruitHero: (heroId: string) => void
+      placeHero: (heroId: string, row: FormationRow, position: FormationPosition) => void
+      setHeroCareerLevel: (heroId: string, careerId: string, level: number) => void
+      seedLearnedMartial: (heroId: string, martialId: string, level: number, slot?: number) => void
+      setHeroCooldown: (heroId: string, martialId: string, remainingMs: number) => void
+      fillInventory: (count: number) => void
+      settleEnemy: (seed: number, rank?: CombatRank) => string[]
+      showWave: (wave: number, seed: number) => void
+      forceCombatResult: (result: 'victory' | 'defeat') => void
+      prepareQuestBoard: (factionId: string, seed: number) => void
       reset: () => void
     }
   }
 }
 
 window.__EGG_JIANGHU__ = {
-  getState: () => structuredClone(state),
+  getState: () => structuredClone(session.state),
+  getCombat: () => structuredClone(session.combat?.state ?? null),
+  getSelection: () => structuredClone(session.selection),
   setTab: (tab) => { activeTab = tab; render() },
-  advanceCombat: (steps) => { for (let index = 0; index < steps; index += 1) stepCombat(state); persistAndRender() },
+  startStage: (worldId, stage, mode, seed) => {
+    selectedWorldId = worldId
+    selectedStage = stage
+    startSelectedStage(mode, seed)
+  },
+  advanceCombat: (ticks) => {
+    const events = session.advanceTicks(ticks)
+    logEvents(events)
+    render()
+    return events
+  },
+  advanceRuntime: (elapsedMs) => { session.advanceRuntime(elapsedMs); render() },
+  grantWorldCurrency: (worldId, amount) => { session.state.worldCurrency[worldId] = amount; session.save(); render() },
+  grantContribution: (factionId, amount) => { session.state.contribution[factionId] = amount; session.save(); render() },
+  recruitHero: debugRecruit,
+  placeHero: (heroId, row, position) => { commitAction(placeFormation(heroId, row, position)); render() },
+  setHeroCareerLevel: (heroId, careerId, level) => {
+    const hero = session.state.heroes[heroId]
+    if (!hero) throw new Error('侠客尚未加入')
+    hero.careers[careerId] = { level, experience: 0, perfected: false }
+    hero.currentCareerId = careerId
+    session.save()
+    render()
+  },
+  seedLearnedMartial: (heroId, martialId, level, slot) => {
+    const hero = session.state.heroes[heroId]
+    const martial = martialByIdV10(martialId)
+    if (!hero || !martial) throw new Error('侠客或武功不存在')
+    hero.learnedMartials[martialId] = { level, invested: { worldCurrency: {}, contribution: {} } }
+    if (slot !== undefined && slot >= 0 && slot < 4) hero.equippedMartialIds[slot] = martialId
+    session.save()
+    render()
+  },
+  setHeroCooldown: (heroId, martialId, remainingMs) => {
+    const hero = session.combat?.state.party.find((unit) => unit.id === heroId)
+    if (!hero) throw new Error('出战侠客不存在')
+    hero.cooldowns[martialId] = Math.max(0, remainingMs)
+    render()
+  },
+  fillInventory: debugFillInventory,
+  settleEnemy: debugSettleEnemy,
+  showWave: (wave, seed) => {
+    if (!session.combat) throw new Error('战斗尚未开始')
+    session.combat.state.wave = wave
+    session.combat.state.enemies = createWave(session.combat.state.worldId, session.combat.state.stage, wave, seed).enemies
+    render()
+  },
+  forceCombatResult: (result) => {
+    if (!session.combat) throw new Error('战斗尚未开始')
+    session.combat.state.result = result
+    logEvents(session.advanceTicks(0))
+    render()
+  },
+  prepareQuestBoard: (factionId, seed) => {
+    const faction = FACTIONS.find((item) => item.id === factionId)
+    if (!faction) throw new Error('势力不存在')
+    const normalId = `${faction.worldId}_stage_01_normal_1`
+    const bossId = `${faction.worldId}_stage_01_boss`
+    session.state.encounteredEnemyIds = [...new Set([...session.state.encounteredEnemyIds, normalId, bossId])]
+    initializeQuestBoard(session.state, factionId, createRng(seed), 0)
+    session.save()
+    render()
+  },
   reset: () => {
-    clearSave(window.localStorage)
-    state = createInitialState()
-    levelView = 'regions'
-    chapterRegionId = null
+    window.localStorage.removeItem(SAVE_KEY_V10)
+    session = GameSession.create(window.localStorage)
+    activeTab = 'idle'
+    selectedWorldId = 'world_01'
+    selectedStage = 1
     selectedHeroId = null
-    lastRuntimeAt = Date.now()
+    selectedFactionId = 'qingfeng_hall'
+    combatSpeed = 1
+    combatLogs = []
     render()
   },
 }
 
-if (loaded.recoveredFromError) notify('旧存档无法读取，已安全恢复为新档', 'warning')
 render()
