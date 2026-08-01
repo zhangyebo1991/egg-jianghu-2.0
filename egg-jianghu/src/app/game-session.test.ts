@@ -1,0 +1,90 @@
+import { describe, expect, it } from 'vitest'
+import { recruitFromTavern } from '../domain/recruitment'
+import { SAVE_KEY_V10, type StorageLike } from '../domain/save-v10'
+import { GameSession } from './game-session'
+
+const memoryStorage = (): StorageLike & { values: Map<string, string> } => {
+  const values = new Map<string, string>()
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => { values.set(key, value) },
+    removeItem: (key) => { values.delete(key) },
+    values,
+  }
+}
+
+const sessionWithParty = (storage = memoryStorage()): GameSession => {
+  const session = GameSession.create(storage, 1000)
+  recruitFromTavern(session.state, 'hero_shen_yanqiu')
+  session.state.formation = [{ heroId: 'hero_shen_yanqiu', row: 'front', position: 0 }]
+  session.save(1000)
+  return session
+}
+
+const makePartyOverwhelming = (session: GameSession): void => {
+  const party = session.combat!.state.party
+  for (const hero of party) {
+    hero.hp = hero.maxHp = 50_000
+    hero.externalAttack = hero.internalAttack = 50_000
+    hero.externalDefense = hero.internalDefense = 5000
+    hero.effectiveAgility = 10_000
+    hero.accuracy = 1
+  }
+}
+
+describe('GameSession', () => {
+  it('保存长期收益但不保存进行中的战斗', () => {
+    const storage = memoryStorage()
+    const session = sessionWithParty(storage)
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 11 }).ok).toBe(true)
+    makePartyOverwhelming(session)
+
+    session.advanceTicks(5000)
+    const earned = structuredClone(session.state.worldCurrency)
+    const reopened = GameSession.create(storage, 2000)
+
+    expect(reopened.combat).toBeNull()
+    expect(reopened.state.worldCurrency).toEqual(earned)
+    expect(JSON.parse(storage.getItem(SAVE_KEY_V10)!).combat).toBeUndefined()
+  })
+
+  it('闯荡失败自动切驻守并重新创建回退关卡', () => {
+    const session = sessionWithParty()
+    expect(session.startStage({ worldId: 'world_01', stage: 4, mode: 'roam', seed: 9 }).ok).toBe(true)
+    for (const hero of session.combat!.state.party) {
+      hero.hp = hero.maxHp = 1
+      hero.gauge = 0
+    }
+    for (const enemy of session.combat!.state.enemies) {
+      enemy.gauge = 1000
+      enemy.externalAttack = 100_000
+      enemy.accuracy = 1
+    }
+
+    session.advanceTicks(1)
+
+    expect(session.selection).toEqual({ worldId: 'world_01', stage: 3, mode: 'guard' })
+    expect(session.combat?.state.wave).toBe(1)
+    expect(session.combat?.state.result).toBe('fighting')
+  })
+
+  it('闯荡通关第十关时解锁下一卷并从第一关继续', () => {
+    const session = sessionWithParty()
+    expect(session.startStage({ worldId: 'world_01', stage: 10, mode: 'roam', seed: 22 }).ok).toBe(true)
+    makePartyOverwhelming(session)
+
+    session.advanceTicks(5000)
+
+    expect(session.state.unlockedWorldIds).toContain('world_02')
+    expect(session.selection).toEqual({ worldId: 'world_02', stage: 1, mode: 'roam' })
+    expect(session.combat?.state.wave).toBe(1)
+  })
+
+  it('空阵容和未解锁关卡不能启动战斗', () => {
+    const session = GameSession.create(memoryStorage(), 1000)
+
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(false)
+    expect(session.startStage({ worldId: 'world_02', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(false)
+    expect(session.combat).toBeNull()
+  })
+})
