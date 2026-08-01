@@ -13,6 +13,39 @@ test.afterEach(() => {
   expect(pageErrors).toEqual([])
 })
 
+test('连续 tick 保持页签按钮节点并支持慢速点击', async ({ page }) => {
+  const stableAcrossTicks = await page.getByTestId('tab-heroes').evaluate(async (button) => {
+    await new Promise((resolve) => setTimeout(resolve, 350))
+    return button === document.querySelector('[data-testid="tab-heroes"]')
+  })
+  expect(stableAcrossTicks).toBe(true)
+
+  const button = page.getByTestId('tab-heroes')
+  const box = await button.boundingBox()
+  expect(box).not.toBeNull()
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+  await page.mouse.down()
+  await page.waitForTimeout(250)
+  await page.mouse.up()
+  await expect(page.locator('[data-page="heroes"]')).toBeVisible()
+})
+
+test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => {
+  await page.getByTestId('start-guard').click()
+
+  const stableAcrossCombatTicks = await page.evaluate(async () => {
+    const tab = document.querySelector('[data-testid="tab-idle"]')
+    const stop = document.querySelector('[data-testid="stop-combat"]')
+    await new Promise((resolve) => setTimeout(resolve, 350))
+    return {
+      tab: tab === document.querySelector('[data-testid="tab-idle"]'),
+      stop: stop === document.querySelector('[data-testid="stop-combat"]'),
+    }
+  })
+
+  expect(stableAcrossCombatTicks).toEqual({ tab: true, stop: true })
+})
+
 test('从酒馆明确名单直接邀请并放入前后三格阵容', async ({ page }) => {
   await page.getByTestId('tab-city').click()
   await page.getByTestId('tavern-hero_shen_yanqiu').getByRole('button', { name: '直接邀请' }).click()

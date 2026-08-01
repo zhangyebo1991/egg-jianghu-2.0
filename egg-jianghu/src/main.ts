@@ -24,10 +24,12 @@ import { renderFactionsPage, type FactionsPageViewModel } from './ui/factions-pa
 import { renderHeroesPage, type HeroesPageViewModel } from './ui/heroes-page'
 import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
+import { createDomPatcher } from './ui/dom-patch'
 import { renderShell, type TabId } from './ui/shell'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (!app) throw new Error('缺少 #app 根节点')
+const patchApp = createDomPatcher(app)
 
 const toast = document.createElement('div')
 toast.className = 'toast'
@@ -293,7 +295,7 @@ const render = (): void => {
         : activeTab === 'city'
           ? renderCityPage(cityViewModel())
           : renderInventoryPage(inventoryViewModel())
-  app.innerHTML = renderShell({
+  patchApp(renderShell({
     activeTab,
     worldName: world.name,
     worldCurrency: session.state.worldCurrency[selectedWorldId] ?? 0,
@@ -301,7 +303,7 @@ const render = (): void => {
     inventoryCount: session.state.inventory.length,
     inventoryCapacity: INVENTORY_CAPACITY,
     content,
-  })
+  }))
 }
 
 const logEvents = (events: CombatEvent[]): void => {
