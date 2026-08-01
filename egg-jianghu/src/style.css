@@ -754,8 +754,8 @@
   .idle-combat-return strong { font-size: 14px; letter-spacing: 1px; }
   .idle-combat-return small { align-self: end; color: var(--gold2); font-size: 13px; white-space: nowrap; }
 
-  /* ---- Toast：原型顶部居中胶囊 ---- */
-  .toast { position: fixed; z-index: 120; left: 50%; top: 74px; bottom: auto; transform: translateX(-50%); max-width: min(520px, calc(100vw - 30px)); padding: 8px 22px; color: var(--gold2); border: 1px solid var(--gold-dim); border-radius: 20px; background: rgba(30, 24, 14, .95); box-shadow: var(--shadow); font-size: 14px; letter-spacing: 1px; animation: toast-in .25s ease-out both; }
+  /* ---- Toast：全局提示，屏幕中下居中胶囊 ---- */
+  .toast { position: fixed; z-index: 120; left: 50%; top: auto; bottom: 26px; transform: translateX(-50%); max-width: min(520px, calc(100vw - 30px)); padding: 8px 22px; color: var(--gold2); border: 1px solid var(--gold-dim); border-radius: 20px; background: rgba(30, 24, 14, .95); box-shadow: var(--shadow); font-size: 14px; letter-spacing: 1px; animation: toast-in .25s ease-out both; }
   .toast.warning { color: #eba592; border-color: #7e3a2c; background: rgba(52, 26, 19, .95); }
 
   @keyframes hero-strike { 45% { transform: translateX(14px) scale(1.02); border-color: var(--gold); } }
@@ -763,7 +763,7 @@
   @keyframes side-hit { 25%, 75% { transform: translateX(-3px); filter: brightness(1.4) sepia(.2); } 50% { transform: translateX(4px); } }
   @keyframes damage-rise { from { opacity: 0; transform: translateY(9px) scale(.8); } 25% { opacity: 1; } to { opacity: 0; transform: translateY(-34px) scale(1.08); } }
   @keyframes combo-reveal { from { opacity: 0; transform: scale(.82); } 25% { opacity: 1; } to { opacity: 0; transform: scale(1.04); } }
-  @keyframes toast-in { from { opacity: 0; transform: translate(-50%, -8px); } }
+  @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 10px); } }
 }
 
 @layer responsive {

@@ -63,8 +63,6 @@ let activeTab: TabId = 'idle'
 let levelView: LevelView = 'regions'
 let chapterRegionId: RegionId | null = null
 let selectedHeroId: string | null = null
-let toast = loaded.recoveredFromError ? '旧存档无法读取，已安全恢复为新档' : ''
-let toastKind: 'success' | 'warning' = loaded.recoveredFromError ? 'warning' : 'success'
 let toastTimer = 0
 let lastRuntimeAt = Date.now()
 
@@ -73,6 +71,13 @@ importInput.type = 'file'
 importInput.accept = 'application/json,.json'
 importInput.hidden = true
 document.body.append(importInput)
+
+/* 全局 Toast：独立于 #app 挂载，避免整树重绘反复重建节点导致淡入动画重复播放 */
+const toastEl = document.createElement('div')
+toastEl.className = 'toast'
+toastEl.setAttribute('role', 'status')
+toastEl.hidden = true
+document.body.append(toastEl)
 
 const escapeHtml = (value: string): string => value.replace(/[&<>'"]/g, (char) => ({
   '&': '&amp;',
@@ -99,16 +104,18 @@ const renderStatusChips = (statuses: CombatStatus[]): string => statuses.length
   : ''
 
 const notify = (result: ActionResult | string, kind: 'success' | 'warning' = 'success'): void => {
-  if (typeof result === 'string') {
-    toast = result
-    toastKind = kind
-  } else {
-    toast = result.message
-    toastKind = result.ok ? 'success' : 'warning'
-  }
+  const message = typeof result === 'string' ? result : result.message
+  const resolvedKind = typeof result === 'string' ? kind : result.ok ? 'success' : 'warning'
+  toastEl.textContent = message
+  toastEl.classList.toggle('warning', resolvedKind === 'warning')
+  toastEl.hidden = false
+  // 强制重启动画：即使连续提示相同文案也能重新淡入，而非沿用上一次的显示状态
+  toastEl.style.animation = 'none'
+  void toastEl.offsetWidth
+  toastEl.style.animation = ''
+  if (toastTimer) window.clearTimeout(toastTimer)
   toastTimer = window.setTimeout(() => {
-    toast = ''
-    if (!dragHeroId && !dragCandidatePressed) render()
+    toastEl.hidden = true
   }, 2800)
 }
 
@@ -758,8 +765,7 @@ function render(): void {
     ${renderHeader()}
     ${renderNav()}
     <main class="game-main">${content}</main>
-    ${renderIdleCombatReturn()}
-    ${toast ? `<div class="toast ${toastKind}" role="status">${escapeHtml(toast)}</div>` : ''}`
+    ${renderIdleCombatReturn()}`
 }
 
 const persistAndRender = (): void => {
@@ -782,7 +788,6 @@ app.addEventListener('click', (event) => {
   const button = target.closest<HTMLButtonElement>('button[data-action]')
   if (!button) return
   const { action, blessingId, direction, heroId, martialId, regionId, row, slot, stage } = button.dataset
-  if (toastTimer) window.clearTimeout(toastTimer)
 
   switch (action) {
     case 'select-hero': selectedHeroId = heroId ?? null; break
@@ -1073,4 +1078,5 @@ window.__EGG_JIANGHU__ = {
   },
 }
 
+if (loaded.recoveredFromError) notify('旧存档无法读取，已安全恢复为新档', 'warning')
 render()
