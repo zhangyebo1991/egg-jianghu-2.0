@@ -19,6 +19,7 @@ export interface CombatStatus {
 export interface CombatUnit {
   id: string
   name: string
+  careerId?: string
   side: CombatSide
   row: FormationRow
   position: FormationPosition
