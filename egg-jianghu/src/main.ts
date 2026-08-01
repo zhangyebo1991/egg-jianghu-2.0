@@ -16,6 +16,7 @@ import {
 import {
   COMBAT_STATUS_NAMES,
   abandonMystery,
+  addToFormation,
   createInitialState,
   equipMartial,
   finishMystery,
@@ -32,6 +33,7 @@ import {
   isRegionUnlocked,
   chooseMysteryBlessing,
   moveMartial,
+  removeFromFormation,
   returnToIdle,
   setFormationRow,
   setPartySlot,
@@ -39,6 +41,7 @@ import {
   startIdleStage,
   startChallenge,
   stepCombat,
+  swapFormationRows,
   unequipMartial,
   upgradeHero,
 } from './game'
@@ -138,7 +141,7 @@ const getTabItems = (): { id: TabId; label: string; note: string; ic: string }[]
     ? `${getSelectedRegion(state).name} · 第 ${state.combat.stage ?? 1} 关`
     : '选择关卡' },
   { id: 'heroes', label: '侠客', ic: '🧑‍🤝‍🧑', note: `${HEROES.filter((hero) => state.heroes[hero.id].unlocked).length}/${HEROES.length}` },
-  { id: 'party', label: '队伍', ic: '⚔️', note: '前后列阵' },
+  { id: 'party', label: '羁绊', ic: '🪢', note: '缘分合击' },
   { id: 'battle', label: '战斗', ic: '👹', note: `已破 ${state.defeatedBossIds.length}/${REGIONS.length}` },
   { id: 'mystery', label: '秘境', ic: '🏮', note: state.mystery.run ? `第 ${Math.min(state.mystery.run.floor + 1, MYSTERY_ENCOUNTERS.length)} 层` : `通关 ${state.mystery.runsCompleted}` },
 ]
@@ -289,10 +292,6 @@ const renderRegionCard = (regionId: RegionId, index: number): string => {
 }
 
 const renderRegionList = (): string => `
-  <div class="page-heading">
-    <div><span class="eyebrow">Jianghu Chapters</span><h1>江湖关卡</h1><p>先选择一处大关卡，再从其中十个小关卡开始挂机战斗。进入游戏时不会自动开战。</p></div>
-    <div class="location-status idle"><i></i><span>队伍正在整备<strong>请选择大关卡</strong></span></div>
-  </div>
   <section class="region-map panel">
     <div class="section-title"><span>大关卡</span><small>击败区域 BOSS 后解锁下一处江湖</small></div>
     <div class="region-grid">${REGIONS.map((candidate, index) => renderRegionCard(candidate.id, index)).join('')}</div>
@@ -318,10 +317,6 @@ const renderStageList = (): string => {
   const region = regionById(chapterRegionId ?? '') ?? REGIONS[0]
   return `
     <div class="level-breadcrumb"><button class="text-button" data-action="back-regions">← 返回大关卡</button><span>江湖关卡 / ${region.name}</span></div>
-    <div class="page-heading compact-heading">
-      <div><span class="eyebrow">${region.name} · Ten Stages</span><h1>${region.name}</h1><p>${region.description} 选择任一小关卡后，队伍才会开始挂机战斗。</p></div>
-      <div class="stage-plaque"><small>小关卡</small><strong>10</strong><span>${region.rewardText}</span></div>
-    </div>
     <section class="stage-map panel" data-testid="stage-map">
       <div class="section-title"><span>小关卡</span><small>点击后立即开始对应关卡的挂机战斗</small></div>
       <div class="stage-grid">${Array.from({ length: 10 }, (_, index) => renderStageCard(region.id, index + 1)).join('')}</div>
@@ -332,13 +327,12 @@ const renderStageCombat = (): string => {
   const region = getSelectedRegion(state)
   const stage = state.combat.stage ?? 1
   return `
-    <div class="level-breadcrumb"><button class="text-button" data-action="back-stages">← 返回小关卡</button><span>${region.name} / 第 ${stage} 关</span></div>
-    <div class="page-heading">
-      <div><span class="eyebrow">Idle Combat</span><h1>${region.name} · 第 ${stage} 关</h1><p>本关挂机战斗仅在游戏打开时进行；退出游戏后不会继续结算收益。</p></div>
-      <div class="combat-heading-actions">
-        <div class="location-status"><i></i><span>队伍正在战斗<strong>${region.rewardText}</strong></span></div>
+    <div class="level-breadcrumb">
+      <button class="text-button" data-action="back-stages">← 返回小关卡</button><span>${region.name} / 第 ${stage} 关</span>
+      <span class="breadcrumb-actions">
+        <span class="location-status"><i></i><span>队伍正在战斗<strong>${region.rewardText}</strong></span></span>
         <button class="secondary-button stop-idle-button" type="button" data-action="stop-idle">停止挂机</button>
-      </div>
+      </span>
     </div>
     <div class="idle-layout">
       <div class="main-column">
@@ -376,11 +370,12 @@ const renderHeroRosterCard = (heroId: string, activeHeroId: string): string => {
   const hero = heroById(heroId)
   const progress = state.heroes[heroId]
   if (!hero || !progress?.unlocked) return ''
-  const inFormation = state.formation.some((slot) => slot.heroId === heroId)
+  const formationSlot = state.formation.find((slot) => slot.heroId === heroId)
   return `
     <button type="button" class="hero-roster-card ${heroId === activeHeroId ? 'selected' : ''}"
-      data-action="select-hero" data-hero-id="${heroId}" aria-pressed="${heroId === activeHeroId}">
-      ${inFormation ? '<span class="roster-status">出战</span>' : ''}
+      data-action="select-hero" data-hero-id="${heroId}" data-drag-hero="${heroId}" draggable="${isBuildUiLocked() ? 'false' : 'true'}"
+      aria-pressed="${heroId === activeHeroId}">
+      ${formationSlot ? `<span class="roster-status">${formationSlot.row === 'front' ? '前排' : '后排'}</span>` : ''}
       <span class="roster-level">Lv.${progress.level}</span>
       <span class="roster-portrait element-${hero.element}">${hero.name.slice(-1)}</span>
       <strong>${hero.name}</strong>
@@ -458,6 +453,7 @@ const renderHeroDetail = (heroId: string): string => {
   const stats = getHeroStats(state, heroId)
   const passives = getPassiveBonuses(progress.learnedMartials)
   const upgradeCost = getUpgradeCost(progress.level)
+  const inFormation = state.formation.some((slot) => slot.heroId === heroId)
   return `
     <section class="hero-detail panel" data-testid="hero-detail">
       <div class="hero-detail-head">
@@ -468,7 +464,11 @@ const renderHeroDetail = (heroId: string): string => {
           <p>${hero.description}</p>
           <div class="tag-row"><span>${hero.element}行</span><span>${hero.style}劲</span><span class="affinity">${stats.affinityText}</span></div>
         </div>
-        <b class="power-number">${stats.power}<small>战力</small></b>
+        <div class="hero-head-side">
+          <b class="power-number">${stats.power}<small>战力</small></b>
+          <button type="button" class="secondary-button formation-toggle" data-action="toggle-formation" data-hero-id="${hero.id}"
+            ${isBuildUiLocked() ? 'disabled' : ''} data-testid="formation-toggle">${inFormation ? '下阵休整' : '邀其上阵'}</button>
+        </div>
       </div>
       <div class="hero-detail-stats">
         <span><small>攻击</small><strong>${stats.attack}</strong></span>
@@ -482,20 +482,70 @@ const renderHeroDetail = (heroId: string): string => {
     </section>`
 }
 
+/* ---- 出战阵容面板（前 3 后 3，拖拽布阵） ---- */
+const renderFormationPanel = (): string => {
+  const locked = isBuildUiLocked()
+  const formation = getFormationSummary(state)
+  const synergy = getPartySynergy(state)
+  const activeBonds = getActiveBonds(state)
+  const activeCombos = getActiveCombos(state)
+  const renderRow = (row: FormationRow): string => {
+    const members = state.formation.filter((slot) => slot.row === row)
+    const slots = [0, 1, 2].map((index) => {
+      const member = members[index]
+      if (!member) return '<div class="formation-slot empty"><em>＋<small>拖入侠客</small></em></div>'
+      const hero = heroById(member.heroId)!
+      const progress = state.heroes[member.heroId]
+      const stats = getHeroStats(state, member.heroId)
+      const targetRow: FormationRow = row === 'front' ? 'back' : 'front'
+      return `
+        <article class="formation-slot filled row-${row}" data-drag-hero="${hero.id}" draggable="${locked ? 'false' : 'true'}" data-testid="formation-slot-${hero.id}">
+          <button type="button" class="slot-remove text-button danger" data-action="remove-formation" data-hero-id="${hero.id}"
+            ${locked ? 'disabled' : ''} aria-label="让${hero.name}下阵" title="下阵">✕</button>
+          <div class="portrait element-${hero.element}">${hero.name.slice(-1)}</div>
+          <strong>${hero.name}</strong>
+          <small>Lv.${progress.level} · 战力 ${stats.power}</small>
+          <button type="button" class="slot-move text-button" data-action="set-row" data-hero-id="${hero.id}" data-row="${targetRow}" ${locked ? 'disabled' : ''}>
+            调至${targetRow === 'front' ? '前排' : '后排'}
+          </button>
+        </article>`
+    })
+    return `
+      <div class="formation-row ${row}" data-drop-row="${row}" data-testid="formation-${row}-row">
+        <div class="formation-row-heading">
+          <span>${row === 'front' ? '前排' : '后排'}</span>
+          <small>${row === 'front' ? '优先承伤 · 受到伤害 -20% · 造成伤害 -10%' : '受前排保护 · 造成伤害 +15%'}</small>
+        </div>
+        <div class="formation-slots">${slots.join('')}</div>
+      </div>`
+  }
+  return `
+    <section class="formation-panel panel" data-testid="formation-panel">
+      <div class="section-title"><span>出战阵容</span><small>总战力 ${formatNumber(getPartyPower(state))} · 拖入侠客上阵</small></div>
+      <div class="formation-rows">${renderRow('back')}${renderRow('front')}</div>
+      <div class="synergy-strip" data-testid="synergy-strip">
+        <span class="active"><b>阵</b>${formation.name}</span>
+        <span class="${synergy.sectName ? 'active' : ''}"><b>门</b>${synergy.sectName ? `${synergy.sectName} ×${synergy.sectCount}` : '未共鸣'}</span>
+        <span class="${activeBonds.length ? 'active' : ''}"><b>缘</b>${activeBonds.length ? `${activeBonds.length} 条羁绊` : '无羁绊'}</span>
+        <span class="${activeCombos.length ? 'active' : ''}"><b>合</b>${activeCombos.length ? activeCombos.map((combo) => combo.name).join('、') : '无合击'}</span>
+      </div>
+    </section>`
+}
+
 const renderHeroes = (): string => {
   const owned = getOwnedHeroes()
   const heroId = getSelectedHeroId()
   const lockMessage = getBuildUiLockMessage()
   return `
-    <div class="page-heading compact-heading heroes-heading">
-      <div><span class="eyebrow">Heroes &amp; Loadout</span><h1>江湖名册</h1><p>查看已拥有侠客，配置四门出战武功；全部已学武功的被动效果都会叠加。</p></div>
-    </div>
     ${lockMessage ? `<aside class="hero-build-lock" data-testid="hero-build-lock"><b>配置锁定</b><span>${lockMessage}</span></aside>` : ''}
     <div class="heroes-workbench">
-      <aside class="hero-roster-panel panel">
-        <div class="section-title"><span>侠客阵容</span><small>已拥有 ${owned.length} 人</small></div>
-        <div class="hero-roster" data-testid="hero-roster">${owned.map((hero) => renderHeroRosterCard(hero.id, heroId)).join('')}</div>
-      </aside>
+      <div class="heroes-side">
+        ${renderFormationPanel()}
+        <aside class="hero-roster-panel panel" data-drop-roster>
+          <div class="section-title"><span>侠客名册</span><small>已拥有 ${owned.length} 人 · 点击配置武功 · 拖入上方出战</small></div>
+          <div class="hero-roster" data-testid="hero-roster">${owned.map((hero) => renderHeroRosterCard(hero.id, heroId)).join('')}</div>
+        </aside>
+      </div>
       ${renderHeroDetail(heroId)}
     </div>`
 }
@@ -505,48 +555,9 @@ const renderParty = (): string => {
   const activeBonds = getActiveBonds(state)
   const activeCombos = getActiveCombos(state)
   const formation = getFormationSummary(state)
-  const unlocked = HEROES.filter((hero) => state.heroes[hero.id].unlocked)
-  const challengeActive = isBuildUiLocked()
-  const renderFormationRow = (row: FormationRow): string => {
-    const rowSlots = state.formation
-      .map((slot, index) => ({ slot, index }))
-      .filter(({ slot }) => slot.row === row)
-    return `
-      <section class="formation-editor-row ${row}" data-testid="formation-${row}-row">
-        <div class="formation-row-heading">
-          <span>${row === 'front' ? '前排' : '后排'}</span>
-          <small>${row === 'front' ? '优先承伤 · 受到伤害 -20% · 造成伤害 -10%' : '受前排保护 · 造成伤害 +15%'}</small>
-        </div>
-        <div class="party-slots">
-          ${rowSlots.map(({ slot, index }) => {
-            const hero = heroById(slot.heroId)!
-            const stats = getHeroStats(state, slot.heroId)
-            const targetRow: FormationRow = row === 'front' ? 'back' : 'front'
-            const lastInRow = rowSlots.length === 1
-            return `<article class="party-slot row-${row}" data-slot="${index}">
-              <span class="slot-index">第 ${index + 1} 位 · ${row === 'front' ? '前排' : '后排'}</span>
-              <div class="portrait large element-${hero.element}">${hero.name.slice(-1)}</div>
-              <strong>${hero.name}</strong><small>${hero.sect} · ${hero.epithet}</small>
-              <div class="slot-power">攻 ${stats.attack} · 战力 ${stats.power}</div>
-              <select data-action="party-slot" data-slot="${index}" ${challengeActive ? 'disabled' : ''} aria-label="第 ${index + 1} 位侠客">
-                ${unlocked.map((candidate) => `<option value="${candidate.id}" ${candidate.id === hero.id ? 'selected' : ''}>${candidate.name} · ${candidate.sect}</option>`).join('')}
-              </select>
-              <button class="position-button secondary-button" data-action="set-row" data-slot="${index}" data-row="${targetRow}" ${challengeActive || lastInRow ? 'disabled' : ''}>
-                ${challengeActive ? state.mystery.run ? '秘境中不可换位' : '交锋中不可换位' : lastInRow ? `需保留${row === 'front' ? '前排' : '后排'}` : `调至${targetRow === 'front' ? '前排' : '后排'}`}
-              </button>
-            </article>`
-          }).join('')}
-        </div>
-      </section>`
-  }
   return `
-    <div class="page-heading compact-heading">
-      <div><span class="eyebrow">Formation &amp; Bonds</span><h1>列阵与羁绊</h1><p>站位决定攻守，侠客关系提供被动增益，特定二人同队还会自动施展联手武学。</p></div>
-      <div class="power-plaque"><small>当前队伍战力</small><strong>${formatNumber(getPartyPower(state))}</strong></div>
-    </div>
     <section class="party-board panel">
-      <div class="formation-editor">${renderFormationRow('back')}${renderFormationRow('front')}</div>
-      <div class="synergy-line" aria-hidden="true"><i></i><span></span><i></i></div>
+      <div class="section-title"><span>阵势与共鸣</span><small>列阵调整请前往「侠客」页拖拽完成</small></div>
       <div class="synergy-grid">
         <article class="synergy-card active formation"><span class="seal-icon">阵</span><div><small>当前阵势</small><strong>${formation.name}</strong><p>${formation.effectText}</p></div></article>
         <article class="synergy-card ${synergy.sectName ? 'active' : ''}"><span class="seal-icon">门</span><div><small>门派羁绊</small><strong>${synergy.sectName ? `${synergy.sectName}共鸣` : '尚未激活'}</strong><p>${synergy.sectText}</p></div></article>
@@ -591,10 +602,6 @@ const renderBattle = (): string => {
   const defeated = state.defeatedBossIds.includes(boss.id)
   const unlocks = nextRegionAfter(region.id)
   return `
-    <div class="page-heading compact-heading">
-      <div><span class="eyebrow">Regional Boss</span><h1>${region.name}问鼎</h1><p>区域 BOSS 具有明确克制规则。读懂敌情、调整阵型或武学，比单纯堆战力更重要。</p></div>
-      <div class="stage-plaque"><small>区域进度</small><strong>${state.defeatedBossIds.length}/${REGIONS.length}</strong><span>${defeated ? '此地已问鼎' : '首胜解锁后续区域'}</span></div>
-    </div>
     <div class="battle-page-layout">
       <div class="main-column">
         <section class="boss-intel panel" data-testid="boss-intel">
@@ -630,11 +637,7 @@ const renderMystery = (): string => {
         <i>${index + 1}</i><b>${encounter.name}</b><small>${encounter.boss ? '秘境之主' : enemyTraitById(encounter.traitId).name}</small>
       </span>`).join('')}
     </div>`
-  const heading = `
-    <div class="page-heading compact-heading">
-      <div><span class="eyebrow">Roguelike Expedition</span><h1>无相秘境</h1><p>每层从两条岔路中选择一项临时祝福。祝福只在本轮生效，路线与 build 共同决定你能走多深。</p></div>
-      <div class="stage-plaque"><small>秘境记录</small><strong>${state.mystery.bestFloor}/${MYSTERY_ENCOUNTERS.length}</strong><span>已通关 ${state.mystery.runsCompleted} 次</span></div>
-    </div>`
+  const heading = ''
 
   if (!run) {
     return `${heading}
@@ -724,8 +727,6 @@ const renderIdleCombatReturn = (): string => {
 }
 
 function render(): void {
-  const focused = document.activeElement
-  if (focused instanceof HTMLSelectElement) return
   const content = activeTab === 'idle'
     ? renderIdle()
     : activeTab === 'heroes'
@@ -835,9 +836,23 @@ app.addEventListener('click', (event) => {
     }
     case 'set-row': {
       if (row !== 'front' && row !== 'back') return
-      notify(setFormationRow(state, Number(slot), row))
+      const slotIndex = state.formation.findIndex((candidate) => candidate.heroId === heroId)
+      if (slotIndex < 0) return
+      notify(setFormationRow(state, slotIndex, row))
       break
     }
+    case 'toggle-formation': {
+      const targetId = heroId ?? ''
+      if (state.formation.some((candidate) => candidate.heroId === targetId)) {
+        notify(removeFromFormation(state, targetId))
+        break
+      }
+      const frontCount = state.formation.filter((candidate) => candidate.row === 'front').length
+      const targetRow: FormationRow = state.formation.length - frontCount <= frontCount ? 'back' : 'front'
+      notify(addToFormation(state, targetId, targetRow))
+      break
+    }
+    case 'remove-formation': notify(removeFromFormation(state, heroId ?? '')); break
     case 'challenge': notify(startChallenge(state)); activeTab = 'battle'; break
     case 'start-mystery': notify(startMystery(state)); activeTab = 'mystery'; break
     case 'choose-mystery': {
@@ -881,14 +896,88 @@ app.addEventListener('click', (event) => {
   persistAndRender()
 })
 
-app.addEventListener('change', (event) => {
-  const select = event.target as HTMLSelectElement
-  if (!(select instanceof HTMLSelectElement)) return
-  const action = select.dataset.action
-  if (action !== 'party-slot') return
-  notify(setPartySlot(state, Number(select.dataset.slot), select.value))
+/* ---- 阵容拖拽（侠客页：名册 ⇄ 阵容格，前 3 后 3） ---- */
+let dragHeroId: string | null = null
+let dragFromFormation = false
+
+const clearFormationDrag = (): void => {
+  dragHeroId = null
+  dragFromFormation = false
+  app.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'))
+}
+
+const placeHeroOnFormation = (heroId: string, row: FormationRow, occupantId?: string): ActionResult => {
+  const slotIndex = state.formation.findIndex((candidate) => candidate.heroId === heroId)
+  if (occupantId && occupantId !== heroId) {
+    // 落到已占用的格子：阵容内互换前后排；阵容外直接替换该格侠客
+    if (slotIndex >= 0) return swapFormationRows(state, heroId, occupantId)
+    return setPartySlot(state, state.formation.findIndex((candidate) => candidate.heroId === occupantId), heroId)
+  }
+  if (slotIndex >= 0) {
+    if (state.formation[slotIndex].row === row) return { ok: true, message: '侠客已在这一排' }
+    return setFormationRow(state, slotIndex, row)
+  }
+  return addToFormation(state, heroId, row)
+}
+
+app.addEventListener('dragstart', (event) => {
+  const el = (event.target as HTMLElement).closest<HTMLElement>('[data-drag-hero]')
+  if (!el || !event.dataTransfer) return
+  dragHeroId = el.dataset.dragHero ?? null
+  dragFromFormation = Boolean(el.closest('.formation-slot'))
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/plain', dragHeroId ?? '')
+  el.classList.add('dragging')
+})
+
+app.addEventListener('dragover', (event) => {
+  if (!dragHeroId || !event.dataTransfer) return
+  const target = event.target as HTMLElement
+  const rowEl = target.closest<HTMLElement>('[data-drop-row]')
+  if (rowEl) {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    rowEl.classList.add('drag-over')
+    return
+  }
+  const rosterEl = target.closest<HTMLElement>('[data-drop-roster]')
+  if (rosterEl && dragFromFormation) {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    rosterEl.classList.add('drag-over')
+  }
+})
+
+app.addEventListener('dragleave', (event) => {
+  const related = event.relatedTarget as Node | null
+  const target = event.target as HTMLElement
+  const rowEl = target.closest<HTMLElement>('[data-drop-row]')
+  if (rowEl && !rowEl.contains(related)) rowEl.classList.remove('drag-over')
+  const rosterEl = target.closest<HTMLElement>('[data-drop-roster]')
+  if (rosterEl && !rosterEl.contains(related)) rosterEl.classList.remove('drag-over')
+})
+
+app.addEventListener('drop', (event) => {
+  if (!dragHeroId) return
+  const target = event.target as HTMLElement
+  const rowEl = target.closest<HTMLElement>('[data-drop-row]')
+  const rosterEl = target.closest<HTMLElement>('[data-drop-roster]')
+  if (!rowEl && !(rosterEl && dragFromFormation)) return
+  event.preventDefault()
+  const heroId = dragHeroId
+  clearFormationDrag()
+  if (!rowEl) {
+    notify(removeFromFormation(state, heroId))
+    persistAndRender()
+    return
+  }
+  const row = rowEl.dataset.dropRow as FormationRow
+  const occupantId = target.closest<HTMLElement>('.formation-slot.filled')?.dataset.dragHero
+  notify(placeHeroOnFormation(heroId, row, occupantId))
   persistAndRender()
 })
+
+app.addEventListener('dragend', () => { clearFormationDrag() })
 
 importInput.addEventListener('change', async () => {
   const file = importInput.files?.[0]
@@ -921,7 +1010,7 @@ window.setInterval(() => {
     lastRuntimeAt += elapsed * 1000
     state.lastTickAt = now
   }
-  render()
+  if (!dragHeroId) render()   // 拖拽布阵期间跳过整树重绘，避免拖源被销毁
 }, 500)
 
 window.setInterval(() => saveGame(window.localStorage, state), 5000)

@@ -1,5 +1,5 @@
 import { HEROES, MARTIALS, MYSTERY_BLESSINGS, MYSTERY_ENCOUNTERS, REGIONS, regionById } from './data'
-import { createInitialState, getMysteryChoices, resumeMysteryCombat, returnToIdle } from './game'
+import { createInitialState, getMysteryChoices, MAX_FORMATION_ROW_SIZE, resumeMysteryCombat, returnToIdle } from './game'
 import {
   MAX_LEARNED_MARTIALS,
   createLearnedMartial,
@@ -139,15 +139,23 @@ export function hydrateState(raw: unknown, now = Date.now()): GameState {
     }
   }
 
-  state.formation = importedFormation.slice(0, 3)
-  for (const heroId of availableHeroIds) {
-    if (state.formation.length >= 3) break
-    if (!state.formation.some((slot) => slot.heroId === heroId)) {
+  // 阵容约束：每排最多 3 人；不强制补满，尊重玩家主动的减员
+  const rowCounts: Record<FormationRow, number> = { front: 0, back: 0 }
+  state.formation = importedFormation.filter((slot) => {
+    if (rowCounts[slot.row] >= MAX_FORMATION_ROW_SIZE) return false
+    rowCounts[slot.row] += 1
+    return true
+  })
+  if (state.formation.length === 0) {
+    // 空阵容无法战斗：用已拥有侠客补一支默认队伍（前排两人、后排一人）
+    for (const heroId of availableHeroIds.slice(0, 3)) {
       state.formation.push({ heroId, row: state.formation.length < 2 ? 'front' : 'back' })
     }
   }
-  if (!state.formation.some((slot) => slot.row === 'front')) state.formation[0].row = 'front'
-  if (!state.formation.some((slot) => slot.row === 'back')) state.formation.at(-1)!.row = 'back'
+  if (state.formation.length > 1) {
+    if (!state.formation.some((slot) => slot.row === 'front')) state.formation[0].row = 'front'
+    if (!state.formation.some((slot) => slot.row === 'back')) state.formation.at(-1)!.row = 'back'
+  }
   const allowedBossIds = new Set(REGIONS.map((region) => region.boss.id))
   if (Array.isArray(raw.defeatedBossIds)) {
     state.defeatedBossIds = [...new Set(raw.defeatedBossIds.filter(

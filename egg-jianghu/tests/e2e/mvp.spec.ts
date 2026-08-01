@@ -10,7 +10,7 @@ test('页面使用原型风格的高对比楷体与深色烫金配色', async ({
     const root = getComputedStyle(document.documentElement)
     return {
       rootFamily: root.fontFamily,
-      headingFamily: getComputedStyle(document.querySelector('h1')!).fontFamily,
+      headingFamily: getComputedStyle(document.querySelector('.section-title span')!).fontFamily,
       inkColor: root.color,
       appAreas: getComputedStyle(document.querySelector('#app')!).gridTemplateAreas,
     }
@@ -24,7 +24,7 @@ test('页面使用原型风格的高对比楷体与深色烫金配色', async ({
 
 test('启动后先选择大关卡和小关卡，再开始挂机战斗', async ({ page }, testInfo) => {
   await expect(page).toHaveTitle(/蛋蛋江湖 2\.0/)
-  await expect(page.locator('h1')).toHaveText('江湖关卡')
+  await expect(page.locator('.region-map .section-title')).toContainText('大关卡')
   await expect(page.getByTestId('battle-arena')).toHaveCount(0)
   await expect(page.locator('.region-card')).toHaveCount(3)
   await expect(page.getByTestId('region-card-blackwind_fort').getByRole('button')).toBeDisabled()
@@ -41,10 +41,10 @@ test('启动后先选择大关卡和小关卡，再开始挂机战斗', async ({
   await expect(page.getByTestId('martial-slots').locator('.martial-slot')).toHaveCount(4)
   await expect(page.locator('.martial-item')).toHaveCount(0)
 
-  await page.getByRole('button', { name: /队伍/ }).click()
-  await expect(page.locator('.party-slot')).toHaveCount(3)
+  await page.getByRole('button', { name: /羁绊/ }).click()
+  await expect(page.locator('.synergy-card')).toHaveCount(4)
   await page.getByRole('button', { name: /战斗/ }).click()
-  await expect(page.getByRole('heading', { name: '青石古道问鼎' })).toBeVisible()
+  await expect(page.getByTestId('boss-intel')).toContainText('青石古道')
   await expect(page.getByTestId('boss-intel')).toContainText('破阵重击')
 
   await page.getByRole('button', { name: /关卡/ }).click()
@@ -65,10 +65,10 @@ test('可从其他页面通过悬浮入口返回正在进行的挂机战斗', as
 
   await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(120))
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().statistics.idleEnemiesDefeated)).toBeGreaterThan(defeatsBefore)
-  await expect(page.getByRole('heading', { name: '江湖名册' })).toBeVisible()
+  await expect(page.getByTestId('formation-panel')).toBeVisible()
 
   await returnButton.click()
-  await expect(page.getByRole('heading', { name: '青石古道 · 第 3 关' })).toBeVisible()
+  await expect(page.getByText(/青石古道 · 第 3 关 · 挂机战斗中/)).toBeVisible()
   await expect(page.getByTestId('battle-arena')).toBeVisible()
   await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
   expect(await page.evaluate(() => {
@@ -86,7 +86,7 @@ test('可从挂机战斗页立即停止挂机并返回当前章节', async ({ pa
   await stopButton.click()
 
   await expect(page.getByTestId('stage-map')).toBeVisible()
-  await expect(page.getByRole('heading', { name: '青石古道', exact: true })).toBeVisible()
+  await expect(page.locator('.level-breadcrumb')).toContainText('江湖关卡 / 青石古道')
   await expect(page.getByTestId('battle-arena')).toHaveCount(0)
   await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
   expect(await page.evaluate(() => {
@@ -98,7 +98,7 @@ test('可从挂机战斗页立即停止挂机并返回当前章节', async ({ pa
 test('可进入秘境、选择临时祝福并完成首层探索', async ({ page }) => {
   await page.getByRole('button', { name: /秘境/ }).click()
   await expect(page.getByTestId('idle-combat-return')).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: '无相秘境' })).toBeVisible()
+  await expect(page.getByTestId('mystery-page')).toBeVisible()
   await expect(page.getByTestId('mystery-route').locator(':scope > span')).toHaveCount(5)
   await page.getByRole('button', { name: '踏入无相秘境' }).click()
   await expect(page.getByTestId('mystery-choices').locator('.mystery-choice-grid > button')).toHaveCount(2)
@@ -196,18 +196,38 @@ test('四槽武功会展示预案并按优先级在自动战斗中施展', async
     .every((event) => Boolean(event.abilityId)))).toBe(true)
 })
 
-test('可切换前后排阵型且战斗按阵位展示', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: /队伍/ }).click()
-  await expect(page.getByRole('heading', { name: '列阵与羁绊' })).toBeVisible()
-  await expect(page.getByTestId('formation-front-row').locator('.party-slot')).toHaveCount(2)
-  await expect(page.getByTestId('formation-back-row').locator('.party-slot')).toHaveCount(1)
-  await expect(page.getByText('磐石阵', { exact: true })).toBeVisible()
+test('可在侠客页布阵（拖拽/按钮）且战斗按阵位展示', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: /侠客/ }).click()
+  await expect(page.getByTestId('formation-panel')).toBeVisible()
+  await expect(page.getByTestId('formation-front-row').locator('.formation-slot.filled')).toHaveCount(2)
+  await expect(page.getByTestId('formation-back-row').locator('.formation-slot.filled')).toHaveCount(1)
+  await expect(page.getByTestId('synergy-strip')).toContainText('磐石阵')
 
-  await page.getByRole('button', { name: '调至后排' }).first().click()
-  await expect(page.getByText('雁行阵', { exact: true })).toBeVisible()
+  // 按钮换位（触屏友好路径）
+  await page.getByTestId('formation-front-row').getByRole('button', { name: '调至后排' }).first().click()
+  await expect(page.getByTestId('synergy-strip')).toContainText('雁行阵')
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation.map((slot) => slot.row)))
     .toEqual(['back', 'front', 'back'])
-  await page.locator('.party-board').screenshot({ path: testInfo.outputPath('desktop-formation.png') })
+
+  // 拖拽换位：后排侠客拖入前排空格，恢复磐石阵
+  await page.getByTestId('formation-back-row').locator('.formation-slot.filled').first()
+    .dragTo(page.getByTestId('formation-front-row').locator('.formation-slot.empty').first())
+  await expect(page.getByTestId('synergy-strip')).toContainText('磐石阵')
+  await page.getByTestId('formation-panel').screenshot({ path: testInfo.outputPath('desktop-formation.png') })
+
+  // 拖回名册下阵：阵容剩 2 人且前后排各一
+  await page.getByTestId('formation-front-row').locator('.formation-slot.filled').first()
+    .dragTo(page.locator('.hero-roster-card').first())
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)).toHaveLength(2)
+
+  // 详情页按钮重新上阵
+  const removedHeroId = await page.evaluate(() => {
+    const state = window.__EGG_JIANGHU__.getState()
+    return Object.keys(state.heroes).find((id) => state.heroes[id].unlocked && !state.formation.some((slot) => slot.heroId === id)) ?? ''
+  })
+  await page.locator(`.hero-roster-card[data-hero-id="${removedHeroId}"]`).click()
+  await page.getByTestId('formation-toggle').click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)).toHaveLength(3)
 
   await page.getByRole('button', { name: /关卡/ }).click()
   await page.getByRole('button', { name: '进入青石古道' }).click()
@@ -217,8 +237,9 @@ test('可切换前后排阵型且战斗按阵位展示', async ({ page }, testIn
 
   await page.getByRole('button', { name: /战斗/ }).click()
   await page.getByRole('button', { name: /挑战断碑手/ }).click()
-  await page.getByRole('button', { name: /队伍/ }).click()
-  await expect(page.locator('.position-button:not([disabled])')).toHaveCount(0)
+  await page.getByRole('button', { name: /侠客/ }).click()
+  await expect(page.locator('.slot-move:not([disabled])')).toHaveCount(0)
+  await expect(page.locator('.slot-remove:not([disabled])')).toHaveCount(0)
 })
 
 test('击败克制型 BOSS 后解锁区域并能在刷新后恢复', async ({ page }, testInfo) => {
@@ -239,12 +260,12 @@ test('击败克制型 BOSS 后解锁区域并能在刷新后恢复', async ({ pa
   await expect(page.getByTestId('stage-map').locator('.stage-card')).toHaveCount(10)
   await page.getByTestId('stage-map').screenshot({ path: testInfo.outputPath('desktop-regions-unlocked.png') })
   await page.getByTestId('stage-card-1').getByRole('button', { name: '开始挂机' }).click()
-  await expect(page.locator('h1')).toHaveText('黑风寨 · 第 1 关')
+  await expect(page.getByText(/黑风寨 · 第 1 关 · 挂机战斗中/)).toBeVisible()
   await expect(page.getByTestId('battle-arena')).toContainText('黑铁重甲')
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().selectedRegionId)).toBe('blackwind_fort')
 
   await page.getByRole('button', { name: /战斗/ }).click()
-  await expect(page.getByRole('heading', { name: '黑风寨问鼎' })).toBeVisible()
+  await expect(page.getByTestId('boss-intel')).toContainText('黑风寨')
   await expect(page.getByTestId('boss-intel')).toContainText('雁行阵')
   await page.getByTestId('boss-intel').screenshot({ path: testInfo.outputPath('desktop-blackwind-boss.png') })
 })
@@ -288,11 +309,12 @@ test('移动端布局保持可操作', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: /战斗/ }).click()
   await expect(page.getByTestId('boss-intel')).toBeVisible()
   await page.getByTestId('boss-intel').screenshot({ path: testInfo.outputPath('mobile-boss-intel.png') })
-  await page.getByRole('button', { name: /队伍/ }).click()
-  await expect(page.locator('.party-slot').first()).toBeVisible()
+  await page.getByRole('button', { name: /羁绊/ }).click()
+  await expect(page.locator('.synergy-card').first()).toBeVisible()
   await expect(page.getByTestId('idle-combat-return')).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('mobile-party.png'), fullPage: true })
   await page.getByRole('button', { name: /侠客/ }).click()
+  await expect(page.getByTestId('formation-panel')).toBeVisible()
   await expect(page.getByTestId('hero-roster')).toBeVisible()
   await expect(page.getByTestId('martial-slots').locator('.martial-slot')).toHaveCount(4)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)

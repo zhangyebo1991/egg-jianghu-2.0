@@ -190,9 +190,12 @@ button{font-family:inherit;cursor:pointer}
 .stage-card .citymark{position:absolute;right:10px;bottom:10px;font-size:16px;opacity:.8}
 .stage-card.cur-stage{box-shadow:0 0 0 1px var(--gold),0 0 18px rgba(201,164,92,.25)}
 /* ============ 角色屏 ============ */
-#screen-heroes.active{display:grid;grid-template-columns:340px 1fr;gap:14px;align-content:start}
-#roster{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start}
+#screen-heroes.active{display:grid;grid-template-columns:410px 1fr;grid-template-rows:minmax(0,1fr);gap:14px;overflow:hidden}
+#heroes-left{display:flex;flex-direction:column;min-width:0;min-height:0}
+#roster{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start;
+  flex:1;overflow-y:auto;min-height:0;padding-bottom:6px}
 .hcard{padding:10px 6px;text-align:center;cursor:pointer;transition:.15s;position:relative}
+.hcard[draggable="true"]{cursor:grab}
 .hcard:hover{transform:translateY(-2px)}
 .hcard.sel{box-shadow:0 0 0 1px var(--gold),0 0 14px rgba(201,164,92,.3)}
 .hcard .ava{width:54px;height:54px;margin:0 auto 6px;border-radius:50%;display:flex;align-items:center;
@@ -204,7 +207,29 @@ button{font-family:inherit;cursor:pointer}
   background:rgba(0,0,0,.5);padding:0 5px;border-radius:6px;border:1px solid var(--line)}
 .hcard .onteam{position:absolute;top:6px;left:6px;font-size:9px;color:#a9d193;
   background:rgba(60,90,40,.5);padding:0 5px;border-radius:6px;border:1px solid #4a6b3a}
-#hero-detail{min-height:640px}
+/* ---- 出战阵容面板（拖拽布阵：前排3格 + 后排3格） ---- */
+#team-panel .frow-label{font-size:13px;color:var(--gold2);letter-spacing:2px;margin:4px 0 7px;
+  display:flex;align-items:baseline;gap:8px}
+#team-panel .frow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fslot{border:1px dashed var(--line2);border-radius:6px;min-height:98px;display:flex;align-items:center;
+  justify-content:center;position:relative;background:rgba(0,0,0,.22);transition:.12s}
+.fslot.filled{border-style:solid}
+.fslot.drag-over{border-color:var(--gold);background:rgba(201,164,92,.12);box-shadow:0 0 12px rgba(201,164,92,.3)}
+#roster.drag-over{outline:1px dashed var(--gold);outline-offset:4px;border-radius:6px}
+.fempty{color:var(--dim);font-size:12px;letter-spacing:1px;text-align:center;line-height:1.7;pointer-events:none}
+.funit{text-align:center;cursor:grab;padding:6px 2px;width:100%;position:relative}
+.funit:active{cursor:grabbing}
+.funit .ava{width:46px;height:46px;margin:0 auto 4px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:22px;border:2px solid var(--line2);
+  background:radial-gradient(circle at 35% 30%,#3a2f1c,#1c1610)}
+.funit .nm{font-size:13px;letter-spacing:1px;white-space:nowrap}
+.funit .lv{font-size:11px;color:var(--dim)}
+.fslot .pos-tag{position:absolute;top:3px;left:6px;font-size:10px;color:var(--dim);letter-spacing:1px}
+.fslot .rm{position:absolute;top:2px;right:5px;font-size:13px;color:var(--dim);cursor:pointer;display:none;z-index:2}
+.fslot:hover .rm{display:block}
+.fslot .rm:hover{color:var(--red2)}
+.dragging{opacity:.45}
+#hero-detail{overflow-y:auto;min-height:0}
 #hd-head{display:flex;gap:16px;padding:16px;border-bottom:1px solid var(--line)}
 #hd-ava{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-size:42px;border:3px solid var(--gold-dim);background:radial-gradient(circle at 35% 30%,#3a2f1c,#1c1610);
@@ -470,7 +495,7 @@ body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
             <div class="row">
               <button class="btn primary" id="btn-boss" style="flex:1">👹 挑战守关BOSS</button>
             </div>
-            <div class="row hint">提示：点击己方两名侠客可交换阵位（前排受击概率高、伤害+10%，后排被保护、技能冷却-10%）</div>
+            <div class="row hint">提示：点击己方两名侠客可交换阵位；前往【侠客阵容】可拖拽侠客自由上下阵（前排3人·后排3人，前排受击高、伤害+10%，后排被保护、冷却-10%）</div>
           </div>
           <div class="panel" id="battle-stat">
             <span>本场银两 <b id="st-silver">0</b></span>
@@ -492,10 +517,23 @@ body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
       <div id="stage-grid"></div>
     </section>
 
-    <!-- 侠客阵容 -->
+    <!-- 侠客阵容（队伍管理 + 侠客详情 融合屏） -->
     <section class="screen" id="screen-heroes">
-      <div>
-        <h2 class="stitle">🧑‍🤝‍🧑 已收录侠客 <span class="hint" id="roster-count"></span></h2>
+      <div id="heroes-left">
+        <div class="panel" id="team-panel">
+          <div class="ph"><span style="white-space:nowrap">🛡️ 出战阵容</span>
+            <span class="hint" style="letter-spacing:0;font-size:12px">拖入格子上阵 · 格内拖动换位</span>
+            <span style="margin-left:auto;font-size:13px;color:var(--muted);letter-spacing:0;white-space:nowrap">总战力 <b id="team-pow" style="color:var(--gold2);font-weight:normal">0</b></span>
+          </div>
+          <div class="pb">
+            <div class="frow-label">【前排】<span class="hint">受击概率高 · 伤害+10%</span></div>
+            <div class="frow" id="frow-front"></div>
+            <div class="frow-label" style="margin-top:12px">【后排】<span class="hint">被前排保护 · 技能冷却-10%</span></div>
+            <div class="frow" id="frow-back"></div>
+          </div>
+        </div>
+        <h2 class="stitle" style="margin-top:14px">🧑‍🤝‍🧑 侠客录 <span class="hint" id="roster-count"></span></h2>
+        <p class="hint" style="margin-bottom:10px">点击卡片查看详情；按住卡片拖入上方格子即可上阵，拖回列表则下阵</p>
         <div id="roster"></div>
       </div>
       <div class="panel" id="hero-detail"></div>
@@ -661,7 +699,7 @@ const fmt = n=> n>=1e8?(n/1e8).toFixed(1)+'亿' : n>=1e4?(n/1e4).toFixed(1)+'万
 const state = {
   silver: 128600, yuanbao: 2680, xiu: 8450, page: 12,
   stageIdx: 1, viewStage: 1, sub: 3, wave: 4, speed: 1,
-  team: ['shi','shen','chu','su','liu','xuan'],   // 前3=前排，后3=后排
+  team: ['shi','shen','chu','su','liu','xuan'],   // 6个阵位：索引0-2=前排，3-5=后排，null=空位
   heroes: clone(HEROES),
   skillLv: {},          // 武功等级（全局，满级20）
   skillCapEx: {},       // 残页突破的额外上限
@@ -729,11 +767,15 @@ function mkEnemies(){
   return arr;
 }
 function rebuildAllies(){
-  battle.allies = state.team.map((id,i)=>{
-    const old = battle.allies[i];
+  const oldBySlot = {};
+  battle.allies.forEach(u=>{ oldBySlot[u.idx]=u; });
+  battle.allies = [];
+  state.team.forEach((id,i)=>{
+    if(!id) return;                        // 空阵位不上人
     const u = mkUnit(heroById(id),'ally', i<3?0:1, i);
+    const old = oldBySlot[i];
     if(old) u.hp = Math.min(old.hp, u.maxhp);
-    return u;
+    battle.allies.push(u);
   });
 }
 function startBattle(){
@@ -927,7 +969,12 @@ function unitHTML(u){
   </div>`;
 }
 function renderArena(){
-  $('#side-ally').innerHTML = battle.allies.map(u=>`<div class="cell ${u.row===0?'front':''}">${unitHTML(u)}</div>`).join('');
+  let allyHtml = '';
+  for(let i=0;i<6;i++){                    // 始终渲染6个格子，空位留空以保持阵型
+    const u = battle.allies.find(x=>x.idx===i);
+    allyHtml += `<div class="cell ${i<3?'front':''}">${u?unitHTML(u):''}</div>`;
+  }
+  $('#side-ally').innerHTML = allyHtml;
   $('#side-enemy').innerHTML = battle.enemies.map(u=>`<div class="cell ${u.row===0?'front':''}">${unitHTML(u)}</div>`).join('');
 }
 $('#sub-dots').addEventListener('click', e=>{
@@ -977,19 +1024,110 @@ $('#stage-grid').addEventListener('click', e=>{
 function renderRoster(){
   const list = state.heroes.slice().sort((a,b)=>RARITY_ORDER[b.rarity]-RARITY_ORDER[a.rarity]);
   $('#roster-count').textContent = `（${state.heroes.filter(h=>h.owned).length}/${state.heroes.length}）`;
-  $('#roster').innerHTML = list.map(h=>`
-    <div class="panel hcard bdr-${h.rarity} ${h.id===state.selHero?'sel':''}" data-id="${h.id}" style="${h.owned?'':'opacity:.45'}">
+  $('#roster').innerHTML = list.map(h=>{
+    const ti = state.team.indexOf(h.id);
+    return `<div class="panel hcard bdr-${h.rarity} ${h.id===state.selHero?'sel':''}" data-id="${h.id}" data-owned="${h.owned?1:0}"
+      ${h.owned?'draggable="true"':''} style="${h.owned?'':'opacity:.45'}">
       <span class="lvpill">${h.owned?'Lv.'+h.lv:'未收录'}</span>
-      ${state.team.includes(h.id)?'<span class="onteam">出战中</span>':''}
+      ${ti>=0?`<span class="onteam">${ti<3?'前排':'后排'}</span>`:''}
       <div class="ava">${h.ic}</div>
       <div class="nm rarity-${h.rarity}">${h.name}</div>
       <div class="cls">${PATHS[h.path].tiers[h.tier]} · ${h.rarity}</div>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 $('#roster').addEventListener('click', e=>{
   const c = e.target.closest('.hcard'); if(!c) return;
   state.selHero = c.dataset.id; state.hdTab='wu';
   renderRoster(); renderHeroDetail();
+});
+
+/* ---- 队伍管理（拖拽布阵：前排3格 + 后排3格） ---- */
+function teamPow(){
+  return state.team.reduce((s,id)=>{ if(!id) return s; const h=heroById(id);
+    return s + h.atk*5 + h.hp + h.def*8 + h.spd*3; }, 0);
+}
+function renderTeamPanel(){
+  $('#team-pow').textContent = fmt(teamPow());
+  [['front',0],['back',1]].forEach(([row,r])=>{
+    $('#frow-'+row).innerHTML = [0,1,2].map(k=>{
+      const i = r*3+k, id = state.team[i];
+      if(!id) return `<div class="fslot" data-slot="${i}"><div class="fempty">＋<br>拖拽上阵</div></div>`;
+      const h = heroById(id);
+      return `<div class="fslot filled bdr-${h.rarity}" data-slot="${i}">
+        <span class="pos-tag">${r===0?'前':'后'}${k+1}</span>
+        <span class="rm" data-rm="${i}" title="下阵">✕</span>
+        <div class="funit" draggable="true" data-id="${id}">
+          <div class="ava">${h.ic}</div>
+          <div class="nm rarity-${h.rarity}">${h.name}</div>
+          <div class="lv">Lv.${h.lv}</div>
+        </div></div>`;
+    }).join('');
+  });
+}
+function afterTeamChange(){
+  renderTeamPanel(); renderRoster(); renderHeroDetail();
+  rebuildAllies(); renderArena();
+}
+function placeHero(id, to, from){
+  if(from===to) return;
+  if(from!==null){                         // 阵容内拖动 → 交换两格
+    [state.team[from], state.team[to]] = [state.team[to], state.team[from]];
+    toast(`🔀 ${heroById(id).name} 调至${to<3?'前排':'后排'}·${(to%3)+1}号位`);
+  }else{
+    const at = state.team.indexOf(id);
+    if(at>=0){ [state.team[at], state.team[to]] = [state.team[to], state.team[at]]; }
+    else{
+      const replaced = state.team[to];
+      state.team[to] = id;
+      toast(replaced? `🔄 ${heroById(id).name} 上阵，替换了 ${heroById(replaced).name}`
+                    : `🛡️ ${heroById(id).name} 上阵，位于${to<3?'前排':'后排'}·${(to%3)+1}号位`);
+    }
+  }
+  afterTeamChange();
+}
+function removeFromTeam(i){
+  if(state.team.filter(Boolean).length<=1){ toast('⚠️ 至少保留 1 名侠客出战'); return; }
+  const id = state.team[i]; state.team[i] = null;
+  toast(`${heroById(id).name} 已下阵`);
+  afterTeamChange();
+}
+let dragId = null, dragFrom = null;   // dragFrom：null=来自侠客列表，数字=来自阵位
+const clearDragMarks = ()=> $$('.drag-over,.dragging').forEach(x=>x.classList.remove('drag-over','dragging'));
+const heroesScr = $('#screen-heroes');
+heroesScr.addEventListener('dragstart', e=>{
+  const fu = e.target.closest('.funit'), card = e.target.closest('.hcard');
+  if(fu){ dragId = fu.dataset.id; dragFrom = +fu.closest('.fslot').dataset.slot; fu.classList.add('dragging'); }
+  else if(card && card.dataset.owned==='1'){ dragId = card.dataset.id; dragFrom = null; card.classList.add('dragging'); }
+  else { e.preventDefault(); return; }
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragId);
+});
+heroesScr.addEventListener('dragover', e=>{
+  const slot = e.target.closest('.fslot');
+  if(slot && dragId){ e.preventDefault(); e.dataTransfer.dropEffect='move'; slot.classList.add('drag-over'); return; }
+  if(dragFrom!==null && e.target.closest('#heroes-left') && !e.target.closest('#team-panel')){
+    e.preventDefault(); e.dataTransfer.dropEffect='move'; $('#roster').classList.add('drag-over');
+  }
+});
+heroesScr.addEventListener('dragleave', e=>{
+  const slot = e.target.closest('.fslot');
+  if(slot && !slot.contains(e.relatedTarget)) slot.classList.remove('drag-over');
+  if(!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest('#heroes-left')) $('#roster').classList.remove('drag-over');
+});
+heroesScr.addEventListener('drop', e=>{
+  const slot = e.target.closest('.fslot');
+  if(slot && dragId){ e.preventDefault(); placeHero(dragId, +slot.dataset.slot, dragFrom); }
+  else if(dragFrom!==null && e.target.closest('#heroes-left') && !e.target.closest('#team-panel')){
+    e.preventDefault(); removeFromTeam(dragFrom);
+  }
+  dragId=null; dragFrom=null; clearDragMarks();
+});
+heroesScr.addEventListener('dragend', ()=>{ dragId=null; dragFrom=null; clearDragMarks(); });
+$('#team-panel').addEventListener('click', e=>{
+  const rm = e.target.closest('[data-rm]');
+  if(rm){ removeFromTeam(+rm.dataset.rm); return; }
+  const fu = e.target.closest('.funit');
+  if(fu){ state.selHero = fu.dataset.id; state.hdTab='wu'; renderRoster(); renderHeroDetail(); }
 });
 function powOf(h){ return fmt(h.atk*5 + h.hp + h.def*8 + h.spd*3); }
 function renderHeroDetail(){
@@ -1022,9 +1160,12 @@ function renderHeroDetail(){
           <div class="pn">${t}</div>
           <div class="tg">+标签【${P.tags[i]}】</div>
         </div>`).join('')}
-      <button class="btn small ${canUp?'primary':''}" id="btn-advance" style="margin-left:auto" ${canUp?'':'disabled'}>
-        ${h.tier>=4?'已臻化境':`进阶${P.tiers[h.tier+1]}（需Lv.${nextNeed}）`}
-      </button>
+      <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        ${h.owned?`<button class="btn small" id="btn-team-toggle">${state.team.includes(h.id)?'➖ 下阵':'➕ 上阵'}</button>`:''}
+        <button class="btn small ${canUp?'primary':''}" id="btn-advance" ${canUp?'':'disabled'}>
+          ${h.tier>=4?'已臻化境':`进阶${P.tiers[h.tier+1]}（需Lv.${nextNeed}）`}
+        </button>
+      </span>
     </div>
     <div id="hd-tabs">${Object.entries(tabs).map(([k,v])=>`<div class="t ${state.hdTab===k?'on':''}" data-t="${k}">${v}</div>`).join('')}</div>
     <div id="hd-body">${state.hdTab==='wu'? heroWuHTML(h) : heroEqHTML(h)}</div>`;
@@ -1032,7 +1173,19 @@ function renderHeroDetail(){
   if(adv && canUp) adv.onclick = ()=>{
     h.tier++; h.atk=Math.floor(h.atk*1.25); h.hp=Math.floor(h.hp*1.25);
     toast(`🎉 ${h.name} 进阶为【${P.tiers[h.tier]}】，获得标签【${P.tags[h.tier]}】！`);
-    renderHeroDetail(); renderRoster(); rebuildAllies(); renderArena();
+    renderHeroDetail(); renderRoster(); renderTeamPanel(); rebuildAllies(); renderArena();
+  };
+  const tt = $('#btn-team-toggle');
+  if(tt) tt.onclick = ()=>{
+    const at = state.team.indexOf(h.id);
+    if(at>=0){ removeFromTeam(at); return; }
+    const preferBack = ['yi','qi','ci'].includes(h.path);   // 医/气/刺 默认优先后排
+    let empty = state.team.findIndex((x,i)=> !x && (preferBack? i>=3 : i<3));
+    if(empty<0) empty = state.team.findIndex(x=>!x);
+    if(empty<0){ toast('⚠️ 阵容已满（前3后3），请先让一名侠客下阵'); return; }
+    state.team[empty] = h.id;
+    toast(`🛡️ ${h.name} 上阵，位于${empty<3?'前排':'后排'}·${(empty%3)+1}号位`);
+    afterTeamChange();
   };
   $$('#hd-tabs .t').forEach(t=> t.onclick = ()=>{ state.hdTab=t.dataset.t; renderHeroDetail(); });
   if(state.hdTab==='wu') bindWuEvents(h); else bindEqEvents(h);
@@ -1420,7 +1573,7 @@ function switchScreen(name){
 $$('.nav-item').forEach(n=> n.onclick = ()=>{
   switchScreen(n.dataset.screen);
   if(n.dataset.screen==='stages') renderStages();
-  if(n.dataset.screen==='heroes'){ renderRoster(); renderHeroDetail(); }
+  if(n.dataset.screen==='heroes'){ renderTeamPanel(); renderRoster(); renderHeroDetail(); }
   if(n.dataset.screen==='skills'){ renderSkillFilter(); renderSkillLib(); }
 });
 $('#btn-goto-stages').onclick = ()=> openStage(state.stageIdx);
@@ -1440,7 +1593,7 @@ $('#btn-boss').onclick = ()=>{
 ===================================================== */
 ['leng','azi','tang','guo'].forEach(id=> heroById(id).owned=false);
 state.heroes.forEach(h=>{ if(h.owned===undefined) h.owned=true; });
-renderTop(); renderStages(); renderRoster(); renderHeroDetail();
+renderTop(); renderStages(); renderTeamPanel(); renderRoster(); renderHeroDetail();
 renderSkillFilter(); renderSkillLib();
 startBattle();
 addLog('🍶 侠客队伍已进入【桃花岛】，挂机战斗开始……','l-sys');

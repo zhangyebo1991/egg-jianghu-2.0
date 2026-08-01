@@ -3,6 +3,7 @@ import { BONDS, COMBOS, HEROES, MARTIALS, MYSTERY_BLESSINGS, MYSTERY_ENCOUNTERS,
 import {
   BACK_ATTACK_MULTIPLIER,
   abandonMystery,
+  addToFormation,
   chooseMysteryBlessing,
   FRONT_ATTACK_MULTIPLIER,
   FRONT_DAMAGE_TAKEN_MULTIPLIER,
@@ -19,6 +20,7 @@ import {
   isRegionUnlocked,
   moveMartial,
   recruitHero,
+  removeFromFormation,
   returnToIdle,
   selectRegion,
   setFormationRow,
@@ -27,6 +29,7 @@ import {
   startIdleStage,
   startMystery,
   stepCombat,
+  swapFormationRows,
   unequipMartial,
 } from './game'
 
@@ -165,6 +168,58 @@ describe('蛋蛋江湖 MVP 核心循环', () => {
     const state = createInitialState()
     expect(startChallenge(state).ok).toBe(true)
     expect(setFormationRow(state, 0, 'back')).toEqual({ ok: false, message: expect.stringContaining('挑战中不可换位') })
+  })
+
+  it('可上阵新侠客至前后排，每排最多三位', () => {
+    const state = createInitialState()
+    state.resources.silver = 10_000
+    expect(recruitHero(state, 'jiang_wan').ok).toBe(true)
+    expect(recruitHero(state, 'yan_qiusheng').ok).toBe(true)
+    expect(recruitHero(state, 'qi_rumo').ok).toBe(true)
+    expect(recruitHero(state, 'ning_suyin').ok).toBe(true)
+
+    expect(addToFormation(state, 'jiang_wan', 'back').ok).toBe(true)
+    expect(addToFormation(state, 'jiang_wan', 'front')).toEqual({ ok: false, message: expect.stringContaining('已在阵容中') })
+    expect(addToFormation(state, 'yan_qiusheng', 'back').ok).toBe(true)
+    expect(state.formation.filter((slot) => slot.row === 'back')).toHaveLength(3)
+    expect(addToFormation(state, 'qi_rumo', 'back')).toEqual({ ok: false, message: expect.stringContaining('后排最多上阵 3 位侠客') })
+    expect(addToFormation(state, 'qi_rumo', 'front').ok).toBe(true)
+    expect(state.formation).toHaveLength(6)
+    expect(addToFormation(state, 'ning_suyin', 'front')).toEqual({ ok: false, message: expect.stringContaining('前排最多上阵 3 位侠客') })
+  })
+
+  it('下阵需为前后排各保留至少一位侠客', () => {
+    const state = createInitialState()   // 初始：前排两人、后排一人
+    const backHero = state.formation.find((slot) => slot.row === 'back')!.heroId
+    expect(removeFromFormation(state, backHero)).toEqual({ ok: false, message: '前后排都至少需要一位侠客' })
+    expect(removeFromFormation(state, state.formation[0].heroId).ok).toBe(true)
+    expect(state.formation).toHaveLength(2)
+    expect(removeFromFormation(state, state.formation[0].heroId)).toEqual({ ok: false, message: '前后排都至少需要一位侠客' })
+  })
+
+  it('阵容至少保留一位侠客出战', () => {
+    const state = createInitialState()
+    state.formation = [state.formation[0]]
+    expect(removeFromFormation(state, state.formation[0].heroId)).toEqual({ ok: false, message: '至少保留一位侠客出战' })
+  })
+
+  it('两名侠客可互换前后排阵位', () => {
+    const state = createInitialState()
+    const frontHero = state.formation[0].heroId
+    const backHero = state.formation[2].heroId
+    expect(swapFormationRows(state, frontHero, state.formation[1].heroId)).toEqual({ ok: false, message: '两位侠客已在同一排' })
+    expect(swapFormationRows(state, frontHero, 'jiang_wan')).toEqual({ ok: false, message: '无法交换这两个阵位' })
+    expect(swapFormationRows(state, frontHero, backHero).ok).toBe(true)
+    expect(state.formation.map((slot) => slot.row)).toEqual(['back', 'front', 'front'])
+  })
+
+  it('挑战交锋期间不可上阵或下阵', () => {
+    const state = createInitialState()
+    state.resources.silver = 1_000
+    expect(recruitHero(state, 'jiang_wan').ok).toBe(true)
+    expect(startChallenge(state).ok).toBe(true)
+    expect(addToFormation(state, 'jiang_wan', 'back')).toEqual({ ok: false, message: expect.stringContaining('挑战中不可换阵') })
+    expect(removeFromFormation(state, state.formation[0].heroId)).toEqual({ ok: false, message: expect.stringContaining('挑战中不可换阵') })
   })
 
   it('陆青山与江晚同队时按轮次施展山河照影', () => {
