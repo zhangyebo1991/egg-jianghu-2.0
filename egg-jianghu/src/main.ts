@@ -107,7 +107,7 @@ const notify = (result: ActionResult | string, kind: 'success' | 'warning' = 'su
   }
   toastTimer = window.setTimeout(() => {
     toast = ''
-    render()
+    if (!dragHeroId && !dragCandidatePressed) render()
   }, 2800)
 }
 
@@ -371,9 +371,11 @@ const renderHeroRosterCard = (heroId: string, activeHeroId: string): string => {
   const progress = state.heroes[heroId]
   if (!hero || !progress?.unlocked) return ''
   const formationSlot = state.formation.find((slot) => slot.heroId === heroId)
+  // 已出战的侠客不能再从名册拖动：换位/下阵请直接操作上方阵容格
+  const draggable = !formationSlot && !isBuildUiLocked()
   return `
-    <button type="button" class="hero-roster-card ${heroId === activeHeroId ? 'selected' : ''}"
-      data-action="select-hero" data-hero-id="${heroId}" data-drag-hero="${heroId}" draggable="${isBuildUiLocked() ? 'false' : 'true'}"
+    <button type="button" class="hero-roster-card ${heroId === activeHeroId ? 'selected' : ''} ${formationSlot ? 'on-duty' : ''}"
+      data-action="select-hero" data-hero-id="${heroId}" ${draggable ? `data-drag-hero="${heroId}" draggable="true"` : ''}
       aria-pressed="${heroId === activeHeroId}">
       ${formationSlot ? `<span class="roster-status">${formationSlot.row === 'front' ? '前排' : '后排'}</span>` : ''}
       <span class="roster-level">Lv.${progress.level}</span>
@@ -522,7 +524,7 @@ const renderFormationPanel = (): string => {
   return `
     <section class="formation-panel panel" data-testid="formation-panel">
       <div class="section-title"><span>出战阵容</span><small>总战力 ${formatNumber(getPartyPower(state))} · 拖入侠客上阵</small></div>
-      <div class="formation-rows">${renderRow('back')}${renderRow('front')}</div>
+      <div class="formation-rows">${renderRow('front')}${renderRow('back')}</div>
       <div class="synergy-strip" data-testid="synergy-strip">
         <span class="active"><b>阵</b>${formation.name}</span>
         <span class="${synergy.sectName ? 'active' : ''}"><b>门</b>${synergy.sectName ? `${synergy.sectName} ×${synergy.sectCount}` : '未共鸣'}</span>
@@ -542,7 +544,7 @@ const renderHeroes = (): string => {
       <div class="heroes-side">
         ${renderFormationPanel()}
         <aside class="hero-roster-panel panel" data-drop-roster>
-          <div class="section-title"><span>侠客名册</span><small>已拥有 ${owned.length} 人 · 点击配置武功 · 拖入上方出战</small></div>
+          <div class="section-title"><span>侠客名册</span><small>已拥有 ${owned.length} 人 · 点击配置武功 · 未出战者可拖入上方阵容</small></div>
           <div class="hero-roster" data-testid="hero-roster">${owned.map((hero) => renderHeroRosterCard(hero.id, heroId)).join('')}</div>
         </aside>
       </div>
@@ -899,12 +901,19 @@ app.addEventListener('click', (event) => {
 /* ---- 阵容拖拽（侠客页：名册 ⇄ 阵容格，前 3 后 3） ---- */
 let dragHeroId: string | null = null
 let dragFromFormation = false
+let dragCandidatePressed = false   // 按下可拖拽元素期间同样暂停重绘，保护 mousedown → dragstart 窗口
 
 const clearFormationDrag = (): void => {
   dragHeroId = null
   dragFromFormation = false
   app.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'))
 }
+
+app.addEventListener('pointerdown', (event) => {
+  dragCandidatePressed = Boolean((event.target as HTMLElement).closest('[data-drag-hero]'))
+})
+app.addEventListener('pointerup', () => { dragCandidatePressed = false })
+app.addEventListener('pointercancel', () => { dragCandidatePressed = false })
 
 const placeHeroOnFormation = (heroId: string, row: FormationRow, occupantId?: string): ActionResult => {
   const slotIndex = state.formation.findIndex((candidate) => candidate.heroId === heroId)
@@ -1010,7 +1019,7 @@ window.setInterval(() => {
     lastRuntimeAt += elapsed * 1000
     state.lastTickAt = now
   }
-  if (!dragHeroId) render()   // 拖拽布阵期间跳过整树重绘，避免拖源被销毁
+  if (!dragHeroId && !dragCandidatePressed) render()   // 拖拽布阵期间跳过整树重绘，避免拖源被销毁
 }, 500)
 
 window.setInterval(() => saveGame(window.localStorage, state), 5000)

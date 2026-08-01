@@ -1,4 +1,20 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
+
+// 模拟真实拖拽轨迹：先小步启动拖拽，再分步移动到目标（dragTo 的瞬时大跳会被浏览器合并输入而吞掉 dragstart）
+const dragHero = async (page: Page, source: Locator, target: Locator): Promise<void> => {
+  await target.scrollIntoViewIfNeeded()
+  await source.scrollIntoViewIfNeeded()
+  const sb = await source.boundingBox()
+  const tb = await target.boundingBox()
+  if (!sb || !tb) throw new Error('拖拽元素不可见')
+  await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(sb.x + sb.width / 2 + 6, sb.y + sb.height / 2 + 6, { steps: 2 })
+  await page.mouse.move(tb.x + tb.width / 2, tb.y + tb.height / 2, { steps: 6 })
+  await page.waitForTimeout(80)
+  await page.mouse.up()
+  await page.waitForTimeout(150)
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -210,14 +226,20 @@ test('可在侠客页布阵（拖拽/按钮）且战斗按阵位展示', async (
     .toEqual(['back', 'front', 'back'])
 
   // 拖拽换位：后排侠客拖入前排空格，恢复磐石阵
-  await page.getByTestId('formation-back-row').locator('.formation-slot.filled').first()
-    .dragTo(page.getByTestId('formation-front-row').locator('.formation-slot.empty').first())
+  await dragHero(
+    page,
+    page.getByTestId('formation-back-row').locator('.formation-slot.filled').first(),
+    page.getByTestId('formation-front-row').locator('.formation-slot.empty').first(),
+  )
   await expect(page.getByTestId('synergy-strip')).toContainText('磐石阵')
   await page.getByTestId('formation-panel').screenshot({ path: testInfo.outputPath('desktop-formation.png') })
 
   // 拖回名册下阵：阵容剩 2 人且前后排各一
-  await page.getByTestId('formation-front-row').locator('.formation-slot.filled').first()
-    .dragTo(page.locator('.hero-roster-card').first())
+  await dragHero(
+    page,
+    page.getByTestId('formation-front-row').locator('.formation-slot.filled').first(),
+    page.locator('.hero-roster-card').first(),
+  )
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)).toHaveLength(2)
 
   // 详情页按钮重新上阵
