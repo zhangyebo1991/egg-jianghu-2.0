@@ -9,7 +9,7 @@ import { resolveDefeat, resolveVictory, type CampaignSelection } from '../domain
 import { advanceQuestBoards, initializeQuestBoard } from '../domain/quests'
 import { settleCombatEvent } from '../domain/rewards'
 import { loadGameV10, saveGameV10, type StorageLike } from '../domain/save-v10'
-import type { ActionResult, GameStateV10 } from '../domain/types'
+import type { ActionResult, CampaignMode, GameStateV10 } from '../domain/types'
 
 const formationOrder = (row: 'front' | 'back', position: 0 | 1 | 2): number =>
   (row === 'front' ? 0 : 3) + position
@@ -86,6 +86,11 @@ export class GameSession {
   startStage(input: StageSelectionInput): ActionResult {
     if (!this.state.unlockedWorldIds.includes(input.worldId)) return { ok: false, message: '江湖卷尚未解锁' }
     if (!Number.isInteger(input.stage) || input.stage < 1 || input.stage > 10) return { ok: false, message: '小关不存在' }
+    const highestUnlockedStage = Math.min(10, Math.max(
+      1,
+      (this.state.clearedStageByWorld[input.worldId] ?? 0) + 1,
+    ))
+    if (input.stage > highestUnlockedStage) return { ok: false, message: '小关尚未解锁' }
     const combatInput = buildCombatStartInput(this.state, input)
     if (combatInput.party.length === 0) return { ok: false, message: '请先配置出战阵容' }
 
@@ -113,6 +118,15 @@ export class GameSession {
     const before = JSON.stringify(this.state.factionBoards)
     advanceQuestBoards(this.state, elapsedMs, this.runtimeRng)
     if (JSON.stringify(this.state.factionBoards) !== before) this.save()
+  }
+
+  setCombatMode(mode: CampaignMode): ActionResult {
+    if (!this.combat || !this.selection || this.combat.state.result !== 'fighting') {
+      return { ok: false, message: '当前没有进行中的战斗' }
+    }
+    this.selection = { ...this.selection, mode }
+    this.combat.setMode(mode)
+    return { ok: true, message: mode === 'guard' ? '已切换为驻守' : '已切换为闯荡' }
   }
 
   stopCombat(): void {

@@ -50,6 +50,7 @@ describe('GameSession', () => {
 
   it('闯荡失败自动切驻守并重新创建回退关卡', () => {
     const session = sessionWithParty()
+    session.state.clearedStageByWorld.world_01 = 3
     expect(session.startStage({ worldId: 'world_01', stage: 4, mode: 'roam', seed: 9 }).ok).toBe(true)
     for (const hero of session.combat!.state.party) {
       hero.hp = hero.maxHp = 1
@@ -70,6 +71,7 @@ describe('GameSession', () => {
 
   it('闯荡通关第十关时解锁下一卷并从第一关继续', () => {
     const session = sessionWithParty()
+    session.state.clearedStageByWorld.world_01 = 9
     expect(session.startStage({ worldId: 'world_01', stage: 10, mode: 'roam', seed: 22 }).ok).toBe(true)
     makePartyOverwhelming(session)
 
@@ -85,6 +87,35 @@ describe('GameSession', () => {
 
     expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(false)
     expect(session.startStage({ worldId: 'world_02', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(false)
+    expect(session.combat).toBeNull()
+  })
+
+  it('即时切换模式但不重建或重置当前战斗', () => {
+    const session = sessionWithParty()
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 17 }).ok).toBe(true)
+    session.advanceTicks(3)
+    const engine = session.combat
+    const before = structuredClone(session.combat!.state)
+
+    expect(session.setCombatMode('roam')).toEqual({ ok: true, message: '已切换为闯荡' })
+
+    expect(session.combat).toBe(engine)
+    expect(session.selection).toEqual({ worldId: 'world_01', stage: 1, mode: 'roam' })
+    expect(session.combat!.state).toEqual({ ...before, mode: 'roam' })
+  })
+
+  it('没有进行中战斗时拒绝切换模式', () => {
+    const session = sessionWithParty()
+
+    expect(session.setCombatMode('roam')).toEqual({ ok: false, message: '当前没有进行中的战斗' })
+    expect(session.combat).toBeNull()
+  })
+
+  it('拒绝绕过界面进入尚未解锁的小关', () => {
+    const session = sessionWithParty()
+
+    expect(session.startStage({ worldId: 'world_01', stage: 2, mode: 'guard', seed: 1 }))
+      .toEqual({ ok: false, message: '小关尚未解锁' })
     expect(session.combat).toBeNull()
   })
 })

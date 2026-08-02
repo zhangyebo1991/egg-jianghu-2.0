@@ -1,4 +1,5 @@
 import { MARTIALS_V10, martialByIdV10 } from '../content/martials'
+import type { CampaignMode } from '../domain/types'
 import { calculateDamage, hitChance } from './damage'
 import { createRng, type Rng } from './rng'
 import { selectSkill, type CombatSkillDefinition } from './skill-ai'
@@ -16,6 +17,7 @@ import { advanceToNextWave, createWave, isWaveCleared } from './waves'
 export interface CombatEngine {
   readonly state: CombatSnapshot
   tick(count?: number): CombatEvent[]
+  setMode(mode: CampaignMode): void
   stop(): CombatEvent[]
 }
 
@@ -196,6 +198,9 @@ export const createCombatEngine = (input: CombatStartInput): CombatEngine => {
         events.push(...tickOnce(state, rng))
       }
       return events
+    },
+    setMode(mode): void {
+      state.mode = mode
     },
     stop(): CombatEvent[] {
       if (state.result !== 'fighting') return []
