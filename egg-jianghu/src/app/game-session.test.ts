@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { recruitFromTavern } from '../domain/recruitment'
-import { SAVE_KEY_V10, type StorageLike } from '../domain/save-v10'
+import { SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
+import { createNewGameStateV10 } from '../domain/state'
 import { GameSession } from './game-session'
 
 const memoryStorage = (): StorageLike & { values: Map<string, string> } => {
@@ -33,6 +34,15 @@ const makePartyOverwhelming = (session: GameSession): void => {
 }
 
 describe('GameSession', () => {
+  it('新建玩家角色在战斗中显示自定义姓名', () => {
+    const storage = memoryStorage()
+    saveGameV10(storage, createNewGameStateV10('燕七', 1000), 1000)
+    const session = GameSession.create(storage, 1000)
+
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(true)
+    expect(session.combat?.state.party[0]?.name).toBe('燕七')
+  })
+
   it('保存长期收益但不保存进行中的战斗', () => {
     const storage = memoryStorage()
     const session = sessionWithParty(storage)

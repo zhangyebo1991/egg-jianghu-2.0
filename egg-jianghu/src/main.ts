@@ -7,7 +7,7 @@ import { createWave } from './combat/waves'
 import { CAREERS, careerById } from './content/careers'
 import { EQUIPMENT_AFFIXES, equipmentDefinitionById } from './content/equipment'
 import { FACTIONS } from './content/factions'
-import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10 } from './content/heroes'
+import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10 } from './content/heroes'
 import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTIALS, martialByIdV10 } from './content/martials'
 import { WORLDS } from './content/worlds'
 import { changeCareer, perfectCareer } from './domain/careers'
@@ -130,7 +130,7 @@ const stageListViewModel = (): StageListViewModel => {
 
 const recruitedHeroes = () => HEROES_V10.flatMap((definition) => {
   const progress = session.state.heroes[definition.id]
-  return progress?.recruited ? [{ definition, progress }] : []
+  return progress?.recruited ? [{ definition, progress, name: heroDisplayNameV10(definition, progress) }] : []
 })
 
 const normalizeSelectedHero = (): string | null => {
@@ -158,12 +158,12 @@ const heroesViewModel = (): HeroesPageViewModel => {
   return {
     selectedHeroId: selectedId,
     formation: session.state.formation,
-    heroes: recruitedHeroes().map(({ definition, progress }) => {
+    heroes: recruitedHeroes().map(({ definition, progress, name }) => {
       const career = careerById(progress.currentCareerId)
       const record = progress.careers[progress.currentCareerId]
       return {
         id: definition.id,
-        name: definition.name,
+        name,
         grade: definition.grade,
         recruited: progress.recruited,
         level: progress.level,
@@ -254,7 +254,7 @@ const cityViewModel = (): CityPageViewModel => {
     worldName: world.name,
     worldCurrency: session.state.worldCurrency[world.id] ?? 0,
     selectedHeroId: selectedId,
-    heroes: recruitedHeroes().map(({ definition }) => ({ id: definition.id, name: definition.name })),
+    heroes: recruitedHeroes().map(({ definition, name }) => ({ id: definition.id, name })),
     tavernHeroes: TAVERN_HEROES.filter((hero) => hero.worldId === world.id).map((hero) => ({
       id: hero.id,
       name: hero.name,
@@ -281,7 +281,7 @@ const cityViewModel = (): CityPageViewModel => {
 
 const inventoryViewModel = (): InventoryPageViewModel => {
   const selectedId = normalizeSelectedHero()
-  const heroes = recruitedHeroes().map(({ definition }) => ({ id: definition.id, name: definition.name }))
+  const heroes = recruitedHeroes().map(({ definition, name }) => ({ id: definition.id, name }))
   const equippedBy = (uid: string): string | null => Object.entries(session.state.heroes)
     .find(([, progress]) => Object.values(progress.equipmentBySlot).includes(uid))?.[0] ?? null
   return {

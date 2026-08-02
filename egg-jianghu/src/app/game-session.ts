@@ -3,7 +3,7 @@ import { createRng, type Rng } from '../combat/rng'
 import { buildCombatStats } from '../combat/stats'
 import type { CombatEvent, CombatStartInput, CombatUnit, StageSelectionInput } from '../combat/types'
 import { FACTIONS } from '../content/factions'
-import { heroByIdV10 } from '../content/heroes'
+import { heroByIdV10, heroDisplayNameV10 } from '../content/heroes'
 import { WORLDS } from '../content/worlds'
 import { resolveDefeat, resolveVictory, type CampaignSelection } from '../domain/progression'
 import { advanceQuestBoards, initializeQuestBoard } from '../domain/quests'
@@ -24,7 +24,7 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
     const stats = buildCombatStats(definition, progress, state.inventory)
     return [{
       id: slot.heroId,
-      name: definition.name,
+      name: heroDisplayNameV10(definition, progress),
       careerId: progress.currentCareerId,
       side: 'party' as const,
       row: slot.row,
