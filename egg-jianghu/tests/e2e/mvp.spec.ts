@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 let pageErrors: string[]
 
@@ -12,6 +12,23 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(() => {
   expect(pageErrors).toEqual([])
 })
+
+const prepareParty = async (page: Page): Promise<void> => {
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.recruitHero('hero_shen_yanqiu')
+    window.__EGG_JIANGHU__.placeHero('hero_shen_yanqiu', 'front', 0)
+  })
+}
+
+const enterWorld = async (page: Page, worldId = 'world_01'): Promise<void> => {
+  await page.getByTestId('tab-idle').click()
+  await page.getByTestId(`world-${worldId}`).click()
+}
+
+const openWorldSection = async (page: Page, section: 'stages' | 'factions' | 'city'): Promise<void> => {
+  await enterWorld(page)
+  await page.getByTestId(`world-section-${section}`).click()
+}
 
 test('江湖按大关小关分层并在点击小关后立即驻守', async ({ page }) => {
   await page.evaluate(() => {
@@ -34,6 +51,105 @@ test('江湖按大关小关分层并在点击小关后立即驻守', async ({ pa
   })
 })
 
+test('桌面与移动端导航始终位于内容左侧', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const desktop = await page.evaluate(() => {
+    const sidebar = document.querySelector('.game-sidebar')!.getBoundingClientRect()
+    const main = document.querySelector('.game-main')!.getBoundingClientRect()
+    return { sidebar: { x: sidebar.x, width: sidebar.width, height: sidebar.height }, mainX: main.x }
+  })
+  expect(desktop.sidebar.x).toBe(0)
+  expect(desktop.sidebar.width).toBeGreaterThanOrEqual(140)
+  expect(desktop.sidebar.height).toBe(800)
+  expect(desktop.mainX).toBeGreaterThanOrEqual(desktop.sidebar.width)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  const mobile = await page.evaluate(() => {
+    const sidebar = document.querySelector('.game-sidebar')!.getBoundingClientRect()
+    const main = document.querySelector('.game-main')!.getBoundingClientRect()
+    return {
+      sidebar: { x: sidebar.x, width: sidebar.width, height: sidebar.height },
+      mainX: main.x,
+      scrollWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    }
+  })
+  expect(mobile.sidebar.x).toBe(0)
+  expect(mobile.sidebar.width).toBeLessThanOrEqual(80)
+  expect(mobile.sidebar.height).toBe(844)
+  expect(mobile.mainX).toBeGreaterThanOrEqual(mobile.sidebar.width)
+  expect(mobile.scrollWidth).toBeLessThanOrEqual(mobile.viewportWidth)
+})
+
+test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) => {
+  await prepareParty(page)
+  await enterWorld(page)
+  await page.getByTestId('stage-1').click()
+  const before = await page.evaluate(() => ({
+    combat: window.__EGG_JIANGHU__.getCombat(),
+    currency: window.__EGG_JIANGHU__.getState().worldCurrency.world_01,
+    inventory: window.__EGG_JIANGHU__.getState().inventory.length,
+  }))
+
+  await page.getByTestId('mode-roam').click()
+
+  const after = await page.evaluate(() => ({
+    combat: window.__EGG_JIANGHU__.getCombat(),
+    currency: window.__EGG_JIANGHU__.getState().worldCurrency.world_01,
+    inventory: window.__EGG_JIANGHU__.getState().inventory.length,
+  }))
+  expect(after.combat?.mode).toBe('roam')
+  expect(after.combat?.seed).toBe(before.combat?.seed)
+  expect(after.combat?.worldId).toBe(before.combat?.worldId)
+  expect(after.combat?.stage).toBe(before.combat?.stage)
+  expect(after.combat?.elapsedMs).toBeGreaterThanOrEqual(before.combat?.elapsedMs ?? 0)
+  expect(after.currency).toBeGreaterThanOrEqual(before.currency)
+  expect(after.inventory).toBeGreaterThanOrEqual(before.inventory)
+})
+
+test('势力和城市只显示当前大关内容', async ({ page }) => {
+  await openWorldSection(page, 'factions')
+  await expect(page.getByText('青锋馆', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText('断浪刀门', { exact: true })).toHaveCount(0)
+
+  await page.getByTestId('world-section-city').click()
+  await expect(page.getByTestId('city-page')).toContainText('青石江湖')
+  await expect(page.getByTestId('city-page')).not.toContainText('沧浪江湖')
+})
+
+test('离页后恢复同一战斗并在停止后返回小关列表', async ({ page }) => {
+  await prepareParty(page)
+  await enterWorld(page)
+  await page.getByTestId('stage-1').click()
+  const seed = await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.seed)
+
+  await page.getByTestId('tab-heroes').click()
+  await page.getByTestId('idle-combat-return').click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.seed)).toBe(seed)
+
+  await page.getByTestId('stop-combat').click()
+  await expect(page.getByTestId('stage-overview')).toBeVisible()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat())).toBeNull()
+})
+
+test('返回总览隐藏二级导航且新大关默认进入关卡', async ({ page }) => {
+  await enterWorld(page)
+  await page.getByTestId('world-section-city').click()
+  await page.locator('[data-action="return-worlds"]').click()
+  await expect(page.locator('[data-jianghu-section]')).toHaveCount(0)
+
+  await prepareParty(page)
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.setClearedStage('world_01', 9)
+    window.__EGG_JIANGHU__.startStage('world_01', 10, 'roam', 23)
+    window.__EGG_JIANGHU__.forceCombatResult('victory')
+  })
+  await page.getByTestId('tab-idle').click()
+  await page.getByTestId('world-world_02').click()
+  await expect(page.getByTestId('stage-overview')).toBeVisible()
+  await expect(page.getByTestId('world-section-stages')).toHaveClass(/active/)
+})
+
 test('连续 tick 保持页签按钮节点并支持慢速点击', async ({ page }) => {
   const stableAcrossTicks = await page.getByTestId('tab-heroes').evaluate(async (button) => {
     await new Promise((resolve) => setTimeout(resolve, 350))
@@ -52,7 +168,9 @@ test('连续 tick 保持页签按钮节点并支持慢速点击', async ({ page 
 })
 
 test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => {
-  await page.getByTestId('start-guard').click()
+  await prepareParty(page)
+  await enterWorld(page)
+  await page.getByTestId('stage-1').click()
 
   const stableAcrossCombatTicks = await page.evaluate(async () => {
     const tab = document.querySelector('[data-testid="tab-idle"]')
@@ -68,7 +186,7 @@ test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => 
 })
 
 test('从酒馆明确名单直接邀请并放入前后三格阵容', async ({ page }) => {
-  await page.getByTestId('tab-city').click()
+  await openWorldSection(page, 'city')
   await page.getByTestId('tavern-hero_shen_yanqiu').getByRole('button', { name: '直接邀请' }).click()
   await page.getByTestId('tavern-hero_huo_chuan').getByRole('button', { name: '直接邀请' }).click()
 
@@ -91,7 +209,7 @@ test('职业 Lv.10 转职且侠客等级保持不变', async ({ page }) => {
   })
   const heroLevel = await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_shen_yanqiu.level)
 
-  await page.getByTestId('tab-city').click()
+  await openWorldSection(page, 'city')
   await page.locator('[data-action="career-buy-token"][data-token-id="token_sword_swift_mid"]').click()
   await page.getByTestId('tab-heroes').click()
   await page.locator('[data-action="career-change"][data-career-id="sword_swift_mid"]').click()
@@ -134,6 +252,7 @@ test('闯荡失败回退上一小关并切换驻守', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_shen_yanqiu')
     window.__EGG_JIANGHU__.placeHero('hero_shen_yanqiu', 'front', 0)
+    window.__EGG_JIANGHU__.setClearedStage('world_01', 3)
     window.__EGG_JIANGHU__.startStage('world_01', 4, 'roam', 31)
     window.__EGG_JIANGHU__.forceCombatResult('defeat')
   })
@@ -165,7 +284,7 @@ test('第 301 件装备被拒绝且战斗继续', async ({ page }) => {
 
 test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page }) => {
   await page.evaluate(() => window.__EGG_JIANGHU__.prepareQuestBoard('qingfeng_hall', 211))
-  await page.getByTestId('tab-factions').click()
+  await openWorldSection(page, 'factions')
   await expect(page.locator('[data-quest-slot]')).toHaveCount(6)
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.qingfeng_hall.slots.map((slot) => slot?.id ?? null))
   await page.getByTestId('quest-slot-0').getByRole('button', { name: '接受' }).click()
@@ -188,16 +307,16 @@ test('重载页面后长期收益保留但必须重新选择关卡', async ({ pa
   expect(after.worldCurrency).toEqual(before.worldCurrency)
   expect(after.inventory).toEqual(before.inventory)
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat())).toBeNull()
-  await expect(page.getByRole('heading', { name: '整备阵容，择关而行' })).toBeVisible()
+  await expect(page.getByTestId('world-overview')).toBeVisible()
 })
 
 test('页面不出现离线收益抽卡残页铁匠铺和首次奖励', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  for (const tab of ['idle', 'heroes', 'factions', 'city', 'inventory'] as const) {
+  for (const tab of ['idle', 'heroes', 'inventory'] as const) {
     await page.getByTestId(`tab-${tab}`).click()
     await expect(page.getByTestId(`tab-${tab}`)).toHaveAttribute('aria-current', 'page')
   }
   await page.getByTestId('tab-idle').click()
-  await expect(page.getByTestId('stop-combat')).toBeVisible()
+  await expect(page.getByTestId('world-overview')).toBeVisible()
   expect(await page.locator('body').innerText()).not.toMatch(/离线收益|十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解|首次通关|首次奖励|叩关/)
 })
