@@ -6,7 +6,10 @@ test.beforeEach(async ({ page }) => {
   pageErrors = []
   page.on('pageerror', (error) => pageErrors.push(error.message))
   await page.goto('/')
-  await page.evaluate(() => window.__EGG_JIANGHU__.reset())
+  await page.getByRole('button', { name: '新建游戏' }).click()
+  await page.getByLabel('玩家姓名').fill('测试少侠')
+  await page.getByLabel('玩家姓名').press('Enter')
+  await expect(page.getByTestId('world-overview')).toBeVisible()
 })
 
 test.afterEach(() => {
@@ -193,6 +196,7 @@ test('从酒馆明确名单直接邀请并放入前后三格阵容', async ({ pa
   await page.getByTestId('tab-heroes').click()
   await page.locator('[data-action="formation-place"][data-target-row="back"][data-position="0"]').click()
   await page.getByTestId('hero-hero_shen_yanqiu').click()
+  await page.locator('[data-action="formation-remove"][data-hero-id="hero_player"]').click()
   await page.locator('[data-action="formation-place"][data-target-row="front"][data-position="0"]').click()
 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
@@ -303,6 +307,8 @@ test('重载页面后长期收益保留但必须重新选择关卡', async ({ pa
   })
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
   await page.reload()
+  await expect(page.getByTestId('title-page')).toBeVisible()
+  await page.getByRole('button', { name: '继续游戏' }).click()
   const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
   expect(after.worldCurrency).toEqual(before.worldCurrency)
   expect(after.inventory).toEqual(before.inventory)
