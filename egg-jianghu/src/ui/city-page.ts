@@ -11,7 +11,14 @@ export interface CityPageViewModel {
   careerTokens: Array<{ id: string; name: string; tier: string; cost: number; owned: boolean }>
 }
 
-export const renderCityPage = (view: CityPageViewModel): string => `<section class="city-layout" data-testid="city-page">
+export const renderCityPage = (view: CityPageViewModel): string => {
+  if (view.tavernHeroes.length === 0 && view.martials.length === 0 && view.careerTokens.length === 0) {
+    return `<section class="city-layout empty-page" data-testid="city-page">
+      <header class="city-heading panel"><div><small>${escapeHtml(view.worldName)}</small><h1>城中行走</h1></div></header>
+      <div class="panel section-empty"><strong>本卷城市暂无可用内容</strong><span>返回关卡继续推进江湖进度。</span></div>
+    </section>`
+  }
+  return `<section class="city-layout" data-testid="city-page">
   <header class="city-heading panel"><div><small>${escapeHtml(view.worldName)}</small><h1>城中行走</h1></div><div><span>本卷货币</span><strong>${formatNumber(view.worldCurrency)}</strong></div></header>
   <label class="hero-picker">传授对象<select data-action="select-hero-input">${view.heroes.map((hero) => `<option value="${hero.id}" ${hero.id === view.selectedHeroId ? 'selected' : ''}>${escapeHtml(hero.name)}</option>`).join('')}</select></label>
   <div class="city-columns">
@@ -20,3 +27,4 @@ export const renderCityPage = (view: CityPageViewModel): string => `<section cla
     <section class="token-shop panel"><header><small>转职信物</small><strong>高阶信物随江湖卷开放</strong></header>${view.careerTokens.map((token) => `<article><div><strong>${escapeHtml(token.name)}</strong><small>${escapeHtml(token.tier)} · 本卷货币 ${token.cost}</small></div><button type="button" data-action="career-buy-token" data-world-id="${view.worldId}" data-token-id="${token.id}" ${token.owned ? 'disabled' : ''}>${token.owned ? '已持有' : '购取'}</button></article>`).join('')}</section>
   </div>
 </section>`
+}

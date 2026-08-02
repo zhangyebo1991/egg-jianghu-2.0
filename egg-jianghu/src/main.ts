@@ -24,8 +24,9 @@ import { renderFactionsPage, type FactionsPageViewModel } from './ui/factions-pa
 import { renderHeroesPage, type HeroesPageViewModel } from './ui/heroes-page'
 import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
+import { renderStageList, renderWorldOverview, type StageListViewModel, type WorldOverviewViewModel } from './ui/jianghu-page'
 import { createDomPatcher } from './ui/dom-patch'
-import { renderShell, type TabId } from './ui/shell'
+import { renderShell, type JianghuSection, type TabId } from './ui/shell'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (!app) throw new Error('缺少 #app 根节点')
@@ -38,9 +39,13 @@ toast.setAttribute('role', 'status')
 document.body.append(toast)
 
 let session = GameSession.create(window.localStorage)
+type JianghuView = 'worlds' | 'world' | 'combat'
+
 let activeTab: TabId = 'idle'
+let jianghuView: JianghuView = 'worlds'
+let jianghuSection: JianghuSection = 'stages'
 let selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
-let selectedStage = Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1)
+let selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
 let selectedHeroId: string | null = Object.keys(session.state.heroes)[0] ?? null
 let selectedFactionId = FACTIONS.find((faction) => session.state.unlockedWorldIds.includes(faction.worldId))?.id ?? 'qingfeng_hall'
 let combatSpeed: 1 | 2 | 4 = 1
@@ -76,32 +81,50 @@ const unitView = (unit: CombatUnit): IdleCombatUnitView => ({
 })
 
 const idleViewModel = (): IdlePageViewModel => {
-  const cleared = session.state.clearedStageByWorld[selectedWorldId] ?? 0
   const combat = session.combat?.state
+  if (!combat) throw new Error('战斗页面缺少进行中的战斗')
+  const world = WORLDS.find((item) => item.id === combat.worldId) ?? WORLDS[0]
   return {
-    worlds: WORLDS.map((world) => ({
-      id: world.id,
-      name: world.name,
-      unlocked: session.state.unlockedWorldIds.includes(world.id),
-    })),
-    selectedWorldId,
-    stages: Array.from({ length: 10 }, (_, index) => ({
-      stage: index + 1,
-      unlocked: index + 1 <= Math.max(1, cleared + 1),
-      cleared: index + 1 <= cleared,
-    })),
-    selectedStage,
-    worldCurrency: session.state.worldCurrency[selectedWorldId] ?? 0,
+    worldName: world.name,
+    selectedStage: combat.stage,
     inventoryCount: session.state.inventory.length,
     inventoryCapacity: INVENTORY_CAPACITY,
     combatSpeed,
-    combat: combat ? {
+    combat: {
       mode: combat.mode,
       wave: combat.wave,
       party: combat.party.map(unitView),
       enemies: combat.enemies.map(unitView),
-    } : null,
+    },
     logs: combatLogs,
+  }
+}
+
+const worldOverviewViewModel = (): WorldOverviewViewModel => ({
+  worlds: WORLDS.map((world) => ({
+    id: world.id,
+    name: world.name,
+    index: world.index,
+    unlocked: session.state.unlockedWorldIds.includes(world.id),
+    difficulty: Math.min(5, Math.ceil(world.index / 2)),
+    recommendedPower: Math.round(4000 * 1.65 ** (world.index - 1)),
+    clearedStages: session.state.clearedStageByWorld[world.id] ?? 0,
+    factionNames: FACTIONS.filter((faction) => faction.worldId === world.id).map((faction) => faction.name),
+  })),
+})
+
+const stageListViewModel = (): StageListViewModel => {
+  const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
+  const cleared = session.state.clearedStageByWorld[world.id] ?? 0
+  return {
+    worldId: world.id,
+    worldName: world.name,
+    worldCurrency: session.state.worldCurrency[world.id] ?? 0,
+    stages: Array.from({ length: 10 }, (_, index) => ({
+      stage: index + 1,
+      unlocked: index + 1 <= Math.min(10, Math.max(1, cleared + 1)),
+      cleared: index + 1 <= cleared,
+    })),
   }
 }
 
@@ -174,8 +197,10 @@ const heroesViewModel = (): HeroesPageViewModel => {
 }
 
 const factionsViewModel = (): FactionsPageViewModel => {
-  const availableFactions = FACTIONS.filter((faction) => session.state.unlockedWorldIds.includes(faction.worldId))
-  if (!availableFactions.some((faction) => faction.id === selectedFactionId)) selectedFactionId = availableFactions[0]?.id ?? 'qingfeng_hall'
+  const availableFactions = FACTIONS.filter((faction) =>
+    faction.worldId === selectedWorldId
+    && session.state.unlockedWorldIds.includes(faction.worldId))
+  if (!availableFactions.some((faction) => faction.id === selectedFactionId)) selectedFactionId = availableFactions[0]?.id ?? ''
   const faction = availableFactions.find((item) => item.id === selectedFactionId) ?? availableFactions[0]
   const board = session.state.factionBoards[selectedFactionId]
   const heroProgress = selectedHeroId ? session.state.heroes[selectedHeroId] : undefined
@@ -283,25 +308,40 @@ const inventoryViewModel = (): InventoryPageViewModel => {
   }
 }
 
+const normalizeSelectedWorld = (): void => {
+  if (session.state.unlockedWorldIds.includes(selectedWorldId)) return
+  selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
+  selectedStage = 1
+  jianghuView = 'worlds'
+  jianghuSection = 'stages'
+}
+
+const renderJianghuContent = (): string => {
+  if (jianghuView === 'worlds') return renderWorldOverview(worldOverviewViewModel())
+  if (jianghuView === 'combat' && session.combat) return renderIdlePage(idleViewModel())
+  if (jianghuView === 'combat') {
+    jianghuView = 'world'
+    jianghuSection = 'stages'
+  }
+  if (jianghuSection === 'factions') return renderFactionsPage(factionsViewModel())
+  if (jianghuSection === 'city') return renderCityPage(cityViewModel())
+  return renderStageList(stageListViewModel())
+}
+
 const render = (): void => {
+  normalizeSelectedWorld()
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
-  const contribution = Object.values(session.state.contribution).reduce((sum, value) => sum + value, 0)
   const content = activeTab === 'idle'
-    ? renderIdlePage(idleViewModel())
+    ? renderJianghuContent()
     : activeTab === 'heroes'
       ? renderHeroesPage(heroesViewModel())
-      : activeTab === 'factions'
-        ? renderFactionsPage(factionsViewModel())
-        : activeTab === 'city'
-          ? renderCityPage(cityViewModel())
-          : renderInventoryPage(inventoryViewModel())
+      : renderInventoryPage(inventoryViewModel())
   patchApp(renderShell({
     activeTab,
-    worldName: world.name,
-    worldCurrency: session.state.worldCurrency[selectedWorldId] ?? 0,
-    contribution,
-    inventoryCount: session.state.inventory.length,
-    inventoryCapacity: INVENTORY_CAPACITY,
+    worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
+      ? { worldName: world.name, activeSection: jianghuSection }
+      : null,
+    hasCombatReturn: Boolean(session.combat && !(activeTab === 'idle' && jianghuView === 'combat')),
     content,
   }))
 }
@@ -320,6 +360,10 @@ const logEvents = (events: CombatEvent[]): void => {
 const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => {
   const result = session.startStage({ worldId: selectedWorldId, stage: selectedStage, mode, seed })
   notify(result.message, !result.ok)
+  if (result.ok) {
+    jianghuView = 'combat'
+    jianghuSection = 'stages'
+  }
   render()
 }
 
@@ -380,28 +424,59 @@ app.addEventListener('click', (event) => {
   const tab = target.closest<HTMLElement>('[data-tab]')?.dataset.tab as TabId | undefined
   if (tab) {
     activeTab = tab
+    if (tab === 'idle') {
+      jianghuView = 'worlds'
+      jianghuSection = 'stages'
+    }
+    render()
+    return
+  }
+  const worldSection = target.closest<HTMLElement>('[data-jianghu-section]')
+    ?.dataset.jianghuSection as JianghuSection | undefined
+  if (worldSection) {
+    activeTab = 'idle'
+    jianghuView = 'world'
+    jianghuSection = worldSection
     render()
     return
   }
   const button = target.closest<HTMLButtonElement>('[data-action]')
   if (!button || button.disabled) return
   const { action } = button.dataset
-  if (action === 'select-world' && button.dataset.worldId) {
+  if (action === 'enter-world' && button.dataset.worldId) {
+    if (!session.state.unlockedWorldIds.includes(button.dataset.worldId)) {
+      notify('江湖卷尚未解锁', true)
+      return
+    }
     selectedWorldId = button.dataset.worldId
-    selectedStage = Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1)
-  } else if (action === 'select-stage') selectedStage = Number(button.dataset.stage) || 1
-  else if (action === 'select-hero') selectedHeroId = button.dataset.heroId ?? null
-  else if (action === 'select-faction') selectedFactionId = button.dataset.factionId ?? selectedFactionId
-  else if (action === 'start-guard') {
+    selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
+    selectedFactionId = FACTIONS.find((faction) => faction.worldId === selectedWorldId)?.id ?? ''
+    jianghuView = 'world'
+    jianghuSection = 'stages'
+  } else if (action === 'start-stage') {
+    selectedStage = Number(button.dataset.stage) || 1
     startSelectedStage('guard')
     return
-  } else if (action === 'start-roam') {
-    startSelectedStage('roam')
-    return
+  } else if (action === 'select-hero') selectedHeroId = button.dataset.heroId ?? null
+  else if (action === 'select-faction') selectedFactionId = button.dataset.factionId ?? selectedFactionId
+  else if (action === 'set-mode-guard' || action === 'set-mode-roam') {
+    const result = session.setCombatMode(action === 'set-mode-guard' ? 'guard' : 'roam')
+    notify(result.message, !result.ok)
   } else if (action === 'stop-combat') {
     session.stopCombat()
     combatLogs.push('主动停止战斗，临时战斗状态已清除')
     notify('已停止战斗')
+    jianghuView = 'world'
+    jianghuSection = 'stages'
+  } else if (action === 'resume-combat' && session.combat) {
+    activeTab = 'idle'
+    selectedWorldId = session.combat.state.worldId
+    selectedStage = session.combat.state.stage
+    jianghuView = 'combat'
+    jianghuSection = 'stages'
+  } else if (action === 'return-worlds') {
+    jianghuView = 'worlds'
+    jianghuSection = 'stages'
   } else if (action?.startsWith('speed-')) {
     const speed = Number(action.slice(-1))
     if (speed === 1 || speed === 2 || speed === 4) combatSpeed = speed
@@ -470,6 +545,8 @@ declare global {
       getSelection: () => ReturnType<typeof structuredClone>
       setTab: (tab: TabId) => void
       startStage: (worldId: string, stage: number, mode: 'guard' | 'roam', seed: number) => void
+      setCombatMode: (mode: 'guard' | 'roam') => void
+      setClearedStage: (worldId: string, stage: number) => void
       advanceCombat: (ticks: number) => CombatEvent[]
       advanceRuntime: (elapsedMs: number) => void
       grantWorldCurrency: (worldId: string, amount: number) => void
@@ -493,11 +570,23 @@ window.__EGG_JIANGHU__ = {
   getState: () => structuredClone(session.state),
   getCombat: () => structuredClone(session.combat?.state ?? null),
   getSelection: () => structuredClone(session.selection),
-  setTab: (tab) => { activeTab = tab; render() },
+  setTab: (tab) => {
+    activeTab = tab
+    if (tab === 'idle') {
+      jianghuView = 'worlds'
+      jianghuSection = 'stages'
+    }
+    render()
+  },
   startStage: (worldId, stage, mode, seed) => {
     selectedWorldId = worldId
     selectedStage = stage
     startSelectedStage(mode, seed)
+  },
+  setCombatMode: (mode) => { commitAction(session.setCombatMode(mode)); render() },
+  setClearedStage: (worldId, stage) => {
+    session.state.clearedStageByWorld[worldId] = Math.max(0, Math.min(10, Math.floor(stage)))
+    render()
   },
   advanceCombat: (ticks) => {
     const events = session.advanceTicks(ticks)
@@ -561,6 +650,8 @@ window.__EGG_JIANGHU__ = {
     window.localStorage.removeItem(SAVE_KEY_V10)
     session = GameSession.create(window.localStorage)
     activeTab = 'idle'
+    jianghuView = 'worlds'
+    jianghuSection = 'stages'
     selectedWorldId = 'world_01'
     selectedStage = 1
     selectedHeroId = null

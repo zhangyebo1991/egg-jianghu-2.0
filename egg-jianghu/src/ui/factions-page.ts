@@ -29,6 +29,11 @@ const renderQuest = (factionId: string, slot: number, quest: FactionsPageViewMod
 </article>`
 
 export const renderFactionsPage = (view: FactionsPageViewModel): string => {
+  if (view.factions.length === 0) {
+    return `<section class="factions-layout empty-page" data-testid="factions-page">
+      <div class="panel section-empty"><strong>本卷暂无可用势力</strong><span>返回关卡继续推进江湖进度。</span></div>
+    </section>`
+  }
   const selected = view.factions.find((faction) => faction.id === view.selectedFactionId) ?? view.factions[0]
   const minutes = Math.max(0, Math.ceil(view.refreshRemainingMs / 60_000))
   return `<section class="factions-layout" data-testid="factions-page">

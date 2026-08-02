@@ -82,4 +82,11 @@ describe('version 10 长期循环页面', () => {
     const html = renderCityPage(cityFixture()) + renderInventoryPage(inventoryFixture())
     expect(html).not.toMatch(/十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解/)
   })
+
+  it('当前大关没有势力或城市内容时显示本卷空状态', () => {
+    expect(renderFactionsPage({ ...factionsFixture(), factions: [], branches: [], factionHero: null }))
+      .toContain('本卷暂无可用势力')
+    expect(renderCityPage({ ...cityFixture(), tavernHeroes: [], martials: [], careerTokens: [] }))
+      .toContain('本卷城市暂无可用内容')
+  })
 })

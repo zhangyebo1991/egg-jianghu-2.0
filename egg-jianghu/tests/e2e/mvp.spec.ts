@@ -13,6 +13,27 @@ test.afterEach(() => {
   expect(pageErrors).toEqual([])
 })
 
+test('江湖按大关小关分层并在点击小关后立即驻守', async ({ page }) => {
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.recruitHero('hero_shen_yanqiu')
+    window.__EGG_JIANGHU__.placeHero('hero_shen_yanqiu', 'front', 0)
+  })
+  await expect(page.getByTestId('world-overview')).toBeVisible()
+  await expect(page.getByTestId('stage-1')).toHaveCount(0)
+
+  await page.getByTestId('world-world_01').click()
+  await expect(page.getByTestId('stage-overview')).toBeVisible()
+  await expect(page.locator('button[data-testid^="stage-"]')).toHaveCount(10)
+
+  await page.getByTestId('stage-1').click()
+  await expect(page.getByTestId('idle-page')).toBeVisible()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getSelection())).toEqual({
+    worldId: 'world_01',
+    stage: 1,
+    mode: 'guard',
+  })
+})
+
 test('连续 tick 保持页签按钮节点并支持慢速点击', async ({ page }) => {
   const stableAcrossTicks = await page.getByTestId('tab-heroes').evaluate(async (button) => {
     await new Promise((resolve) => setTimeout(resolve, 350))
