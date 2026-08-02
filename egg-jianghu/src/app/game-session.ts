@@ -8,7 +8,8 @@ import { WORLDS } from '../content/worlds'
 import { resolveDefeat, resolveVictory, type CampaignSelection } from '../domain/progression'
 import { advanceQuestBoards, initializeQuestBoard } from '../domain/quests'
 import { settleCombatEvent } from '../domain/rewards'
-import { loadGameV10, saveGameV10, type StorageLike } from '../domain/save-v10'
+import { loadExistingGameV10, loadGameV10, saveGameV10, type StorageLike } from '../domain/save-v10'
+import { createNewGameStateV10 } from '../domain/state'
 import type { ActionResult, CampaignMode, GameStateV10 } from '../domain/types'
 
 const formationOrder = (row: 'front' | 'back', position: 0 | 1 | 2): number =>
@@ -77,6 +78,19 @@ export class GameSession {
 
   static create(storage: StorageLike, now = Date.now()): GameSession {
     return new GameSession(loadGameV10(storage, now).state, storage)
+  }
+
+  static createNew(storage: StorageLike, playerName: string, now = Date.now()): GameSession {
+    const session = new GameSession(createNewGameStateV10(playerName, now), storage)
+    session.save(now)
+    return session
+  }
+
+  static continue(storage: StorageLike, now = Date.now()): GameSession {
+    const loaded = loadExistingGameV10(storage, now)
+    if (!loaded) throw new Error('没有可继续的存档')
+    if (loaded.recoveredFromError) throw new Error('存档无法读取')
+    return new GameSession(loaded.state, storage)
   }
 
   save(now = Date.now()): void {

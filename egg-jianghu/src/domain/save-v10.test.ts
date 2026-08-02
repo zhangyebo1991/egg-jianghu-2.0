@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createInitialStateV10 } from './state'
-import { loadGameV10, SAVE_KEY_V10, saveGameV10 } from './save-v10'
+import { createInitialStateV10, createNewGameStateV10 } from './state'
+import { clearSaveV10, hasSaveV10, loadGameV10, SAVE_KEY_V10, saveGameV10 } from './save-v10'
 
 const memoryStorage = () => {
   const values = new Map<string, string>()
@@ -13,6 +13,36 @@ const memoryStorage = () => {
 }
 
 describe('version 10 存档', () => {
+  it('通过 version 10 专用 key 检测存档是否存在', () => {
+    const storage = memoryStorage()
+
+    expect(hasSaveV10(storage)).toBe(false)
+
+    storage.setItem(SAVE_KEY_V10, '{}')
+
+    expect(hasSaveV10(storage)).toBe(true)
+  })
+
+  it('清除时只移除 version 10 存档', () => {
+    const storage = memoryStorage()
+    storage.setItem(SAVE_KEY_V10, '{}')
+    storage.setItem('other-key', '保留')
+
+    clearSaveV10(storage)
+
+    expect(storage.getItem(SAVE_KEY_V10)).toBeNull()
+    expect(storage.getItem('other-key')).toBe('保留')
+  })
+
+  it('新建玩家角色保存并读取后保留自定义姓名', () => {
+    const storage = memoryStorage()
+    saveGameV10(storage, createNewGameStateV10('燕七', 1000), 1000)
+
+    const loaded = loadGameV10(storage, 2000)
+
+    expect(loaded.state.heroes.hero_player?.customName).toBe('燕七')
+  })
+
   it('忽略 version 1～9 的旧 key 并从零开始', () => {
     const storage = memoryStorage()
     storage.setItem('egg-jianghu-2-save-v1', JSON.stringify({ version: 9, resources: { silver: 999999 } }))

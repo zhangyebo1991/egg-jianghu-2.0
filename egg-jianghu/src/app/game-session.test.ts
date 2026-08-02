@@ -34,6 +34,89 @@ const makePartyOverwhelming = (session: GameSession): void => {
 }
 
 describe('GameSession', () => {
+  it('新建游戏立即保存玩家角色和默认阵型', () => {
+    const storage = memoryStorage()
+
+    const session = GameSession.createNew(storage, '燕七', 1000)
+    const saved = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
+
+    expect(session.state.heroes.hero_player?.customName).toBe('燕七')
+    expect(saved.heroes.hero_player.customName).toBe('燕七')
+    expect(saved.formation).toEqual([{ heroId: 'hero_player', row: 'front', position: 0 }])
+  })
+
+  it('继续旧的有效空角色存档时不补玩家角色', () => {
+    const storage = memoryStorage()
+    saveGameV10(storage, {
+      ...createNewGameStateV10('燕七', 1000),
+      heroes: {},
+      formation: [],
+    }, 1000)
+
+    const session = GameSession.continue(storage, 2000)
+
+    expect(session.state.heroes.hero_player).toBeUndefined()
+    expect(session.state.formation).toEqual([])
+  })
+
+  it('没有存档时拒绝继续游戏', () => {
+    expect(() => GameSession.continue(memoryStorage(), 1000)).toThrowError('没有可继续的存档')
+  })
+
+  it('坏 JSON 存档时拒绝继续游戏', () => {
+    const storage = memoryStorage()
+    storage.setItem(SAVE_KEY_V10, '{坏 JSON')
+
+    expect(() => GameSession.continue(storage, 1000)).toThrowError('存档无法读取')
+  })
+
+  it('空字符串存档时拒绝继续游戏', () => {
+    const storage = memoryStorage()
+    storage.setItem(SAVE_KEY_V10, '')
+
+    expect(() => GameSession.continue(storage, 1000)).toThrowError('存档无法读取')
+  })
+
+  it('继续游戏只读取一次存档并使用同一次读取到的有效内容', () => {
+    const source = memoryStorage()
+    saveGameV10(source, createNewGameStateV10('燕七', 1000), 1000)
+    const serialized = source.getItem(SAVE_KEY_V10)!
+    let getItemCalls = 0
+    const storage: StorageLike = {
+      getItem: () => {
+        getItemCalls += 1
+        return getItemCalls === 1 ? serialized : null
+      },
+      setItem: () => undefined,
+      removeItem: () => undefined,
+    }
+
+    const session = GameSession.continue(storage, 2000)
+
+    expect(getItemCalls).toBe(1)
+    expect(session.state.heroes.hero_player?.customName).toBe('燕七')
+  })
+
+  it('新建游戏保存失败时抛出且不返回 session', () => {
+    const storage: StorageLike = {
+      getItem: () => null,
+      setItem: () => { throw new Error('写入失败') },
+      removeItem: () => undefined,
+    }
+
+    expect(() => GameSession.createNew(storage, '燕七', 1000)).toThrowError('写入失败')
+  })
+
+  it('继续游戏时读取异常不会伪装成空新档', () => {
+    const storage: StorageLike = {
+      getItem: () => { throw new Error('读取失败') },
+      setItem: () => undefined,
+      removeItem: () => undefined,
+    }
+
+    expect(() => GameSession.continue(storage, 1000)).toThrowError('读取失败')
+  })
+
   it('新建玩家角色在战斗中显示自定义姓名', () => {
     const storage = memoryStorage()
     saveGameV10(storage, createNewGameStateV10('燕七', 1000), 1000)

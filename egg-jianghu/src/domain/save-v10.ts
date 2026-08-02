@@ -14,6 +14,9 @@ export interface LoadResultV10 {
   recoveredFromError: boolean
 }
 
+export const hasSaveV10 = (storage: StorageLike): boolean =>
+  storage.getItem(SAVE_KEY_V10) !== null
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
@@ -55,9 +58,9 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
   }, Math.min(now, Number(raw.lastSavedAt) || now))
 }
 
-export const loadGameV10 = (storage: StorageLike, now = Date.now()): LoadResultV10 => {
+export const loadExistingGameV10 = (storage: StorageLike, now = Date.now()): LoadResultV10 | null => {
   const serialized = storage.getItem(SAVE_KEY_V10)
-  if (!serialized) return { state: createInitialStateV10(now), recoveredFromError: false }
+  if (serialized === null) return null
 
   try {
     return { state: hydrateStateV10(JSON.parse(serialized) as unknown, now), recoveredFromError: false }
@@ -65,6 +68,9 @@ export const loadGameV10 = (storage: StorageLike, now = Date.now()): LoadResultV
     return { state: createInitialStateV10(now), recoveredFromError: true }
   }
 }
+
+export const loadGameV10 = (storage: StorageLike, now = Date.now()): LoadResultV10 =>
+  loadExistingGameV10(storage, now) ?? { state: createInitialStateV10(now), recoveredFromError: false }
 
 export const saveGameV10 = (
   storage: StorageLike,
