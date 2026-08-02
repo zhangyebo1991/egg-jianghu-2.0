@@ -1,16 +1,4 @@
-import { escapeHtml, formatNumber, percent } from './html'
-
-export interface IdleWorldView {
-  id: string
-  name: string
-  unlocked: boolean
-}
-
-export interface IdleStageView {
-  stage: number
-  unlocked: boolean
-  cleared: boolean
-}
+import { escapeHtml, percent } from './html'
 
 export interface IdleCombatUnitView {
   id: string
@@ -35,15 +23,12 @@ export interface IdleCombatView {
 }
 
 export interface IdlePageViewModel {
-  worlds: IdleWorldView[]
-  selectedWorldId: string
-  stages: IdleStageView[]
+  worldName: string
   selectedStage: number
-  worldCurrency: number
   inventoryCount: number
   inventoryCapacity: number
   combatSpeed: 1 | 2 | 4
-  combat: IdleCombatView | null
+  combat: IdleCombatView
   logs: string[]
 }
 
@@ -73,44 +58,28 @@ const formationSlots = (combat: IdleCombatView | null): string => (['back', 'fro
 ).join('')
 
 export const renderIdlePage = (view: IdlePageViewModel): string => {
-  const selectedWorld = view.worlds.find((world) => world.id === view.selectedWorldId) ?? view.worlds[0]
   const inventoryFull = view.inventoryCount >= view.inventoryCapacity
   return `
     <section class="idle-layout" data-testid="idle-page">
-      <aside class="world-rail panel">
-        <header><small>江湖卷</small><strong>${escapeHtml(selectedWorld?.name ?? '未选择')}</strong></header>
-        <div class="world-list">
-          ${view.worlds.map((world, index) => `
-            <button type="button" data-action="select-world" data-world-id="${world.id}" class="world-item${world.id === view.selectedWorldId ? ' active' : ''}" ${world.unlocked ? '' : 'disabled'}>
-              <span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(world.name)}</strong>
-            </button>`).join('')}
-        </div>
-        <div class="stage-grid" aria-label="小关">
-          ${view.stages.map((stage) => `
-            <button type="button" data-action="select-stage" data-stage="${stage.stage}" data-testid="stage-${stage.stage}" class="stage-item${stage.stage === view.selectedStage ? ' active' : ''}${stage.cleared ? ' cleared' : ''}" ${stage.unlocked ? '' : 'disabled'}>${stage.stage}</button>`).join('')}
-        </div>
-        <div class="rail-currency"><span>本卷货币</span><strong>${formatNumber(view.worldCurrency)}</strong></div>
-      </aside>
-
       <section class="battle-theatre panel">
         <header class="battle-heading">
-          <div><small>${view.combat?.mode === 'roam' ? '闯荡' : '驻守'} · 第 ${view.selectedStage} 关</small><h1>${view.combat ? `第 ${view.combat.wave} / 10 波` : '整备阵容，择关而行'}</h1></div>
+          <div><small>${escapeHtml(view.worldName)} · 第 ${view.selectedStage} 关</small><h1>第 ${view.combat.wave} / 10 波</h1></div>
           ${inventoryFull ? '<strong class="capacity-warning" role="status">背包已满 · 新装备无法获得</strong>' : `<span class="capacity-safe">背包 ${view.inventoryCount} / ${view.inventoryCapacity}</span>`}
         </header>
         <div class="battlefield">
           <div class="formation-board" aria-label="六侠两排阵容">${formationSlots(view.combat)}</div>
           <div class="battle-divider" aria-hidden="true"><span>战</span></div>
           <div class="enemy-board" data-testid="enemy-board">
-            ${view.combat?.enemies.length
+            ${view.combat.enemies.length
               ? view.combat.enemies.map((enemy) => renderUnit(enemy, 'enemy')).join('')
-              : '<div class="battle-empty"><strong>山门未启</strong><span>选择驻守或闯荡后，战斗将从第 1 波开始</span></div>'}
+              : '<div class="battle-empty"><strong>山道暂静</strong><span>下一波敌人正在赶来</span></div>'}
           </div>
         </div>
         <footer class="battle-controls">
           <div class="mode-controls">
-            <button type="button" class="primary" data-action="start-guard" data-testid="start-guard">驻守</button>
-            <button type="button" class="primary roam" data-action="start-roam" data-testid="start-roam">闯荡</button>
-            <button type="button" data-action="stop-combat" data-testid="stop-combat" ${view.combat ? '' : 'disabled'}>停止战斗</button>
+            <button type="button" class="primary${view.combat.mode === 'guard' ? ' active' : ''}" data-action="set-mode-guard" data-testid="mode-guard">驻守</button>
+            <button type="button" class="primary roam${view.combat.mode === 'roam' ? ' active' : ''}" data-action="set-mode-roam" data-testid="mode-roam">闯荡</button>
+            <button type="button" data-action="stop-combat" data-testid="stop-combat">停止战斗</button>
           </div>
           <div class="speed-controls" aria-label="战斗速度">
             ${([1, 2, 4] as const).map((speed) => `<button type="button" data-action="speed-${speed}" class="${view.combatSpeed === speed ? 'active' : ''}">${speed}×</button>`).join('')}
