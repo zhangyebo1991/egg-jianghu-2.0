@@ -16,7 +16,7 @@ export interface HeroDefinitionV10 {
   grade: HeroGrade
   baseCareerId: string
   worldId: string
-  source: 'tavern' | 'faction'
+  source: 'starter' | 'tavern' | 'faction'
   cost: number
   factionId: string | null
   aptitudes: HeroAptitudes
@@ -30,6 +30,26 @@ export const TAVERN_HERO_ROWS = [
   ['hero_su_wenlan', '苏问岚', '乙', 'doctor', 260, [6, 12, 8, 8, 10]],
   ['hero_lu_guiyuan', '陆归元', '乙', 'inner', 300, [7, 11, 9, 7, 11]],
 ] as const
+
+export const PLAYER_HERO_ID = 'hero_player'
+
+export const PLAYER_HERO_V10: HeroDefinitionV10 = {
+  id: PLAYER_HERO_ID,
+  name: '无名少侠',
+  grade: '丙',
+  baseCareerId: 'sword',
+  worldId: 'world_01',
+  source: 'starter',
+  cost: 0,
+  factionId: null,
+  aptitudes: {
+    strength: 8,
+    insight: 8,
+    constitution: 9,
+    agility: 9,
+    resolve: 8,
+  },
+}
 
 const careerByCategory: Record<CareerCategory, string> = {
   剑: 'sword',
@@ -100,7 +120,7 @@ export const FACTION_HEROES: HeroDefinitionV10[] = FACTIONS.map((faction) => {
   }
 })
 
-export const HEROES_V10: HeroDefinitionV10[] = [...TAVERN_HEROES, ...FACTION_HEROES]
+export const HEROES_V10: HeroDefinitionV10[] = [PLAYER_HERO_V10, ...TAVERN_HEROES, ...FACTION_HEROES]
 
 export const heroByIdV10 = (id: string): HeroDefinitionV10 | undefined =>
   HEROES_V10.find((hero) => hero.id === id)

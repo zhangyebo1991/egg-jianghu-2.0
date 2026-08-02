@@ -37,6 +37,7 @@ export interface CareerRecord {
 
 export interface HeroProgressV10 {
   recruited: boolean
+  customName?: string
   level: number
   experience: number
   careers: Record<string, CareerRecord>
