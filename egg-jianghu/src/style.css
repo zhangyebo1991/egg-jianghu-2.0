@@ -52,23 +52,28 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 68px 58px 1fr;
+  grid-template-columns: 168px minmax(0, 1fr);
 }
 
-.topbar {
+.game-sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 100vh;
   display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 10px clamp(14px, 2.6vw, 38px);
-  border-bottom: 1px solid #30362d;
-  background: rgb(15 18 15 / 94%);
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 12px;
+  overflow-y: auto;
+  border-right: 1px solid #30362d;
+  background: rgb(15 18 15 / 97%);
   backdrop-filter: blur(16px);
 }
 
-.brand-block { display: flex; align-items: center; gap: 11px; min-width: 215px; }
+.brand-block { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .brand-block > span:last-child { display: grid; gap: 2px; }
-.brand-block strong { color: #f2eadb; font-size: 18px; letter-spacing: .12em; }
-.brand-block small { color: #817f72; font-size: 11px; letter-spacing: .08em; }
+.brand-block strong { color: #f2eadb; font-size: 14px; letter-spacing: .08em; white-space: nowrap; }
+.brand-block small { color: #817f72; font-size: 8px; letter-spacing: .04em; white-space: nowrap; }
 
 .brand-seal {
   width: 38px;
@@ -82,38 +87,61 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   box-shadow: inset 0 0 0 3px #2b1713;
 }
 
-.resource-strip { display: flex; align-items: center; gap: 26px; flex: 1; }
-.resource-strip span { display: grid; gap: 2px; }
-.resource-strip small { color: #858779; font-size: 11px; }
-.resource-strip strong { color: #d8c49c; font-size: 15px; font-variant-numeric: tabular-nums; }
-.save-state { display: flex; align-items: center; gap: 7px; color: #8b927f; font-size: 12px; }
-.save-state i { width: 7px; height: 7px; border-radius: 50%; background: var(--jade-bright); box-shadow: 0 0 12px var(--jade); }
-
 .game-nav {
   display: grid;
-  grid-template-columns: repeat(5, minmax(90px, 150px));
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 16px;
-  border-bottom: 1px solid #32382f;
-  background: #181b17;
+  gap: 6px;
 }
 
-.nav-item { display: flex; align-items: center; justify-content: center; gap: 9px; padding: 8px 12px; border-color: transparent; background: transparent; }
+.nav-item { display: flex; align-items: center; justify-content: flex-start; gap: 9px; padding: 10px; border-color: transparent; background: transparent; }
 .nav-item span { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid #454b3f; color: #a3a68f; font-size: 11px; }
-.nav-item strong { font-size: 14px; letter-spacing: .14em; }
+.nav-item strong { font-size: 13px; letter-spacing: .12em; }
 .nav-item.active { color: #f2e7cf; border-color: #52604d; background: #252a22; }
 .nav-item.active span { border-color: var(--gold); color: var(--gold); }
 
-.game-main { min-height: 0; padding: clamp(10px, 1.4vw, 20px); }
+.world-subnav { display: grid; gap: 5px; padding: 14px 0 0 18px; border-top: 1px solid var(--line); }
+.world-subnav button { padding: 8px 9px; text-align: left; border-color: transparent; background: transparent; font-size: 12px; }
+.world-subnav button.active { color: var(--gold); border-color: #5b503e; background: #27251e; }
+.world-subnav .world-back { margin-bottom: 4px; color: #898b7d; font-size: 10px; }
+
+.game-main { min-width: 0; min-height: 100vh; padding: clamp(10px, 1.4vw, 20px); }
 .panel { border: 1px solid var(--line); border-radius: var(--radius); background: rgb(25 29 24 / 96%); box-shadow: var(--shadow); }
+
+.page-heading { margin-bottom: 18px; padding: 6px 2px 14px; border-bottom: 1px solid var(--line); }
+.page-heading small { color: var(--gold); font-size: 10px; letter-spacing: .2em; }
+.page-heading h1 { margin: 4px 0; color: #f0e4ce; font-size: clamp(26px, 3vw, 42px); letter-spacing: .12em; }
+.page-heading p { margin: 0; color: #828779; font-size: 12px; }
+.world-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.world-heading > span { color: #888b7d; font-size: 11px; }
+.world-heading > span strong { margin-left: 6px; color: var(--gold); font-size: 16px; }
+
+.world-card-grid { display: grid; grid-template-columns: repeat(3, minmax(240px, 1fr)); gap: 12px; }
+.world-card { position: relative; min-height: 148px; display: grid; align-content: space-between; gap: 9px; padding: 16px; overflow: hidden; text-align: left; background: linear-gradient(145deg, #20241d, #171a16); }
+.world-card:hover:not(:disabled) { background: linear-gradient(145deg, #292e25, #1c201a); }
+.world-card > strong { padding-right: 38px; color: #efe3cc; font-size: 18px; letter-spacing: .1em; }
+.world-card > small { color: #989482; font-size: 11px; }
+.world-card > em { overflow: hidden; color: #a5967b; font-size: 10px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.world-index { position: absolute; top: 8px; right: 12px; color: rgb(207 167 93 / 18%); font: 30px Georgia, serif; }
+.world-progress { height: 6px; overflow: hidden; background: #0f120e; }
+.world-progress b { display: block; height: 100%; background: linear-gradient(90deg, #8c713e, var(--gold)); }
+.world-card.locked { filter: saturate(.45); }
+
+.stage-card-grid { display: grid; grid-template-columns: repeat(5, minmax(140px, 1fr)); gap: 12px; }
+.stage-card { min-height: 130px; display: grid; align-content: space-between; gap: 8px; padding: 14px; text-align: left; background: #1a1e18; }
+.stage-card > span { color: var(--gold); font: 18px Georgia, serif; }
+.stage-card > strong { color: #e8ddc8; font-size: 15px; }
+.stage-card > small { color: #7f8375; font-size: 10px; }
+.stage-card.cleared { border-color: var(--jade); box-shadow: inset 3px 0 0 var(--jade); }
+.section-empty { min-height: 260px; display: grid; place-content: center; gap: 8px; text-align: center; }
+.section-empty strong { color: #d6c8ad; font-size: 20px; }
+.section-empty span { color: #7e8275; font-size: 11px; }
+.idle-combat-return { position: fixed; right: 18px; bottom: 18px; z-index: 40; padding: 10px 14px; border-color: var(--gold); background: #3b3020; box-shadow: var(--shadow); }
 
 .idle-layout {
   width: min(1760px, 100%);
-  min-height: calc(100vh - 166px);
+  min-height: calc(100vh - 40px);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(190px, 230px) minmax(620px, 1fr) minmax(220px, 280px);
+  grid-template-columns: minmax(620px, 1fr) minmax(220px, 280px);
   gap: 12px;
 }
 
@@ -197,6 +225,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .battle-controls button { min-height: 36px; padding: 7px 14px; font-size: 12px; }
 .battle-controls .primary { border-color: #58705e; background: #34483b; }
 .battle-controls .roam { border-color: #846647; background: #4b3826; }
+.battle-controls .primary.active { color: #17140d; border-color: var(--gold); background: var(--gold); font-weight: 800; }
 .speed-controls button { min-width: 42px; padding-inline: 9px; }
 .speed-controls button.active { color: #1a1710; border-color: var(--gold); background: var(--gold); font-weight: 800; }
 
@@ -297,7 +326,9 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .empty-inventory strong { color: #c6b99f; font-size: 20px; }
 
 @media (max-width: 1120px) {
-  .idle-layout { grid-template-columns: 190px minmax(540px, 1fr); }
+  .world-card-grid { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+  .stage-card-grid { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+  .idle-layout { grid-template-columns: minmax(540px, 1fr); }
   .combat-rail { grid-column: 1 / -1; }
   .combat-log { max-height: 150px; }
   .heroes-layout, .factions-layout { grid-template-columns: 190px minmax(0, 1fr); }
@@ -306,24 +337,25 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 }
 
 @media (max-width: 760px) {
-  .app-shell { grid-template-rows: auto auto 1fr; }
-  .topbar { flex-wrap: wrap; gap: 10px 16px; padding: 9px 12px; }
-  .brand-block { min-width: 0; flex: 1; }
-  .brand-block small, .save-state { display: none; }
-  .resource-strip { order: 3; width: 100%; justify-content: space-between; gap: 8px; }
-  .resource-strip span:nth-child(2) { display: none; }
-  .resource-strip strong { font-size: 12px; }
-  .game-nav { position: sticky; top: 0; z-index: 20; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 5px; }
-  .nav-item { display: grid; gap: 2px; padding: 5px 2px; }
+  .app-shell { grid-template-columns: 64px minmax(0, 1fr); }
+  .game-sidebar { padding: 8px 5px; gap: 12px; }
+  .brand-block { justify-content: center; min-width: 0; }
+  .brand-block > span:last-child { display: none; }
+  .brand-seal { width: 36px; height: 36px; }
+  .game-nav { gap: 4px; }
+  .nav-item { display: grid; justify-content: center; gap: 2px; padding: 7px 3px; }
   .nav-item span { width: 22px; height: 22px; margin: auto; }
-  .nav-item strong { font-size: 10px; letter-spacing: .04em; }
-  .game-main { padding: 7px; }
+  .nav-item strong { display: none; }
+  .world-subnav { padding: 10px 0 0; }
+  .world-subnav button { padding: 6px 2px; text-align: center; font-size: 9px; }
+  .game-main { padding: 7px; overflow-x: hidden; }
+  .page-heading { margin-bottom: 10px; }
+  .page-heading h1 { font-size: 25px; }
+  .page-heading p { font-size: 10px; }
+  .world-heading { align-items: flex-start; flex-direction: column; }
+  .world-card-grid, .stage-card-grid { grid-template-columns: 1fr; gap: 8px; }
+  .world-card, .stage-card { min-height: 112px; }
   .idle-layout { min-height: auto; grid-template-columns: 1fr; }
-  .world-rail { padding: 10px; }
-  .world-list { grid-template-columns: repeat(5, 1fr); }
-  .world-item { display: block; padding: 7px 3px; text-align: center; }
-  .world-item span { display: none; }
-  .world-item strong { font-size: 9px; }
   .battle-theatre { grid-template-rows: auto auto auto; }
   .battle-heading { align-items: flex-start; padding: 12px; }
   .battle-heading h1 { font-size: 19px; }
@@ -339,6 +371,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .speed-controls { width: 100%; }
   .speed-controls button { flex: 1; }
   .combat-rail { grid-column: auto; }
+  .idle-combat-return { right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); max-width: calc(100vw - 84px); }
   .heroes-layout, .factions-layout { min-height: auto; grid-template-columns: 1fr; }
   .hero-list, .faction-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-roster > header, .faction-rail > header { grid-column: 1 / -1; }
