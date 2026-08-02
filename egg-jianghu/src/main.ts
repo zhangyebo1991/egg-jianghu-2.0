@@ -643,6 +643,7 @@ const handleStartOrResetAction = (action: string | undefined): boolean => {
   if (action === 'request-reset-save') {
     if (appScreen === 'playing') showResetConfirmation = true
     render()
+    app.querySelector<HTMLButtonElement>('[data-action="cancel-reset-save"]')?.focus()
     return true
   }
   if (action === 'cancel-reset-save') {

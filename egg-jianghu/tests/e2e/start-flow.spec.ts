@@ -85,6 +85,13 @@ test('确认删档后回到新建页且标题页不可继续', async ({ page }) 
   await expect(page.getByRole('button', { name: '继续游戏' })).toBeDisabled()
 })
 
+test('打开删档确认后将焦点放在取消按钮', async ({ page }) => {
+  await createGame(page, '燕七')
+  await page.locator('[data-action="request-reset-save"]').click()
+
+  await expect(page.locator('[data-action="cancel-reset-save"]')).toBeFocused()
+})
+
 test('未请求删档时忽略伪造的确认操作并保留当前进度', async ({ page }) => {
   await createGame(page, '燕七')
 

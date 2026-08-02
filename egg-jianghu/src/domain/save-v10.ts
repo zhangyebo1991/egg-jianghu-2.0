@@ -21,21 +21,41 @@ export const hasSaveV10 = (storage: StorageLike): boolean =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value)
+
+const isNumberRecord = (value: unknown): boolean =>
+  isRecord(value) && Object.values(value).every(isFiniteNumber)
+
+const isCareerRecord = (value: unknown): boolean =>
+  isRecord(value)
+  && isFiniteNumber(value.level)
+  && isFiniteNumber(value.experience)
+  && typeof value.perfected === 'boolean'
+
+const isLearnedMartial = (value: unknown): boolean =>
+  isRecord(value)
+  && isFiniteNumber(value.level)
+  && isRecord(value.invested)
+  && isNumberRecord(value.invested.worldCurrency)
+  && isNumberRecord(value.invested.contribution)
+
 const isHeroProgress = (value: unknown): boolean => {
   if (!isRecord(value)) return false
   return typeof value.recruited === 'boolean'
-    && typeof value.level === 'number'
-    && Number.isFinite(value.level)
-    && typeof value.experience === 'number'
-    && Number.isFinite(value.experience)
+    && isFiniteNumber(value.level)
+    && isFiniteNumber(value.experience)
     && isRecord(value.careers)
+    && Object.values(value.careers).every(isCareerRecord)
     && typeof value.currentCareerId === 'string'
     && isRecord(value.learnedMartials)
+    && Object.values(value.learnedMartials).every(isLearnedMartial)
     && Array.isArray(value.equippedMartialIds)
     && value.equippedMartialIds.length === 4
     && value.equippedMartialIds.every((id) => id === null || typeof id === 'string')
     && (value.heartMethodId === null || typeof value.heartMethodId === 'string')
     && isRecord(value.equipmentBySlot)
+    && Object.values(value.equipmentBySlot).every((id) => id === null || typeof id === 'string')
     && (value.customName === undefined || typeof value.customName === 'string')
 }
 

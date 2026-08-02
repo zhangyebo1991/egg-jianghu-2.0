@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialStateV10, createNewGameStateV10 } from './state'
-import { clearSaveV10, hasSaveV10, loadGameV10, SAVE_KEY_V10, saveGameV10 } from './save-v10'
+import { clearSaveV10, hasSaveV10, hydrateStateV10, loadGameV10, SAVE_KEY_V10, saveGameV10 } from './save-v10'
 
 const memoryStorage = () => {
   const values = new Map<string, string>()
@@ -103,5 +103,55 @@ describe('version 10 存档', () => {
     storage.setItem(SAVE_KEY_V10, JSON.stringify(raw))
 
     expect(loadGameV10(storage, 2000).recoveredFromError).toBe(true)
+  })
+
+  it.each([
+    ['职业记录不是对象', (hero: Record<string, unknown>) => { hero.careers = { sword: null } }],
+    ['职业等级不是有限数字', (hero: Record<string, unknown>) => {
+      hero.careers = { sword: { level: '1', experience: 0, perfected: false } }
+    }],
+    ['职业经验不是有限数字', (hero: Record<string, unknown>) => {
+      hero.careers = { sword: { level: 1, experience: '0', perfected: false } }
+    }],
+    ['职业圆满状态不是布尔值', (hero: Record<string, unknown>) => {
+      hero.careers = { sword: { level: 1, experience: 0, perfected: 'no' } }
+    }],
+    ['已学武功不是对象', (hero: Record<string, unknown>) => { hero.learnedMartials = { foo: null } }],
+    ['武功等级不是有限数字', (hero: Record<string, unknown>) => {
+      hero.learnedMartials = { foo: { level: '1', invested: { worldCurrency: {}, contribution: {} } } }
+    }],
+    ['武功投入不是对象', (hero: Record<string, unknown>) => {
+      hero.learnedMartials = { foo: { level: 1, invested: null } }
+    }],
+    ['世界货币投入不是对象', (hero: Record<string, unknown>) => {
+      hero.learnedMartials = { foo: { level: 1, invested: { worldCurrency: null, contribution: {} } } }
+    }],
+    ['势力贡献投入不是对象', (hero: Record<string, unknown>) => {
+      hero.learnedMartials = { foo: { level: 1, invested: { worldCurrency: {}, contribution: [] } } }
+    }],
+    ['投入金额不是有限数字', (hero: Record<string, unknown>) => {
+      hero.learnedMartials = { foo: { level: 1, invested: { worldCurrency: { world_01: '100' }, contribution: {} } } }
+    }],
+    ['装备槽位值不是字符串或 null', (hero: Record<string, unknown>) => { hero.equipmentBySlot = { weapon: 42 } }],
+  ])('拒绝嵌套侠客字段损坏：%s', (_field, mutate) => {
+    const storage = memoryStorage()
+    const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>
+    const heroes = raw.heroes as Record<string, Record<string, unknown>>
+    mutate(heroes.hero_player)
+    const serialized = JSON.stringify(raw)
+    storage.setItem(SAVE_KEY_V10, serialized)
+
+    const loaded = loadGameV10(storage, 2000)
+
+    expect(loaded.recoveredFromError).toBe(true)
+    expect(loaded.state).toEqual(createInitialStateV10(2000))
+    expect(storage.getItem(SAVE_KEY_V10)).toBe(serialized)
+  })
+
+  it('拒绝嵌套侠客字段中的无限数字', () => {
+    const raw = createNewGameStateV10('燕七', 1000)
+    raw.heroes.hero_player.careers.sword.level = Number.POSITIVE_INFINITY
+
+    expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
   })
 })
