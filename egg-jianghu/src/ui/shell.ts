@@ -7,6 +7,7 @@ export interface ShellViewModel {
   activeTab: TabId
   worldContext: { worldName: string; activeSection: JianghuSection } | null
   hasCombatReturn: boolean
+  showResetConfirmation: boolean
   content: string
 }
 
@@ -47,6 +48,18 @@ export const renderShell = (view: ShellViewModel): string => {
                 data-jianghu-section="${section.id}" data-testid="world-section-${section.id}"
                 aria-current="${worldContext.activeSection === section.id ? 'page' : 'false'}">${section.label}</button>`).join('')}
           </nav>` : ''}
+        <div class="sidebar-danger-zone">
+          ${view.showResetConfirmation
+            ? `<section class="danger-confirm compact sidebar-danger-confirm" data-testid="reset-save-confirmation">
+                <strong>确认删档？</strong>
+                <p>当前进度将被永久删除，且无法恢复。</p>
+                <div>
+                  <button type="button" data-action="cancel-reset-save">取消</button>
+                  <button type="button" class="danger" data-action="confirm-reset-save">确认删档</button>
+                </div>
+              </section>`
+            : '<button type="button" class="sidebar-danger-link" data-action="request-reset-save">删档重开</button>'}
+        </div>
       </aside>
       <main class="game-main" data-page="${view.activeTab}">${view.content}</main>
       ${view.hasCombatReturn

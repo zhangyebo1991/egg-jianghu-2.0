@@ -7,6 +7,7 @@ describe('应用 Shell', () => {
       activeTab: 'idle',
       worldContext: null,
       hasCombatReturn: false,
+      showResetConfirmation: false,
       content: '<p>内容</p>',
     })
 
@@ -22,6 +23,7 @@ describe('应用 Shell', () => {
       activeTab: 'idle',
       worldContext: { worldName: '青石江湖', activeSection: 'factions' },
       hasCombatReturn: true,
+      showResetConfirmation: false,
       content: '<p>内容</p>',
     })
 
@@ -30,5 +32,38 @@ describe('应用 Shell', () => {
     expect(html).toContain('data-jianghu-section="city"')
     expect(html).toContain('data-action="return-worlds"')
     expect(html).toContain('data-action="resume-combat"')
+  })
+
+  it('默认在侧栏底部显示删档重开入口', () => {
+    const html = renderShell({
+      activeTab: 'idle',
+      worldContext: null,
+      hasCombatReturn: false,
+      showResetConfirmation: false,
+      content: '<p>内容</p>',
+    })
+
+    expect(html).toContain('class="sidebar-danger-zone"')
+    expect(html).toContain('data-action="request-reset-save"')
+    expect(html).toContain('删档重开')
+    expect(html).not.toContain('data-testid="reset-save-confirmation"')
+  })
+
+  it('请求删档后显示永久删除警告与取消确认操作', () => {
+    const html = renderShell({
+      activeTab: 'idle',
+      worldContext: null,
+      hasCombatReturn: false,
+      showResetConfirmation: true,
+      content: '<p>内容</p>',
+    })
+
+    expect(html).not.toContain('data-action="request-reset-save"')
+    expect(html).toContain('data-testid="reset-save-confirmation"')
+    expect(html).toContain('永久删除')
+    expect(html).toContain('data-action="cancel-reset-save"')
+    expect(html).toContain('data-action="confirm-reset-save"')
+    expect(html).toContain('取消')
+    expect(html).toContain('确认删档')
   })
 })
