@@ -75,4 +75,33 @@ describe('version 10 存档', () => {
 
     expect(loaded.state.factionBoards.qingfeng_hall.refreshRemainingMs).toBe(1234)
   })
+
+  it('玩家自定义姓名不是字符串时把存档标记为损坏', () => {
+    const storage = memoryStorage()
+    const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>
+    const heroes = raw.heroes as Record<string, Record<string, unknown>>
+    heroes.hero_player.customName = 42
+    storage.setItem(SAVE_KEY_V10, JSON.stringify(raw))
+
+    const loaded = loadGameV10(storage, 2000)
+
+    expect(loaded.recoveredFromError).toBe(true)
+    expect(storage.getItem(SAVE_KEY_V10)).not.toBeNull()
+  })
+
+  it.each([
+    ['progress', null],
+    ['recruited', { recruited: 'yes' }],
+    ['level', { level: '1' }],
+    ['currentCareerId', { currentCareerId: 42 }],
+    ['equippedMartialIds', { equippedMartialIds: {} }],
+  ])('拒绝基础侠客字段损坏：%s', (_field, patch) => {
+    const storage = memoryStorage()
+    const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>
+    const heroes = raw.heroes as Record<string, Record<string, unknown> | null>
+    heroes.hero_player = patch === null ? null : { ...heroes.hero_player, ...patch }
+    storage.setItem(SAVE_KEY_V10, JSON.stringify(raw))
+
+    expect(loadGameV10(storage, 2000).recoveredFromError).toBe(true)
+  })
 })

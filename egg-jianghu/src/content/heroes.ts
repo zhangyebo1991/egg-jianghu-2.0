@@ -126,4 +126,4 @@ export const heroByIdV10 = (id: string): HeroDefinitionV10 | undefined =>
   HEROES_V10.find((hero) => hero.id === id)
 
 export const heroDisplayNameV10 = (definition: HeroDefinitionV10, progress?: HeroProgressV10): string =>
-  progress?.customName?.trim() || definition.name
+  typeof progress?.customName === 'string' && progress.customName.trim() || definition.name

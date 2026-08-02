@@ -12,6 +12,7 @@ export interface StorageLike {
 export interface LoadResultV10 {
   state: GameStateV10
   recoveredFromError: boolean
+  serialized: string | null
 }
 
 export const hasSaveV10 = (storage: StorageLike): boolean =>
@@ -19,6 +20,24 @@ export const hasSaveV10 = (storage: StorageLike): boolean =>
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const isHeroProgress = (value: unknown): boolean => {
+  if (!isRecord(value)) return false
+  return typeof value.recruited === 'boolean'
+    && typeof value.level === 'number'
+    && Number.isFinite(value.level)
+    && typeof value.experience === 'number'
+    && Number.isFinite(value.experience)
+    && isRecord(value.careers)
+    && typeof value.currentCareerId === 'string'
+    && isRecord(value.learnedMartials)
+    && Array.isArray(value.equippedMartialIds)
+    && value.equippedMartialIds.length === 4
+    && value.equippedMartialIds.every((id) => id === null || typeof id === 'string')
+    && (value.heartMethodId === null || typeof value.heartMethodId === 'string')
+    && isRecord(value.equipmentBySlot)
+    && (value.customName === undefined || typeof value.customName === 'string')
+}
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
   version: 10,
@@ -37,7 +56,12 @@ const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10
 })
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
-  if (!isRecord(raw) || raw.version !== 10 || !Array.isArray(raw.inventory) || !Array.isArray(raw.formation)) {
+  if (!isRecord(raw)
+    || raw.version !== 10
+    || !Array.isArray(raw.inventory)
+    || !Array.isArray(raw.formation)
+    || !isRecord(raw.heroes)
+    || !Object.values(raw.heroes).every(isHeroProgress)) {
     throw new Error('存档版本不受支持或格式无效')
   }
 
@@ -46,7 +70,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     ...state,
     worldCurrency: isRecord(raw.worldCurrency) ? structuredClone(raw.worldCurrency) as GameStateV10['worldCurrency'] : state.worldCurrency,
     contribution: isRecord(raw.contribution) ? structuredClone(raw.contribution) as GameStateV10['contribution'] : state.contribution,
-    heroes: isRecord(raw.heroes) ? structuredClone(raw.heroes) as GameStateV10['heroes'] : state.heroes,
+    heroes: structuredClone(raw.heroes) as GameStateV10['heroes'],
     careerTokens: Array.isArray(raw.careerTokens) ? structuredClone(raw.careerTokens) as string[] : state.careerTokens,
     formation: structuredClone(raw.formation) as GameStateV10['formation'],
     unlockedWorldIds: Array.isArray(raw.unlockedWorldIds) ? structuredClone(raw.unlockedWorldIds) as string[] : state.unlockedWorldIds,
@@ -63,22 +87,24 @@ export const loadExistingGameV10 = (storage: StorageLike, now = Date.now()): Loa
   if (serialized === null) return null
 
   try {
-    return { state: hydrateStateV10(JSON.parse(serialized) as unknown, now), recoveredFromError: false }
+    return { state: hydrateStateV10(JSON.parse(serialized) as unknown, now), recoveredFromError: false, serialized }
   } catch {
-    return { state: createInitialStateV10(now), recoveredFromError: true }
+    return { state: createInitialStateV10(now), recoveredFromError: true, serialized }
   }
 }
 
 export const loadGameV10 = (storage: StorageLike, now = Date.now()): LoadResultV10 =>
-  loadExistingGameV10(storage, now) ?? { state: createInitialStateV10(now), recoveredFromError: false }
+  loadExistingGameV10(storage, now) ?? { state: createInitialStateV10(now), recoveredFromError: false, serialized: null }
 
 export const saveGameV10 = (
   storage: StorageLike,
   state: GameStateV10,
   now = Date.now(),
-): void => {
+): string => {
+  const serialized = JSON.stringify(persistentState(state, now))
+  storage.setItem(SAVE_KEY_V10, serialized)
   state.lastSavedAt = now
-  storage.setItem(SAVE_KEY_V10, JSON.stringify(persistentState(state, now)))
+  return serialized
 }
 
 export const clearSaveV10 = (storage: StorageLike): void => {

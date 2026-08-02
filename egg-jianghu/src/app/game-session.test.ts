@@ -107,6 +107,39 @@ describe('GameSession', () => {
     expect(() => GameSession.createNew(storage, '燕七', 1000)).toThrowError('写入失败')
   })
 
+  it('两个会话继续同一存档后拒绝较旧会话覆盖较新进度', () => {
+    const storage = memoryStorage()
+    GameSession.createNew(storage, '燕七', 1000)
+    const sessionA = GameSession.continue(storage, 2000)
+    const sessionB = GameSession.continue(storage, 2000)
+
+    sessionA.state.worldCurrency.world_01 = 1234
+    sessionA.save(3000)
+    const savedByA = storage.getItem(SAVE_KEY_V10)
+    sessionB.state.worldCurrency.world_01 = 5678
+
+    expect(() => sessionB.save(4000)).toThrowError('存档已在其他窗口发生变化')
+    expect(storage.getItem(SAVE_KEY_V10)).toBe(savedByA)
+  })
+
+  it('外部删除存档后旧会话保存不能复活存档', () => {
+    const storage = memoryStorage()
+    GameSession.createNew(storage, '燕七', 1000)
+    const staleSession = GameSession.continue(storage, 2000)
+    storage.removeItem(SAVE_KEY_V10)
+
+    expect(() => staleSession.save(3000)).toThrowError('存档已在其他窗口发生变化')
+    expect(storage.getItem(SAVE_KEY_V10)).toBeNull()
+  })
+
+  it('新建游戏时已验证的存档快照发生变化则拒绝覆盖', () => {
+    const storage = memoryStorage()
+    storage.setItem(SAVE_KEY_V10, 'newer-save')
+
+    expect(() => GameSession.createNew(storage, '燕七', 1000, 'older-save')).toThrowError('存档已在其他窗口发生变化')
+    expect(storage.getItem(SAVE_KEY_V10)).toBe('newer-save')
+  })
+
   it('继续游戏时读取异常不会伪装成空新档', () => {
     const storage: StorageLike = {
       getItem: () => { throw new Error('读取失败') },

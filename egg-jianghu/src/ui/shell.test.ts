@@ -60,6 +60,11 @@ describe('应用 Shell', () => {
 
     expect(html).not.toContain('data-action="request-reset-save"')
     expect(html).toContain('data-testid="reset-save-confirmation"')
+    expect(html).toContain('role="dialog"')
+    expect(html).toContain('aria-modal="true"')
+    expect(html).toContain('aria-labelledby="reset-save-title"')
+    expect(html).toMatch(/id="reset-save-title"[^>]*>确认删档？/)
+    expect(html).toMatch(/data-action="cancel-reset-save"[^>]*autofocus/)
     expect(html).toContain('永久删除')
     expect(html).toContain('data-action="cancel-reset-save"')
     expect(html).toContain('data-action="confirm-reset-save"')

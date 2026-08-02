@@ -8,7 +8,7 @@ import { WORLDS } from '../content/worlds'
 import { resolveDefeat, resolveVictory, type CampaignSelection } from '../domain/progression'
 import { advanceQuestBoards, initializeQuestBoard } from '../domain/quests'
 import { settleCombatEvent } from '../domain/rewards'
-import { loadExistingGameV10, loadGameV10, saveGameV10, type StorageLike } from '../domain/save-v10'
+import { loadExistingGameV10, loadGameV10, SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
 import { createNewGameStateV10 } from '../domain/state'
 import type { ActionResult, CampaignMode, GameStateV10 } from '../domain/types'
 
@@ -62,26 +62,40 @@ export const buildCombatStartInput = (
   input: StageSelectionInput,
 ): CombatStartInput => ({ ...input, party: buildCombatParty(state) })
 
+export class SaveConflictError extends Error {
+  readonly actualSnapshot: string | null
+
+  constructor(actualSnapshot: string | null) {
+    super('存档已在其他窗口发生变化')
+    this.name = 'SaveConflictError'
+    this.actualSnapshot = actualSnapshot
+  }
+}
+
 export class GameSession {
   readonly state: GameStateV10
   combat: CombatEngine | null = null
   selection: CampaignSelection | null = null
   private readonly runtimeRng: Rng
   private readonly storage: StorageLike
+  private expectedSaveSnapshot: string | null
 
-  private constructor(state: GameStateV10, storage: StorageLike) {
+  private constructor(state: GameStateV10, storage: StorageLike, expectedSaveSnapshot: string | null) {
     this.state = state
     this.storage = storage
+    this.expectedSaveSnapshot = expectedSaveSnapshot
     this.runtimeRng = createRng(state.lastSavedAt)
     this.ensureFactionBoards()
   }
 
   static create(storage: StorageLike, now = Date.now()): GameSession {
-    return new GameSession(loadGameV10(storage, now).state, storage)
+    const loaded = loadGameV10(storage, now)
+    return new GameSession(loaded.state, storage, loaded.serialized)
   }
 
-  static createNew(storage: StorageLike, playerName: string, now = Date.now()): GameSession {
-    const session = new GameSession(createNewGameStateV10(playerName, now), storage)
+  static createNew(storage: StorageLike, playerName: string, now = Date.now(), expectedSnapshot?: string | null): GameSession {
+    const snapshot = expectedSnapshot === undefined ? storage.getItem(SAVE_KEY_V10) : expectedSnapshot
+    const session = new GameSession(createNewGameStateV10(playerName, now), storage, snapshot)
     session.save(now)
     return session
   }
@@ -90,11 +104,13 @@ export class GameSession {
     const loaded = loadExistingGameV10(storage, now)
     if (!loaded) throw new Error('没有可继续的存档')
     if (loaded.recoveredFromError) throw new Error('存档无法读取')
-    return new GameSession(loaded.state, storage)
+    return new GameSession(loaded.state, storage, loaded.serialized)
   }
 
   save(now = Date.now()): void {
-    saveGameV10(this.storage, this.state, now)
+    const currentSnapshot = this.storage.getItem(SAVE_KEY_V10)
+    if (currentSnapshot !== this.expectedSaveSnapshot) throw new SaveConflictError(currentSnapshot)
+    this.expectedSaveSnapshot = saveGameV10(this.storage, this.state, now)
   }
 
   startStage(input: StageSelectionInput): ActionResult {

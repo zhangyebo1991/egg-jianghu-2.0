@@ -1,5 +1,5 @@
 import './style.css'
-import { GameSession } from './app/game-session'
+import { GameSession, SaveConflictError } from './app/game-session'
 import { createRng } from './combat/rng'
 import { COMBAT_TICK_MS } from './combat/timeline'
 import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
@@ -98,9 +98,43 @@ const ensurePlaying = (): GameSession => {
   return session
 }
 
+const externalSaveChangeMessage = '存档已在其他窗口发生变化，请重新选择继续或新建游戏'
+
+const leavePlayingForSaveChange = (serialized: string | null): void => {
+  if (appScreen === 'playing') session.stopCombat()
+  appScreen = 'title'
+  hasSave = serialized !== null
+  startPlayerName = ''
+  startError = externalSaveChangeMessage
+  confirmOverwrite = false
+  overwriteSaveSnapshot = null
+  startBusy = false
+  showResetConfirmation = false
+  render()
+  notify(externalSaveChangeMessage, true)
+}
+
+const handleSessionSaveError = (error: unknown, silent = false): void => {
+  if (error instanceof SaveConflictError) {
+    leavePlayingForSaveChange(error.actualSnapshot)
+    return
+  }
+  if (!silent) notify('存档保存失败，当前进度尚未写入', true)
+}
+
+const saveSession = (silent = false): boolean => {
+  try {
+    session.save()
+    return true
+  } catch (error) {
+    handleSessionSaveError(error, silent)
+    return false
+  }
+}
+
 const commitAction = (result: ActionResult, successMessage?: string): void => {
   notify(result.ok ? successMessage ?? result.message : result.message, !result.ok)
-  if (result.ok) session.save()
+  if (result.ok) saveSession()
 }
 
 const unitView = (unit: CombatUnit): IdleCombatUnitView => ({
@@ -396,13 +430,13 @@ const render = (): void => {
   }))
 }
 
-const createAndEnter = (playerName: string): void => {
+const createAndEnter = (playerName: string, expectedSnapshot: string | null): void => {
   if (startBusy) return
   startBusy = true
   startError = null
   render()
   try {
-    const nextSession = GameSession.createNew(window.localStorage, playerName)
+    const nextSession = GameSession.createNew(window.localStorage, playerName, Date.now(), expectedSnapshot)
     hasSave = true
     startBusy = false
     confirmOverwrite = false
@@ -410,9 +444,17 @@ const createAndEnter = (playerName: string): void => {
   } catch (error) {
     appScreen = 'new-game'
     startBusy = false
-    confirmOverwrite = false
-    overwriteSaveSnapshot = null
-    startError = error instanceof Error ? error.message : '新建游戏失败'
+    if (error instanceof SaveConflictError) {
+      hasSave = error.actualSnapshot !== null
+      confirmOverwrite = true
+      overwriteSaveSnapshot = error.actualSnapshot
+      startError = '存档已发生变化，请重新确认覆盖'
+      notify(startError, true)
+    } else {
+      confirmOverwrite = false
+      overwriteSaveSnapshot = null
+      startError = error instanceof Error ? error.message : '新建游戏失败'
+    }
   }
   render()
 }
@@ -474,8 +516,7 @@ const performAction = (button: HTMLButtonElement): void => {
     const result = recruitFromTavern(session.state, heroId)
     if (result.ok) {
       selectedHeroId = result.heroId
-      session.save()
-      notify('邀请成功')
+      if (saveSession()) notify('邀请成功')
     } else notify(result.message, true)
   } else if (action === 'faction-recruit') commitAction(recruitFromFaction(session.state, button.dataset.factionId ?? '', heroId))
   else if (action === 'city-martial-learn') commitAction(learnCityMartial(session.state, heroId, button.dataset.martialId ?? ''))
@@ -518,7 +559,7 @@ app.addEventListener('submit', (event) => {
     return
   }
   overwriteSaveSnapshot = null
-  createAndEnter(startPlayerName)
+  createAndEnter(startPlayerName, null)
 })
 
 app.addEventListener('change', (event) => {
@@ -596,7 +637,7 @@ const handleStartOrResetAction = (action: string | undefined): boolean => {
       render()
       return true
     }
-    createAndEnter(startPlayerName)
+    createAndEnter(startPlayerName, currentSave)
     return true
   }
   if (action === 'request-reset-save') {
@@ -699,15 +740,35 @@ app.addEventListener('click', (event) => {
   render()
 })
 
+window.addEventListener('storage', (event) => {
+  if (event.key !== SAVE_KEY_V10 || event.storageArea !== window.localStorage) return
+  if (appScreen === 'playing') {
+    leavePlayingForSaveChange(event.newValue)
+    return
+  }
+  hasSave = event.newValue !== null
+  render()
+})
+
 window.setInterval(() => {
   if (appScreen !== 'playing') return
-  if (session.combat) logEvents(session.advanceTicks(combatSpeed))
-  session.advanceRuntime(COMBAT_TICK_MS)
+  try {
+    if (session.combat) logEvents(session.advanceTicks(combatSpeed))
+    session.advanceRuntime(COMBAT_TICK_MS)
+  } catch (error) {
+    handleSessionSaveError(error)
+    return
+  }
   render()
 }, COMBAT_TICK_MS)
 
 window.addEventListener('beforeunload', () => {
-  if (appScreen === 'playing') session.save()
+  if (appScreen !== 'playing') return
+  try {
+    session.save()
+  } catch {
+    // 页面关闭时仅阻止旧会话覆盖外部存档，不再打扰用户。
+  }
 })
 
 const debugRecruit = (heroId: string): void => {
@@ -729,7 +790,7 @@ const debugRecruit = (heroId: string): void => {
     if (!result.ok) throw new Error(result.message)
   }
   selectedHeroId = heroId
-  session.save()
+  saveSession()
   render()
 }
 
@@ -743,7 +804,7 @@ const debugFillInventory = (count: number): void => {
     affixes: [],
     locked: false,
   }))
-  session.save()
+  saveSession()
   render()
 }
 
@@ -758,7 +819,7 @@ const debugSettleEnemy = (seed: number, rank: CombatRank = 'normal'): string[] =
     stage: 1,
     seed,
   })
-  session.save()
+  saveSession()
   render()
   return result.addedEquipmentUids
 }
@@ -825,8 +886,8 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     return events
   },
   advanceRuntime: (elapsedMs) => { ensurePlaying(); session.advanceRuntime(elapsedMs); render() },
-  grantWorldCurrency: (worldId, amount) => { ensurePlaying(); session.state.worldCurrency[worldId] = amount; session.save(); render() },
-  grantContribution: (factionId, amount) => { ensurePlaying(); session.state.contribution[factionId] = amount; session.save(); render() },
+  grantWorldCurrency: (worldId, amount) => { ensurePlaying(); session.state.worldCurrency[worldId] = amount; saveSession(); render() },
+  grantContribution: (factionId, amount) => { ensurePlaying(); session.state.contribution[factionId] = amount; saveSession(); render() },
   recruitHero: debugRecruit,
   placeHero: (heroId, row, position) => { ensurePlaying(); commitAction(placeFormation(heroId, row, position)); render() },
   setHeroCareerLevel: (heroId, careerId, level) => {
@@ -835,7 +896,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     if (!hero) throw new Error('侠客尚未加入')
     hero.careers[careerId] = { level, experience: 0, perfected: false }
     hero.currentCareerId = careerId
-    session.save()
+    saveSession()
     render()
   },
   seedLearnedMartial: (heroId, martialId, level, slot) => {
@@ -845,7 +906,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     if (!hero || !martial) throw new Error('侠客或武功不存在')
     hero.learnedMartials[martialId] = { level, invested: { worldCurrency: {}, contribution: {} } }
     if (slot !== undefined && slot >= 0 && slot < 4) hero.equippedMartialIds[slot] = martialId
-    session.save()
+    saveSession()
     render()
   },
   setHeroCooldown: (heroId, martialId, remainingMs) => {
@@ -879,12 +940,12 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     const bossId = `${faction.worldId}_stage_01_boss`
     session.state.encounteredEnemyIds = [...new Set([...session.state.encounteredEnemyIds, normalId, bossId])]
     initializeQuestBoard(session.state, factionId, createRng(seed), 0)
-    session.save()
+    saveSession()
     render()
   },
   reset: () => {
     window.localStorage.removeItem(SAVE_KEY_V10)
-    enterPlaying(GameSession.createNew(window.localStorage, '测试少侠', 1000))
+    enterPlaying(GameSession.createNew(window.localStorage, '测试少侠', 1000, null))
     hasSave = true
     render()
   },

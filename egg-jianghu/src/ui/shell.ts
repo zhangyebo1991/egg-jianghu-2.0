@@ -50,11 +50,12 @@ export const renderShell = (view: ShellViewModel): string => {
           </nav>` : ''}
         <div class="sidebar-danger-zone">
           ${view.showResetConfirmation
-            ? `<section class="danger-confirm compact sidebar-danger-confirm" data-testid="reset-save-confirmation">
-                <strong>确认删档？</strong>
+            ? `<section class="danger-confirm compact sidebar-danger-confirm" data-testid="reset-save-confirmation"
+                role="dialog" aria-modal="true" aria-labelledby="reset-save-title">
+                <strong id="reset-save-title">确认删档？</strong>
                 <p>当前进度将被永久删除，且无法恢复。</p>
                 <div>
-                  <button type="button" data-action="cancel-reset-save">取消</button>
+                  <button type="button" data-action="cancel-reset-save" autofocus>取消</button>
                   <button type="button" class="danger" data-action="confirm-reset-save">确认删档</button>
                 </div>
               </section>`

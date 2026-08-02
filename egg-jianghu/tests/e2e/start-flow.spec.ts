@@ -138,3 +138,56 @@ test('移动端删档确认使用可读且可操作的居中面板', async ({ pa
   await confirmation.getByRole('button', { name: '取消' }).click()
   await expect(confirmation).toHaveCount(0)
 })
+
+test('多标签页同步存档状态且旧会话不能覆盖外部删档或新档', async ({ page, context }) => {
+  const secondPage = await context.newPage()
+  const secondPageErrors: string[] = []
+  secondPage.on('pageerror', (error) => secondPageErrors.push(error.message))
+  await secondPage.clock.install({ time: new Date('2026-08-02T12:00:00Z') })
+  await secondPage.goto('/')
+  await secondPage.clock.pauseAt(new Date('2026-08-02T12:00:01Z'))
+  await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeDisabled()
+
+  await createGame(page, '甲少侠')
+  await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeEnabled()
+  await secondPage.getByRole('button', { name: '继续游戏' }).click()
+  await page.evaluate(() => {
+    document.querySelector<HTMLButtonElement>('[data-action="request-reset-save"]')?.click()
+    document.querySelector<HTMLButtonElement>('[data-action="confirm-reset-save"]')?.click()
+  })
+  await expect(secondPage.getByTestId('title-page')).toBeVisible()
+  await expect(secondPage.getByRole('status')).toHaveText('存档已在其他窗口发生变化，请重新选择继续或新建游戏')
+  await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeDisabled()
+  await secondPage.waitForTimeout(600)
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v10'))).toBeNull()
+
+  await page.getByLabel('玩家姓名').fill('新少侠')
+  await page.getByLabel('玩家姓名').press('Enter')
+  await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeEnabled()
+  await secondPage.waitForTimeout(600)
+  expect(await page.evaluate(() => {
+    const raw = window.localStorage.getItem('egg-jianghu-2-save-v10')
+    return raw ? JSON.parse(raw).heroes.hero_player.customName : null
+  })).toBe('新少侠')
+  expect(secondPageErrors).toEqual([])
+  await secondPage.close()
+})
+
+test('损坏的玩家姓名存档拒绝继续且不会被当前会话覆盖', async ({ page }) => {
+  await createGame(page, '燕七')
+  const corruptedSave = await page.evaluate(() => {
+    const key = 'egg-jianghu-2-save-v10'
+    const raw = JSON.parse(window.localStorage.getItem(key)!)
+    raw.heroes.hero_player.customName = 42
+    const serialized = JSON.stringify(raw)
+    window.localStorage.setItem(key, serialized)
+    return serialized
+  })
+
+  await page.reload()
+  await page.getByRole('button', { name: '继续游戏' }).click()
+  await expect(page.getByTestId('title-page')).toBeVisible()
+  await expect(page.getByRole('status')).toHaveText('存档无法读取')
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v10'))).toBe(corruptedSave)
+  await page.waitForTimeout(350)
+})
