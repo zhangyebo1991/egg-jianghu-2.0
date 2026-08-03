@@ -344,8 +344,6 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .formation-editor-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 12px; }
 .formation-editor-slot { position: relative; min-height: 84px; display: grid; align-content: center; gap: 5px; padding: 8px; border: 1px dashed #454d42; background: #141713; }
 .formation-editor-slot > span { color: #676d63; font-size: 9px; }
-.formation-editor-slot > button { padding: 6px; font-size: 10px; }
-.formation-editor-slot > button:first-of-type { display: flex; justify-content: space-between; gap: 8px; background: #242a22; }
 .formation-editor-slot small { color: #9a957f; }
 .text-action { color: #9fa392; background: transparent; }
 .hero-detail > header, .quest-board > header, .city-heading, .inventory-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
@@ -477,7 +475,6 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .faction-invite, .faction-invite > div { align-items: flex-start; flex-direction: column; }
   .formation-editor-grid { gap: 4px; }
   .formation-editor-slot { min-height: 94px; padding: 5px; }
-  .formation-editor-slot > button { padding: 4px; font-size: 9px; }
 }
 
 @media (max-width: 430px) {
