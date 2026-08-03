@@ -112,5 +112,9 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('已上阵')
     expect(html).toContain('data-testid="formation-hero-hero_test"')
     expect(html).toContain('formation-slot-remove')
+
+    const selectedHtml = renderFormationPage({ ...formationFixture(), selectedHeroId: 'hero_test' })
+    expect(selectedHtml).toMatch(/data-hero-id="hero_test"[^>]*class="[^"]*\bactive\b/)
+    expect(selectedHtml).not.toMatch(/data-hero-id="hero_shen"[^>]*class="[^"]*\bactive\b/)
   })
 })

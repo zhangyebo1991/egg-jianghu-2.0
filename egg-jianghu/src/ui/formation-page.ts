@@ -29,7 +29,7 @@ export const renderFormationPage = (view: FormationPageViewModel): string => `
   <section class="heroes-layout" data-testid="formation-page">
     <aside class="hero-roster formation-roster panel">
       <header><small>待上阵侠客</small><strong>${view.heroes.length} 人</strong></header>
-      <div class="hero-list">${view.heroes.map((hero) => `<button type="button" draggable="true" data-action="formation-select" data-hero-id="${hero.id}" class="hero-row${hero.inFormation ? ' in-formation' : ''}" data-testid="formation-hero-${hero.id}">
+      <div class="hero-list">${view.heroes.map((hero) => `<button type="button" draggable="true" data-action="formation-select" data-hero-id="${hero.id}" class="hero-row${hero.inFormation ? ' in-formation' : ''}${hero.id === view.selectedHeroId ? ' active' : ''}" data-testid="formation-hero-${hero.id}">
         <span data-rarity="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span><strong>${escapeHtml(hero.name)}</strong><small>侠客 Lv.${hero.level}${hero.inFormation ? ' · 已上阵' : ''}</small>
       </button>`).join('') || '<p>尚无侠客</p>'}</div>
     </aside>

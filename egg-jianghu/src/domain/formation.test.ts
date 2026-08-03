@@ -20,8 +20,17 @@ describe('阵容领域逻辑', () => {
 
   it('已上阵侠客移动到空格', () => {
     const state = freshState()
-    placeFormation(state, PLAYER_HERO_ID, 'back', 1)
+    expect(placeFormation(state, PLAYER_HERO_ID, 'back', 1)).toEqual({ ok: true, message: '侠客已入阵' })
     expect(state.formation).toEqual([{ heroId: PLAYER_HERO_ID, row: 'back', position: 1 }])
+  })
+
+  it('未上阵侠客入阵到空格', () => {
+    const state = freshState()
+    expect(placeFormation(state, 'hero_shen_yanqiu', 'back', 2)).toEqual({ ok: true, message: '侠客已入阵' })
+    expect(state.formation).toEqual([
+      { heroId: PLAYER_HERO_ID, row: 'front', position: 0 },
+      { heroId: 'hero_shen_yanqiu', row: 'back', position: 2 },
+    ])
   })
 
   it('两个已上阵侠客交换位置', () => {

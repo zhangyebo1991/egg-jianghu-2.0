@@ -523,6 +523,7 @@ app.addEventListener('dragover', (event) => {
   const roster = target.closest<HTMLElement>('.formation-roster')
   if (slot || roster) {
     event.preventDefault()
+    clearDragOver()
     ;(slot ?? roster)!.classList.add('drag-over')
   }
 })
