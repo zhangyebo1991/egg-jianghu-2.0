@@ -278,3 +278,12 @@ EOF
 - [ ] Run: `npm run test:e2e` —— e2e 无装备名断言，应通过
 - [ ] Run: `git diff --check` —— 无空白错误
 - [ ] 手动检查：启动游戏，进入牛家村/擂鼓山战斗，查看背包掉落装备名为对应大关的新名字；确认装备卡上「槽位名/名字/品质」三字段正常。
+
+### 评审后续项（deferred Minor，最终评审三判：均可留作后续）
+
+1. `equipment-names.ts` 用 `Record<string, WorldEquipmentNames>`，类型层面不体现表可能缺失；可改 `Partial<Record<...>>`（与 `ENEMY_NAMES_BY_WORLD` 先例同型，改收益低）。
+2. `equipment.ts` 兜底分支 `?? 第N卷+槽位名` 当前不可达（前 10 卷均在表内）且无测试；为未来 world_11+ 预留的防御语义。
+3. 接线测试 `^第\d+卷` 正则与当前占位名格式耦合；主断言 `definition.name === equipmentName(...)` 已兜底，漏检风险极低。
+4. `validate.ts` 存在性校验用 `.trim()` 判空、全局去重用原始字符串，口径不一致（当前数据无此问题）；若修，两处统一 trim 即可。
+
+**已知维护点：** 发布下一卷（world_11+）时，生成器 `Array.from({ length: 10 })` 与测试 `seen.size === 70` 需同步更新（建议从 `RELEASED_WORLD_COUNT` 派生）。
