@@ -26,25 +26,11 @@ export interface HeroesCareerView {
 
 export interface HeroesPageViewModel {
   selectedHeroId: string | null
-  formation: Array<{ heroId: string; row: 'front' | 'back'; position: 0 | 1 | 2 }>
   heroes: HeroesHeroView[]
   careers: HeroesCareerView[]
   martials: Array<{ id: string; name: string; rarity: string; level: number; learned: boolean }>
   heartMethods: Array<{ id: string; name: string; equipped: boolean }>
 }
-
-const renderFormation = (view: HeroesPageViewModel): string => (['back', 'front'] as const).flatMap((row) =>
-  ([0, 1, 2] as const).map((position) => {
-    const slot = view.formation.find((item) => item.row === row && item.position === position)
-    const hero = slot ? view.heroes.find((item) => item.id === slot.heroId) : undefined
-    return `<div class="formation-editor-slot ${hero ? 'filled' : ''}" data-row="${row}" data-position="${position}">
-      <span>${row === 'front' ? '前排' : '后排'} ${position + 1}</span>
-      ${hero ? `<button type="button" data-action="select-hero" data-hero-id="${hero.id}"><strong>${escapeHtml(hero.name)}</strong><small>${escapeHtml(hero.grade)}品</small></button>
-        <button type="button" class="text-action" data-action="formation-remove" data-hero-id="${hero.id}">下阵</button>`
-        : `<button type="button" class="text-action" data-action="formation-place" data-target-row="${row}" data-position="${position}" data-hero-id="${view.selectedHeroId ?? ''}">置入所选侠客</button>`}
-    </div>`
-  }),
-).join('')
 
 export const renderHeroesPage = (view: HeroesPageViewModel): string => {
   const selected = view.heroes.find((hero) => hero.id === view.selectedHeroId) ?? view.heroes[0]
@@ -56,7 +42,6 @@ export const renderHeroesPage = (view: HeroesPageViewModel): string => {
       </button>`).join('')}</div>
     </aside>
     <section class="hero-workbench">
-      <section class="formation-editor panel"><header><small>六侠阵容</small><strong>前后排各三格</strong></header><div class="formation-editor-grid">${renderFormation(view)}</div></section>
       ${selected ? `<section class="hero-detail panel" data-testid="selected-hero">
         <header><div><small>${escapeHtml(selected.grade)}品侠客</small><h1>${escapeHtml(selected.name)}</h1></div><strong>侠客 Lv.${selected.level}</strong></header>
         <div class="career-summary"><span>当前职业</span><strong>${escapeHtml(selected.careerName)}</strong><em>职业 Lv.${selected.careerLevel}</em>

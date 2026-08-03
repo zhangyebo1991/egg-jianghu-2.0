@@ -234,7 +234,6 @@ const heroesViewModel = (): HeroesPageViewModel => {
 
   return {
     selectedHeroId: selectedId,
-    formation: session.state.formation,
     heroes: recruitedHeroes().map(({ definition, progress, name }) => {
       const career = careerById(progress.currentCareerId)
       const record = progress.careers[progress.currentCareerId]
@@ -554,8 +553,7 @@ app.addEventListener('dragend', () => {
 const performAction = (button: HTMLButtonElement): void => {
   const action = button.dataset.action
   const heroId = button.dataset.heroId ?? selectedHeroId ?? ''
-  if (action === 'formation-place') commitAction(placeFormation(session.state, heroId, button.dataset.targetRow as FormationRow, dataNumber(button, 'position') as FormationPosition))
-  else if (action === 'formation-remove') commitAction(removeFormation(session.state, heroId))
+  if (action === 'formation-remove') commitAction(removeFormation(session.state, heroId))
   else if (action === 'formation-select') {
     if (isTouchDevice()) formationSelectedHeroId = heroId
   } else if (action === 'formation-slot-tap') {

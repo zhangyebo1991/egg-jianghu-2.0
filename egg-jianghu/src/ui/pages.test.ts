@@ -7,7 +7,6 @@ import { renderFormationPage, type FormationPageViewModel } from './formation-pa
 
 const heroesFixture = (): HeroesPageViewModel => ({
   selectedHeroId: 'hero_test',
-  formation: [{ heroId: 'hero_test', row: 'front', position: 0 }],
   heroes: [{
     id: 'hero_test', name: '试剑人', grade: '乙', recruited: true,
     level: 12, careerId: 'sword', careerName: '剑客', careerLevel: 10,
@@ -75,12 +74,12 @@ const formationFixture = (): FormationPageViewModel => ({
 })
 
 describe('version 10 长期循环页面', () => {
-  it('侠客页保持前后排各三格并展示职业独立等级', () => {
+  it('侠客页展示职业独立等级且不再含阵容编辑器', () => {
     const html = renderHeroesPage(heroesFixture())
-    expect(html.match(/data-row="front"/g)).toHaveLength(3)
-    expect(html.match(/data-row="back"/g)).toHaveLength(3)
     expect(html).toContain('职业 Lv.')
     expect(html).toContain('圆满心得')
+    expect(html).not.toContain('formation-editor')
+    expect(html).not.toContain('六侠阵容')
   })
 
   it('势力页显示六格悬榜和两条四阶传承', () => {
