@@ -72,9 +72,12 @@ export const enemyName = (worldId: string, rank: CombatRank, stage: number, inde
     const bossIndex = Math.max(0, Math.min(stage - 1, names.bosses.length - 1))
     return names.bosses[bossIndex] ?? fallbackName(rank, stage)
   }
-  const pool = rank === 'elite' ? names.elite : names.normal
-  if (pool.length === 0) return fallbackName(rank, stage)
-  return pool[(Math.max(1, index) - 1) % pool.length]
+  if (rank === 'elite') {
+    if (names.elite.length === 0) return fallbackName(rank, stage)
+    return names.elite[(stage - 1) % names.elite.length]
+  }
+  if (names.normal.length === 0) return fallbackName(rank, stage)
+  return names.normal[(Math.max(1, index) - 1) % names.normal.length]
 }
 
 export const enemyDisplayName = (enemyId: string): string => {

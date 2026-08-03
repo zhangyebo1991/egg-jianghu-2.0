@@ -41,4 +41,11 @@ describe('敌人命名表', () => {
     expect(enemyDisplayName('world_20_stage_05_elite_1')).toBe('第5关精英')
     expect(enemyDisplayName('broken_enemy_id')).toBe('未知目标')
   })
+
+  it('精英名随小关号递增', () => {
+    expect(enemyName('world_04', 'elite', 1, 2)).toBe('御林侍卫')
+    expect(enemyName('world_04', 'elite', 2, 2)).toBe('段家武士')
+    expect(enemyName('world_04', 'elite', 3, 2)).toBe('天龙寺武僧')
+    expect(enemyName('world_04', 'elite', 4, 2)).toBe('御林侍卫')
+  })
 })
