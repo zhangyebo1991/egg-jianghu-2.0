@@ -188,16 +188,16 @@ test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => 
   expect(stableAcrossCombatTicks).toEqual({ tab: true, stop: true })
 })
 
-test('从酒馆明确名单直接邀请并放入前后三格阵容', async ({ page }) => {
+test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
   await openWorldSection(page, 'city')
   await page.getByTestId('tavern-hero_shen_yanqiu').getByRole('button', { name: '直接邀请' }).click()
   await page.getByTestId('tavern-hero_huo_chuan').getByRole('button', { name: '直接邀请' }).click()
 
-  await page.getByTestId('tab-heroes').click()
-  await page.locator('[data-action="formation-place"][data-target-row="back"][data-position="0"]').click()
-  await page.getByTestId('hero-hero_shen_yanqiu').click()
-  await page.locator('[data-action="formation-remove"][data-hero-id="hero_player"]').click()
-  await page.locator('[data-action="formation-place"][data-target-row="front"][data-position="0"]').click()
+  await page.getByTestId('tab-formation').click()
+  await expect(page.getByTestId('formation-page')).toBeVisible()
+
+  await page.dragAndDrop('[data-testid="formation-hero-hero_shen_yanqiu"]', '[data-row="front"][data-position="0"]')
+  await page.dragAndDrop('[data-testid="formation-hero-hero_huo_chuan"]', '[data-row="back"][data-position="0"]')
 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
   expect(formation).toEqual(expect.arrayContaining([
