@@ -1,5 +1,6 @@
 import type { EquipmentQuality } from '../domain/types'
 import type { Rng } from '../combat/rng'
+import { equipmentName } from './equipment-names'
 
 export const EQUIPMENT_SLOTS = ['weapon', 'head', 'armor', 'wrist', 'waist', 'boots', 'token'] as const
 export const EQUIPMENT_QUALITIES = ['凡品', '良品', '上品', '珍品', '绝品'] as const
@@ -47,7 +48,7 @@ export const EQUIPMENT_DEFINITIONS: EquipmentDefinitionV10[] = Array.from({ leng
   const worldId = `world_${String(worldIndex).padStart(2, '0')}`
   return EQUIPMENT_SLOTS.map((slot) => ({
     id: `${worldId}_${slot}`,
-    name: `第${worldIndex}卷${slotNames[slot]}`,
+    name: equipmentName(worldId, slot) ?? `第${worldIndex}卷${slotNames[slot]}`,
     worldId,
     slot,
     baseStatId: baseStatBySlot[slot],
