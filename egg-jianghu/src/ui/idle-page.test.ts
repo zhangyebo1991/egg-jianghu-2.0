@@ -48,6 +48,27 @@ describe('江湖战斗页', () => {
     expect(html).toContain('背包已满')
   })
 
+  it('按敌上我下展示战场，且双方前排在中线两侧相邻', () => {
+    const unit = (id: string, row: 'front' | 'back', position: 0 | 1 | 2) => ({
+      id, name: id, rank: 'normal' as const, row, position, hp: 100, maxHp: 100,
+      energy: 20, maxEnergy: 100, gauge: 0, cooldownMs: 0, alive: true,
+    })
+    const html = renderIdlePage(fixtureViewModel({
+      combat: {
+        mode: 'guard',
+        wave: 1,
+        enemies: [unit('敌后', 'back', 0), unit('敌前', 'front', 0)],
+        party: [unit('我前', 'front', 0), unit('我后', 'back', 0)],
+      },
+    }))
+
+    expect(html.indexOf('class="battle-side enemy-side"')).toBeLessThan(html.indexOf('class="battle-divider"'))
+    expect(html.indexOf('class="battle-divider"')).toBeLessThan(html.indexOf('class="battle-side party-side"'))
+    expect(html.indexOf('data-enemy-slot="back-0"')).toBeLessThan(html.indexOf('data-enemy-slot="front-0"'))
+    expect(html.indexOf('data-formation-slot="front-0"')).toBeLessThan(html.indexOf('data-formation-slot="back-0"'))
+    expect(html).toContain('前排 · 小怪')
+  })
+
   it('战斗控制暴露稳定 data-action 并标记当前模式', () => {
     const html = renderIdlePage(fixtureViewModel())
 

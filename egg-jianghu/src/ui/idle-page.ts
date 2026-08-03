@@ -41,14 +41,14 @@ const renderGauge = (label: string, value: number, maximum: number, className: s
 
 const renderUnit = (unit: IdleCombatUnitView, side: 'party' | 'enemy'): string => `
   <article class="combat-unit ${side} ${unit.alive ? '' : 'fallen'}" data-unit-id="${escapeHtml(unit.id)}" data-rank="${unit.rank}">
-    <header><strong>${escapeHtml(unit.name)}</strong><span>${side === 'enemy' ? rankName[unit.rank] : unit.row === 'front' ? '前排' : '后排'}</span></header>
+    <header><strong>${escapeHtml(unit.name)}</strong><span>${unit.row === 'front' ? '前排' : '后排'}${side === 'enemy' ? ` · ${rankName[unit.rank]}` : ''}</span></header>
     ${renderGauge('气血', unit.hp, unit.maxHp, 'hp-meter')}
     ${renderGauge('气机', unit.gauge, 1000, 'gauge-meter')}
     ${side === 'party' ? renderGauge('真气', unit.energy, unit.maxEnergy, 'energy-meter') : ''}
     <footer><span>回气</span><strong>${(unit.cooldownMs / 1000).toFixed(1)}s</strong></footer>
   </article>`
 
-const formationSlots = (combat: IdleCombatView | null): string => (['back', 'front'] as const).flatMap((row) =>
+const formationSlots = (combat: IdleCombatView | null): string => (['front', 'back'] as const).flatMap((row) =>
   ([0, 1, 2] as const).map((position) => {
     const unit = combat?.party.find((member) => member.row === row && member.position === position)
     return `<div class="formation-slot ${unit ? 'filled' : 'empty'}" data-formation-slot="${row}-${position}" data-row="${row}" data-position="${position}">
@@ -56,6 +56,18 @@ const formationSlots = (combat: IdleCombatView | null): string => (['back', 'fro
     </div>`
   }),
 ).join('')
+
+const enemySlots = (combat: IdleCombatView): string => {
+  if (!combat.enemies.length) return '<div class="battle-empty"><strong>山道暂静</strong><span>下一波敌人正在赶来</span></div>'
+  return (['back', 'front'] as const).flatMap((row) =>
+    ([0, 1, 2] as const).map((position) => {
+      const unit = combat.enemies.find((enemy) => enemy.row === row && enemy.position === position)
+      return `<div class="enemy-slot ${unit ? 'filled' : 'empty'}" data-enemy-slot="${row}-${position}" data-row="${row}" data-position="${position}">
+        ${unit ? renderUnit(unit, 'enemy') : `<span>${row === 'front' ? '前排' : '后排'} ${position + 1}</span>`}
+      </div>`
+    }),
+  ).join('')
+}
 
 export const renderIdlePage = (view: IdlePageViewModel): string => {
   const inventoryFull = view.inventoryCount >= view.inventoryCapacity
@@ -67,13 +79,15 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
           ${inventoryFull ? '<strong class="capacity-warning" role="status">背包已满 · 新装备无法获得</strong>' : `<span class="capacity-safe">背包 ${view.inventoryCount} / ${view.inventoryCapacity}</span>`}
         </header>
         <div class="battlefield">
-          <div class="formation-board" aria-label="六侠两排阵容">${formationSlots(view.combat)}</div>
+          <section class="battle-side enemy-side" aria-label="敌方阵容">
+            <header class="battle-side-heading"><strong>敌方</strong><span>后排在上 · 前排临阵</span></header>
+            <div class="enemy-board" data-testid="enemy-board">${enemySlots(view.combat)}</div>
+          </section>
           <div class="battle-divider" aria-hidden="true"><span>战</span></div>
-          <div class="enemy-board" data-testid="enemy-board">
-            ${view.combat.enemies.length
-              ? view.combat.enemies.map((enemy) => renderUnit(enemy, 'enemy')).join('')
-              : '<div class="battle-empty"><strong>山道暂静</strong><span>下一波敌人正在赶来</span></div>'}
-          </div>
+          <section class="battle-side party-side" aria-label="我方阵容">
+            <header class="battle-side-heading"><strong>我方</strong><span>前排临阵 · 后排在下</span></header>
+            <div class="formation-board" aria-label="六侠两排阵容">${formationSlots(view.combat)}</div>
+          </section>
         </div>
         <footer class="battle-controls">
           <div class="mode-controls">

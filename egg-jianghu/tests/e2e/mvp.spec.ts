@@ -54,6 +54,43 @@ test('江湖按大关小关分层并在点击小关后立即驻守', async ({ pa
   })
 })
 
+test('战场纵向排列且敌我前排在中线两侧相邻', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1000 })
+  await page.evaluate(() => {
+    const placements = [
+      ['hero_shen_yanqiu', 'front', 1],
+      ['hero_huo_chuan', 'front', 2],
+      ['hero_yue_jinghong', 'back', 0],
+      ['hero_pei_wuying', 'back', 1],
+      ['hero_su_wenlan', 'back', 2],
+    ] as const
+    for (const [heroId, row, position] of placements) {
+      window.__EGG_JIANGHU__.recruitHero(heroId)
+      window.__EGG_JIANGHU__.placeHero(heroId, row, position)
+    }
+  })
+  await page.getByTestId('world-world_01').click()
+  await page.getByTestId('stage-1').click()
+
+  const layout = await page.evaluate(() => {
+    const rect = (selector: string) => document.querySelector<HTMLElement>(selector)!.getBoundingClientRect()
+    return {
+      enemy: rect('.enemy-side'),
+      divider: rect('.battle-divider'),
+      party: rect('.party-side'),
+      enemyBack: rect('[data-enemy-slot="back-0"]'),
+      enemyFront: rect('[data-enemy-slot="front-0"]'),
+      partyFront: rect('[data-formation-slot="front-0"]'),
+      partyBack: rect('[data-formation-slot="back-0"]'),
+    }
+  })
+
+  expect(layout.enemy.bottom).toBeLessThanOrEqual(layout.divider.top)
+  expect(layout.divider.bottom).toBeLessThanOrEqual(layout.party.top)
+  expect(layout.enemyBack.top).toBeLessThan(layout.enemyFront.top)
+  expect(layout.partyFront.top).toBeLessThan(layout.partyBack.top)
+})
+
 test('桌面与移动端导航始终位于内容左侧', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   const desktop = await page.evaluate(() => {
