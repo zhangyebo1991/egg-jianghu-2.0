@@ -18,6 +18,7 @@ import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './do
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { settleCombatEvent } from './domain/rewards'
 import { clearSaveV10, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
+import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
 import type { ActionResult, EquipmentInstance, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
@@ -501,26 +502,67 @@ const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => 
   render()
 }
 
-const placeFormation = (heroId: string, row: FormationRow, position: FormationPosition): ActionResult => {
-  if (!session.state.heroes[heroId]?.recruited) return { ok: false, message: '请先选择已加入的侠客' }
-  session.state.formation = session.state.formation.filter((slot) => slot.heroId !== heroId && !(slot.row === row && slot.position === position))
-  session.state.formation.push({ heroId, row, position })
-  return { ok: true, message: '侠客已入阵' }
-}
-
-const removeFormation = (heroId: string): ActionResult => {
-  const before = session.state.formation.length
-  session.state.formation = session.state.formation.filter((slot) => slot.heroId !== heroId)
-  return session.state.formation.length < before ? { ok: true, message: '侠客已下阵' } : { ok: false, message: '侠客不在阵中' }
-}
-
 const dataNumber = (button: HTMLElement, key: string): number => Number(button.dataset[key])
+
+const isTouchDevice = (): boolean => window.matchMedia('(hover: none)').matches || navigator.maxTouchPoints > 0
+
+const clearDragOver = (): void => {
+  app.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'))
+}
+
+app.addEventListener('dragstart', (event) => {
+  const source = (event.target as HTMLElement).closest<HTMLElement>('[data-hero-id]')
+  if (!source) return
+  dragHeroId = source.dataset.heroId ?? null
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+})
+
+app.addEventListener('dragover', (event) => {
+  const target = event.target as HTMLElement
+  if (!dragHeroId || !target.closest('[data-testid="formation-page"]')) return
+  const slot = target.closest<HTMLElement>('.formation-editor-slot')
+  const roster = target.closest<HTMLElement>('.formation-roster')
+  if (slot || roster) {
+    event.preventDefault()
+    ;(slot ?? roster)!.classList.add('drag-over')
+  }
+})
+
+app.addEventListener('drop', (event) => {
+  if (!dragHeroId) return
+  const target = event.target as HTMLElement
+  const slot = target.closest<HTMLElement>('.formation-editor-slot')
+  if (slot) {
+    event.preventDefault()
+    const row = slot.dataset.row as FormationRow
+    const position = dataNumber(slot, 'position') as FormationPosition
+    commitAction(placeFormation(session.state, dragHeroId, row, position))
+  } else if (target.closest('.formation-roster')) {
+    event.preventDefault()
+    commitAction(removeFormation(session.state, dragHeroId))
+  }
+  dragHeroId = null
+  clearDragOver()
+  render()
+})
+
+app.addEventListener('dragend', () => {
+  dragHeroId = null
+  clearDragOver()
+})
 
 const performAction = (button: HTMLButtonElement): void => {
   const action = button.dataset.action
   const heroId = button.dataset.heroId ?? selectedHeroId ?? ''
-  if (action === 'formation-place') commitAction(placeFormation(heroId, button.dataset.targetRow as FormationRow, dataNumber(button, 'position') as FormationPosition))
-  else if (action === 'formation-remove') commitAction(removeFormation(heroId))
+  if (action === 'formation-place') commitAction(placeFormation(session.state, heroId, button.dataset.targetRow as FormationRow, dataNumber(button, 'position') as FormationPosition))
+  else if (action === 'formation-remove') commitAction(removeFormation(session.state, heroId))
+  else if (action === 'formation-select') {
+    if (isTouchDevice()) formationSelectedHeroId = heroId
+  } else if (action === 'formation-slot-tap') {
+    if (isTouchDevice() && formationSelectedHeroId) {
+      commitAction(placeFormation(session.state, formationSelectedHeroId, button.dataset.row as FormationRow, dataNumber(button, 'position') as FormationPosition))
+    }
+  }
   else if (action === 'career-change') commitAction(changeCareer(session.state.heroes[heroId], button.dataset.careerId ?? '', session.state.careerTokens))
   else if (action === 'career-perfect') commitAction(perfectCareer(session.state.heroes[heroId], button.dataset.careerId ?? ''))
   else if (action === 'career-buy-token') commitAction(buyCareerToken(session.state, button.dataset.worldId ?? selectedWorldId, button.dataset.tokenId ?? ''))
@@ -916,7 +958,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   grantWorldCurrency: (worldId, amount) => { ensurePlaying(); session.state.worldCurrency[worldId] = amount; saveSession(); render() },
   grantContribution: (factionId, amount) => { ensurePlaying(); session.state.contribution[factionId] = amount; saveSession(); render() },
   recruitHero: debugRecruit,
-  placeHero: (heroId, row, position) => { ensurePlaying(); commitAction(placeFormation(heroId, row, position)); render() },
+  placeHero: (heroId, row, position) => { ensurePlaying(); commitAction(placeFormation(session.state, heroId, row, position)); render() },
   setHeroCareerLevel: (heroId, careerId, level) => {
     ensurePlaying()
     const hero = session.state.heroes[heroId]
