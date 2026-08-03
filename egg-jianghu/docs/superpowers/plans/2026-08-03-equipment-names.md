@@ -38,7 +38,7 @@
 
 ```ts
 import { describe, expect, it } from 'vitest'
-import { EQUIPMENT_DEFINITIONS, EQUIPMENT_SLOTS } from './equipment'
+import { EQUIPMENT_SLOTS } from './equipment'
 import { EQUIPMENT_NAMES_BY_WORLD, equipmentName } from './equipment-names'
 import { WORLDS } from './worlds'
 
@@ -76,15 +76,10 @@ describe('装备命名表', () => {
     expect(equipmentName('world_11', 'weapon')).toBeUndefined()
     expect(equipmentName('broken', 'weapon')).toBeUndefined()
   })
-
-  it('EQUIPMENT_DEFINITIONS 前 10 卷装备名与命名表一致且无占位名残留', () => {
-    for (const definition of EQUIPMENT_DEFINITIONS) {
-      expect(definition.name, `${definition.id} 名字未接命名表`).toBe(equipmentName(definition.worldId, definition.slot))
-      expect(definition.name).not.toMatch(/^第\d+卷/)
-    }
-  })
 })
 ```
+
+> 接线断言（`EQUIPMENT_DEFINITIONS` 与命名表一致）在 Task 2 中以失败测试形式加入。
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -121,7 +116,7 @@ export const equipmentName = (worldId: string, slot: EquipmentSlot): string | un
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- src/content/equipment-names.test.ts`
-Expected: PASS（5 个用例全绿）。
+Expected: PASS（4 个用例全绿）。
 
 - [ ] **Step 5: Commit**
 
@@ -142,20 +137,31 @@ EOF
 
 **Files:**
 - Modify: `src/content/equipment.ts:1-2`（新增 import）、`:50`（name 字段）
-- Test: `src/content/equipment-names.test.ts`（Task 1 已含接线断言）
+- Modify: `src/content/equipment-names.test.ts`（追加接线断言）
 
 **Interfaces:**
 - Consumes: `equipmentName`（来自 `./equipment-names`）
 - Produces: `EQUIPMENT_DEFINITIONS` 中前 10 卷装备 `name` 与命名表一致，不再输出「第N卷」占位名
 
-- [ ] **Step 1: Run the existing wiring test to verify it fails**
+- [ ] **Step 1: Add the wiring test (failing first)**
 
-Task 1 的 `EQUIPMENT_DEFINITIONS 前 10 卷装备名与命名表一致` 断言当前会失败（`definition.name` 目前是「第1卷兵刃」等占位名，与 `equipmentName` 返回值不等）。
+在 `src/content/equipment-names.test.ts` 末尾 `describe` 内追加（并把 import 中的 `EQUIPMENT_SLOTS` 扩为 `EQUIPMENT_DEFINITIONS, EQUIPMENT_SLOTS`）：
+
+```ts
+  it('EQUIPMENT_DEFINITIONS 前 10 卷装备名与命名表一致且无占位名残留', () => {
+    for (const definition of EQUIPMENT_DEFINITIONS) {
+      expect(definition.name, `${definition.id} 名字未接命名表`).toBe(equipmentName(definition.worldId, definition.slot))
+      expect(definition.name).not.toMatch(/^第\d+卷/)
+    }
+  })
+```
+
+- [ ] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- src/content/equipment-names.test.ts`
-Expected: FAIL —— `名字未接命名表：world_01_weapon`。
+Expected: FAIL —— `名字未接命名表：world_01_weapon`（`definition.name` 目前是「第1卷兵刃」占位名）。
 
-- [ ] **Step 2: Implement the generator wiring**
+- [ ] **Step 3: Implement the generator wiring**
 
 在 `src/content/equipment.ts` 顶部新增 import：
 
@@ -175,17 +181,17 @@ import { equipmentName } from './equipment-names'
     name: equipmentName(worldId, slot) ?? `第${worldIndex}卷${slotNames[slot]}`,
 ```
 
-- [ ] **Step 3: Run test to verify it passes**
+- [ ] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- src/content/equipment-names.test.ts`
 Expected: PASS。
 
-- [ ] **Step 4: Run full unit suite to catch regressions**
+- [ ] **Step 5: Run full unit suite to catch regressions**
 
 Run: `npm test`
 Expected: PASS（`validate.test.ts` 的 `validateContent() === []`、`pages.test.ts` 的 mock fixture 等均不受影响）。
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add src/content/equipment.ts
