@@ -1,6 +1,6 @@
 import { escapeHtml } from './html'
 
-export type TabId = 'idle' | 'heroes' | 'inventory'
+export type TabId = 'idle' | 'heroes' | 'formation' | 'inventory'
 export type JianghuSection = 'stages' | 'factions' | 'city'
 
 export interface ShellViewModel {
@@ -14,6 +14,7 @@ export interface ShellViewModel {
 const tabs: Array<{ id: TabId; label: string; mark: string }> = [
   { id: 'idle', label: '江湖', mark: '卷' },
   { id: 'heroes', label: '侠客', mark: '侠' },
+  { id: 'formation', label: '阵容', mark: '阵' },
   { id: 'inventory', label: '背包', mark: '匣' },
 ]
 

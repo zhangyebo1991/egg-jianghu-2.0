@@ -22,6 +22,7 @@ import { normalizePlayerName } from './domain/state'
 import type { ActionResult, EquipmentInstance, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { renderFactionsPage, type FactionsPageViewModel } from './ui/factions-page'
+import { renderFormationPage, type FormationPageViewModel } from './ui/formation-page'
 import { renderHeroesPage, type HeroesPageViewModel } from './ui/heroes-page'
 import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
@@ -51,6 +52,8 @@ let jianghuSection: JianghuSection = 'stages'
 let selectedWorldId = ''
 let selectedStage = 1
 let selectedHeroId: string | null = null
+let formationSelectedHeroId: string | null = null
+let dragHeroId: string | null = null
 let selectedFactionId = ''
 let combatSpeed: 1 | 2 | 4 = 1
 let combatLogs: string[] = []
@@ -269,6 +272,18 @@ const heroesViewModel = (): HeroesPageViewModel => {
   }
 }
 
+const formationViewModel = (): FormationPageViewModel => ({
+  formation: session.state.formation,
+  selectedHeroId: formationSelectedHeroId,
+  heroes: recruitedHeroes().map(({ definition, progress, name }) => ({
+    id: definition.id,
+    name,
+    grade: definition.grade,
+    level: progress.level,
+    inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
+  })),
+})
+
 const factionsViewModel = (): FactionsPageViewModel => {
   const availableFactions = FACTIONS.filter((faction) =>
     faction.worldId === selectedWorldId
@@ -422,7 +437,9 @@ const render = (): void => {
     ? renderJianghuContent()
     : activeTab === 'heroes'
       ? renderHeroesPage(heroesViewModel())
-      : renderInventoryPage(inventoryViewModel())
+      : activeTab === 'formation'
+        ? renderFormationPage(formationViewModel())
+        : renderInventoryPage(inventoryViewModel())
   patchApp(renderShell({
     activeTab,
     worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
