@@ -3,6 +3,7 @@ import { renderCityPage, type CityPageViewModel } from './city-page'
 import { renderFactionsPage, type FactionsPageViewModel } from './factions-page'
 import { renderHeroesPage, type HeroesPageViewModel } from './heroes-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './inventory-page'
+import { renderFormationPage, type FormationPageViewModel } from './formation-page'
 
 const heroesFixture = (): HeroesPageViewModel => ({
   selectedHeroId: 'hero_test',
@@ -64,6 +65,15 @@ const inventoryFixture = (): InventoryPageViewModel => ({
   }],
 })
 
+const formationFixture = (): FormationPageViewModel => ({
+  selectedHeroId: null,
+  formation: [{ heroId: 'hero_test', row: 'front', position: 0 }],
+  heroes: [
+    { id: 'hero_test', name: '试剑人', grade: '乙', level: 12, inFormation: true },
+    { id: 'hero_shen', name: '沈砚秋', grade: '乙', level: 1, inFormation: false },
+  ],
+})
+
 describe('version 10 长期循环页面', () => {
   it('侠客页保持前后排各三格并展示职业独立等级', () => {
     const html = renderHeroesPage(heroesFixture())
@@ -94,5 +104,14 @@ describe('version 10 长期循环页面', () => {
       .toContain('本卷暂无可用势力')
     expect(renderCityPage({ ...cityFixture(), tavernHeroes: [], martials: [], careerTokens: [] }))
       .toContain('本卷城市暂无可用内容')
+  })
+
+  it('阵容页输出前后排各三格与待上阵名单', () => {
+    const html = renderFormationPage(formationFixture())
+    expect(html.match(/data-row="front"/g)).toHaveLength(3)
+    expect(html.match(/data-row="back"/g)).toHaveLength(3)
+    expect(html).toContain('已上阵')
+    expect(html).toContain('data-testid="formation-hero-hero_test"')
+    expect(html).toContain('formation-slot-remove')
   })
 })
