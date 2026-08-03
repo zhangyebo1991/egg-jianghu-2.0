@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EQUIPMENT_SLOTS } from './equipment'
+import { EQUIPMENT_DEFINITIONS, EQUIPMENT_SLOTS } from './equipment'
 import { EQUIPMENT_NAMES_BY_WORLD, equipmentName } from './equipment-names'
 import { WORLDS } from './worlds'
 
@@ -36,5 +36,12 @@ describe('装备命名表', () => {
   it('缺表世界返回 undefined 由调用方兜底', () => {
     expect(equipmentName('world_11', 'weapon')).toBeUndefined()
     expect(equipmentName('broken', 'weapon')).toBeUndefined()
+  })
+
+  it('EQUIPMENT_DEFINITIONS 前 10 卷装备名与命名表一致且无占位名残留', () => {
+    for (const definition of EQUIPMENT_DEFINITIONS) {
+      expect(definition.name, `${definition.id} 名字未接命名表`).toBe(equipmentName(definition.worldId, definition.slot))
+      expect(definition.name).not.toMatch(/^第\d+卷/)
+    }
   })
 })
