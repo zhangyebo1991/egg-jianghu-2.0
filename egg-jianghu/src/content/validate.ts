@@ -36,9 +36,14 @@ export const validateContent = (): string[] => {
   }
 
   for (const world of WORLDS) {
-    if (world.stageIds.length !== 10) errors.push(`${world.id} 小关数不是 10`)
-    if (world.factionIds.length !== 3) errors.push(`${world.id} 势力数不是 3`)
-    if (RARITY_BUDGET_BY_WORLD[world.id]?.length !== 8) errors.push(`${world.id} 稀有度预算不是 8`)
+    if (world.released) {
+      if (world.stageIds.length !== 10) errors.push(`${world.id} 小关数不是 10`)
+      if (world.factionIds.length !== 3) errors.push(`${world.id} 势力数不是 3`)
+      if (RARITY_BUDGET_BY_WORLD[world.id]?.length !== 8) errors.push(`${world.id} 稀有度预算不是 8`)
+    } else {
+      if (world.stageIds.length !== 0) errors.push(`${world.id} 未开放卷不应有小关`)
+      if (world.factionIds.length !== 0) errors.push(`${world.id} 未开放卷不应有势力`)
+    }
     for (const id of world.factionIds) {
       if (!factionIds.has(id)) errors.push(`${world.id} 引用了未知势力 ${id}`)
     }

@@ -114,6 +114,8 @@ export class GameSession {
   }
 
   startStage(input: StageSelectionInput): ActionResult {
+    const world = WORLDS.find((item) => item.id === input.worldId)
+    if (!world?.released) return { ok: false, message: '该江湖尚未开放' }
     if (!this.state.unlockedWorldIds.includes(input.worldId)) return { ok: false, message: '江湖卷尚未解锁' }
     if (!Number.isInteger(input.stage) || input.stage < 1 || input.stage > 10) return { ok: false, message: '小关不存在' }
     const highestUnlockedStage = Math.min(10, Math.max(
@@ -195,7 +197,7 @@ export class GameSession {
       if (completed.stage === 10) {
         const currentIndex = WORLDS.findIndex((world) => world.id === completed.worldId)
         const nextWorld = WORLDS[currentIndex + 1]
-        if (nextWorld && !this.state.unlockedWorldIds.includes(nextWorld.id)) {
+        if (nextWorld?.released && !this.state.unlockedWorldIds.includes(nextWorld.id)) {
           this.state.unlockedWorldIds.push(nextWorld.id)
           this.state.worldCurrency[nextWorld.id] ??= 0
           this.state.clearedStageByWorld[nextWorld.id] ??= 0

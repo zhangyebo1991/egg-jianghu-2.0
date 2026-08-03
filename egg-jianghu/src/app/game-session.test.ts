@@ -244,4 +244,21 @@ describe('GameSession', () => {
       .toEqual({ ok: false, message: '小关尚未解锁' })
     expect(session.combat).toBeNull()
   })
+
+  it('通关世界十不会解锁未开放的世界十一', () => {
+    const session = sessionWithParty()
+    session.state.unlockedWorldIds.push('world_10')
+    session.state.clearedStageByWorld.world_10 = 9
+    expect(session.startStage({ worldId: 'world_10', stage: 10, mode: 'roam', seed: 22 }).ok).toBe(true)
+    makePartyOverwhelming(session)
+    session.advanceTicks(5000)
+    expect(session.selection).toEqual({ worldId: 'world_10', stage: 10, mode: 'guard' })
+    expect(session.state.unlockedWorldIds).not.toContain('world_11')
+  })
+
+  it('未开放世界即使被写入解锁也不可进入', () => {
+    const session = sessionWithParty()
+    session.state.unlockedWorldIds.push('world_11')
+    expect(session.startStage({ worldId: 'world_11', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(false)
+  })
 })

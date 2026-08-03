@@ -21,7 +21,7 @@ describe('应用 Shell', () => {
   it('进入大关后在江湖下展开关卡势力城市', () => {
     const html = renderShell({
       activeTab: 'idle',
-      worldContext: { worldName: '青石江湖', activeSection: 'factions' },
+      worldContext: { worldName: '牛家村', activeSection: 'factions' },
       hasCombatReturn: true,
       showResetConfirmation: false,
       content: '<p>内容</p>',

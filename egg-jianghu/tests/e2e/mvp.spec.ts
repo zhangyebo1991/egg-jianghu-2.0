@@ -116,8 +116,8 @@ test('势力和城市只显示当前大关内容', async ({ page }) => {
   await expect(page.getByText('断浪刀门', { exact: true })).toHaveCount(0)
 
   await page.getByTestId('world-section-city').click()
-  await expect(page.getByTestId('city-page')).toContainText('青石江湖')
-  await expect(page.getByTestId('city-page')).not.toContainText('沧浪江湖')
+  await expect(page.getByTestId('city-page')).toContainText('牛家村')
+  await expect(page.getByTestId('city-page')).not.toContainText('嘉兴')
 })
 
 test('离页后恢复同一战斗并在停止后返回小关列表', async ({ page }) => {

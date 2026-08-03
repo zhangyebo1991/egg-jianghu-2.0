@@ -177,11 +177,12 @@ const worldOverviewViewModel = (): WorldOverviewViewModel => ({
     id: world.id,
     name: world.name,
     index: world.index,
+    released: world.released,
     unlocked: session.state.unlockedWorldIds.includes(world.id),
-    difficulty: Math.min(5, Math.ceil(world.index / 2)),
-    recommendedPower: Math.round(4000 * 1.65 ** (world.index - 1)),
-    clearedStages: session.state.clearedStageByWorld[world.id] ?? 0,
-    factionNames: FACTIONS.filter((faction) => faction.worldId === world.id).map((faction) => faction.name),
+    difficulty: world.released ? Math.min(5, Math.ceil(world.index / 2)) : 0,
+    recommendedPower: world.released ? Math.round(4000 * 1.65 ** (world.index - 1)) : 0,
+    clearedStages: world.released ? (session.state.clearedStageByWorld[world.id] ?? 0) : 0,
+    factionNames: world.released ? FACTIONS.filter((faction) => faction.worldId === world.id).map((faction) => faction.name) : [],
   })),
 })
 
@@ -704,6 +705,11 @@ app.addEventListener('click', (event) => {
   if (handleStartOrResetAction(action)) return
   if (appScreen !== 'playing') return
   if (action === 'enter-world' && button.dataset.worldId) {
+    const targetWorld = WORLDS.find((item) => item.id === button.dataset.worldId)
+    if (!targetWorld?.released) {
+      notify('该江湖尚未开放', true)
+      return
+    }
     if (!session.state.unlockedWorldIds.includes(button.dataset.worldId)) {
       notify('江湖卷尚未解锁', true)
       return

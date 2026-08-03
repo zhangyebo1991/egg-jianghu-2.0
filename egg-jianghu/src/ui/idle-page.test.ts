@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderIdlePage, type IdlePageViewModel } from './idle-page'
 
 const fixtureViewModel = (overrides: Partial<IdlePageViewModel> = {}): IdlePageViewModel => ({
-  worldName: '青石江湖',
+  worldName: '牛家村',
   selectedStage: 1,
   inventoryCount: 0,
   inventoryCapacity: 300,
