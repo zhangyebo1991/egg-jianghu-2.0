@@ -26,7 +26,7 @@ const factionsFixture = (): FactionsPageViewModel => ({
   quests: Array.from({ length: 6 }, (_, index) => ({
     slot: index,
     quest: index === 0 ? {
-      id: 'quest_qingfeng_0', type: 'normal', grade: '乙', targetName: '第1关敌手',
+      id: 'quest_qingfeng_0', type: 'normal', grade: '乙', targetName: '村中泼皮',
       progress: 0, targetCount: 20, rewardContribution: 50, accepted: false, completed: false,
     } : null,
   })),
@@ -80,7 +80,7 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('进境')
     expect(html).toContain('真传')
     expect(html).toContain('秘传')
-    expect(html).toContain('第1关敌手')
+    expect(html).toContain('村中泼皮')
     expect(html).not.toContain('world_01_stage_01_normal_1')
   })
 

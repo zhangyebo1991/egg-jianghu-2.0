@@ -1,5 +1,8 @@
 import { createRng } from './rng'
+import { enemyName } from '../content/enemy-names'
 import type { CombatRank, CombatSnapshot, CombatUnit } from './types'
+
+export { enemyDisplayName } from '../content/enemy-names'
 
 export interface CombatWave {
   worldId: string
@@ -12,18 +15,6 @@ const enemyRankMultiplier: Record<CombatRank, number> = {
   normal: 1,
   elite: 1.65,
   boss: 3.1,
-}
-
-const enemyName = (rank: CombatRank, stage: number): string => {
-  if (rank === 'boss') return `第${stage}关首领`
-  if (rank === 'elite') return `第${stage}关精英`
-  return `第${stage}关敌手`
-}
-
-export const enemyDisplayName = (enemyId: string): string => {
-  const match = enemyId.match(/_stage_(\d+)_(normal|elite|boss)(?:_\d+)?$/)
-  if (!match) return '未知目标'
-  return enemyName(match[2] as CombatRank, Number(match[1]))
 }
 
 const createEnemy = (
@@ -43,7 +34,7 @@ const createEnemy = (
   const rankId = rank === 'boss' ? 'boss' : rank === 'elite' ? `elite_${index + 1}` : `normal_${index + 1}`
   return {
     id: `${worldId}_stage_${String(stage).padStart(2, '0')}_${rankId}`,
-    name: enemyName(rank, stage),
+    name: enemyName(worldId, rank, stage, index + 1),
     side: 'enemy',
     row,
     position,
