@@ -3,7 +3,7 @@ import { GameSession, SaveConflictError } from './app/game-session'
 import { createRng } from './combat/rng'
 import { COMBAT_TICK_MS } from './combat/timeline'
 import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
-import { createWave } from './combat/waves'
+import { createWave, enemyDisplayName } from './combat/waves'
 import { CAREERS, careerById } from './content/careers'
 import { EQUIPMENT_AFFIXES, equipmentDefinitionById } from './content/equipment'
 import { FACTIONS } from './content/factions'
@@ -288,7 +288,10 @@ const factionsViewModel = (): FactionsPageViewModel => {
       selected: item.id === selectedFactionId,
     })),
     refreshRemainingMs: board?.refreshRemainingMs ?? 0,
-    quests: Array.from({ length: 6 }, (_, slot) => ({ slot, quest: board?.slots[slot] ?? null })),
+    quests: Array.from({ length: 6 }, (_, slot) => {
+      const quest = board?.slots[slot]
+      return { slot, quest: quest ? { ...quest, targetName: enemyDisplayName(quest.targetId) } : null }
+    }),
     branches: (faction?.branchLabels ?? []).map((branch) => ({
       name: branch,
       martials: factionMartials.filter((martial) => martial.branch === branch).map((martial) => ({

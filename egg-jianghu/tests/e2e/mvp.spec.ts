@@ -290,6 +290,8 @@ test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page 
   await page.evaluate(() => window.__EGG_JIANGHU__.prepareQuestBoard('qingfeng_hall', 211))
   await openWorldSection(page, 'factions')
   await expect(page.locator('[data-quest-slot]')).toHaveCount(6)
+  await expect(page.locator('.quest-grid')).not.toContainText('world_01_stage_01')
+  await expect(page.locator('.quest-card p').first()).toContainText(/第1关(?:敌手|首领)/)
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.qingfeng_hall.slots.map((slot) => slot?.id ?? null))
   await page.getByTestId('quest-slot-0').getByRole('button', { name: '接受' }).click()
   await page.evaluate(() => window.__EGG_JIANGHU__.advanceRuntime(3_600_000))

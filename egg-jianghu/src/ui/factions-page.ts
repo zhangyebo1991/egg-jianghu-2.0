@@ -14,7 +14,7 @@ export interface FactionsPageViewModel {
   selectedFactionId: string
   factions: Array<{ id: string; name: string; category: string; contribution: number; selected: boolean }>
   refreshRemainingMs: number
-  quests: Array<{ slot: number; quest: null | { id: string; type: 'normal' | 'boss'; grade: string; targetId: string; progress: number; targetCount: number; rewardContribution: number; accepted: boolean; completed: boolean } }>
+  quests: Array<{ slot: number; quest: null | { id: string; type: 'normal' | 'boss'; grade: string; targetName: string; progress: number; targetCount: number; rewardContribution: number; accepted: boolean; completed: boolean } }>
   branches: Array<{ name: string; martials: FactionMartialView[] }>
   factionHero: null | { id: string; name: string; grade: string; cost: number; recruited: boolean }
   selectedHeroId: string | null
@@ -23,7 +23,7 @@ export interface FactionsPageViewModel {
 const stageNames = ['初传', '进境', '真传', '秘传'] as const
 
 const renderQuest = (factionId: string, slot: number, quest: FactionsPageViewModel['quests'][number]['quest']): string => `<article class="quest-card ${quest?.accepted ? 'accepted' : ''}" data-quest-slot="${slot}" data-testid="quest-slot-${slot}">
-  ${quest ? `<header><span data-rarity="${escapeHtml(quest.grade)}">${escapeHtml(quest.grade)}</span><strong>${quest.type === 'boss' ? '首领悬赏' : '江湖悬赏'}</strong></header><p>${escapeHtml(quest.targetId)}</p><div><span>${quest.progress} / ${quest.targetCount}</span><strong>贡献 ${quest.rewardContribution}</strong></div>
+  ${quest ? `<header><span data-rarity="${escapeHtml(quest.grade)}">${escapeHtml(quest.grade)}</span><strong>${quest.type === 'boss' ? '首领悬赏' : '江湖悬赏'}</strong></header><p>${escapeHtml(quest.targetName)}</p><div><span>${quest.progress} / ${quest.targetCount}</span><strong>贡献 ${quest.rewardContribution}</strong></div>
     ${quest.accepted ? quest.completed ? `<button type="button" data-action="quest-claim" data-faction-id="${factionId}" data-slot="${slot}">领取</button>` : `<button type="button" data-action="quest-cancel" data-faction-id="${factionId}" data-slot="${slot}">取消</button>` : `<button type="button" data-action="quest-accept" data-faction-id="${factionId}" data-slot="${slot}">接受</button>`}
   ` : '<strong>待刷新</strong><span>此格暂无悬榜</span>'}
 </article>`

@@ -20,6 +20,12 @@ const enemyName = (rank: CombatRank, stage: number): string => {
   return `第${stage}关敌手`
 }
 
+export const enemyDisplayName = (enemyId: string): string => {
+  const match = enemyId.match(/_stage_(\d+)_(normal|elite|boss)(?:_\d+)?$/)
+  if (!match) return '未知目标'
+  return enemyName(match[2] as CombatRank, Number(match[1]))
+}
+
 const createEnemy = (
   worldId: string,
   stage: number,

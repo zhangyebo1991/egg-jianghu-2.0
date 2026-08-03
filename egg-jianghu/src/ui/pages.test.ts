@@ -24,7 +24,11 @@ const factionsFixture = (): FactionsPageViewModel => ({
   factions: [{ id: 'qingfeng_hall', name: '青锋馆', category: '剑', contribution: 600, selected: true }],
   refreshRemainingMs: 3_600_000,
   quests: Array.from({ length: 6 }, (_, index) => ({
-    slot: index, quest: null,
+    slot: index,
+    quest: index === 0 ? {
+      id: 'quest_qingfeng_0', type: 'normal', grade: '乙', targetName: '第1关敌手',
+      progress: 0, targetCount: 20, rewardContribution: 50, accepted: false, completed: false,
+    } : null,
   })),
   branches: [
     { name: '快剑', martials: [1, 2, 3, 4].map((stage) => ({
@@ -76,6 +80,8 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('进境')
     expect(html).toContain('真传')
     expect(html).toContain('秘传')
+    expect(html).toContain('第1关敌手')
+    expect(html).not.toContain('world_01_stage_01_normal_1')
   })
 
   it('城市和背包页没有抽卡、残页与铁匠铺', () => {
