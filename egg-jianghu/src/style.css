@@ -342,7 +342,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .hero-workbench, .faction-content { display: grid; gap: 12px; align-content: start; min-width: 0; }
 .formation-editor, .hero-detail, .quest-board, .inheritance, .faction-invite, .city-heading, .tavern, .academy, .token-shop, .inventory-heading { padding: 15px; }
 .formation-editor-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 12px; }
-.formation-editor-slot { min-height: 84px; display: grid; align-content: center; gap: 5px; padding: 8px; border: 1px dashed #454d42; background: #141713; }
+.formation-editor-slot { position: relative; min-height: 84px; display: grid; align-content: center; gap: 5px; padding: 8px; border: 1px dashed #454d42; background: #141713; }
 .formation-editor-slot > span { color: #676d63; font-size: 9px; }
 .formation-editor-slot > button { padding: 6px; font-size: 10px; }
 .formation-editor-slot > button:first-of-type { display: flex; justify-content: space-between; gap: 8px; background: #242a22; }
@@ -498,3 +498,35 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+.formation-slot-remove {
+  display: none;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border-radius: 50%;
+  background: #3a2519;
+  color: #e8c98a;
+}
+
+@media (hover: none) {
+  .formation-slot-remove { display: grid; }
+}
+
+.formation-editor-slot.drag-over {
+  border-color: #c8a55c;
+  background: #20261c;
+}
+
+.formation-roster.drag-over {
+  outline: 1px dashed #c8a55c;
+  outline-offset: -3px;
+}
+
+.hero-row.in-formation { opacity: 0.72; }
