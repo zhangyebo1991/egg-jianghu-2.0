@@ -348,6 +348,16 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .text-action { color: #9fa392; background: transparent; }
 .hero-detail > header, .quest-board > header, .city-heading, .inventory-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .hero-detail h1, .quest-board h1, .city-heading h1, .inventory-heading h1 { margin: 3px 0 0; color: #eee2cd; font-size: 24px; }
+.hero-stat-sections { display: grid; grid-template-columns: minmax(190px, .7fr) minmax(0, 2fr); gap: 8px; margin-top: 14px; }
+.hero-stat-block { min-width: 0; padding: 11px; border: 1px solid #373d34; background: #171a16; }
+.hero-stat-block > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.hero-stat-block h2 { margin: 0; color: #b9aa8e; font-size: 12px; letter-spacing: .08em; }
+.hero-stat-block header small { color: #6f7469; font-size: 9px; letter-spacing: 0; text-align: right; }
+.hero-stat-block dl { display: grid; grid-template-columns: repeat(5, minmax(64px, 1fr)); gap: 5px; margin: 0; }
+.hero-base-stats dl { grid-template-columns: repeat(2, minmax(64px, 1fr)); }
+.hero-stat { min-width: 0; padding: 7px 8px; border-left: 2px solid #39453a; background: #20251e; }
+.hero-stat dt { overflow: hidden; color: #858a7d; font-size: 9px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.hero-stat dd { margin: 3px 0 0; color: #e1d6c1; font: 600 13px ui-monospace, monospace; }
 .career-summary { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 12px; margin-top: 14px; padding: 12px; border-left: 3px solid var(--gold); background: #20251e; }
 .career-summary > span, .career-summary > em { color: #8e9283; font-size: 11px; font-style: normal; }
 .career-summary button, .career-options button, .martial-workbench button, .heart-methods button { padding: 6px 9px; font-size: 10px; }
@@ -469,6 +479,8 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .heroes-layout, .factions-layout { min-height: auto; grid-template-columns: 1fr; }
   .hero-list, .faction-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-roster > header, .faction-rail > header { grid-column: 1 / -1; }
+  .hero-stat-sections { grid-template-columns: 1fr; }
+  .hero-base-stats dl, .hero-stat-block dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .career-summary { grid-template-columns: 1fr 1fr; }
   .martial-slots, .quest-grid, .branch-grid, .city-columns { grid-template-columns: 1fr; }
   .token-shop { grid-column: auto; }
@@ -478,6 +490,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 }
 
 @media (max-width: 430px) {
+  .hero-stat-block dl, .hero-base-stats dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .formation-board { gap: 5px; }
   .formation-slot { min-height: 108px; }
   .combat-unit { padding: 6px; }

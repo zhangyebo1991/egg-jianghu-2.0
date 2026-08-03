@@ -11,6 +11,14 @@ const heroesFixture = (): HeroesPageViewModel => ({
     id: 'hero_test', name: '试剑人', grade: '乙', recruited: true,
     level: 12, careerId: 'sword', careerName: '剑客', careerLevel: 10,
     careerPerfected: false, availableCareerIds: ['sword_swift_mid'],
+    aptitudes: { strength: 10, insight: 8, constitution: 9, agility: 11, resolve: 7 },
+    combatStats: {
+      maxHp: 520, maxEnergy: 100, initialEnergy: 20, energyRecovery: 6,
+      externalAttack: 88, internalAttack: 62, externalDefense: 51, internalDefense: 44,
+      effectiveAgility: 92.4, accuracy: 0.073, evade: 0.11, controlResistance: 0.084,
+      criticalChance: 0.092, criticalMultiplier: 1.5, cooldownRate: 0.02,
+      gaugeRate: 0.02, momentumBonus: 0.03, survivalBonus: 0.03, perfectedBonusPool: 0.05,
+    },
     learnedMartials: [], equippedMartialIds: [null, null, null, null],
     heartMethodId: null,
   }],
@@ -80,6 +88,18 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('圆满心得')
     expect(html).not.toContain('formation-editor')
     expect(html).not.toContain('六侠阵容')
+  })
+
+  it('侠客页展示基础属性与计入养成加成后的战斗属性', () => {
+    const html = renderHeroesPage(heroesFixture())
+    expect(html).toContain('data-testid="hero-stats"')
+    expect(html).toContain('基础属性')
+    expect(html).toContain('臂力</dt><dd>10')
+    expect(html).toContain('战斗属性')
+    expect(html).toContain('气血</dt><dd>520')
+    expect(html).toContain('有效身法</dt><dd>92.4')
+    expect(html).toContain('命中修正</dt><dd>7.3%')
+    expect(html).toContain('圆满加成</dt><dd>5%')
   })
 
   it('势力页显示六格悬榜和两条四阶传承', () => {

@@ -188,6 +188,18 @@ test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => 
   expect(stableAcrossCombatTicks).toEqual({ tab: true, stop: true })
 })
 
+test('侠客页展示基础属性与实时战斗属性', async ({ page }) => {
+  await page.getByTestId('tab-heroes').click()
+
+  const stats = page.getByTestId('hero-stats')
+  await expect(stats).toContainText('基础属性')
+  await expect(stats.locator('[data-stat-label="臂力"] dd')).toHaveText('8')
+  await expect(stats).toContainText('战斗属性')
+  await expect(stats.locator('[data-stat-label="气血"] dd')).toHaveText('240')
+  await expect(stats.locator('[data-stat-label="外功"] dd')).toHaveText('63')
+  await expect(stats.locator('[data-stat-label="命中修正"] dd')).toHaveText('6.7%')
+})
+
 test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
   await openWorldSection(page, 'city')
   await page.getByTestId('tavern-hero_shen_yanqiu').getByRole('button', { name: '直接邀请' }).click()

@@ -1,4 +1,6 @@
 import { escapeHtml } from './html'
+import type { CombatStats } from '../combat/stats'
+import type { HeroAptitudes } from '../content/heroes'
 
 export interface HeroesHeroView {
   id: string
@@ -11,6 +13,8 @@ export interface HeroesHeroView {
   careerLevel: number
   careerPerfected: boolean
   availableCareerIds: string[]
+  aptitudes: HeroAptitudes
+  combatStats: CombatStats
   learnedMartials: Array<{ id: string; name: string; rarity: string; level: number }>
   equippedMartialIds: [string | null, string | null, string | null, string | null]
   heartMethodId: string | null
@@ -32,6 +36,53 @@ export interface HeroesPageViewModel {
   heartMethods: Array<{ id: string; name: string; equipped: boolean }>
 }
 
+const formatNumber = (value: number): string => Number.isInteger(value) ? String(value) : value.toFixed(1)
+const formatPercent = (value: number): string => `${(value * 100).toFixed(value * 100 % 1 === 0 ? 0 : 1)}%`
+
+const renderStat = (label: string, value: string | number): string =>
+  `<div class="hero-stat" data-stat-label="${escapeHtml(label)}"><dt>${escapeHtml(label)}</dt><dd>${typeof value === 'number' ? formatNumber(value) : escapeHtml(value)}</dd></div>`
+
+const renderHeroStats = (hero: HeroesHeroView): string => {
+  const aptitudes = hero.aptitudes
+  const stats = hero.combatStats
+  return `<div class="hero-stat-sections" data-testid="hero-stats">
+    <section class="hero-stat-block hero-base-stats">
+      <header><h2>基础属性</h2><small>先天资质</small></header>
+      <dl>${[
+        renderStat('臂力', aptitudes.strength),
+        renderStat('悟性', aptitudes.insight),
+        renderStat('体魄', aptitudes.constitution),
+        renderStat('身法', aptitudes.agility),
+        renderStat('定力', aptitudes.resolve),
+      ].join('')}</dl>
+    </section>
+    <section class="hero-stat-block hero-combat-stats">
+      <header><h2>战斗属性</h2><small>已计入等级、职业、心法与装备</small></header>
+      <dl>${[
+        renderStat('气血', stats.maxHp),
+        renderStat('真气', stats.maxEnergy),
+        renderStat('初始真气', stats.initialEnergy),
+        renderStat('真气回复', stats.energyRecovery),
+        renderStat('外功', stats.externalAttack),
+        renderStat('内功', stats.internalAttack),
+        renderStat('外防', stats.externalDefense),
+        renderStat('内防', stats.internalDefense),
+        renderStat('有效身法', stats.effectiveAgility),
+        renderStat('命中修正', formatPercent(stats.accuracy)),
+        renderStat('闪避', formatPercent(stats.evade)),
+        renderStat('控制抗性', formatPercent(stats.controlResistance)),
+        renderStat('暴击', formatPercent(stats.criticalChance)),
+        renderStat('暴击倍率', formatPercent(stats.criticalMultiplier)),
+        renderStat('冷却缩减', formatPercent(stats.cooldownRate)),
+        renderStat('气机加速', formatPercent(stats.gaugeRate)),
+        renderStat('武势加成', formatPercent(stats.momentumBonus)),
+        renderStat('生存加成', formatPercent(stats.survivalBonus)),
+        renderStat('圆满加成', formatPercent(stats.perfectedBonusPool)),
+      ].join('')}</dl>
+    </section>
+  </div>`
+}
+
 export const renderHeroesPage = (view: HeroesPageViewModel): string => {
   const selected = view.heroes.find((hero) => hero.id === view.selectedHeroId) ?? view.heroes[0]
   return `<section class="heroes-layout" data-testid="heroes-page">
@@ -44,6 +95,7 @@ export const renderHeroesPage = (view: HeroesPageViewModel): string => {
     <section class="hero-workbench">
       ${selected ? `<section class="hero-detail panel" data-testid="selected-hero">
         <header><div><small>${escapeHtml(selected.grade)}品侠客</small><h1>${escapeHtml(selected.name)}</h1></div><strong>侠客 Lv.${selected.level}</strong></header>
+        ${renderHeroStats(selected)}
         <div class="career-summary"><span>当前职业</span><strong>${escapeHtml(selected.careerName)}</strong><em>职业 Lv.${selected.careerLevel}</em>
           <button type="button" data-action="career-perfect" data-hero-id="${selected.id}" data-career-id="${selected.careerId}" ${selected.careerLevel < 20 || selected.careerPerfected ? 'disabled' : ''}>${selected.careerPerfected ? '圆满心得已领悟' : '领悟圆满心得'}</button>
         </div>

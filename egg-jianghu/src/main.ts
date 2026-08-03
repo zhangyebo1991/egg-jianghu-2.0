@@ -1,6 +1,7 @@
 import './style.css'
 import { GameSession, SaveConflictError } from './app/game-session'
 import { createRng } from './combat/rng'
+import { buildCombatStats } from './combat/stats'
 import { COMBAT_TICK_MS } from './combat/timeline'
 import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
 import { createWave, enemyDisplayName } from './combat/waves'
@@ -248,6 +249,8 @@ const heroesViewModel = (): HeroesPageViewModel => {
         careerLevel: record?.level ?? 1,
         careerPerfected: record?.perfected ?? false,
         availableCareerIds: compatibleCareers.map((item) => item.id),
+        aptitudes: definition.aptitudes,
+        combatStats: buildCombatStats(definition, progress, session.state.inventory),
         learnedMartials: Object.entries(progress.learnedMartials).map(([id, learnedRecord]) => {
           const martial = martialByIdV10(id)
           return { id, name: martial?.name ?? id, rarity: martial?.rarity ?? '粗浅', level: learnedRecord.level }
