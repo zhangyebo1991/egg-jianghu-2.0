@@ -194,7 +194,7 @@ Expected: PASS（`validate.test.ts` 的 `validateContent() === []`、`pages.test
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/content/equipment.ts
+git add src/content/equipment.ts src/content/equipment-names.test.ts
 git commit -m "$(cat <<'EOF'
 ✨ feat(content): 装备定义接入大关专属装备名
 
