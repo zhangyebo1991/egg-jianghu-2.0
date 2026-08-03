@@ -1,5 +1,7 @@
 import { CAREERS } from './careers'
 import { ENEMY_NAMES_BY_WORLD } from './enemy-names'
+import { EQUIPMENT_SLOTS } from './equipment'
+import { EQUIPMENT_NAMES_BY_WORLD } from './equipment-names'
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
 import { FACTION_MARTIALS } from './martials'
 import { WORLDS } from './worlds'
@@ -49,6 +51,14 @@ export const validateContent = (): string[] => {
         if (names.normal.length < 6) errors.push(`${world.id} 普通小怪名少于 6`)
         if (names.elite.length < 3) errors.push(`${world.id} 精英名少于 3`)
       }
+      const equipmentNames = EQUIPMENT_NAMES_BY_WORLD[world.id]
+      if (!equipmentNames) {
+        errors.push(`${world.id} 缺少装备命名表`)
+      } else {
+        for (const slot of EQUIPMENT_SLOTS) {
+          if (!equipmentNames[slot]?.trim()) errors.push(`${world.id} 缺少${slot}装备名`)
+        }
+      }
     } else {
       if (world.stageIds.length !== 0) errors.push(`${world.id} 未开放卷不应有小关`)
       if (world.factionIds.length !== 0) errors.push(`${world.id} 未开放卷不应有势力`)
@@ -64,6 +74,17 @@ export const validateContent = (): string[] => {
     for (const boss of ENEMY_NAMES_BY_WORLD[world.id]?.bosses ?? []) {
       if (seenBosses.has(boss)) errors.push(`Boss 名重复：${boss}`)
       seenBosses.add(boss)
+    }
+  }
+
+  const seenEquipmentNames = new Set<string>()
+  for (const world of WORLDS) {
+    if (!world.released) continue
+    for (const slot of EQUIPMENT_SLOTS) {
+      const name = EQUIPMENT_NAMES_BY_WORLD[world.id]?.[slot]
+      if (!name) continue
+      if (seenEquipmentNames.has(name)) errors.push(`装备名重复：${name}`)
+      seenEquipmentNames.add(name)
     }
   }
 
