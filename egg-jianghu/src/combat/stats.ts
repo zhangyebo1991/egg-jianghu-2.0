@@ -1,6 +1,6 @@
 import { careerById } from '../content/careers'
 import { heartMethodByIdV10 } from '../content/martials'
-import { equipmentDefinitionById, EQUIPMENT_QUALITIES } from '../content/equipment'
+import { equipmentBaseStatValue, equipmentDefinitionById } from '../content/equipment'
 import type { HeroDefinitionV10 } from '../content/heroes'
 import type { EquipmentInstance, HeroProgressV10 } from '../domain/types'
 
@@ -72,7 +72,6 @@ export const buildCombatStats = (
     perfectedBonusPool,
   }
 
-  const qualityMultiplier = [1, 1.18, 1.42, 1.72, 2.08]
   const applyBonus = (id: string, value: number): void => {
     if (id === 'attack') {
       stats.externalAttack += value
@@ -88,6 +87,7 @@ export const buildCombatStats = (
       stats.effectiveAgility += value
       return
     }
+    if (id === 'accuracy') stats.accuracy = Math.min(0.2, stats.accuracy + value / 100)
     if (id === 'energyRecovery') stats.energyRecovery += value
     if (id === 'cooldownRate') stats.cooldownRate = Math.min(0.6, stats.cooldownRate + value / 100)
     if (id === 'criticalChance') stats.criticalChance = Math.min(1, stats.criticalChance + value / 100)
@@ -99,8 +99,7 @@ export const buildCombatStats = (
     const instance = equipment.find((item) => item.uid === equipmentUid)
     const equipmentDefinition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
     if (!instance || !equipmentDefinition) continue
-    const qualityIndex = EQUIPMENT_QUALITIES.indexOf(instance.quality)
-    const baseValue = Math.floor((equipmentDefinition.baseValue + instance.level) * qualityMultiplier[qualityIndex])
+    const baseValue = equipmentBaseStatValue(equipmentDefinition, instance)
     applyBonus(equipmentDefinition.baseStatId, baseValue)
     for (const affix of instance.affixes) applyBonus(affix.id, affix.value)
   }

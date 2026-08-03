@@ -6,14 +6,21 @@ import { COMBAT_TICK_MS } from './combat/timeline'
 import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
 import { createWave, enemyDisplayName } from './combat/waves'
 import { CAREERS, careerById } from './content/careers'
-import { EQUIPMENT_AFFIXES, equipmentDefinitionById } from './content/equipment'
+import {
+  EQUIPMENT_AFFIXES,
+  EQUIPMENT_QUALITIES,
+  EQUIPMENT_SLOTS,
+  equipmentBaseStatValue,
+  equipmentDefinitionById,
+  type EquipmentSlot,
+} from './content/equipment'
 import { FACTIONS } from './content/factions'
 import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10 } from './content/heroes'
 import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTIALS, martialByIdV10 } from './content/martials'
 import { WORLDS } from './content/worlds'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
-import { equipEquipment, INVENTORY_CAPACITY, toggleEquipmentLock } from './domain/inventory'
+import { equipEquipment, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
@@ -21,11 +28,11 @@ import { settleCombatEvent } from './domain/rewards'
 import { clearSaveV10, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
-import type { ActionResult, EquipmentInstance, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
+import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { renderFactionsPage, type FactionsPageViewModel } from './ui/factions-page'
 import { renderFormationPage, type FormationPageViewModel } from './ui/formation-page'
-import { renderHeroesPage, type HeroesPageViewModel } from './ui/heroes-page'
+import { renderHeroesPage, type HeroesEquipmentView, type HeroesPageViewModel } from './ui/heroes-page'
 import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
 import { renderStageList, renderWorldOverview, type StageListViewModel, type WorldOverviewViewModel } from './ui/jianghu-page'
@@ -54,6 +61,9 @@ let jianghuSection: JianghuSection = 'stages'
 let selectedWorldId = ''
 let selectedStage = 1
 let selectedHeroId: string | null = null
+let heroInventorySlotFilter: EquipmentSlot | 'all' = 'all'
+let heroInventoryQualityFilter: EquipmentQuality | 'all' = 'all'
+let heroInventoryPage = 1
 let formationSelectedHeroId: string | null = null
 let dragHeroId: string | null = null
 let selectedFactionId = ''
@@ -91,6 +101,9 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
   selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
   selectedHeroId = Object.keys(session.state.heroes)[0] ?? null
+  heroInventorySlotFilter = 'all'
+  heroInventoryQualityFilter = 'all'
+  heroInventoryPage = 1
   selectedFactionId = FACTIONS.find((faction) => session.state.unlockedWorldIds.includes(faction.worldId))?.id ?? ''
   combatSpeed = 1
   combatLogs = []
@@ -217,6 +230,69 @@ const normalizeSelectedHero = (): string | null => {
   return selectedHeroId
 }
 
+const equipmentSlotNames: Record<EquipmentSlot, string> = {
+  weapon: '兵刃',
+  head: '冠巾',
+  armor: '衣甲',
+  wrist: '护腕',
+  waist: '腰佩',
+  boots: '履靴',
+  token: '信物',
+}
+
+const equipmentStatNames: Record<string, string> = {
+  attack: '外功 / 内功',
+  externalAttack: '外功',
+  internalAttack: '内功',
+  maxHp: '气血',
+  externalDefense: '外防',
+  internalDefense: '内防',
+  agility: '身法',
+  effectiveAgility: '有效身法',
+  accuracy: '命中修正',
+  energyRecovery: '真气回复',
+  cooldownRate: '冷却缩减',
+  criticalChance: '暴击',
+  controlResistance: '控制抗性',
+}
+
+const percentEquipmentStats = new Set(['accuracy', 'cooldownRate', 'criticalChance', 'controlResistance'])
+
+const equipmentOwnerId = (uid: string): string | null => Object.entries(session.state.heroes)
+  .find(([, progress]) => Object.values(progress.equipmentBySlot).includes(uid))?.[0] ?? null
+
+const heroEquipmentView = (item: EquipmentInstance): HeroesEquipmentView => {
+  const definition = equipmentDefinitionById(item.definitionId)
+  const ownerId = equipmentOwnerId(item.uid)
+  const ownerDefinition = ownerId ? heroByIdV10(ownerId) : undefined
+  const ownerProgress = ownerId ? session.state.heroes[ownerId] : undefined
+  const slot = definition?.slot ?? 'weapon'
+  const baseStatId = definition?.baseStatId ?? 'attack'
+  return {
+    uid: item.uid,
+    name: definition?.name ?? item.definitionId,
+    slot,
+    slotName: equipmentSlotNames[slot],
+    level: item.level,
+    quality: item.quality,
+    locked: item.locked,
+    equippedByHeroId: ownerId,
+    equippedByHeroName: ownerDefinition && ownerProgress ? heroDisplayNameV10(ownerDefinition, ownerProgress) : null,
+    baseStat: {
+      name: equipmentStatNames[baseStatId] ?? baseStatId,
+      value: definition ? equipmentBaseStatValue(definition, item) : 0,
+      percent: percentEquipmentStats.has(baseStatId),
+    },
+    affixes: item.affixes.map((affix) => ({
+      name: EQUIPMENT_AFFIXES.find((definitionAffix) => definitionAffix.id === affix.id)?.name
+        ?? equipmentStatNames[affix.id]
+        ?? affix.id,
+      value: affix.value,
+      percent: percentEquipmentStats.has(affix.id),
+    })),
+  }
+}
+
 const heroesViewModel = (): HeroesPageViewModel => {
   const selectedId = normalizeSelectedHero()
   const selectedProgress = selectedId ? session.state.heroes[selectedId] : undefined
@@ -232,6 +308,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
     ? [...FACTION_HEART_METHODS, ...CITY_HEART_METHODS].filter((method) =>
       session.state.unlockedWorldIds.includes(method.worldId) && method.careerIds.includes(selectedProgress.currentCareerId))
     : []
+  const inventoryItems = session.state.inventory.map(heroEquipmentView)
 
   return {
     selectedHeroId: selectedId,
@@ -251,6 +328,11 @@ const heroesViewModel = (): HeroesPageViewModel => {
         availableCareerIds: compatibleCareers.map((item) => item.id),
         aptitudes: definition.aptitudes,
         combatStats: buildCombatStats(definition, progress, session.state.inventory),
+        equipmentSlots: EQUIPMENT_SLOTS.map((slot) => ({
+          id: slot,
+          name: equipmentSlotNames[slot],
+          equipment: inventoryItems.find((item) => item.uid === progress.equipmentBySlot[slot]) ?? null,
+        })),
         learnedMartials: Object.entries(progress.learnedMartials).map(([id, learnedRecord]) => {
           const martial = martialByIdV10(id)
           return { id, name: martial?.name ?? id, rarity: martial?.rarity ?? '粗浅', level: learnedRecord.level }
@@ -272,6 +354,11 @@ const heroesViewModel = (): HeroesPageViewModel => {
       name: method.name,
       equipped: selectedProgress?.heartMethodId === method.id,
     })),
+    inventoryItems,
+    inventoryCapacity: INVENTORY_CAPACITY,
+    inventorySlotFilter: heroInventorySlotFilter,
+    inventoryQualityFilter: heroInventoryQualityFilter,
+    inventoryPage: heroInventoryPage,
   }
 }
 
@@ -586,7 +673,10 @@ const performAction = (button: HTMLButtonElement): void => {
   } else if (action === 'faction-recruit') commitAction(recruitFromFaction(session.state, button.dataset.factionId ?? '', heroId))
   else if (action === 'city-martial-learn') commitAction(learnCityMartial(session.state, heroId, button.dataset.martialId ?? ''))
   else if (action === 'equipment-equip') commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
+  else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
+  else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
+  else if (action === 'hero-inventory-page') heroInventoryPage = Math.max(1, dataNumber(button, 'page'))
 }
 
 app.addEventListener('submit', (event) => {
@@ -628,10 +718,44 @@ app.addEventListener('submit', (event) => {
 })
 
 app.addEventListener('change', (event) => {
-  const select = (event.target as HTMLElement).closest<HTMLSelectElement>('[data-action="select-hero-input"]')
-  if (!select) return
-  selectedHeroId = select.value || null
+  const target = event.target as HTMLElement
+  const select = target.closest<HTMLSelectElement>('[data-action="select-hero-input"]')
+  if (select) selectedHeroId = select.value || null
+  const inventoryFilter = target.closest<HTMLSelectElement>('[data-hero-inventory-filter]')
+  if (inventoryFilter?.dataset.heroInventoryFilter === 'slot') {
+    const value = inventoryFilter.value as EquipmentSlot | 'all'
+    heroInventorySlotFilter = value === 'all' || EQUIPMENT_SLOTS.includes(value as EquipmentSlot) ? value : 'all'
+    heroInventoryPage = 1
+  }
+  if (inventoryFilter?.dataset.heroInventoryFilter === 'quality') {
+    const value = inventoryFilter.value as EquipmentQuality | 'all'
+    heroInventoryQualityFilter = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality) ? value : 'all'
+    heroInventoryPage = 1
+  }
+  if (!select && !inventoryFilter) return
   render()
+})
+
+const equipHeroInventoryItem = (target: HTMLElement): boolean => {
+  const item = target.closest<HTMLElement>('[data-testid="hero-inventory-panel"] [data-equipment-uid]')
+  if (!item || appScreen !== 'playing') return false
+  const heroId = normalizeSelectedHero()
+  if (!heroId) {
+    notify('请先选择侠客', true)
+    return true
+  }
+  commitAction(equipEquipment(session.state, heroId, item.dataset.equipmentUid ?? ''))
+  render()
+  return true
+}
+
+app.addEventListener('dblclick', (event) => {
+  equipHeroInventoryItem(event.target as HTMLElement)
+})
+
+app.addEventListener('contextmenu', (event) => {
+  if (!equipHeroInventoryItem(event.target as HTMLElement)) return
+  event.preventDefault()
 })
 
 const handleStartOrResetAction = (action: string | undefined): boolean => {

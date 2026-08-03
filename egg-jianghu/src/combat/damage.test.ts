@@ -66,4 +66,20 @@ describe('战斗面板与伤害乘区', () => {
 
     expect(buildCombatStats(definition, progress, equipment).externalAttack).toBeGreaterThan(baseline.externalAttack)
   })
+
+  it('护腕基础命中正确换算为百分比加成', () => {
+    const definition: HeroDefinitionV10 = {
+      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
+      source: 'tavern', cost: 0, factionId: null,
+      aptitudes: { strength: 8, insight: 8, constitution: 8, agility: 8, resolve: 8 },
+    }
+    const progress = createHeroProgress('sword')
+    const baseline = buildCombatStats(definition, progress)
+    progress.equipmentBySlot.wrist = 'wrist_uid'
+    const wrist: EquipmentInstance = {
+      uid: 'wrist_uid', definitionId: 'world_01_wrist', level: 1, quality: '凡品', affixes: [], locked: false,
+    }
+
+    expect(buildCombatStats(definition, progress, [wrist]).accuracy).toBeCloseTo(baseline.accuracy + 0.09)
+  })
 })

@@ -200,6 +200,72 @@ test('侠客页展示基础属性与实时战斗属性', async ({ page }) => {
   await expect(stats.locator('[data-stat-label="命中修正"] dd')).toHaveText('6.7%')
 })
 
+test('侠客页物品栏支持筛选整理、双击或右键装备及同部位对比', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(2))
+  await page.getByTestId('tab-heroes').click()
+
+  const panel = page.getByTestId('hero-inventory-panel')
+  await expect(panel).toBeVisible()
+  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(2)
+  const columnOrder = await page.evaluate(() => {
+    const roster = document.querySelector('.hero-roster')!.getBoundingClientRect()
+    const detail = document.querySelector('.hero-workbench')!.getBoundingClientRect()
+    const inventory = document.querySelector('.hero-inventory-panel')!.getBoundingClientRect()
+    return { rosterRight: roster.right, detailLeft: detail.left, detailRight: detail.right, inventoryLeft: inventory.left }
+  })
+  expect(columnOrder.rosterRight).toBeLessThanOrEqual(columnOrder.detailLeft)
+  expect(columnOrder.detailRight).toBeLessThanOrEqual(columnOrder.inventoryLeft)
+
+  await page.getByTestId('hero-inventory-item-debug-equipment-0').dblclick()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_player.equipmentBySlot.weapon))
+    .toBe('debug-equipment-0')
+
+  const slot = page.getByTestId('hero-equipment-slot-weapon')
+  await expect(slot).toContainText('柴刀')
+  await slot.hover()
+  await expect(slot.locator(':scope > .equipment-tooltip')).toBeVisible()
+  await slot.click({ position: { x: 8, y: 8 } })
+  await page.getByTestId('selected-hero').locator(':scope > header').hover()
+  await expect(slot.locator(':scope > .equipment-tooltip')).toBeHidden()
+
+  const replacement = page.getByTestId('hero-inventory-item-debug-equipment-1')
+  await replacement.hover()
+  const comparison = replacement.locator(':scope > .equipment-tooltip')
+  await expect(comparison).toBeVisible()
+  await expect(comparison).toContainText('当前查看')
+  await expect(comparison).toContainText('当前穿戴')
+  await replacement.click()
+  await page.getByTestId('selected-hero').locator(':scope > header').hover()
+  await expect(comparison).toBeHidden()
+
+  await replacement.click({ button: 'right' })
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_player.equipmentBySlot.weapon))
+    .toBe('debug-equipment-1')
+
+  await panel.locator('[data-hero-inventory-filter="slot"]').selectOption('head')
+  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(0)
+  await panel.locator('[data-hero-inventory-filter="slot"]').selectOption('weapon')
+  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(2)
+  await panel.getByRole('button', { name: '整理' }).click()
+  await expect(page.getByRole('status')).toHaveText('物品已按部位、品质和等级整理')
+
+  await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(300))
+  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(200)
+  await expect(panel).toContainText('第 1 / 2 页 · 本页 200 件')
+  const inventoryGrid = await panel.locator('.hero-inventory-list').evaluate((element) => {
+    const style = getComputedStyle(element)
+    return { columns: style.gridTemplateColumns.split(' ').length, overflow: style.overflow }
+  })
+  expect(inventoryGrid).toEqual({ columns: 10, overflow: 'visible' })
+  await panel.getByRole('button', { name: '下一页' }).click()
+  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(100)
+  await expect(panel).toContainText('第 2 / 2 页 · 本页 100 件')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+})
+
 test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
   await openWorldSection(page, 'city')
   await page.getByTestId('tavern-hero_shen_yanqiu').getByRole('button', { name: '直接邀请' }).click()

@@ -1,9 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import { renderCityPage, type CityPageViewModel } from './city-page'
 import { renderFactionsPage, type FactionsPageViewModel } from './factions-page'
-import { renderHeroesPage, type HeroesPageViewModel } from './heroes-page'
+import { renderHeroesPage, type HeroesEquipmentView, type HeroesPageViewModel } from './heroes-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './inventory-page'
 import { renderFormationPage, type FormationPageViewModel } from './formation-page'
+
+const equippedWeapon: HeroesEquipmentView = {
+  uid: 'weapon_old', name: '旧试剑', slot: 'weapon', slotName: '兵刃', level: 2, quality: '良品', locked: false,
+  equippedByHeroId: 'hero_test', equippedByHeroName: '试剑人',
+  baseStat: { name: '外功 / 内功', value: 11, percent: false },
+  affixes: [{ name: '外功', value: 4, percent: false }],
+}
+
+const inventoryWeapon: HeroesEquipmentView = {
+  uid: 'weapon_new', name: '新试剑', slot: 'weapon', slotName: '兵刃', level: 5, quality: '上品', locked: true,
+  equippedByHeroId: null, equippedByHeroName: null,
+  baseStat: { name: '外功 / 内功', value: 18, percent: false },
+  affixes: [{ name: '暴击', value: 5, percent: true }],
+}
 
 const heroesFixture = (): HeroesPageViewModel => ({
   selectedHeroId: 'hero_test',
@@ -19,12 +33,26 @@ const heroesFixture = (): HeroesPageViewModel => ({
       criticalChance: 0.092, criticalMultiplier: 1.5, cooldownRate: 0.02,
       gaugeRate: 0.02, momentumBonus: 0.03, survivalBonus: 0.03, perfectedBonusPool: 0.05,
     },
+    equipmentSlots: [
+      { id: 'weapon', name: '兵刃', equipment: equippedWeapon },
+      { id: 'head', name: '冠巾', equipment: null },
+      { id: 'armor', name: '衣甲', equipment: null },
+      { id: 'wrist', name: '护腕', equipment: null },
+      { id: 'waist', name: '腰佩', equipment: null },
+      { id: 'boots', name: '履靴', equipment: null },
+      { id: 'token', name: '信物', equipment: null },
+    ],
     learnedMartials: [], equippedMartialIds: [null, null, null, null],
     heartMethodId: null,
   }],
   careers: [{ id: 'sword_swift_mid', name: '游剑客', tier: '中级', owned: false, tokenOwned: true }],
   martials: [],
   heartMethods: [],
+  inventoryItems: [equippedWeapon, inventoryWeapon],
+  inventoryCapacity: 300,
+  inventorySlotFilter: 'all',
+  inventoryQualityFilter: 'all',
+  inventoryPage: 1,
 })
 
 const factionsFixture = (): FactionsPageViewModel => ({
@@ -100,6 +128,34 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('有效身法</dt><dd>92.4')
     expect(html).toContain('命中修正</dt><dd>7.3%')
     expect(html).toContain('圆满加成</dt><dd>5%')
+  })
+
+  it('侠客页展示装备栏、可筛选物品及同部位装备对比', () => {
+    const html = renderHeroesPage(heroesFixture())
+    expect(html).toContain('data-testid="hero-equipment-slots"')
+    expect(html).toContain('data-testid="hero-equipment-slot-weapon"')
+    expect(html).toContain('旧试剑')
+    expect(html).toContain('data-testid="hero-inventory-panel"')
+    expect(html).toContain('data-hero-inventory-filter="slot"')
+    expect(html).toContain('data-action="organize-hero-inventory"')
+    expect(html).toContain('data-testid="hero-inventory-item-weapon_new"')
+    expect(html).toContain('当前查看')
+    expect(html).toContain('当前穿戴')
+    expect(html).toContain('双击左键或右键')
+  })
+
+  it('物品栏每页最多展示 200 件并可切换分页', () => {
+    const items = Array.from({ length: 201 }, (_, index) => ({
+      ...inventoryWeapon,
+      uid: `paged_${index}`,
+    }))
+    const firstPage = renderHeroesPage({ ...heroesFixture(), inventoryItems: items, inventoryPage: 1 })
+    const secondPage = renderHeroesPage({ ...heroesFixture(), inventoryItems: items, inventoryPage: 2 })
+
+    expect(firstPage.match(/data-testid="hero-inventory-item-/g)).toHaveLength(200)
+    expect(firstPage).toContain('第 1 / 2 页 · 本页 200 件')
+    expect(secondPage.match(/data-testid="hero-inventory-item-/g)).toHaveLength(1)
+    expect(secondPage).toContain('第 2 / 2 页 · 本页 1 件')
   })
 
   it('势力页显示六格悬榜和两条四阶传承', () => {

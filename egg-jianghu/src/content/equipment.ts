@@ -1,9 +1,10 @@
-import type { EquipmentQuality } from '../domain/types'
+import type { EquipmentInstance, EquipmentQuality } from '../domain/types'
 import type { Rng } from '../combat/rng'
 import { equipmentName } from './equipment-names'
 
 export const EQUIPMENT_SLOTS = ['weapon', 'head', 'armor', 'wrist', 'waist', 'boots', 'token'] as const
 export const EQUIPMENT_QUALITIES = ['凡品', '良品', '上品', '珍品', '绝品'] as const
+const EQUIPMENT_QUALITY_MULTIPLIERS = [1, 1.18, 1.42, 1.72, 2.08] as const
 
 export type EquipmentSlot = typeof EQUIPMENT_SLOTS[number]
 
@@ -71,6 +72,14 @@ export const EQUIPMENT_AFFIXES: EquipmentAffixDefinitionV10[] = [
 
 export const equipmentDefinitionById = (id: string): EquipmentDefinitionV10 | undefined =>
   EQUIPMENT_DEFINITIONS.find((definition) => definition.id === id)
+
+export const equipmentBaseStatValue = (
+  definition: EquipmentDefinitionV10,
+  equipment: EquipmentInstance,
+): number => Math.floor(
+  (definition.baseValue + equipment.level)
+  * EQUIPMENT_QUALITY_MULTIPLIERS[EQUIPMENT_QUALITIES.indexOf(equipment.quality)],
+)
 
 export const rollAffixes = (
   quality: EquipmentQuality,

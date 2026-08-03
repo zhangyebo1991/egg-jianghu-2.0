@@ -329,7 +329,8 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 [data-rarity] { border-color: var(--rarity, var(--line)) !important; }
 [data-rarity] > span:first-child, [data-rarity] > header em, span[data-rarity], strong[data-rarity] { color: var(--rarity, var(--paper)); }
 
-.heroes-layout, .factions-layout { width: min(1500px, 100%); min-height: calc(100vh - 166px); margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 12px; }
+.heroes-layout { width: min(1800px, 100%); min-height: calc(100vh - 166px); margin: 0 auto; display: grid; grid-template-columns: 190px minmax(380px, .75fr) minmax(460px, 1.25fr); gap: 10px; align-items: start; }
+.factions-layout { width: min(1500px, 100%); min-height: calc(100vh - 166px); margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 12px; }
 .hero-roster, .faction-rail { padding: 14px; }
 .hero-roster > header, .faction-rail > header, .formation-editor > header, .inheritance > header, .tavern > header, .academy > header, .token-shop > header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
 .hero-roster header small, .faction-rail header small, .formation-editor header small, .hero-detail header small, .quest-board header small, .inheritance header small, .faction-invite small, .city-heading small, .tavern header small, .academy header small, .token-shop header small, .inventory-heading small { color: #858a7d; font-size: 10px; letter-spacing: .16em; }
@@ -348,16 +349,70 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .text-action { color: #9fa392; background: transparent; }
 .hero-detail > header, .quest-board > header, .city-heading, .inventory-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .hero-detail h1, .quest-board h1, .city-heading h1, .inventory-heading h1 { margin: 3px 0 0; color: #eee2cd; font-size: 24px; }
-.hero-stat-sections { display: grid; grid-template-columns: minmax(190px, .7fr) minmax(0, 2fr); gap: 8px; margin-top: 14px; }
+.hero-stat-sections { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
 .hero-stat-block { min-width: 0; padding: 11px; border: 1px solid #373d34; background: #171a16; }
 .hero-stat-block > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .hero-stat-block h2 { margin: 0; color: #b9aa8e; font-size: 12px; letter-spacing: .08em; }
 .hero-stat-block header small { color: #6f7469; font-size: 9px; letter-spacing: 0; text-align: right; }
 .hero-stat-block dl { display: grid; grid-template-columns: repeat(5, minmax(64px, 1fr)); gap: 5px; margin: 0; }
-.hero-base-stats dl { grid-template-columns: repeat(2, minmax(64px, 1fr)); }
+.hero-base-stats dl { grid-template-columns: repeat(5, minmax(52px, 1fr)); }
 .hero-stat { min-width: 0; padding: 7px 8px; border-left: 2px solid #39453a; background: #20251e; }
 .hero-stat dt { overflow: hidden; color: #858a7d; font-size: 9px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .hero-stat dd { margin: 3px 0 0; color: #e1d6c1; font: 600 13px ui-monospace, monospace; }
+.hero-equipment-section { margin-top: 14px; }
+.hero-equipment-section > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.hero-equipment-section h2 { margin: 0; color: #b9aa8e; font-size: 13px; letter-spacing: .08em; }
+.hero-equipment-section header small { color: #70756a; font-size: 9px; }
+.hero-equipment-grid { display: grid; grid-template-columns: repeat(4, minmax(72px, 1fr)); gap: 5px; }
+.hero-equipment-slot { position: relative; min-width: 0; min-height: 82px; display: grid; align-content: start; gap: 4px; padding: 8px; border: 1px dashed #3a4138; outline: none; background: #171a16; }
+.hero-equipment-slot.equipped { border-style: solid; border-color: var(--rarity, #455044); }
+.hero-equipment-slot > span { color: #74796e; font-size: 9px; }
+.hero-equipment-slot > strong { overflow: hidden; color: #d7ccb8; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.hero-equipment-slot > small { color: var(--rarity, #666d63); font-size: 8px; }
+.hero-equipment-slot > button { align-self: end; padding: 4px 6px; font-size: 8px; }
+.hero-inventory-panel { position: relative; min-width: 0; padding: 12px; }
+.hero-inventory-panel > header { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding-bottom: 9px; border-bottom: 1px solid var(--line); }
+.hero-inventory-panel > header div { display: grid; gap: 2px; }
+.hero-inventory-panel > header small, .hero-inventory-panel > header span { color: #7d8275; font-size: 9px; }
+.hero-inventory-panel > header strong { color: #d7c9ae; font-size: 15px; }
+.hero-inventory-tools { display: grid; grid-template-columns: 1fr 1fr auto; gap: 5px; margin: 10px 0; }
+.hero-inventory-tools label { display: grid; gap: 3px; color: #777c70; font-size: 8px; }
+.hero-inventory-tools select, .hero-inventory-tools button { min-width: 0; padding: 6px; font-size: 9px; }
+.hero-inventory-list { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; overflow: visible; }
+.hero-inventory-item { position: relative; min-width: 0; min-height: 68px; display: grid; align-content: start; gap: 2px; padding: 5px; text-align: left; background: #181c17; }
+.hero-inventory-item.current { box-shadow: inset 3px 0 0 var(--jade); background: #202820; }
+.hero-inventory-item.occupied { opacity: .65; }
+.hero-inventory-item > span, .hero-inventory-item > em { overflow: hidden; color: var(--rarity, #818578); font-size: 7px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.hero-inventory-item > strong { display: -webkit-box; overflow: hidden; color: #d8cdb9; font-size: 9px; line-height: 1.25; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.hero-inventory-item > small { overflow: hidden; color: #777c70; font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.hero-inventory-empty { min-height: 180px; display: grid; place-content: center; gap: 6px; color: #777c70; text-align: center; }
+.hero-inventory-empty strong { color: #b6aa94; font-size: 12px; }
+.hero-inventory-empty span { font-size: 9px; }
+.hero-inventory-pagination { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); }
+.hero-inventory-pagination > div { display: flex; gap: 3px; }
+.hero-inventory-pagination button { min-width: 28px; padding: 5px 7px; font-size: 8px; }
+.hero-inventory-pagination button.active { border-color: var(--jade); color: var(--jade); background: #243027; }
+.hero-inventory-pagination > span { color: #73786c; font-size: 8px; text-align: right; }
+.hero-inventory-panel > footer { margin-top: 9px; color: #686d63; font-size: 8px; text-align: center; }
+.equipment-tooltip { position: absolute; z-index: 40; width: min(360px, calc(100vw - 40px)); display: none; padding: 11px; border: 1px solid #555c4e; color: #a6a797; text-align: left; background: #111410; box-shadow: 0 16px 38px rgb(0 0 0 / 58%); pointer-events: none; }
+.hero-inventory-item > .equipment-tooltip { top: 0; right: calc(100% + 8px); }
+.hero-equipment-slot > .equipment-tooltip { top: calc(100% + 7px); left: 0; }
+.hero-inventory-item:hover > .equipment-tooltip, .hero-equipment-slot:hover > .equipment-tooltip { display: block; }
+.equipment-tooltip > header { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; padding-bottom: 8px; border-bottom: 1px solid #3a4037; }
+.equipment-tooltip > header span, .equipment-tooltip > header em { color: #7d8275; font-size: 8px; font-style: normal; }
+.equipment-tooltip > header strong { color: var(--rarity, #e1d6c1); font-size: 12px; }
+.equipment-tooltip > header em { text-align: right; }
+.equipment-tooltip-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.equipment-tooltip-columns > section:only-child { grid-column: 1 / -1; }
+.equipment-tooltip-columns section { min-width: 0; }
+.equipment-tooltip-columns section > small { display: block; margin-bottom: 5px; color: var(--gold); font-size: 8px; }
+.equipment-tooltip-columns section > strong { display: block; overflow: hidden; margin-bottom: 5px; color: #cfc2ab; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-compare { padding-left: 8px; border-left: 1px solid #353b33; }
+.equipment-properties { display: grid; gap: 3px; margin: 0; }
+.equipment-properties > div { display: flex; justify-content: space-between; gap: 8px; }
+.equipment-properties dt { color: #8d9182; font-size: 9px; }
+.equipment-properties dd { margin: 0; color: #d5c9b3; font: 9px ui-monospace, monospace; }
+.equipment-tooltip > footer { margin-top: 8px; padding-top: 7px; border-top: 1px solid #30362e; color: #73796d; font-size: 8px; }
 .career-summary { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 12px; margin-top: 14px; padding: 12px; border-left: 3px solid var(--gold); background: #20251e; }
 .career-summary > span, .career-summary > em { color: #8e9283; font-size: 11px; font-style: normal; }
 .career-summary button, .career-options button, .martial-workbench button, .heart-methods button { padding: 6px 9px; font-size: 10px; }
@@ -419,7 +474,10 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .idle-layout { grid-template-columns: minmax(540px, 1fr); }
   .combat-rail { grid-column: 1 / -1; }
   .combat-log { max-height: 150px; }
-  .heroes-layout, .factions-layout { grid-template-columns: 190px minmax(0, 1fr); }
+  .heroes-layout { grid-template-columns: 190px minmax(0, 1fr); }
+  .hero-inventory-panel { position: static; grid-column: 2; }
+  .hero-inventory-list { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .factions-layout { grid-template-columns: 190px minmax(0, 1fr); }
   .city-columns { grid-template-columns: 1fr 1fr; }
   .token-shop { grid-column: 1 / -1; }
 }
@@ -477,6 +535,10 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .combat-rail { grid-column: auto; }
   .idle-combat-return { right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); max-width: calc(100vw - 84px); }
   .heroes-layout, .factions-layout { min-height: auto; grid-template-columns: 1fr; }
+  .hero-inventory-panel { grid-column: auto; }
+  .hero-inventory-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hero-equipment-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .equipment-tooltip { position: fixed; top: 50% !important; right: auto !important; left: 50% !important; transform: translate(-50%, -50%); }
   .hero-list, .faction-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-roster > header, .faction-rail > header { grid-column: 1 / -1; }
   .hero-stat-sections { grid-template-columns: 1fr; }
@@ -491,6 +553,10 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 
 @media (max-width: 430px) {
   .hero-stat-block dl, .hero-base-stats dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero-equipment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero-inventory-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero-inventory-tools { grid-template-columns: 1fr 1fr; }
+  .hero-inventory-tools > button { grid-column: 1 / -1; }
   .formation-board { gap: 5px; }
   .formation-slot { min-height: 108px; }
   .combat-unit { padding: 6px; }

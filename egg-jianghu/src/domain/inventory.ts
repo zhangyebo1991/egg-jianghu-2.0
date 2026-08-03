@@ -1,5 +1,5 @@
 import type { EquipmentInstance, GameStateV10 } from './types'
-import { equipmentDefinitionById } from '../content/equipment'
+import { EQUIPMENT_QUALITIES, EQUIPMENT_SLOTS, equipmentDefinitionById } from '../content/equipment'
 import type { ActionResult } from './types'
 
 export const INVENTORY_CAPACITY = 300
@@ -59,4 +59,20 @@ export const toggleEquipmentLock = (state: GameStateV10, equipmentUid: string): 
   if (!equipment) return { ok: false, message: '装备不存在' }
   equipment.locked = !equipment.locked
   return { ok: true, message: equipment.locked ? '装备已锁定' : '装备已解锁' }
+}
+
+export const organizeInventory = (state: GameStateV10): ActionResult => {
+  state.inventory.sort((left, right) => {
+    const leftDefinition = equipmentDefinitionById(left.definitionId)
+    const rightDefinition = equipmentDefinitionById(right.definitionId)
+    const slotDifference = EQUIPMENT_SLOTS.indexOf(leftDefinition?.slot ?? 'token')
+      - EQUIPMENT_SLOTS.indexOf(rightDefinition?.slot ?? 'token')
+    if (slotDifference !== 0) return slotDifference
+    const qualityDifference = EQUIPMENT_QUALITIES.indexOf(right.quality) - EQUIPMENT_QUALITIES.indexOf(left.quality)
+    if (qualityDifference !== 0) return qualityDifference
+    if (left.level !== right.level) return right.level - left.level
+    const definitionDifference = left.definitionId.localeCompare(right.definitionId)
+    return definitionDifference || left.uid.localeCompare(right.uid)
+  })
+  return { ok: true, message: '物品已按部位、品质和等级整理' }
 }
