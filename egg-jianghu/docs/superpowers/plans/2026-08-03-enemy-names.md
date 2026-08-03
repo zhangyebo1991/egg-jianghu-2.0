@@ -388,8 +388,52 @@ Run: `npm run dev`，进入牛家村（world_01）与擂鼓山（world_10）战�
 
 ---
 
+### Task 5: 适配 e2e 悬榜目标名断言
+
+> 执行中发现的设计文档缺口：原以为「e2e 无敌人名字断言」，但 `tests/e2e/mvp.spec.ts:294` 断言悬榜目标名匹配 `/第1关(?:敌手|首领)/`，新命名（目标名变为真实名字）后失效。
+
+**Files:**
+- Modify: `tests/e2e/mvp.spec.ts:294`
+- Test: `tests/e2e/mvp.spec.ts:289-301`（同一用例，重跑验证）
+
+**Interfaces:**
+- Consumes: 敌人命名表（Task 1 产物）—— `prepareQuestBoard('qingfeng_hall', 211)` 仅收录 `world_01_stage_01_normal_1` 与 `world_01_stage_01_boss`，其显示名分别为「村中泼皮」「段天德」。
+
+- [ ] **Step 1: 更新断言**
+
+将 `tests/e2e/mvp.spec.ts:294` 的：
+
+```ts
+  await expect(page.locator('.quest-card p').first()).toContainText(/第1关(?:敌手|首领)/)
+```
+
+改为（覆盖普通与 Boss 两种目标的新名字）：
+
+```ts
+  await expect(page.locator('.quest-card p').first()).toContainText(/^(?:村中泼皮|段天德)$/)
+```
+
+- [ ] **Step 2: 重跑该用例确认通过**
+
+Run: `npx playwright test tests/e2e/mvp.spec.ts -g "势力六格悬榜锁定已接任务并刷新未接任务"`
+Expected: PASS。
+
+- [ ] **Step 3: 重跑全量 e2e 确认无回归**
+
+Run: `npm run test:e2e`
+Expected: 29/29 PASS。
+
+- [ ] **Step 4: 提交**
+
+```bash
+git add egg-jianghu/tests/e2e/mvp.spec.ts
+git commit -m "✅ test(e2e): 适配悬榜目标名新命名断言"
+```
+
+---
+
 ## 自审结果
 
-- **Spec 覆盖**：设计文档的「数据模型」（enemy-names.ts 接口与解析表）→ Task 1；「代码改动」（waves.ts）→ Task 2；「测试调整」（waves.test.ts 断言、validate 校验、pages fixture）→ Task 2/Task 3；「完整验证」→ Task 4。100 个 Boss 名与普通/精英名池全部落在 Task 1 的 `ENEMY_NAMES_BY_WORLD`。
+- **Spec 覆盖**：设计文档的「数据模型」（enemy-names.ts 接口与解析表）→ Task 1；「代码改动」（waves.ts）→ Task 2；「测试调整」（waves.test.ts 断言、validate 校验、pages fixture）→ Task 2/Task 3；「完整验证」→ Task 4；e2e 悬榜目标名断言适配（执行中发现的设计缺口）→ Task 5。100 个 Boss 名与普通/精英名池全部落在 Task 1 的 `ENEMY_NAMES_BY_WORLD`。
 - **占位扫描**：无 TBD/TODO；每个代码步骤均含可直接粘贴的实现。
 - **类型一致性**：`enemyName(worldId, rank, stage, index)` 与 `enemyDisplayName(enemyId)` 在 Task 1 定义、Task 2/3 引用，签名一致；`index` 统一为 1 起始序号（Task 2 传 `index + 1`）。
