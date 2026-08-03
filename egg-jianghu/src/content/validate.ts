@@ -1,4 +1,5 @@
 import { CAREERS } from './careers'
+import { ENEMY_NAMES_BY_WORLD } from './enemy-names'
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
 import { FACTION_MARTIALS } from './martials'
 import { WORLDS } from './worlds'
@@ -40,12 +41,29 @@ export const validateContent = (): string[] => {
       if (world.stageIds.length !== 10) errors.push(`${world.id} 小关数不是 10`)
       if (world.factionIds.length !== 3) errors.push(`${world.id} 势力数不是 3`)
       if (RARITY_BUDGET_BY_WORLD[world.id]?.length !== 8) errors.push(`${world.id} 稀有度预算不是 8`)
+      const names = ENEMY_NAMES_BY_WORLD[world.id]
+      if (!names) {
+        errors.push(`${world.id} 缺少敌人命名表`)
+      } else {
+        if (names.bosses.length !== 10) errors.push(`${world.id} Boss 数不是 10`)
+        if (names.normal.length < 6) errors.push(`${world.id} 普通小怪名少于 6`)
+        if (names.elite.length < 3) errors.push(`${world.id} 精英名少于 3`)
+      }
     } else {
       if (world.stageIds.length !== 0) errors.push(`${world.id} 未开放卷不应有小关`)
       if (world.factionIds.length !== 0) errors.push(`${world.id} 未开放卷不应有势力`)
     }
     for (const id of world.factionIds) {
       if (!factionIds.has(id)) errors.push(`${world.id} 引用了未知势力 ${id}`)
+    }
+  }
+
+  const seenBosses = new Set<string>()
+  for (const world of WORLDS) {
+    if (!world.released) continue
+    for (const boss of ENEMY_NAMES_BY_WORLD[world.id]?.bosses ?? []) {
+      if (seenBosses.has(boss)) errors.push(`Boss 名重复：${boss}`)
+      seenBosses.add(boss)
     }
   }
 

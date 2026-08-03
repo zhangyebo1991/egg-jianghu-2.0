@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialStateV10 } from '../domain/state'
 import { CAREERS } from './careers'
+import { ENEMY_NAMES_BY_WORLD } from './enemy-names'
 import { FACTIONS } from './factions'
 import { FACTION_MARTIALS } from './martials'
 import { validateContent } from './validate'
@@ -60,5 +61,17 @@ describe('首发内容目录', () => {
         `${faction.id}_a2`, `${faction.id}_b2`, `${faction.id}_c2`, `${faction.id}_d2`,
       ])
     }
+  })
+
+  it('每个已开放卷具备完整敌人命名表且 Boss 不重名', () => {
+    for (const world of WORLDS) {
+      if (!world.released) continue
+      const names = ENEMY_NAMES_BY_WORLD[world.id]
+      expect(names).toBeDefined()
+      expect(names!.bosses).toHaveLength(10)
+      expect(names!.normal.length).toBeGreaterThanOrEqual(6)
+      expect(names!.elite.length).toBeGreaterThanOrEqual(3)
+    }
+    expect(validateContent()).toEqual([])
   })
 })
