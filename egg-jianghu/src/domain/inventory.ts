@@ -1,6 +1,5 @@
-import type { EquipmentInstance, GameStateV10 } from './types'
+import type { ActionResult, EquipmentInstance, EquipmentQuality, GameStateV10 } from './types'
 import { EQUIPMENT_QUALITIES, EQUIPMENT_SLOTS, equipmentDefinitionById } from '../content/equipment'
-import type { ActionResult } from './types'
 
 export const INVENTORY_CAPACITY = 300
 
@@ -75,4 +74,24 @@ export const organizeInventory = (state: GameStateV10): ActionResult => {
     return definitionDifference || left.uid.localeCompare(right.uid)
   })
   return { ok: true, message: '物品已按部位、品质和等级整理' }
+}
+
+// 判断装备是否正被某位侠客穿戴
+const isEquipmentEquipped = (state: GameStateV10, uid: string): boolean =>
+  Object.values(state.heroes).some((progress) =>
+    Object.values(progress.equipmentBySlot).includes(uid))
+
+export const discardEquipmentByQuality = (
+  state: GameStateV10,
+  maxQuality: EquipmentQuality,
+): ActionResult => {
+  const maxIndex = EQUIPMENT_QUALITIES.indexOf(maxQuality)
+  const discarded = state.inventory.filter((item) =>
+    EQUIPMENT_QUALITIES.indexOf(item.quality) <= maxIndex
+    && !item.locked
+    && !isEquipmentEquipped(state, item.uid))
+  if (discarded.length === 0) return { ok: false, message: '没有可丢弃的装备' }
+  const removed = new Set(discarded.map((item) => item.uid))
+  state.inventory = state.inventory.filter((item) => !removed.has(item.uid))
+  return { ok: true, message: `已丢弃 ${discarded.length} 件${maxQuality}及以下装备` }
 }
