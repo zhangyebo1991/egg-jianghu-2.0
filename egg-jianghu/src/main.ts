@@ -364,6 +364,7 @@ const heroEquipmentView = (item: EquipmentInstance): HeroesEquipmentView => {
   const baseStatId = definition?.baseStatId ?? 'attack'
   return {
     uid: item.uid,
+    definitionId: item.definitionId,
     name: definition?.name ?? item.definitionId,
     slot,
     slotName: equipmentSlotNames[slot],

@@ -3,9 +3,11 @@ import type { CombatStats } from '../combat/stats'
 import { EQUIPMENT_QUALITIES, type EquipmentSlot } from '../content/equipment'
 import type { HeroAptitudes } from '../content/heroes'
 import type { EquipmentQuality } from '../domain/types'
+import { equipmentIconAsset } from './equipment-icon-assets'
 
 export interface HeroesEquipmentView {
   uid: string
+  definitionId: string
   name: string
   slot: EquipmentSlot
   slotName: string
@@ -81,8 +83,10 @@ const statMarks: Record<string, string> = {
 const renderStat = (label: string, value: string | number): string =>
   `<div class="hero-stat" data-stat-label="${escapeHtml(label)}"><i aria-hidden="true">${statMarks[label] ?? '◇'}</i><dt>${escapeHtml(label)}</dt><dd>${typeof value === 'number' ? formatNumber(value) : escapeHtml(value)}</dd></div>`
 
-const renderEquipmentArt = (slot: EquipmentSlot): string =>
-  `<span class="equipment-art" data-slot-art="${slot}" aria-hidden="true"></span>`
+const renderEquipmentArt = (slot: EquipmentSlot, definitionId?: string): string => {
+  const icon = equipmentIconAsset(slot, definitionId)
+  return `<img class="equipment-art" src="${escapeHtml(icon.url)}" data-slot-art="${slot}" data-icon-source="${icon.source}" alt="" aria-hidden="true" draggable="false">`
+}
 
 const renderHeroStats = (hero: HeroesHeroView): string => {
   const aptitudes = hero.aptitudes
@@ -147,7 +151,7 @@ const renderEquipmentSlots = (hero: HeroesHeroView): string => `<section class="
     return `<article class="hero-equipment-slot${item ? ' equipped' : ''}" data-slot="${slot.id}" ${item ? `data-rarity="${escapeHtml(item.quality)}"` : ''} data-testid="hero-equipment-slot-${slot.id}">
       <span>${escapeHtml(slot.name)}</span>
       <strong>${item ? escapeHtml(item.name) : '未装备'}</strong>
-      ${item ? `<small>${escapeHtml(item.quality)} · Lv.${item.level}</small>${renderEquipmentArt(slot.id)}<button type="button" data-action="equipment-unequip" data-hero-id="${hero.id}" data-slot="${slot.id}">卸下</button>${renderEquipmentTooltip(item)}` : `<small>空</small>${renderEquipmentArt(slot.id)}`}
+      ${item ? `<small>${escapeHtml(item.quality)} · Lv.${item.level}</small>${renderEquipmentArt(slot.id, item.definitionId)}<button type="button" data-action="equipment-unequip" data-hero-id="${hero.id}" data-slot="${slot.id}">卸下</button>${renderEquipmentTooltip(item)}` : `<small>空</small>${renderEquipmentArt(slot.id)}`}
     </article>`
   }).join('')}</div>
 </section>`
@@ -187,7 +191,7 @@ const renderInventoryPanel = (view: HeroesPageViewModel, selected: HeroesHeroVie
       const comparison = selected?.equipmentSlots.find((slot) => slot.id === item.slot)?.equipment ?? null
       const isSelectedHeroEquipment = item.equippedByHeroId === selected?.id
       return `<button type="button" class="hero-inventory-item${isSelectedHeroEquipment ? ' current' : item.equippedByHeroId ? ' occupied' : ''}" data-equipment-uid="${item.uid}" data-rarity="${escapeHtml(item.quality)}" data-testid="hero-inventory-item-${item.uid}" aria-label="查看 ${escapeHtml(item.name)}">
-        <span>${escapeHtml(item.slotName)}</span><strong>${escapeHtml(item.name)}</strong><em>${escapeHtml(item.quality)}</em>${renderEquipmentArt(item.slot)}<small>Lv.${item.level}${isSelectedHeroEquipment ? ' · 已装备' : item.equippedByHeroName ? ` · ${escapeHtml(item.equippedByHeroName)}` : ''}</small>
+        <span>${escapeHtml(item.slotName)}</span><strong>${escapeHtml(item.name)}</strong><em>${escapeHtml(item.quality)}</em>${renderEquipmentArt(item.slot, item.definitionId)}<small>Lv.${item.level}${isSelectedHeroEquipment ? ' · 已装备' : item.equippedByHeroName ? ` · ${escapeHtml(item.equippedByHeroName)}` : ''}</small>
         ${renderEquipmentTooltip(item, comparison?.uid === item.uid ? null : comparison)}
       </button>`
     }).join('') || '<div class="hero-inventory-empty"><strong>暂无符合条件的物品</strong><span>调整筛选条件，或前往江湖战斗获取装备。</span></div>'}</div></div>

@@ -238,7 +238,16 @@ test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => 
 })
 
 test('侠客页展示基础属性与实时战斗属性', async ({ page }) => {
+  await page.setViewportSize({ width: 1676, height: 941 })
   await page.getByTestId('tab-heroes').click()
+
+  const equipmentIcons = page.getByTestId('hero-equipment-slots').locator('img.equipment-art')
+  await expect(equipmentIcons).toHaveCount(7)
+  expect(await equipmentIcons.evaluateAll((icons) => icons.every((icon) => {
+    const image = icon as HTMLImageElement
+    return image.complete && image.naturalWidth === 256 && image.naturalHeight === 256
+      && image.dataset.iconSource === 'slot'
+  }))).toBe(true)
 
   const stats = page.getByTestId('hero-stats')
   await expect(stats).toContainText('基础属性')
@@ -257,6 +266,10 @@ test('侠客页物品栏支持筛选整理、双击或右键装备及同部位�
   const panel = page.getByTestId('hero-inventory-panel')
   await expect(panel).toBeVisible()
   await expect(panel.locator('[data-equipment-uid]')).toHaveCount(2)
+  expect(await panel.locator('img.equipment-art').evaluateAll((icons) => icons.every((icon) => {
+    const image = icon as HTMLImageElement
+    return image.complete && image.naturalWidth === 256 && image.naturalHeight === 256
+  }))).toBe(true)
   const columnOrder = await page.evaluate(() => {
     const roster = document.querySelector('.hero-roster')!.getBoundingClientRect()
     const detail = document.querySelector('.hero-workbench')!.getBoundingClientRect()

@@ -6,14 +6,14 @@ import { renderInventoryPage, type InventoryPageViewModel } from './inventory-pa
 import { renderFormationPage, type FormationPageViewModel } from './formation-page'
 
 const equippedWeapon: HeroesEquipmentView = {
-  uid: 'weapon_old', name: '旧试剑', slot: 'weapon', slotName: '兵刃', level: 2, quality: '良品', locked: false,
+  uid: 'weapon_old', definitionId: 'world_01_weapon', name: '旧试剑', slot: 'weapon', slotName: '兵刃', level: 2, quality: '良品', locked: false,
   equippedByHeroId: 'hero_test', equippedByHeroName: '试剑人',
   baseStat: { name: '外功 / 内功', value: 11, percent: false },
   affixes: [{ name: '外功', value: 4, percent: false }],
 }
 
 const inventoryWeapon: HeroesEquipmentView = {
-  uid: 'weapon_new', name: '新试剑', slot: 'weapon', slotName: '兵刃', level: 5, quality: '上品', locked: true,
+  uid: 'weapon_new', definitionId: 'world_02_weapon', name: '新试剑', slot: 'weapon', slotName: '兵刃', level: 5, quality: '上品', locked: true,
   equippedByHeroId: null, equippedByHeroName: null,
   baseStat: { name: '外功 / 内功', value: 18, percent: false },
   affixes: [{ name: '暴击', value: 5, percent: true }],
@@ -137,7 +137,8 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-testid="hero-equipment-slots"')
     expect(html).toContain('data-testid="hero-equipment-slot-weapon"')
     expect(html).toContain('class="hero-medallion"')
-    expect(html).toContain('data-slot-art="weapon"')
+    expect(html).toContain('data-slot-art="weapon" data-icon-source="slot"')
+    expect(html).toContain('src="/src/assets/equipment/slots/weapon.png"')
     expect(html).toContain('旧试剑')
     expect(html).toContain('data-testid="hero-inventory-panel"')
     expect(html).toContain('data-hero-inventory-filter="slot"')
