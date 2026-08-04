@@ -53,6 +53,8 @@ const heroesFixture = (): HeroesPageViewModel => ({
   inventorySlotFilter: 'all',
   inventoryQualityFilter: 'all',
   inventoryPage: 1,
+  batchDiscardQuality: 'all',
+  batchDiscardConfirm: false,
 })
 
 const factionsFixture = (): FactionsPageViewModel => ({
@@ -156,6 +158,29 @@ describe('version 10 长期循环页面', () => {
     expect(firstPage).toContain('第 1 / 2 页 · 本页 200 件')
     expect(secondPage.match(/data-testid="hero-inventory-item-/g)).toHaveLength(1)
     expect(secondPage).toContain('第 2 / 2 页 · 本页 1 件')
+  })
+
+  it('物品栏提供按稀有度批量丢弃的品质选择与入口', () => {
+    const html = renderHeroesPage(heroesFixture())
+    expect(html).toContain('data-batch-discard-quality')
+    expect(html).toMatch(/data-action="request-batch-discard" disabled/)
+    expect(html).toContain('批量丢弃')
+  })
+
+  it('批量丢弃确认态展示将丢弃件数及跳过条件', () => {
+    const html = renderHeroesPage({
+      ...heroesFixture(),
+      inventoryItems: [
+        { ...inventoryWeapon, locked: false },
+        { ...inventoryWeapon, uid: 'second', locked: false, quality: '良品' },
+      ],
+      batchDiscardQuality: '上品',
+      batchDiscardConfirm: true,
+    })
+    expect(html).toContain('确认丢弃 2 件装备')
+    expect(html).toContain('品质 ≤上品')
+    expect(html).toContain('data-action="confirm-batch-discard"')
+    expect(html).toContain('data-action="cancel-batch-discard"')
   })
 
   it('势力页显示六格悬榜和两条四阶传承', () => {

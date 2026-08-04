@@ -62,6 +62,8 @@ export interface HeroesPageViewModel {
   inventorySlotFilter: EquipmentSlot | 'all'
   inventoryQualityFilter: EquipmentQuality | 'all'
   inventoryPage: number
+  batchDiscardQuality: EquipmentQuality | 'all'
+  batchDiscardConfirm: boolean
 }
 
 const HERO_INVENTORY_PAGE_SIZE = 200
@@ -147,13 +149,30 @@ const renderInventoryPanel = (view: HeroesPageViewModel, selected: HeroesHeroVie
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / HERO_INVENTORY_PAGE_SIZE))
   const page = Math.min(pageCount, Math.max(1, view.inventoryPage))
   const visibleItems = filteredItems.slice((page - 1) * HERO_INVENTORY_PAGE_SIZE, page * HERO_INVENTORY_PAGE_SIZE)
+  const batchDiscardThreshold = view.batchDiscardQuality
+  const batchDiscardCount = batchDiscardThreshold === 'all'
+    ? 0
+    : view.inventoryItems.filter((item) =>
+        EQUIPMENT_QUALITIES.indexOf(item.quality) <= EQUIPMENT_QUALITIES.indexOf(batchDiscardThreshold)
+        && !item.locked
+        && !item.equippedByHeroId).length
   return `<aside class="hero-inventory-panel panel" data-testid="hero-inventory-panel">
     <header><div><small>物品</small><strong>${filteredItems.length} 件</strong></div><span>${view.inventoryItems.length} / ${view.inventoryCapacity}</span></header>
     <div class="hero-inventory-tools">
       <label>部位<select data-hero-inventory-filter="slot"><option value="all">全部部位</option>${selected?.equipmentSlots.map((slot) => `<option value="${slot.id}" ${view.inventorySlotFilter === slot.id ? 'selected' : ''}>${escapeHtml(slot.name)}</option>`).join('') ?? ''}</select></label>
       <label>品质<select data-hero-inventory-filter="quality"><option value="all">全部品质</option>${EQUIPMENT_QUALITIES.map((quality) => `<option value="${quality}" ${view.inventoryQualityFilter === quality ? 'selected' : ''}>${quality}</option>`).join('')}</select></label>
+      <label>丢弃≤<select data-batch-discard-quality><option value="all">选择品质</option>${EQUIPMENT_QUALITIES.map((quality) => `<option value="${quality}" ${view.batchDiscardQuality === quality ? 'selected' : ''}>${quality}</option>`).join('')}</select></label>
       <button type="button" data-action="organize-hero-inventory">整理</button>
+      <button type="button" data-action="request-batch-discard" ${view.batchDiscardQuality === 'all' ? 'disabled' : ''}>批量丢弃</button>
     </div>
+    ${view.batchDiscardConfirm && batchDiscardThreshold !== 'all'
+      ? `<div class="batch-discard-confirm" role="alertdialog" aria-label="确认批量丢弃">
+          <strong>确认丢弃 ${batchDiscardCount} 件装备？</strong>
+          <span>品质 ≤${escapeHtml(batchDiscardThreshold)} · 不含已装备与已锁定</span>
+          <button type="button" class="danger" data-action="confirm-batch-discard" ${batchDiscardCount === 0 ? 'disabled' : ''}>确认丢弃</button>
+          <button type="button" data-action="cancel-batch-discard">取消</button>
+        </div>`
+      : ''}
     <div class="hero-inventory-list">${visibleItems.map((item) => {
       const comparison = selected?.equipmentSlots.find((slot) => slot.id === item.slot)?.equipment ?? null
       const isSelectedHeroEquipment = item.equippedByHeroId === selected?.id
