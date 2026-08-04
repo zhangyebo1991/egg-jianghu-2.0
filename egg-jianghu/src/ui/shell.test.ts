@@ -16,6 +16,9 @@ describe('应用 Shell', () => {
     expect(html).toContain('data-testid="tab-heroes"')
     expect(html).toContain('data-testid="tab-formation"')
     expect(html).toContain('data-testid="tab-inventory"')
+    expect(html).toContain('class="nav-mark"')
+    expect(html).toContain('class="sidebar-landscape"')
+    expect(html).toContain('十万里一剑 · 不负侠者行')
     expect(html).not.toMatch(/tab-factions|tab-city|势力贡献|装备背包|自动存档|resource-strip/)
   })
 

@@ -71,8 +71,18 @@ const HERO_INVENTORY_PAGE_SIZE = 200
 const formatNumber = (value: number): string => Number.isInteger(value) ? String(value) : value.toFixed(1)
 const formatPercent = (value: number): string => `${(value * 100).toFixed(value * 100 % 1 === 0 ? 0 : 1)}%`
 
+const statMarks: Record<string, string> = {
+  臂力: '力', 悟性: '悟', 体魄: '骨', 身法: '身', 定力: '心', 气血: '♥', 真气: '●',
+  初始真气: '✣', 真气回复: '◉', 外功: '剑', 内功: '气', 外防: '盾', 内防: '甲',
+  有效身法: '影', 命中修正: '羽', 闪避: '闪', 控制抗性: '定', 暴击: '暴',
+  暴击倍率: '破', 冷却缩减: '冷', 气机加速: '速', 武势加成: '势', 生存加成: '生', 圆满加成: '圆',
+}
+
 const renderStat = (label: string, value: string | number): string =>
-  `<div class="hero-stat" data-stat-label="${escapeHtml(label)}"><dt>${escapeHtml(label)}</dt><dd>${typeof value === 'number' ? formatNumber(value) : escapeHtml(value)}</dd></div>`
+  `<div class="hero-stat" data-stat-label="${escapeHtml(label)}"><i aria-hidden="true">${statMarks[label] ?? '◇'}</i><dt>${escapeHtml(label)}</dt><dd>${typeof value === 'number' ? formatNumber(value) : escapeHtml(value)}</dd></div>`
+
+const renderEquipmentArt = (slot: EquipmentSlot): string =>
+  `<span class="equipment-art" data-slot-art="${slot}" aria-hidden="true"></span>`
 
 const renderHeroStats = (hero: HeroesHeroView): string => {
   const aptitudes = hero.aptitudes
@@ -121,7 +131,7 @@ const renderEquipmentProperties = (item: HeroesEquipmentView): string => `<dl cl
 </dl>`
 
 const renderEquipmentTooltip = (item: HeroesEquipmentView, comparison: HeroesEquipmentView | null = null): string =>
-  `<div class="equipment-tooltip" role="tooltip">
+  `<div class="equipment-tooltip" role="tooltip" popover="manual">
     <header><span>${escapeHtml(item.slotName)} · Lv.${item.level}</span><strong data-rarity="${escapeHtml(item.quality)}">${escapeHtml(item.name)}</strong><em>${escapeHtml(item.quality)}${item.locked ? ' · 已锁定' : ''}</em></header>
     <div class="equipment-tooltip-columns">
       <section><small>${comparison ? '当前查看' : '装备属性'}</small>${renderEquipmentProperties(item)}</section>
@@ -137,7 +147,7 @@ const renderEquipmentSlots = (hero: HeroesHeroView): string => `<section class="
     return `<article class="hero-equipment-slot${item ? ' equipped' : ''}" data-slot="${slot.id}" ${item ? `data-rarity="${escapeHtml(item.quality)}"` : ''} data-testid="hero-equipment-slot-${slot.id}">
       <span>${escapeHtml(slot.name)}</span>
       <strong>${item ? escapeHtml(item.name) : '未装备'}</strong>
-      ${item ? `<small>${escapeHtml(item.quality)} · Lv.${item.level}</small><button type="button" data-action="equipment-unequip" data-hero-id="${hero.id}" data-slot="${slot.id}">卸下</button>${renderEquipmentTooltip(item)}` : '<small>空</small>'}
+      ${item ? `<small>${escapeHtml(item.quality)} · Lv.${item.level}</small>${renderEquipmentArt(slot.id)}<button type="button" data-action="equipment-unequip" data-hero-id="${hero.id}" data-slot="${slot.id}">卸下</button>${renderEquipmentTooltip(item)}` : `<small>空</small>${renderEquipmentArt(slot.id)}`}
     </article>`
   }).join('')}</div>
 </section>`
@@ -173,14 +183,14 @@ const renderInventoryPanel = (view: HeroesPageViewModel, selected: HeroesHeroVie
           <button type="button" data-action="cancel-batch-discard">取消</button>
         </div>`
       : ''}
-    <div class="hero-inventory-list">${visibleItems.map((item) => {
+    <div class="hero-inventory-viewport"><div class="hero-inventory-list${visibleItems.length > 10 ? ' dense' : ''}">${visibleItems.map((item) => {
       const comparison = selected?.equipmentSlots.find((slot) => slot.id === item.slot)?.equipment ?? null
       const isSelectedHeroEquipment = item.equippedByHeroId === selected?.id
       return `<button type="button" class="hero-inventory-item${isSelectedHeroEquipment ? ' current' : item.equippedByHeroId ? ' occupied' : ''}" data-equipment-uid="${item.uid}" data-rarity="${escapeHtml(item.quality)}" data-testid="hero-inventory-item-${item.uid}" aria-label="查看 ${escapeHtml(item.name)}">
-        <span>${escapeHtml(item.slotName)}</span><strong>${escapeHtml(item.name)}</strong><em>${escapeHtml(item.quality)}</em><small>Lv.${item.level}${isSelectedHeroEquipment ? ' · 已装备' : item.equippedByHeroName ? ` · ${escapeHtml(item.equippedByHeroName)}` : ''}</small>
+        <span>${escapeHtml(item.slotName)}</span><strong>${escapeHtml(item.name)}</strong><em>${escapeHtml(item.quality)}</em>${renderEquipmentArt(item.slot)}<small>Lv.${item.level}${isSelectedHeroEquipment ? ' · 已装备' : item.equippedByHeroName ? ` · ${escapeHtml(item.equippedByHeroName)}` : ''}</small>
         ${renderEquipmentTooltip(item, comparison?.uid === item.uid ? null : comparison)}
       </button>`
-    }).join('') || '<div class="hero-inventory-empty"><strong>暂无符合条件的物品</strong><span>调整筛选条件，或前往江湖战斗获取装备。</span></div>'}</div>
+    }).join('') || '<div class="hero-inventory-empty"><strong>暂无符合条件的物品</strong><span>调整筛选条件，或前往江湖战斗获取装备。</span></div>'}</div></div>
     <nav class="hero-inventory-pagination" aria-label="物品分页">
       <button type="button" data-action="hero-inventory-page" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>上一页</button>
       <div>${Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => `<button type="button" data-action="hero-inventory-page" data-page="${pageNumber}" class="${pageNumber === page ? 'active' : ''}" aria-current="${pageNumber === page ? 'page' : 'false'}">${pageNumber}</button>`).join('')}</div>
@@ -197,22 +207,25 @@ export const renderHeroesPage = (view: HeroesPageViewModel): string => {
     <aside class="hero-roster panel">
       <header><small>已邀侠客</small><strong>${view.heroes.length} 人</strong></header>
       <div class="hero-list">${view.heroes.map((hero) => `<button type="button" data-action="select-hero" data-hero-id="${hero.id}" data-testid="hero-${hero.id}" class="hero-row${hero.id === selected?.id ? ' active' : ''}">
-        <span data-rarity="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span><strong>${escapeHtml(hero.name)}</strong><small>侠客 Lv.${hero.level}</small>
+        <span class="hero-roster-medallion" data-rarity="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span><strong>${escapeHtml(hero.name)}</strong><small>侠客 Lv.${hero.level}</small>${hero.id === selected?.id ? '<em>当前</em>' : ''}
       </button>`).join('')}</div>
+      <div class="hero-roster-landscape" aria-hidden="true"></div>
     </aside>
     <section class="hero-workbench">
       ${selected ? `<section class="hero-detail panel" data-testid="selected-hero">
-        <header><div><small>${escapeHtml(selected.grade)}品侠客</small><h1>${escapeHtml(selected.name)}</h1></div><strong>侠客 Lv.${selected.level}</strong></header>
-        ${renderHeroStats(selected)}
-        ${renderEquipmentSlots(selected)}
-        <div class="career-summary"><span>当前职业</span><strong>${escapeHtml(selected.careerName)}</strong><em>职业 Lv.${selected.careerLevel}</em>
-          <button type="button" data-action="career-perfect" data-hero-id="${selected.id}" data-career-id="${selected.careerId}" ${selected.careerLevel < 20 || selected.careerPerfected ? 'disabled' : ''}>${selected.careerPerfected ? '圆满心得已领悟' : '领悟圆满心得'}</button>
+        <header class="hero-detail-heading"><span class="hero-medallion" aria-hidden="true">${escapeHtml(selected.grade)}</span><div><small>${escapeHtml(selected.grade)}品侠客</small><h1>${escapeHtml(selected.name)}</h1><p>侠客 · 行走江湖</p></div><strong>侠客 Lv.${selected.level}</strong><i aria-hidden="true">侠<br>之<br>道</i></header>
+        <div class="hero-detail-scroll">
+          ${renderHeroStats(selected)}
+          ${renderEquipmentSlots(selected)}
+          <div class="career-summary"><span>当前职业</span><strong>${escapeHtml(selected.careerName)}</strong><em>职业 Lv.${selected.careerLevel}</em>
+            <button type="button" data-action="career-perfect" data-hero-id="${selected.id}" data-career-id="${selected.careerId}" ${selected.careerLevel < 20 || selected.careerPerfected ? 'disabled' : ''}>${selected.careerPerfected ? '圆满心得已领悟' : '领悟圆满心得'}</button>
+          </div>
+          <div class="career-options"><h2>转职与切换</h2>${view.careers.map((career) => `<article><span>${escapeHtml(career.tier)}</span><strong>${escapeHtml(career.name)}</strong><small>${career.owned ? '已解锁' : career.tokenOwned ? '信物已备' : '缺少信物'}</small><button type="button" data-action="career-change" data-hero-id="${selected.id}" data-career-id="${career.id}">${career.owned ? '切换' : '转职'}</button></article>`).join('')}</div>
+          <div class="martial-workbench"><h2>四槽武功 · 优先级</h2><div class="martial-slots">${selected.equippedMartialIds.map((martialId, slot) => `<article data-testid="martial-slot-${slot + 1}"><span>${slot + 1}</span><strong>${escapeHtml(view.martials.find((item) => item.id === martialId)?.name ?? '空槽')}</strong>${martialId ? `<button type="button" data-action="martial-unequip" data-hero-id="${selected.id}" data-slot="${slot}">卸下</button>` : ''}</article>`).join('')}</div>
+            <div class="learned-martials">${selected.learnedMartials.map((martial) => `<article data-rarity="${escapeHtml(martial.rarity)}"><div><strong>${escapeHtml(martial.name)}</strong><small>${escapeHtml(martial.rarity)} · Lv.${martial.level}</small></div><button type="button" data-action="martial-upgrade" data-hero-id="${selected.id}" data-martial-id="${martial.id}">升级</button>${[0, 1, 2, 3].map((slot) => `<button type="button" data-action="martial-equip" data-hero-id="${selected.id}" data-martial-id="${martial.id}" data-slot="${slot}">槽 ${slot + 1}</button>`).join('')}<button type="button" data-action="martial-forget" data-hero-id="${selected.id}" data-martial-id="${martial.id}">遗忘返还 80%</button></article>`).join('') || '<p>尚未学会武功</p>'}</div>
+          </div>
+          <div class="heart-methods"><h2>主修心法</h2>${view.heartMethods.map((method) => `<button type="button" data-action="heart-method-equip" data-hero-id="${selected.id}" data-heart-method-id="${method.id}" class="${method.equipped ? 'active' : ''}">${escapeHtml(method.name)}</button>`).join('') || '<span>尚无可用心法</span>'}</div>
         </div>
-        <div class="career-options"><h2>转职与切换</h2>${view.careers.map((career) => `<article><span>${escapeHtml(career.tier)}</span><strong>${escapeHtml(career.name)}</strong><small>${career.owned ? '已解锁' : career.tokenOwned ? '信物已备' : '缺少信物'}</small><button type="button" data-action="career-change" data-hero-id="${selected.id}" data-career-id="${career.id}">${career.owned ? '切换' : '转职'}</button></article>`).join('')}</div>
-        <div class="martial-workbench"><h2>四槽武功 · 优先级</h2><div class="martial-slots">${selected.equippedMartialIds.map((martialId, slot) => `<article data-testid="martial-slot-${slot + 1}"><span>${slot + 1}</span><strong>${escapeHtml(view.martials.find((item) => item.id === martialId)?.name ?? '空槽')}</strong>${martialId ? `<button type="button" data-action="martial-unequip" data-hero-id="${selected.id}" data-slot="${slot}">卸下</button>` : ''}</article>`).join('')}</div>
-          <div class="learned-martials">${selected.learnedMartials.map((martial) => `<article data-rarity="${escapeHtml(martial.rarity)}"><div><strong>${escapeHtml(martial.name)}</strong><small>${escapeHtml(martial.rarity)} · Lv.${martial.level}</small></div><button type="button" data-action="martial-upgrade" data-hero-id="${selected.id}" data-martial-id="${martial.id}">升级</button>${[0, 1, 2, 3].map((slot) => `<button type="button" data-action="martial-equip" data-hero-id="${selected.id}" data-martial-id="${martial.id}" data-slot="${slot}">槽 ${slot + 1}</button>`).join('')}<button type="button" data-action="martial-forget" data-hero-id="${selected.id}" data-martial-id="${martial.id}">遗忘返还 80%</button></article>`).join('') || '<p>尚未学会武功</p>'}</div>
-        </div>
-        <div class="heart-methods"><h2>主修心法</h2>${view.heartMethods.map((method) => `<button type="button" data-action="heart-method-equip" data-hero-id="${selected.id}" data-heart-method-id="${method.id}" class="${method.equipped ? 'active' : ''}">${escapeHtml(method.name)}</button>`).join('') || '<span>尚无可用心法</span>'}</div>
       </section>` : '<section class="hero-detail panel"><strong>尚无侠客</strong><span>前往城市酒馆直接邀请。</span></section>'}
     </section>
     ${renderInventoryPanel(view, selected)}

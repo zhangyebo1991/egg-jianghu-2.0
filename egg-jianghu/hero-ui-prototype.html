@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:," />
+  <title>蛋蛋江湖 2.0 · 侠客高保真原型</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink-950: #070b09;
+      --ink-900: #0b100d;
+      --ink-850: #0f1612;
+      --ink-800: #131b16;
+      --ink-750: #18211b;
+      --ink-700: #1e2921;
+      --paper: #e7ddbd;
+      --paper-muted: #978f76;
+      --gold: #c1a46b;
+      --gold-bright: #e2c788;
+      --gold-deep: #6f5a35;
+      --line: rgba(193, 164, 107, 0.32);
+      --line-soft: rgba(193, 164, 107, 0.16);
+      --jade: #6c9981;
+      --cinnabar: #9c3f2e;
+      --purple: #8d5aa0;
+      --blue: #3f7498;
+      --shadow: rgba(0, 0, 0, 0.55);
+      --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+      --sans: "Microsoft YaHei UI", "PingFang SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; min-width: 1360px; min-height: 760px; width: 100%; height: 100%; }
+
+    body {
+      overflow: hidden;
+      color: var(--paper);
+      font-family: var(--serif);
+      background:
+        radial-gradient(circle at 70% 18%, rgba(71, 90, 74, 0.12), transparent 36%),
+        radial-gradient(circle at 18% 80%, rgba(99, 78, 45, 0.1), transparent 28%),
+        linear-gradient(135deg, #070a08 0%, #0c120f 48%, #070b09 100%);
+    }
+
+    button, select { font: inherit; }
+    button { color: inherit; }
+
+    .svg-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+    .app-shell {
+      position: relative;
+      display: grid;
+      grid-template-columns: 176px 226px 548px minmax(610px, 1fr);
+      gap: 12px;
+      width: 100vw;
+      height: 100vh;
+      min-height: 760px;
+      padding-right: 12px;
+      isolation: isolate;
+    }
+
+    .app-shell::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      opacity: 0.22;
+      background-image:
+        linear-gradient(90deg, transparent 49.8%, rgba(255,255,255,.02) 50%, transparent 50.2%),
+        linear-gradient(0deg, transparent 49.8%, rgba(255,255,255,.014) 50%, transparent 50.2%);
+      background-size: 64px 64px;
+      pointer-events: none;
+    }
+
+    .app-shell::after {
+      content: "";
+      position: fixed;
+      left: 35%; right: 0; bottom: -10%; height: 48%;
+      z-index: -1;
+      opacity: 0.17;
+      background:
+        linear-gradient(145deg, transparent 28%, #294034 28.3% 29%, transparent 29.2%) 0 100% / 32% 100% no-repeat,
+        linear-gradient(35deg, transparent 35%, #1e3329 35.3% 38%, transparent 38.3%) 25% 100% / 45% 95% no-repeat,
+        linear-gradient(145deg, transparent 38%, #233a2f 38.3% 42%, transparent 42.3%) 60% 100% / 55% 90% no-repeat;
+      filter: blur(1px);
+      pointer-events: none;
+    }
+
+    .panel {
+      position: relative;
+      min-width: 0;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.018), transparent 18%),
+        linear-gradient(180deg, rgba(20, 29, 24, .96), rgba(10, 16, 13, .97));
+      border: 1px solid var(--line);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.45), 0 15px 35px rgba(0,0,0,.22);
+    }
+
+    .panel::before,
+    .panel::after {
+      content: "";
+      position: absolute;
+      z-index: 4;
+      width: 12px;
+      height: 12px;
+      pointer-events: none;
+    }
+
+    .panel::before {
+      left: 3px; top: 3px;
+      border-left: 1px solid var(--gold);
+      border-top: 1px solid var(--gold);
+    }
+
+    .panel::after {
+      right: 3px; bottom: 3px;
+      border-right: 1px solid var(--gold);
+      border-bottom: 1px solid var(--gold);
+    }
+
+    .eyebrow {
+      color: #8d8367;
+      font-family: var(--sans);
+      font-size: 10px;
+      letter-spacing: .14em;
+    }
+
+    .left-rail {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-height: 760px;
+      overflow: hidden;
+      border-right: 1px solid rgba(193,164,107,.28);
+      background:
+        linear-gradient(180deg, rgba(10,15,12,.96), rgba(8,13,11,.88)),
+        radial-gradient(circle at 50% 30%, rgba(81,107,87,.14), transparent 45%);
+    }
+
+    .left-rail::after {
+      content: "";
+      position: absolute;
+      left: -20px; right: -30px; bottom: 42px; height: 270px;
+      opacity: .32;
+      background:
+        radial-gradient(ellipse at 26% 78%, rgba(194,166,104,.32) 0 1px, transparent 2px),
+        linear-gradient(145deg, transparent 49%, #21352c 49.4% 59%, transparent 59.4%) 0 70px / 110px 180px no-repeat,
+        linear-gradient(35deg, transparent 46%, #182a22 46.4% 60%, transparent 60.4%) 45px 40px / 155px 210px no-repeat;
+      filter: drop-shadow(0 -12px 16px rgba(19,35,28,.7));
+      pointer-events: none;
+    }
+
+    .brand {
+      position: relative;
+      z-index: 2;
+      min-height: 90px;
+      padding: 18px 4px 12px 52px;
+      border-bottom: 1px solid rgba(193,164,107,.09);
+    }
+
+    .brand-seal {
+      position: absolute;
+      left: 14px; top: 18px;
+      display: grid;
+      place-items: center;
+      width: 31px; height: 31px;
+      color: #f0d7a3;
+      font-weight: 800;
+      border: 1px solid #b76a50;
+      outline: 1px solid rgba(183,106,80,.42);
+      outline-offset: 2px;
+      background: #60261f;
+      box-shadow: inset 0 0 11px rgba(255,176,114,.13);
+    }
+
+    .brand h1 {
+      margin: 0;
+      color: #efe3c4;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      text-shadow: 0 2px 10px #000;
+      white-space: nowrap;
+    }
+
+    .brand p {
+      margin: 6px 0 0;
+      color: #776e59;
+      font-size: 9px;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .main-nav {
+      position: relative;
+      z-index: 3;
+      display: grid;
+      gap: 5px;
+      padding: 22px 10px;
+    }
+
+    .nav-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      align-items: center;
+      min-height: 58px;
+      padding: 0 11px;
+      color: #c9bea0;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-align: left;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: color .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .nav-item:hover { color: #f0dfb6; background: rgba(179,151,91,.06); }
+
+    .nav-item.active {
+      color: #f4e4b9;
+      border-color: rgba(193,164,107,.38);
+      background:
+        linear-gradient(90deg, rgba(193,164,107,.16), transparent 90%),
+        rgba(35,42,34,.72);
+      box-shadow: inset 3px 0 0 rgba(211,175,102,.8);
+    }
+
+    .nav-item.active::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--gold-bright);
+      box-shadow: 0 0 8px var(--gold-bright);
+    }
+
+    .nav-icon {
+      display: grid;
+      place-items: center;
+      width: 27px; height: 27px;
+      color: #aa9870;
+      font-size: 13px;
+      border: 1px solid rgba(193,164,107,.28);
+      border-radius: 50%;
+      background: rgba(16,23,19,.75);
+    }
+
+    .nav-item.active .nav-icon {
+      color: #f0d9a0;
+      border-color: rgba(223,190,119,.72);
+      background: rgba(95,77,42,.38);
+      box-shadow: 0 0 18px rgba(205,164,83,.18);
+    }
+
+    .rail-footer {
+      position: relative;
+      z-index: 3;
+      margin-top: auto;
+      padding: 0 0 28px;
+      color: #665d4a;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-align: center;
+    }
+
+    .rail-lantern {
+      position: absolute;
+      z-index: 2;
+      left: 28px; bottom: 36px;
+      width: 26px; height: 38px;
+      border: 1px solid #715c38;
+      background: radial-gradient(circle, rgba(231,190,111,.8), rgba(121,86,42,.34) 42%, transparent 68%);
+      box-shadow: 0 0 24px rgba(203,158,79,.22);
+      transform: skewY(-3deg);
+    }
+
+    .roster,
+    .hero-detail,
+    .inventory { margin: 8px 0; height: calc(100vh - 16px); min-height: 744px; }
+
+    .roster {
+      overflow: hidden;
+      padding: 18px 12px;
+    }
+
+    .roster-header,
+    .inventory-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      min-height: 46px;
+      padding: 0 3px 13px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .roster-header strong,
+    .inventory-header strong {
+      color: #eee0bb;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .hero-list { padding-top: 12px; }
+
+    .hero-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 46px 1fr auto;
+      grid-template-rows: 1fr 1fr;
+      align-items: center;
+      width: 100%;
+      min-height: 76px;
+      padding: 10px;
+      color: var(--paper);
+      text-align: left;
+      border: 1px solid rgba(193,164,107,.24);
+      border-radius: 2px;
+      background: rgba(28,38,31,.78);
+      cursor: pointer;
+    }
+
+    .hero-row.active {
+      border-color: #b89551;
+      background: linear-gradient(100deg, rgba(90,77,47,.32), rgba(25,34,29,.88));
+      box-shadow: inset 0 0 0 1px rgba(224,194,126,.12), 0 0 18px rgba(0,0,0,.2);
+    }
+
+    .hero-row .portrait {
+      grid-row: 1 / span 2;
+      display: grid;
+      place-items: center;
+      width: 38px; height: 38px;
+      color: #ead7a8;
+      font-size: 22px;
+      font-weight: 800;
+      border: 1px solid #8d7444;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 34%, #4c432d, #171d18 68%);
+      box-shadow: inset 0 0 0 4px rgba(0,0,0,.32), 0 0 0 1px rgba(208,173,102,.16);
+    }
+
+    .hero-row strong { align-self: end; font-size: 16px; }
+    .hero-row small { align-self: start; color: #8e856e; font-size: 10px; font-family: var(--sans); }
+    .hero-row em { align-self: start; color: #9c875c; font-size: 9px; font-style: normal; }
+    .hero-row .current { position: absolute; top: 0; right: 0; padding: 3px 7px; color: #f0daa5; font-size: 9px; background: #766039; }
+
+    .roster-mountains {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 50%;
+      opacity: .26;
+      background:
+        linear-gradient(145deg, transparent 48%, #345143 48.4% 58%, transparent 58.4%) -40px 100% / 180px 280px no-repeat,
+        linear-gradient(35deg, transparent 49%, #284438 49.4% 60%, transparent 60.4%) 20px 100% / 250px 330px no-repeat;
+      pointer-events: none;
+    }
+
+    .hero-detail {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .hero-head {
+      position: relative;
+      display: grid;
+      grid-template-columns: 78px 1fr auto;
+      align-items: center;
+      flex: 0 0 116px;
+      padding: 15px 20px 13px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(100,86,51,.12), transparent 48%),
+        radial-gradient(ellipse at 80% 100%, rgba(81,107,87,.15), transparent 50%);
+    }
+
+    .hero-head::after {
+      content: "";
+      position: absolute;
+      right: 34px; bottom: 8px;
+      width: 175px; height: 58px;
+      opacity: .22;
+      background:
+        linear-gradient(150deg, transparent 49%, #667b67 49.5% 55%, transparent 55.5%) 0 100% / 110px 56px no-repeat,
+        linear-gradient(30deg, transparent 45%, #536c59 45.5% 55%, transparent 55.5%) 48px 100% / 120px 45px no-repeat;
+      pointer-events: none;
+    }
+
+    .hero-medallion {
+      display: grid;
+      place-items: center;
+      width: 62px; height: 62px;
+      color: #f0ddad;
+      font-size: 31px;
+      font-weight: 800;
+      border: 2px solid #8b7447;
+      border-radius: 50%;
+      outline: 1px solid #4f432c;
+      outline-offset: 4px;
+      background: radial-gradient(circle at 42% 34%, #423a27 0, #141b17 66%);
+      box-shadow: inset 0 0 0 5px rgba(0,0,0,.3), 0 7px 16px rgba(0,0,0,.34);
+    }
+
+    .hero-name { position: relative; z-index: 1; }
+    .hero-name h2 { margin: 0; color: #f4e7c7; font-size: 34px; font-weight: 700; line-height: 1; letter-spacing: .04em; }
+    .hero-name p { margin: 8px 0 0; color: #9b8b69; font-family: var(--sans); font-size: 11px; }
+    .hero-name .dot { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-right: 5px; color: #1a211b; border-radius: 50%; background: var(--gold); }
+
+    .red-seal {
+      position: relative;
+      z-index: 1;
+      align-self: start;
+      display: grid;
+      place-items: center;
+      width: 24px; height: 35px;
+      color: #bb6650;
+      font-size: 8px;
+      line-height: 1.15;
+      border: 1px solid #743327;
+      background: rgba(61,25,21,.55);
+    }
+
+    .detail-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #5f5235 transparent;
+      padding: 12px 16px 16px;
+    }
+
+    .section { margin-bottom: 12px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      height: 22px;
+      margin-bottom: 8px;
+    }
+
+    .section-title h3 { margin: 0; color: #d7c295; font-size: 15px; letter-spacing: .06em; }
+    .section-title .rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+    .section-title small { color: #6f6c59; font: 9px var(--sans); }
+
+    .stat-grid { display: grid; gap: 5px; }
+    .stat-grid.base { grid-template-columns: repeat(5, 1fr); }
+    .stat-grid.combat { grid-template-columns: repeat(5, 1fr); }
+
+    .stat {
+      position: relative;
+      min-height: 49px;
+      padding: 7px 7px 6px 34px;
+      border: 1px solid rgba(193,164,107,.17);
+      background: linear-gradient(135deg, rgba(45,57,47,.72), rgba(24,32,27,.74));
+    }
+
+    .stat-icon {
+      position: absolute;
+      left: 9px; top: 50%;
+      width: 16px; height: 16px;
+      color: #a78e5d;
+      line-height: 16px;
+      text-align: center;
+      transform: translateY(-50%);
+      opacity: .88;
+    }
+
+    .stat span { display: block; color: #8d866f; font: 9px var(--sans); white-space: nowrap; }
+    .stat strong { display: block; margin-top: 2px; color: #efe2c4; font-size: 15px; line-height: 1; }
+
+    .equipment-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .equip-card,
+    .inventory-card {
+      position: relative;
+      overflow: visible;
+      text-align: left;
+      border: 1px solid var(--purple);
+      background:
+        radial-gradient(circle at 50% 36%, rgba(110,87,114,.16), transparent 38%),
+        linear-gradient(180deg, #1c2520, #111713);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .equip-card[data-rarity="凡品"], .inventory-card[data-rarity="凡品"] { border-color: var(--blue); }
+    .equip-card:hover, .inventory-card:hover, .inventory-card.selected {
+      z-index: 8;
+      transform: translateY(-2px);
+      border-color: #d4b46e;
+      box-shadow: 0 8px 20px rgba(0,0,0,.4), inset 0 0 16px rgba(207,172,97,.06);
+    }
+
+    .equip-card { min-width: 0; height: 129px; padding: 6px 6px 5px; }
+    .equip-card .slot, .inventory-card .slot { color: #9270a1; font: 9px var(--sans); }
+    .equip-card[data-rarity="凡品"] .slot, .inventory-card[data-rarity="凡品"] .slot { color: #5f92b0; }
+    .equip-card strong, .inventory-card strong { display: block; overflow: hidden; margin-top: 3px; color: #eee1c2; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+    .equip-card small, .inventory-card small { display: block; color: #8d6d9a; font: 8px var(--sans); }
+    .equip-card[data-rarity="凡品"] small, .inventory-card[data-rarity="凡品"] small { color: #527f9e; }
+
+    .item-art {
+      display: block;
+      width: 50px; height: 50px;
+      margin: 2px auto 0;
+      color: #b8a271;
+      filter: drop-shadow(0 4px 3px rgba(0,0,0,.52));
+    }
+
+    .equip-card .unequip {
+      position: absolute;
+      left: 5px; right: 5px; bottom: 5px;
+      height: 20px;
+      color: #d4c39d;
+      font-size: 9px;
+      border: 1px solid rgba(193,164,107,.31);
+      background: rgba(46,54,43,.55);
+      cursor: pointer;
+    }
+
+    .equip-card .unequip:hover { color: #fff1cd; border-color: #b99a5c; background: rgba(93,75,43,.42); }
+
+    .career-banner {
+      position: relative;
+      display: grid;
+      grid-template-columns: 80px 1fr auto auto;
+      align-items: center;
+      min-height: 58px;
+      padding: 8px 10px 8px 14px;
+      border-left: 3px solid #c9a455;
+      border-top: 1px solid var(--line-soft);
+      border-bottom: 1px solid var(--line-soft);
+      background:
+        linear-gradient(90deg, rgba(130,105,59,.18), transparent 58%),
+        rgba(33,42,34,.76);
+      overflow: hidden;
+    }
+
+    .career-banner::before {
+      content: "";
+      position: absolute;
+      left: 82px; top: -16px;
+      width: 150px; height: 90px;
+      opacity: .16;
+      background: linear-gradient(150deg, transparent 45%, #d7bd80 46% 47%, transparent 48%);
+      transform: rotate(-4deg);
+    }
+
+    .career-banner span { color: #887f69; font: 10px var(--sans); }
+    .career-banner strong { position: relative; color: #f0dda9; font-size: 22px; }
+    .career-banner em { color: #a49572; font: normal 10px var(--sans); }
+
+    .ghost-button,
+    .career-row button,
+    .tool-button,
+    .pagination button {
+      min-height: 28px;
+      padding: 0 10px;
+      color: #d4c39c;
+      border: 1px solid rgba(193,164,107,.3);
+      border-radius: 2px;
+      background: linear-gradient(180deg, rgba(43,52,42,.9), rgba(24,31,26,.9));
+      cursor: pointer;
+    }
+
+    .ghost-button:hover,
+    .career-row button:hover,
+    .tool-button:hover,
+    .pagination button:hover:not(:disabled) { color: #f5e4ba; border-color: #a98b50; }
+
+    .ghost-button:disabled { color: #625e50; cursor: not-allowed; }
+
+    .career-list { display: grid; gap: 6px; }
+    .career-row {
+      display: grid;
+      grid-template-columns: 42px 1fr auto 70px;
+      align-items: center;
+      min-height: 43px;
+      padding: 4px 8px 4px 12px;
+      border: 1px solid var(--line-soft);
+      background: rgba(30,39,32,.68);
+    }
+    .career-row span { color: #e1d09f; font-size: 16px; }
+    .career-row strong { color: #eaddb9; font-size: 16px; }
+    .career-row small { color: #786f59; font: 9px var(--sans); }
+    .career-row button { min-height: 26px; }
+
+    .inventory {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 18px 14px 14px;
+    }
+
+    .inventory-header { flex: 0 0 46px; }
+    .inventory-title { display: flex; align-items: baseline; gap: 15px; }
+    .inventory-header .capacity { color: #77725f; font: 10px var(--sans); }
+    .inventory-header .capacity b { color: #7d9c77; font-weight: 400; }
+
+    .inventory-tools {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto auto;
+      gap: 9px;
+      flex: 0 0 58px;
+      align-items: end;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .filter label { display: block; margin-bottom: 4px; color: #77715f; font: 8px var(--sans); }
+    .filter select {
+      width: 100%;
+      height: 30px;
+      padding: 0 9px;
+      color: #302c24;
+      font-family: var(--serif);
+      font-size: 11px;
+      border: 1px solid #b5ac98;
+      border-radius: 2px;
+      background: #d8d3c5;
+      outline: none;
+    }
+
+    .tool-button { height: 30px; padding: 0 9px; font-size: 10px; white-space: nowrap; }
+    .tool-button.danger { color: #d3b78c; }
+
+    .confirm-strip {
+      display: none;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      margin-top: 7px;
+      padding: 7px 10px;
+      border: 1px solid rgba(159,65,48,.48);
+      background: rgba(76,30,24,.46);
+    }
+    .confirm-strip.visible { display: grid; }
+    .confirm-strip span { color: #d5b18b; font: 10px var(--sans); }
+    .confirm-strip button { min-height: 25px; padding: 0 10px; border: 1px solid rgba(193,164,107,.28); background: #252d25; color: #d8c39a; cursor: pointer; }
+    .confirm-strip .confirm { border-color: rgba(179,75,54,.7); background: #57291f; }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(76px, 1fr));
+      gap: 7px;
+      flex: 0 0 auto;
+      padding: 9px 0 0;
+    }
+
+    .inventory-card { min-width: 0; height: 174px; padding: 9px 8px; }
+    .inventory-card .item-art { width: 84px; max-width: 90%; height: 88px; margin-top: 2px; }
+    .inventory-card small { margin-top: 4px; }
+    .inventory-card .equipped { position: absolute; left: 8px; bottom: 7px; color: #8d8269; font: 8px var(--sans); }
+
+    .inventory-space {
+      position: relative;
+      flex: 1;
+      min-height: 90px;
+      overflow: hidden;
+    }
+
+    .inventory-space::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -58px;
+      height: 210px;
+      opacity: .12;
+      background:
+        linear-gradient(145deg, transparent 48%, #4f6b58 48.4% 60%, transparent 60.4%) 5% 100% / 34% 100% no-repeat,
+        linear-gradient(35deg, transparent 46%, #415c4d 46.4% 60%, transparent 60.4%) 35% 100% / 42% 92% no-repeat,
+        linear-gradient(145deg, transparent 49%, #496451 49.4% 58%, transparent 58.4%) 80% 100% / 35% 90% no-repeat;
+      filter: blur(.4px);
+    }
+
+    .inventory-footer {
+      flex: 0 0 76px;
+      padding-top: 9px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .pagination {
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+    }
+    .pagination button { min-height: 27px; font-size: 10px; }
+    .pagination button:disabled { opacity: .35; cursor: default; }
+    .pagination .page-active { min-width: 30px; color: #d9c28e; border-color: #a58b57; background: #27382d; }
+    .pagination span { color: #756f5c; font: 9px var(--sans); text-align: right; }
+    .inventory-hint { margin: 11px 0 0; color: #6d6958; font: 9px var(--sans); text-align: center; letter-spacing: .12em; }
+
+    .hover-tip {
+      position: fixed;
+      z-index: 99;
+      display: none;
+      width: 218px;
+      padding: 12px;
+      color: #d9cdae;
+      border: 1px solid #8c7345;
+      background: rgba(9,14,11,.98);
+      box-shadow: 0 14px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(218,187,120,.07);
+      pointer-events: none;
+    }
+    .hover-tip.visible { display: block; }
+    .hover-tip small { color: #7d755f; font: 9px var(--sans); }
+    .hover-tip strong { display: block; margin: 4px 0 8px; color: #ecd8a7; font-size: 15px; }
+    .hover-tip dl { display: grid; gap: 4px; margin: 0; }
+    .hover-tip dl div { display: flex; justify-content: space-between; font: 10px var(--sans); }
+    .hover-tip dt { color: #8e856d; }
+    .hover-tip dd { margin: 0; color: #d4be8e; }
+
+    .toast {
+      position: fixed;
+      z-index: 120;
+      left: 50%; bottom: 28px;
+      padding: 9px 18px;
+      color: #e9d8ae;
+      font: 11px var(--sans);
+      border: 1px solid rgba(193,164,107,.48);
+      background: rgba(14,21,17,.95);
+      box-shadow: 0 10px 30px rgba(0,0,0,.45);
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+    }
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-height: 850px) {
+      .hero-head { flex-basis: 98px; }
+      .hero-medallion { width: 54px; height: 54px; font-size: 27px; }
+      .hero-name h2 { font-size: 29px; }
+      .stat { min-height: 43px; padding-top: 5px; padding-bottom: 5px; }
+      .equip-card { height: 116px; }
+      .item-art { width: 43px; height: 43px; }
+      .career-banner { min-height: 50px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="item-sword" viewBox="0 0 100 100">
+      <path d="M70 11l9 9-42 52-8-8z" fill="#c9c2ad" stroke="#6b6251" stroke-width="2"/>
+      <path d="M77 8l8 8-7 7-8-8z" fill="#8e7650"/>
+      <path d="M24 63l16 16-7 7-16-16z" fill="#a48854" stroke="#54452f" stroke-width="2"/>
+      <path d="M34 79l-11 12-6-6 12-11z" fill="#665137"/>
+      <path d="M61 24L37 62" stroke="#f6eedb" stroke-width="2" opacity=".75"/>
+    </symbol>
+    <symbol id="item-hat" viewBox="0 0 100 100">
+      <path d="M15 67c8-18 62-21 73 0-12 13-59 16-73 0z" fill="#8b6841" stroke="#c2a36c" stroke-width="2"/>
+      <path d="M37 62c2-26 25-35 34 0" fill="#6f563a" stroke="#a78a59" stroke-width="2"/>
+      <path d="M48 30l12-8 11 9-4 7-17-1z" fill="#947449"/>
+      <path d="M22 68c18 5 44 5 60-2" fill="none" stroke="#d5bd82" stroke-width="2" opacity=".7"/>
+    </symbol>
+    <symbol id="item-robe" viewBox="0 0 100 100">
+      <path d="M34 18l16 8 16-8 21 18-12 18-9-7 6 39H28l7-39-10 7-11-18z" fill="#8e9282" stroke="#c0b592" stroke-width="2"/>
+      <path d="M40 21l10 27 12-27M50 48v37" fill="none" stroke="#4c554d" stroke-width="3"/>
+      <path d="M31 64h38" stroke="#b19a66" stroke-width="4"/>
+    </symbol>
+    <symbol id="item-bracer" viewBox="0 0 100 100">
+      <path d="M33 18l31 8 5 56-39-2z" fill="#72533b" stroke="#b38c59" stroke-width="2"/>
+      <path d="M35 32l30 7M33 48l34 8M31 65l37 6" stroke="#c39b62" stroke-width="3" opacity=".68"/>
+      <path d="M43 24l5 55M57 26l-1 54" stroke="#392c23" stroke-width="2"/>
+    </symbol>
+    <symbol id="item-belt" viewBox="0 0 100 100">
+      <path d="M18 43c19-12 46-11 66 1l-8 20c-18-7-38-7-54 0z" fill="#684a31" stroke="#af8a56" stroke-width="2"/>
+      <path d="M43 40h19v27H43z" fill="#a88752" stroke="#d1b879" stroke-width="2"/>
+      <path d="M49 47h7v12h-7z" fill="#3a3024"/>
+      <path d="M24 48c9-4 15-5 20-5M62 43c6 0 11 2 17 5" stroke="#c4a56b" stroke-width="2"/>
+    </symbol>
+    <symbol id="item-boots" viewBox="0 0 100 100">
+      <path d="M27 17h22l-1 47c-3 8-15 14-31 13l-5-9 15-12z" fill="#54483a" stroke="#9b8460" stroke-width="2"/>
+      <path d="M56 17h21l3 48c3 7 10 12 14 15-14 7-32 2-36-9z" fill="#665547" stroke="#9b8460" stroke-width="2"/>
+      <path d="M27 29h21M58 30h20M26 48h22M59 49h20" stroke="#b09366" stroke-width="2"/>
+    </symbol>
+    <symbol id="item-jade" viewBox="0 0 100 100">
+      <path d="M50 13c22 0 34 18 29 39-5 21-18 32-29 36-14-4-27-19-29-38-2-20 9-37 29-37z" fill="#7fa091" stroke="#d2bc79" stroke-width="3"/>
+      <path d="M50 28c12 0 18 9 17 21-1 13-8 21-17 25-9-3-17-13-18-25-1-12 6-21 18-21z" fill="#b7c8b6" stroke="#526f64" stroke-width="2"/>
+      <path d="M43 8h14l5 8-12 11-12-11z" fill="#a98950"/>
+      <path d="M43 43c13-9 22 3 12 11-7 6-17 0-12-11z" fill="none" stroke="#789889" stroke-width="3"/>
+    </symbol>
+  </svg>
+
+  <main class="app-shell">
+    <aside class="left-rail" aria-label="主导航">
+      <header class="brand">
+        <div class="brand-seal">蛋</div>
+        <h1>蛋蛋江湖 2.0</h1>
+        <p>十万里一剑 · 不负侠者行</p>
+      </header>
+      <nav class="main-nav">
+        <button class="nav-item" type="button"><span class="nav-icon">邑</span><span>江湖</span></button>
+        <button class="nav-item active" type="button"><span class="nav-icon">侠</span><span>侠客</span></button>
+        <button class="nav-item" type="button"><span class="nav-icon">阵</span><span>阵容</span></button>
+        <button class="nav-item" type="button"><span class="nav-icon">囊</span><span>背包</span></button>
+      </nav>
+      <div class="rail-lantern" aria-hidden="true"></div>
+      <footer class="rail-footer">朝悟道 · 暮练剑</footer>
+    </aside>
+
+    <aside class="roster panel">
+      <header class="roster-header">
+        <span class="eyebrow">已邀侠客</span>
+        <strong>1 人</strong>
+      </header>
+      <div class="hero-list">
+        <button class="hero-row active" type="button">
+          <span class="portrait">丙</span>
+          <strong>123</strong>
+          <em>当前</em>
+          <small>侠客 Lv.11</small>
+          <span class="current">当前</span>
+        </button>
+      </div>
+      <div class="roster-mountains" aria-hidden="true"></div>
+    </aside>
+
+    <section class="hero-detail panel" aria-label="侠客详情">
+      <header class="hero-head">
+        <div class="hero-medallion">丙</div>
+        <div class="hero-name">
+          <h2>123</h2>
+          <p><span class="dot">侠</span>侠客&nbsp; Lv.11</p>
+        </div>
+        <div class="red-seal">侠<br>之<br>道</div>
+      </header>
+
+      <div class="detail-scroll">
+        <section class="section">
+          <header class="section-title"><h3>基础属性</h3><span class="rule"></span><small>先天资质 ◇</small></header>
+          <div class="stat-grid base">
+            <div class="stat"><i class="stat-icon">力</i><span>臂力</span><strong>8</strong></div>
+            <div class="stat"><i class="stat-icon">悟</i><span>悟性</span><strong>8</strong></div>
+            <div class="stat"><i class="stat-icon">骨</i><span>体魄</span><strong>9</strong></div>
+            <div class="stat"><i class="stat-icon">身</i><span>身法</span><strong>9</strong></div>
+            <div class="stat"><i class="stat-icon">心</i><span>定力</span><strong>8</strong></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <header class="section-title"><h3>战斗属性</h3><span class="rule"></span><small>已计入等级、职业、心法与装备</small></header>
+          <div class="stat-grid combat">
+            <div class="stat"><i class="stat-icon">♥</i><span>气血</span><strong>573</strong></div>
+            <div class="stat"><i class="stat-icon">●</i><span>真气</span><strong>100</strong></div>
+            <div class="stat"><i class="stat-icon">✣</i><span>初始真气</span><strong>20</strong></div>
+            <div class="stat"><i class="stat-icon">◉</i><span>真气回复</span><strong>25</strong></div>
+            <div class="stat"><i class="stat-icon">剑</i><span>外功</span><strong>116</strong></div>
+            <div class="stat"><i class="stat-icon">气</i><span>内功</span><strong>120</strong></div>
+            <div class="stat"><i class="stat-icon">盾</i><span>外防</span><strong>86</strong></div>
+            <div class="stat"><i class="stat-icon">甲</i><span>内防</span><strong>68</strong></div>
+            <div class="stat"><i class="stat-icon">影</i><span>有效身法</span><strong>107</strong></div>
+            <div class="stat"><i class="stat-icon">羽</i><span>命中修正</span><strong>18.7%</strong></div>
+            <div class="stat"><i class="stat-icon">闪</i><span>闪避</span><strong>9%</strong></div>
+            <div class="stat"><i class="stat-icon">定</i><span>控制抗性</span><strong>22.6%</strong></div>
+            <div class="stat"><i class="stat-icon">暴</i><span>暴击</span><strong>12.4%</strong></div>
+            <div class="stat"><i class="stat-icon">破</i><span>暴击倍率</span><strong>150%</strong></div>
+            <div class="stat"><i class="stat-icon">冷</i><span>冷却缩减</span><strong>5%</strong></div>
+            <div class="stat"><i class="stat-icon">速</i><span>气机加速</span><strong>0%</strong></div>
+            <div class="stat"><i class="stat-icon">势</i><span>武势加成</span><strong>0%</strong></div>
+            <div class="stat"><i class="stat-icon">生</i><span>生存加成</span><strong>0%</strong></div>
+            <div class="stat"><i class="stat-icon">圆</i><span>圆满加成</span><strong>0%</strong></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <header class="section-title"><h3>装备栏</h3><span class="rule"></span><small>悬停装备格查看属性</small></header>
+          <div class="equipment-grid">
+            <article class="equip-card" data-item="寒刀" data-slot="兵刃" data-stat="外功 +18|暴击 +4.2%" data-rarity="珍品"><span class="slot">兵刃</span><strong>寒刀</strong><small>珍品 · Lv.1</small><svg class="item-art"><use href="#item-sword"/></svg><button class="unequip" type="button">卸下</button></article>
+            <article class="equip-card" data-item="斗笠" data-slot="冠巾" data-stat="外防 +11|闪避 +3.1%" data-rarity="珍品"><span class="slot">冠巾</span><strong>斗笠</strong><small>珍品 · Lv.1</small><svg class="item-art"><use href="#item-hat"/></svg><button class="unequip" type="button">卸下</button></article>
+            <article class="equip-card" data-item="粗布短衣" data-slot="衣甲" data-stat="内防 +13|气血 +45" data-rarity="凡品"><span class="slot">衣甲</span><strong>粗布短衣</strong><small>凡品 · Lv.1</small><svg class="item-art"><use href="#item-robe"/></svg><button class="unequip" type="button">卸下</button></article>
+            <article class="equip-card" data-item="硬皮护布" data-slot="护腕" data-stat="外防 +9|控制抗性 +2.4%" data-rarity="凡品"><span class="slot">护腕</span><strong>硬皮护布</strong><small>凡品 · Lv.1</small><svg class="item-art"><use href="#item-bracer"/></svg><button class="unequip" type="button">卸下</button></article>
+            <article class="equip-card" data-item="素腰革绳" data-slot="腰佩" data-stat="气血 +30|身法 +2" data-rarity="珍品"><span class="slot">腰佩</span><strong>素腰革绳</strong><small>珍品 · Lv.1</small><svg class="item-art"><use href="#item-belt"/></svg><button class="unequip" type="button">卸下</button></article>
+            <article class="equip-card" data-item="皮鞋" data-slot="履靴" data-stat="身法 +4|闪避 +1.8%" data-rarity="珍品"><span class="slot">履靴</span><strong>皮鞋</strong><small>珍品 · Lv.1</small><svg class="item-art"><use href="#item-boots"/></svg><button class="unequip" type="button">卸下</button></article>
+            <article class="equip-card" data-item="羊皮玉佩" data-slot="饰物" data-stat="内功 +15|真气回复 +3" data-rarity="珍品"><span class="slot">饰物</span><strong>羊皮玉佩</strong><small>珍品 · Lv.1</small><svg class="item-art"><use href="#item-jade"/></svg><button class="unequip" type="button">卸下</button></article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="career-banner">
+            <span>当前职业</span>
+            <strong>剑客</strong>
+            <em>职业 Lv.9</em>
+            <button class="ghost-button" type="button" disabled>领悟圆满心得</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <header class="section-title"><h3>转职与切换</h3><span class="rule"></span></header>
+          <div class="career-list">
+            <article class="career-row"><span>中级</span><strong>游剑客</strong><small>缺少信物</small><button type="button">转职</button></article>
+            <article class="career-row"><span>高级</span><strong>追风剑师</strong><small>缺少信物</small><button type="button">转职</button></article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <aside class="inventory panel" aria-label="物品栏">
+      <header class="inventory-header">
+        <div class="inventory-title"><span class="eyebrow">物品</span><strong>7 件</strong></div>
+        <span class="capacity"><b>7</b> / 300</span>
+      </header>
+
+      <div class="inventory-tools">
+        <div class="filter"><label for="slot-filter">部位</label><select id="slot-filter"><option>全部部位</option><option>兵刃</option><option>冠巾</option><option>衣甲</option><option>护腕</option><option>腰佩</option><option>履靴</option><option>饰物</option></select></div>
+        <div class="filter"><label for="quality-filter">品质</label><select id="quality-filter"><option>全部品质</option><option>珍品</option><option>凡品</option></select></div>
+        <div class="filter"><label for="discard-filter">丢弃 ≤</label><select id="discard-filter"><option>选择品质</option><option>凡品</option><option>珍品</option></select></div>
+        <button class="tool-button" id="organize" type="button">整理</button>
+        <button class="tool-button danger" id="discard" type="button">批量丢弃</button>
+      </div>
+
+      <div class="confirm-strip" id="confirm-strip" role="alertdialog" aria-label="确认批量丢弃">
+        <span>确认丢弃符合品质的未锁定装备？</span>
+        <button class="confirm" id="confirm-discard" type="button">确认丢弃</button>
+        <button id="cancel-discard" type="button">取消</button>
+      </div>
+
+      <div class="inventory-grid" id="inventory-grid">
+        <article class="inventory-card" data-item="寒刀" data-slot="兵刃" data-stat="外功 +18|暴击 +4.2%" data-rarity="珍品"><span class="slot">兵刃</span><strong>寒刀</strong><small>珍品</small><svg class="item-art"><use href="#item-sword"/></svg><span class="equipped">Lv.1 · 已装备</span></article>
+        <article class="inventory-card" data-item="斗笠" data-slot="冠巾" data-stat="外防 +11|闪避 +3.1%" data-rarity="珍品"><span class="slot">冠巾</span><strong>斗笠</strong><small>珍品</small><svg class="item-art"><use href="#item-hat"/></svg><span class="equipped">Lv.1 · 已装备</span></article>
+        <article class="inventory-card" data-item="粗布短衣" data-slot="衣甲" data-stat="内防 +13|气血 +45" data-rarity="凡品"><span class="slot">衣甲</span><strong>粗布短衣</strong><small>凡品</small><svg class="item-art"><use href="#item-robe"/></svg><span class="equipped">Lv.1 · 已装备</span></article>
+        <article class="inventory-card" data-item="硬皮护布" data-slot="护腕" data-stat="外防 +9|控制抗性 +2.4%" data-rarity="凡品"><span class="slot">护腕</span><strong>硬皮护布</strong><small>凡品</small><svg class="item-art"><use href="#item-bracer"/></svg><span class="equipped">Lv.1 · 已装备</span></article>
+        <article class="inventory-card" data-item="素腰革绳" data-slot="腰佩" data-stat="气血 +30|身法 +2" data-rarity="珍品"><span class="slot">腰佩</span><strong>素腰革绳</strong><small>珍品</small><svg class="item-art"><use href="#item-belt"/></svg><span class="equipped">Lv.1 · 已装备</span></article>
+        <article class="inventory-card" data-item="皮鞋" data-slot="履靴" data-stat="身法 +4|闪避 +1.8%" data-rarity="珍品"><span class="slot">履靴</span><strong>皮鞋</strong><small>珍品</small><svg class="item-art"><use href="#item-boots"/></svg><span class="equipped">Lv.1 · 已装备</span></article>
+        <article class="inventory-card" data-item="羊皮玉佩" data-slot="饰物" data-stat="内功 +15|真气回复 +3" data-rarity="珍品"><span class="slot">饰物</span><strong>羊皮玉佩</strong><small>珍品</small><svg class="item-art"><use href="#item-jade"/></svg><span class="equipped">Lv.1 · 已装备</span></article>
+      </div>
+
+      <div class="inventory-space" aria-hidden="true"></div>
+
+      <footer class="inventory-footer">
+        <nav class="pagination" aria-label="物品分页">
+          <button type="button" disabled>上一页</button>
+          <button class="page-active" type="button">1</button>
+          <span>第 1 / 1 页 · 共 7 件</span>
+          <button type="button" disabled>下一页</button>
+        </nav>
+        <p class="inventory-hint">单击选择 · 双击左键或右键装备</p>
+      </footer>
+    </aside>
+  </main>
+
+  <div class="hover-tip" id="hover-tip" role="tooltip"></div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const toast = document.querySelector('#toast')
+    const tip = document.querySelector('#hover-tip')
+    let toastTimer
+
+    const showToast = (message) => {
+      toast.textContent = message
+      toast.classList.add('visible')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => toast.classList.remove('visible'), 1400)
+    }
+
+    document.querySelectorAll('.nav-item').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach((item) => item.classList.remove('active'))
+        button.classList.add('active')
+        showToast(`已切换至「${button.lastElementChild.textContent}」示意状态`)
+      })
+    })
+
+    document.querySelectorAll('[data-item]').forEach((card) => {
+      card.addEventListener('mouseenter', () => {
+        const rows = card.dataset.stat.split('|').map((row) => {
+          const [label, value] = row.split(' +')
+          return `<div><dt>${label}</dt><dd>+${value}</dd></div>`
+        }).join('')
+        tip.innerHTML = `<small>${card.dataset.slot} · Lv.1</small><strong>${card.dataset.item}</strong><dl>${rows}</dl>`
+        tip.classList.add('visible')
+      })
+
+      card.addEventListener('mousemove', (event) => {
+        const left = Math.min(event.clientX + 16, window.innerWidth - 232)
+        const top = Math.min(event.clientY + 16, window.innerHeight - 125)
+        tip.style.left = `${left}px`
+        tip.style.top = `${top}px`
+      })
+
+      card.addEventListener('mouseleave', () => tip.classList.remove('visible'))
+    })
+
+    document.querySelectorAll('.inventory-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.inventory-card').forEach((item) => item.classList.remove('selected'))
+        card.classList.add('selected')
+      })
+      card.addEventListener('dblclick', () => showToast(`${card.dataset.item} 已装备`))
+      card.addEventListener('contextmenu', (event) => {
+        event.preventDefault()
+        showToast(`${card.dataset.item} 已装备`)
+      })
+    })
+
+    document.querySelectorAll('.unequip').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation()
+        showToast('原型操作：已卸下装备')
+      })
+    })
+
+    const applyFilters = () => {
+      const slot = document.querySelector('#slot-filter').value
+      const quality = document.querySelector('#quality-filter').value
+      let visible = 0
+      document.querySelectorAll('.inventory-card').forEach((card) => {
+        const matchesSlot = slot === '全部部位' || card.dataset.slot === slot
+        const matchesQuality = quality === '全部品质' || card.dataset.rarity === quality
+        card.hidden = !(matchesSlot && matchesQuality)
+        if (!card.hidden) visible += 1
+      })
+      document.querySelector('.inventory-title strong').textContent = `${visible} 件`
+      document.querySelector('.pagination span').textContent = `第 1 / 1 页 · 共 ${visible} 件`
+    }
+
+    document.querySelector('#slot-filter').addEventListener('change', applyFilters)
+    document.querySelector('#quality-filter').addEventListener('change', applyFilters)
+    document.querySelector('#organize').addEventListener('click', () => showToast('物品已按部位与品质整理'))
+
+    const confirmStrip = document.querySelector('#confirm-strip')
+    document.querySelector('#discard').addEventListener('click', () => confirmStrip.classList.add('visible'))
+    document.querySelector('#cancel-discard').addEventListener('click', () => confirmStrip.classList.remove('visible'))
+    document.querySelector('#confirm-discard').addEventListener('click', () => {
+      confirmStrip.classList.remove('visible')
+      showToast('原型操作：批量丢弃已确认')
+    })
+  </script>
+</body>
+</html>

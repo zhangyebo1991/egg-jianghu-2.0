@@ -78,6 +78,99 @@ let confirmOverwrite = false
 let overwriteSaveSnapshot: string | null = null
 let startBusy = false
 let showResetConfirmation = false
+let openEquipmentTooltip: HTMLDivElement | null = null
+let openEquipmentTooltipAnchor: HTMLElement | null = null
+
+const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item'
+const EQUIPMENT_TOOLTIP_GAP = 10
+const EQUIPMENT_TOOLTIP_VIEWPORT_PADDING = 12
+
+const hideEquipmentTooltip = (): void => {
+  const tooltip = openEquipmentTooltip
+  openEquipmentTooltip = null
+  openEquipmentTooltipAnchor = null
+  if (!tooltip) return
+  if (tooltip.isConnected && tooltip.matches(':popover-open')) tooltip.hidePopover()
+  tooltip.style.removeProperty('left')
+  tooltip.style.removeProperty('top')
+  delete tooltip.dataset.placement
+}
+
+const positionOpenEquipmentTooltip = (): void => {
+  const tooltip = openEquipmentTooltip
+  const anchor = openEquipmentTooltipAnchor
+  if (!tooltip?.isConnected || !anchor?.isConnected || !tooltip.matches(':popover-open')) {
+    openEquipmentTooltip = null
+    openEquipmentTooltipAnchor = null
+    return
+  }
+
+  const anchorRect = anchor.getBoundingClientRect()
+  const tooltipRect = tooltip.getBoundingClientRect()
+  const viewportWidth = document.documentElement.clientWidth
+  const viewportHeight = document.documentElement.clientHeight
+  const padding = EQUIPMENT_TOOLTIP_VIEWPORT_PADDING
+  const gap = EQUIPMENT_TOOLTIP_GAP
+  const clamp = (value: number, minimum: number, maximum: number): number =>
+    Math.min(Math.max(value, minimum), Math.max(minimum, maximum))
+  const roomRight = viewportWidth - anchorRect.right - padding
+  const roomLeft = anchorRect.left - padding
+  const roomAbove = anchorRect.top - padding
+  const roomBelow = viewportHeight - anchorRect.bottom - padding
+  let left: number
+  let top: number
+  let placement: 'left' | 'right' | 'above' | 'below'
+
+  if (roomRight >= tooltipRect.width + gap || roomLeft >= tooltipRect.width + gap) {
+    const useRight = roomRight >= tooltipRect.width + gap
+      && (roomLeft < tooltipRect.width + gap || roomRight >= roomLeft)
+    placement = useRight ? 'right' : 'left'
+    left = useRight ? anchorRect.right + gap : anchorRect.left - tooltipRect.width - gap
+    top = clamp(
+      anchorRect.top + (anchorRect.height - tooltipRect.height) / 2,
+      padding,
+      viewportHeight - tooltipRect.height - padding,
+    )
+  } else {
+    const useBelow = roomBelow >= tooltipRect.height + gap
+      && (roomAbove < tooltipRect.height + gap || roomBelow >= roomAbove)
+    placement = useBelow ? 'below' : 'above'
+    left = clamp(
+      anchorRect.left + (anchorRect.width - tooltipRect.width) / 2,
+      padding,
+      viewportWidth - tooltipRect.width - padding,
+    )
+    top = useBelow ? anchorRect.bottom + gap : anchorRect.top - tooltipRect.height - gap
+    top = clamp(top, padding, viewportHeight - tooltipRect.height - padding)
+  }
+
+  tooltip.style.left = `${Math.round(left)}px`
+  tooltip.style.top = `${Math.round(top)}px`
+  tooltip.dataset.placement = placement
+}
+
+const showEquipmentTooltip = (anchor: HTMLElement): void => {
+  const tooltip = [...anchor.children].find((child): child is HTMLDivElement =>
+    child instanceof HTMLDivElement && child.classList.contains('equipment-tooltip'))
+  if (!tooltip) return
+  if (openEquipmentTooltip === tooltip && tooltip.matches(':popover-open')) {
+    positionOpenEquipmentTooltip()
+    return
+  }
+
+  hideEquipmentTooltip()
+  openEquipmentTooltip = tooltip
+  openEquipmentTooltipAnchor = anchor
+  tooltip.style.left = '0px'
+  tooltip.style.top = '0px'
+  try {
+    tooltip.showPopover()
+    positionOpenEquipmentTooltip()
+  } catch {
+    openEquipmentTooltip = null
+    openEquipmentTooltipAnchor = null
+  }
+}
 let toastTimer = 0
 
 try {
@@ -520,6 +613,7 @@ const render = (): void => {
       confirmOverwrite,
       busy: startBusy,
     }))
+    positionOpenEquipmentTooltip()
     return
   }
   normalizeSelectedWorld()
@@ -540,6 +634,7 @@ const render = (): void => {
     showResetConfirmation,
     content,
   }))
+  positionOpenEquipmentTooltip()
 }
 
 const createAndEnter = (playerName: string, expectedSnapshot: string | null): void => {
@@ -599,6 +694,25 @@ const isTouchDevice = (): boolean => window.matchMedia('(hover: none)').matches 
 const clearDragOver = (): void => {
   app.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'))
 }
+
+app.addEventListener('pointerover', (event) => {
+  const target = event.target
+  if (!(target instanceof Element)) return
+  const anchor = target.closest<HTMLElement>(EQUIPMENT_TOOLTIP_ANCHOR)
+  if (anchor) showEquipmentTooltip(anchor)
+})
+
+app.addEventListener('pointerout', (event) => {
+  const target = event.target
+  if (!(target instanceof Element)) return
+  const anchor = target.closest<HTMLElement>(EQUIPMENT_TOOLTIP_ANCHOR)
+  if (!anchor || anchor !== openEquipmentTooltipAnchor) return
+  if (event.relatedTarget instanceof Node && anchor.contains(event.relatedTarget)) return
+  hideEquipmentTooltip()
+})
+
+app.addEventListener('scroll', positionOpenEquipmentTooltip, true)
+window.addEventListener('resize', positionOpenEquipmentTooltip)
 
 app.addEventListener('dragstart', (event) => {
   const source = (event.target as HTMLElement).closest<HTMLElement>('[data-hero-id]')

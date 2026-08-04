@@ -12,10 +12,10 @@ export interface ShellViewModel {
 }
 
 const tabs: Array<{ id: TabId; label: string; mark: string }> = [
-  { id: 'idle', label: '江湖', mark: '卷' },
+  { id: 'idle', label: '江湖', mark: '邑' },
   { id: 'heroes', label: '侠客', mark: '侠' },
   { id: 'formation', label: '阵容', mark: '阵' },
-  { id: 'inventory', label: '背包', mark: '匣' },
+  { id: 'inventory', label: '背包', mark: '囊' },
 ]
 
 const worldSections: Array<{ id: JianghuSection; label: string }> = [
@@ -31,14 +31,14 @@ export const renderShell = (view: ShellViewModel): string => {
       <aside class="game-sidebar">
         <div class="brand-block">
           <span class="brand-seal" aria-hidden="true">蛋</span>
-          <span><strong>蛋蛋江湖 2.0</strong><small>十卷风云 · 六侠同行</small></span>
+          <span><strong>蛋蛋江湖 2.0</strong><small>十万里一剑 · 不负侠者行</small></span>
         </div>
         <nav class="game-nav" aria-label="游戏区域">
           ${tabs.map((tab) => `
             <button type="button" class="nav-item${view.activeTab === tab.id ? ' active' : ''}"
               data-tab="${tab.id}" data-testid="tab-${tab.id}"
               aria-current="${view.activeTab === tab.id ? 'page' : 'false'}">
-              <span aria-hidden="true">${tab.mark}</span><strong>${tab.label}</strong>
+              <span class="nav-mark" aria-hidden="true">${tab.mark}</span><strong>${tab.label}</strong>
             </button>`).join('')}
         </nav>
         ${worldContext ? `
@@ -62,6 +62,8 @@ export const renderShell = (view: ShellViewModel): string => {
               </section>`
             : '<button type="button" class="sidebar-danger-link" data-action="request-reset-save">删档重开</button>'}
         </div>
+        <div class="sidebar-landscape" aria-hidden="true"><i></i><b></b></div>
+        <span class="sidebar-motto" aria-hidden="true">朝悟道 · 暮练剑</span>
       </aside>
       <main class="game-main" data-page="${view.activeTab}">${view.content}</main>
       ${view.hasCombatReturn

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 let pageErrors: string[]
 
@@ -31,6 +31,18 @@ const enterWorld = async (page: Page, worldId = 'world_01'): Promise<void> => {
 const openWorldSection = async (page: Page, section: 'stages' | 'factions' | 'city'): Promise<void> => {
   await enterWorld(page)
   await page.getByTestId(`world-section-${section}`).click()
+}
+
+const expectTooltipInsideViewport = async (page: Page, tooltip: Locator): Promise<void> => {
+  await expect.poll(() => tooltip.evaluate((element) => element.matches(':popover-open'))).toBe(true)
+  const bounds = await tooltip.boundingBox()
+  const viewport = page.viewportSize()
+  expect(bounds).not.toBeNull()
+  expect(viewport).not.toBeNull()
+  expect(bounds!.x).toBeGreaterThanOrEqual(0)
+  expect(bounds!.y).toBeGreaterThanOrEqual(0)
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport!.width)
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport!.height)
 }
 
 test('江湖按大关小关分层并在点击小关后立即驻守', async ({ page }) => {
@@ -238,7 +250,7 @@ test('侠客页展示基础属性与实时战斗属性', async ({ page }) => {
 })
 
 test('侠客页物品栏支持筛选整理、双击或右键装备及同部位对比', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.setViewportSize({ width: 1676, height: 941 })
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(2))
   await page.getByTestId('tab-heroes').click()
 
@@ -261,7 +273,9 @@ test('侠客页物品栏支持筛选整理、双击或右键装备及同部位�
   const slot = page.getByTestId('hero-equipment-slot-weapon')
   await expect(slot).toContainText('柴刀')
   await slot.hover()
-  await expect(slot.locator(':scope > .equipment-tooltip')).toBeVisible()
+  const equippedTooltip = slot.locator(':scope > .equipment-tooltip')
+  await expect(equippedTooltip).toBeVisible()
+  await expectTooltipInsideViewport(page, equippedTooltip)
   await slot.click({ position: { x: 8, y: 8 } })
   await page.getByTestId('selected-hero').locator(':scope > header').hover()
   await expect(slot.locator(':scope > .equipment-tooltip')).toBeHidden()
@@ -270,6 +284,7 @@ test('侠客页物品栏支持筛选整理、双击或右键装备及同部位�
   await replacement.hover()
   const comparison = replacement.locator(':scope > .equipment-tooltip')
   await expect(comparison).toBeVisible()
+  await expectTooltipInsideViewport(page, comparison)
   await expect(comparison).toContainText('当前查看')
   await expect(comparison).toContainText('当前穿戴')
   await replacement.click()
