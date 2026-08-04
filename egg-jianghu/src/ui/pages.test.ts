@@ -173,6 +173,8 @@ describe('version 10 长期循环页面', () => {
       inventoryItems: [
         { ...inventoryWeapon, locked: false },
         { ...inventoryWeapon, uid: 'second', locked: false, quality: '良品' },
+        { ...inventoryWeapon, uid: 'locked_one', locked: true, quality: '良品' },
+        { ...inventoryWeapon, uid: 'equipped_one', locked: false, equippedByHeroId: 'hero_test', quality: '良品' },
       ],
       batchDiscardQuality: '上品',
       batchDiscardConfirm: true,

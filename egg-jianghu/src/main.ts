@@ -20,7 +20,7 @@ import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTI
 import { WORLDS } from './content/worlds'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
-import { discardEquipmentByQuality, equipEquipment, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
+import { discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
@@ -262,12 +262,9 @@ const equipmentStatNames: Record<string, string> = {
 
 const percentEquipmentStats = new Set(['accuracy', 'cooldownRate', 'criticalChance', 'controlResistance'])
 
-const equipmentOwnerId = (uid: string): string | null => Object.entries(session.state.heroes)
-  .find(([, progress]) => Object.values(progress.equipmentBySlot).includes(uid))?.[0] ?? null
-
 const heroEquipmentView = (item: EquipmentInstance): HeroesEquipmentView => {
   const definition = equipmentDefinitionById(item.definitionId)
-  const ownerId = equipmentOwnerId(item.uid)
+  const ownerId = equipmentOwnerId(session.state, item.uid)
   const ownerDefinition = ownerId ? heroByIdV10(ownerId) : undefined
   const ownerProgress = ownerId ? session.state.heroes[ownerId] : undefined
   const slot = definition?.slot ?? 'weapon'
@@ -469,8 +466,6 @@ const cityViewModel = (): CityPageViewModel => {
 const inventoryViewModel = (): InventoryPageViewModel => {
   const selectedId = normalizeSelectedHero()
   const heroes = recruitedHeroes().map(({ definition, name }) => ({ id: definition.id, name }))
-  const equippedBy = (uid: string): string | null => Object.entries(session.state.heroes)
-    .find(([, progress]) => Object.values(progress.equipmentBySlot).includes(uid))?.[0] ?? null
   return {
     selectedHeroId: selectedId,
     heroes,
@@ -485,7 +480,7 @@ const inventoryViewModel = (): InventoryPageViewModel => {
         level: item.level,
         quality: item.quality,
         locked: item.locked,
-        equippedByHeroId: equippedBy(item.uid),
+        equippedByHeroId: equipmentOwnerId(session.state, item.uid),
         affixes: item.affixes.map((affix) => ({
           name: EQUIPMENT_AFFIXES.find((definitionAffix) => definitionAffix.id === affix.id)?.name ?? affix.id,
           value: affix.value,

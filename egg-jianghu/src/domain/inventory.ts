@@ -31,11 +31,8 @@ export const equipEquipment = (
   if (!equipment) return { ok: false, message: '装备不存在' }
   const definition = equipmentDefinitionById(equipment.definitionId)
   if (!definition) return { ok: false, message: '装备部位定义不存在' }
-  for (const [otherHeroId, progress] of Object.entries(state.heroes)) {
-    if (otherHeroId !== heroId && Object.values(progress.equipmentBySlot).includes(equipmentUid)) {
-      return { ok: false, message: '装备已被其他侠客穿戴' }
-    }
-  }
+  const ownerId = equipmentOwnerId(state, equipmentUid)
+  if (ownerId && ownerId !== heroId) return { ok: false, message: '装备已被其他侠客穿戴' }
   if (hero.equipmentBySlot[definition.slot] === equipmentUid) return { ok: false, message: '装备已经穿戴' }
 
   hero.equipmentBySlot[definition.slot] = equipmentUid
@@ -76,10 +73,17 @@ export const organizeInventory = (state: GameStateV10): ActionResult => {
   return { ok: true, message: '物品已按部位、品质和等级整理' }
 }
 
+// 返回穿戴该装备的侠客 id，未穿戴则 null
+export const equipmentOwnerId = (state: GameStateV10, uid: string): string | null => {
+  for (const [heroId, progress] of Object.entries(state.heroes)) {
+    if (Object.values(progress.equipmentBySlot).includes(uid)) return heroId
+  }
+  return null
+}
+
 // 判断装备是否正被某位侠客穿戴
 const isEquipmentEquipped = (state: GameStateV10, uid: string): boolean =>
-  Object.values(state.heroes).some((progress) =>
-    Object.values(progress.equipmentBySlot).includes(uid))
+  equipmentOwnerId(state, uid) !== null
 
 export const discardEquipmentByQuality = (
   state: GameStateV10,

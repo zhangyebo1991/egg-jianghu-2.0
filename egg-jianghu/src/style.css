@@ -573,6 +573,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .hero-equipment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-inventory-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .hero-inventory-tools { grid-template-columns: 1fr 1fr; }
+  .hero-inventory-tools > label:last-of-type { grid-column: 1 / -1; }
   .hero-inventory-tools > button { grid-column: 1 / -1; }
   .formation-board { gap: 5px; }
   .formation-slot { min-height: 92px; }

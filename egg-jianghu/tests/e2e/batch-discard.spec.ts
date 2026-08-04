@@ -40,6 +40,7 @@ test('批量丢弃确认条可取消且不改变库存', async ({ page }) => {
   await panel.locator('[data-batch-discard-quality]').selectOption('凡品')
   await panel.getByRole('button', { name: '批量丢弃' }).click()
   await panel.getByRole('button', { name: '取消' }).click()
+  await expect(panel.getByRole('button', { name: '确认丢弃' })).toHaveCount(0)
 
   await expect(panel.locator('[data-batch-discard-quality]')).toBeVisible()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().inventory)).toHaveLength(3)
