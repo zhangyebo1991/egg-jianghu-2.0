@@ -20,7 +20,7 @@ import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTI
 import { WORLDS } from './content/worlds'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
-import { equipEquipment, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
+import { discardEquipmentByQuality, equipEquipment, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
@@ -64,6 +64,8 @@ let selectedHeroId: string | null = null
 let heroInventorySlotFilter: EquipmentSlot | 'all' = 'all'
 let heroInventoryQualityFilter: EquipmentQuality | 'all' = 'all'
 let heroInventoryPage = 1
+let heroBatchDiscardQuality: EquipmentQuality | 'all' = 'all'
+let showBatchDiscardConfirm = false
 let formationSelectedHeroId: string | null = null
 let dragHeroId: string | null = null
 let selectedFactionId = ''
@@ -104,6 +106,8 @@ const enterPlaying = (nextSession: GameSession): void => {
   heroInventorySlotFilter = 'all'
   heroInventoryQualityFilter = 'all'
   heroInventoryPage = 1
+  heroBatchDiscardQuality = 'all'
+  showBatchDiscardConfirm = false
   selectedFactionId = FACTIONS.find((faction) => session.state.unlockedWorldIds.includes(faction.worldId))?.id ?? ''
   combatSpeed = 1
   combatLogs = []
@@ -359,6 +363,8 @@ const heroesViewModel = (): HeroesPageViewModel => {
     inventorySlotFilter: heroInventorySlotFilter,
     inventoryQualityFilter: heroInventoryQualityFilter,
     inventoryPage: heroInventoryPage,
+    batchDiscardQuality: heroBatchDiscardQuality,
+    batchDiscardConfirm: showBatchDiscardConfirm,
   }
 }
 
@@ -677,6 +683,17 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
   else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
   else if (action === 'hero-inventory-page') heroInventoryPage = Math.max(1, dataNumber(button, 'page'))
+  else if (action === 'request-batch-discard') {
+    if (heroBatchDiscardQuality !== 'all') showBatchDiscardConfirm = true
+  } else if (action === 'cancel-batch-discard') {
+    showBatchDiscardConfirm = false
+  } else if (action === 'confirm-batch-discard') {
+    if (heroBatchDiscardQuality !== 'all') {
+      commitAction(discardEquipmentByQuality(session.state, heroBatchDiscardQuality))
+      showBatchDiscardConfirm = false
+      heroInventoryPage = 1
+    }
+  }
 }
 
 app.addEventListener('submit', (event) => {
@@ -732,7 +749,14 @@ app.addEventListener('change', (event) => {
     heroInventoryQualityFilter = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality) ? value : 'all'
     heroInventoryPage = 1
   }
-  if (!select && !inventoryFilter) return
+  const batchDiscardSelect = target.closest<HTMLSelectElement>('[data-batch-discard-quality]')
+  if (batchDiscardSelect) {
+    const value = batchDiscardSelect.value as EquipmentQuality | 'all'
+    heroBatchDiscardQuality = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality) ? value : 'all'
+    showBatchDiscardConfirm = false
+    heroInventoryPage = 1
+  }
+  if (!select && !inventoryFilter && !batchDiscardSelect) return
   render()
 })
 
