@@ -3,6 +3,7 @@ import { createInitialStateV10 } from '../domain/state'
 import { CAREERS } from './careers'
 import { ENEMY_NAMES_BY_WORLD } from './enemy-names'
 import { FACTIONS } from './factions'
+import { HEROES_V10 } from './heroes'
 import { FACTION_MARTIALS } from './martials'
 import { validateContent } from './validate'
 import { WORLDS } from './worlds'
@@ -50,6 +51,22 @@ describe('首发内容目录', () => {
     expect(WORLDS[9].factionIds).toHaveLength(3)
     expect(WORLDS[10].stageIds).toEqual([])
     expect(WORLDS[10].factionIds).toEqual([])
+  })
+
+  it('酒馆侠客每卷 3 名、势力门人每势力 3 名且 id 全局唯一', () => {
+    expect(HEROES_V10).toHaveLength(121)
+    const tavernByWorld = new Map<string, number>()
+    const factionHeroCounts = new Map<string, number>()
+    for (const hero of HEROES_V10) {
+      if (hero.source === 'tavern') tavernByWorld.set(hero.worldId, (tavernByWorld.get(hero.worldId) ?? 0) + 1)
+      if (hero.source === 'faction') factionHeroCounts.set(hero.factionId ?? '', (factionHeroCounts.get(hero.factionId ?? '') ?? 0) + 1)
+    }
+    for (const world of WORLDS) {
+      if (world.released) expect(tavernByWorld.get(world.id)).toBe(3)
+      else expect(tavernByWorld.get(world.id) ?? 0).toBe(0)
+    }
+    for (const faction of FACTIONS) expect(factionHeroCounts.get(faction.id)).toBe(3)
+    expect(validateContent()).toEqual([])
   })
 
   it('每个势力恰好提供两线各四门主动武功', () => {

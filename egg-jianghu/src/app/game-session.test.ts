@@ -16,8 +16,8 @@ const memoryStorage = (): StorageLike & { values: Map<string, string> } => {
 
 const sessionWithParty = (storage = memoryStorage()): GameSession => {
   const session = GameSession.create(storage, 1000)
-  recruitFromTavern(session.state, 'hero_shen_yanqiu')
-  session.state.formation = [{ heroId: 'hero_shen_yanqiu', row: 'front', position: 0 }]
+  recruitFromTavern(session.state, 'hero_mu_nianci')
+  session.state.formation = [{ heroId: 'hero_mu_nianci', row: 'front', position: 0 }]
   session.save(1000)
   return session
 }

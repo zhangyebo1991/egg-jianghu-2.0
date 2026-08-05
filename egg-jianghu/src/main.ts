@@ -480,7 +480,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
   const board = session.state.factionBoards[selectedFactionId]
   const heroProgress = selectedHeroId ? session.state.heroes[selectedHeroId] : undefined
   const factionMartials = FACTION_MARTIALS.filter((martial) => martial.factionId === selectedFactionId)
-  const factionHero = FACTION_HEROES.find((hero) => hero.factionId === selectedFactionId)
+  const factionHeroes = FACTION_HEROES.filter((hero) => hero.factionId === selectedFactionId)
   return {
     selectedFactionId,
     factions: availableFactions.map((item) => ({
@@ -507,13 +507,13 @@ const factionsViewModel = (): FactionsPageViewModel => {
         level: heroProgress?.learnedMartials[martial.id]?.level ?? 0,
       })),
     })),
-    factionHero: factionHero ? {
+    factionHeroes: factionHeroes.map((factionHero) => ({
       id: factionHero.id,
       name: factionHero.name,
       grade: factionHero.grade,
       cost: factionHero.cost,
       recruited: Boolean(session.state.heroes[factionHero.id]?.recruited),
-    } : null,
+    })),
     selectedHeroId: normalizeSelectedHero(),
   }
 }

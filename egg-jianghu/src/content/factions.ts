@@ -9,41 +9,51 @@ export interface FactionDefinition {
   branchLabels: readonly [string, string]
 }
 
+const branchLabelsFor = (category: CareerCategory): readonly [string, string] => {
+  if (category === '剑') return ['快剑', '重剑']
+  if (category === '刀') return ['快刀', '狂刀']
+  if (category === '拳') return ['刚拳', '绵掌']
+  if (category === '暗') return ['影刺', '毒术']
+  if (category === '医') return ['疗伤', '药理']
+  return ['运气', '护体']
+}
+
+// id 保持稳定（武功 id、贡献、悬榜均以势力 id 为键），仅调整金庸门派名与类别。
 export const FACTION_ROWS = [
-  ['qingfeng_hall', '青锋馆', '剑', 'world_01', ['快剑', '重剑']],
-  ['tieyi_school', '铁衣武馆', '拳', 'world_01', ['刚拳', '绵掌']],
-  ['renxin_hall', '仁心堂', '医', 'world_01', ['疗伤', '药理']],
-  ['duanlang_blade', '断浪刀门', '刀', 'world_02', ['快刀', '狂刀']],
-  ['yexing_tower', '夜行楼', '暗', 'world_02', ['影刺', '毒术']],
-  ['guiyuan_manor', '归元庄', '内家', 'world_02', ['运气', '护体']],
-  ['tingyu_sword', '听雨剑庐', '剑', 'world_03', ['快剑', '重剑']],
-  ['feixing_dock', '飞星坞', '暗', 'world_03', ['影刺', '毒术']],
-  ['tiaoxi_court', '调息院', '内家', 'world_03', ['运气', '护体']],
-  ['zhenyue_blade', '镇岳刀馆', '刀', 'world_04', ['快刀', '狂刀']],
-  ['mianshan_school', '绵山武院', '拳', 'world_04', ['刚拳', '绵掌']],
-  ['baicao_hall', '百草堂', '医', 'world_04', ['疗伤', '药理']],
-  ['cangfeng_manor', '藏锋山庄', '剑', 'world_05', ['快剑', '重剑']],
-  ['hengjiang_blade', '横江刀会', '刀', 'world_05', ['快刀', '狂刀']],
-  ['xinglin_valley', '杏林谷', '医', 'world_05', ['疗伤', '药理']],
-  ['zhenshan_gate', '震山门', '拳', 'world_06', ['刚拳', '绵掌']],
-  ['wuteng_stockade', '乌藤寨', '暗', 'world_06', ['影刺', '毒术']],
-  ['baoyuan_temple', '抱元观', '内家', 'world_06', ['运气', '护体']],
-  ['wanren_court', '万仞剑庭', '剑', 'world_07', ['快剑', '重剑']],
-  ['juezong_gate', '绝踪门', '暗', 'world_07', ['影刺', '毒术']],
-  ['jingmai_court', '经脉院', '医', 'world_07', ['疗伤', '药理']],
-  ['shuofeng_blade', '朔风刀盟', '刀', 'world_08', ['快刀', '狂刀']],
-  ['huajin_hall', '化劲堂', '拳', 'world_08', ['刚拳', '绵掌']],
-  ['jingang_court', '金刚院', '内家', 'world_08', ['运气', '护体']],
-  ['tianxia_sword', '天下剑盟', '剑', 'world_09', ['快剑', '重剑']],
-  ['tongbi_society', '通臂会', '拳', 'world_09', ['刚拳', '绵掌']],
-  ['zhoutian_sect', '周天宗', '内家', 'world_09', ['运气', '护体']],
-  ['baizhan_blade', '百战刀宗', '刀', 'world_10', ['快刀', '狂刀']],
-  ['zhuiming_office', '追命司', '暗', 'world_10', ['影刺', '毒术']],
-  ['qihuang_society', '岐黄会', '医', 'world_10', ['疗伤', '药理']],
-] as const satisfies ReadonlyArray<readonly [string, string, CareerCategory, string, readonly [string, string]]>
+  ['qingfeng_hall', '全真教', '剑', 'world_01'],
+  ['tieyi_school', '丐帮', '拳', 'world_01'],
+  ['renxin_hall', '桃花岛', '医', 'world_01'],
+  ['duanlang_blade', '陆家庄', '刀', 'world_02'],
+  ['yexing_tower', '白驼山', '暗', 'world_02'],
+  ['guiyuan_manor', '古墓派', '内家', 'world_02'],
+  ['tingyu_sword', '绝情谷', '刀', 'world_03'],
+  ['feixing_dock', '万兽山庄', '暗', 'world_03'],
+  ['tiaoxi_court', '全真教', '内家', 'world_03'],
+  ['zhenyue_blade', '大理段氏', '内家', 'world_04'],
+  ['mianshan_school', '天龙寺', '医', 'world_04'],
+  ['baicao_hall', '四大恶人', '暗', 'world_04'],
+  ['cangfeng_manor', '逍遥派', '内家', 'world_05'],
+  ['hengjiang_blade', '灵鹫宫', '剑', 'world_05'],
+  ['xinglin_valley', '万劫谷', '暗', 'world_05'],
+  ['zhenshan_gate', '蒙古大营', '刀', 'world_06'],
+  ['wuteng_stockade', '丐帮', '拳', 'world_06'],
+  ['baoyuan_temple', '渔樵耕读', '医', 'world_06'],
+  ['wanren_court', '明教', '拳', 'world_07'],
+  ['juezong_gate', '武当', '内家', 'world_07'],
+  ['jingmai_court', '峨眉', '剑', 'world_07'],
+  ['shuofeng_blade', '少林', '拳', 'world_08'],
+  ['huajin_hall', '逍遥派', '剑', 'world_08'],
+  ['jingang_court', '大理段氏', '医', 'world_08'],
+  ['tianxia_sword', '丐帮', '拳', 'world_09'],
+  ['tongbi_society', '聪辩门下', '医', 'world_09'],
+  ['zhoutian_sect', '渔樵耕读', '刀', 'world_09'],
+  ['baizhan_blade', '灵鹫宫', '剑', 'world_10'],
+  ['zhuiming_office', '星宿派', '暗', 'world_10'],
+  ['qihuang_society', '姑苏慕容', '刀', 'world_10'],
+] as const satisfies ReadonlyArray<readonly [string, string, CareerCategory, string]>
 
 export const FACTIONS: FactionDefinition[] = FACTION_ROWS.map(
-  ([id, name, category, worldId, branchLabels]) => ({ id, name, category, worldId, branchLabels }),
+  ([id, name, category, worldId]) => ({ id, name, category, worldId, branchLabels: branchLabelsFor(category) }),
 )
 
 export const RARITY_BUDGET_BY_WORLD: Record<string, readonly Rarity[]> = {

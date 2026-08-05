@@ -6,8 +6,8 @@ import { placeFormation, removeFormation } from './formation'
 
 const freshState = () => {
   const state = createNewGameStateV10('燕七', 1000)
-  recruitFromTavern(state, 'hero_shen_yanqiu')
-  recruitFromTavern(state, 'hero_huo_chuan')
+  recruitFromTavern(state, 'hero_guo_jing')
+  recruitFromTavern(state, 'hero_yang_tiexin')
   return state
 }
 
@@ -26,27 +26,27 @@ describe('阵容领域逻辑', () => {
 
   it('未上阵侠客入阵到空格', () => {
     const state = freshState()
-    expect(placeFormation(state, 'hero_shen_yanqiu', 'back', 2)).toEqual({ ok: true, message: '侠客已入阵' })
+    expect(placeFormation(state, 'hero_guo_jing', 'back', 2)).toEqual({ ok: true, message: '侠客已入阵' })
     expect(state.formation).toEqual([
       { heroId: PLAYER_HERO_ID, row: 'front', position: 0 },
-      { heroId: 'hero_shen_yanqiu', row: 'back', position: 2 },
+      { heroId: 'hero_guo_jing', row: 'back', position: 2 },
     ])
   })
 
   it('两个已上阵侠客交换位置', () => {
     const state = freshState()
-    state.formation.push({ heroId: 'hero_shen_yanqiu', row: 'front', position: 1 })
+    state.formation.push({ heroId: 'hero_guo_jing', row: 'front', position: 1 })
     placeFormation(state, PLAYER_HERO_ID, 'front', 1)
     expect(state.formation).toEqual([
-      { heroId: 'hero_shen_yanqiu', row: 'front', position: 0 },
+      { heroId: 'hero_guo_jing', row: 'front', position: 0 },
       { heroId: PLAYER_HERO_ID, row: 'front', position: 1 },
     ])
   })
 
   it('未上阵侠客拖到已占格时顶替原侠客', () => {
     const state = freshState()
-    placeFormation(state, 'hero_shen_yanqiu', 'front', 0)
-    expect(state.formation).toEqual([{ heroId: 'hero_shen_yanqiu', row: 'front', position: 0 }])
+    placeFormation(state, 'hero_guo_jing', 'front', 0)
+    expect(state.formation).toEqual([{ heroId: 'hero_guo_jing', row: 'front', position: 0 }])
   })
 
   it('侠客拖回自己原位不产生变化', () => {

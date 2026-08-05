@@ -435,8 +435,8 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .career-summary button, .career-options button, .martial-workbench button, .heart-methods button { padding: 6px 9px; font-size: 10px; }
 .career-options h2, .martial-workbench h2, .heart-methods h2, .branch-grid h2 { margin: 18px 0 8px; color: #b9aa8e; font-size: 13px; letter-spacing: .08em; }
 .career-options, .learned-martials { display: grid; gap: 6px; }
-.career-options article, .learned-martials article, .inheritance article, .tavern article, .academy article, .token-shop article { display: flex; align-items: center; gap: 9px; padding: 9px; border: 1px solid #373d34; background: #1d211b; }
-.career-options article strong, .learned-martials article div, .inheritance article div, .tavern article div, .academy article div, .token-shop article div { flex: 1; }
+.career-options article, .learned-martials article, .inheritance article, .tavern article, .academy article, .token-shop article, .faction-invite article { display: flex; align-items: center; gap: 9px; padding: 9px; border: 1px solid #373d34; background: #1d211b; }
+.career-options article strong, .learned-martials article div, .inheritance article div, .tavern article div, .academy article div, .token-shop article div, .faction-invite article div { flex: 1; }
 .career-options small, .learned-martials small, .inheritance small, .tavern small, .academy small, .token-shop small { color: #828578; font-size: 10px; }
 .martial-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .martial-slots article { display: grid; gap: 5px; padding: 9px; border: 1px solid #41483c; background: #171a16; }
@@ -460,9 +460,10 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .quest-card button { min-height: 30px; }
 .branch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .inheritance article > span { width: 34px; color: var(--rarity); font-size: 10px; }
-.faction-invite { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.faction-invite > div { display: flex; align-items: center; gap: 12px; }
-.faction-invite button { padding: 9px 18px; }
+.faction-invite { display: grid; gap: 8px; }
+.faction-invite > header { margin-bottom: 4px; }
+.faction-invite-list { display: grid; gap: 7px; }
+.faction-invite button { padding: 7px 10px; font-size: 10px; }
 
 .city-layout, .inventory-layout { width: min(1400px, 100%); margin: 0 auto; display: grid; gap: 12px; }
 .city-heading > div:last-child, .inventory-heading > strong { text-align: right; color: var(--gold); }
@@ -560,7 +561,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .career-summary { grid-template-columns: 1fr 1fr; }
   .martial-slots, .quest-grid, .branch-grid, .city-columns { grid-template-columns: 1fr; }
   .token-shop { grid-column: auto; }
-  .faction-invite, .faction-invite > div { align-items: flex-start; flex-direction: column; }
+  .faction-invite article { flex-wrap: wrap; }
   .formation-editor-grid { gap: 4px; }
   .formation-editor-slot { min-height: 94px; padding: 5px; }
 }

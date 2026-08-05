@@ -59,7 +59,7 @@ const heroesFixture = (): HeroesPageViewModel => ({
 
 const factionsFixture = (): FactionsPageViewModel => ({
   selectedFactionId: 'qingfeng_hall',
-  factions: [{ id: 'qingfeng_hall', name: '青锋馆', category: '剑', contribution: 600, selected: true }],
+  factions: [{ id: 'qingfeng_hall', name: '全真教', category: '剑', contribution: 600, selected: true }],
   refreshRemainingMs: 3_600_000,
   quests: Array.from({ length: 6 }, (_, index) => ({
     slot: index,
@@ -78,7 +78,11 @@ const factionsFixture = (): FactionsPageViewModel => ({
       rarity: '寻常', cost: 100, learned: false, level: 0,
     })) },
   ],
-  factionHero: { id: 'hero_qingfeng_hall', name: '青锋馆传人', grade: '乙', cost: 800, recruited: false },
+  factionHeroes: [
+    { id: 'hero_qingfeng_hall_01', name: '孙不二', grade: '乙', cost: 800, recruited: false },
+    { id: 'hero_qingfeng_hall_02', name: '刘处玄', grade: '乙', cost: 800, recruited: false },
+    { id: 'hero_qingfeng_hall_03', name: '谭处端', grade: '乙', cost: 800, recruited: false },
+  ],
   selectedHeroId: 'hero_test',
 })
 
@@ -86,7 +90,7 @@ const cityFixture = (): CityPageViewModel => ({
   worldId: 'world_01', worldName: '青石卷', worldCurrency: 1000,
   selectedHeroId: 'hero_test',
   heroes: [{ id: 'hero_test', name: '试剑人' }],
-  tavernHeroes: [{ id: 'hero_shen_yanqiu', name: '沈砚秋', grade: '乙', cost: 280, recruited: false }],
+  tavernHeroes: [{ id: 'hero_guo_jing', name: '郭靖', grade: '乙', cost: 240, recruited: false }],
   martials: [{ id: 'world_01_common_sword_01', name: '青石剑法', rarity: '粗浅', cost: 200, learned: false }],
   careerTokens: [{ id: 'token_sword_swift_mid', name: '游剑客信物', tier: '中级', cost: 300, owned: false }],
 })
@@ -107,7 +111,7 @@ const formationFixture = (): FormationPageViewModel => ({
   formation: [{ heroId: 'hero_test', row: 'front', position: 0 }],
   heroes: [
     { id: 'hero_test', name: '试剑人', grade: '乙', level: 12, inFormation: true },
-    { id: 'hero_shen', name: '沈砚秋', grade: '乙', level: 1, inFormation: false },
+    { id: 'hero_shen', name: '郭靖', grade: '乙', level: 1, inFormation: false },
   ],
 })
 
@@ -206,7 +210,7 @@ describe('version 10 长期循环页面', () => {
   })
 
   it('当前大关没有势力或城市内容时显示本卷空状态', () => {
-    expect(renderFactionsPage({ ...factionsFixture(), factions: [], branches: [], factionHero: null }))
+    expect(renderFactionsPage({ ...factionsFixture(), factions: [], branches: [], factionHeroes: [] }))
       .toContain('本卷暂无可用势力')
     expect(renderCityPage({ ...cityFixture(), tavernHeroes: [], martials: [], careerTokens: [] }))
       .toContain('本卷城市暂无可用内容')

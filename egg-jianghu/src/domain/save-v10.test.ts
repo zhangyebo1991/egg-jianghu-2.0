@@ -76,6 +76,23 @@ describe('version 10 存档', () => {
     expect(loaded.state.factionBoards.qingfeng_hall.refreshRemainingMs).toBe(1234)
   })
 
+  it('内容目录改版后剪枝已删除侠客的进度并清理阵型', () => {
+    const storage = memoryStorage()
+    const state = createNewGameStateV10('燕七', 1000)
+    state.heroes.hero_shen_yanqiu = structuredClone(state.heroes.hero_player)
+    state.formation = [
+      { heroId: 'hero_player', row: 'front', position: 0 },
+      { heroId: 'hero_shen_yanqiu', row: 'back', position: 0 },
+    ]
+    saveGameV10(storage, state, 1000)
+
+    const loaded = loadGameV10(storage, 2000)
+
+    expect(loaded.state.heroes.hero_shen_yanqiu).toBeUndefined()
+    expect(loaded.state.heroes.hero_player).toBeDefined()
+    expect(loaded.state.formation).toEqual([{ heroId: 'hero_player', row: 'front', position: 0 }])
+  })
+
   it('玩家自定义姓名不是字符串时把存档标记为损坏', () => {
     const storage = memoryStorage()
     const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>

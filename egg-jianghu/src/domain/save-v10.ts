@@ -1,4 +1,5 @@
 import { createInitialStateV10 } from './state'
+import { HEROES_V10 } from '../content/heroes'
 import type { GameStateV10 } from './types'
 
 export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v10'
@@ -75,6 +76,16 @@ const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10
   lastSavedAt,
 })
 
+// 内容目录改版后，旧存档可能残留已删除侠客的进度；按当前英雄目录剪枝，避免孤儿英雄。
+const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
+  const knownIds = new Set(HEROES_V10.map((hero) => hero.id))
+  const heroes = Object.fromEntries(
+    Object.entries(state.heroes).filter(([id]) => knownIds.has(id)),
+  )
+  const formation = state.formation.filter((slot) => knownIds.has(slot.heroId))
+  return { ...state, heroes, formation }
+}
+
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
     || raw.version !== 10
@@ -86,7 +97,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
   }
 
   const state = createInitialStateV10(now)
-  return persistentState({
+  return pruneUnknownHeroes(persistentState({
     ...state,
     worldCurrency: isRecord(raw.worldCurrency) ? structuredClone(raw.worldCurrency) as GameStateV10['worldCurrency'] : state.worldCurrency,
     contribution: isRecord(raw.contribution) ? structuredClone(raw.contribution) as GameStateV10['contribution'] : state.contribution,
@@ -99,7 +110,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     factionBoards: isRecord(raw.factionBoards) ? structuredClone(raw.factionBoards) as GameStateV10['factionBoards'] : state.factionBoards,
     inventory: structuredClone(raw.inventory) as GameStateV10['inventory'],
     statistics: isRecord(raw.statistics) ? structuredClone(raw.statistics) as GameStateV10['statistics'] : state.statistics,
-  }, Math.min(now, Number(raw.lastSavedAt) || now))
+  }, Math.min(now, Number(raw.lastSavedAt) || now)))
 }
 
 export const loadExistingGameV10 = (storage: StorageLike, now = Date.now()): LoadResultV10 | null => {

@@ -24,8 +24,8 @@ const dragToSlot = async (page: Page, source: string, target: string): Promise<v
 
 test('桌面拖拽：已占格拖到另一已占格交换位置', async ({ page }) => {
   await page.evaluate(() => {
-    window.__EGG_JIANGHU__.recruitHero('hero_shen_yanqiu')
-    window.__EGG_JIANGHU__.placeHero('hero_shen_yanqiu', 'back', 0)
+    window.__EGG_JIANGHU__.recruitHero('hero_guo_jing')
+    window.__EGG_JIANGHU__.placeHero('hero_guo_jing', 'back', 0)
   })
   await page.getByTestId('tab-formation').click()
 
@@ -34,7 +34,7 @@ test('桌面拖拽：已占格拖到另一已占格交换位置', async ({ page 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
   expect(formation).toEqual(expect.arrayContaining([
     { heroId: 'hero_player', row: 'back', position: 0 },
-    { heroId: 'hero_shen_yanqiu', row: 'front', position: 0 },
+    { heroId: 'hero_guo_jing', row: 'front', position: 0 },
   ]))
 })
 
@@ -59,20 +59,20 @@ test.describe('触屏视口', () => {
 
   test('触屏点击流：点选侠客后点空格置入，点角落×下阵', async ({ page }) => {
     await page.evaluate(() => {
-      window.__EGG_JIANGHU__.recruitHero('hero_shen_yanqiu')
+      window.__EGG_JIANGHU__.recruitHero('hero_guo_jing')
     })
     await page.getByTestId('tab-formation').click()
 
-    await page.getByTestId('formation-hero-hero_shen_yanqiu').click()
+    await page.getByTestId('formation-hero-hero_guo_jing').click()
     await page.locator('[data-row="back"][data-position="1"]').click()
 
     let formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
     expect(formation).toEqual(expect.arrayContaining([
       { heroId: 'hero_player', row: 'front', position: 0 },
-      { heroId: 'hero_shen_yanqiu', row: 'back', position: 1 },
+      { heroId: 'hero_guo_jing', row: 'back', position: 1 },
     ]))
 
-    await page.locator('.formation-slot-remove[data-hero-id="hero_shen_yanqiu"]').click()
+    await page.locator('.formation-slot-remove[data-hero-id="hero_guo_jing"]').click()
     formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
     expect(formation).toEqual([{ heroId: 'hero_player', row: 'front', position: 0 }])
   })

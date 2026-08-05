@@ -4,6 +4,7 @@ import { EQUIPMENT_SLOTS } from './equipment'
 import { EQUIPMENT_NAMES_BY_WORLD } from './equipment-names'
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
 import { FACTION_MARTIALS } from './martials'
+import { HEROES_V10 } from './heroes'
 import { WORLDS } from './worlds'
 
 export const validateContent = (): string[] => {
@@ -86,6 +87,47 @@ export const validateContent = (): string[] => {
       if (seenEquipmentNames.has(name)) errors.push(`装备名重复：${name}`)
       seenEquipmentNames.add(name)
     }
+  }
+
+  const heroIds = new Set(HEROES_V10.map((hero) => hero.id))
+  if (heroIds.size !== HEROES_V10.length) errors.push('侠客 id 重复')
+
+  for (const world of WORLDS) {
+    const tavernHeroes = HEROES_V10.filter((hero) => hero.source === 'tavern' && hero.worldId === world.id)
+    if (world.released && tavernHeroes.length !== 3) errors.push(`${world.id} 酒馆侠客数不是 3`)
+    if (!world.released && tavernHeroes.length !== 0) errors.push(`${world.id} 未开放卷不应有酒馆侠客`)
+  }
+
+  const factionHeroCounts = new Map<string, number>()
+  for (const hero of HEROES_V10) {
+    if (hero.source !== 'faction') continue
+    const factionId = hero.factionId
+    if (!factionId) {
+      errors.push(`${hero.id} 引用了未知势力`)
+      continue
+    }
+    const faction = FACTIONS.find((item) => item.id === factionId)
+    if (!faction) {
+      errors.push(`${hero.id} 引用了未知势力`)
+      continue
+    }
+    factionHeroCounts.set(factionId, (factionHeroCounts.get(factionId) ?? 0) + 1)
+    if (!WORLDS.find((world) => world.id === faction.worldId && world.released)) {
+      errors.push(`${hero.id} 所属势力未在已开放卷`)
+    }
+  }
+  for (const [factionId, count] of factionHeroCounts) {
+    if (count !== 3) errors.push(`${factionId} 势力侠客数不是 3`)
+  }
+
+  const sameWorldEnemy = (hero: { worldId: string; name: string }): boolean => {
+    const names = ENEMY_NAMES_BY_WORLD[hero.worldId]
+    if (!names) return false
+    return names.bosses.includes(hero.name) || names.elite.includes(hero.name) || names.normal.includes(hero.name)
+  }
+  for (const hero of HEROES_V10) {
+    if (hero.source === 'starter') continue
+    if (sameWorldEnemy(hero)) errors.push(`${hero.id} 与 ${hero.worldId} 敌人/BOSS 重名：${hero.name}`)
   }
 
   return errors

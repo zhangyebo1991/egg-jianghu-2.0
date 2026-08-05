@@ -12,7 +12,7 @@ describe('江湖层级页', () => {
       difficulty: 1,
       recommendedPower: 4000,
       clearedStages: 3,
-      factionNames: ['青锋馆', '铁衣武馆', '仁心堂'],
+      factionNames: ['全真教', '丐帮', '桃花岛'],
     }] })
 
     expect(html).toContain('data-testid="world-world_01"')
