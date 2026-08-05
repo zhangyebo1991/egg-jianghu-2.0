@@ -420,20 +420,102 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   padding: 22px 30px 6px;
 }
 .meridian-head .board-title h2 { color: #e6d7b4; }
-/* 研习对象 */
-.disciple { display: flex; align-items: center; gap: 10px; }
+/* 研习对象 · 腰牌 + 点将谱 */
+.disciple { position: relative; display: flex; align-items: center; gap: 10px; }
 .disciple-label { font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute); }
-.disciple-chips { display: flex; gap: 6px; }
-.disciple-chip {
-  display: flex; align-items: center; gap: 7px; padding: 7px 13px;
-  border: 1px solid var(--line); border-radius: 999px;
-  font-size: 12px; letter-spacing: 0.1em; color: var(--paper-dim);
-  transition: all 0.25s var(--ease-out);
+.disciple-plate {
+  display: flex; align-items: center; gap: 9px; padding: 7px 12px 7px 8px;
+  border: 1px solid var(--gold-deep); border-radius: 6px;
+  background: linear-gradient(165deg, rgb(201 163 92 / 12%), rgb(201 163 92 / 4%));
+  transition: border-color 0.25s var(--ease-out), box-shadow 0.25s, transform 0.25s;
 }
-.disciple-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--paper-mute); transition: background 0.25s; }
-.disciple-chip:hover { border-color: var(--jade-dim); color: var(--paper); }
-.disciple-chip.active { border-color: var(--gold); color: var(--gold-bright); background: rgb(201 163 92 / 8%); }
-.disciple-chip.active::before { background: var(--gold-bright); }
+.disciple-plate:hover { border-color: var(--gold); box-shadow: 0 4px 14px rgb(201 163 92 / 18%); transform: translateY(-1px); }
+.disciple-plate[aria-expanded="true"] { border-color: var(--gold-bright); box-shadow: 0 0 0 3px rgb(201 163 92 / 14%); }
+.dp-seal {
+  width: 26px; height: 26px; display: grid; place-items: center; flex: none;
+  font-family: var(--font-brush); font-size: 14px; color: #f8e9da;
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 4px 6px 4px 7px / 6px 4px 7px 4px; transform: rotate(-3deg);
+  box-shadow: inset 0 0 0 1px rgb(255 230 210 / 35%);
+}
+.dp-seal.dp-player { background: linear-gradient(150deg, var(--gold-bright), var(--gold-deep)); color: #2e2208; }
+.dp-name { font-size: 14px; letter-spacing: 0.12em; color: #efe2c6; }
+.dp-cat { font-size: 10px; letter-spacing: 0.18em; color: var(--paper-mute); }
+.dp-caret { color: var(--gold); transition: transform 0.3s var(--ease-out); }
+.disciple-plate[aria-expanded="true"] .dp-caret { transform: rotate(180deg); }
+
+.roster-pop {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 40;
+  width: 336px; display: flex; flex-direction: column;
+  border: 1px solid rgb(201 163 92 / 30%); border-radius: 10px;
+  background: linear-gradient(170deg, #1d221a, #12150f 80%);
+  box-shadow: 0 30px 70px rgb(0 0 0 / 60%), inset 0 1px 0 rgb(233 222 195 / 6%);
+  transform-origin: top right;
+  animation: pop-in 0.38s var(--ease-out);
+}
+@keyframes pop-in { from { opacity: 0; transform: translateY(-8px) scale(0.97); } to { opacity: 1; transform: none; } }
+.roster-pop[hidden] { display: none; }
+.roster-pop > header { display: flex; align-items: center; gap: 12px; padding: 14px 16px 12px; border-bottom: 1px solid var(--line-soft); }
+.roster-pop > header strong { font-family: var(--font-brush); font-size: 20px; font-weight: 400; letter-spacing: 0.16em; color: #e6d7b4; flex: none; }
+.roster-search {
+  flex: 1; min-width: 0; padding: 8px 11px;
+  border: 1px solid var(--line); border-radius: 5px; outline: none;
+  background: var(--ink-950); color: var(--paper); font-size: 12px; letter-spacing: 0.08em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.roster-search:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgb(201 163 92 / 14%); }
+.roster-search::placeholder { color: var(--paper-mute); }
+.roster-list { max-height: 322px; overflow-y: auto; padding: 6px; scrollbar-width: thin; scrollbar-color: #3d4438 transparent; }
+.roster-list::-webkit-scrollbar { width: 8px; }
+.roster-list::-webkit-scrollbar-thumb { background: #333a30; border-radius: 4px; }
+.roster-group + .roster-group { margin-top: 4px; }
+.roster-ghead {
+  position: sticky; top: -6px; z-index: 2;
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 8px 10px 6px; margin: 0 -6px;
+  background: linear-gradient(180deg, #1a1f17 78%, rgb(26 31 23 / 0%));
+  font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute);
+}
+.roster-ghead b { color: #d8c9a4; font-weight: 600; }
+.roster-ghead .gh-hint { margin-left: auto; letter-spacing: 0.14em; color: var(--jade); }
+.roster-row {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px; text-align: left;
+  transition: background 0.2s var(--ease-out);
+}
+.roster-row:hover { background: rgb(233 222 195 / 5%); }
+.roster-row .rr-seal {
+  width: 22px; height: 22px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 12px; color: #f8e9da;
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 4px; box-shadow: inset 0 0 0 1px rgb(255 230 210 / 30%);
+}
+.roster-row .rr-seal.g-甲 { background: linear-gradient(150deg, #a8483a, #7c3026); }
+.roster-row .rr-seal.g-地 { background: linear-gradient(150deg, #8f3a30, #63261d); }
+.roster-row .rr-seal.g-天 { background: linear-gradient(150deg, #b98a3a, #8a6224); }
+.roster-row .rr-seal.g-主 { background: linear-gradient(150deg, var(--gold-bright), var(--gold-deep)); color: #2e2208; }
+.roster-row .rr-name { font-size: 14px; letter-spacing: 0.1em; color: var(--paper); }
+.roster-row .rr-meta { font-size: 10px; color: var(--paper-mute); letter-spacing: 0.08em; margin-top: 2px; }
+.roster-row .rr-fit { margin-left: auto; flex: none; display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.16em; }
+.roster-row .rr-fit.ok { color: var(--jade); }
+.roster-row .rr-fit.ok::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--jade); box-shadow: 0 0 7px rgb(127 168 141 / 70%); }
+.roster-row .rr-fit.no { color: rgb(233 222 195 / 26%); }
+.roster-row.dim .rr-name, .roster-row.dim .rr-meta { opacity: 0.45; }
+.roster-row.dim .rr-seal { filter: grayscale(0.5) brightness(0.8); }
+.roster-row.active { background: rgb(201 163 92 / 9%); box-shadow: inset 2px 0 0 var(--gold); }
+.roster-row.active .rr-name { color: var(--gold-bright); }
+.roster-row .rr-new {
+  flex: none; padding: 1px 6px; border-radius: 3px; font-size: 9px; letter-spacing: 0.1em;
+  color: #2e2208; background: var(--gold-bright);
+}
+.roster-empty { padding: 30px 0 26px; text-align: center; color: var(--paper-mute); font-size: 12px; letter-spacing: 0.3em; }
+.roster-pop > footer {
+  padding: 9px 16px; border-top: 1px solid var(--line-soft);
+  font-size: 10px; letter-spacing: 0.14em; color: var(--paper-mute);
+  display: flex; align-items: center; gap: 7px;
+}
+.roster-pop > footer::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--jade); box-shadow: 0 0 7px rgb(127 168 141 / 70%); }
+.roster-pop > footer b { color: var(--gold-bright); font-weight: 600; }
 
 .branch {
   display: grid; grid-template-columns: 108px minmax(0, 1fr);
@@ -716,7 +798,15 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
         </div>
         <div class="disciple">
           <span class="disciple-label">研习对象</span>
-          <div class="disciple-chips" id="discipleChips"></div>
+          <button type="button" class="disciple-plate" id="disciplePlate" aria-haspopup="true" aria-expanded="false"></button>
+          <div class="roster-pop" id="rosterPop" hidden>
+            <header>
+              <strong>点将谱</strong>
+              <input type="search" class="roster-search" id="rosterSearch" placeholder="以名相寻…" autocomplete="off">
+            </header>
+            <div class="roster-list" id="rosterList"></div>
+            <footer>玉点者 · 可传本派武学 · 共 <b id="rosterCount">0</b> 人</footer>
+          </div>
         </div>
       </header>
       <div id="branchZone"></div>
@@ -844,21 +934,83 @@ FACTIONS.forEach((f) => {
   ];
 });
 
-// 研习对象（已招募侠客）与已学武功：learned[factionId][discipleId][martialKey] = level
+// 已招募侠客名册（演示数据：名字/派系取自游戏真实配置，品级按卷序规则 乙乙乙乙/甲甲甲/地地/天）
+// cat 为职业脉系；主角特殊「百脉皆通」，各派武学皆可研习
+const ROSTER = [
+  { id: 'hero_player', name: '我', cat: '剑', grade: '主', faction: '主角', allMeridian: true },
+  // 剑脉
+  { id: 'r_j01', name: '灭绝师太', cat: '剑', grade: '甲', faction: '峨眉' },
+  { id: 'r_j02', name: '纪晓芙', cat: '剑', grade: '甲', faction: '峨眉' },
+  { id: 'r_j03', name: '周芷若', cat: '剑', grade: '甲', faction: '峨眉' },
+  { id: 'r_j04', name: '余婆', cat: '剑', grade: '甲', faction: '灵鹫宫' },
+  { id: 'r_j05', name: '石嫂', cat: '剑', grade: '甲', faction: '灵鹫宫' },
+  { id: 'r_j06', name: '吴领军', cat: '剑', grade: '地', faction: '逍遥派' },
+  { id: 'r_j07', name: '竹剑', cat: '剑', grade: '天', faction: '灵鹫宫' },
+  { id: 'r_j08', name: '兰剑', cat: '剑', grade: '天', faction: '灵鹫宫' },
+  { id: 'r_j09', name: '梅剑', cat: '剑', grade: '天', faction: '灵鹫宫' },
+  // 刀脉
+  { id: 'r_d01', name: '陆展元', cat: '刀', grade: '乙', faction: '陆家庄' },
+  { id: 'r_d02', name: '公孙止', cat: '刀', grade: '乙', faction: '绝情谷' },
+  { id: 'r_d03', name: '霍都', cat: '刀', grade: '甲', faction: '蒙古大营' },
+  { id: 'r_d04', name: '古笃诚', cat: '刀', grade: '地', faction: '渔樵耕读' },
+  { id: 'r_d05', name: '邓百川', cat: '刀', grade: '天', faction: '姑苏慕容' },
+  { id: 'r_d06', name: '公冶乾', cat: '刀', grade: '天', faction: '姑苏慕容' },
+  { id: 'r_d07', name: '风波恶', cat: '刀', grade: '天', faction: '姑苏慕容' },
+  // 拳脉
+  { id: 'h_gb_1', name: '洪七公', cat: '拳', grade: '乙', faction: '丐帮' },
+  { id: 'h_gb_2', name: '黎生', cat: '拳', grade: '乙', faction: '丐帮' },
+  { id: 'r_q03', name: '黄蓉', cat: '拳', grade: '甲', faction: '丐帮' },
+  { id: 'r_q04', name: '耶律齐', cat: '拳', grade: '甲', faction: '丐帮' },
+  { id: 'r_q05', name: '杨逍', cat: '拳', grade: '甲', faction: '明教' },
+  { id: 'r_q06', name: '范遥', cat: '拳', grade: '甲', faction: '明教' },
+  { id: 'r_q07', name: '殷天正', cat: '拳', grade: '甲', faction: '明教' },
+  { id: 'r_q08', name: '玄慈', cat: '拳', grade: '地', faction: '少林' },
+  { id: 'r_q09', name: '玄苦', cat: '拳', grade: '地', faction: '少林' },
+  { id: 'r_q10', name: '扫地僧', cat: '拳', grade: '地', faction: '少林' },
+  { id: 'r_q11', name: '吴长风', cat: '拳', grade: '地', faction: '丐帮' },
+  // 暗脉
+  { id: 'r_a01', name: '欧阳锋', cat: '暗', grade: '乙', faction: '白驼山' },
+  { id: 'r_a02', name: '杨康', cat: '暗', grade: '乙', faction: '白驼山' },
+  { id: 'r_a03', name: '岳老三', cat: '暗', grade: '乙', faction: '四大恶人' },
+  { id: 'r_a04', name: '叶二娘', cat: '暗', grade: '乙', faction: '四大恶人' },
+  { id: 'r_a05', name: '史伯威', cat: '暗', grade: '乙', faction: '万兽山庄' },
+  { id: 'r_a06', name: '钟万仇', cat: '暗', grade: '甲', faction: '万劫谷' },
+  { id: 'r_a07', name: '甘宝宝', cat: '暗', grade: '甲', faction: '万劫谷' },
+  { id: 'r_a08', name: '阿紫', cat: '暗', grade: '天', faction: '星宿派' },
+  { id: 'r_a09', name: '天狼子', cat: '暗', grade: '天', faction: '星宿派' },
+  // 医脉
+  { id: 'r_y01', name: '本观', cat: '医', grade: '乙', faction: '天龙寺' },
+  { id: 'r_y02', name: '本相', cat: '医', grade: '乙', faction: '天龙寺' },
+  { id: 'r_y03', name: '朱子柳', cat: '医', grade: '甲', faction: '渔樵耕读' },
+  { id: 'r_y04', name: '武三通', cat: '医', grade: '甲', faction: '渔樵耕读' },
+  { id: 'r_y05', name: '石清露', cat: '医', grade: '地', faction: '聪辩门下' },
+  { id: 'r_y06', name: '段正明', cat: '医', grade: '地', faction: '大理段氏' },
+  { id: 'r_y07', name: '枯荣大师', cat: '医', grade: '地', faction: '大理段氏' },
+  // 内家
+  { id: 'r_n01', name: '李莫愁', cat: '内家', grade: '乙', faction: '古墓派' },
+  { id: 'r_n02', name: '陆无双', cat: '内家', grade: '乙', faction: '古墓派' },
+  { id: 'r_n03', name: '段誉', cat: '内家', grade: '乙', faction: '大理段氏' },
+  { id: 'r_n04', name: '丘处机', cat: '内家', grade: '乙', faction: '全真教' },
+  { id: 'r_n05', name: '张三丰', cat: '内家', grade: '甲', faction: '武当' },
+  { id: 'r_n06', name: '宋远桥', cat: '内家', grade: '甲', faction: '武当' },
+  { id: 'r_n07', name: '范百龄', cat: '内家', grade: '甲', faction: '逍遥派' },
+];
+
 const state = {
   factionId: 'qingfeng_hall',
   discipleId: 'hero_player',
-  disciples: [
-    { id: 'hero_player', name: '我', tag: '主角' },
-    { id: 'h_gb_1', name: '洪七公', tag: '丐帮' },
-  ],
+  rosterQuery: '',
   learned: {
-    qingfeng_hall: { hero_player: { qingfeng_hall_b11: 3, qingfeng_hall_b12: 1 } },
+    qingfeng_hall: { hero_player: { qingfeng_hall_b11: 20, qingfeng_hall_b12: 1 } },
     tieyi_school: { hero_player: {} },
     renxin_hall: { hero_player: { renxin_hall_b11: 1 } },
   },
   acceptedCount: 3,
 };
+
+const currentDisciple = () => ROSTER.find((d) => d.id === state.discipleId) ?? ROSTER[0];
+// 简化兼容判定：真实规则为 martial.careerIds.includes(hero.currentCareerId)
+const discipleFits = (d, f) => Boolean(d.allMeridian) || d.cat === f.category;
 
 const faction = () => FACTIONS.find((f) => f.id === state.factionId);
 const learnedOf = (fid) => (state.learned[fid] ||= {})[state.discipleId] ||= {};
@@ -980,7 +1132,9 @@ function veinD(endX) {
 function acuState(m, learned, stageIdx) {
   const lv = learned[m.key];
   if (lv) return { cls: 'learned', lv };
-  if (stageIdx === 0 || learned[`${m.key.slice(0, -1)}${stageIdx}`]) return { cls: 'next' };
+  if (stageIdx === 0) return { cls: 'next' };
+  // 真实规则：同线前置武功须达 Lv.20 方可研习下一阶
+  if ((learned[`${m.key.slice(0, -1)}${stageIdx}`] ?? 0) >= 20) return { cls: 'next' };
   return { cls: 'locked' };
 }
 
@@ -1019,17 +1173,24 @@ function renderAcuDetail() {
   const box = $('#acuDetail');
   if (!openAcu) { box.className = 'acu-detail'; box.innerHTML = ''; return; }
   const f = faction();
-  const m = f.martialBranches[openAcu.branch].martials[openAcu.stage];
+  const br = f.martialBranches[openAcu.branch];
+  const m = br.martials[openAcu.stage];
   const learned = learnedOf(f.id);
   const lv = learned[m.key] || 0;
   const st = acuState(m, learned, openAcu.stage);
   const upCost = Math.ceil(m.cost * (1 + lv * 0.2));
   const afford = f.contribution >= (lv ? upCost : m.cost);
+  const fits = discipleFits(currentDisciple(), f);
   const btn = st.cls === 'locked'
-    ? `<button type="button" class="btn-learn" disabled>先通前穴</button>`
-    : lv
-      ? `<button type="button" class="btn-learn upgrade" data-acu="upgrade" ${afford ? '' : 'disabled'}>${afford ? `升级 · 贡献 ${upCost}` : '贡献不足'}</button>`
-      : `<button type="button" class="btn-learn" data-acu="learn" ${afford ? '' : 'disabled'}>${afford ? `研习 · 贡献 ${m.cost}` : '贡献不足'}</button>`;
+    ? `<button type="button" class="btn-learn" disabled>前穴未满 · Lv.20</button>`
+    : lv >= 20
+      ? `<button type="button" class="btn-learn" disabled>已臻化境</button>`
+      : lv
+        ? `<button type="button" class="btn-learn upgrade" data-acu="upgrade" ${afford ? '' : 'disabled'}>${afford ? `升级 · 贡献 ${upCost}` : '贡献不足'}</button>`
+        : !fits
+          ? `<button type="button" class="btn-learn" disabled>职不符 · 不可传</button>`
+          : `<button type="button" class="btn-learn" data-acu="learn" ${afford ? '' : 'disabled'}>${afford ? `研习 · 贡献 ${m.cost}` : '贡献不足'}</button>`;
+  const prevStat = openAcu.stage > 0 ? `<span>前置 <b>${br.martials[openAcu.stage - 1].short} Lv.20</b></span>` : '';
   box.innerHTML = `
     <div>
       <div class="ad-name">${f.name} · ${m.short}${lv ? ` <span style="font-size:14px;color:var(--gold-bright)">Lv.${lv}</span>` : ''}</div>
@@ -1038,7 +1199,8 @@ function renderAcuDetail() {
         <span>耗气 <b>${m.energy}</b></span>
         <span>调息 <b>${m.cooldown.toFixed(1)}s</b></span>
         <span>威力 <b>${m.power}</b></span>
-        <span>研习 <i>${state.disciples.find((d) => d.id === state.discipleId)?.name ?? '我'}</i></span>
+        ${prevStat}
+        <span>研习 <i>${currentDisciple().name}</i></span>
       </div>
     </div>
     ${btn}`;
@@ -1069,14 +1231,72 @@ function updateVeins() {
     lit.style.strokeDasharray = `${total}`;
     lit.style.strokeDashoffset = `${total}`;          // 先复位
     lit.getBoundingClientRect();                       // 强制 reflow 以播放过渡
+    lit.style.visibility = litLen > 0 ? 'visible' : 'hidden';  // 隐藏零长度时的线帽残影
     lit.style.strokeDashoffset = `${total - litLen}`;
   });
 }
 
-/* ---------- 门人 ---------- */
-function renderDiscipleChips() {
-  $('#discipleChips').innerHTML = state.disciples.map((d) => `
-    <button type="button" class="disciple-chip ${d.id === state.discipleId ? 'active' : ''}" data-disciple="${d.id}">${d.name}</button>`).join('');
+/* ---------- 研习对象 · 腰牌与点将谱 ---------- */
+const CAT_ORDER = ['剑', '刀', '拳', '暗', '医', '内家'];
+
+function renderDisciplePlate() {
+  const d = currentDisciple();
+  $('#disciplePlate').innerHTML = `
+    <span class="dp-seal ${d.allMeridian ? 'dp-player' : ''}">${d.grade}</span>
+    <span class="dp-name">${d.name}</span>
+    <span class="dp-cat">${d.allMeridian ? '百脉皆通' : `${d.cat} 脉`}</span>
+    <svg class="dp-caret" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1 L5 5 L9 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+}
+
+function rosterRowHTML(d, f) {
+  const fits = discipleFits(d, f);
+  return `<button type="button" class="roster-row ${fits ? '' : 'dim'} ${d.id === state.discipleId ? 'active' : ''}" data-hero="${d.id}">
+    <span class="rr-seal g-${d.grade}">${d.grade}</span>
+    <span>
+      <span class="rr-name">${d.name}</span>
+      <div class="rr-meta">${d.faction} · ${d.allMeridian ? '百脉皆通' : `${d.cat} 脉`}</div>
+    </span>
+    ${d.isNew ? '<span class="rr-new">新入</span>' : ''}
+    <span class="rr-fit ${fits ? 'ok' : 'no'}">${fits ? '可传' : '职不符'}</span>
+  </button>`;
+}
+
+function renderRosterList() {
+  const f = faction();
+  const q = state.rosterQuery.trim();
+  let html = '';
+  if (q) {
+    const hits = ROSTER.filter((d) => d.name.includes(q));
+    html = hits.length
+      ? `<div class="roster-group"><div class="roster-ghead"><b>寻人结果</b><span>${hits.length} 人</span></div>${hits.map((d) => rosterRowHTML(d, f)).join('')}</div>`
+      : '<div class="roster-empty">江湖无此人</div>';
+    $('#rosterCount').textContent = hits.length;
+  } else {
+    const cats = [f.category, ...CAT_ORDER.filter((c) => c !== f.category)];
+    for (const cat of cats) {
+      const group = ROSTER.filter((d) => d.cat === cat && !d.allMeridian);
+      if (cat === f.category) group.unshift(...ROSTER.filter((d) => d.allMeridian));
+      if (group.length === 0) continue;
+      html += `<div class="roster-group">
+        <div class="roster-ghead"><b>${cat} 脉</b><span>${group.length} 人</span>${cat === f.category ? '<span class="gh-hint">可传本派武学</span>' : ''}</div>
+        ${group.map((d) => rosterRowHTML(d, f)).join('')}
+      </div>`;
+    }
+    $('#rosterCount').textContent = ROSTER.length;
+  }
+  $('#rosterList').innerHTML = html;
+}
+
+function setRosterOpen(open) {
+  const pop = $('#rosterPop');
+  pop.hidden = !open;
+  $('#disciplePlate').setAttribute('aria-expanded', String(open));
+  if (open) {
+    state.rosterQuery = '';
+    $('#rosterSearch').value = '';
+    renderRosterList();
+    setTimeout(() => $('#rosterSearch').focus(), 60);
+  }
 }
 
 function renderCallingCards() {
@@ -1104,7 +1324,7 @@ function renderAll() {
   renderPlaques();
   renderBoard();
   renderMeridian();
-  renderDiscipleChips();
+  renderDisciplePlate();
   renderCallingCards();
   $('#purseFaction').textContent = faction().name;
   animatePurse(faction().contribution);
@@ -1119,15 +1339,22 @@ document.addEventListener('click', (e) => {
     if (t.dataset.faction !== state.factionId) {
       state.factionId = t.dataset.faction;
       openAcu = null;
+      setRosterOpen(false);
       renderAll();
     }
     return;
   }
 
-  if (t.dataset.disciple) {
-    state.discipleId = t.dataset.disciple;
+  if (t.id === 'disciplePlate') {
+    setRosterOpen($('#rosterPop').hidden);
+    return;
+  }
+
+  if (t.dataset.hero) {
+    state.discipleId = t.dataset.hero;
     openAcu = null;
-    renderDiscipleChips();
+    setRosterOpen(false);
+    renderDisciplePlate();
     renderMeridian();
     return;
   }
@@ -1183,12 +1410,24 @@ document.addEventListener('click', (e) => {
     if (f.contribution < h.cost) { toast('贡献不足 · 难以服人', true); return; }
     f.contribution -= h.cost;
     h.recruited = true; h.fresh = true;
-    if (!state.disciples.some((d) => d.id === h.id)) state.disciples.push({ id: h.id, name: h.name, tag: f.name });
-    renderPlaques(); renderCallingCards(); renderDiscipleChips(); animatePurse(f.contribution);
-    toast(`${h.name} 已入麾下`);
+    if (!ROSTER.some((d) => d.id === h.id)) ROSTER.splice(1, 0, { id: h.id, name: h.name, cat: f.category, grade: h.grade, faction: f.name, isNew: true });
+    renderPlaques(); renderCallingCards(); renderDisciplePlate(); animatePurse(f.contribution);
+    toast(`${h.name} 已入麾下 · 点将谱在册`);
     setTimeout(() => { h.fresh = false; }, 600);
     return;
   }
+});
+
+/* 点将谱：外部点击 / Esc 关闭，搜索过滤 */
+document.addEventListener('click', (e) => {
+  if (!$('#rosterPop').hidden && !e.target.closest('.disciple')) setRosterOpen(false);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('#rosterPop').hidden) setRosterOpen(false);
+});
+$('#rosterSearch').addEventListener('input', (e) => {
+  state.rosterQuery = e.target.value;
+  renderRosterList();
 });
 
 /* ---------- 一炷香 · 换榜 ---------- */
