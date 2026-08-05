@@ -1,5 +1,6 @@
 import './style.css'
 import { GameSession, SaveConflictError } from './app/game-session'
+import { RuntimeClock } from './app/runtime-clock'
 import { createRng } from './combat/rng'
 import { buildCombatStats } from './combat/stats'
 import { COMBAT_TICK_MS } from './combat/timeline'
@@ -20,7 +21,7 @@ import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTI
 import { WORLDS } from './content/worlds'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
-import { discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
+import { backpackEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
@@ -43,6 +44,9 @@ import { renderStartPage } from './ui/start-page'
 const app = document.querySelector<HTMLDivElement>('#app')
 if (!app) throw new Error('缺少 #app 根节点')
 const patchApp = createDomPatcher(app)
+const MAX_COMBAT_REALTIME_TICKS_PER_PULSE = 600
+const runtimeClock = new RuntimeClock(COMBAT_TICK_MS, performance.now())
+const combatClock = new RuntimeClock(COMBAT_TICK_MS, performance.now())
 
 const toast = document.createElement('div')
 toast.className = 'toast'
@@ -80,6 +84,7 @@ let startBusy = false
 let showResetConfirmation = false
 let openEquipmentTooltip: HTMLDivElement | null = null
 let openEquipmentTooltipAnchor: HTMLElement | null = null
+let trackedCombat: GameSession['combat'] = null
 
 const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item'
 const EQUIPMENT_TOOLTIP_GAP = 10
@@ -206,6 +211,10 @@ const enterPlaying = (nextSession: GameSession): void => {
   combatLogs = []
   showResetConfirmation = false
   overwriteSaveSnapshot = null
+  const now = performance.now()
+  runtimeClock.reset(now)
+  combatClock.reset(now)
+  trackedCombat = session.combat
 }
 
 const ensurePlaying = (): GameSession => {
@@ -274,7 +283,7 @@ const idleViewModel = (): IdlePageViewModel => {
   return {
     worldName: world.name,
     selectedStage: combat.stage,
-    inventoryCount: session.state.inventory.length,
+    inventoryCount: backpackEquipment(session.state).length,
     inventoryCapacity: INVENTORY_CAPACITY,
     combatSpeed,
     combat: {
@@ -403,7 +412,8 @@ const heroesViewModel = (): HeroesPageViewModel => {
     ? [...FACTION_HEART_METHODS, ...CITY_HEART_METHODS].filter((method) =>
       session.state.unlockedWorldIds.includes(method.worldId) && method.careerIds.includes(selectedProgress.currentCareerId))
     : []
-  const inventoryItems = session.state.inventory.map(heroEquipmentView)
+  const allEquipmentItems = session.state.inventory.map(heroEquipmentView)
+  const inventoryItems = allEquipmentItems.filter((item) => !item.equippedByHeroId)
 
   return {
     selectedHeroId: selectedId,
@@ -426,7 +436,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
         equipmentSlots: EQUIPMENT_SLOTS.map((slot) => ({
           id: slot,
           name: equipmentSlotNames[slot],
-          equipment: inventoryItems.find((item) => item.uid === progress.equipmentBySlot[slot]) ?? null,
+          equipment: allEquipmentItems.find((item) => item.uid === progress.equipmentBySlot[slot]) ?? null,
         })),
         learnedMartials: Object.entries(progress.learnedMartials).map(([id, learnedRecord]) => {
           const martial = martialByIdV10(id)
@@ -564,7 +574,7 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     selectedHeroId: selectedId,
     heroes,
     capacity: INVENTORY_CAPACITY,
-    items: session.state.inventory.map((item) => {
+    items: backpackEquipment(session.state).map((item) => {
       const definition = equipmentDefinitionById(item.definitionId)
       return {
         uid: item.uid,
@@ -1079,17 +1089,43 @@ window.addEventListener('storage', (event) => {
   render()
 })
 
-window.setInterval(() => {
-  if (appScreen !== 'playing') return
+const runGameLoop = (): void => {
+  const now = performance.now()
+  if (appScreen !== 'playing') {
+    runtimeClock.reset(now)
+    combatClock.reset(now)
+    trackedCombat = null
+    return
+  }
+  const runtimePulse = runtimeClock.consume(now, Number.MAX_SAFE_INTEGER)
+  let combatTickCount = 0
+  if (session.combat) {
+    if (session.combat !== trackedCombat) combatClock.reset(now)
+    trackedCombat = session.combat
+    const combatPulse = combatClock.consume(now, MAX_COMBAT_REALTIME_TICKS_PER_PULSE)
+    combatTickCount = combatPulse.tickCount * combatSpeed
+  } else {
+    combatClock.reset(now)
+    trackedCombat = null
+  }
+  if (runtimePulse.tickCount === 0 && combatTickCount === 0) return
   try {
-    if (session.combat) logEvents(session.advanceTicks(combatSpeed))
-    session.advanceRuntime(COMBAT_TICK_MS)
+    if (combatTickCount > 0) {
+      logEvents(session.advanceRealtimeTicks(combatTickCount))
+      trackedCombat = session.combat
+    }
+    session.advanceRuntime(runtimePulse.elapsedMs)
   } catch (error) {
     handleSessionSaveError(error)
     return
   }
   render()
-}, COMBAT_TICK_MS)
+}
+
+window.setInterval(runGameLoop, COMBAT_TICK_MS)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) runGameLoop()
+})
 
 window.addEventListener('beforeunload', () => {
   if (appScreen !== 'playing') return

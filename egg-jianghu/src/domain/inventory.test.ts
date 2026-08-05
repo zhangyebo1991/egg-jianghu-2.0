@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { addEquipment, discardEquipmentByQuality, INVENTORY_CAPACITY, organizeInventory } from './inventory'
+import {
+  addEquipment,
+  backpackEquipment,
+  discardEquipmentByQuality,
+  equipEquipment,
+  INVENTORY_CAPACITY,
+  organizeInventory,
+  unequipEquipment,
+} from './inventory'
 import { createInitialStateV10, createNewGameStateV10 } from './state'
 import type { EquipmentInstance, EquipmentQuality } from './types'
 
@@ -29,6 +37,60 @@ describe('装备背包', () => {
     addEquipment(state, equipment('same'))
 
     expect(() => addEquipment(state, equipment('same'))).toThrow('重复装备 uid')
+  })
+
+  it('穿戴后移出物品栏，卸下后重新进入物品栏', () => {
+    const state = createNewGameStateV10('测试')
+    state.inventory = [equipment('weapon')]
+
+    expect(equipEquipment(state, 'hero_player', 'weapon')).toEqual({ ok: true, message: '装备成功' })
+    expect(backpackEquipment(state)).toEqual([])
+
+    expect(unequipEquipment(state, 'hero_player', 'weapon')).toEqual({ ok: true, message: '已卸下装备' })
+    expect(backpackEquipment(state).map((item) => item.uid)).toEqual(['weapon'])
+  })
+
+  it('已穿戴装备不占用物品栏容量', () => {
+    const state = createNewGameStateV10('测试')
+    state.inventory = [
+      equipment('worn'),
+      ...Array.from({ length: INVENTORY_CAPACITY - 1 }, (_, index) => equipment(`loose_${index}`)),
+    ]
+    state.heroes.hero_player.equipmentBySlot.weapon = 'worn'
+
+    expect(addEquipment(state, equipment('last-slot'))).toEqual({ ok: true })
+    expect(backpackEquipment(state)).toHaveLength(INVENTORY_CAPACITY)
+    expect(state.inventory).toHaveLength(INVENTORY_CAPACITY + 1)
+  })
+
+  it('物品栏已满时禁止卸下且保持当前穿戴', () => {
+    const state = createNewGameStateV10('测试')
+    state.inventory = [
+      equipment('worn'),
+      ...Array.from({ length: INVENTORY_CAPACITY }, (_, index) => equipment(`loose_${index}`)),
+    ]
+    state.heroes.hero_player.equipmentBySlot.weapon = 'worn'
+
+    expect(unequipEquipment(state, 'hero_player', 'weapon'))
+      .toEqual({ ok: false, message: '物品栏已满，无法卸下装备' })
+    expect(state.heroes.hero_player.equipmentBySlot.weapon).toBe('worn')
+    expect(backpackEquipment(state)).toHaveLength(INVENTORY_CAPACITY)
+  })
+
+  it('物品栏已满时仍可原子替换同部位装备', () => {
+    const state = createNewGameStateV10('测试')
+    state.inventory = [
+      equipment('worn'),
+      equipment('replacement'),
+      ...Array.from({ length: INVENTORY_CAPACITY - 1 }, (_, index) => equipment(`loose_${index}`)),
+    ]
+    state.heroes.hero_player.equipmentBySlot.weapon = 'worn'
+
+    expect(equipEquipment(state, 'hero_player', 'replacement')).toEqual({ ok: true, message: '装备成功' })
+    expect(state.heroes.hero_player.equipmentBySlot.weapon).toBe('replacement')
+    expect(backpackEquipment(state)).toHaveLength(INVENTORY_CAPACITY)
+    expect(backpackEquipment(state).map((item) => item.uid)).toContain('worn')
+    expect(backpackEquipment(state).map((item) => item.uid)).not.toContain('replacement')
   })
 
   it('整理物品时按部位、品质和等级稳定排序', () => {

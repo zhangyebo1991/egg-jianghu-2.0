@@ -5,11 +5,15 @@ export const INVENTORY_CAPACITY = 300
 
 export type AddEquipmentResult = { ok: true } | { ok: false; reason: 'inventory-full' }
 
+// inventory 保存全部装备实例；物品栏仅包含尚未被侠客穿戴的装备。
+export const backpackEquipment = (state: GameStateV10): EquipmentInstance[] =>
+  state.inventory.filter((item) => equipmentOwnerId(state, item.uid) === null)
+
 export const addEquipment = (
   state: GameStateV10,
   equipment: EquipmentInstance,
 ): AddEquipmentResult => {
-  if (state.inventory.length >= INVENTORY_CAPACITY) {
+  if (backpackEquipment(state).length >= INVENTORY_CAPACITY) {
     state.statistics.equipmentMissedAtCapacity += 1
     return { ok: false, reason: 'inventory-full' }
   }
@@ -46,6 +50,9 @@ export const unequipEquipment = (
 ): ActionResult => {
   const hero = state.heroes[heroId]
   if (!hero?.equipmentBySlot[slot]) return { ok: false, message: '该部位没有装备' }
+  if (backpackEquipment(state).length >= INVENTORY_CAPACITY) {
+    return { ok: false, message: '物品栏已满，无法卸下装备' }
+  }
   hero.equipmentBySlot[slot] = null
   return { ok: true, message: '已卸下装备' }
 }

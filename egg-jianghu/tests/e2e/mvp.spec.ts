@@ -282,6 +282,9 @@ test('侠客页物品栏支持筛选整理、双击或右键装备及同部位�
   await page.getByTestId('hero-inventory-item-debug-equipment-0').dblclick()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_player.equipmentBySlot.weapon))
     .toBe('debug-equipment-0')
+  await expect(page.getByTestId('hero-inventory-item-debug-equipment-0')).toHaveCount(0)
+  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(1)
+  await expect(panel).toContainText('1 / 300')
 
   const slot = page.getByTestId('hero-equipment-slot-weapon')
   await expect(slot).toContainText('柴刀')
@@ -307,13 +310,20 @@ test('侠客页物品栏支持筛选整理、双击或右键装备及同部位�
   await replacement.click({ button: 'right' })
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_player.equipmentBySlot.weapon))
     .toBe('debug-equipment-1')
+  await expect(page.getByTestId('hero-inventory-item-debug-equipment-1')).toHaveCount(0)
+  await expect(page.getByTestId('hero-inventory-item-debug-equipment-0')).toBeVisible()
 
   await panel.locator('[data-hero-inventory-filter="slot"]').selectOption('head')
   await expect(panel.locator('[data-equipment-uid]')).toHaveCount(0)
   await panel.locator('[data-hero-inventory-filter="slot"]').selectOption('weapon')
-  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(2)
+  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(1)
   await panel.getByRole('button', { name: '整理' }).click()
   await expect(page.getByRole('status')).toHaveText('物品已按部位、品质和等级整理')
+
+  await slot.getByRole('button', { name: '卸下' }).click()
+  await expect(slot).toContainText('未装备')
+  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(2)
+  await expect(page.getByTestId('hero-inventory-item-debug-equipment-1')).toBeVisible()
 
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(300))
   await expect(panel.locator('[data-equipment-uid]')).toHaveCount(200)

@@ -48,7 +48,7 @@ const heroesFixture = (): HeroesPageViewModel => ({
   careers: [{ id: 'sword_swift_mid', name: '游剑客', tier: '中级', owned: false, tokenOwned: true }],
   martials: [],
   heartMethods: [],
-  inventoryItems: [equippedWeapon, inventoryWeapon],
+  inventoryItems: [inventoryWeapon],
   inventoryCapacity: 300,
   inventorySlotFilter: 'all',
   inventoryQualityFilter: 'all',
@@ -148,6 +148,7 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-hero-inventory-filter="slot"')
     expect(html).toContain('data-action="organize-hero-inventory"')
     expect(html).toContain('data-testid="hero-inventory-item-weapon_new"')
+    expect(html).not.toContain('data-testid="hero-inventory-item-weapon_old"')
     expect(html).toContain('role="tooltip" popover="manual"')
     expect(html).toContain('当前查看')
     expect(html).toContain('当前穿戴')

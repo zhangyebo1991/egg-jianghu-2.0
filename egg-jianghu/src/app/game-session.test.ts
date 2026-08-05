@@ -174,6 +174,19 @@ describe('GameSession', () => {
     expect(JSON.parse(storage.getItem(SAVE_KEY_V10)!).combat).toBeUndefined()
   })
 
+  it('实时补帧跨越战斗胜利后继续挂机', () => {
+    const session = sessionWithParty()
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 11 }).ok).toBe(true)
+    makePartyOverwhelming(session)
+
+    session.advanceRealtimeTicks(5_000)
+
+    expect(session.state.clearedStageByWorld.world_01).toBeGreaterThanOrEqual(1)
+    expect(session.selection).toEqual({ worldId: 'world_01', stage: 1, mode: 'guard' })
+    expect(session.combat?.state.result).toBe('fighting')
+    expect(session.combat?.state.elapsedMs).toBeGreaterThan(0)
+  })
+
   it('闯荡失败自动切驻守并重新创建回退关卡', () => {
     const session = sessionWithParty()
     session.state.clearedStageByWorld.world_01 = 3

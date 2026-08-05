@@ -146,6 +146,27 @@ export class GameSession {
     return events
   }
 
+  advanceRealtimeTicks(count: number): CombatEvent[] {
+    const events: CombatEvent[] = []
+    const safeCount = Math.max(0, Math.floor(count))
+    let changed = false
+
+    for (let index = 0; index < safeCount && this.combat; index += 1) {
+      const tickEvents = this.combat.tick(1)
+      events.push(...tickEvents)
+      for (const event of tickEvents) {
+        changed = settleCombatEvent(this.state, event).needsSave || changed
+      }
+      changed = this.handleResult(false) || changed
+    }
+
+    if (changed) {
+      this.ensureFactionBoards(true)
+      this.save()
+    }
+    return events
+  }
+
   advanceRuntime(elapsedMs: number): void {
     const before = JSON.stringify(this.state.factionBoards)
     advanceQuestBoards(this.state, elapsedMs, this.runtimeRng)
@@ -186,8 +207,8 @@ export class GameSession {
     }))
   }
 
-  private handleResult(): void {
-    if (!this.combat || !this.selection) return
+  private handleResult(saveImmediately = true): boolean {
+    if (!this.combat || !this.selection) return false
     if (this.combat.state.result === 'victory') {
       const completed = this.selection
       this.state.clearedStageByWorld[completed.worldId] = Math.max(
@@ -205,11 +226,12 @@ export class GameSession {
         }
       }
       this.restartSelection(resolveVictory(completed))
-      this.save()
-      return
+      if (saveImmediately) this.save()
+      return true
     }
     if (this.combat.state.result === 'defeat') {
       this.restartSelection(resolveDefeat(this.selection))
     }
+    return false
   }
 }
