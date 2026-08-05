@@ -58,8 +58,12 @@ const heroesFixture = (): HeroesPageViewModel => ({
 })
 
 const factionsFixture = (): FactionsPageViewModel => ({
+  worldIndex: 1,
+  worldName: '牛家村',
   selectedFactionId: 'qingfeng_hall',
-  factions: [{ id: 'qingfeng_hall', name: '全真教', category: '剑', contribution: 600, selected: true }],
+  factions: [{
+    id: 'qingfeng_hall', name: '全真教', category: '剑', branchNames: ['快剑', '重剑'], contribution: 600, selected: true,
+  }],
   refreshRemainingMs: 3_600_000,
   quests: Array.from({ length: 6 }, (_, index) => ({
     slot: index,
@@ -71,11 +75,17 @@ const factionsFixture = (): FactionsPageViewModel => ({
   branches: [
     { name: '快剑', martials: [1, 2, 3, 4].map((stage) => ({
       id: `qingfeng_hall_${stage}`, name: `快剑第${stage}式`, stage: stage as 1 | 2 | 3 | 4,
-      rarity: '粗浅', cost: 80, learned: false, level: 0,
+      rarity: '粗浅', cost: 80, upgradeCost: 96, learned: false, level: 0, state: stage === 1 ? 'next' : 'locked',
+      energyCost: 12, cooldownMs: 2200, power: 1.15, previousName: stage === 1 ? null : `快剑第${stage - 1}式`,
+      careerNames: ['剑客', '游剑客'], careerCompatible: true, affordable: true, actionDisabled: false, actionReason: null,
+      selected: stage === 1,
     })) },
     { name: '重剑', martials: [1, 2, 3, 4].map((stage) => ({
       id: `qingfeng_hall_b${stage}`, name: `重剑第${stage}式`, stage: stage as 1 | 2 | 3 | 4,
-      rarity: '寻常', cost: 100, learned: false, level: 0,
+      rarity: '寻常', cost: 100, upgradeCost: 120, learned: false, level: 0, state: stage === 1 ? 'next' : 'locked',
+      energyCost: 12, cooldownMs: 2200, power: 1.15, previousName: stage === 1 ? null : `重剑第${stage - 1}式`,
+      careerNames: ['剑客', '重剑客'], careerCompatible: true, affordable: true, actionDisabled: false, actionReason: null,
+      selected: false,
     })) },
   ],
   factionHeroes: [
@@ -84,6 +94,22 @@ const factionsFixture = (): FactionsPageViewModel => ({
     { id: 'hero_qingfeng_hall_03', name: '谭处端', grade: '乙', cost: 800, recruited: false },
   ],
   selectedHeroId: 'hero_test',
+  selectedHero: {
+    id: 'hero_test', name: '试剑人', grade: '主', category: '剑', factionName: '江湖散人', compatible: true, selected: true, isPlayer: true,
+  },
+  roster: [{
+    id: 'hero_test', name: '试剑人', grade: '主', category: '剑', factionName: '江湖散人', compatible: true, selected: true, isPlayer: true,
+  }],
+  rosterCount: 1,
+  rosterOpen: false,
+  rosterQuery: '',
+  selectedMartialId: 'qingfeng_hall_1',
+  selectedMartial: {
+    id: 'qingfeng_hall_1', name: '快剑第一式', stage: 1, rarity: '粗浅', cost: 80, upgradeCost: 96,
+    learned: false, level: 0, state: 'next', energyCost: 12, cooldownMs: 2200, power: 1.15,
+    previousName: null, careerNames: ['剑客', '游剑客'], careerCompatible: true, affordable: true,
+    actionDisabled: false, actionReason: null, selected: true,
+  },
 })
 
 const cityFixture = (): CityPageViewModel => ({

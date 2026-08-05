@@ -440,17 +440,70 @@ test('第 301 件装备被拒绝且战斗继续', async ({ page }) => {
 })
 
 test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page }) => {
-  await page.evaluate(() => window.__EGG_JIANGHU__.prepareQuestBoard('qingfeng_hall', 211))
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.grantContribution('qingfeng_hall', 1_000)
+    window.__EGG_JIANGHU__.grantContribution('tieyi_school', 400)
+    window.__EGG_JIANGHU__.prepareQuestBoard('qingfeng_hall', 211)
+  })
   await openWorldSection(page, 'factions')
   await expect(page.locator('[data-quest-slot]')).toHaveCount(6)
-  await expect(page.locator('.quest-grid')).not.toContainText('world_01_stage_01')
-  await expect(page.locator('.quest-card p').first()).toContainText(/^(?:村中泼皮|段天德)$/)
+  await expect(page.locator('.faction-quest-grid')).not.toContainText('world_01_stage_01')
+  await expect(page.locator('.faction-notice h3').first()).toContainText(/^(?:村中泼皮|段天德)$/)
+  await page.waitForTimeout(750)
+  const questCard = page.getByTestId('quest-slot-0')
+  const restingTransform = await questCard.evaluate((element) => getComputedStyle(element).transform)
+  await questCard.hover()
+  await expect.poll(() => questCard.evaluate((element) => getComputedStyle(element).transform)).not.toBe(restingTransform)
+  await page.getByTestId('faction-page-title').hover()
+  await expect.poll(() => questCard.evaluate((element) => getComputedStyle(element).transform)).toBe(restingTransform)
+
+  const purse = page.getByTestId('faction-purse').locator('strong')
+  await page.getByTestId('faction-plaque-tieyi_school').click()
+  const cardMotionPlaying = await page.getByTestId('quest-slot-0').evaluate((element) =>
+    element.getAnimations().some((animation) => animation.playState === 'running'))
+  const purseMotionPlaying = await page.getByTestId('faction-purse').evaluate((element) =>
+    element.getAnimations().some((animation) => animation.playState === 'running'))
+  expect(cardMotionPlaying).toBe(true)
+  expect(purseMotionPlaying).toBe(true)
+  await page.waitForTimeout(120)
+  const tieyiContribution = await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school ?? 0)
+  expect(await purse.textContent()).not.toBe(tieyiContribution.toLocaleString('zh-CN'))
+  await expect(purse).toHaveText(tieyiContribution.toLocaleString('zh-CN'), { timeout: 1_000 })
+  await page.getByTestId('faction-plaque-qingfeng_hall').click()
+  await expect(page.getByTestId('faction-plaque-qingfeng_hall')).toHaveAttribute('aria-pressed', 'true')
+  await page.waitForTimeout(750)
+
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.qingfeng_hall.slots.map((slot) => slot?.id ?? null))
-  await page.getByTestId('quest-slot-0').getByRole('button', { name: '接受' }).click()
+  await page.getByTestId('quest-slot-0').getByRole('button', { name: '揭榜' }).click()
   await page.evaluate(() => window.__EGG_JIANGHU__.advanceRuntime(3_600_000))
   const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.qingfeng_hall.slots.map((slot) => slot?.id ?? null))
   expect(after[0]).toBe(before[0])
   expect(after.slice(1)).not.toEqual(before.slice(1))
+})
+
+test('势力页支持切换匾额、点将谱搜索和经脉研习', async ({ page }) => {
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
+    window.__EGG_JIANGHU__.grantContribution('qingfeng_hall', 1000)
+  })
+  await openWorldSection(page, 'factions')
+
+  await page.getByTestId('faction-plaque-tieyi_school').click()
+  await expect(page.getByTestId('faction-plaque-tieyi_school')).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('faction-page-title')).toBeVisible()
+  await page.getByTestId('faction-plaque-qingfeng_hall').click()
+
+  await page.locator('[data-action="toggle-faction-roster"]').click()
+  await expect(page.getByTestId('faction-roster')).toBeVisible()
+  await page.getByRole('searchbox', { name: '搜索研习对象' }).fill('穆念慈')
+  await expect(page.getByTestId('faction-roster-hero_mu_nianci')).toBeVisible()
+  await page.getByTestId('faction-roster-hero_mu_nianci').click()
+  await expect(page.locator('[data-action="toggle-faction-roster"]')).toContainText('穆念慈')
+
+  await page.getByTestId('faction-martial-qingfeng_hall_a1').click()
+  await expect(page.getByTestId('faction-martial-detail')).toContainText('快剑初传')
+  await page.getByRole('button', { name: /研习 · 贡献 80/ }).click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_mu_nianci.learnedMartials.qingfeng_hall_a1?.level)).toBe(1)
 })
 
 test('重载页面后长期收益保留但必须重新选择关卡', async ({ page }) => {

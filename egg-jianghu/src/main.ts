@@ -22,7 +22,7 @@ import { WORLDS } from './content/worlds'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
 import { backpackEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
-import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
+import { MAX_MARTIAL_LEVEL, equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { settleCombatEvent } from './domain/rewards'
@@ -31,7 +31,7 @@ import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
 import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
-import { renderFactionsPage, type FactionsPageViewModel } from './ui/factions-page'
+import { renderFactionsPage, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
 import { renderFormationPage, type FormationPageViewModel } from './ui/formation-page'
 import { renderHeroesPage, type HeroesEquipmentView, type HeroesPageViewModel } from './ui/heroes-page'
 import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
@@ -73,6 +73,9 @@ let showBatchDiscardConfirm = false
 let formationSelectedHeroId: string | null = null
 let dragHeroId: string | null = null
 let selectedFactionId = ''
+let selectedFactionMartialId: string | null = null
+let factionRosterOpen = false
+let factionRosterQuery = ''
 let combatSpeed: 1 | 2 | 4 = 1
 let combatLogs: string[] = []
 let hasSave = false
@@ -85,6 +88,16 @@ let showResetConfirmation = false
 let openEquipmentTooltip: HTMLDivElement | null = null
 let openEquipmentTooltipAnchor: HTMLElement | null = null
 let trackedCombat: GameSession['combat'] = null
+type FactionContributionAnimation = {
+  from: number
+  to: number
+  startedAt: number
+  framePending: boolean
+}
+
+let factionSwitchAnimationPending = false
+let factionContributionAnimation: FactionContributionAnimation | null = null
+let factionMotionTimer: number | null = null
 
 const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item'
 const EQUIPMENT_TOOLTIP_GAP = 10
@@ -207,6 +220,9 @@ const enterPlaying = (nextSession: GameSession): void => {
   heroBatchDiscardQuality = 'all'
   showBatchDiscardConfirm = false
   selectedFactionId = FACTIONS.find((faction) => session.state.unlockedWorldIds.includes(faction.worldId))?.id ?? ''
+  selectedFactionMartialId = null
+  factionRosterOpen = false
+  factionRosterQuery = ''
   combatSpeed = 1
   combatLogs = []
   showResetConfirmation = false
@@ -482,21 +498,97 @@ const formationViewModel = (): FormationPageViewModel => ({
 })
 
 const factionsViewModel = (): FactionsPageViewModel => {
+  const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const availableFactions = FACTIONS.filter((faction) =>
     faction.worldId === selectedWorldId
     && session.state.unlockedWorldIds.includes(faction.worldId))
   if (!availableFactions.some((faction) => faction.id === selectedFactionId)) selectedFactionId = availableFactions[0]?.id ?? ''
   const faction = availableFactions.find((item) => item.id === selectedFactionId) ?? availableFactions[0]
   const board = session.state.factionBoards[selectedFactionId]
-  const heroProgress = selectedHeroId ? session.state.heroes[selectedHeroId] : undefined
+  const normalizedHeroId = normalizeSelectedHero()
+  const heroProgress = normalizedHeroId ? session.state.heroes[normalizedHeroId] : undefined
   const factionMartials = FACTION_MARTIALS.filter((martial) => martial.factionId === selectedFactionId)
   const factionHeroes = FACTION_HEROES.filter((hero) => hero.factionId === selectedFactionId)
+  if (!factionMartials.some((martial) => martial.id === selectedFactionMartialId)) {
+    selectedFactionMartialId = factionMartials[0]?.id ?? null
+  }
+
+  const contribution = session.state.contribution[selectedFactionId] ?? 0
+  const martialViews = factionMartials.map((martial) => {
+    const learnedRecord = heroProgress?.learnedMartials[martial.id]
+    const learned = Boolean(learnedRecord)
+    const level = learnedRecord?.level ?? 0
+    const previous = martial.previousId ? martialByIdV10(martial.previousId) : undefined
+    const previousReady = !martial.previousId
+      || heroProgress?.learnedMartials[martial.previousId]?.level === MAX_MARTIAL_LEVEL
+    const state: FactionMartialState = learned ? 'learned' : previousReady ? 'next' : 'locked'
+    const actionCost = learned
+      ? Math.ceil(martial.currencySource.amount * (1 + level * 0.2))
+      : martial.currencySource.amount
+    const careerCompatible = Boolean(heroProgress && martial.careerIds.includes(heroProgress.currentCareerId))
+    let actionReason: string | null = null
+    if (!normalizedHeroId) actionReason = '请先选择研习对象'
+    else if (learned && level >= MAX_MARTIAL_LEVEL) actionReason = '已臻化境'
+    else if (!learned && !previousReady) actionReason = '前穴未满 · Lv.20'
+    else if (!careerCompatible) actionReason = '职不符 · 不可传'
+    else if (Object.keys(heroProgress?.learnedMartials ?? {}).length >= 20 && !learned) actionReason = '已满 20 门'
+    else if (contribution < actionCost) actionReason = '贡献不足'
+
+    return {
+      id: martial.id,
+      name: martial.name,
+      stage: martial.stage,
+      rarity: martial.rarity,
+      cost: martial.currencySource.amount,
+      upgradeCost: actionCost,
+      learned,
+      level,
+      state,
+      energyCost: martial.energyCost,
+      cooldownMs: martial.cooldownMs,
+      power: martial.power,
+      previousName: previous?.name ?? null,
+      careerNames: [...new Set(martial.careerIds.map((careerId) => careerById(careerId)?.name ?? careerId))],
+      careerCompatible,
+      affordable: contribution >= actionCost,
+      actionDisabled: actionReason !== null,
+      actionReason,
+      selected: martial.id === selectedFactionMartialId,
+    }
+  })
+  const selectedMartial = martialViews.find((martial) => martial.id === selectedFactionMartialId) ?? null
+  const recruited = recruitedHeroes()
+  const careerCategoryOf = (heroId: string): string => {
+    const progress = session.state.heroes[heroId]
+    return careerById(progress?.currentCareerId ?? '')?.category ?? '未知'
+  }
+  const rosterQuery = factionRosterQuery.trim()
+  const roster = recruited
+    .filter(({ name }) => !rosterQuery || name.includes(rosterQuery))
+    .map(({ definition, name }) => {
+      const category = careerCategoryOf(definition.id)
+      const heroFaction = definition.factionId ? FACTIONS.find((item) => item.id === definition.factionId) : undefined
+      return {
+        id: definition.id,
+        name,
+        grade: definition.source === 'starter' ? '主' : definition.grade,
+        category,
+        factionName: heroFaction?.name ?? '江湖散人',
+        compatible: Boolean(faction && category === faction.category),
+        selected: definition.id === normalizedHeroId,
+        isPlayer: definition.source === 'starter',
+      }
+    })
+  const selectedHero = roster.find((hero) => hero.id === normalizedHeroId) ?? null
   return {
+    worldIndex: world.index,
+    worldName: world.name,
     selectedFactionId,
     factions: availableFactions.map((item) => ({
       id: item.id,
       name: item.name,
       category: item.category,
+      branchNames: [item.branchLabels[0], item.branchLabels[1]],
       contribution: session.state.contribution[item.id] ?? 0,
       selected: item.id === selectedFactionId,
     })),
@@ -507,15 +599,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
     }),
     branches: (faction?.branchLabels ?? []).map((branch) => ({
       name: branch,
-      martials: factionMartials.filter((martial) => martial.branch === branch).map((martial) => ({
-        id: martial.id,
-        name: martial.name,
-        stage: martial.stage,
-        rarity: martial.rarity,
-        cost: martial.currencySource.amount,
-        learned: Boolean(heroProgress?.learnedMartials[martial.id]),
-        level: heroProgress?.learnedMartials[martial.id]?.level ?? 0,
-      })),
+      martials: martialViews.filter((martial) => factionMartials.find((definition) => definition.id === martial.id)?.branch === branch),
     })),
     factionHeroes: factionHeroes.map((factionHero) => ({
       id: factionHero.id,
@@ -524,7 +608,14 @@ const factionsViewModel = (): FactionsPageViewModel => {
       cost: factionHero.cost,
       recruited: Boolean(session.state.heroes[factionHero.id]?.recruited),
     })),
-    selectedHeroId: normalizeSelectedHero(),
+    selectedHeroId: normalizedHeroId,
+    selectedHero,
+    roster,
+    rosterCount: roster.length,
+    rosterOpen: factionRosterOpen,
+    rosterQuery: factionRosterQuery,
+    selectedMartialId: selectedFactionMartialId,
+    selectedMartial,
   }
 }
 
@@ -628,6 +719,10 @@ const render = (): void => {
     return
   }
   normalizeSelectedWorld()
+  const shouldPlayFactionSwitch = factionSwitchAnimationPending
+    && activeTab === 'idle'
+    && jianghuView === 'world'
+    && jianghuSection === 'factions'
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const content = activeTab === 'idle'
     ? renderJianghuContent()
@@ -645,6 +740,11 @@ const render = (): void => {
     showResetConfirmation,
     content,
   }))
+  if (shouldPlayFactionSwitch) {
+    factionSwitchAnimationPending = false
+    playFactionSwitchMotion()
+  }
+  updateFactionContributionAnimation()
   positionOpenEquipmentTooltip()
 }
 
@@ -701,6 +801,99 @@ const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => 
 const dataNumber = (button: HTMLElement, key: string): number => Number(button.dataset[key])
 
 const isTouchDevice = (): boolean => window.matchMedia('(hover: none)').matches || navigator.maxTouchPoints > 0
+
+const formatFactionContribution = (value: number): string => Math.max(0, Math.round(value)).toLocaleString('zh-CN')
+
+const readFactionContribution = (): number | null => {
+  const node = app.querySelector<HTMLElement>('[data-testid="faction-purse"] strong')
+  if (!node) return null
+  const value = Number(node.textContent?.replace(/[^\d.-]/g, '') ?? '')
+  return Number.isFinite(value) ? value : null
+}
+
+const scheduleFactionContributionFrame = (): void => {
+  const animation = factionContributionAnimation
+  if (!animation || animation.framePending) return
+  animation.framePending = true
+  window.requestAnimationFrame(() => {
+    const current = factionContributionAnimation
+    if (!current) return
+    current.framePending = false
+    updateFactionContributionAnimation()
+  })
+}
+
+const updateFactionContributionAnimation = (): void => {
+  const animation = factionContributionAnimation
+  const node = app.querySelector<HTMLElement>('[data-testid="faction-purse"] strong')
+  if (!animation || !node) {
+    factionContributionAnimation = null
+    return
+  }
+  const progress = Math.min(1, (performance.now() - animation.startedAt) / 600)
+  const eased = 1 - Math.pow(1 - progress, 3)
+  node.textContent = formatFactionContribution(animation.from + (animation.to - animation.from) * eased)
+  if (progress >= 1) {
+    node.textContent = formatFactionContribution(animation.to)
+    factionContributionAnimation = null
+    return
+  }
+  scheduleFactionContributionFrame()
+}
+
+const startFactionContributionAnimation = (to: number): void => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    factionContributionAnimation = null
+    return
+  }
+  const from = readFactionContribution() ?? session.state.contribution[selectedFactionId] ?? to
+  if (from === to) {
+    factionContributionAnimation = null
+    return
+  }
+  factionContributionAnimation = { from, to, startedAt: performance.now(), framePending: false }
+}
+
+const playFactionSwitchMotion = (): void => {
+  const page = app.querySelector<HTMLElement>('[data-testid="factions-page"].faction-page')
+  if (!page || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  if (factionMotionTimer !== null) window.clearTimeout(factionMotionTimer)
+
+  const purse = page.querySelector<HTMLElement>('[data-testid="faction-purse"]')
+  if (purse) {
+    purse.getAnimations().forEach((animation) => animation.cancel())
+    const animation = purse.animate([
+      { opacity: 0.58, transform: 'translateY(-5px) scale(.98)' },
+      { opacity: 1, transform: 'translateY(0) scale(1)' },
+    ], {
+      duration: 500,
+      easing: 'cubic-bezier(.22, 1, .36, 1)',
+      fill: 'both',
+    })
+    animation.onfinish = () => animation.cancel()
+  }
+
+  const cards = [...page.querySelectorAll<HTMLElement>('.faction-notice')]
+  cards.forEach((card, index) => {
+    card.getAnimations().forEach((animation) => animation.cancel())
+    const rotation = getComputedStyle(card).getPropertyValue('--faction-rotation').trim() || '0deg'
+    const animation = card.animate([
+      { opacity: 0, transform: `rotate(${rotation}) translateY(14px)` },
+      { opacity: 1, transform: `rotate(${rotation}) translateY(-2px)`, offset: 0.72 },
+      { opacity: 1, transform: `rotate(${rotation}) translateY(0)` },
+    ], {
+      duration: 600,
+      delay: index * 70,
+      easing: 'cubic-bezier(.77, 0, .175, 1)',
+      fill: 'both',
+    })
+    animation.onfinish = () => animation.cancel()
+  })
+
+  factionMotionTimer = window.setTimeout(() => {
+    factionMotionTimer = null
+  }, 1_100)
+}
 
 const clearDragOver = (): void => {
   app.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'))
@@ -786,6 +979,14 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'martial-equip') commitAction(equipMartial(session.state, heroId, button.dataset.martialId ?? '', dataNumber(button, 'slot')))
   else if (action === 'martial-unequip') commitAction(unequipMartial(session.state, heroId, dataNumber(button, 'slot')))
   else if (action === 'martial-forget') commitAction(forgetMartial(session.state, heroId, button.dataset.martialId ?? ''))
+  else if (action === 'toggle-faction-roster') {
+    factionRosterOpen = !factionRosterOpen
+    if (!factionRosterOpen) factionRosterQuery = ''
+  } else if (action === 'select-faction-hero') {
+    selectedHeroId = button.dataset.heroId ?? selectedHeroId
+    factionRosterOpen = false
+    factionRosterQuery = ''
+  } else if (action === 'select-martial') selectedFactionMartialId = button.dataset.martialId ?? selectedFactionMartialId
   else if (action === 'heart-method-equip') commitAction(equipHeartMethod(session.state, heroId, button.dataset.heartMethodId ?? ''))
   else if (action === 'quest-accept') commitAction(acceptQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
   else if (action === 'quest-cancel') commitAction(cancelQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
@@ -877,6 +1078,21 @@ app.addEventListener('change', (event) => {
     heroInventoryPage = 1
   }
   if (!select && !inventoryFilter && !batchDiscardSelect) return
+  render()
+})
+
+app.addEventListener('input', (event) => {
+  const input = (event.target as HTMLElement).closest<HTMLInputElement>('[data-action="faction-roster-search"]')
+  if (!input) return
+  factionRosterQuery = input.value
+  factionRosterOpen = true
+  render()
+})
+
+app.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !factionRosterOpen) return
+  factionRosterOpen = false
+  factionRosterQuery = ''
   render()
 })
 
@@ -1009,6 +1225,10 @@ const handleStartOrResetAction = (action: string | undefined): boolean => {
 
 app.addEventListener('click', (event) => {
   const target = event.target as HTMLElement
+  if (factionRosterOpen && !target.closest('.faction-disciple')) {
+    factionRosterOpen = false
+    factionRosterQuery = ''
+  }
   const tab = target.closest<HTMLElement>('[data-tab]')?.dataset.tab as TabId | undefined
   if (tab) {
     activeTab = tab
@@ -1046,6 +1266,9 @@ app.addEventListener('click', (event) => {
     selectedWorldId = button.dataset.worldId
     selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
     selectedFactionId = FACTIONS.find((faction) => faction.worldId === selectedWorldId)?.id ?? ''
+    selectedFactionMartialId = null
+    factionRosterOpen = false
+    factionRosterQuery = ''
     jianghuView = 'world'
     jianghuSection = 'stages'
   } else if (action === 'start-stage') {
@@ -1053,7 +1276,17 @@ app.addEventListener('click', (event) => {
     startSelectedStage('guard')
     return
   } else if (action === 'select-hero') selectedHeroId = button.dataset.heroId ?? null
-  else if (action === 'select-faction') selectedFactionId = button.dataset.factionId ?? selectedFactionId
+  else if (action === 'select-faction') {
+    const nextFactionId = button.dataset.factionId ?? selectedFactionId
+    if (nextFactionId !== selectedFactionId) {
+      selectedFactionMartialId = null
+      factionSwitchAnimationPending = true
+      startFactionContributionAnimation(session.state.contribution[nextFactionId] ?? 0)
+    }
+    selectedFactionId = nextFactionId
+    factionRosterOpen = false
+    factionRosterQuery = ''
+  }
   else if (action === 'set-mode-guard' || action === 'set-mode-roam') {
     const result = session.setCombatMode(action === 'set-mode-guard' ? 'guard' : 'roam')
     notify(result.message, !result.ok)
