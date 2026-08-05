@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>势力 · 蛋蛋江湖 2.0 — 高保真重设计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   势力页重设计 · 蛋蛋江湖 2.0
+   设计语言：墨底宣纸 · 朱砂印 · 金漆匾 · 经脉行功
+   ============================================================ */
+:root {
+  --ink-950: #0c0e0b;
+  --ink-900: #11140f;
+  --ink-850: #171b14;
+  --ink-800: #1f241c;
+  --ink-700: #2a3026;
+  --paper: #e8e1d3;
+  --paper-dim: #b3ad9e;
+  --paper-mute: #7d7f72;
+  --xuan: #e9dec3;          /* 宣纸 */
+  --xuan-deep: #ddceaa;
+  --xuan-ink: #2b2519;       /* 纸上墨色 */
+  --cinnabar: #b5503c;       /* 朱砂 */
+  --cinnabar-bright: #cf6b53;
+  --cinnabar-deep: #8a3a2b;
+  --gold: #c9a35c;
+  --gold-bright: #e6c67f;
+  --gold-deep: #8f6f3a;
+  --jade: #7fa88d;
+  --jade-dim: #57705f;
+  --line: #31382e;
+  --line-soft: #252a22;
+  --r-粗浅: #8e887d;
+  --r-寻常: #4f9168;
+  --r-精妙: #4e7fb8;
+  --r-上乘: #8b63a8;
+  --r-绝学: #c9953d;
+  --font-brush: "Ma Shan Zheng", "Noto Serif SC", serif;
+  --font-song: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: var(--font-song);
+  color: var(--paper);
+  background:
+    radial-gradient(1100px 500px at 78% -10%, rgb(127 168 141 / 9%), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgb(181 80 60 / 6%), transparent 55%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+  font-synthesis: none;
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+::selection { background: rgb(181 80 60 / 55%); color: #fff4e8; }
+
+/* 纸颗粒覆盖层 —— 全场胶片/宣纸质感 */
+.grain {
+  position: fixed; inset: -50%; z-index: 60; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.055; mix-blend-mode: overlay;
+}
+
+/* ============ 游戏外壳 · 侧边栏 ============ */
+.app-shell { display: grid; grid-template-columns: 212px minmax(0, 1fr); min-height: 100vh; }
+
+.game-sidebar {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; gap: 26px;
+  padding: 26px 20px 20px;
+  border-right: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, rgb(23 27 20 / 72%), rgb(13 16 12 / 88%));
+}
+.brand-block { display: flex; align-items: center; gap: 12px; }
+.brand-seal {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 24px; color: #f6e3d2;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  border: 1px solid #c96f58; border-radius: 6px;
+  box-shadow: inset 0 0 0 3px #411811, 0 4px 14px rgb(0 0 0 / 40%);
+  transform: rotate(-2deg);
+}
+.brand-block strong { display: block; font-size: 15px; letter-spacing: 0.1em; color: #efe4cf; white-space: nowrap; }
+.brand-block small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); white-space: nowrap; }
+
+.game-nav { display: grid; gap: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 6px; text-align: left;
+  color: var(--paper-dim); transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  position: relative;
+}
+.nav-item .nav-mark {
+  width: 30px; height: 30px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 16px;
+  border: 1px solid var(--line); border-radius: 5px; color: var(--paper-mute);
+  transition: all 0.25s var(--ease-out);
+}
+.nav-item strong { font-size: 14px; letter-spacing: 0.28em; font-weight: 500; }
+.nav-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.nav-item.active { color: #f3e9d5; background: rgb(233 222 195 / 5%); }
+.nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px;
+  background: var(--cinnabar); border-radius: 2px;
+}
+.nav-item.active .nav-mark { border-color: var(--cinnabar-deep); color: var(--cinnabar-bright); }
+
+.world-subnav { display: grid; gap: 4px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.world-subnav .world-back {
+  text-align: left; padding: 6px 12px; font-size: 11px; letter-spacing: 0.18em;
+  color: var(--paper-mute); transition: color 0.2s;
+}
+.world-subnav .world-back:hover { color: var(--gold-bright); }
+.world-subnav .ws-item {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 8px 12px; border-radius: 5px; text-align: left;
+  font-size: 13px; letter-spacing: 0.32em; color: var(--paper-dim);
+  transition: all 0.25s var(--ease-out);
+}
+.world-subnav .ws-item small { font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); font-style: normal; }
+.world-subnav .ws-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.world-subnav .ws-item.active { color: var(--gold-bright); background: rgb(201 163 92 / 8%); }
+.world-subnav .ws-item.active small { color: var(--gold); }
+
+.sidebar-landscape { margin-top: auto; height: 74px; position: relative; overflow: hidden; border-radius: 6px; }
+.sidebar-landscape::before { /* 远山 */
+  content: ""; position: absolute; inset: auto -12px 0 -12px; height: 56px;
+  background:
+    linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
+    linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
+    linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
+}
+.sidebar-landscape::after { /* 雾 */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
+  background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
+}
+.sidebar-motto { font-size: 10px; letter-spacing: 0.5em; color: var(--paper-mute); text-align: center; }
+
+/* ============ 主区框架 ============ */
+.game-main { min-width: 0; padding: 30px 38px 70px; position: relative; }
+
+/* 巨字书法背景 —— 氛围层 */
+.ghost-char {
+  position: absolute; z-index: 0; pointer-events: none; user-select: none;
+  font-family: var(--font-brush); line-height: 0.9; color: rgb(233 222 195 / 4%);
+  transition: opacity 0.6s var(--ease-out);
+}
+.ghost-board { top: 210px; right: -30px; font-size: 400px; transform: rotate(6deg); }
+.ghost-meridian { top: 880px; left: -46px; font-size: 360px; transform: rotate(-5deg); color: rgb(201 163 92 / 4%); }
+.ghost-heroes { top: 1560px; right: 0px; font-size: 330px; transform: rotate(4deg); color: rgb(181 80 60 / 4%); }
+
+.page-head {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+  padding-bottom: 22px; margin-bottom: 26px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.page-head .crumb { font-size: 11px; letter-spacing: 0.3em; color: var(--paper-mute); margin-bottom: 12px; }
+.page-head .crumb b { color: var(--gold); font-weight: 500; }
+.page-head h1 {
+  font-family: var(--font-brush); font-weight: 400;
+  font-size: 58px; line-height: 1; letter-spacing: 0.06em; color: #f2e7d0;
+  text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
+}
+.page-head .latin { margin-top: 10px; font-size: 10px; letter-spacing: 0.42em; color: var(--paper-mute); text-transform: uppercase; }
+
+/* 贡献钱袋 */
+.purse { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border: 1px solid rgb(201 163 92 / 28%); border-radius: 8px; background: linear-gradient(160deg, rgb(201 163 92 / 9%), rgb(201 163 92 / 3%)); }
+.purse svg { flex: none; filter: drop-shadow(0 2px 6px rgb(201 163 92 / 35%)); }
+.purse .purse-num { font-size: 26px; font-weight: 700; color: var(--gold-bright); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; line-height: 1; }
+.purse .purse-label { font-size: 10px; letter-spacing: 0.3em; color: var(--gold); margin-top: 4px; }
+.purse .purse-faction { font-size: 10px; color: var(--paper-mute); letter-spacing: 0.12em; margin-top: 2px; }
+
+/* ============ 势力匾额 ============ */
+.plaque-row { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 34px; }
+.plaque {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 20px; border-radius: 8px; text-align: left;
+  background:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 12%) 0 2px, transparent 2px 46px),
+    linear-gradient(165deg, #2c241a, #1d1812 60%, #181410);
+  border: 1px solid #3a3122;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 32%);
+  opacity: 0.62; filter: saturate(0.8);
+  transition: opacity 0.35s var(--ease-out), filter 0.35s var(--ease-out), transform 0.35s var(--ease-out), border-color 0.35s;
+}
+.plaque:hover { opacity: 0.9; filter: saturate(1); transform: translateY(-2px); }
+.plaque.active {
+  opacity: 1; filter: none; transform: translateY(-3px);
+  border-color: rgb(201 163 92 / 65%);
+  box-shadow: 0 16px 36px rgb(0 0 0 / 42%), inset 0 0 0 1px rgb(201 163 92 / 22%), inset 0 -18px 30px rgb(201 163 92 / 6%);
+}
+.plaque.active::after { /* 选中匾的压角金线 */
+  content: ""; position: absolute; inset: 5px; pointer-events: none;
+  border: 1px solid rgb(201 163 92 / 30%); border-radius: 5px;
+}
+.plaque .plaque-char {
+  width: 56px; height: 56px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 32px; color: #f2ddba;
+  background: radial-gradient(circle at 35% 30%, #4a3d27, #2c2415 70%);
+  border: 1px solid rgb(201 163 92 / 45%); border-radius: 50%;
+  box-shadow: inset 0 2px 8px rgb(0 0 0 / 55%);
+}
+.plaque .plaque-name { font-family: var(--font-brush); font-size: 30px; letter-spacing: 0.1em; color: #efdfbe; line-height: 1.05; }
+.plaque .plaque-meta { margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.2em; color: var(--paper-mute); }
+.plaque .plaque-cat {
+  display: inline-grid; place-items: center; width: 18px; height: 18px;
+  font-size: 10px; color: #f0d2c4; background: var(--cinnabar-deep);
+  border-radius: 3px; letter-spacing: 0;
+}
+.plaque .plaque-contrib { margin-left: auto; text-align: right; }
+.plaque .plaque-contrib b { display: block; font-size: 19px; color: var(--gold-bright); font-variant-numeric: tabular-nums; font-weight: 700; }
+.plaque .plaque-contrib span { font-size: 9px; letter-spacing: 0.28em; color: var(--gold); }
+</style>
+<style>
+/* ============ 悬榜 · 木板与榜文 ============ */
+.board {
+  position: relative; z-index: 1;
+  border-radius: 12px; padding: 3px;             /* 木框 */
+  background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+  margin-bottom: 40px;
+}
+.board-inner {
+  border-radius: 9px; overflow: hidden;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 14%) 0 2px, transparent 2px 64px),
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 6%) 0 1px, transparent 1px 7px),
+    linear-gradient(165deg, #2f2819, #221c10 55%, #292216);
+  border: 1px solid rgb(0 0 0 / 40%);
+}
+.board-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 20px 26px 16px;
+}
+.board-title { display: flex; align-items: baseline; gap: 14px; }
+.board-title h2 { font-family: var(--font-brush); font-size: 34px; font-weight: 400; letter-spacing: 0.12em; color: #ecdcb9; }
+.board-title .sub { font-size: 10px; letter-spacing: 0.34em; color: rgb(233 222 195 / 42%); }
+.board-title .sub i { font-style: normal; color: var(--cinnabar-bright); }
+
+/* 一炷香 · 刷新计时 */
+.incense { display: flex; align-items: center; gap: 12px; }
+.incense-track { position: relative; width: 148px; height: 4px; border-radius: 2px; background: rgb(233 222 195 / 12%); }
+.incense-stick { position: absolute; right: 0; top: 0; bottom: 0; border-radius: 2px; background: linear-gradient(90deg, #6b4f35, #93714c); }
+.incense-ember {
+  position: absolute; top: 50%; width: 7px; height: 7px; border-radius: 50%;
+  transform: translate(50%, -50%);
+  background: radial-gradient(circle, #ffd9a0 0%, #f08a3c 45%, rgb(181 80 60 / 0%) 75%);
+  box-shadow: 0 0 10px 3px rgb(240 138 60 / 55%);
+  animation: ember 2.6s ease-in-out infinite;
+}
+@keyframes ember { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; box-shadow: 0 0 14px 5px rgb(240 138 60 / 75%); } }
+.incense-label { font-size: 10px; letter-spacing: 0.22em; color: rgb(233 222 195 / 50%); white-space: nowrap; }
+.incense-label b { color: var(--gold-bright); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* 榜文区 */
+.notice-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px 20px; padding: 10px 26px 30px;
+}
+.notice {
+  position: relative;
+  min-height: 216px; display: flex; flex-direction: column;
+  padding: 20px 18px 14px;
+  color: var(--xuan-ink);
+  background:
+    radial-gradient(140% 90% at 50% 0%, rgb(255 250 235 / 55%), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.16 0.4' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.05'/%3E%3C/svg%3E"),
+    linear-gradient(172deg, var(--xuan), var(--xuan-deep));
+  border-radius: 3px;
+  box-shadow: 0 12px 22px rgb(0 0 0 / 42%), inset 0 0 0 1px rgb(120 95 55 / 18%);
+  transform: rotate(var(--rot, 0deg)) translateY(var(--lift, 0));
+  transition: transform 0.45s var(--ease-out), box-shadow 0.45s var(--ease-out), filter 0.45s;
+  animation: notice-in 0.6s var(--ease-snap) both;
+}
+@keyframes notice-in { from { opacity: 0; transform: rotate(var(--rot, 0deg)) translateY(14px); } to { opacity: 1; transform: rotate(var(--rot, 0deg)) translateY(0); } }
+.notice:hover { --rot: 0deg !important; --lift: -6px; box-shadow: 0 26px 40px rgb(0 0 0 / 55%), inset 0 0 0 1px rgb(120 95 55 / 18%); z-index: 3; }
+.notice::before { /* 榜钉 */
+  content: ""; position: absolute; top: 7px; left: 50%; width: 11px; height: 11px;
+  transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d8b271, #7a5a2c 65%, #3d2c12);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 55%), inset 0 -1px 2px rgb(0 0 0 / 45%);
+}
+.notice.boss {
+  background:
+    radial-gradient(140% 90% at 50% 0%, rgb(255 240 220 / 38%), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.16 0.4' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.05'/%3E%3C/svg%3E"),
+    linear-gradient(172deg, #e3d3ae, #d3c096);
+  outline: 1px solid rgb(60 45 25 / 45%); outline-offset: -5px;
+}
+
+.notice-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.notice-type { display: flex; align-items: center; gap: 7px; font-size: 10px; letter-spacing: 0.3em; color: #6b5b3d; }
+.notice-type::before { content: ""; width: 14px; height: 1px; background: #a08a5c; }
+.notice.boss .notice-type { color: var(--cinnabar-deep); font-weight: 700; }
+.notice.boss .notice-type::before { background: var(--cinnabar); }
+
+/* 朱砂品级印 */
+.seal-grade {
+  flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 20px; color: #f8e9da;
+  text-shadow: 0 1px 2px rgb(60 20 12 / 55%);
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 6px 8px 5px 9px / 8px 5px 9px 6px;
+  transform: rotate(4deg);
+  box-shadow: 0 2px 6px rgb(138 58 43 / 45%), inset 0 0 0 1.5px rgb(255 230 210 / 40%), inset 0 -4px 7px rgb(0 0 0 / 28%);
+}
+.seal-grade.g-乙 { background: linear-gradient(150deg, #c15b46, #93402e); }
+.seal-grade.g-甲 { background: linear-gradient(150deg, #a8483a, #7c3026); }
+.seal-grade.g-地 { background: linear-gradient(150deg, #8f3a30, #63261d); }
+.seal-grade.g-天 { background: linear-gradient(150deg, #b98a3a, #8a6224); box-shadow: 0 2px 8px rgb(185 138 58 / 50%), inset 0 0 0 1.5px rgb(255 240 210 / 45%), inset 0 -4px 7px rgb(0 0 0 / 28%); }
+
+.notice-target {
+  font-family: var(--font-brush); font-size: 27px; line-height: 1.15; letter-spacing: 0.06em;
+  color: #2e2717; margin-bottom: 4px;
+}
+.notice-scene { font-size: 10px; letter-spacing: 0.18em; color: #8a7a55; margin-bottom: 14px; }
+
+/* 正字计数进度 */
+.tally-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.tally { display: flex; gap: 6px; align-items: baseline; min-height: 24px; }
+.tally span { font-family: var(--font-brush); font-size: 22px; color: #4a3c22; }
+.tally span.partial { font-size: 15px; color: #857141; }
+.tally-num { font-size: 11px; color: #7d6c46; font-variant-numeric: tabular-nums; letter-spacing: 0.08em; white-space: nowrap; }
+.tally-num b { font-size: 15px; color: #4a3c22; }
+.notice.done .tally span { color: var(--cinnabar-deep); }
+
+.notice-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 12px; border-top: 1px dashed rgb(120 95 55 / 40%); }
+.reward { font-size: 11px; letter-spacing: 0.12em; color: #75643f; }
+.reward b { font-size: 17px; color: #8a6420; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.btn-take { /* 揭榜 */
+  padding: 8px 16px; font-size: 12px; letter-spacing: 0.3em; text-indent: 0.3em;
+  color: #f8e9db; background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 4px; box-shadow: 0 3px 8px rgb(138 58 43 / 40%);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s, filter 0.2s;
+}
+.btn-take:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 14px rgb(138 58 43 / 50%); }
+.btn-take:active { transform: translateY(1px); }
+.btn-cancel {
+  padding: 8px 14px; font-size: 12px; letter-spacing: 0.3em; text-indent: 0.3em;
+  color: #6b5b3d; border: 1px solid rgb(107 91 61 / 55%); border-radius: 4px;
+  transition: all 0.2s var(--ease-out);
+}
+.btn-cancel:hover { color: #42361c; border-color: #42361c; background: rgb(107 91 61 / 8%); }
+.btn-claim {
+  position: relative; padding: 8px 18px; font-size: 12px; letter-spacing: 0.3em; text-indent: 0.3em;
+  color: #3d2c10; font-weight: 700;
+  background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep));
+  border-radius: 4px; box-shadow: 0 3px 10px rgb(201 163 92 / 45%);
+  animation: claim-glow 2.2s ease-in-out infinite;
+  transition: transform 0.2s var(--ease-out);
+}
+.btn-claim:hover { transform: translateY(-1px) scale(1.03); }
+@keyframes claim-glow { 0%, 100% { box-shadow: 0 3px 10px rgb(201 163 92 / 35%); } 50% { box-shadow: 0 3px 20px rgb(230 198 127 / 70%); } }
+
+/* 已揭状态：纸色沉暗 + 斜印 */
+.notice.accepted { filter: saturate(0.82) brightness(0.94); }
+.stamp-accepted {
+  position: absolute; right: 12px; top: 46%; z-index: 2; pointer-events: none;
+  padding: 4px 12px; font-family: var(--font-brush); font-size: 26px; letter-spacing: 0.2em;
+  color: var(--cinnabar-deep); border: 2.5px solid var(--cinnabar-deep); border-radius: 4px;
+  transform: rotate(-14deg); opacity: 0.85;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='s'%3E%3CfeTurbulence baseFrequency='0.5' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.85 0.1'/%3E%3CfeComposite operator='in' in2='SourceGraphic'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  mask-size: cover;
+}
+.stamp-accepted.stamp-in { animation: stamp-in 0.5s var(--ease-snap); }
+@keyframes stamp-in {
+  0% { transform: rotate(-14deg) scale(2.4); opacity: 0; }
+  60% { transform: rotate(-14deg) scale(0.94); opacity: 0.95; }
+  100% { transform: rotate(-14deg) scale(1); opacity: 0.85; }
+}
+.stamp-done { color: #8a6420; border-color: #8a6420; }
+
+/* 空榜槽 */
+.notice-empty {
+  min-height: 216px; display: grid; place-content: center; justify-items: center; gap: 8px;
+  border: 1.5px dashed rgb(233 222 195 / 20%); border-radius: 3px;
+  color: rgb(233 222 195 / 34%); transform: rotate(var(--rot, 0deg));
+  animation: notice-in 0.6s var(--ease-snap) both;
+}
+.notice-empty strong { font-family: var(--font-brush); font-size: 22px; letter-spacing: 0.2em; font-weight: 400; }
+.notice-empty span { font-size: 10px; letter-spacing: 0.26em; }
+.notice-empty::before {
+  content: ""; width: 9px; height: 9px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #8d7a55, #4d4028 70%);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 50%);
+}
+</style>
+<style>
+/* ============ 传承 · 经脉行功图 ============ */
+.meridian {
+  position: relative; z-index: 1;
+  border-radius: 12px; margin-bottom: 40px;
+  background:
+    radial-gradient(900px 300px at 50% -80px, rgb(201 163 92 / 7%), transparent 70%),
+    linear-gradient(170deg, var(--ink-850), var(--ink-900) 70%);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 35%);
+  overflow: hidden;
+}
+.meridian::before { /* 卷轴两侧轴杆暗示 */
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+  background: linear-gradient(180deg, #3a3122, #241d12);
+}
+.meridian::after {
+  content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 5px;
+  background: linear-gradient(180deg, #3a3122, #241d12);
+}
+.meridian-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  padding: 22px 30px 6px;
+}
+.meridian-head .board-title h2 { color: #e6d7b4; }
+/* 研习对象 */
+.disciple { display: flex; align-items: center; gap: 10px; }
+.disciple-label { font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute); }
+.disciple-chips { display: flex; gap: 6px; }
+.disciple-chip {
+  display: flex; align-items: center; gap: 7px; padding: 7px 13px;
+  border: 1px solid var(--line); border-radius: 999px;
+  font-size: 12px; letter-spacing: 0.1em; color: var(--paper-dim);
+  transition: all 0.25s var(--ease-out);
+}
+.disciple-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--paper-mute); transition: background 0.25s; }
+.disciple-chip:hover { border-color: var(--jade-dim); color: var(--paper); }
+.disciple-chip.active { border-color: var(--gold); color: var(--gold-bright); background: rgb(201 163 92 / 8%); }
+.disciple-chip.active::before { background: var(--gold-bright); }
+
+.branch {
+  display: grid; grid-template-columns: 108px minmax(0, 1fr);
+  align-items: stretch; margin: 14px 30px 8px;
+  border-top: 1px dashed var(--line);
+}
+.branch:first-of-type { border-top: none; }
+.branch-name {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  padding: 18px 0; border-right: 1px solid var(--line-soft);
+}
+.branch-name .bn-vertical {
+  writing-mode: vertical-rl; font-family: var(--font-brush);
+  font-size: 32px; letter-spacing: 0.34em; color: #dcc99b;
+}
+.branch-name .bn-force {
+  font-size: 9px; letter-spacing: 0.3em; text-indent: 0.3em; color: var(--paper-mute);
+  border: 1px solid var(--line); border-radius: 3px; padding: 3px 7px;
+}
+.branch-name .bn-force.swift { color: #9fc3ad; border-color: rgb(127 168 141 / 40%); }
+.branch-name .bn-force.hard { color: #d9a08c; border-color: rgb(181 80 60 / 40%); }
+.branch-name .bn-force.soft { color: #b3a6d0; border-color: rgb(139 99 168 / 40%); }
+.branch-name .bn-force.support { color: #a8c39f; border-color: rgb(127 168 141 / 40%); }
+
+.branch-track { position: relative; padding: 26px 0 30px; overflow-x: auto; }
+.meridian-svg { display: block; width: 100%; min-width: 620px; height: 118px; }
+.meridian-svg .vein-base { fill: none; stroke: rgb(233 222 195 / 13%); stroke-width: 1.6; stroke-dasharray: 3 7; stroke-linecap: round; }
+.meridian-svg .vein-lit {
+  fill: none; stroke: url(#veinGold); stroke-width: 2.4; stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgb(201 163 92 / 55%));
+  transition: stroke-dashoffset 1.1s var(--ease-out);
+}
+
+/* 穴位节点 */
+.acupoint { position: absolute; top: 26px; width: 150px; margin-left: -75px; display: grid; justify-items: center; gap: 0; }
+.acu-dot {
+  position: relative; width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center; z-index: 2;
+  background: radial-gradient(circle at 38% 32%, var(--ink-700), var(--ink-900) 75%);
+  border: 1.6px solid var(--rc, var(--paper-mute));
+  font-family: var(--font-brush); font-size: 20px; color: var(--paper-dim);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s, background 0.3s;
+}
+.acupoint:hover .acu-dot { transform: scale(1.1); }
+.acupoint.locked { opacity: 0.42; }
+.acupoint.locked .acu-dot { border-style: dashed; }
+.acupoint.next .acu-dot {
+  border-color: var(--gold); color: var(--gold-bright);
+  animation: acu-pulse 2.4s var(--ease-out) infinite;
+}
+@keyframes acu-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(201 163 92 / 40%); }
+  55% { box-shadow: 0 0 0 11px rgb(201 163 92 / 0%); }
+}
+.acupoint.learned .acu-dot {
+  background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--rc) 55%, #fff 8%), color-mix(in srgb, var(--rc) 70%, #000) 78%);
+  border-color: color-mix(in srgb, var(--rc) 80%, #fff 20%);
+  color: #fdf6e8; text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--rc) 55%, transparent);
+}
+.acu-lv {
+  position: absolute; right: -7px; bottom: -5px; z-index: 3;
+  padding: 1px 6px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.04em;
+  color: #20180a; background: linear-gradient(160deg, var(--gold-bright), var(--gold));
+  box-shadow: 0 2px 5px rgb(0 0 0 / 45%); font-family: var(--font-song);
+}
+.acupoint.selected .acu-dot { outline: 2px solid rgb(230 198 127 / 65%); outline-offset: 3px; }
+.acu-name { margin-top: 10px; font-size: 13px; letter-spacing: 0.14em; color: var(--paper); }
+.acu-sub { margin-top: 3px; font-size: 10px; color: var(--paper-mute); letter-spacing: 0.1em; display: flex; gap: 6px; align-items: center; }
+.acu-sub .rarity-tag { color: var(--rc, var(--paper-mute)); }
+.acu-sub .cost-tag { color: var(--gold); font-variant-numeric: tabular-nums; }
+
+/* 穴位详情条 */
+.acu-detail {
+  margin: 6px 30px 26px; padding: 0 26px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: linear-gradient(165deg, rgb(201 163 92 / 6%), rgb(20 24 18 / 40%));
+  max-height: 0; opacity: 0; overflow: hidden; padding-top: 0; padding-bottom: 0; border-width: 0;
+  transition: max-height 0.5s var(--ease-out), opacity 0.4s, padding 0.4s, border-width 0.2s, margin 0.4s;
+}
+.acu-detail.open { max-height: 130px; opacity: 1; padding: 16px 26px; border-width: 1px; margin-top: 14px; }
+.acu-detail .ad-name { font-family: var(--font-brush); font-size: 22px; letter-spacing: 0.1em; color: #eadcb8; }
+.acu-detail .ad-stats { display: flex; gap: 22px; margin-top: 8px; font-size: 11px; color: var(--paper-mute); letter-spacing: 0.08em; }
+.acu-detail .ad-stats b { color: var(--paper); font-weight: 600; font-variant-numeric: tabular-nums; }
+.acu-detail .ad-stats i { font-style: normal; color: var(--jade); }
+.btn-learn {
+  padding: 11px 26px; border-radius: 6px; white-space: nowrap;
+  font-size: 13px; letter-spacing: 0.34em; text-indent: 0.34em; font-weight: 600;
+  color: #f6e9d6; background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  box-shadow: 0 6px 18px rgb(138 58 43 / 40%);
+  transition: transform 0.2s var(--ease-out), filter 0.2s, box-shadow 0.2s;
+}
+.btn-learn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.btn-learn:active { transform: translateY(1px); }
+.btn-learn.upgrade { background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep)); color: #2e2208; box-shadow: 0 6px 18px rgb(201 163 92 / 35%); }
+.btn-learn:disabled { filter: grayscale(0.7) brightness(0.7); cursor: not-allowed; transform: none; }
+
+/* ============ 门人 · 拜帖 ============ */
+.disciples { position: relative; z-index: 1; margin-bottom: 30px; }
+.disciples-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; }
+.disciples-head h2 { font-family: var(--font-brush); font-size: 30px; font-weight: 400; letter-spacing: 0.12em; color: #e6d7b4; }
+.disciples-head .sub { font-size: 10px; letter-spacing: 0.34em; color: var(--paper-mute); }
+.calling-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.calling-card {
+  position: relative; display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 0;
+  min-height: 196px; border-radius: 6px; overflow: hidden;
+  background:
+    radial-gradient(120% 100% at 0% 0%, rgb(255 250 235 / 45%), transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.16 0.4' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.05'/%3E%3C/svg%3E"),
+    linear-gradient(150deg, var(--xuan), var(--xuan-deep));
+  color: var(--xuan-ink);
+  box-shadow: 0 14px 30px rgb(0 0 0 / 40%);
+  transform: rotate(var(--rot, 0deg));
+  transition: transform 0.45s var(--ease-out), box-shadow 0.45s;
+  animation: notice-in 0.6s var(--ease-snap) both;
+}
+.calling-card:hover { transform: rotate(0deg) translateY(-5px); box-shadow: 0 24px 44px rgb(0 0 0 / 52%); }
+.cc-name-rail {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 18px 0; border-right: 1px dashed rgb(120 95 55 / 40%);
+  background: linear-gradient(180deg, rgb(138 58 43 / 7%), transparent 45%);
+}
+.cc-vertical { writing-mode: vertical-rl; font-family: var(--font-brush); font-size: 30px; letter-spacing: 0.22em; color: #33290f; }
+.cc-grade {
+  width: 24px; height: 24px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 14px; color: #f7e9dc;
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 4px; transform: rotate(3deg);
+  box-shadow: inset 0 0 0 1px rgb(255 230 210 / 35%), 0 2px 5px rgb(138 58 43 / 40%);
+}
+.cc-body { display: flex; flex-direction: column; padding: 18px 18px 14px; }
+.cc-title { font-size: 10px; letter-spacing: 0.3em; color: #857143; margin-bottom: 8px; }
+.cc-line { font-size: 12.5px; line-height: 1.9; color: #4d4023; letter-spacing: 0.06em; }
+.cc-line i { font-style: normal; color: var(--cinnabar-deep); }
+.cc-foot { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed rgb(120 95 55 / 40%); }
+.cc-cost { font-size: 11px; letter-spacing: 0.1em; color: #75643f; }
+.cc-cost b { font-size: 16px; color: #8a6420; font-variant-numeric: tabular-nums; }
+.btn-invite {
+  width: 40px; height: 40px; border-radius: 50%;
+  font-family: var(--font-brush); font-size: 19px; color: #f8e9db;
+  background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  box-shadow: 0 4px 10px rgb(138 58 43 / 40%);
+  transition: transform 0.25s var(--ease-out), filter 0.2s;
+}
+.btn-invite:hover { transform: scale(1.12) rotate(-6deg); filter: brightness(1.1); }
+.calling-card.recruited { filter: saturate(0.7) brightness(0.92); }
+.calling-card.recruited .btn-invite { background: #8d8468; box-shadow: none; cursor: default; pointer-events: none; }
+.cc-stamp {
+  position: absolute; right: 14px; top: 14px; z-index: 2; pointer-events: none;
+  padding: 3px 10px; font-family: var(--font-brush); font-size: 19px; letter-spacing: 0.14em;
+  color: var(--cinnabar-deep); border: 2px solid var(--cinnabar-deep); border-radius: 4px;
+  transform: rotate(10deg); opacity: 0.85;
+}
+.cc-stamp.stamp-in { animation: stamp-in 0.5s var(--ease-snap); }
+
+/* ============ 通知 toast ============ */
+.toast-zone { position: fixed; right: 26px; bottom: 24px; z-index: 80; display: grid; gap: 10px; justify-items: end; }
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px; border-radius: 6px;
+  background: linear-gradient(160deg, #262c22, #171b14);
+  border: 1px solid var(--line); border-left: 3px solid var(--gold);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 50%);
+  font-size: 13px; letter-spacing: 0.1em; color: var(--paper);
+  animation: toast-in 0.5s var(--ease-snap);
+}
+.toast.err { border-left-color: var(--cinnabar); }
+.toast .t-mark { font-family: var(--font-brush); color: var(--gold-bright); font-size: 16px; }
+.toast.err .t-mark { color: var(--cinnabar-bright); }
+.toast.out { transition: opacity 0.4s, transform 0.4s; opacity: 0; transform: translateY(8px); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+.page-foot { position: relative; z-index: 1; text-align: center; padding: 20px 0 4px; font-size: 10px; letter-spacing: 0.4em; color: rgb(233 222 195 / 26%); }
+
+/* ============ 响应式 ============ */
+@media (max-width: 1240px) {
+  .notice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calling-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ghost-meridian { top: 1180px; }
+  .ghost-heroes { top: 2050px; }
+}
+@media (max-width: 980px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .game-sidebar { display: none; }
+  .game-main { padding: 24px 20px 60px; }
+  .plaque-row { grid-template-columns: 1fr; }
+  .branch { grid-template-columns: 76px minmax(0, 1fr); margin: 10px 16px 6px; }
+  .branch-name .bn-vertical { font-size: 24px; }
+  .meridian-head, .acu-detail { margin-left: 16px; margin-right: 16px; padding-left: 0; padding-right: 0; }
+}
+@media (max-width: 640px) {
+  .notice-grid, .calling-cards { grid-template-columns: 1fr; }
+  .page-head h1 { font-size: 44px; }
+  .page-head { flex-direction: column; align-items: flex-start; }
+  .branch { overflow-x: auto; }
+  .branch-track { min-width: 620px; }
+  .ghost-char { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="app-shell">
+  <!-- ======== 游戏外壳 ======== -->
+  <aside class="game-sidebar">
+    <div class="brand-block">
+      <span class="brand-seal">蛋</span>
+      <span><strong>蛋蛋江湖 2.0</strong><small>十万里一剑 · 不负侠者行</small></span>
+    </div>
+    <nav class="game-nav" aria-label="游戏区域">
+      <button type="button" class="nav-item active"><span class="nav-mark">邑</span><strong>江湖</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">侠</span><strong>侠客</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">阵</span><strong>阵容</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">囊</span><strong>背包</strong></button>
+    </nav>
+    <nav class="world-subnav" aria-label="牛家村">
+      <button type="button" class="world-back">← 返回江湖</button>
+      <button type="button" class="ws-item">关卡<small>STAGES</small></button>
+      <button type="button" class="ws-item active">势力<small>FACTIONS</small></button>
+      <button type="button" class="ws-item">城市<small>CITY</small></button>
+    </nav>
+    <div class="sidebar-landscape" aria-hidden="true"></div>
+    <span class="sidebar-motto">朝悟道 · 暮练剑</span>
+  </aside>
+
+  <!-- ======== 势力主区 ======== -->
+  <main class="game-main">
+    <span class="ghost-char ghost-board" aria-hidden="true">榜</span>
+    <span class="ghost-char ghost-meridian" aria-hidden="true">脉</span>
+    <span class="ghost-char ghost-heroes" aria-hidden="true">侠</span>
+
+    <header class="page-head">
+      <div>
+        <p class="crumb">第一卷 · <b>牛家村</b> · 江湖三派</p>
+        <h1>势力</h1>
+        <p class="latin">Factions · Niujia Volume I</p>
+      </div>
+      <div class="purse" id="purse">
+        <svg width="34" height="30" viewBox="0 0 34 30" fill="none" aria-hidden="true">
+          <path d="M17 3 C10 3 5 8 4.5 14 C4 20 9 26 17 26 C25 26 30 20 29.5 14 C29 8 24 3 17 3 Z" fill="url(#ingot)" stroke="#8f6f3a" stroke-width="1"/>
+          <ellipse cx="17" cy="9.5" rx="5.5" ry="3" fill="#f2ddab" opacity="0.85"/>
+          <defs><linearGradient id="ingot" x1="4" y1="4" x2="30" y2="26"><stop stop-color="#e6c67f"/><stop offset="1" stop-color="#a37e3f"/></linearGradient></defs>
+        </svg>
+        <div>
+          <div class="purse-num" id="purseNum">0</div>
+          <div class="purse-label">势力贡献</div>
+          <div class="purse-faction" id="purseFaction">—</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 三派匾额 -->
+    <div class="plaque-row" id="plaqueRow"></div>
+
+    <!-- 悬榜 -->
+    <section class="board" id="board">
+      <div class="board-inner">
+        <header class="board-head">
+          <div class="board-title">
+            <h2>悬榜</h2>
+            <span class="sub">六格悬榜 · <i>揭榜追杀</i> · 以功易赏</span>
+          </div>
+          <div class="incense" title="一炷香尽，未揭之榜尽数更换">
+            <span class="incense-label">一炷香后换榜 · <b id="incenseMin">47</b> 分钟</span>
+            <span class="incense-track"><span class="incense-stick" id="incenseStick"></span><span class="incense-ember" id="incenseEmber"></span></span>
+          </div>
+        </header>
+        <div class="notice-grid" id="noticeGrid"></div>
+      </div>
+    </section>
+
+    <!-- 传承 -->
+    <section class="meridian" id="meridian">
+      <header class="meridian-head">
+        <div class="board-title">
+          <h2>传承</h2>
+          <span class="sub">双线行功 · 初传至秘传 · <i>逐穴打通</i></span>
+        </div>
+        <div class="disciple">
+          <span class="disciple-label">研习对象</span>
+          <div class="disciple-chips" id="discipleChips"></div>
+        </div>
+      </header>
+      <div id="branchZone"></div>
+      <div class="acu-detail" id="acuDetail"></div>
+    </section>
+
+    <!-- 门人 -->
+    <section class="disciples" id="disciples">
+      <header class="disciples-head">
+        <h2>门人拜帖</h2>
+        <span class="sub">三席可邀 · 以贡献为聘</span>
+      </header>
+      <div class="calling-cards" id="callingCards"></div>
+    </section>
+
+    <footer class="page-foot">蛋蛋江湖 2.0 · 势力页高保真重设计 · 数据与规则取自游戏真实配置</footer>
+  </main>
+</div>
+
+<div class="toast-zone" id="toastZone"></div>
+
+<!-- SVG 共享定义 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="veinGold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8f6f3a"/>
+      <stop offset="0.55" stop-color="#e6c67f"/>
+      <stop offset="1" stop-color="#c9a35c"/>
+    </linearGradient>
+  </defs>
+</svg>
+<script>
+/* ============================================================
+   数据层 —— 数值规则与 egg-jianghu/src 真实配置一致
+   武功价：60×阶 + 卷序×20（第一卷 → 80/140/200/260 贡献）
+   升级价：ceil(基础价 × (1 + 等级×0.2))
+   悬榜赏金：20 × 品级权重(丙1/乙2.5/甲6/地13/天24)，首领 ×1.4
+   门人：乙级 · 600 贡献
+   ============================================================ */
+const STAGES = ['初传', '进境', '真传', '秘传'];
+const STAGE_CHARS = ['初', '进', '真', '秘'];
+const RARITY_W1 = { b1: ['粗浅', '粗浅', '粗浅', '粗浅'], b2: ['粗浅', '寻常', '寻常', '寻常'] };
+const GRADE_REWARD = { 丙: 20, 乙: 50, 甲: 120, 地: 260, 天: 480 };
+
+const mkMartials = (faction, branchKey, rarityRow) =>
+  STAGES.map((stage, i) => ({
+    key: `${faction.id}_${branchKey}${i + 1}`,
+    name: `${faction.name}·${stage}`,
+    short: `${branchKey === 'b1' ? faction.branches[0].name : faction.branches[1].name}${stage}`,
+    stage: i + 1,
+    rarity: rarityRow[i],
+    cost: 60 * (i + 1) + 20,
+    energy: 8 + 4 * (i + 1),
+    cooldown: (1800 + 400 * (i + 1)) / 1000,
+    power: (0.8 + 0.35 * (i + 1)).toFixed(2),
+  }));
+
+const Q = (grade, type, target, count, state = 'idle', progress = 0) => ({
+  grade, type, target, count, state, progress,
+  reward: Math.floor(GRADE_REWARD[grade] * (type === 'boss' ? 1.4 : 1)),
+});
+
+const FACTIONS = [
+  {
+    id: 'qingfeng_hall', name: '全真教', category: '剑',
+    branches: [{ name: '快剑', force: 'swift', forceLabel: '迅' }, { name: '重剑', force: 'soft', forceLabel: '柔' }],
+    contribution: 1260,
+    quests: [
+      Q('丙', 'normal', '偷鸡贼', 5),
+      Q('乙', 'normal', '金兵什长', 20, 'accepted', 12),
+      Q('甲', 'boss', '沙通天', 4),
+      Q('乙', 'boss', '段天德', 2, 'done', 2),
+      Q('丙', 'normal', '地痞', 5),
+      null,
+    ],
+    heroes: [
+      { id: 'h_qf_1', name: '孙不二', grade: '乙', cost: 600, line: '清静散人，剑心通明。入队即携全真剑意。' },
+      { id: 'h_qf_2', name: '刘处玄', grade: '乙', cost: 600, line: '长生子，剑随心动，攻守两宜。' },
+      { id: 'h_qf_3', name: '谭处端', grade: '乙', cost: 600, line: '长真子，剑势沉稳，可镇前排。' },
+    ],
+  },
+  {
+    id: 'tieyi_school', name: '丐帮', category: '拳',
+    branches: [{ name: '刚拳', force: 'hard', forceLabel: '刚' }, { name: '绵掌', force: 'soft', forceLabel: '柔' }],
+    contribution: 640,
+    quests: [
+      Q('乙', 'normal', '护院拳师', 20),
+      Q('丙', 'normal', '村中泼皮', 5, 'accepted', 3),
+      Q('甲', 'boss', '彭连虎', 4),
+      Q('丙', 'normal', '愣头青', 5),
+      Q('乙', 'boss', '侯通海', 2),
+      null,
+    ],
+    heroes: [
+      { id: 'h_gb_1', name: '洪七公', grade: '乙', cost: 600, line: '九指神丐，降龙刚猛，天下无不可破之盾。', recruited: true },
+      { id: 'h_gb_2', name: '黎生', grade: '乙', cost: 600, line: '丐帮长老，拳路老辣，遇事沉得住气。' },
+      { id: 'h_gb_3', name: '余兆兴', grade: '乙', cost: 600, line: '布袋弟子，腿勤手快，打探追杀两相宜。' },
+    ],
+  },
+  {
+    id: 'renxin_hall', name: '桃花岛', category: '医',
+    branches: [{ name: '疗伤', force: 'support', forceLabel: '疗' }, { name: '药理', force: 'support', forceLabel: '药' }],
+    contribution: 300,
+    quests: [
+      Q('丙', 'normal', '赶集莽汉', 5),
+      Q('乙', 'boss', '灵智上人', 2, 'accepted', 1),
+      Q('甲', 'normal', '金兵什长', 50),
+      Q('丙', 'normal', '无赖闲汉', 5),
+      Q('地', 'boss', '梁子翁', 8),
+      null,
+    ],
+    heroes: [
+      { id: 'h_th_1', name: '冯默风', grade: '乙', cost: 600, line: '铁匠出身的岛上门人，沉默而可靠。' },
+      { id: 'h_th_2', name: '程英', grade: '乙', cost: 600, line: '温婉坚韧，医剑双修，后勤补给的一把好手。' },
+      { id: 'h_th_3', name: '傻姑', grade: '乙', cost: 600, line: '天真烂漫，掌法却得了桃花岛真传。' },
+    ],
+  },
+];
+
+// 每派武功（双支各四阶）
+FACTIONS.forEach((f) => {
+  f.martialBranches = [
+    { ...f.branches[0], martials: mkMartials(f, 'b1', RARITY_W1.b1) },
+    { ...f.branches[1], martials: mkMartials(f, 'b2', RARITY_W1.b2) },
+  ];
+});
+
+// 研习对象（已招募侠客）与已学武功：learned[factionId][discipleId][martialKey] = level
+const state = {
+  factionId: 'qingfeng_hall',
+  discipleId: 'hero_player',
+  disciples: [
+    { id: 'hero_player', name: '我', tag: '主角' },
+    { id: 'h_gb_1', name: '洪七公', tag: '丐帮' },
+  ],
+  learned: {
+    qingfeng_hall: { hero_player: { qingfeng_hall_b11: 3, qingfeng_hall_b12: 1 } },
+    tieyi_school: { hero_player: {} },
+    renxin_hall: { hero_player: { renxin_hall_b11: 1 } },
+  },
+  acceptedCount: 3,
+};
+
+const faction = () => FACTIONS.find((f) => f.id === state.factionId);
+const learnedOf = (fid) => (state.learned[fid] ||= {})[state.discipleId] ||= {};
+const fmt = (n) => n.toLocaleString('zh-CN');
+const $ = (sel) => document.querySelector(sel);
+
+/* ---------- 正字计数 ---------- */
+function tallyHTML(n) {
+  const full = Math.floor(n / 5);
+  const rem = n % 5;
+  let html = '';
+  for (let i = 0; i < full; i++) html += '<span>正</span>';
+  if (rem > 0) html += `<span class="partial">+${['', '一', '二', '三', '四'][rem]}</span>`;
+  if (n === 0) html = '<span class="partial">未动</span>';
+  return html;
+}
+</script>
+<script>
+/* ============================================================
+   渲染与交互
+   ============================================================ */
+const ROTS = [-1.6, 0.9, -0.7, 1.4, -1.1, 0.6];
+const CC_ROTS = [-1.2, 0.8, -0.6];
+const NODE_XS = [130, 355, 580, 805];
+let openAcu = null; // {branch, stage}
+let purseShown = 0;
+
+/* ---------- 小部件 ---------- */
+function toast(msg, err = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (err ? ' err' : '');
+  el.innerHTML = `<span class="t-mark">${err ? '✕' : '❋'}</span><span>${msg}</span>`;
+  $('#toastZone').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 450); }, 2600);
+}
+
+function animatePurse(to) {
+  const from = purseShown, t0 = performance.now();
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / 600);
+    const v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+    $('#purseNum').textContent = fmt(v);
+    if (k < 1) requestAnimationFrame(step); else purseShown = to;
+  };
+  requestAnimationFrame(step);
+}
+
+/* ---------- 匾额 ---------- */
+function renderPlaques() {
+  $('#plaqueRow').innerHTML = FACTIONS.map((f) => `
+    <button type="button" class="plaque ${f.id === state.factionId ? 'active' : ''}" data-faction="${f.id}">
+      <span class="plaque-char">${f.category}</span>
+      <span>
+        <span class="plaque-name">${f.name}</span>
+        <span class="plaque-meta">
+          <span class="plaque-cat">${f.category}</span>
+          ${f.branches[0].name} · ${f.branches[1].name} 双线
+        </span>
+      </span>
+      <span class="plaque-contrib"><b>${fmt(f.contribution)}</b><span>贡献</span></span>
+    </button>`).join('');
+}
+
+/* ---------- 悬榜 ---------- */
+function noticeHTML(quest, i) {
+  const rot = `style="--rot:${ROTS[i]}deg;animation-delay:${i * 70}ms"`;
+  if (!quest) {
+    return `<div class="notice-empty" ${rot}><strong>榜位空悬</strong><span>此榜已揭 · 静待换榜</span></div>`;
+  }
+  const boss = quest.type === 'boss';
+  const done = quest.state === 'done';
+  const accepted = quest.state === 'accepted' || done;
+  const btn = done
+    ? `<button type="button" class="btn-claim" data-quest="claim" data-slot="${i}">领赏</button>`
+    : accepted
+      ? `<button type="button" class="btn-cancel" data-quest="cancel" data-slot="${i}">收榜</button>`
+      : `<button type="button" class="btn-take" data-quest="accept" data-slot="${i}">揭榜</button>`;
+  const stamp = done
+    ? `<span class="stamp-accepted stamp-done ${quest.fresh ? 'stamp-in' : ''}">功成</span>`
+    : accepted
+      ? `<span class="stamp-accepted ${quest.fresh ? 'stamp-in' : ''}">已揭</span>` : '';
+  return `<article class="notice ${boss ? 'boss' : ''} ${accepted ? 'accepted' : ''} ${done ? 'done' : ''}" ${rot}>
+    ${stamp}
+    <div class="notice-top">
+      <span class="notice-type">${boss ? '首领悬赏' : '江湖悬赏'}</span>
+      <span class="seal-grade g-${quest.grade}">${quest.grade}</span>
+    </div>
+    <h3 class="notice-target">${quest.target}</h3>
+    <p class="notice-scene">出没于 牛家村 · ${boss ? '关底首领' : '沿途敌手'}</p>
+    <div class="tally-row">
+      <div class="tally">${tallyHTML(quest.progress)}</div>
+      <span class="tally-num"><b>${quest.progress}</b> / ${quest.count} 杀</span>
+    </div>
+    <div class="notice-foot">
+      <span class="reward">赏 <b>${quest.reward}</b> 贡献</span>
+      ${btn}
+    </div>
+  </article>`;
+}
+
+function renderBoard() {
+  $('#noticeGrid').innerHTML = faction().quests.map((q, i) => noticeHTML(q, i)).join('');
+}
+
+/* ---------- 传承经脉 ---------- */
+function veinD(endX) {
+  const pts = [{ x: 16, y: 49 }, { x: 130, y: 44 }, { x: 355, y: 54 }, { x: 580, y: 44 }, { x: 805, y: 54 }, { x: 984, y: 49 }]
+    .filter((p, i, a) => p.x <= endX || i === 0);
+  if (pts[pts.length - 1].x < endX) pts.push({ x: endX, y: 49 });
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 1; i < pts.length; i++) {
+    const mx = (pts[i - 1].x + pts[i].x) / 2;
+    const my = (pts[i - 1].y + pts[i].y) / 2 + (i % 2 ? -11 : 11);
+    d += ` Q ${mx} ${my} ${pts[i].x} ${pts[i].y}`;
+  }
+  return d;
+}
+
+function acuState(m, learned, stageIdx) {
+  const lv = learned[m.key];
+  if (lv) return { cls: 'learned', lv };
+  if (stageIdx === 0 || learned[`${m.key.slice(0, -1)}${stageIdx}`]) return { cls: 'next' };
+  return { cls: 'locked' };
+}
+
+function renderMeridian() {
+  const f = faction();
+  const learned = learnedOf(f.id);
+  $('#branchZone').innerHTML = f.martialBranches.map((br, bi) => `
+    <div class="branch">
+      <div class="branch-name">
+        <span class="bn-vertical">${br.name}</span>
+        <span class="bn-force ${br.force}">${br.forceLabel} 劲</span>
+      </div>
+      <div class="branch-track">
+        <svg class="meridian-svg" viewBox="0 0 1000 118" preserveAspectRatio="none" data-branch="${bi}" aria-hidden="true">
+          <path class="vein-base" d="${veinD(984)}"/>
+          <path class="vein-lit" d="${veinD(984)}"/>
+        </svg>
+        ${br.martials.map((m, si) => {
+          const st = acuState(m, learned, si);
+          const sel = openAcu && openAcu.branch === bi && openAcu.stage === si;
+          return `<div class="acupoint ${st.cls} ${sel ? 'selected' : ''}" style="left:${NODE_XS[si] / 10}%" data-branch="${bi}" data-stage="${si}">
+            <button type="button" class="acu-dot" style="--rc:var(--r-${m.rarity})" aria-label="${m.short}">
+              ${STAGE_CHARS[si]}${st.lv ? `<span class="acu-lv">Lv.${st.lv}</span>` : ''}
+            </button>
+            <span class="acu-name">${m.short}</span>
+            <span class="acu-sub"><span class="rarity-tag">${m.rarity}</span>·<span class="cost-tag">贡献 ${m.cost}</span></span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+  renderAcuDetail();
+  requestAnimationFrame(updateVeins);
+}
+
+function renderAcuDetail() {
+  const box = $('#acuDetail');
+  if (!openAcu) { box.className = 'acu-detail'; box.innerHTML = ''; return; }
+  const f = faction();
+  const m = f.martialBranches[openAcu.branch].martials[openAcu.stage];
+  const learned = learnedOf(f.id);
+  const lv = learned[m.key] || 0;
+  const st = acuState(m, learned, openAcu.stage);
+  const upCost = Math.ceil(m.cost * (1 + lv * 0.2));
+  const afford = f.contribution >= (lv ? upCost : m.cost);
+  const btn = st.cls === 'locked'
+    ? `<button type="button" class="btn-learn" disabled>先通前穴</button>`
+    : lv
+      ? `<button type="button" class="btn-learn upgrade" data-acu="upgrade" ${afford ? '' : 'disabled'}>${afford ? `升级 · 贡献 ${upCost}` : '贡献不足'}</button>`
+      : `<button type="button" class="btn-learn" data-acu="learn" ${afford ? '' : 'disabled'}>${afford ? `研习 · 贡献 ${m.cost}` : '贡献不足'}</button>`;
+  box.innerHTML = `
+    <div>
+      <div class="ad-name">${f.name} · ${m.short}${lv ? ` <span style="font-size:14px;color:var(--gold-bright)">Lv.${lv}</span>` : ''}</div>
+      <div class="ad-stats">
+        <span>品阶 <b style="color:var(--r-${m.rarity})">${m.rarity}</b></span>
+        <span>耗气 <b>${m.energy}</b></span>
+        <span>调息 <b>${m.cooldown.toFixed(1)}s</b></span>
+        <span>威力 <b>${m.power}</b></span>
+        <span>研习 <i>${state.disciples.find((d) => d.id === state.discipleId)?.name ?? '我'}</i></span>
+      </div>
+    </div>
+    ${btn}`;
+  box.className = 'acu-detail open';
+}
+
+function lengthAtX(path, x) {
+  const total = path.getTotalLength();
+  if (x <= 0) return 0;
+  for (let t = 0; t <= total; t += total / 240) {
+    if (path.getPointAtLength(t).x >= x) return t;
+  }
+  return total;
+}
+
+function updateVeins() {
+  const f = faction();
+  const learned = learnedOf(f.id);
+  document.querySelectorAll('.meridian-svg').forEach((svg) => {
+    const bi = Number(svg.dataset.branch);
+    const br = f.martialBranches[bi];
+    let lastX = 0;
+    br.martials.forEach((m, si) => { if (learned[m.key]) lastX = NODE_XS[si]; });
+    const base = svg.querySelector('.vein-base');
+    const lit = svg.querySelector('.vein-lit');
+    const total = base.getTotalLength();
+    const litLen = lastX ? Math.min(total, lengthAtX(base, lastX) + 26) : 0;
+    lit.style.strokeDasharray = `${total}`;
+    lit.style.strokeDashoffset = `${total}`;          // 先复位
+    lit.getBoundingClientRect();                       // 强制 reflow 以播放过渡
+    lit.style.strokeDashoffset = `${total - litLen}`;
+  });
+}
+
+/* ---------- 门人 ---------- */
+function renderDiscipleChips() {
+  $('#discipleChips').innerHTML = state.disciples.map((d) => `
+    <button type="button" class="disciple-chip ${d.id === state.discipleId ? 'active' : ''}" data-disciple="${d.id}">${d.name}</button>`).join('');
+}
+
+function renderCallingCards() {
+  const f = faction();
+  $('#callingCards').innerHTML = f.heroes.map((h, i) => `
+    <article class="calling-card ${h.recruited ? 'recruited' : ''}" style="--rot:${CC_ROTS[i]}deg;animation-delay:${i * 90}ms">
+      ${h.recruited ? `<span class="cc-stamp ${h.fresh ? 'stamp-in' : ''}">已入麾下</span>` : ''}
+      <div class="cc-name-rail">
+        <span class="cc-grade">${h.grade}</span>
+        <span class="cc-vertical">${h.name}</span>
+      </div>
+      <div class="cc-body">
+        <p class="cc-title">${f.name} · 拜帖</p>
+        <p class="cc-line">${h.line}</p>
+        <div class="cc-foot">
+          <span class="cc-cost">聘 <b>${fmt(h.cost)}</b> 贡献</span>
+          <button type="button" class="btn-invite" data-invite="${h.id}" ${h.recruited ? 'disabled' : ''} aria-label="邀请${h.name}">${h.recruited ? '✓' : '邀'}</button>
+        </div>
+      </div>
+    </article>`).join('');
+}
+
+/* ---------- 全量渲染 ---------- */
+function renderAll() {
+  renderPlaques();
+  renderBoard();
+  renderMeridian();
+  renderDiscipleChips();
+  renderCallingCards();
+  $('#purseFaction').textContent = faction().name;
+  animatePurse(faction().contribution);
+}
+
+/* ---------- 交互 ---------- */
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button');
+  if (!t) return;
+
+  if (t.dataset.faction) {
+    if (t.dataset.faction !== state.factionId) {
+      state.factionId = t.dataset.faction;
+      openAcu = null;
+      renderAll();
+    }
+    return;
+  }
+
+  if (t.dataset.disciple) {
+    state.discipleId = t.dataset.disciple;
+    openAcu = null;
+    renderDiscipleChips();
+    renderMeridian();
+    return;
+  }
+
+  if (t.dataset.quest) {
+    const f = faction();
+    const slot = Number(t.dataset.slot);
+    const q = f.quests[slot];
+    if (!q) return;
+    if (t.dataset.quest === 'accept') {
+      if (state.acceptedCount >= 10) { toast('全局最多同时揭十张榜', true); return; }
+      q.state = 'accepted'; q.fresh = true; state.acceptedCount++;
+      renderBoard(); toast(`已揭榜 · 追杀 ${q.target}`);
+      setTimeout(() => { q.fresh = false; }, 600);
+    } else if (t.dataset.quest === 'cancel') {
+      f.quests[slot] = null; state.acceptedCount--;
+      renderBoard(); toast('已收榜 · 进度清零');
+    } else if (t.dataset.quest === 'claim') {
+      f.contribution += q.reward; state.acceptedCount--;
+      f.quests[slot] = null;
+      renderPlaques(); renderBoard(); animatePurse(f.contribution);
+      toast(`领赏 · 贡献 +${q.reward}`);
+    }
+    return;
+  }
+
+  const acuEl = e.target.closest('.acupoint');
+  if (acuEl) {
+    const b = Number(acuEl.dataset.branch), s = Number(acuEl.dataset.stage);
+    openAcu = openAcu && openAcu.branch === b && openAcu.stage === s ? null : { branch: b, stage: s };
+    renderMeridian();
+    return;
+  }
+
+  if (t.dataset.acu) {
+    const f = faction();
+    const m = f.martialBranches[openAcu.branch].martials[openAcu.stage];
+    const learned = learnedOf(f.id);
+    const lv = learned[m.key] || 0;
+    const cost = lv ? Math.ceil(m.cost * (1 + lv * 0.2)) : m.cost;
+    if (f.contribution < cost) { toast('势力贡献不足', true); return; }
+    f.contribution -= cost;
+    learned[m.key] = lv + 1;
+    renderPlaques(); renderMeridian(); animatePurse(f.contribution);
+    toast(lv ? `${m.short} 提升至 Lv.${lv + 1}` : `习得 ${f.name} · ${m.short}`);
+    return;
+  }
+
+  if (t.dataset.invite) {
+    const f = faction();
+    const h = f.heroes.find((x) => x.id === t.dataset.invite);
+    if (!h || h.recruited) return;
+    if (f.contribution < h.cost) { toast('贡献不足 · 难以服人', true); return; }
+    f.contribution -= h.cost;
+    h.recruited = true; h.fresh = true;
+    if (!state.disciples.some((d) => d.id === h.id)) state.disciples.push({ id: h.id, name: h.name, tag: f.name });
+    renderPlaques(); renderCallingCards(); renderDiscipleChips(); animatePurse(f.contribution);
+    toast(`${h.name} 已入麾下`);
+    setTimeout(() => { h.fresh = false; }, 600);
+    return;
+  }
+});
+
+/* ---------- 一炷香 · 换榜 ---------- */
+const NORMAL_POOL = ['村中泼皮', '无赖闲汉', '偷鸡贼', '地痞', '愣头青', '赶集莽汉', '护院拳师', '金兵什长', '回乡兵痞'];
+const BOSS_POOL = ['段天德', '完颜洪烈', '梁子翁', '灵智上人', '侯通海', '沙通天', '彭连虎', '欧阳克', '梅超风', '曲灵风'];
+const GRADE_W = [['丙', 40], ['乙', 30], ['甲', 18], ['地', 9], ['天', 3]];
+const COUNTS = { 丙: [5, 1], 乙: [20, 2], 甲: [50, 4], 地: [100, 8], 天: [160, 16] };
+
+function rollQuest() {
+  let roll = Math.random() * 100, grade = '丙';
+  for (const [g, w] of GRADE_W) { roll -= w; if (roll < 0) { grade = g; break; } }
+  const boss = Math.random() < 0.3;
+  const target = boss ? BOSS_POOL[Math.floor(Math.random() * BOSS_POOL.length)] : NORMAL_POOL[Math.floor(Math.random() * NORMAL_POOL.length)];
+  return Q(grade, boss ? 'boss' : 'normal', target, COUNTS[grade][boss ? 1 : 0]);
+}
+
+const INCENSE_TOTAL = 3600;
+let incenseLeft = 47 * 60;
+const incenseTick = () => {
+  incenseLeft--;
+  if (incenseLeft <= 0) {
+    incenseLeft = INCENSE_TOTAL;
+    const f = faction();
+    f.quests = f.quests.map((q) => (q && (q.state === 'accepted' || q.state === 'done')) ? q : rollQuest());
+    renderBoard();
+    toast('香尽换榜 · 新榜高悬');
+  }
+  const frac = incenseLeft / INCENSE_TOTAL;
+  $('#incenseMin').textContent = Math.ceil(incenseLeft / 60);
+  $('#incenseStick').style.width = `${frac * 100}%`;
+  $('#incenseEmber').style.left = `${(1 - frac) * 100}%`;
+  $('#incenseEmber').style.transform = 'translate(-50%, -50%)';
+};
+setInterval(incenseTick, 1000);
+
+/* ---------- 启动 ---------- */
+renderAll();
+incenseTick();
+</script>
+</body>
+</html>
