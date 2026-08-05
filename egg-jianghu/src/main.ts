@@ -17,7 +17,7 @@ import {
 } from './content/equipment'
 import { FACTIONS } from './content/factions'
 import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10 } from './content/heroes'
-import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTIALS, martialByIdV10 } from './content/martials'
+import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTIALS, heartMethodByIdV10, martialByIdV10 } from './content/martials'
 import { WORLDS } from './content/worlds'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
@@ -32,7 +32,7 @@ import { normalizePlayerName } from './domain/state'
 import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { renderFactionsPage, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
-import { renderFormationPage, type FormationPageViewModel } from './ui/formation-page'
+import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
 import { renderHeroesPage, type HeroesEquipmentView, type HeroesPageViewModel } from './ui/heroes-page'
 import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
@@ -71,7 +71,10 @@ let heroInventoryPage = 1
 let heroBatchDiscardQuality: EquipmentQuality | 'all' = 'all'
 let showBatchDiscardConfirm = false
 let formationSelectedHeroId: string | null = null
+let formationDetailHeroId: string | null = null
+let formationFilter: FormationFilter = 'all'
 let dragHeroId: string | null = null
+let dragCandidateHeroId: string | null = null
 let selectedFactionId = ''
 let selectedFactionMartialId: string | null = null
 let factionRosterOpen = false
@@ -485,17 +488,119 @@ const heroesViewModel = (): HeroesPageViewModel => {
   }
 }
 
-const formationViewModel = (): FormationPageViewModel => ({
-  formation: session.state.formation,
-  selectedHeroId: formationSelectedHeroId,
-  heroes: recruitedHeroes().map(({ definition, progress, name }) => ({
-    id: definition.id,
-    name,
-    grade: definition.grade,
-    level: progress.level,
-    inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
-  })),
-})
+const formationCareerPath = (currentCareerId: string): FormationPageViewModel['heroes'][number]['careerPath'] => {
+  const current = careerById(currentCareerId)
+  if (!current) return []
+  const base = CAREERS.find((career) => career.category === current.category && career.branch === null)
+  const branchName = current.branch ?? CAREERS.find((career) => career.category === current.category && career.branch !== null)?.branch
+  const tierOrder: Record<string, number> = { 初级: 0, 中级: 1, 高级: 2, 顶级: 3 }
+  const branch = CAREERS
+    .filter((career) => career.category === current.category && career.branch === branchName)
+    .sort((left, right) => tierOrder[left.tier] - tierOrder[right.tier])
+  const path = base ? [base, ...branch] : [current, ...branch.filter((career) => career.id !== current.id)]
+  const currentIndex = Math.max(0, path.findIndex((career) => career.id === current.id))
+  return path.map((career, index) => ({
+    name: career.name,
+    state: career.id === current.id ? 'current' : index < currentIndex ? 'done' : 'future',
+  }))
+}
+
+const formationSourceLabel = (definition: (typeof HEROES_V10)[number]): string => {
+  if (definition.source === 'starter') return '本队主角'
+  if (definition.source === 'tavern') return '酒馆相逢'
+  return `${FACTIONS.find((faction) => faction.id === definition.factionId)?.name ?? '势力'}门人`
+}
+
+const formationViewModel = (): FormationPageViewModel => {
+  const heroes = recruitedHeroes().map(({ definition, progress, name }) => {
+    const currentCareer = careerById(progress.currentCareerId) ?? careerById(definition.baseCareerId)
+    const careerRecord = progress.careers[progress.currentCareerId]
+    const combatStats = buildCombatStats(definition, progress, session.state.inventory)
+    return {
+      id: definition.id,
+      name,
+      grade: definition.grade,
+      level: progress.level,
+      inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
+      category: currentCareer?.category ?? '剑',
+      source: formationSourceLabel(definition),
+      careerName: currentCareer?.name ?? progress.currentCareerId,
+      careerLevel: careerRecord?.level ?? 1,
+      careerPath: formationCareerPath(progress.currentCareerId),
+      aptitudes: definition.aptitudes,
+      combatStats: {
+        maxHp: combatStats.maxHp,
+        externalAttack: combatStats.externalAttack,
+        internalAttack: combatStats.internalAttack,
+        externalDefense: combatStats.externalDefense,
+        internalDefense: combatStats.internalDefense,
+        effectiveAgility: combatStats.effectiveAgility,
+      },
+      equippedMartials: progress.equippedMartialIds.map((martialId) => {
+        if (!martialId) return null
+        const martial = martialByIdV10(martialId)
+        return martial
+          ? { name: martial.name, rarity: martial.rarity, level: progress.learnedMartials[martialId]?.level ?? 1 }
+          : null
+      }),
+      heartMethodName: progress.heartMethodId ? heartMethodByIdV10(progress.heartMethodId)?.name ?? null : null,
+      slot: session.state.formation.find((slot) => slot.heroId === definition.id) ?? null,
+    }
+  })
+  const selectedHeroId = heroes.some((hero) => hero.id === formationDetailHeroId)
+    ? formationDetailHeroId
+    : session.state.formation[0]?.heroId ?? heroes[0]?.id ?? null
+  formationDetailHeroId = selectedHeroId
+  return { formation: session.state.formation, selectedHeroId, filter: formationFilter, heroes }
+}
+
+const formationFilterOptions: FormationFilter[] = ['all', '剑', '刀', '拳', '暗', '医', '内家']
+
+const formationHeroCategory = (heroId: string): FormationFilter | null => {
+  const definition = heroByIdV10(heroId)
+  const progress = session.state.heroes[heroId]
+  if (!definition || !progress) return null
+  return careerById(progress.currentCareerId)?.category ?? careerById(definition.baseCareerId)?.category ?? null
+}
+
+const autoArrangeFormation = (): ActionResult => {
+  const placedIds = session.state.formation
+    .map((slot) => slot.heroId)
+    .filter((heroId, index, ids) => ids.indexOf(heroId) === index)
+  if (!placedIds.length) return { ok: false, message: '阵中无人 · 先从名册点将' }
+
+  const originalOrder = new Map(placedIds.map((heroId, index) => [heroId, index]))
+  const constitutionOf = (heroId: string): number => heroByIdV10(heroId)?.aptitudes.constitution ?? 0
+  const levelOf = (heroId: string): number => session.state.heroes[heroId]?.level ?? 0
+  const stableCompare = (left: string, right: string, value: (heroId: string) => number): number =>
+    value(right) - value(left) || (originalOrder.get(left) ?? 0) - (originalOrder.get(right) ?? 0)
+
+  const frontPreferred = placedIds
+    .filter((heroId) => {
+      const category = formationHeroCategory(heroId)
+      return category === '拳' || category === '内家'
+    })
+    .sort((left, right) => stableCompare(left, right, constitutionOf))
+  const others = placedIds
+    .filter((heroId) => !frontPreferred.includes(heroId))
+    .sort((left, right) => stableCompare(left, right, levelOf))
+  const front = frontPreferred.slice(0, 3)
+  const pool = [...frontPreferred.slice(3), ...others]
+  while (front.length < 3 && pool.length) front.push(pool.shift()!)
+  const back = pool.slice(0, 3)
+
+  session.state.formation = [
+    ...front.map((heroId, position) => ({ heroId, row: 'front' as const, position: position as FormationPosition })),
+    ...back.map((heroId, position) => ({ heroId, row: 'back' as const, position: position as FormationPosition })),
+  ]
+  return { ok: true, message: '自动列阵毕 · 拳内居前承伤' }
+}
+
+const clearFormation = (): ActionResult => {
+  if (!session.state.formation.length) return { ok: false, message: '阵中本就无人' }
+  session.state.formation = []
+  return { ok: true, message: '已悉数下阵' }
+}
 
 const factionsViewModel = (): FactionsPageViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
@@ -800,8 +905,6 @@ const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => 
 
 const dataNumber = (button: HTMLElement, key: string): number => Number(button.dataset[key])
 
-const isTouchDevice = (): boolean => window.matchMedia('(hover: none)').matches || navigator.maxTouchPoints > 0
-
 const formatFactionContribution = (value: number): string => Math.max(0, Math.round(value)).toLocaleString('zh-CN')
 
 const readFactionContribution = (): number | null => {
@@ -918,17 +1021,27 @@ app.addEventListener('pointerout', (event) => {
 app.addEventListener('scroll', positionOpenEquipmentTooltip, true)
 window.addEventListener('resize', positionOpenEquipmentTooltip)
 
+app.addEventListener('pointerdown', (event) => {
+  const target = event.target as HTMLElement
+  dragCandidateHeroId = target.closest<HTMLElement>('.formation-roster-row')?.dataset.heroId ?? null
+})
+
 app.addEventListener('dragstart', (event) => {
   const source = (event.target as HTMLElement).closest<HTMLElement>('[data-hero-id]')
   if (!source) return
-  dragHeroId = source.dataset.heroId ?? null
-  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+  dragHeroId = dragCandidateHeroId ?? source.dataset.heroId ?? null
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    if (dragHeroId) event.dataTransfer.setData('text/plain', dragHeroId)
+  }
 })
 
 app.addEventListener('dragover', (event) => {
   const target = event.target as HTMLElement
-  if (!dragHeroId || !target.closest('[data-testid="formation-page"]')) return
-  const slot = target.closest<HTMLElement>('.formation-editor-slot')
+  const transferHeroId = dragHeroId ?? event.dataTransfer?.getData('text/plain') ?? null
+  if (!transferHeroId || !target.closest('[data-testid="formation-page"]')) return
+  dragHeroId = transferHeroId
+  const slot = target.closest<HTMLElement>('.formation-slot')
   const roster = target.closest<HTMLElement>('.formation-roster')
   if (slot || roster) {
     event.preventDefault()
@@ -938,25 +1051,28 @@ app.addEventListener('dragover', (event) => {
 })
 
 app.addEventListener('drop', (event) => {
-  if (!dragHeroId) return
+  const droppedHeroId = dragHeroId ?? event.dataTransfer?.getData('text/plain') ?? null
+  if (!droppedHeroId) return
   const target = event.target as HTMLElement
-  const slot = target.closest<HTMLElement>('.formation-editor-slot')
+  const slot = target.closest<HTMLElement>('.formation-slot')
   if (slot) {
     event.preventDefault()
     const row = slot.dataset.row as FormationRow
     const position = dataNumber(slot, 'position') as FormationPosition
-    commitAction(placeFormation(session.state, dragHeroId, row, position))
+    commitAction(placeFormation(session.state, droppedHeroId, row, position))
   } else if (target.closest('.formation-roster')) {
     event.preventDefault()
-    commitAction(removeFormation(session.state, dragHeroId))
+    commitAction(removeFormation(session.state, droppedHeroId))
   }
   dragHeroId = null
+  dragCandidateHeroId = null
   clearDragOver()
   render()
 })
 
 app.addEventListener('dragend', () => {
   dragHeroId = null
+  dragCandidateHeroId = null
   clearDragOver()
 })
 
@@ -965,10 +1081,25 @@ const performAction = (button: HTMLButtonElement): void => {
   const heroId = button.dataset.heroId ?? selectedHeroId ?? ''
   if (action === 'formation-remove') commitAction(removeFormation(session.state, heroId))
   else if (action === 'formation-select') {
-    if (isTouchDevice()) formationSelectedHeroId = heroId
+    formationDetailHeroId = heroId
+    formationSelectedHeroId = heroId
+  } else if (action === 'formation-filter') {
+    const nextFilter = button.dataset.filter as FormationFilter
+    if (formationFilterOptions.includes(nextFilter)) formationFilter = nextFilter
+  } else if (action === 'formation-auto-arrange') {
+    formationSelectedHeroId = null
+    commitAction(autoArrangeFormation())
+  } else if (action === 'formation-clear') {
+    formationSelectedHeroId = null
+    commitAction(clearFormation())
   } else if (action === 'formation-slot-tap') {
-    if (isTouchDevice() && formationSelectedHeroId) {
+    const slotHeroId = button.dataset.heroId ?? null
+    if (formationSelectedHeroId) {
       commitAction(placeFormation(session.state, formationSelectedHeroId, button.dataset.row as FormationRow, dataNumber(button, 'position') as FormationPosition))
+      formationDetailHeroId = formationSelectedHeroId
+      formationSelectedHeroId = null
+    } else if (slotHeroId) {
+      formationDetailHeroId = slotHeroId
     }
   }
   else if (action === 'career-change') commitAction(changeCareer(session.state.heroes[heroId], button.dataset.careerId ?? '', session.state.careerTokens))

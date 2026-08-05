@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>阵容 · 蛋蛋江湖 2.0 — 高保真重设计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   阵容页重设计 · 蛋蛋江湖 2.0
+   概念：演武点将 —— 名册选将 · 令牌立阵 · 阵势相参
+   设计语言沿用势力页：墨底宣纸 · 朱砂印 · 金漆匾 · 经脉行功
+   ============================================================ */
+:root {
+  --ink-950: #0c0e0b;
+  --ink-900: #11140f;
+  --ink-850: #171b14;
+  --ink-800: #1f241c;
+  --ink-700: #2a3026;
+  --paper: #e8e1d3;
+  --paper-dim: #b3ad9e;
+  --paper-mute: #7d7f72;
+  --xuan: #e9dec3;          /* 宣纸 */
+  --xuan-deep: #ddceaa;
+  --xuan-ink: #2b2519;       /* 纸上墨色 */
+  --cinnabar: #b5503c;       /* 朱砂 */
+  --cinnabar-bright: #cf6b53;
+  --cinnabar-deep: #8a3a2b;
+  --gold: #c9a35c;
+  --gold-bright: #e6c67f;
+  --gold-deep: #8f6f3a;
+  --jade: #7fa88d;
+  --jade-dim: #57705f;
+  --line: #31382e;
+  --line-soft: #252a22;
+  --wood-1: #3a2e1d;         /* 令牌檀木 */
+  --wood-2: #241b10;
+  --font-brush: "Ma Shan Zheng", "Noto Serif SC", serif;
+  --font-song: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: var(--font-song);
+  color: var(--paper);
+  background:
+    radial-gradient(1100px 500px at 78% -10%, rgb(127 168 141 / 9%), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgb(181 80 60 / 6%), transparent 55%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+  font-synthesis: none;
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+::selection { background: rgb(181 80 60 / 55%); color: #fff4e8; }
+
+/* 纸颗粒覆盖层 —— 全场胶片/宣纸质感 */
+.grain {
+  position: fixed; inset: -50%; z-index: 60; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.055; mix-blend-mode: overlay;
+}
+
+/* ============ 游戏外壳 · 侧边栏 ============ */
+.app-shell { display: grid; grid-template-columns: 212px minmax(0, 1fr); min-height: 100vh; }
+
+.game-sidebar {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; gap: 26px;
+  padding: 26px 20px 20px;
+  border-right: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, rgb(23 27 20 / 72%), rgb(13 16 12 / 88%));
+}
+.brand-block { display: flex; align-items: center; gap: 12px; }
+.brand-seal {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 24px; color: #f6e3d2;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  border: 1px solid #c96f58; border-radius: 6px;
+  box-shadow: inset 0 0 0 3px #411811, 0 4px 14px rgb(0 0 0 / 40%);
+  transform: rotate(-2deg);
+}
+.brand-block strong { display: block; font-size: 15px; letter-spacing: 0.1em; color: #efe4cf; white-space: nowrap; }
+.brand-block small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); white-space: nowrap; }
+
+.game-nav { display: grid; gap: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 6px; text-align: left;
+  color: var(--paper-dim); transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  position: relative;
+}
+.nav-item .nav-mark {
+  width: 30px; height: 30px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 16px;
+  border: 1px solid var(--line); border-radius: 5px; color: var(--paper-mute);
+  transition: all 0.25s var(--ease-out);
+}
+.nav-item strong { font-size: 14px; letter-spacing: 0.28em; font-weight: 500; }
+.nav-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.nav-item.active { color: #f3e9d5; background: rgb(233 222 195 / 5%); }
+.nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px;
+  background: var(--cinnabar); border-radius: 2px;
+}
+.nav-item.active .nav-mark { border-color: var(--cinnabar-deep); color: var(--cinnabar-bright); }
+
+.sidebar-landscape { margin-top: auto; height: 74px; position: relative; overflow: hidden; border-radius: 6px; }
+.sidebar-landscape::before { /* 远山 */
+  content: ""; position: absolute; inset: auto -12px 0 -12px; height: 56px;
+  background:
+    linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
+    linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
+    linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
+}
+.sidebar-landscape::after { /* 雾 */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
+  background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
+}
+.sidebar-motto { font-size: 10px; letter-spacing: 0.5em; color: var(--paper-mute); text-align: center; }
+
+/* ============ 主区框架 ============ */
+.game-main { min-width: 0; padding: 30px 38px 70px; position: relative; }
+
+/* 巨字书法背景 —— 氛围层 */
+.ghost-char {
+  position: absolute; z-index: 0; pointer-events: none; user-select: none;
+  font-family: var(--font-brush); line-height: 0.9; color: rgb(233 222 195 / 4%);
+}
+.ghost-zhen { top: 190px; right: -40px; font-size: 420px; transform: rotate(5deg); }
+.ghost-wu { top: 1080px; left: -50px; font-size: 350px; transform: rotate(-6deg); color: rgb(201 163 92 / 4%); }
+
+.page-head {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+  padding-bottom: 22px; margin-bottom: 26px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.page-head .crumb { font-size: 11px; letter-spacing: 0.3em; color: var(--paper-mute); margin-bottom: 12px; }
+.page-head .crumb b { color: var(--gold); font-weight: 500; }
+.page-head h1 {
+  font-family: var(--font-brush); font-weight: 400;
+  font-size: 58px; line-height: 1; letter-spacing: 0.06em; color: #f2e7d0;
+  text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
+}
+.page-head .latin { margin-top: 10px; font-size: 10px; letter-spacing: 0.42em; color: var(--paper-mute); text-transform: uppercase; }
+
+/* 战功牌 · 页首三栏统计 */
+.war-stats {
+  display: flex; align-items: stretch; gap: 0;
+  border: 1px solid rgb(201 163 92 / 28%); border-radius: 8px;
+  background: linear-gradient(160deg, rgb(201 163 92 / 9%), rgb(201 163 92 / 3%));
+  overflow: hidden;
+}
+.wstat { padding: 12px 22px; text-align: center; position: relative; }
+.wstat + .wstat::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 1px; background: rgb(201 163 92 / 22%); }
+.wstat b { display: block; font-size: 25px; font-weight: 700; color: var(--gold-bright); font-variant-numeric: tabular-nums; line-height: 1.05; letter-spacing: 0.02em; }
+.wstat b i { font-style: normal; font-size: 17px; color: var(--gold); }
+.wstat span { display: block; margin-top: 5px; font-size: 10px; letter-spacing: 0.3em; color: var(--gold); white-space: nowrap; }
+.wstat.accent b { color: var(--cinnabar-bright); }
+.wstat.accent span { color: var(--cinnabar-bright); }
+
+/* ============ 按钮 ============ */
+.btn-gold {
+  padding: 9px 18px; font-size: 12px; letter-spacing: 0.26em; text-indent: 0.26em;
+  color: #3d2c10; font-weight: 700;
+  background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep));
+  border-radius: 4px; box-shadow: 0 3px 10px rgb(201 163 92 / 40%);
+  transition: transform 0.2s var(--ease-out), filter 0.2s, box-shadow 0.2s;
+}
+.btn-gold:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 6px 16px rgb(201 163 92 / 50%); }
+.btn-gold:active { transform: translateY(1px); }
+.btn-ghost {
+  padding: 9px 16px; font-size: 12px; letter-spacing: 0.26em; text-indent: 0.26em;
+  color: var(--paper-mute); border: 1px solid var(--line); border-radius: 4px;
+  transition: all 0.2s var(--ease-out);
+}
+.btn-ghost:hover { color: var(--paper); border-color: var(--paper-mute); background: rgb(233 222 195 / 4%); }
+.btn-cinnabar {
+  padding: 9px 18px; font-size: 12px; letter-spacing: 0.3em; text-indent: 0.3em;
+  color: #f8e9db; background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 4px; box-shadow: 0 3px 8px rgb(138 58 43 / 40%);
+  transition: transform 0.2s var(--ease-out), filter 0.2s, box-shadow 0.2s;
+}
+.btn-cinnabar:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 14px rgb(138 58 43 / 50%); }
+.btn-line {
+  padding: 9px 16px; font-size: 12px; letter-spacing: 0.3em; text-indent: 0.3em;
+  color: var(--cinnabar-bright); border: 1px solid var(--cinnabar-deep); border-radius: 4px;
+  transition: all 0.2s var(--ease-out);
+}
+.btn-line:hover { background: rgb(181 80 60 / 10%); }
+
+/* ============ 品级朱砂印 ============ */
+.seal-grade {
+  flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 20px; color: #f8e9da;
+  text-shadow: 0 1px 2px rgb(60 20 12 / 55%);
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 6px 8px 5px 9px / 8px 5px 9px 6px;
+  transform: rotate(4deg);
+  box-shadow: 0 2px 6px rgb(138 58 43 / 45%), inset 0 0 0 1.5px rgb(255 230 210 / 40%), inset 0 -4px 7px rgb(0 0 0 / 28%);
+}
+.seal-grade.g-丙 { background: linear-gradient(150deg, #8f7a55, #6b5a3d); box-shadow: 0 2px 6px rgb(107 90 61 / 45%), inset 0 0 0 1.5px rgb(255 240 210 / 35%), inset 0 -4px 7px rgb(0 0 0 / 28%); }
+.seal-grade.g-乙 { background: linear-gradient(150deg, #c15b46, #93402e); }
+.seal-grade.g-甲 { background: linear-gradient(150deg, #a8483a, #7c3026); }
+.seal-grade.g-地 { background: linear-gradient(150deg, #8f3a30, #63261d); }
+.seal-grade.g-天 { background: linear-gradient(150deg, #b98a3a, #8a6224); box-shadow: 0 2px 8px rgb(185 138 58 / 50%), inset 0 0 0 1.5px rgb(255 240 210 / 45%), inset 0 -4px 7px rgb(0 0 0 / 28%); }
+.seal-grade.sm { width: 26px; height: 26px; font-size: 15px; border-radius: 5px 6px 4px 7px / 6px 4px 7px 5px; }
+
+/* ============ 提示 Toast ============ */
+.toast {
+  position: fixed; top: 26px; left: 50%; z-index: 80;
+  transform: translate(-50%, -16px); opacity: 0; pointer-events: none;
+  padding: 10px 22px; font-size: 13px; letter-spacing: 0.2em;
+  color: #f3e6d2; background: linear-gradient(165deg, #2c241a, #1d1812);
+  border: 1px solid rgb(201 163 92 / 50%); border-radius: 6px;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 55%);
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  display: flex; align-items: center; gap: 10px;
+}
+.toast::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--cinnabar-bright); box-shadow: 0 0 8px 2px rgb(207 107 83 / 55%); }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+</style>
+<style>
+/* ============ 点将布局 ============ */
+.muster-layout {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 296px minmax(0, 1fr) 312px;
+  gap: 20px; align-items: start;
+  margin-bottom: 40px;
+}
+
+/* ============ 点将名册 ============ */
+.roster {
+  border-radius: 12px; padding: 3px;
+  background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+  position: sticky; top: 26px;
+}
+.roster-inner {
+  border-radius: 9px; overflow: hidden;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 12%) 0 2px, transparent 2px 56px),
+    linear-gradient(165deg, #2f2819, #221c10 55%, #292216);
+  border: 1px solid rgb(0 0 0 / 40%);
+}
+.roster-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 18px 18px 12px;
+}
+.roster-head h2 { font-family: var(--font-brush); font-weight: 400; font-size: 27px; letter-spacing: 0.12em; color: #ecdcb9; }
+.roster-head small { font-size: 10px; letter-spacing: 0.18em; color: rgb(233 222 195 / 45%); }
+.roster-head small b { color: var(--gold-bright); font-weight: 600; }
+
+/* 职业筛选签 */
+.roster-filter {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 0 18px 12px;
+  border-bottom: 1px dashed rgb(120 95 55 / 35%);
+}
+.filter-chip {
+  min-width: 30px; height: 26px; padding: 0 8px;
+  display: grid; place-items: center;
+  font-size: 12px; letter-spacing: 0.08em;
+  color: rgb(233 222 195 / 55%);
+  border: 1px solid rgb(120 95 55 / 40%); border-radius: 4px;
+  transition: all 0.22s var(--ease-out);
+}
+.filter-chip:hover { color: #f2e7d0; border-color: rgb(201 163 92 / 60%); }
+.filter-chip.active {
+  color: #f6e3d2; border-color: var(--cinnabar);
+  background: linear-gradient(160deg, rgb(181 80 60 / 34%), rgb(138 58 43 / 30%));
+  box-shadow: 0 2px 8px rgb(138 58 43 / 30%);
+}
+
+/* 名册行 */
+.roster-list { max-height: 476px; overflow-y: auto; padding: 8px 10px 12px; display: grid; gap: 6px; }
+.roster-list::-webkit-scrollbar { width: 8px; }
+.roster-list::-webkit-scrollbar-thumb { background: rgb(120 95 55 / 45%); border-radius: 4px; }
+.roster-list::-webkit-scrollbar-track { background: transparent; }
+
+.hero-row {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 10px;
+  border: 1px solid transparent; border-radius: 6px;
+  text-align: left; cursor: grab;
+  transition: all 0.25s var(--ease-out);
+}
+.hero-row:active { cursor: grabbing; }
+.hero-row:hover { background: rgb(233 222 195 / 5%); border-color: rgb(120 95 55 / 40%); }
+.hero-row.selected {
+  background: linear-gradient(160deg, rgb(201 163 92 / 14%), rgb(201 163 92 / 5%));
+  border-color: rgb(201 163 92 / 65%);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 30%);
+}
+.hero-row .hr-main { min-width: 0; flex: 1; }
+.hero-row .hr-name { display: block; font-size: 15px; font-weight: 600; letter-spacing: 0.12em; color: #efe4cf; }
+.hero-row .hr-sub { display: block; margin-top: 3px; font-size: 10px; letter-spacing: 0.12em; color: rgb(233 222 195 / 48%); }
+.hero-row .hr-lv { flex: none; font-size: 11px; color: var(--gold); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.hero-row.in-formation { opacity: 0.72; }
+.hero-row.in-formation:hover, .hero-row.in-formation.selected { opacity: 1; }
+/* 在阵朱批 */
+.hr-stamp {
+  position: absolute; right: 8px; top: 50%;
+  transform: translateY(-50%) rotate(-8deg);
+  padding: 1px 6px;
+  font-family: var(--font-brush); font-size: 13px; letter-spacing: 0.1em;
+  color: var(--cinnabar-bright); border: 1.5px solid var(--cinnabar); border-radius: 3px;
+  opacity: 0.85; pointer-events: none;
+}
+.hero-row .hr-lv { margin-right: 4px; }
+.hero-row.in-formation .hr-lv { margin-right: 46px; }
+
+.roster-foot {
+  padding: 10px 18px 14px;
+  font-size: 10px; letter-spacing: 0.2em; color: rgb(233 222 195 / 38%);
+  border-top: 1px dashed rgb(120 95 55 / 35%);
+}
+
+/* ============ 演武场 ============ */
+.field {
+  position: relative; overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(620px 260px at 50% -60px, rgb(181 80 60 / 8%), transparent 62%),
+    radial-gradient(600px 600px at 50% 58%, rgb(201 163 92 / 5%), transparent 66%),
+    repeating-linear-gradient(0deg, rgb(233 222 195 / 3%) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(90deg, rgb(233 222 195 / 3%) 0 1px, transparent 1px 46px),
+    linear-gradient(170deg, #191d15, #12150f 60%, #171a12);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+.field::before { /* 太极水印 */
+  content: ""; position: absolute; left: 50%; top: 55%; width: 460px; height: 460px;
+  transform: translate(-50%, -50%);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23e9dec3' stroke-opacity='0.07'%3E%3Ccircle cx='50' cy='50' r='48'/%3E%3Ccircle cx='50' cy='50' r='36'/%3E%3C/g%3E%3Cpath d='M50 2 a48 48 0 0 1 0 96 a24 24 0 0 1 0-48 a24 24 0 0 0 0-48 Z' fill='%23e9dec3' fill-opacity='0.05'/%3E%3Ccircle cx='50' cy='26' r='7' fill='%23e9dec3' fill-opacity='0.05'/%3E%3Ccircle cx='50' cy='74' r='7' fill='%230c0e0b' fill-opacity='0.35'/%3E%3C/svg%3E") center / contain no-repeat;
+  pointer-events: none;
+}
+.field-head {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 20px 24px 6px;
+}
+.field-head .fh-title { display: flex; align-items: baseline; gap: 14px; }
+.field-head h2 { font-family: var(--font-brush); font-weight: 400; font-size: 30px; letter-spacing: 0.14em; color: #ecdcb9; }
+.field-head .fh-sub { font-size: 10px; letter-spacing: 0.3em; color: rgb(233 222 195 / 42%); }
+.field-head .fh-sub i { font-style: normal; color: var(--cinnabar-bright); }
+.field-ops { display: flex; gap: 10px; }
+
+/* 敌军来向 */
+.enemy-strip {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  margin: 8px 24px 0; padding: 10px 0 8px;
+  border-bottom: 1px dashed rgb(181 80 60 / 35%);
+}
+.enemy-strip .ember-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: radial-gradient(circle, #ffd9a0 0%, #f08a3c 45%, rgb(181 80 60 / 0%) 75%);
+  box-shadow: 0 0 10px 3px rgb(240 138 60 / 50%);
+  animation: ember 2.6s ease-in-out infinite;
+}
+@keyframes ember { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; box-shadow: 0 0 14px 5px rgb(240 138 60 / 70%); } }
+.enemy-strip .enemy-label { font-size: 10px; letter-spacing: 0.44em; text-indent: 0.44em; color: rgb(207 107 83 / 85%); }
+.enemy-chevrons { display: flex; gap: 7px; }
+.enemy-chevrons i {
+  width: 9px; height: 9px;
+  border-right: 2px solid var(--cinnabar-bright); border-bottom: 2px solid var(--cinnabar-bright);
+  transform: rotate(45deg);
+  animation: chev 1.8s ease-in-out infinite;
+}
+.enemy-chevrons i:nth-child(2) { animation-delay: 0.22s; }
+.enemy-chevrons i:nth-child(3) { animation-delay: 0.44s; }
+@keyframes chev { 0%, 100% { opacity: 0.2; } 45% { opacity: 0.95; } }
+
+/* 阵位列 */
+.field-rows { position: relative; z-index: 1; padding: 6px 24px 4px; }
+.frow {
+  display: grid; grid-template-columns: 108px minmax(0, 1fr);
+  align-items: center; gap: 8px;
+  padding: 14px 0;
+}
+.frow + .frow { border-top: 1px dashed rgb(233 222 195 / 12%); }
+.row-tag { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding-left: 4px; }
+.row-tag .rt-name {
+  font-family: var(--font-brush); font-size: 27px; line-height: 1; letter-spacing: 0.2em;
+  color: #ecdcb9; display: flex; align-items: center; gap: 9px;
+}
+.row-tag .rt-name::after { content: ""; width: 26px; height: 1px; background: linear-gradient(90deg, rgb(201 163 92 / 70%), transparent); }
+.frow.back .row-tag .rt-name { color: #cdc2a8; }
+.row-tag .rt-trait {
+  font-size: 9px; letter-spacing: 0.14em; line-height: 1.6;
+  padding: 3px 8px; border-radius: 3px;
+  color: rgb(207 107 83 / 80%); border: 1px solid rgb(181 80 60 / 35%);
+}
+.frow.back .row-tag .rt-trait { color: rgb(127 168 141 / 85%); border-color: rgb(87 112 95 / 45%); }
+</style>
+<style>
+/* 阵位 · 令牌槽 */
+.slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.slot {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 250px; padding-top: 8px;
+  border-radius: 10px;
+  transition: background 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+}
+.slot.drag-over { background: rgb(201 163 92 / 7%); box-shadow: inset 0 0 0 1px rgb(201 163 92 / 45%); }
+
+.slot-disc {
+  position: relative;
+  width: 82px; height: 82px; flex: none;
+  display: grid; place-items: center;
+  border: 1.5px dashed rgb(201 163 92 / 38%); border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, rgb(201 163 92 / 8%), transparent 68%);
+  transition: all 0.3s var(--ease-out);
+}
+.slot-disc .trigram {
+  font-size: 30px; line-height: 1;
+  color: rgb(201 163 92 / 40%);
+  text-shadow: 0 0 14px rgb(201 163 92 / 18%);
+  transition: all 0.3s var(--ease-out);
+}
+.slot.filled .slot-disc {
+  border-style: solid; border-color: rgb(201 163 92 / 62%);
+  background: radial-gradient(circle at 50% 38%, rgb(201 163 92 / 15%), transparent 70%);
+  box-shadow: 0 0 24px rgb(201 163 92 / 14%), inset 0 0 18px rgb(201 163 92 / 10%);
+}
+.slot.filled .slot-disc .trigram { color: rgb(230 198 127 / 78%); }
+.slot-pos { margin-top: 8px; font-size: 9px; letter-spacing: 0.4em; text-indent: 0.4em; color: var(--paper-mute); }
+.slot.filled .slot-pos { color: var(--gold); }
+
+/* 空位虚影令牌 */
+.token-ghost {
+  width: 64px; height: 168px; margin-bottom: -34px; z-index: 1;
+  display: grid; place-items: center;
+  border: 1.5px dashed rgb(233 222 195 / 22%); border-radius: 6px;
+  transition: all 0.3s var(--ease-out);
+}
+.token-ghost span {
+  writing-mode: vertical-rl;
+  font-family: var(--font-brush); font-size: 19px; line-height: 1.05; letter-spacing: 0.34em;
+  color: rgb(233 222 195 / 26%);
+  transition: all 0.3s var(--ease-out);
+}
+.slot.armed .token-ghost {
+  border-color: rgb(230 198 127 / 75%);
+  box-shadow: 0 0 18px rgb(201 163 92 / 22%);
+  animation: ghost-breathe 1.5s ease-in-out infinite;
+}
+.slot.armed .token-ghost span { color: var(--gold-bright); }
+@keyframes ghost-breathe { 0%, 100% { box-shadow: 0 0 10px rgb(201 163 92 / 12%); } 50% { box-shadow: 0 0 26px rgb(201 163 92 / 34%); } }
+.slot.armed { cursor: pointer; }
+
+/* 上阵令牌 */
+.token {
+  position: relative; z-index: 2;
+  width: 68px; height: 168px; margin-bottom: -34px;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 30px 0 12px;
+  background:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 16%) 0 2px, transparent 2px 14px),
+    linear-gradient(168deg, #463722, var(--wood-1) 38%, var(--wood-2) 82%);
+  border: 1px solid rgb(201 163 92 / 50%);
+  border-radius: 5px 5px 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 11px), 50% 100%, 0 calc(100% - 11px));
+  filter: drop-shadow(0 10px 16px rgb(0 0 0 / 50%));
+  cursor: grab;
+  animation: token-in 0.5s var(--ease-snap);
+  transition: filter 0.25s var(--ease-out);
+}
+.token:hover { filter: drop-shadow(0 16px 24px rgb(0 0 0 / 62%)) brightness(1.07); }
+.token:active { cursor: grabbing; }
+@keyframes token-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+.token::before { /* 穿绳孔 */
+  content: ""; position: absolute; top: 4px; left: 50%; width: 7px; height: 7px;
+  transform: translateX(-50%); border-radius: 50%;
+  background: #14100a; box-shadow: inset 0 1px 2px rgb(0 0 0 / 80%), 0 1px 0 rgb(201 163 92 / 25%);
+}
+.token-cat {
+  position: absolute; top: 5px; left: 5px;
+  width: 20px; height: 20px; display: grid; place-items: center;
+  font-size: 11px; font-weight: 700; color: #f6e3d2;
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  transform: rotate(45deg); border-radius: 3px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 45%), inset 0 0 0 1px rgb(255 230 210 / 35%);
+}
+.token-cat i { font-style: normal; transform: rotate(-45deg); }
+.token-name {
+  writing-mode: vertical-rl;
+  font-family: var(--font-brush); font-weight: 400; font-size: 20px; line-height: 1.02; letter-spacing: 0.1em;
+  color: #f2e2c4; text-shadow: 0 2px 4px rgb(0 0 0 / 60%);
+}
+.token-lv { font-size: 9px; color: rgb(230 198 127 / 85%); font-variant-numeric: tabular-nums; letter-spacing: 0.06em; margin-top: auto; padding-top: 5px; }
+.token .seal-grade {
+  position: absolute; top: 3px; right: 3px;
+  width: 22px; height: 22px; font-size: 13px;
+  border-radius: 4px 5px 4px 6px / 5px 4px 6px 4px;
+}
+.token-x {
+  position: absolute; top: 3px; left: 3px; z-index: 3;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 13px; line-height: 1; color: #f8e9db;
+  background: #1d1812; border: 1px solid var(--cinnabar);
+  opacity: 0; transform: scale(0.7);
+  transition: all 0.22s var(--ease-out);
+}
+.token:hover .token-x { opacity: 1; transform: scale(1); }
+.token-x:hover { background: var(--cinnabar-deep); }
+.token.selected-token { outline: 2px solid rgb(230 198 127 / 85%); outline-offset: 2px; }
+
+/* 出手次第 */
+.order-ribbon {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
+  margin: 10px 24px 0; padding: 16px 6px 4px;
+  border-top: 1px dashed rgb(233 222 195 / 14%);
+}
+.order-ribbon::before {
+  content: ""; position: absolute; left: 30px; right: 30px; top: 27px;
+  border-top: 1px dashed rgb(201 163 92 / 30%);
+}
+.order-label {
+  position: relative; z-index: 1; flex: none;
+  font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute);
+  padding-top: 13px; margin-right: 8px;
+}
+.order-node { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; }
+.order-node .on-dot {
+  width: 24px; height: 24px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 14px;
+  color: rgb(233 222 195 / 40%);
+  background: var(--ink-900); border: 1px solid rgb(233 222 195 / 22%); border-radius: 50%;
+  transition: all 0.3s var(--ease-out);
+}
+.order-node .on-name {
+  max-width: 100%; font-size: 10px; letter-spacing: 0.08em; color: transparent;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.3s var(--ease-out);
+}
+.order-node.lit .on-dot {
+  color: #f2ddba; border-color: rgb(201 163 92 / 75%);
+  background: radial-gradient(circle at 40% 32%, #4a3d27, #2c2415 75%);
+  box-shadow: 0 0 12px rgb(201 163 92 / 30%);
+}
+.order-node.lit .on-name { color: var(--gold-bright); }
+
+/* ============ 侠客帖 ============ */
+.hero-card {
+  position: sticky; top: 26px;
+  min-height: 560px;
+  padding: 26px 22px 20px;
+  color: var(--xuan-ink);
+  background:
+    radial-gradient(140% 80% at 50% 0%, rgb(255 250 235 / 55%), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.16 0.4' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.05'/%3E%3C/svg%3E"),
+    linear-gradient(172deg, var(--xuan), var(--xuan-deep));
+  border-radius: 3px;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 50%), inset 0 0 0 1px rgb(120 95 55 / 18%);
+  transform: rotate(0.4deg);
+}
+.hero-card::before { /* 榜钉 */
+  content: ""; position: absolute; top: 8px; left: 50%; width: 11px; height: 11px;
+  transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d8b271, #7a5a2c 65%, #3d2c12);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 55%), inset 0 -1px 2px rgb(0 0 0 / 45%);
+}
+.hero-card .hc-corner {
+  position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px;
+  border-right: 2px solid rgb(138 58 43 / 35%); border-bottom: 2px solid rgb(138 58 43 / 35%);
+  border-radius: 0 0 4px 0; pointer-events: none;
+}
+
+/* 空帖 */
+.hc-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; min-height: 500px; }
+.hc-empty .hc-empty-char {
+  font-family: var(--font-brush); font-size: 74px; color: rgb(43 37 25 / 14%); line-height: 1;
+}
+.hc-empty p { font-size: 12px; line-height: 1.5; letter-spacing: 0.3em; color: #8a7a55; writing-mode: vertical-rl; max-height: 300px; }
+
+/* 帖头 */
+.hc-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.hc-head .hc-title { min-width: 0; flex: 1; }
+.hc-head h3 { font-family: var(--font-brush); font-weight: 400; font-size: 37px; line-height: 1.05; letter-spacing: 0.08em; color: #2e2717; }
+.hc-head .hc-sub { margin-top: 6px; font-size: 10px; letter-spacing: 0.18em; color: #8a7a55; }
+.hc-head .hc-sub b { color: var(--cinnabar-deep); font-weight: 700; }
+.hc-lv-badge {
+  flex: none; text-align: center; padding: 7px 10px;
+  border: 1px solid rgb(138 100 32 / 45%); border-radius: 5px;
+  background: linear-gradient(160deg, rgb(201 163 92 / 20%), rgb(201 163 92 / 6%));
+}
+.hc-lv-badge b { display: block; font-size: 19px; color: #8a6420; font-variant-numeric: tabular-nums; line-height: 1; }
+.hc-lv-badge span { font-size: 9px; letter-spacing: 0.2em; color: #8a7a55; }
+
+/* 行伍契合 */
+.hc-fit {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 9px 12px; margin-bottom: 16px;
+  font-size: 11px; line-height: 1.7; letter-spacing: 0.06em; color: #6b5b3d;
+  border-left: 2px solid var(--cinnabar); background: rgb(181 80 60 / 6%);
+}
+.hc-fit i { flex: none; font-style: normal; font-family: var(--font-brush); font-size: 15px; color: var(--cinnabar-deep); }
+
+/* 五维雷达 */
+.hc-block-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; letter-spacing: 0.3em; color: #8a7a55; margin-bottom: 8px;
+}
+.hc-block-title::before, .hc-block-title::after { content: ""; flex: 1; height: 1px; background: rgb(120 95 55 / 30%); }
+.hc-radar { display: block; margin: 0 auto 4px; }
+.hc-radar .axis { stroke: rgb(120 95 55 / 35%); stroke-width: 1; }
+.hc-radar .ring { fill: none; stroke: rgb(120 95 55 / 30%); stroke-width: 1; }
+.hc-radar .ring.outer { stroke: rgb(120 95 55 / 55%); }
+.hc-radar .shape { fill: rgb(181 80 60 / 22%); stroke: var(--cinnabar-deep); stroke-width: 1.6; }
+.hc-radar .dot { fill: var(--cinnabar-deep); }
+.hc-radar text { font-size: 10px; fill: #6b5b3d; letter-spacing: 0.06em; font-family: var(--font-song); }
+.hc-radar .apt-val { font-size: 9px; fill: #a08a5c; }
+
+/* 职业链 */
+.hc-career { display: flex; align-items: center; gap: 5px; margin-bottom: 16px; }
+.career-node {
+  flex: 1; min-width: 0; text-align: center;
+  padding: 6px 2px; font-size: 10px; letter-spacing: 0.04em;
+  color: #8a7a55; border: 1px dashed rgb(120 95 55 / 45%); border-radius: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.career-node.done { color: #4a3c22; border-style: solid; border-color: rgb(138 100 32 / 55%); background: rgb(201 163 92 / 14%); }
+.career-node.now {
+  color: #f8e9db; font-weight: 700;
+  border-style: solid; border-color: var(--cinnabar-deep);
+  background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  box-shadow: 0 2px 8px rgb(138 58 43 / 35%);
+}
+.career-arrow { flex: none; font-size: 10px; color: #a08a5c; }
+
+/* 武学 */
+.hc-martials { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 8px; }
+.martial-chip {
+  padding: 7px 10px; font-size: 11px; letter-spacing: 0.06em;
+  color: #4a3c22; border: 1px solid rgb(120 95 55 / 45%); border-radius: 4px;
+  background: rgb(255 250 235 / 35%);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.martial-chip small { display: block; font-size: 9px; color: #a08a5c; letter-spacing: 0.14em; margin-bottom: 2px; }
+.martial-chip.empty { color: #a08a5c; border-style: dashed; background: none; }
+.martial-chip.heart {
+  grid-column: 1 / -1; color: #3d2c10; font-weight: 600;
+  border-color: rgb(138 100 32 / 55%);
+  background: linear-gradient(160deg, rgb(230 198 127 / 45%), rgb(201 163 92 / 25%));
+}
+
+/* 帖足 */
+.hc-foot { margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgb(120 95 55 / 40%); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hc-hint { font-size: 10px; letter-spacing: 0.14em; color: #8a7a55; line-height: 1.7; }
+.hc-hint b { color: var(--cinnabar-deep); }
+
+/* ============ 阵势 ============ */
+.synergy {
+  position: relative; z-index: 1;
+  border-radius: 12px;
+  background:
+    radial-gradient(900px 300px at 50% -80px, rgb(201 163 92 / 7%), transparent 70%),
+    linear-gradient(170deg, var(--ink-850), var(--ink-900) 70%);
+  border: 1px solid var(--line-soft);
+}
+.synergy::before, .synergy::after { /* 卷轴两侧轴杆 */
+  content: ""; position: absolute; top: 0; bottom: 0; width: 5px;
+  background: linear-gradient(180deg, #3a3122, #241d12);
+}
+.synergy::before { left: 0; border-radius: 12px 0 0 12px; }
+.synergy::after { right: 0; border-radius: 0 12px 12px 0; }
+.synergy-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  padding: 22px 30px 4px;
+}
+.synergy-head .sh-title { display: flex; align-items: baseline; gap: 14px; }
+.synergy-head h2 { font-family: var(--font-brush); font-weight: 400; font-size: 30px; letter-spacing: 0.14em; color: #e6d7b4; }
+.synergy-head .sh-sub { font-size: 10px; letter-spacing: 0.3em; color: rgb(233 222 195 / 42%); }
+.synergy-head .sh-count { font-size: 11px; letter-spacing: 0.2em; color: var(--paper-mute); }
+.synergy-head .sh-count b { color: var(--gold-bright); font-size: 16px; font-variant-numeric: tabular-nums; }
+
+.syn-grid {
+  position: relative;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px;
+  padding: 20px 30px 30px;
+}
+.syn-grid::before { /* 阵势经脉 */
+  content: ""; position: absolute; left: 46px; right: 46px; top: 31px;
+  border-top: 2px dashed rgb(233 222 195 / 13%);
+}
+.syn-card { position: relative; padding-top: 24px; }
+.syn-card::before { /* 穴位节点 */
+  content: ""; position: absolute; top: 6px; left: 50%; width: 13px; height: 13px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--ink-900); border: 1.5px solid rgb(233 222 195 / 28%);
+  transition: all 0.4s var(--ease-out);
+}
+.syn-card.on::before {
+  background: radial-gradient(circle at 38% 32%, var(--gold-bright), var(--gold-deep) 75%);
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 14px 3px rgb(201 163 92 / 50%);
+}
+.syn-body {
+  height: 100%; min-height: 150px;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 13px 12px 12px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: linear-gradient(168deg, rgb(233 222 195 / 3%), transparent 55%);
+  transition: all 0.35s var(--ease-out);
+}
+.syn-card.on .syn-body {
+  border-color: rgb(201 163 92 / 60%);
+  background: linear-gradient(168deg, rgb(201 163 92 / 10%), rgb(201 163 92 / 2%) 60%);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 30%), inset 0 0 20px rgb(201 163 92 / 5%);
+}
+.syn-name { font-family: var(--font-brush); font-size: 21px; letter-spacing: 0.1em; color: rgb(233 222 195 / 55%); line-height: 1.1; transition: color 0.35s; }
+.syn-card.on .syn-name { color: var(--gold-bright); text-shadow: 0 0 16px rgb(201 163 92 / 35%); }
+.syn-need { display: flex; flex-wrap: wrap; gap: 5px; }
+.need-chip {
+  padding: 2px 7px; font-size: 9px; letter-spacing: 0.1em;
+  color: var(--paper-mute); border: 1px dashed rgb(233 222 195 / 25%); border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.need-chip.met { color: var(--gold-bright); border-style: solid; border-color: rgb(201 163 92 / 60%); background: rgb(201 163 92 / 8%); }
+.syn-effect { font-size: 10px; line-height: 1.7; letter-spacing: 0.08em; color: rgb(233 222 195 / 45%); }
+.syn-card.on .syn-effect { color: var(--paper-dim); }
+.syn-state { margin-top: auto; font-family: var(--font-brush); font-size: 14px; letter-spacing: 0.22em; color: rgb(233 222 195 / 30%); }
+.syn-card.on .syn-state { color: var(--cinnabar-bright); }
+
+/* ============ 页足 ============ */
+.page-foot {
+  position: relative; z-index: 1;
+  margin-top: 44px; padding-top: 18px;
+  border-top: 1px solid var(--line-soft);
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  font-size: 10px; letter-spacing: 0.24em; color: var(--paper-mute);
+}
+.page-foot b { color: var(--gold); font-weight: 500; }
+
+/* ============ 响应式 ============ */
+@media (max-width: 1460px) {
+  .muster-layout { grid-template-columns: 272px minmax(0, 1fr) 288px; }
+  .syn-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .syn-grid::before { display: none; }
+  .syn-card { padding-top: 0; }
+  .syn-card::before { display: none; }
+}
+@media (max-width: 1180px) {
+  .muster-layout { grid-template-columns: 264px minmax(0, 1fr); }
+  .hero-card { position: static; grid-column: 1 / -1; min-height: 0; transform: none; }
+  .hc-empty { min-height: 220px; }
+  .hc-empty p { writing-mode: horizontal-tb; height: auto; }
+}
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .game-sidebar { display: none; }
+  .game-main { padding: 24px 20px 60px; }
+  .muster-layout { grid-template-columns: 1fr; }
+  .roster { position: static; }
+  .frow { grid-template-columns: 1fr; gap: 4px; }
+  .row-tag { flex-direction: row; align-items: center; }
+  .syn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-head { flex-direction: column; align-items: flex-start; }
+  .page-head h1 { font-size: 44px; }
+  .ghost-char { display: none; }
+}
+@media (max-width: 560px) {
+  .slots { grid-template-columns: 1fr; }
+  .slot { min-height: 0; }
+  .order-ribbon { overflow-x: auto; }
+  .syn-grid { grid-template-columns: 1fr; }
+  .war-stats { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<div class="app-shell">
+  <!-- ============ 侧边栏 ============ -->
+  <aside class="game-sidebar">
+    <div class="brand-block">
+      <span class="brand-seal" aria-hidden="true">蛋</span>
+      <span><strong>蛋蛋江湖 2.0</strong><small>十万里一剑 · 不负侠者行</small></span>
+    </div>
+    <nav class="game-nav" aria-label="游戏区域">
+      <button type="button" class="nav-item"><span class="nav-mark">邑</span><strong>江湖</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">侠</span><strong>侠客</strong></button>
+      <button type="button" class="nav-item active"><span class="nav-mark">阵</span><strong>阵容</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">囊</span><strong>背包</strong></button>
+    </nav>
+    <div class="sidebar-landscape" aria-hidden="true"></div>
+    <div class="sidebar-motto">侠之大者</div>
+  </aside>
+
+  <!-- ============ 主区 ============ -->
+  <main class="game-main">
+    <span class="ghost-char ghost-zhen" aria-hidden="true">陣</span>
+    <span class="ghost-char ghost-wu" aria-hidden="true">將</span>
+
+    <header class="page-head">
+      <div>
+        <div class="crumb">蛋蛋江湖 2.0<b> / </b>阵容 · 演武点将</div>
+        <h1>阵容</h1>
+        <div class="latin">Formation · Muster at the Arena</div>
+      </div>
+      <div class="war-stats" aria-label="队伍概览">
+        <div class="wstat"><b id="statPower">0</b><span>队伍战力</span></div>
+        <div class="wstat"><b><i id="statCount">0</i>/6</b><span>上阵侠客</span></div>
+        <div class="wstat accent"><b id="statSyn">0</b><span>阵势激发</span></div>
+      </div>
+    </header>
+
+    <div class="muster-layout">
+      <!-- 点将名册 -->
+      <aside class="roster" aria-label="点将名册">
+        <div class="roster-inner">
+          <div class="roster-head">
+            <h2>点将名册</h2>
+            <small>在册 <b id="rosterTotal">0</b> 人 · 在阵 <b id="rosterIn">0</b></small>
+          </div>
+          <div class="roster-filter" id="rosterFilter" role="group" aria-label="按职业筛选">
+            <button type="button" class="filter-chip active" data-filter="all">全</button>
+            <button type="button" class="filter-chip" data-filter="剑">剑</button>
+            <button type="button" class="filter-chip" data-filter="刀">刀</button>
+            <button type="button" class="filter-chip" data-filter="拳">拳</button>
+            <button type="button" class="filter-chip" data-filter="暗">暗</button>
+            <button type="button" class="filter-chip" data-filter="医">医</button>
+            <button type="button" class="filter-chip" data-filter="内">内</button>
+          </div>
+          <div class="roster-list" id="rosterList"></div>
+          <div class="roster-foot">点击选将 · 拖拽令牌亦可布阵</div>
+        </div>
+      </aside>
+
+      <!-- 演武场 -->
+      <section class="field" aria-label="演武场">
+        <div class="field-head">
+          <div class="fh-title">
+            <h2>演武场</h2>
+            <span class="fh-sub">前后两列 · <i>各陈三将</i></span>
+          </div>
+          <div class="field-ops">
+            <button type="button" class="btn-gold" id="btnAuto">自动列阵</button>
+            <button type="button" class="btn-ghost" id="btnClear">悉数下阵</button>
+          </div>
+        </div>
+
+        <div class="enemy-strip" aria-hidden="true">
+          <span class="ember-dot"></span>
+          <span class="enemy-label">狼烟起处 · 敌军来向</span>
+          <span class="enemy-chevrons"><i></i><i></i><i></i></span>
+        </div>
+
+        <div class="field-rows">
+          <div class="frow front">
+            <div class="row-tag">
+              <span class="rt-name">前排</span>
+              <span class="rt-trait">锋镝所迎 · 受敌先击</span>
+            </div>
+            <div class="slots" id="slotsFront"></div>
+          </div>
+          <div class="frow back">
+            <div class="row-tag">
+              <span class="rt-name">后排</span>
+              <span class="rt-trait">藏锋蓄锐 · 出手稍缓</span>
+            </div>
+            <div class="slots" id="slotsBack"></div>
+          </div>
+        </div>
+
+        <div class="order-ribbon" id="orderRibbon">
+          <span class="order-label">出手<br>次第</span>
+          <!-- 节点由脚本渲染 -->
+        </div>
+      </section>
+
+      <!-- 侠客帖 -->
+      <aside class="hero-card" id="heroCard" aria-label="侠客帖">
+        <span class="hc-corner" aria-hidden="true"></span>
+      </aside>
+    </div>
+
+    <!-- 阵势 -->
+    <section class="synergy" aria-label="阵势">
+      <div class="synergy-head">
+        <div class="sh-title">
+          <h2>阵势</h2>
+          <span class="sh-sub">同气相求 · 其势自生</span>
+        </div>
+        <div class="sh-count">已激发 <b id="synOn">0</b> / <span id="synTotal">0</span></div>
+      </div>
+      <div class="syn-grid" id="synGrid"></div>
+    </section>
+
+    <footer class="page-foot">
+      <span><b>阵容页高保真重设计</b> · 蛋蛋江湖 2.0 · 演武点将</span>
+      <span>演示数据 · 交互为本机模拟</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   演武点将 · 本机交互模拟（演示数据）
+   选将：点名册 → 点阵位（或拖拽）上阵；点阵中令牌可览帖
+   布阵：占用位再点 = 换位/替换；令牌 × 或帖中按钮 = 下阵
+   ============================================================ */
+const HEROES = [
+  { id:'guojing',   name:'郭靖',   grade:'乙', cat:'拳', career:['拳师','长拳师','震山拳师','通臂宗师'], step:1, level:21, src:'酒馆相逢', apt:{str:10,ins:7, con:9, agi:7, res:7 }, martials:['太祖长拳','空明拳','降龙十八掌·残',null], heart:'丐帮心法' },
+  { id:'player',    name:'无名少侠', grade:'丙', cat:'剑', career:['剑客','游剑客','追风剑师','无痕剑宗'], step:1, level:24, src:'本队主角', apt:{str:8, ins:8, con:9, agi:9, res:8 }, martials:['越女剑法','全真剑法',null,null], heart:'第壹卷通用心法' },
+  { id:'hongqigong',name:'洪七公', grade:'乙', cat:'拳', career:['拳师','绵掌师','化劲掌师','化境宗师'], step:1, level:19, src:'丐帮门人', apt:{str:10,ins:7, con:9, agi:7, res:7 }, martials:['降龙十八掌','打狗棒法','逍遥游',null], heart:'丐帮心法' },
+  { id:'munianci',  name:'穆念慈', grade:'乙', cat:'剑', career:['剑客','游剑客','追风剑师','无痕剑宗'], step:1, level:18, src:'酒馆相逢', apt:{str:7, ins:7, con:7, agi:10,res:7 }, martials:['越女剑法','杨家枪法·化剑',null,null], heart:'第壹卷通用心法' },
+  { id:'wangyuyan', name:'王语嫣', grade:'甲', cat:'内', career:['内家','运气士','周天师','气宗'],    step:2, level:16, src:'酒馆相逢', apt:{str:9, ins:12,con:9, agi:9, res:11}, martials:['小无相功','凌波微步',null,null], heart:'琅嬛玉典' },
+  { id:'yangtiexin',name:'杨铁心', grade:'乙', cat:'刀', career:['刀客','狂刀客','血战刀师','百战刀宗'], step:0, level:15, src:'酒馆相逢', apt:{str:10,ins:7, con:7, agi:7, res:7 }, martials:['杨家枪法·化刀',null,null,null], heart:'第壹卷通用心法' },
+  { id:'huazheng',  name:'华筝',   grade:'乙', cat:'内', career:['内家','护气士','铁衣护法','金刚宗师'], step:0, level:14, src:'酒馆相逢', apt:{str:8, ins:11,con:8, agi:8, res:10}, martials:[null,null,null,null], heart:'第贰卷通用心法' },
+  { id:'zhebie',    name:'哲别',   grade:'乙', cat:'刀', career:['刀客','快刀客','追魂刀师','无影刀宗'], step:0, level:13, src:'酒馆相逢', apt:{str:11,ins:7, con:8, agi:7, res:7 }, martials:['弯刀七斩',null,null,null], heart:'第贰卷通用心法' },
+  { id:'baoxiruo',  name:'包惜弱', grade:'乙', cat:'医', career:['医者','仁心医士','杏林圣手','岐黄国手'], step:0, level:12, src:'酒馆相逢', apt:{str:8, ins:11,con:8, agi:8, res:8 }, martials:['岐黄针术',null,null,null], heart:'第叁卷通用心法' },
+  { id:'muwanqing', name:'木婉清', grade:'甲', cat:'暗', career:['暗客','影客','追命使','无踪魁首'],   step:0, level:11, src:'酒馆相逢', apt:{str:9, ins:9, con:9, agi:12,res:9 }, martials:['袖箭','淬毒飞镖',null,null], heart:'第伍卷通用心法' },
+  { id:'yangkang',  name:'杨康',   grade:'乙', cat:'暗', career:['暗客','毒手','百毒使','毒门魁首'],   step:0, level:10, src:'白驼山门人', apt:{str:8, ins:8, con:8, agi:11,res:8 }, martials:['灵蛇拳',null,null,null], heart:'白驼山心法' },
+  { id:'huangrong', name:'黄蓉',   grade:'甲', cat:'拳', career:['拳师','长拳师','震山拳师','通臂宗师'], step:0, level:9,  src:'丐帮门人', apt:{str:13,ins:10,con:12,agi:10,res:10}, martials:['打狗棒法',null,null,null], heart:'丐帮心法' },
+];
+
+const GRADE_MUL = { 丙:14, 乙:18, 甲:24, 地:30, 天:38 };
+const SYNERGIES = [
+  { id:'quan',  name:'双拳镇岳', need:[['拳',2]],          effect:'气血上限 +10% · 前排承伤更稳' },
+  { id:'jian',  name:'三剑齐鸣', need:[['剑',3]],          effect:'会心一击 +8% · 剑光相映成辉' },
+  { id:'yiwu',  name:'医武相济', need:[['医',1],['拳',1]], effect:'每回合回复 2% 气血' },
+  { id:'daoan', name:'刀暗双绝', need:[['刀',1],['暗',1]], effect:'破甲 +6% · 攻其不备' },
+  { id:'nei',   name:'内家护脉', need:[['内',2]],          effect:'内力回复 +12% · 气脉悠长' },
+  { id:'liu',   name:'六侠成阵', need:[['满员',6]],        effect:'全属性 +3% · 阵势圆熟' },
+];
+const POS_NAMES = ['壹','贰','叁'];
+const ORDER_NAMES = ['壹','贰','叁','肆','伍','陆'];
+const TRIGRAMS = { front:['☰','☱','☲'], back:['☵','☶','☷'] };
+const ROW_NAMES = { front:'前排', back:'后排' };
+const FIT_TEXT = {
+  拳:'拳师根骨沉厚，宜列前排，为队友遮拦锋镝。',
+  刀:'刀势沉猛，宜居前以先手破敌，势不可挡。',
+  剑:'剑走轻灵，前列可抢先手，后列可保其锋。',
+  暗:'淬毒暗器，藏于帷幄之中，出手最难提防。',
+  医:'医者仁心，居后方得悬壶续命、安稳施救。',
+  内:'内家气脉绵长，居后运气，可护全队心脉。',
+};
+
+const state = {
+  selected: 'guojing',
+  filter: 'all',
+  formation: { front: ['guojing','player','hongqigong'], back: ['munianci','wangyuyan', null] },
+};
+
+const $ = (sel) => document.querySelector(sel);
+const heroById = (id) => HEROES.find((h) => h.id === id);
+const aptSum = (h) => h.apt.str + h.apt.ins + h.apt.con + h.apt.agi + h.apt.res;
+const heroPower = (h) => h.level * GRADE_MUL[h.grade] + aptSum(h) * 6;
+const slotOf = (id) => {
+  for (const row of ['front','back']) {
+    const pos = state.formation[row].indexOf(id);
+    if (pos > -1) return { row, pos };
+  }
+  return null;
+};
+const inFormationCount = () => ['front','back'].reduce((n, row) => n + state.formation[row].filter(Boolean).length, 0);
+const catCounts = () => {
+  const c = {};
+  for (const row of ['front','back']) for (const id of state.formation[row]) {
+    if (id) { const cat = heroById(id).cat; c[cat] = (c[cat] || 0) + 1; }
+  }
+  return c;
+};
+const slotName = (row, pos) => `${ROW_NAMES[row]}·${POS_NAMES[pos]}位`;
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+/* ---------- 名册 ---------- */
+function renderRoster() {
+  const heroes = HEROES.filter((h) => state.filter === 'all' || h.cat === state.filter);
+  $('#rosterList').innerHTML = heroes.map((h) => {
+    const s = slotOf(h.id);
+    return `<button type="button" class="hero-row${s ? ' in-formation' : ''}${state.selected === h.id ? ' selected' : ''}" draggable="true" data-id="${h.id}">
+      <span class="seal-grade sm g-${h.grade}">${h.grade}</span>
+      <span class="hr-main"><span class="hr-name">${h.name}</span><span class="hr-sub">${h.cat} · ${h.career[h.step]} · ${h.src}</span></span>
+      <span class="hr-lv">Lv.${h.level}</span>
+      ${s ? '<span class="hr-stamp">在阵</span>' : ''}
+    </button>`;
+  }).join('') || '<p style="padding:14px;font-size:11px;color:var(--paper-mute);letter-spacing:0.2em;">此类侠客尚未入册</p>';
+  $('#rosterTotal').textContent = HEROES.length;
+  $('#rosterIn').textContent = inFormationCount();
+}
+
+/* ---------- 演武场 ---------- */
+function tokenHtml(h) {
+  return `<div class="token${state.selected === h.id ? ' selected-token' : ''}" draggable="true" data-id="${h.id}">
+    <span class="token-cat"><i>${h.cat}</i></span>
+    <span class="token-name">${h.name}</span>
+    <span class="token-lv">Lv.${h.level}</span>
+    <span class="seal-grade g-${h.grade}">${h.grade}</span>
+    <button type="button" class="token-x" data-remove="${h.id}" aria-label="下阵 ${h.name}">×</button>
+  </div>`;
+}
+function renderSlots(row) {
+  return state.formation[row].map((id, pos) => {
+    const h = id ? heroById(id) : null;
+    const armed = state.selected && !h ? ' armed' : '';
+    return `<div class="slot${h ? ' filled' : ''}${armed}" data-row="${row}" data-pos="${pos}">
+      ${h ? tokenHtml(h) : '<div class="token-ghost"><span>虚位</span></div>'}
+      <div class="slot-disc"><span class="trigram">${TRIGRAMS[row][pos]}</span></div>
+      <div class="slot-pos">${POS_NAMES[pos]}</div>
+    </div>`;
+  }).join('');
+}
+function renderField() {
+  $('#slotsFront').innerHTML = renderSlots('front');
+  $('#slotsBack').innerHTML = renderSlots('back');
+}
+function renderRibbon() {
+  const flat = [...state.formation.front, ...state.formation.back];
+  $('#orderRibbon').innerHTML = '<span class="order-label">出手<br>次第</span>' + flat.map((id, i) => {
+    const h = id ? heroById(id) : null;
+    return `<div class="order-node${h ? ' lit' : ''}"><span class="on-dot">${ORDER_NAMES[i]}</span><span class="on-name">${h ? h.name : '虚'}</span></div>`;
+  }).join('');
+}
+
+/* ---------- 侠客帖 ---------- */
+function radarSvg(h) {
+  const AXES = [['臂力','str'],['悟性','ins'],['根骨','con'],['身法','agi'],['定力','res']];
+  const cx = 100, cy = 95, R = 58, MAX = 16;
+  const pt = (i, r) => { const a = (-90 + i * 72) * Math.PI / 180; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+  const ring = (f) => `<polygon class="ring${f === 1 ? ' outer' : ''}" points="${AXES.map((_, i) => pt(i, R * f).map((n) => n.toFixed(1)).join(',')).join(' ')}"/>`;
+  const axes = AXES.map((_, i) => { const [x, y] = pt(i, R); return `<line class="axis" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join('');
+  const shape = AXES.map((_, i) => pt(i, R * Math.min(h.apt[AXES[i][1]] / MAX, 1)).map((n) => n.toFixed(1)).join(',')).join(' ');
+  const dots = AXES.map((_, i) => { const [x, y] = pt(i, R * Math.min(h.apt[AXES[i][1]] / MAX, 1)); return `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4"/>`; }).join('');
+  const labels = AXES.map((a, i) => {
+    const deg = -90 + i * 72, cos = Math.cos(deg * Math.PI / 180);
+    const anchor = Math.abs(cos) < 0.2 ? 'middle' : (cos > 0 ? 'start' : 'end');
+    const [x, y] = pt(i, R + 18);
+    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}">${a[0]} ${h.apt[a[1]]}</text>`;
+  }).join('');
+  return `<svg class="hc-radar" width="200" height="190" viewBox="0 0 200 190">${ring(1/3)}${ring(2/3)}${ring(1)}${axes}<polygon class="shape" points="${shape}"/>${dots}${labels}</svg>`;
+}
+function careerHtml(h) {
+  return h.career.map((c, i) => {
+    const cls = i < h.step ? 'done' : (i === h.step ? 'now' : '');
+    return `${i ? '<span class="career-arrow">›</span>' : ''}<span class="career-node ${cls}">${c}</span>`;
+  }).join('');
+}
+function martialsHtml(h) {
+  const chips = h.martials.map((m, i) => m
+    ? `<span class="martial-chip"><small>武学 ${'壹贰叁肆'[i]}</small>${m}</span>`
+    : `<span class="martial-chip empty"><small>武学 ${'壹贰叁肆'[i]}</small>虚位</span>`).join('');
+  return chips + (h.heart ? `<span class="martial-chip heart"><small>心法</small>${h.heart}</span>` : '');
+}
+function renderDetail() {
+  const card = $('#heroCard');
+  const h = state.selected ? heroById(state.selected) : null;
+  if (!h) {
+    card.innerHTML = '<span class="hc-corner"></span><div class="hc-empty"><span class="hc-empty-char">帖</span><p>点选名册侠客 · 览其身手帖</p></div>';
+    return;
+  }
+  const s = slotOf(h.id);
+  card.innerHTML = `
+    <span class="hc-corner"></span>
+    <div class="hc-head">
+      <span class="seal-grade g-${h.grade}">${h.grade}</span>
+      <div class="hc-title"><h3>${h.name}</h3><div class="hc-sub">${h.src} · <b>${h.grade}品</b> · ${h.cat}门</div></div>
+      <span class="hc-lv-badge"><b>${h.level}</b><span>等级</span></span>
+    </div>
+    <div class="hc-fit"><i>宜</i><span>${FIT_TEXT[h.cat]}</span></div>
+    <div class="hc-block-title">五维禀赋</div>
+    ${radarSvg(h)}
+    <div class="hc-block-title">职业进境</div>
+    <div class="hc-career">${careerHtml(h)}</div>
+    <div class="hc-block-title">随身武学</div>
+    <div class="hc-martials">${martialsHtml(h)}</div>
+    <div class="hc-foot">
+      <span class="hc-hint">${s ? `现居 <b>${slotName(s.row, s.pos)}</b>` : '未在阵中 · 点阵位即可遣其上阵'}</span>
+      ${s ? `<button type="button" class="btn-line" data-remove="${h.id}">遣其下阵</button>` : ''}
+    </div>`;
+}
+
+/* ---------- 阵势 ---------- */
+function synState() {
+  const cc = catCounts(), filled = inFormationCount();
+  return SYNERGIES.map((s) => {
+    const chips = s.need.map(([cat, n]) => {
+      const have = cat === '满员' ? filled : (cc[cat] || 0);
+      return { cat, n, have, met: have >= n };
+    });
+    return { ...s, chips, on: chips.every((c) => c.met) };
+  });
+}
+function renderSyn() {
+  const list = synState();
+  $('#synGrid').innerHTML = list.map((s) => `<div class="syn-card${s.on ? ' on' : ''}">
+    <div class="syn-body">
+      <div class="syn-name">${s.name}</div>
+      <div class="syn-need">${s.chips.map((c) => `<span class="need-chip${c.met ? ' met' : ''}">${c.cat} ${Math.min(c.have, c.n)}/${c.n}</span>`).join('')}</div>
+      <div class="syn-effect">${s.effect}</div>
+      <div class="syn-state">${s.on ? '已激发' : '未竟'}</div>
+    </div>
+  </div>`).join('');
+  $('#synOn').textContent = list.filter((s) => s.on).length;
+  $('#synTotal').textContent = list.length;
+}
+
+/* ---------- 页首统计 ---------- */
+function renderStats() {
+  const ids = [...state.formation.front, ...state.formation.back].filter(Boolean);
+  $('#statPower').textContent = ids.reduce((n, id) => n + heroPower(heroById(id)), 0).toLocaleString();
+  $('#statCount').textContent = ids.length;
+  $('#statSyn').textContent = synState().filter((s) => s.on).length;
+}
+
+function renderAll() {
+  renderRoster();
+  renderField();
+  renderRibbon();
+  renderDetail();
+  renderSyn();
+  renderStats();
+}
+
+/* ---------- 布阵动作 ---------- */
+function place(id, row, pos) {
+  const h = heroById(id);
+  if (!h) return;
+  const cur = slotOf(id);
+  if (cur && cur.row === row && cur.pos === pos) { toast(`${h.name} 已在该位`); return; }
+  const targetId = state.formation[row][pos];
+  if (cur) state.formation[cur.row][cur.pos] = null;
+  if (targetId) {
+    const t = heroById(targetId);
+    if (cur) { state.formation[cur.row][cur.pos] = targetId; toast(`阵位互换 · ${h.name} ⇄ ${t.name}`); }
+    else toast(`${h.name} 已入阵 · ${t.name} 暂回名册`);
+  } else {
+    toast(`${h.name} 已入阵 · ${slotName(row, pos)}`);
+  }
+  state.formation[row][pos] = id;
+  renderAll();
+}
+function remove(id) {
+  const cur = slotOf(id);
+  if (!cur) return;
+  state.formation[cur.row][cur.pos] = null;
+  toast(`${heroById(id).name} 已下阵`);
+  renderAll();
+}
+function clearAll() {
+  if (!inFormationCount()) { toast('阵中本就无人'); return; }
+  state.formation = { front: [null, null, null], back: [null, null, null] };
+  toast('六将悉数下阵 · 名册待命');
+  renderAll();
+}
+function autoArrange() {
+  const ids = [...state.formation.front, ...state.formation.back].filter(Boolean);
+  if (!ids.length) { toast('阵中无人 · 先自名册点将'); return; }
+  const isTank = (id) => ['拳', '内'].includes(heroById(id).cat);
+  const tanks = ids.filter(isTank).sort((a, b) => heroById(b).apt.con - heroById(a).apt.con);
+  const others = ids.filter((id) => !isTank(id)).sort((a, b) => heroById(b).level - heroById(a).level);
+  const front = tanks.slice(0, 3);
+  const pool = [...tanks.slice(3), ...others];
+  while (front.length < 3 && pool.length) front.push(pool.shift());
+  const back = pool.slice(0, 3);
+  state.formation.front = [front[0] || null, front[1] || null, front[2] || null];
+  state.formation.back = [back[0] || null, back[1] || null, back[2] || null];
+  toast('自动列阵毕 · 拳内居前承伤');
+  renderAll();
+}
+
+/* ---------- 事件 ---------- */
+$('#rosterList').addEventListener('click', (e) => {
+  const row = e.target.closest('.hero-row');
+  if (!row) return;
+  state.selected = row.dataset.id;
+  renderAll();
+});
+$('#rosterFilter').addEventListener('click', (e) => {
+  const chip = e.target.closest('.filter-chip');
+  if (!chip) return;
+  state.filter = chip.dataset.filter;
+  document.querySelectorAll('.filter-chip').forEach((c) => c.classList.toggle('active', c === chip));
+  renderRoster();
+});
+document.querySelector('.field-rows').addEventListener('click', (e) => {
+  const rm = e.target.closest('[data-remove]');
+  if (rm) { e.stopPropagation(); remove(rm.dataset.remove); return; }
+  const slot = e.target.closest('.slot');
+  if (!slot) return;
+  const row = slot.dataset.row, pos = Number(slot.dataset.pos);
+  const curId = state.formation[row][pos];
+  if (state.selected && state.selected !== curId) { place(state.selected, row, pos); }
+  else if (curId) { state.selected = curId; renderAll(); }
+  else toast('先自名册点选侠客');
+});
+$('#heroCard').addEventListener('click', (e) => {
+  const rm = e.target.closest('[data-remove]');
+  if (rm) remove(rm.dataset.remove);
+});
+$('#btnAuto').addEventListener('click', autoArrange);
+$('#btnClear').addEventListener('click', clearAll);
+
+/* 拖拽布阵：名册 / 令牌 → 阵位 */
+let dragId = null;
+document.addEventListener('dragstart', (e) => {
+  const t = e.target.closest('[draggable="true"][data-id]');
+  if (!t) return;
+  dragId = t.dataset.id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragId);
+});
+document.querySelectorAll('.slots').forEach((sl) => {
+  sl.addEventListener('dragover', (e) => {
+    const slot = e.target.closest('.slot');
+    if (!slot) return;
+    e.preventDefault();
+    slot.classList.add('drag-over');
+  });
+  sl.addEventListener('dragleave', (e) => {
+    const slot = e.target.closest('.slot');
+    if (slot) slot.classList.remove('drag-over');
+  });
+  sl.addEventListener('drop', (e) => {
+    const slot = e.target.closest('.slot');
+    if (!slot) return;
+    e.preventDefault();
+    slot.classList.remove('drag-over');
+    const id = e.dataTransfer.getData('text/plain') || dragId;
+    if (id) place(id, slot.dataset.row, Number(slot.dataset.pos));
+  });
+});
+document.addEventListener('dragend', () => {
+  document.querySelectorAll('.slot.drag-over').forEach((s) => s.classList.remove('drag-over'));
+  dragId = null;
+});
+
+renderAll();
+</script>
+</body>
+</html>

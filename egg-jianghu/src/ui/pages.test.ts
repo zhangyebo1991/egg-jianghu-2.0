@@ -133,11 +133,39 @@ const inventoryFixture = (): InventoryPageViewModel => ({
 })
 
 const formationFixture = (): FormationPageViewModel => ({
-  selectedHeroId: null,
+  selectedHeroId: 'hero_test',
+  filter: 'all',
   formation: [{ heroId: 'hero_test', row: 'front', position: 0 }],
   heroes: [
-    { id: 'hero_test', name: '试剑人', grade: '乙', level: 12, inFormation: true },
-    { id: 'hero_shen', name: '郭靖', grade: '乙', level: 1, inFormation: false },
+    {
+      id: 'hero_test', name: '试剑人', grade: '乙', level: 12, inFormation: true,
+      category: '剑', source: '本队主角', careerName: '游剑客', careerLevel: 2,
+      careerPath: [
+        { name: '剑客', state: 'done' },
+        { name: '游剑客', state: 'current' },
+        { name: '追风剑师', state: 'future' },
+      ],
+      aptitudes: { strength: 8, insight: 8, constitution: 9, agility: 9, resolve: 8 },
+      combatStats: { maxHp: 420, externalAttack: 90, internalAttack: 80, externalDefense: 60, internalDefense: 55, effectiveAgility: 74 },
+      equippedMartials: [
+        { name: '越女剑法', rarity: '粗浅', level: 2 },
+        null,
+        null,
+        null,
+      ],
+      heartMethodName: '第壹卷通用心法',
+      slot: { row: 'front', position: 0 },
+    },
+    {
+      id: 'hero_shen', name: '郭靖', grade: '乙', level: 1, inFormation: false,
+      category: '拳', source: '酒馆相逢', careerName: '拳师', careerLevel: 1,
+      careerPath: [{ name: '拳师', state: 'current' }],
+      aptitudes: { strength: 10, insight: 7, constitution: 11, agility: 7, resolve: 7 },
+      combatStats: { maxHp: 360, externalAttack: 74, internalAttack: 65, externalDefense: 58, internalDefense: 45, effectiveAgility: 62 },
+      equippedMartials: [null, null, null, null],
+      heartMethodName: null,
+      slot: null,
+    },
   ],
 })
 
@@ -247,7 +275,14 @@ describe('version 10 长期循环页面', () => {
     const html = renderFormationPage(formationFixture())
     expect(html.match(/data-row="front"/g)).toHaveLength(3)
     expect(html.match(/data-row="back"/g)).toHaveLength(3)
-    expect(html).toContain('已上阵')
+    expect(html).toContain('点将名册')
+    expect(html).toContain('演武场')
+    expect(html).toContain('data-testid="formation-hero-card"')
+    expect(html).toContain('data-testid="formation-synergy-fist"')
+    expect(html).toContain('data-action="formation-auto-arrange"')
+    expect(html).toContain('data-action="formation-filter"')
+    expect(html).toContain('formation-radar')
+    expect(html).toContain('在阵')
     expect(html).toContain('data-testid="formation-hero-hero_test"')
     expect(html).toContain('formation-slot-remove')
 
