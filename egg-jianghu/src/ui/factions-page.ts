@@ -1,4 +1,6 @@
 import { escapeHtml, formatNumber } from './html'
+import { careerCategoryIconAsset, martialIconAsset } from './career-icon-assets'
+import { heroPortraitAsset } from './portrait-assets'
 
 export type FactionMartialState = 'learned' | 'next' | 'locked'
 
@@ -131,7 +133,7 @@ const renderQuest = (
 
 const renderFactionPlaques = (view: FactionsPageViewModel): string => view.factions.map((faction) => `
   <button type="button" class="faction-plaque ${faction.selected ? 'active' : ''}" data-action="select-faction" data-faction-id="${escapeHtml(faction.id)}" data-testid="faction-plaque-${escapeHtml(faction.id)}" aria-pressed="${faction.selected}">
-    <span class="faction-plaque-char" aria-hidden="true">${escapeHtml(faction.category)}</span>
+    <span class="faction-plaque-char" aria-hidden="true"><img class="faction-plaque-icon" src="${escapeHtml(careerCategoryIconAsset(faction.category))}" alt="" draggable="false"></span>
     <span class="faction-plaque-main">
       <strong class="faction-plaque-name">${escapeHtml(faction.name)}</strong>
       <span class="faction-plaque-meta"><b>${escapeHtml(faction.category)}</b>${escapeHtml(faction.branchNames.join(' · '))} 双线</span>
@@ -142,7 +144,7 @@ const renderFactionPlaques = (view: FactionsPageViewModel): string => view.facti
 const renderRoster = (view: FactionsPageViewModel): string => {
   const rosterRows = view.roster.length > 0
     ? view.roster.map((hero) => `<button type="button" class="faction-roster-row ${hero.selected ? 'active' : ''} ${hero.compatible ? '' : 'dim'}" data-action="select-faction-hero" data-hero-id="${escapeHtml(hero.id)}" data-testid="faction-roster-${escapeHtml(hero.id)}">
-        <span class="faction-roster-seal" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span>
+        <img class="faction-roster-portrait" src="${escapeHtml(heroPortraitAsset(hero.id, hero.category).url)}" alt="" aria-hidden="true" draggable="false"><span class="faction-roster-seal" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span>
         <span class="faction-roster-copy"><strong>${escapeHtml(hero.name)}</strong><small>${escapeHtml(hero.factionName)} · ${escapeHtml(hero.category)}脉</small></span>
         <span class="faction-roster-fit ${hero.compatible ? 'ok' : 'no'}">${hero.compatible ? '可传' : '职不符'}</span>
       </button>`).join('')
@@ -190,6 +192,7 @@ const renderMartialDetail = (view: FactionsPageViewModel): string => {
     : `${martial.learned ? '升级' : '研习'} · 贡献 ${formatNumber(actionCost)}`
   return `<div class="faction-martial-detail ${martial.state}" data-testid="faction-martial-detail">
     <div class="faction-detail-copy">
+      <img class="faction-detail-icon" src="${escapeHtml(martialIconAsset(martial.id))}" alt="" aria-hidden="true" draggable="false">
       <div class="faction-detail-name">${escapeHtml(martial.name)}${martial.learned ? ` <small>Lv.${martial.level}</small>` : ''}</div>
       <div class="faction-detail-stats">
         <span>品阶 <b data-rarity="${escapeHtml(martial.rarity)}">${escapeHtml(martial.rarity)}</b></span>
@@ -210,7 +213,7 @@ const renderMartialDetail = (view: FactionsPageViewModel): string => {
 const renderCallingCards = (view: FactionsPageViewModel, selected: FactionSelectorView): string => view.factionHeroes.map((hero, index) => `
   <article class="faction-calling-card ${hero.recruited ? 'recruited' : ''}" style="--faction-card-rotation:${[-1.2, 0.8, -0.6][index] ?? 0}deg;--faction-delay:${index * 90}ms" data-testid="faction-hero-${escapeHtml(hero.id)}">
     ${hero.recruited ? '<span class="faction-calling-stamp">已入麾下</span>' : ''}
-    <div class="faction-calling-rail"><span class="faction-calling-grade" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span><strong>${escapeHtml(hero.name)}</strong></div>
+    <div class="faction-calling-rail"><img class="faction-calling-portrait" src="${escapeHtml(heroPortraitAsset(hero.id, selected.category).url)}" alt="" aria-hidden="true" draggable="false"><span class="faction-calling-grade" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span><strong>${escapeHtml(hero.name)}</strong></div>
     <div class="faction-calling-body">
       <p class="faction-calling-title">${escapeHtml(selected.name)} · 拜帖</p>
       <p class="faction-calling-line">${escapeHtml(selected.category)}脉门人，可入队研习本派双线武学。</p>

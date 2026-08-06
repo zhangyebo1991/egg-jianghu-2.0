@@ -67,7 +67,8 @@ export interface CombatSnapshot {
 }
 
 export type CombatEvent =
-  | { type: 'damage' | 'healing'; atMs: number; sourceId: string; targetId: string; amount: number }
+  | { type: 'damage'; atMs: number; sourceId: string; targetId: string; amount: number; critical: boolean }
+  | { type: 'healing'; atMs: number; sourceId: string; targetId: string; amount: number }
   | { type: 'status-applied'; atMs: number; sourceId: string; targetId: string; status: CombatStatus }
   | { type: 'skill-used'; atMs: number; sourceId: string; skillId: string; targetIds: string[] }
   | { type: 'skill-skipped'; atMs: number; sourceId: string; skillId: string; reason: string }

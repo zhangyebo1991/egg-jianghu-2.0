@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>城市 · 蛋蛋江湖 2.0 — 高保真重设计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   城市页重设计 · 蛋蛋江湖 2.0
+   设计语言：墨底宣纸 · 朱砂印 · 金漆匾（与势力页同源）
+   页面意象：城中长街 —— 酒馆 · 武馆 · 当铺，三铺横陈，一屏尽览
+   ============================================================ */
+:root {
+  --ink-950: #0c0e0b;
+  --ink-900: #11140f;
+  --ink-850: #171b14;
+  --ink-800: #1f241c;
+  --ink-700: #2a3026;
+  --paper: #e8e1d3;
+  --paper-dim: #b3ad9e;
+  --paper-mute: #7d7f72;
+  --xuan: #e9dec3;          /* 宣纸 */
+  --xuan-deep: #ddceaa;
+  --xuan-ink: #2b2519;       /* 纸上墨色 */
+  --cinnabar: #b5503c;       /* 朱砂 */
+  --cinnabar-bright: #cf6b53;
+  --cinnabar-deep: #8a3a2b;
+  --gold: #c9a35c;
+  --gold-bright: #e6c67f;
+  --gold-deep: #8f6f3a;
+  --jade: #7fa88d;
+  --jade-dim: #57705f;
+  --line: #31382e;
+  --line-soft: #252a22;
+  --r-粗浅: #8e887d;
+  /* 六脉脉色 */
+  --c-剑: #8fb3d9;
+  --c-刀: #d98f7f;
+  --c-拳: #c9a35c;
+  --c-暗: #a98fd0;
+  --c-医: #8fbf9f;
+  --c-内家: #7fc4c0;
+  --font-brush: "Ma Shan Zheng", "Noto Serif SC", serif;
+  --font-song: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: var(--font-song);
+  color: var(--paper);
+  background:
+    radial-gradient(1100px 500px at 82% -10%, rgb(201 163 92 / 7%), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgb(181 80 60 / 6%), transparent 55%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+  font-synthesis: none;
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+::selection { background: rgb(181 80 60 / 55%); color: #fff4e8; }
+
+/* 纸颗粒覆盖层 */
+.grain {
+  position: fixed; inset: -50%; z-index: 60; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.055; mix-blend-mode: overlay;
+}
+
+/* ============ 游戏外壳 · 侧边栏（与势力页一致） ============ */
+.app-shell { display: grid; grid-template-columns: 212px minmax(0, 1fr); min-height: 100vh; }
+
+.game-sidebar {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; gap: 26px;
+  padding: 26px 20px 20px;
+  border-right: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, rgb(23 27 20 / 72%), rgb(13 16 12 / 88%));
+}
+.brand-block { display: flex; align-items: center; gap: 12px; }
+.brand-seal {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 24px; color: #f6e3d2;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  border: 1px solid #c96f58; border-radius: 6px;
+  box-shadow: inset 0 0 0 3px #411811, 0 4px 14px rgb(0 0 0 / 40%);
+  transform: rotate(-2deg);
+}
+.brand-block strong { display: block; font-size: 15px; letter-spacing: 0.1em; color: #efe4cf; white-space: nowrap; }
+.brand-block small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); white-space: nowrap; }
+
+.game-nav { display: grid; gap: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 6px; text-align: left;
+  color: var(--paper-dim); transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  position: relative;
+}
+.nav-item .nav-mark {
+  width: 30px; height: 30px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 16px;
+  border: 1px solid var(--line); border-radius: 5px; color: var(--paper-mute);
+  transition: all 0.25s var(--ease-out);
+}
+.nav-item strong { font-size: 14px; letter-spacing: 0.28em; font-weight: 500; }
+.nav-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.nav-item.active { color: #f3e9d5; background: rgb(233 222 195 / 5%); }
+.nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px;
+  background: var(--cinnabar); border-radius: 2px;
+}
+.nav-item.active .nav-mark { border-color: var(--cinnabar-deep); color: var(--cinnabar-bright); }
+
+.world-subnav { display: grid; gap: 4px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.world-subnav .world-back {
+  text-align: left; padding: 6px 12px; font-size: 11px; letter-spacing: 0.18em;
+  color: var(--paper-mute); transition: color 0.2s;
+}
+.world-subnav .world-back:hover { color: var(--gold-bright); }
+.world-subnav .ws-item {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 8px 12px; border-radius: 5px; text-align: left;
+  font-size: 13px; letter-spacing: 0.32em; color: var(--paper-dim);
+  transition: all 0.25s var(--ease-out);
+}
+.world-subnav .ws-item small { font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); font-style: normal; }
+.world-subnav .ws-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.world-subnav .ws-item.active { color: var(--gold-bright); background: rgb(201 163 92 / 8%); }
+.world-subnav .ws-item.active small { color: var(--gold); }
+
+.sidebar-landscape { margin-top: auto; height: 74px; position: relative; overflow: hidden; border-radius: 6px; }
+.sidebar-landscape::before {
+  content: ""; position: absolute; inset: auto -12px 0 -12px; height: 56px;
+  background:
+    linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
+    linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
+    linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
+}
+.sidebar-landscape::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
+  background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
+}
+.sidebar-motto { font-size: 10px; letter-spacing: 0.5em; color: var(--paper-mute); text-align: center; }
+
+/* ============ 主区框架 ============ */
+.game-main { min-width: 0; padding: 26px 36px 24px; position: relative; }
+
+.ghost-char {
+  position: absolute; z-index: 0; pointer-events: none; user-select: none;
+  font-family: var(--font-brush); line-height: 0.9; color: rgb(233 222 195 / 4%);
+}
+.ghost-city { top: 130px; right: -24px; font-size: 380px; transform: rotate(5deg); }
+
+.page-head {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+  padding-bottom: 18px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.page-head .crumb { font-size: 11px; letter-spacing: 0.3em; color: var(--paper-mute); margin-bottom: 10px; }
+.page-head .crumb b { color: var(--gold); font-weight: 500; }
+.page-head h1 {
+  font-family: var(--font-brush); font-weight: 400;
+  font-size: 52px; line-height: 1; letter-spacing: 0.06em; color: #f2e7d0;
+  text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
+}
+.page-head .latin { margin-top: 9px; font-size: 10px; letter-spacing: 0.42em; color: var(--paper-mute); text-transform: uppercase; }
+
+/* 本卷货币 · 铜钱袋 */
+.purse { display: flex; align-items: center; gap: 12px; padding: 10px 18px; border: 1px solid rgb(201 163 92 / 28%); border-radius: 8px; background: linear-gradient(160deg, rgb(201 163 92 / 9%), rgb(201 163 92 / 3%)); }
+.purse svg { flex: none; filter: drop-shadow(0 2px 6px rgb(201 163 92 / 35%)); }
+.purse .purse-num { font-size: 26px; font-weight: 700; color: var(--gold-bright); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; line-height: 1; transition: color 0.3s; }
+.purse .purse-num.flash { color: #fff2d8; }
+.purse .purse-label { font-size: 10px; letter-spacing: 0.3em; color: var(--gold); margin-top: 4px; }
+.purse .purse-faction { font-size: 10px; color: var(--paper-mute); letter-spacing: 0.12em; margin-top: 2px; }
+</style>
+<style>
+/* ============ 城中长街 · 三铺横陈 ============ */
+.street {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 0.96fr 1.08fr 1fr; gap: 18px;
+  align-items: stretch;
+}
+
+/* 铺面通用骨架 */
+.shop {
+  position: relative; display: flex; flex-direction: column; min-height: 0;
+  border-radius: 10px; border: 1px solid var(--line-soft);
+  background:
+    radial-gradient(120% 60% at 50% -60px, rgb(201 163 92 / 5%), transparent 70%),
+    linear-gradient(170deg, var(--ink-850), var(--ink-900) 75%);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 35%);
+  overflow: hidden;
+}
+.shop::before { /* 檐口 */
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(180deg, #3a3122, #241d12);
+}
+.shop-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 20px 22px 14px; margin-top: 5px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.shop-head h2 { font-family: var(--font-brush); font-size: 27px; font-weight: 400; letter-spacing: 0.12em; color: #ecdcb9; line-height: 1; white-space: nowrap; }
+.shop-head .sub { display: block; margin-top: 6px; font-size: 9.5px; letter-spacing: 0.28em; color: var(--paper-mute); white-space: nowrap; }
+.shop-head .sub i { font-style: normal; color: var(--cinnabar-bright); }
+.shop-body {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px 18px 18px;
+}
+
+/* 铺招 · 圆牌 */
+.shop-sigil {
+  width: 46px; height: 46px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 25px;
+  border-radius: 50%;
+}
+.sigil-wine {
+  color: #f6e3d2;
+  background: radial-gradient(circle at 36% 30%, #c15b46, #8a3a2b 72%);
+  border: 1px solid rgb(255 230 210 / 35%);
+  box-shadow: 0 4px 12px rgb(138 58 43 / 45%), inset 0 -5px 9px rgb(0 0 0 / 30%);
+}
+.sigil-martial {
+  color: #2e2208;
+  background: radial-gradient(circle at 36% 30%, var(--gold-bright), var(--gold-deep) 75%);
+  border: 1px solid rgb(255 240 210 / 45%);
+  box-shadow: 0 4px 12px rgb(201 163 92 / 35%), inset 0 -5px 9px rgb(60 40 5 / 35%);
+}
+.sigil-pawn {
+  color: #ecdcb9;
+  background: radial-gradient(circle at 36% 30%, #2c3328, #171b14 75%);
+  border: 1.5px solid var(--gold-deep);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 45%), inset 0 0 0 3px rgb(201 163 92 / 12%);
+}
+.shop-head .head-note {
+  margin-left: auto; text-align: right; flex: none; white-space: nowrap;
+  font-size: 10px; letter-spacing: 0.18em; color: var(--paper-mute); line-height: 1.8;
+}
+.shop-head .head-note b { color: var(--gold-bright); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- 酒馆 · 英雄帖 ---------- */
+.hero-note {
+  position: relative;
+  flex: 1 1 0;
+  display: grid; grid-template-columns: 66px minmax(0, 1fr);
+  min-height: 118px; border-radius: 5px; overflow: hidden;
+  color: var(--xuan-ink);
+  background:
+    radial-gradient(120% 100% at 0% 0%, rgb(255 250 235 / 45%), transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.16 0.4' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.05'/%3E%3C/svg%3E"),
+    linear-gradient(150deg, var(--xuan), var(--xuan-deep));
+  box-shadow: 0 12px 26px rgb(0 0 0 / 38%);
+  transform: rotate(var(--rot, 0deg));
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s, filter 0.3s;
+  animation: note-in 0.55s var(--ease-snap) both;
+}
+@keyframes note-in { from { opacity: 0; transform: rotate(var(--rot, 0deg)) translateY(12px); } to { opacity: 1; transform: rotate(var(--rot, 0deg)) translateY(0); } }
+.hero-note:hover { transform: rotate(0deg) translateY(-4px); box-shadow: 0 22px 40px rgb(0 0 0 / 50%); }
+.hn-rail {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 16px 0 12px; border-right: 1px dashed rgb(120 95 55 / 40%);
+  background: linear-gradient(180deg, rgb(138 58 43 / 7%), transparent 50%);
+}
+.hn-name { writing-mode: vertical-rl; font-family: var(--font-brush); font-size: 24px; letter-spacing: 0.2em; color: #33290f; }
+.hn-grade {
+  width: 23px; height: 23px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 13px; color: #f7e9dc;
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 4px; transform: rotate(3deg);
+  box-shadow: inset 0 0 0 1px rgb(255 230 210 / 35%), 0 2px 5px rgb(138 58 43 / 40%);
+}
+.hn-body { display: flex; flex-direction: column; padding: 13px 14px 11px; min-width: 0; }
+.hn-tags { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.hn-cat {
+  padding: 1.5px 8px; border-radius: 3px;
+  font-size: 10px; letter-spacing: 0.22em; text-indent: 0.22em;
+  color: var(--cc, #6b5b3d); border: 1px solid color-mix(in srgb, var(--cc, #6b5b3d) 55%, transparent);
+  background: color-mix(in srgb, var(--cc, #6b5b3d) 10%, transparent);
+}
+.hn-role { font-size: 9.5px; letter-spacing: 0.2em; color: #8a7a55; }
+.hn-line { font-size: 12px; line-height: 1.75; color: #4d4023; letter-spacing: 0.05em; }
+.hn-foot { margin-top: auto; padding-top: 9px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.hn-cost { font-size: 10.5px; letter-spacing: 0.08em; color: #75643f; }
+.hn-cost b { font-size: 16px; color: #8a6420; font-variant-numeric: tabular-nums; }
+.btn-invite {
+  width: 38px; height: 38px; border-radius: 50%; flex: none;
+  font-family: var(--font-brush); font-size: 18px; color: #f8e9db;
+  background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  box-shadow: 0 4px 10px rgb(138 58 43 / 40%);
+  transition: transform 0.25s var(--ease-out), filter 0.2s;
+}
+.btn-invite:hover { transform: scale(1.12) rotate(-6deg); filter: brightness(1.1); }
+.hero-note.recruited { filter: saturate(0.68) brightness(0.93); }
+.hero-note.recruited .btn-invite { background: #8d8468; box-shadow: none; cursor: default; pointer-events: none; }
+.hn-stamp {
+  position: absolute; right: 12px; top: 10px; z-index: 2; pointer-events: none;
+  padding: 2px 9px; font-family: var(--font-brush); font-size: 17px; letter-spacing: 0.12em;
+  color: var(--cinnabar-deep); border: 2px solid var(--cinnabar-deep); border-radius: 4px;
+  transform: rotate(9deg); opacity: 0.85;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='s'%3E%3CfeTurbulence baseFrequency='0.5' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.85 0.1'/%3E%3CfeComposite operator='in' in2='SourceGraphic'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  mask-size: cover;
+}
+.hn-stamp.stamp-in { animation: stamp-in 0.5s var(--ease-snap); }
+@keyframes stamp-in {
+  0% { transform: rotate(9deg) scale(2.4); opacity: 0; }
+  60% { transform: rotate(9deg) scale(0.94); opacity: 0.95; }
+  100% { transform: rotate(9deg) scale(1); opacity: 0.85; }
+}
+
+/* ---------- 武馆 · 传授对象（点将谱） ---------- */
+.tutor-bar { display: flex; align-items: center; gap: 10px; position: relative; z-index: 30; }
+.tutor-label { font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute); flex: none; }
+.disciple { position: relative; }
+.disciple-plate {
+  display: flex; align-items: center; gap: 9px; padding: 6px 12px 6px 7px;
+  border: 1px solid var(--gold-deep); border-radius: 6px;
+  background: linear-gradient(165deg, rgb(201 163 92 / 12%), rgb(201 163 92 / 4%));
+  transition: border-color 0.25s var(--ease-out), box-shadow 0.25s, transform 0.25s;
+}
+.disciple-plate:hover { border-color: var(--gold); box-shadow: 0 4px 14px rgb(201 163 92 / 18%); transform: translateY(-1px); }
+.disciple-plate[aria-expanded="true"] { border-color: var(--gold-bright); box-shadow: 0 0 0 3px rgb(201 163 92 / 14%); }
+.dp-seal {
+  width: 25px; height: 25px; display: grid; place-items: center; flex: none;
+  font-family: var(--font-brush); font-size: 13px; color: #f8e9da;
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 4px 6px 4px 7px / 6px 4px 7px 4px; transform: rotate(-3deg);
+  box-shadow: inset 0 0 0 1px rgb(255 230 210 / 35%);
+}
+.dp-seal.dp-player { background: linear-gradient(150deg, var(--gold-bright), var(--gold-deep)); color: #2e2208; }
+.dp-name { font-size: 13.5px; letter-spacing: 0.1em; color: #efe2c6; }
+.dp-cat { font-size: 9.5px; letter-spacing: 0.16em; color: var(--paper-mute); }
+.dp-caret { color: var(--gold); font-size: 11px; transition: transform 0.3s var(--ease-out); }
+.disciple-plate[aria-expanded="true"] .dp-caret { transform: rotate(180deg); }
+.tutor-hint { margin-left: auto; font-size: 10px; letter-spacing: 0.14em; color: var(--paper-mute); }
+.tutor-hint b { color: var(--jade); font-weight: 500; }
+
+.roster-pop {
+  position: absolute; left: 0; top: calc(100% + 8px); z-index: 40;
+  width: 268px; display: flex; flex-direction: column;
+  border: 1px solid rgb(201 163 92 / 30%); border-radius: 10px;
+  background: linear-gradient(170deg, #1d221a, #12150f 80%);
+  box-shadow: 0 30px 70px rgb(0 0 0 / 60%), inset 0 1px 0 rgb(233 222 195 / 6%);
+  transform-origin: top left;
+  animation: pop-in 0.35s var(--ease-out);
+}
+@keyframes pop-in { from { opacity: 0; transform: translateY(-8px) scale(0.97); } to { opacity: 1; transform: none; } }
+.roster-pop[hidden] { display: none; }
+.roster-pop > header { padding: 12px 14px 9px; border-bottom: 1px solid var(--line-soft); }
+.roster-pop > header strong { font-family: var(--font-brush); font-size: 18px; font-weight: 400; letter-spacing: 0.16em; color: #e6d7b4; }
+.roster-list { max-height: 262px; overflow-y: auto; padding: 5px; scrollbar-width: thin; scrollbar-color: #3d4438 transparent; }
+.roster-list::-webkit-scrollbar { width: 7px; }
+.roster-list::-webkit-scrollbar-thumb { background: #333a30; border-radius: 4px; }
+.roster-row {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 7px 9px; border-radius: 6px; text-align: left;
+  transition: background 0.2s var(--ease-out);
+}
+.roster-row:hover { background: rgb(233 222 195 / 5%); }
+.roster-row .rr-seal {
+  width: 22px; height: 22px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 12px; color: #f8e9da;
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 4px; box-shadow: inset 0 0 0 1px rgb(255 230 210 / 30%);
+}
+.roster-row .rr-seal.g-主 { background: linear-gradient(150deg, var(--gold-bright), var(--gold-deep)); color: #2e2208; }
+.roster-row .rr-name { font-size: 13.5px; letter-spacing: 0.08em; color: var(--paper); }
+.roster-row .rr-meta { font-size: 9.5px; color: var(--paper-mute); letter-spacing: 0.08em; margin-top: 2px; }
+.roster-row.active { background: rgb(201 163 92 / 9%); box-shadow: inset 2px 0 0 var(--gold); }
+.roster-row.active .rr-name { color: var(--gold-bright); }
+.roster-pop > footer {
+  padding: 8px 14px; border-top: 1px solid var(--line-soft);
+  font-size: 9.5px; letter-spacing: 0.14em; color: var(--paper-mute);
+  display: flex; align-items: center; gap: 7px;
+}
+.roster-pop > footer::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--jade); box-shadow: 0 0 7px rgb(127 168 141 / 70%); }
+</style>
+<style>
+/* ---------- 武馆 · 秘籍书架 ---------- */
+.shelf-wrap { position: relative; flex: 1 1 auto; min-height: 180px; display: flex; }
+.shelf {
+  position: relative; flex: 1; display: flex; align-items: stretch; justify-content: space-between;
+  padding: 8px 4px 0; gap: 6px;
+}
+.shelf::after { /* 托板 */
+  content: ""; position: absolute; left: -4px; right: -4px; bottom: 0; height: 9px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #3d3323, #241d13);
+  box-shadow: 0 5px 12px rgb(0 0 0 / 45%), inset 0 1px 0 rgb(233 222 195 / 8%);
+}
+.book {
+  position: relative; z-index: 1; flex: 1 1 0; max-width: 62px;
+  border-radius: 3px 6px 6px 3px;
+  border: 1px solid #323e55;
+  background:
+    radial-gradient(circle at 50% 64%, color-mix(in srgb, var(--cc, #8fb3d9) 13%, transparent), transparent 58%),
+    linear-gradient(90deg, rgb(0 0 0 / 38%) 0 4px, transparent 4px),
+    linear-gradient(100deg, #273244, #1a2231 62%, #131a26);
+  box-shadow: 0 8px 16px rgb(0 0 0 / 42%);
+  cursor: pointer;
+  transition: transform 0.32s var(--ease-out), box-shadow 0.32s, border-color 0.25s, filter 0.25s;
+}
+.book::before { /* 线装针脚 */
+  content: ""; position: absolute; right: 8px; top: 12px; bottom: 12px; width: 2px;
+  background: repeating-linear-gradient(0deg, rgb(233 222 195 / 32%) 0 5px, transparent 5px 13px);
+}
+.book::after { /* 书根脉线 */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+  background: var(--cc, var(--paper-mute)); opacity: 0.75;
+  border-radius: 0 0 5px 2px;
+}
+.book:hover { transform: translateY(-9px); border-color: #48597a; box-shadow: 0 16px 26px rgb(0 0 0 / 52%); }
+.book.selected {
+  transform: translateY(-15px);
+  border-color: rgb(230 198 127 / 70%);
+  box-shadow: 0 20px 32px rgb(0 0 0 / 55%), 0 0 0 1px rgb(230 198 127 / 30%), 0 0 22px rgb(201 163 92 / 18%);
+}
+.book .b-tag { /* 白宣题签 */
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  writing-mode: vertical-rl;
+  padding: 8px 3.5px; border-radius: 1.5px;
+  font-size: 12.5px; letter-spacing: 0.18em; color: #33290f;
+  background: linear-gradient(172deg, var(--xuan), var(--xuan-deep));
+  box-shadow: 0 2px 5px rgb(0 0 0 / 45%);
+}
+.book .b-rarity {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  writing-mode: vertical-rl; font-size: 9px; letter-spacing: 0.3em;
+  color: var(--r-粗浅);
+}
+.book .b-learned {
+  position: absolute; top: 10px; right: -6px; z-index: 2;
+  padding: 6px 2px; writing-mode: vertical-rl;
+  font-size: 9px; letter-spacing: 0.2em; color: #f8e9db;
+  background: linear-gradient(180deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 2px; box-shadow: 0 3px 7px rgb(138 58 43 / 50%);
+}
+.book.dim { filter: saturate(0.55) brightness(0.82); }
+.book.dim:hover { filter: saturate(0.8) brightness(0.95); }
+
+/* 秘籍详情条 */
+.book-detail {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  padding: 13px 16px; border: 1px solid var(--line); border-radius: 8px;
+  background: linear-gradient(165deg, rgb(201 163 92 / 6%), rgb(20 24 18 / 40%));
+}
+.bd-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.bd-name { font-family: var(--font-brush); font-size: 20px; letter-spacing: 0.08em; color: #eadcb8; }
+.bd-rarity { font-size: 10px; letter-spacing: 0.2em; color: var(--r-粗浅); border: 1px solid rgb(142 136 125 / 40%); border-radius: 3px; padding: 1px 7px; }
+.bd-fit { font-size: 10px; letter-spacing: 0.16em; }
+.bd-fit.ok { color: var(--jade); }
+.bd-fit.no { color: var(--cinnabar-bright); }
+.bd-stats { display: flex; gap: 16px; margin-top: 7px; font-size: 10.5px; color: var(--paper-mute); letter-spacing: 0.06em; flex-wrap: wrap; }
+.bd-stats b { color: var(--paper); font-weight: 600; font-variant-numeric: tabular-nums; }
+.bd-cost { color: var(--gold); }
+.bd-cost b { color: var(--gold-bright); }
+.btn-learn {
+  padding: 10px 24px; border-radius: 6px; white-space: nowrap;
+  font-size: 12.5px; letter-spacing: 0.32em; text-indent: 0.32em; font-weight: 600;
+  color: #f6e9d6; background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  box-shadow: 0 6px 16px rgb(138 58 43 / 40%);
+  transition: transform 0.2s var(--ease-out), filter 0.2s, box-shadow 0.2s;
+}
+.btn-learn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.btn-learn:active { transform: translateY(1px); }
+.btn-learn:disabled { filter: grayscale(0.75) brightness(0.72); cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ---------- 当铺 · 信物玉格 ---------- */
+.token-grid { flex: 1 1 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 9px; }
+.token-cell {
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 5px;
+  min-height: 60px;
+  padding: 9px 4px 8px; border: 1px solid var(--line); border-radius: 7px;
+  background: linear-gradient(165deg, rgb(233 222 195 / 3%), transparent 60%), var(--ink-800);
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease-out), transform 0.25s var(--ease-out), box-shadow 0.25s, filter 0.25s;
+}
+.token-cell:hover { border-color: rgb(201 163 92 / 45%); transform: translateY(-2px); box-shadow: 0 8px 18px rgb(0 0 0 / 40%); }
+.jade-ring {
+  position: relative; width: 32px; height: 32px; border-radius: 50%;
+  background: radial-gradient(circle, transparent 30%, var(--jc, var(--jade)) 36%, color-mix(in srgb, var(--jc, var(--jade)) 72%, #fff 10%) 62%, var(--jc, var(--jade)) 78%, transparent 82%);
+  filter: drop-shadow(0 2px 5px rgb(0 0 0 / 50%));
+}
+.jade-ring::after { content: ""; position: absolute; left: 7px; top: 5px; width: 7px; height: 4px; border-radius: 50%; background: rgb(255 255 255 / 45%); transform: rotate(-24deg); }
+.token-cell .t-name { font-size: 11.5px; letter-spacing: 0.08em; color: var(--paper); }
+.token-cell .t-price { font-size: 9.5px; letter-spacing: 0.1em; color: var(--gold); font-variant-numeric: tabular-nums; }
+.token-cell.owned { filter: saturate(0.5) brightness(0.8); cursor: default; }
+.token-cell.owned:hover { transform: none; box-shadow: none; border-color: var(--line); }
+.token-cell.owned .t-price { color: var(--paper-mute); }
+.t-owned-mark {
+  position: absolute; right: 5px; top: 5px;
+  padding: 0 4px; font-size: 8.5px; letter-spacing: 0.06em;
+  color: var(--cinnabar-bright); border: 1px solid var(--cinnabar-deep); border-radius: 3px;
+  transform: rotate(8deg); opacity: 0.9;
+}
+.locked-row {
+  display: flex; align-items: center; gap: 10px; flex: none;
+  padding: 8px 12px; border: 1.5px dashed var(--line); border-radius: 7px;
+  color: var(--paper-mute);
+}
+.locked-row .lock-mark {
+  width: 24px; height: 24px; flex: none; display: grid; place-items: center;
+  font-size: 12px; color: rgb(233 222 195 / 40%);
+  border: 1px solid var(--line); border-radius: 5px;
+}
+.locked-row .lr-name { font-size: 11.5px; letter-spacing: 0.14em; color: rgb(233 222 195 / 45%); }
+.locked-row .lr-meta { margin-left: auto; font-size: 9.5px; letter-spacing: 0.16em; }
+.locked-row .lr-meta b { color: rgb(201 163 92 / 60%); font-weight: 500; }
+
+/* ============ 返回战斗浮钮 ============ */
+.return-battle {
+  position: fixed; right: 24px; bottom: 20px; z-index: 70;
+  padding: 10px 20px; border-radius: 7px;
+  font-size: 12.5px; letter-spacing: 0.24em; text-indent: 0.24em;
+  color: var(--gold-bright); border: 1px solid rgb(201 163 92 / 50%);
+  background: linear-gradient(160deg, rgb(31 36 28 / 92%), rgb(17 20 15 / 94%));
+  box-shadow: 0 10px 26px rgb(0 0 0 / 50%), inset 0 0 0 1px rgb(201 163 92 / 10%);
+  transition: all 0.25s var(--ease-out);
+}
+.return-battle:hover { border-color: var(--gold-bright); transform: translateY(-2px); box-shadow: 0 14px 30px rgb(0 0 0 / 55%), 0 0 18px rgb(201 163 92 / 20%); }
+
+/* ============ 通知 toast ============ */
+.toast-zone { position: fixed; right: 26px; bottom: 74px; z-index: 80; display: grid; gap: 10px; justify-items: end; }
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px; border-radius: 6px;
+  background: linear-gradient(160deg, #262c22, #171b14);
+  border: 1px solid var(--line); border-left: 3px solid var(--gold);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 50%);
+  font-size: 13px; letter-spacing: 0.1em; color: var(--paper);
+  animation: toast-in 0.5s var(--ease-snap);
+}
+.toast.err { border-left-color: var(--cinnabar); }
+.toast .t-mark { font-family: var(--font-brush); color: var(--gold-bright); font-size: 16px; }
+.toast.err .t-mark { color: var(--cinnabar-bright); }
+.toast.out { transition: opacity 0.4s, transform 0.4s; opacity: 0; transform: translateY(8px); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+.page-foot { position: relative; z-index: 1; text-align: center; padding: 14px 0 0; font-size: 10px; letter-spacing: 0.4em; color: rgb(233 222 195 / 26%); }
+
+/* ============ 一屏布局（桌面） ============ */
+@media (min-width: 1280px) {
+  html, body { height: 100%; overflow: hidden; }
+  .app-shell { height: 100vh; }
+  .game-main { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .street { flex: 1; min-height: 0; }
+  .shop-body { overflow-y: auto; scrollbar-width: thin; scrollbar-color: #3d4438 transparent; }
+  .shop-body::-webkit-scrollbar { width: 7px; }
+  .shop-body::-webkit-scrollbar-thumb { background: #333a30; border-radius: 4px; }
+  .page-foot { flex: none; }
+}
+@media (min-width: 1280px) and (max-height: 800px) {
+  .page-head h1 { font-size: 44px; }
+  .page-head { padding-bottom: 14px; margin-bottom: 14px; }
+  .shelf-wrap { min-height: 150px; }
+  .hero-note { min-height: 106px; }
+}
+@media (min-width: 1280px) and (max-width: 1500px) {
+  .game-main { padding: 22px 26px 18px; }
+  .shop-head { padding: 16px 16px 11px; gap: 10px; }
+  .shop-head h2 { font-size: 24px; }
+  .shop-head .sub { letter-spacing: 0.22em; }
+  .shop-sigil { width: 40px; height: 40px; font-size: 22px; }
+  .shop-body { padding: 12px 14px 14px; gap: 10px; }
+  .jade-ring { width: 28px; height: 28px; }
+}
+
+/* ============ 响应式（窄屏允许滚动） ============ */
+@media (max-width: 1279px) {
+  .street { grid-template-columns: 1fr; }
+}
+@media (max-width: 980px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .game-sidebar { display: none; }
+  .game-main { padding: 22px 18px 60px; }
+  .ghost-char { display: none; }
+}
+@media (max-width: 640px) {
+  .page-head h1 { font-size: 40px; }
+  .page-head { flex-direction: column; align-items: flex-start; }
+  .token-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="app-shell">
+  <!-- ======== 游戏外壳 ======== -->
+  <aside class="game-sidebar">
+    <div class="brand-block">
+      <span class="brand-seal">蛋</span>
+      <span><strong>蛋蛋江湖 2.0</strong><small>十万里一剑 · 不负侠者行</small></span>
+    </div>
+    <nav class="game-nav" aria-label="游戏区域">
+      <button type="button" class="nav-item active"><span class="nav-mark">邑</span><strong>江湖</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">侠</span><strong>侠客</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">阵</span><strong>阵容</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">囊</span><strong>背包</strong></button>
+    </nav>
+    <nav class="world-subnav" aria-label="牛家村">
+      <button type="button" class="world-back">← 返回江湖</button>
+      <button type="button" class="ws-item">关卡<small>STAGES</small></button>
+      <button type="button" class="ws-item">势力<small>FACTIONS</small></button>
+      <button type="button" class="ws-item active">城市<small>CITY</small></button>
+    </nav>
+    <div class="sidebar-landscape" aria-hidden="true"></div>
+    <span class="sidebar-motto">朝悟道 · 暮练剑</span>
+  </aside>
+
+  <!-- ======== 城市主区 ======== -->
+  <main class="game-main">
+    <span class="ghost-char ghost-city" aria-hidden="true">城</span>
+
+    <header class="page-head">
+      <div>
+        <p class="crumb">第一卷 · <b>牛家村</b> · 城中行走</p>
+        <h1>城市</h1>
+        <p class="latin">City · Niujia Volume I</p>
+      </div>
+      <div class="purse" id="purse">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="12.5" fill="url(#coin)" stroke="#8f6f3a" stroke-width="1"/>
+          <rect x="12.2" y="12.2" width="7.6" height="7.6" rx="1" fill="#141812" stroke="#8f6f3a" stroke-width="0.8"/>
+          <circle cx="16" cy="16" r="12.5" stroke="#e6c67f" stroke-width="0.6" opacity="0.5"/>
+          <defs><linearGradient id="coin" x1="4" y1="4" x2="28" y2="28"><stop stop-color="#e6c67f"/><stop offset="1" stop-color="#a37e3f"/></linearGradient></defs>
+        </svg>
+        <div>
+          <div class="purse-num" id="purseNum">7,342</div>
+          <div class="purse-label">本卷货币</div>
+          <div class="purse-faction">牛家村通用</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 城中长街 -->
+    <div class="street">
+
+      <!-- 酒馆 -->
+      <section class="shop" id="tavern">
+        <header class="shop-head">
+          <span class="shop-sigil sigil-wine">酒</span>
+          <div>
+            <h2>无名酒馆</h2>
+            <span class="sub">酒馆名录 · <i>明码相邀</i> · 乙级侠客</span>
+          </div>
+          <div class="head-note">候邀 <b id="tavernCount">2</b> 人<br>每卷三名</div>
+        </header>
+        <div class="shop-body" id="tavernBody"></div>
+      </section>
+
+      <!-- 武馆 -->
+      <section class="shop" id="academy">
+        <header class="shop-head">
+          <span class="shop-sigil sigil-martial">武</span>
+          <div>
+            <h2>城南武馆</h2>
+            <span class="sub">城市武馆 · 通用武功 · <i>粗浅六册</i></span>
+          </div>
+          <div class="head-note">每册 <b>200</b><br>择人而传</div>
+        </header>
+        <div class="shop-body">
+          <div class="tutor-bar">
+            <span class="tutor-label">传授对象</span>
+            <div class="disciple">
+              <button type="button" class="disciple-plate" id="disciplePlate" aria-haspopup="true" aria-expanded="false"></button>
+              <div class="roster-pop" id="rosterPop" hidden>
+                <header><strong>点将谱</strong></header>
+                <div class="roster-list" id="rosterList"></div>
+                <footer>所传武功 · 各随其脉</footer>
+              </div>
+            </div>
+            <span class="tutor-hint" id="tutorHint"></span>
+          </div>
+          <div class="shelf-wrap">
+            <div class="shelf" id="shelf"></div>
+          </div>
+          <div class="book-detail" id="bookDetail"></div>
+        </div>
+      </section>
+
+      <!-- 当铺 -->
+      <section class="shop" id="pawn">
+        <header class="shop-head">
+          <span class="shop-sigil sigil-pawn">当</span>
+          <div>
+            <h2>恒昌当铺</h2>
+            <span class="sub">转职信物 · <i>中级现货</i> · 高阶随卷</span>
+          </div>
+          <div class="head-note">中级 <b>300</b><br>每人一枚</div>
+        </header>
+        <div class="shop-body">
+          <div class="token-grid" id="tokenGrid"></div>
+          <div class="locked-row">
+            <span class="lock-mark">🔒</span>
+            <span class="lr-name">高级信物</span>
+            <span class="lr-meta">第四卷江湖启 · <b>800</b></span>
+          </div>
+          <div class="locked-row">
+            <span class="lock-mark">🔒</span>
+            <span class="lr-name">顶级信物</span>
+            <span class="lr-meta">第七卷江湖启 · <b>2,000</b></span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="page-foot">蛋蛋江湖 2.0 · 城市页高保真重设计 · 数据与规则取自游戏真实配置</footer>
+  </main>
+</div>
+
+<button type="button" class="return-battle" id="returnBattle">返回进行中战斗</button>
+<div class="toast-zone" id="toastZone"></div>
+
+<script>
+/* ============================================================
+   数据层 —— 数值规则与 egg-jianghu/src 真实配置一致
+   酒馆侠客：乙级 · 200 + 卷序×40（第一卷 → 240）· 每卷 3 名
+   通用武功：粗浅 · 150 + 卷序×50（第一卷 → 200）
+             耗能 11 · 冷却 2.5s · 威力 ×0.95
+   转职信物：中级 300 · 高级 800（第四卷起）· 顶级 2000（第七卷起）
+   ============================================================ */
+const TAVERN = [
+  { id: 'hero_guo_jing',    name: '郭靖',   cat: '拳', grade: '乙', cost: 240, role: '拳师', line: '憨厚少年，根骨清奇，一副拳掌可托付。' },
+  { id: 'hero_yang_tiexin', name: '杨铁心', cat: '刀', grade: '乙', cost: 240, role: '刀客', line: '忠良之后，枪刀沉雄，性如烈火。', recruited: true },
+  { id: 'hero_mu_nianci',   name: '穆念慈', cat: '剑', grade: '乙', cost: 240, role: '剑客', line: '身世飘零，剑里藏柔，心志愈坚。' },
+];
+
+const BOOKS = [
+  { id: 'sword',  cat: '剑',   name: '牛家村通用剑法',   short: '通用剑法',   cost: 200, energy: 11, cd: '2.5 秒', power: '×0.95' },
+  { id: 'blade',  cat: '刀',   name: '牛家村通用刀法',   short: '通用刀法',   cost: 200, energy: 11, cd: '2.5 秒', power: '×0.95' },
+  { id: 'fist',   cat: '拳',   name: '牛家村通用拳法',   short: '通用拳法',   cost: 200, energy: 11, cd: '2.5 秒', power: '×0.95' },
+  { id: 'shadow', cat: '暗',   name: '牛家村通用暗法',   short: '通用暗法',   cost: 200, energy: 11, cd: '2.5 秒', power: '×0.95' },
+  { id: 'doctor', cat: '医',   name: '牛家村通用医法',   short: '通用医法',   cost: 200, energy: 11, cd: '2.5 秒', power: '×0.95' },
+  { id: 'inner',  cat: '内家', name: '牛家村通用内家法', short: '通用内家法', cost: 200, energy: 11, cd: '2.5 秒', power: '×0.95' },
+];
+
+const TOKENS = [
+  { id: 'token_sword_swift_mid',  name: '游剑客', cat: '剑' },
+  { id: 'token_sword_heavy_mid',  name: '重剑客', cat: '剑', owned: true },
+  { id: 'token_blade_swift_mid',  name: '快刀客', cat: '刀' },
+  { id: 'token_blade_fury_mid',   name: '狂刀客', cat: '刀' },
+  { id: 'token_fist_hard_mid',    name: '长拳师', cat: '拳' },
+  { id: 'token_fist_soft_mid',    name: '绵掌师', cat: '拳' },
+  { id: 'token_shadow_assassin_mid', name: '影客', cat: '暗' },
+  { id: 'token_shadow_poison_mid',   name: '毒手', cat: '暗' },
+  { id: 'token_doctor_heal_mid',     name: '仁心医士', cat: '医' },
+  { id: 'token_doctor_medicine_mid', name: '调息医士', cat: '医' },
+  { id: 'token_inner_flow_mid',      name: '运气士', cat: '内家' },
+  { id: 'token_inner_guard_mid',     name: '护气士', cat: '内家' },
+];
+const TOKEN_COST = 300;
+
+/* 点将谱：已招募侠客（演示名册，六脉各一；主角百脉皆通） */
+const ROSTER = [
+  { id: 'hero_player',      name: '花花蛋', cat: '剑',   grade: '主', allMeridian: true, meta: '主角 · 百脉皆通' },
+  { id: 'hero_yang_tiexin', name: '杨铁心', cat: '刀',   grade: '乙', meta: '刀客 · 本卷酒馆' },
+  { id: 'h_gb_1',           name: '洪七公', cat: '拳',   grade: '乙', meta: '拳师 · 丐帮门人' },
+  { id: 'r_a01',            name: '欧阳锋', cat: '暗',   grade: '乙', meta: '暗客 · 白驼山门人' },
+  { id: 'h_th_2',           name: '程英',   cat: '医',   grade: '乙', meta: '医者 · 桃花岛门人' },
+  { id: 'r_n03',            name: '段誉',   cat: '内家', grade: '乙', meta: '内家 · 镇岳刀客' },
+];
+
+const state = {
+  currency: 7342,
+  discipleId: 'hero_player',
+  selectedBook: 'sword',
+  invited: new Set(TAVERN.filter((h) => h.recruited).map((h) => h.id)),
+  owned: new Set(TOKENS.filter((t) => t.owned).map((t) => t.id)),
+  learned: { hero_player: new Set(['sword']) }, // 各侠客各自研习
+};
+
+const CAT_COLOR = { 剑: 'var(--c-剑)', 刀: 'var(--c-刀)', 拳: 'var(--c-拳)', 暗: 'var(--c-暗)', 医: 'var(--c-医)', 内家: 'var(--c-内家)' };
+const fmt = (n) => n.toLocaleString('zh-CN');
+const $ = (sel) => document.querySelector(sel);
+const disciple = () => ROSTER.find((d) => d.id === state.discipleId) ?? ROSTER[0];
+const learnedSet = () => (state.learned[state.discipleId] ||= new Set());
+const fitsBook = (d, book) => Boolean(d.allMeridian) || d.cat === book.cat;
+</script>
+<script>
+/* ============================================================
+   渲染与交互
+   ============================================================ */
+const NOTE_ROTS = [-0.9, 0.7, -0.5];
+
+/* ---------- 小部件 ---------- */
+function toast(msg, err = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (err ? ' err' : '');
+  el.innerHTML = `<span class="t-mark">${err ? '✕' : '❋'}</span><span>${msg}</span>`;
+  $('#toastZone').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 450); }, 2600);
+}
+
+function renderPurse(flash = false) {
+  const num = $('#purseNum');
+  num.textContent = fmt(state.currency);
+  if (flash) {
+    num.classList.add('flash');
+    setTimeout(() => num.classList.remove('flash'), 350);
+  }
+}
+
+function spend(cost, label) {
+  if (state.currency < cost) { toast(`本卷货币不足 · ${label}需 ${fmt(cost)}`, true); return false; }
+  state.currency -= cost;
+  renderPurse(true);
+  return true;
+}
+
+/* ---------- 酒馆 ---------- */
+function renderTavern(stampId = null) {
+  $('#tavernBody').innerHTML = TAVERN.map((h, i) => {
+    const recruited = state.invited.has(h.id);
+    return `<article class="hero-note ${recruited ? 'recruited' : ''}" style="--rot:${NOTE_ROTS[i]}deg; animation-delay:${i * 0.08}s">
+      ${recruited ? `<span class="hn-stamp ${stampId === h.id ? 'stamp-in' : ''}">已入麾下</span>` : ''}
+      <div class="hn-rail">
+        <span class="hn-name">${h.name}</span>
+        <span class="hn-grade">${h.grade}</span>
+      </div>
+      <div class="hn-body">
+        <div class="hn-tags">
+          <span class="hn-cat" style="--cc:${CAT_COLOR[h.cat]}">${h.cat}脉</span>
+          <span class="hn-role">${h.role} · 坐馆相候</span>
+        </div>
+        <p class="hn-line">${h.line}</p>
+        <div class="hn-foot">
+          <span class="hn-cost">聘资 <b>${fmt(h.cost)}</b> 本卷货币</span>
+          <button type="button" class="btn-invite" data-invite="${h.id}" title="直接邀请" ${recruited ? 'disabled' : ''}>邀</button>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+  $('#tavernCount').textContent = TAVERN.length - state.invited.size;
+}
+
+/* ---------- 点将谱 ---------- */
+function renderPlate() {
+  const d = disciple();
+  $('#disciplePlate').innerHTML = `
+    <span class="dp-seal ${d.grade === '主' ? 'dp-player' : ''}">${d.name[0]}</span>
+    <span class="dp-name">${d.name}</span>
+    <span class="dp-cat">${d.allMeridian ? '百脉皆通' : d.cat + '脉'}</span>
+    <span class="dp-caret">▾</span>`;
+  const fitCount = BOOKS.filter((b) => fitsBook(d, b)).length;
+  $('#tutorHint').innerHTML = d.allMeridian
+    ? '六册皆可相传'
+    : `脉路相合 <b>${fitCount}</b> / ${BOOKS.length} 册`;
+}
+
+function renderRoster() {
+  $('#rosterList').innerHTML = ROSTER.map((d) => `
+    <button type="button" class="roster-row ${d.id === state.discipleId ? 'active' : ''}" data-pick="${d.id}">
+      <span class="rr-seal g-${d.grade}">${d.name[0]}</span>
+      <span>
+        <span class="rr-name">${d.name}</span>
+        <div class="rr-meta">${d.meta}</div>
+      </span>
+    </button>`).join('');
+}
+
+/* ---------- 武馆书架 ---------- */
+function renderShelf() {
+  const d = disciple();
+  const learned = learnedSet();
+  $('#shelf').innerHTML = BOOKS.map((b) => {
+    const isLearned = learned.has(b.id);
+    const fit = fitsBook(d, b);
+    return `<button type="button" class="book ${b.id === state.selectedBook ? 'selected' : ''} ${fit ? '' : 'dim'}" data-book="${b.id}" style="--cc:${CAT_COLOR[b.cat]}" title="${b.name}">
+      ${isLearned ? '<span class="b-learned">已研习</span>' : ''}
+      <span class="b-tag">${b.short}</span>
+      <span class="b-rarity">粗浅</span>
+    </button>`;
+  }).join('');
+}
+
+function renderBookDetail() {
+  const b = BOOKS.find((x) => x.id === state.selectedBook);
+  const d = disciple();
+  const learned = learnedSet().has(b.id);
+  const fit = fitsBook(d, b);
+  const btn = learned
+    ? '<button type="button" class="btn-learn" disabled>已学习</button>'
+    : fit
+      ? `<button type="button" class="btn-learn" data-learn="${b.id}">学习</button>`
+      : '<button type="button" class="btn-learn" disabled>脉路不合</button>';
+  $('#bookDetail').innerHTML = `
+    <div>
+      <div class="bd-head">
+        <span class="bd-name">${b.name}</span>
+        <span class="bd-rarity">粗浅</span>
+        <span class="bd-fit ${fit ? 'ok' : 'no'}">${fit ? `脉路相合 · 可传${d.name}` : `${d.name}非${b.cat}脉 · 不可传`}</span>
+      </div>
+      <div class="bd-stats">
+        <span>耗能 <b>${b.energy}</b></span>
+        <span>冷却 <b>${b.cd}</b></span>
+        <span>威力 <b>${b.power}</b></span>
+        <span class="bd-cost">束脩 <b>${fmt(b.cost)}</b> 本卷货币</span>
+      </div>
+    </div>
+    ${btn}`;
+}
+
+/* ---------- 当铺 ---------- */
+function renderTokens() {
+  $('#tokenGrid').innerHTML = TOKENS.map((t) => {
+    const owned = state.owned.has(t.id);
+    return `<button type="button" class="token-cell ${owned ? 'owned' : ''}" data-token="${t.id}" style="--jc:${CAT_COLOR[t.cat]}" ${owned ? 'disabled' : ''}>
+      ${owned ? '<span class="t-owned-mark">已持</span>' : ''}
+      <span class="jade-ring"></span>
+      <span class="t-name">${t.name}</span>
+      <span class="t-price">中级 · ${fmt(TOKEN_COST)}</span>
+    </button>`;
+  }).join('');
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener('click', (e) => {
+  const inviteBtn = e.target.closest('[data-invite]');
+  if (inviteBtn) {
+    const hero = TAVERN.find((h) => h.id === inviteBtn.dataset.invite);
+    if (!hero || state.invited.has(hero.id)) return;
+    if (!spend(hero.cost, `邀请${hero.name}`)) return;
+    state.invited.add(hero.id);
+    renderTavern(hero.id);
+    toast(`${hero.name}已入麾下 · 可于侠客页编排上阵`);
+    return;
+  }
+
+  const bookBtn = e.target.closest('[data-book]');
+  if (bookBtn) {
+    state.selectedBook = bookBtn.dataset.book;
+    renderShelf();
+    renderBookDetail();
+    return;
+  }
+
+  const learnBtn = e.target.closest('[data-learn]');
+  if (learnBtn) {
+    const book = BOOKS.find((b) => b.id === learnBtn.dataset.learn);
+    const d = disciple();
+    if (!book || learnedSet().has(book.id) || !fitsBook(d, book)) return;
+    if (!spend(book.cost, `${book.short}`)) return;
+    learnedSet().add(book.id);
+    renderShelf();
+    renderBookDetail();
+    toast(`${d.name}习得「${book.name}」`);
+    return;
+  }
+
+  const tokenBtn = e.target.closest('[data-token]');
+  if (tokenBtn) {
+    const token = TOKENS.find((t) => t.id === tokenBtn.dataset.token);
+    if (!token || state.owned.has(token.id)) return;
+    if (!spend(TOKEN_COST, `${token.name}信物`)) return;
+    state.owned.add(token.id);
+    renderTokens();
+    toast(`购得「${token.name}信物」· 转职可于侠客页办理`);
+    return;
+  }
+
+  const plate = e.target.closest('#disciplePlate');
+  if (plate) {
+    const pop = $('#rosterPop');
+    const open = pop.hidden;
+    pop.hidden = !open;
+    plate.setAttribute('aria-expanded', String(open));
+    return;
+  }
+
+  const pick = e.target.closest('[data-pick]');
+  if (pick) {
+    state.discipleId = pick.dataset.pick;
+    $('#rosterPop').hidden = true;
+    $('#disciplePlate').setAttribute('aria-expanded', 'false');
+    renderPlate();
+    renderRoster();
+    renderShelf();
+    renderBookDetail();
+    return;
+  }
+
+  /* 点击他处收起点将谱 */
+  if (!e.target.closest('.disciple')) {
+    $('#rosterPop').hidden = true;
+    $('#disciplePlate').setAttribute('aria-expanded', 'false');
+  }
+
+  if (e.target.closest('#returnBattle')) {
+    toast('演示页面 · 此处返回进行中战斗');
+  }
+});
+
+/* ---------- 初始化 ---------- */
+renderPurse();
+renderTavern();
+renderPlate();
+renderRoster();
+renderShelf();
+renderBookDetail();
+renderTokens();
+</script>
+</body>
+</html>

@@ -86,6 +86,7 @@ const tickRealtime = (state: CombatSnapshot, rng: Rng): CombatEvent[] => {
         sourceId: tick.sourceId,
         targetId: tick.targetId,
         amount: tick.amount,
+        critical: false,
       })
     }
     if (wasAlive && !unit.alive && unit.side === 'enemy') events.push(emitDefeat(state, unit, rng))
@@ -136,7 +137,8 @@ const executeAction = (state: CombatSnapshot, actor: CombatUnit, rng: Rng): Comb
 
     if (rng.nextFloat() > hitChance(actor.accuracy - target.evade)) continue
     const route = martial?.damageRoute === 'internal' || (!martial && baseRoute(actor) === 'internal') ? 'internal' : 'external'
-    const critical = rng.nextFloat() < actor.criticalChance ? actor.criticalMultiplier : 1
+    const isCritical = rng.nextFloat() < actor.criticalChance
+    const critical = isCritical ? actor.criticalMultiplier : 1
     const amount = calculateDamage({
       attack: route === 'external' ? actor.externalAttack : actor.internalAttack,
       defense: route === 'external' ? target.externalDefense : target.internalDefense,
@@ -149,7 +151,7 @@ const executeAction = (state: CombatSnapshot, actor: CombatUnit, rng: Rng): Comb
       final: 0,
     })
     target.hp = Math.max(0, target.hp - amount)
-    events.push({ type: 'damage', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, amount })
+    events.push({ type: 'damage', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, amount, critical: isCritical })
     if (target.hp === 0 && target.alive) {
       target.alive = false
       if (target.side === 'enemy') events.push(emitDefeat(state, target, rng))

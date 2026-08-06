@@ -34,7 +34,15 @@ import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { renderFactionsPage, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
 import { renderHeroesPage, type HeroesEquipmentView, type HeroesHeroView, type HeroesPageViewModel } from './ui/heroes-page'
-import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
+import {
+  renderIdlePage,
+  type IdleCombatEffectKind,
+  type IdleCombatEffectView,
+  type IdleCombatLogKind,
+  type IdleCombatLogView,
+  type IdleCombatUnitView,
+  type IdlePageViewModel,
+} from './ui/idle-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
 import { renderStageList, renderWorldOverview, type StageListViewModel, type WorldOverviewViewModel } from './ui/jianghu-page'
 import { createDomPatcher } from './ui/dom-patch'
@@ -84,7 +92,18 @@ let selectedFactionMartialId: string | null = null
 let factionRosterOpen = false
 let factionRosterQuery = ''
 let combatSpeed: 1 | 2 | 4 = 1
-let combatLogs: string[] = []
+let combatLogs: IdleCombatLogView[] = []
+type ActiveCombatEffect = IdleCombatEffectView & { expiresAt: number }
+type CombatRunPresentation = {
+  startedAt: number
+  currencyStart: number
+  equipmentStart: number
+  kills: number
+}
+let combatEffects: ActiveCombatEffect[] = []
+let combatRunPresentation: CombatRunPresentation | null = null
+let nextCombatPresentationId = 1
+const combatUnitCache = new Map<string, { name: string; side: 'party' | 'enemy' }>()
 let hasSave = false
 let startPlayerName = ''
 let startError: string | null = null
@@ -109,6 +128,114 @@ let factionMotionTimer: number | null = null
 const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item, .pack-row'
 const EQUIPMENT_TOOLTIP_GAP = 10
 const EQUIPMENT_TOOLTIP_VIEWPORT_PADDING = 12
+
+const combatEffectDuration: Record<IdleCombatEffectKind, number> = {
+  'lunge-party': 420,
+  'lunge-enemy': 420,
+  'hit-shake': 380,
+  'skill-aura': 760,
+  'heal-aura': 760,
+  damage: 1050,
+  critical: 1050,
+  healing: 1050,
+  'skill-name': 1050,
+  slash: 420,
+  'wave-banner': 1800,
+}
+
+const totalWorldCurrency = (): number => Object.values(session.state.worldCurrency)
+  .reduce((total, value) => total + value, 0)
+
+const cacheCombatUnits = (): void => {
+  const combat = session.combat?.state
+  if (!combat) return
+  for (const unit of [...combat.party, ...combat.summons, ...combat.enemies]) {
+    combatUnitCache.set(unit.id, { name: unit.name, side: unit.side })
+  }
+}
+
+const addCombatLog = (kind: IdleCombatLogKind, mark: string, text: string): void => {
+  combatLogs.push({ id: nextCombatPresentationId++, kind, mark, text })
+  combatLogs = combatLogs.slice(-60)
+}
+
+const addCombatEffect = (
+  kind: IdleCombatEffectKind,
+  now: number,
+  unitId?: string,
+  text?: string,
+): void => {
+  combatEffects.push({
+    id: nextCombatPresentationId++,
+    kind,
+    unitId,
+    text,
+    expiresAt: now + combatEffectDuration[kind],
+  })
+  combatEffects = combatEffects.slice(-100)
+}
+
+const beginCombatPresentation = (): void => {
+  const now = performance.now()
+  combatLogs = []
+  combatEffects = []
+  combatUnitCache.clear()
+  combatRunPresentation = {
+    startedAt: now,
+    currencyStart: totalWorldCurrency(),
+    equipmentStart: backpackEquipment(session.state).length,
+    kills: 0,
+  }
+  cacheCombatUnits()
+  addCombatEffect('wave-banner', now, undefined, '第 1 波')
+  addCombatLog('system', '战', '战斗开始，铜钱与随机装备将在击败敌人后即时入账。')
+}
+
+const activeCombatEffects = (now: number): IdleCombatEffectView[] => {
+  combatEffects = combatEffects.filter((effect) => effect.expiresAt > now)
+  return combatEffects.map(({ expiresAt: _expiresAt, ...effect }) => effect)
+}
+
+const combatUnitName = (unitId: string): string => combatUnitCache.get(unitId)?.name ?? '无名侠客'
+
+const presentCombatEvents = (events: CombatEvent[], now: number): void => {
+  for (const event of events) {
+    if (event.type === 'skill-used') {
+      const martial = martialByIdV10(event.skillId)
+      const actor = combatUnitCache.get(event.sourceId)
+      if (actor && martial?.damageRoute !== 'healing') {
+        addCombatEffect(actor.side === 'party' ? 'lunge-party' : 'lunge-enemy', now, event.sourceId)
+      }
+      if (martial) {
+        addCombatEffect('skill-aura', now, event.sourceId)
+        addCombatEffect('skill-name', now, event.sourceId, martial.name)
+        addCombatLog('skill', '绝', `${combatUnitName(event.sourceId)} 使出「${martial.name}」！`)
+      }
+    } else if (event.type === 'damage') {
+      addCombatEffect('hit-shake', now, event.targetId)
+      addCombatEffect('slash', now, event.targetId)
+      addCombatEffect(event.critical ? 'critical' : 'damage', now, event.targetId, String(event.amount))
+    } else if (event.type === 'healing') {
+      addCombatEffect('heal-aura', now, event.targetId)
+      addCombatEffect('healing', now, event.targetId, String(event.amount))
+      addCombatLog('heal', '愈', `${combatUnitName(event.sourceId)} 为 ${combatUnitName(event.targetId)} 恢复 ${event.amount} 气血。`)
+    } else if (event.type === 'enemy-defeated') {
+      if (combatRunPresentation) combatRunPresentation.kills += 1
+      const rank = event.rank === 'boss' ? '首领' : event.rank === 'elite' ? '精英' : '敌人'
+      addCombatLog('kill', '刃', `击败${rank}「${combatUnitName(event.enemyId)}」，收益已即时入账。`)
+    } else if (event.type === 'wave-started') {
+      addCombatEffect('wave-banner', now, undefined, event.wave === 10 ? '帅旗至 · 第 10 波' : `第 ${event.wave} 波`)
+      addCombatLog('wave', '波', event.wave === 10 ? '敌首亲率众至，第 10 波！' : `敌势再起，进入第 ${event.wave} 波。`)
+    } else if (event.type === 'stage-cleared') {
+      addCombatLog('wave', '破', '本关十波尽破。')
+    } else if (event.type === 'party-defeated') {
+      addCombatLog('defeat', '退', '队伍败退，按当前模式重整旗鼓。')
+    } else if (event.type === 'skill-skipped') {
+      const martialName = martialByIdV10(event.skillId)?.name ?? '当前招式'
+      addCombatLog('system', '止', `${combatUnitName(event.sourceId)} 的「${martialName}」未能施展：${event.reason}。`)
+    }
+  }
+}
 
 const hideEquipmentTooltip = (): void => {
   const tooltip = openEquipmentTooltip
@@ -236,6 +363,9 @@ const enterPlaying = (nextSession: GameSession): void => {
   factionRosterQuery = ''
   combatSpeed = 1
   combatLogs = []
+  combatEffects = []
+  combatRunPresentation = null
+  combatUnitCache.clear()
   showResetConfirmation = false
   overwriteSaveSnapshot = null
   const now = performance.now()
@@ -288,26 +418,37 @@ const commitAction = (result: ActionResult, successMessage?: string): void => {
   if (result.ok) saveSession()
 }
 
-const unitView = (unit: CombatUnit): IdleCombatUnitView => ({
-  id: unit.id,
-  name: unit.name,
-  rank: unit.rank,
-  row: unit.row,
-  position: unit.position,
-  hp: unit.hp,
-  maxHp: unit.maxHp,
-  energy: unit.energy,
-  maxEnergy: unit.maxEnergy,
-  gauge: unit.gauge,
-  cooldownMs: Math.max(0, ...Object.values(unit.cooldowns), 0),
-  alive: unit.alive,
-})
+const unitView = (unit: CombatUnit): IdleCombatUnitView => {
+  const martial = unit.skillIds
+    .map((skillId) => skillId ? martialByIdV10(skillId) : undefined)
+    .find((candidate) => candidate !== undefined)
+  return {
+    id: unit.id,
+    name: unit.name,
+    rank: unit.rank,
+    careerId: unit.careerId,
+    row: unit.row,
+    position: unit.position,
+    hp: unit.hp,
+    maxHp: unit.maxHp,
+    energy: unit.energy,
+    maxEnergy: unit.maxEnergy,
+    gauge: unit.gauge,
+    cooldownMs: Math.max(0, ...Object.values(unit.cooldowns), 0),
+    alive: unit.alive,
+    skillName: martial?.name ?? (unit.side === 'party' ? '蓄势待发' : '伺机出手'),
+  }
+}
 
 const idleViewModel = (): IdlePageViewModel => {
   const combat = session.combat?.state
   if (!combat) throw new Error('战斗页面缺少进行中的战斗')
+  if (!combatRunPresentation) beginCombatPresentation()
   const world = WORLDS.find((item) => item.id === combat.worldId) ?? WORLDS[0]
+  const now = performance.now()
+  const stats = combatRunPresentation!
   return {
+    worldId: world.id,
     worldName: world.name,
     selectedStage: combat.stage,
     inventoryCount: backpackEquipment(session.state).length,
@@ -319,7 +460,14 @@ const idleViewModel = (): IdlePageViewModel => {
       party: combat.party.map(unitView),
       enemies: combat.enemies.map(unitView),
     },
+    stats: {
+      copper: Math.max(0, totalWorldCurrency() - stats.currencyStart),
+      equipment: Math.max(0, backpackEquipment(session.state).length - stats.equipmentStart),
+      kills: stats.kills,
+      elapsedMs: Math.max(0, now - stats.startedAt),
+    },
     logs: combatLogs,
+    effects: activeCombatEffects(now),
   }
 }
 
@@ -947,21 +1095,11 @@ const createAndEnter = (playerName: string, expectedSnapshot: string | null): vo
   render()
 }
 
-const logEvents = (events: CombatEvent[]): void => {
-  for (const event of events) {
-    if (event.type === 'enemy-defeated') combatLogs.push(`击败${event.rank === 'boss' ? ' Boss' : event.rank === 'elite' ? '精英' : '敌人'}，收益即时入账`)
-    if (event.type === 'wave-started') combatLogs.push(`敌势再起，进入第 ${event.wave} 波`)
-    if (event.type === 'stage-cleared') combatLogs.push('本关十波尽破')
-    if (event.type === 'party-defeated') combatLogs.push('队伍败退，按规则回到驻守')
-    if (event.type === 'skill-skipped') combatLogs.push(`${event.skillId}跳过：${event.reason}`)
-  }
-  combatLogs = combatLogs.slice(-40)
-}
-
 const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => {
   const result = session.startStage({ worldId: selectedWorldId, stage: selectedStage, mode, seed })
   notify(result.message, !result.ok)
   if (result.ok) {
+    beginCombatPresentation()
     jianghuView = 'combat'
     jianghuSection = 'stages'
   }
@@ -1521,14 +1659,18 @@ app.addEventListener('click', (event) => {
     factionRosterQuery = ''
   }
   else if (action === 'set-mode-guard' || action === 'set-mode-roam') {
-    const result = session.setCombatMode(action === 'set-mode-guard' ? 'guard' : 'roam')
+    const mode = action === 'set-mode-guard' ? 'guard' : 'roam'
+    const result = session.setCombatMode(mode)
     notify(result.message, !result.ok)
+    if (result.ok) addCombatLog('system', mode === 'guard' ? '守' : '闯', mode === 'guard' ? '转为驻守：原地迎敌，败退自动重整。' : '转为闯荡：破阵后自动深入。')
   } else if (action === 'stop-combat') {
     session.stopCombat()
-    combatLogs.push('主动停止战斗，临时战斗状态已清除')
     notify('已停止战斗')
     jianghuView = 'world'
     jianghuSection = 'stages'
+    combatEffects = []
+    combatRunPresentation = null
+    combatUnitCache.clear()
   } else if (action === 'resume-combat' && session.combat) {
     activeTab = 'idle'
     selectedWorldId = session.combat.state.worldId
@@ -1540,7 +1682,10 @@ app.addEventListener('click', (event) => {
     jianghuSection = 'stages'
   } else if (action?.startsWith('speed-')) {
     const speed = Number(action.slice(-1))
-    if (speed === 1 || speed === 2 || speed === 4) combatSpeed = speed
+    if (speed === 1 || speed === 2 || speed === 4) {
+      combatSpeed = speed
+      addCombatLog('system', '速', `战斗节奏调至 ${speed}×。`)
+    }
   } else performAction(button)
   render()
 })
@@ -1577,7 +1722,10 @@ const runGameLoop = (): void => {
   if (runtimePulse.tickCount === 0 && combatTickCount === 0) return
   try {
     if (combatTickCount > 0) {
-      logEvents(session.advanceRealtimeTicks(combatTickCount))
+      cacheCombatUnits()
+      const events = session.advanceRealtimeTicks(combatTickCount)
+      cacheCombatUnits()
+      presentCombatEvents(events, now)
       trackedCombat = session.combat
     }
     session.advanceRuntime(runtimePulse.elapsedMs)
@@ -1711,8 +1859,10 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   },
   advanceCombat: (ticks) => {
     ensurePlaying()
+    cacheCombatUnits()
     const events = session.advanceTicks(ticks)
-    logEvents(events)
+    cacheCombatUnits()
+    presentCombatEvents(events, performance.now())
     render()
     return events
   },
@@ -1760,7 +1910,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     ensurePlaying()
     if (!session.combat) throw new Error('战斗尚未开始')
     session.combat.state.result = result
-    logEvents(session.advanceTicks(0))
+    presentCombatEvents(session.advanceTicks(0), performance.now())
     render()
   },
   prepareQuestBoard: (factionId, seed) => {

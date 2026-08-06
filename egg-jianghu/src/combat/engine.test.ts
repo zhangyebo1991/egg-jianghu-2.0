@@ -105,4 +105,18 @@ describe('十波战斗', () => {
 
     expect(isWaveCleared(wave.enemies)).toBe(false)
   })
+
+  it('伤害事件携带准确的会心标记供战斗表现使用', () => {
+    const engine = createCombatEngine({
+      worldId: 'world_01',
+      stage: 1,
+      mode: 'guard',
+      seed: 17,
+      party: [partyUnit({ criticalChance: 1 })],
+    })
+
+    const damage = engine.tick(20).find((event) => event.type === 'damage' && event.sourceId === 'hero_strong')
+
+    expect(damage).toMatchObject({ type: 'damage', critical: true })
+  })
 })

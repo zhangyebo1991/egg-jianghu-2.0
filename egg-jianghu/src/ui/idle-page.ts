@@ -1,9 +1,13 @@
+import { careerById } from '../content/careers'
 import { escapeHtml, percent } from './html'
+import { enemyPortraitAsset, heroPortraitAsset } from './portrait-assets'
+import { worldSceneAsset } from './world-scene-assets'
 
 export interface IdleCombatUnitView {
   id: string
   name: string
   rank: 'normal' | 'elite' | 'boss'
+  careerId?: string
   row: 'front' | 'back'
   position: 0 | 1 | 2
   hp: number
@@ -13,6 +17,7 @@ export interface IdleCombatUnitView {
   gauge: number
   cooldownMs: number
   alive: boolean
+  skillName: string
 }
 
 export interface IdleCombatView {
@@ -22,91 +27,239 @@ export interface IdleCombatView {
   enemies: IdleCombatUnitView[]
 }
 
+export type IdleCombatLogKind = 'wave' | 'skill' | 'heal' | 'kill' | 'loot' | 'defeat' | 'system'
+
+export interface IdleCombatLogView {
+  id: number
+  kind: IdleCombatLogKind
+  mark: string
+  text: string
+}
+
+export type IdleCombatEffectKind =
+  | 'lunge-party'
+  | 'lunge-enemy'
+  | 'hit-shake'
+  | 'skill-aura'
+  | 'heal-aura'
+  | 'damage'
+  | 'critical'
+  | 'healing'
+  | 'skill-name'
+  | 'slash'
+  | 'wave-banner'
+
+export interface IdleCombatEffectView {
+  id: number
+  kind: IdleCombatEffectKind
+  unitId?: string
+  text?: string
+}
+
+export interface IdleCombatStatsView {
+  copper: number
+  equipment: number
+  kills: number
+  elapsedMs: number
+}
+
 export interface IdlePageViewModel {
+  worldId: string
   worldName: string
   selectedStage: number
   inventoryCount: number
   inventoryCapacity: number
   combatSpeed: 1 | 2 | 4
   combat: IdleCombatView
-  logs: string[]
+  stats: IdleCombatStatsView
+  logs: IdleCombatLogView[]
+  effects: IdleCombatEffectView[]
 }
 
-const rankName = { normal: '小怪', elite: '精英', boss: 'Boss' } as const
+const rankLabel = { normal: '', elite: '精英', boss: 'BOSS' } as const
+const motionKinds = new Set<IdleCombatEffectKind>(['lunge-party', 'lunge-enemy', 'hit-shake'])
 
-const renderGauge = (label: string, value: number, maximum: number, className: string): string => `
-  <div class="meter ${className}">
-    <span>${label}</span><i><b style="width:${percent(value, maximum)}%"></b></i><em>${Math.floor(value)} / ${Math.floor(maximum)}</em>
+const formatDuration = (elapsedMs: number): string => {
+  const seconds = Math.max(0, Math.floor(elapsedMs / 1000))
+  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+const renderGauge = (
+  label: string,
+  value: number,
+  maximum: number,
+  className: string,
+  stateClass = '',
+): string => `
+  <div class="meter ${className}${stateClass ? ` ${stateClass}` : ''}">
+    <span class="meter-label">${label}</span>
+    <span class="meter-track"><span class="meter-fill" style="width:${percent(value, maximum)}%"></span></span>
+    <span class="meter-num">${Math.floor(value)} / ${Math.floor(maximum)}</span>
   </div>`
 
-const renderUnit = (unit: IdleCombatUnitView, side: 'party' | 'enemy'): string => `
-  <article class="combat-unit ${side} ${unit.alive ? '' : 'fallen'}" data-unit-id="${escapeHtml(unit.id)}" data-rank="${unit.rank}">
-    <header><strong>${escapeHtml(unit.name)}</strong><span>${unit.row === 'front' ? '前排' : '后排'}${side === 'enemy' ? ` · ${rankName[unit.rank]}` : ''}</span></header>
-    ${renderGauge('气血', unit.hp, unit.maxHp, 'hp-meter')}
-    ${renderGauge('气机', unit.gauge, 1000, 'gauge-meter')}
-    ${side === 'party' ? renderGauge('真气', unit.energy, unit.maxEnergy, 'energy-meter') : ''}
-    <footer><span>回气</span><strong>${(unit.cooldownMs / 1000).toFixed(1)}s</strong></footer>
+const renderUnitPortrait = (unit: IdleCombatUnitView, side: 'party' | 'enemy'): string => {
+  const category = careerById(unit.careerId ?? '')?.category ?? '剑'
+  const portrait = side === 'party'
+    ? heroPortraitAsset(unit.id, category)
+    : enemyPortraitAsset(unit.rank, unit.id)
+  const fallback = side === 'party' ? category.slice(0, 1) : unit.name.slice(0, 1)
+  return `<span class="unit-portrait">
+    <span class="portrait-char" aria-hidden="true">${escapeHtml(fallback)}</span>
+    <img src="${escapeHtml(portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">
+    <span class="portrait-ring" aria-hidden="true"></span>
+  </span>`
+}
+
+const renderEffect = (effect: IdleCombatEffectView): string => {
+  const testId = `combat-effect-${effect.id}`
+  if (effect.kind === 'slash') return `<span class="slash-arc" data-testid="${testId}" aria-hidden="true"></span>`
+  if (effect.kind === 'skill-aura' || effect.kind === 'heal-aura') {
+    return `<span class="unit-aura ${effect.kind}" data-testid="${testId}" aria-hidden="true"></span>`
+  }
+  const className = effect.kind === 'critical'
+    ? 'dmg-float crit'
+    : effect.kind === 'healing'
+      ? 'dmg-float heal'
+      : effect.kind === 'skill-name'
+        ? 'dmg-float skill-name-float'
+        : 'dmg-float'
+  return `<span class="${className}" data-testid="${testId}" aria-hidden="true">${escapeHtml(effect.text ?? '')}</span>`
+}
+
+const renderUnit = (
+  unit: IdleCombatUnitView,
+  side: 'party' | 'enemy',
+  effects: IdleCombatEffectView[],
+): string => {
+  const unitEffects = effects.filter((effect) => effect.unitId === unit.id)
+  const motionClasses = unitEffects
+    .filter((effect) => motionKinds.has(effect.kind))
+    .map((effect) => effect.kind)
+    .join(' ')
+  const hpPercent = unit.maxHp > 0 ? unit.hp / unit.maxHp * 100 : 0
+  const rank = rankLabel[unit.rank]
+  return `<article class="combat-unit ${side}${unit.alive ? '' : ' fallen'}${motionClasses ? ` ${motionClasses}` : ''}"
+      data-unit-id="${escapeHtml(unit.id)}" data-rank="${unit.rank}" data-testid="combat-unit-${escapeHtml(unit.id)}">
+    ${renderUnitPortrait(unit, side)}
+    <span class="unit-body">
+      <span class="unit-head">
+        <strong class="unit-name">${escapeHtml(unit.name)}</strong>
+        ${rank ? `<span class="unit-tag rank-${unit.rank}">${rank}</span>` : ''}
+        <span class="unit-tag row-tag">${unit.row === 'front' ? '前排' : '后排'}</span>
+      </span>
+      ${renderGauge('气血', unit.hp, unit.maxHp, 'hp-meter', unit.alive && hpPercent <= 30 ? 'low' : '')}
+      ${renderGauge('气机', unit.gauge, 1000, 'gauge-meter', unit.gauge >= 1000 ? 'full' : '')}
+      ${side === 'party' ? renderGauge('真气', unit.energy, unit.maxEnergy, 'energy-meter', unit.energy >= unit.maxEnergy ? 'full' : '') : ''}
+      <span class="unit-foot"><span class="foot-label">回气</span><span class="cool-num">${(unit.cooldownMs / 1000).toFixed(1)}s</span><span class="skill-name">${escapeHtml(unit.skillName)}</span></span>
+    </span>
+    ${unitEffects.filter((effect) => !motionKinds.has(effect.kind)).map(renderEffect).join('')}
   </article>`
+}
 
-const formationSlots = (combat: IdleCombatView | null): string => (['front', 'back'] as const).flatMap((row) =>
-  ([0, 1, 2] as const).map((position) => {
-    const unit = combat?.party.find((member) => member.row === row && member.position === position)
-    return `<div class="formation-slot ${unit ? 'filled' : 'empty'}" data-formation-slot="${row}-${position}" data-row="${row}" data-position="${position}">
-      ${unit ? renderUnit(unit, 'party') : `<span>${row === 'front' ? '前排' : '后排'} ${position + 1}</span>`}
+const renderRow = (
+  units: IdleCombatUnitView[],
+  side: 'party' | 'enemy',
+  row: 'front' | 'back',
+  effects: IdleCombatEffectView[],
+): string => `<div class="unit-row ${side}-${row}" data-combat-row="${side}-${row}">
+  ${([0, 1, 2] as const).map((position) => {
+    const unit = units.find((candidate) => candidate.row === row && candidate.position === position)
+    const slotAttribute = side === 'enemy' ? 'data-enemy-slot' : 'data-formation-slot'
+    return `<div class="unit-slot ${unit ? 'filled' : 'unit-slot-empty'}" ${slotAttribute}="${row}-${position}" data-row="${row}" data-position="${position}">
+      ${unit ? renderUnit(unit, side, effects) : `<span>${row === 'front' ? '前排' : '后排'} · ${position + 1}</span>`}
     </div>`
-  }),
-).join('')
+  }).join('')}
+</div>`
 
-const enemySlots = (combat: IdleCombatView): string => {
-  if (!combat.enemies.length) return '<div class="battle-empty"><strong>山道暂静</strong><span>下一波敌人正在赶来</span></div>'
-  return (['back', 'front'] as const).flatMap((row) =>
-    ([0, 1, 2] as const).map((position) => {
-      const unit = combat.enemies.find((enemy) => enemy.row === row && enemy.position === position)
-      return `<div class="enemy-slot ${unit ? 'filled' : 'empty'}" data-enemy-slot="${row}-${position}" data-row="${row}" data-position="${position}">
-        ${unit ? renderUnit(unit, 'enemy') : `<span>${row === 'front' ? '前排' : '后排'} ${position + 1}</span>`}
-      </div>`
-    }),
-  ).join('')
+const renderWaveTrack = (wave: number): string => Array.from({ length: 10 }, (_, index) => {
+  const number = index + 1
+  const classes = [
+    'wave-bead',
+    number < wave ? 'cleared' : '',
+    number === wave ? 'current' : '',
+    number === 10 ? 'boss-bead' : '',
+  ].filter(Boolean).join(' ')
+  return `<span class="${classes}" aria-label="第 ${number} 波"></span>`
+}).join('')
+
+const renderCombatLog = (logs: IdleCombatLogView[]): string => {
+  if (!logs.length) return '<li class="log-loot"><span class="log-mark">获</span><span>敌人死亡时，铜钱与随机装备立即入账。</span></li>'
+  return logs.slice(-60).reverse().map((entry) => `<li class="log-${entry.kind}" data-testid="combat-log-${entry.id}">
+    <span class="log-mark">${escapeHtml(entry.mark)}</span><span>${escapeHtml(entry.text)}</span>
+  </li>`).join('')
 }
 
 export const renderIdlePage = (view: IdlePageViewModel): string => {
   const inventoryFull = view.inventoryCount >= view.inventoryCapacity
+  const scene = worldSceneAsset(view.worldId)
+  const enemyCount = view.combat.enemies.filter((enemy) => enemy.alive).length
+  const modeLabel = view.combat.mode === 'guard' ? '驻守中' : '闯荡中'
+  const waveHint = view.combat.wave === 10 ? '帅旗压阵' : view.combat.wave >= 7 ? '精英现身' : '敌势未尽'
+  const packPercent = percent(view.inventoryCount, view.inventoryCapacity)
+  const waveEffects = view.effects.filter((effect) => effect.kind === 'wave-banner')
   return `
-    <section class="idle-layout" data-testid="idle-page">
-      <section class="battle-theatre panel">
-        <header class="battle-heading">
-          <div><small>${escapeHtml(view.worldName)} · 第 ${view.selectedStage} 关</small><h1>第 ${view.combat.wave} / 10 波</h1></div>
-          ${inventoryFull ? '<strong class="capacity-warning" role="status">背包已满 · 新装备无法获得</strong>' : `<span class="capacity-safe">背包 ${view.inventoryCount} / ${view.inventoryCapacity}</span>`}
-        </header>
-        <div class="battlefield">
-          <section class="battle-side enemy-side" aria-label="敌方阵容">
-            <header class="battle-side-heading"><strong>敌方</strong><span>后排在上 · 前排临阵</span></header>
-            <div class="enemy-board" data-testid="enemy-board">${enemySlots(view.combat)}</div>
-          </section>
-          <div class="battle-divider" aria-hidden="true"><span>战</span></div>
-          <section class="battle-side party-side" aria-label="我方阵容">
-            <header class="battle-side-heading"><strong>我方</strong><span>前排临阵 · 后排在下</span></header>
-            <div class="formation-board" aria-label="六侠两排阵容">${formationSlots(view.combat)}</div>
-          </section>
+    <section class="idle-layout idle-page" data-testid="idle-page">
+      <div class="idle-ghost-char" aria-hidden="true">战</div>
+      <header class="battle-topbar">
+        <div class="stage-id">
+          <span class="stage-seal" aria-hidden="true">关</span>
+          <span class="stage-text"><small>${escapeHtml(view.worldName)} · 第 ${view.selectedStage} 关 · ${modeLabel}</small><h1>第 <em>${view.combat.wave}</em> / 10 波</h1></span>
         </div>
-        <footer class="battle-controls">
-          <div class="mode-controls">
-            <button type="button" class="primary${view.combat.mode === 'guard' ? ' active' : ''}" data-action="set-mode-guard" data-testid="mode-guard">驻守</button>
-            <button type="button" class="primary roam${view.combat.mode === 'roam' ? ' active' : ''}" data-action="set-mode-roam" data-testid="mode-roam">闯荡</button>
-            <button type="button" data-action="stop-combat" data-testid="stop-combat">停止战斗</button>
+        <div class="wave-track" aria-label="十波进度">
+          <span class="wave-label">波次</span><span class="wave-beads">${renderWaveTrack(view.combat.wave)}</span><span class="wave-label"><strong>${waveHint}</strong></span>
+        </div>
+        <div class="topbar-stats">
+          <div class="stat-chip${inventoryFull ? ' warn' : ''}" title="背包容量" ${inventoryFull ? 'role="status"' : ''}>
+            <span class="chip-mark" aria-hidden="true">囊</span><span class="chip-num">背包 <em>${view.inventoryCount}</em> / ${view.inventoryCapacity}</span>
           </div>
-          <div class="speed-controls" aria-label="战斗速度">
-            ${([1, 2, 4] as const).map((speed) => `<button type="button" data-action="speed-${speed}" class="${view.combatSpeed === speed ? 'active' : ''}">${speed}×</button>`).join('')}
-          </div>
-        </footer>
-      </section>
+        </div>
+        <div class="battle-controls">
+          <button type="button" class="ctl-btn${view.combat.mode === 'guard' ? ' active' : ''}" data-action="set-mode-guard" data-testid="mode-guard" title="驻守：原地迎敌，败退自动重整">驻守</button>
+          <button type="button" class="ctl-btn${view.combat.mode === 'roam' ? ' active' : ''}" data-action="set-mode-roam" data-testid="mode-roam" title="闯荡：破阵后自动深入下一关">闯荡</button>
+          <button type="button" class="ctl-btn gold" data-action="stop-combat" data-testid="stop-combat" title="停止战斗并返回关卡列表">停止</button>
+          <span class="ctl-sep" aria-hidden="true"></span>
+          <span class="speed-controls speed-group" aria-label="战斗速度">
+            ${([1, 2, 4] as const).map((speed) => `<button type="button" data-action="speed-${speed}" class="ctl-btn${view.combatSpeed === speed ? ' active' : ''}" aria-pressed="${view.combatSpeed === speed}">${speed}×</button>`).join('')}
+          </span>
+        </div>
+      </header>
 
-      <aside class="combat-rail panel">
-        <header><small>战斗札记</small><strong>即时结算</strong></header>
-        <div class="mechanic-legend"><span>气机</span><span>真气</span><span>回气</span></div>
-        <ol class="combat-log" data-testid="combat-log">
-          ${view.logs.length ? view.logs.slice(-12).reverse().map((entry) => `<li>${escapeHtml(entry)}</li>`).join('') : '<li>敌人死亡时，货币与随机装备立即入账。</li>'}
-        </ol>
-      </aside>
+      <div class="battle-stage">
+        <section class="battlefield${scene ? ' has-scene' : ''}" data-testid="battlefield" aria-label="挂机战场"${scene ? ` style="--battle-scene:url('${escapeHtml(scene)}')"` : ''}>
+          <section class="battle-half enemy" aria-label="敌方阵容">
+            <header class="half-heading enemy"><strong>敌方</strong><span>后排在上 · 前排临阵</span><span class="half-hint">余敌 ${enemyCount}</span></header>
+            ${renderRow(view.combat.enemies, 'enemy', 'back', view.effects)}
+            ${renderRow(view.combat.enemies, 'enemy', 'front', view.effects)}
+          </section>
+          <div class="battle-divider" aria-hidden="true"><span class="divider-line"></span><span class="divider-status">第 <em>${view.combat.wave}</em> 波 · 余敌 <em>${enemyCount}</em></span><span class="divider-seal">战</span><span class="divider-status">斩敌 <em>${view.stats.kills}</em></span><span class="divider-line"></span></div>
+          <section class="battle-half party" aria-label="我方阵容">
+            <header class="half-heading party"><strong>我方</strong><span>前排临阵 · 后排在下</span><span class="half-hint">六侠两排</span></header>
+            ${renderRow(view.combat.party, 'party', 'front', view.effects)}
+            ${renderRow(view.combat.party, 'party', 'back', view.effects)}
+          </section>
+          ${waveEffects.map((effect) => `<div class="wave-banner" data-testid="combat-effect-${effect.id}" aria-hidden="true">${escapeHtml(effect.text ?? '')}</div>`).join('')}
+        </section>
+
+        <aside class="combat-rail" aria-label="本场收益与战斗札记">
+          <section class="rail-section loot-section">
+            <header class="rail-title"><strong>本场收益</strong><small>即时入账</small><span class="rail-extra">${formatDuration(view.stats.elapsedMs)}</span></header>
+            <div class="loot-grid">
+              <div class="loot-cell"><span class="loot-num">${view.stats.copper.toLocaleString('zh-CN')}</span><span class="loot-label">铜钱</span></div>
+              <div class="loot-cell"><span class="loot-num jade">${view.stats.equipment}</span><span class="loot-label">装备</span></div>
+              <div class="loot-cell"><span class="loot-num paper">${view.stats.kills}</span><span class="loot-label">斩敌</span></div>
+            </div>
+            <div class="pack-meter${inventoryFull ? ' full' : ''}"><span class="pack-label">背包</span><span class="pack-track"><span class="pack-fill" style="width:${packPercent}%"></span></span><span class="pack-num">${view.inventoryCount} / ${view.inventoryCapacity}</span></div>
+          </section>
+          <section class="log-wrap">
+            <header class="rail-section rail-log-heading"><span class="rail-title"><strong>战斗札记</strong><small>新事在上</small></span></header>
+            <ol class="combat-log" data-testid="combat-log">${renderCombatLog(view.logs)}</ol>
+          </section>
+          <footer class="rail-section mechanic-legend">
+            <span class="legend-item"><i class="legend-dot d-gauge"></i>气机 · 蓄满出手</span>
+            <span class="legend-item"><i class="legend-dot d-energy"></i>真气 · 满则绝技</span>
+            <span class="legend-item"><i class="legend-dot d-cool"></i>回气 · 冷却</span>
+          </footer>
+        </aside>
+      </div>
     </section>`
 }

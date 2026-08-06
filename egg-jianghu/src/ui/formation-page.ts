@@ -1,6 +1,7 @@
 import type { CombatStats } from '../combat/stats'
 import type { HeroAptitudes } from '../content/heroes'
 import { escapeHtml, formatNumber } from './html'
+import { heroPortraitAsset } from './portrait-assets'
 
 export type FormationFilter = 'all' | '剑' | '刀' | '拳' | '暗' | '医' | '内家'
 
@@ -106,6 +107,11 @@ const placedHeroes = (view: FormationPageViewModel): FormationHeroView[] =>
 const renderGradeSeal = (hero: FormationHeroView, compact = false): string =>
   `<span class="formation-grade-seal${compact ? ' compact' : ''} ${gradeClass(hero.grade)}" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span>`
 
+const renderPortrait = (hero: FormationHeroView, className: string): string => {
+  const portrait = heroPortraitAsset(hero.id, hero.category)
+  return `<img class="${className}" src="${escapeHtml(portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">`
+}
+
 const renderRoster = (view: FormationPageViewModel): string => {
   const heroes = view.filter === 'all' ? view.heroes : view.heroes.filter((hero) => hero.category === view.filter)
   return `<aside class="formation-roster panel" data-testid="formation-roster" aria-label="点将名册">
@@ -119,7 +125,7 @@ const renderRoster = (view: FormationPageViewModel): string => {
       </div>
       <div class="formation-roster-list">
         ${heroes.map((hero) => `<button type="button" draggable="true" data-action="formation-select" data-hero-id="${escapeHtml(hero.id)}" data-testid="formation-hero-${escapeHtml(hero.id)}" class="formation-roster-row${hero.inFormation ? ' in-formation' : ''}${hero.id === view.selectedHeroId ? ' active' : ''}" aria-pressed="${hero.id === view.selectedHeroId}">
-          ${renderGradeSeal(hero, true)}
+          ${renderPortrait(hero, 'formation-roster-portrait')}${renderGradeSeal(hero, true)}
           <span class="formation-roster-copy"><strong>${escapeHtml(hero.name)}</strong><small>${escapeHtml(categoryLabel(hero.category))} · ${escapeHtml(hero.careerName)} · ${escapeHtml(hero.source)}</small></span>
           <span class="formation-roster-level">Lv.${hero.level}</span>
           ${hero.inFormation ? '<em class="formation-roster-stamp">在阵</em>' : ''}
@@ -137,6 +143,7 @@ const renderFormationSlot = (view: FormationPageViewModel, row: 'front' | 'back'
   return `<div class="formation-slot${hero ? ' filled' : ''}${hero?.id === view.selectedHeroId ? ' selected' : ''}" data-row="${row}" data-position="${position}" data-action="formation-slot-tap" ${hero ? `data-hero-id="${escapeHtml(hero.id)}" draggable="true"` : ''} data-testid="formation-slot-${row}-${position}" aria-label="${label}">
     ${hero ? `<div class="formation-token" draggable="true" data-hero-id="${escapeHtml(hero.id)}">
       <span class="formation-token-hole" aria-hidden="true"></span>
+      ${renderPortrait(hero, 'formation-token-portrait')}
       <span class="formation-token-cat"><i>${escapeHtml(categoryLabel(hero.category))}</i></span>
       <span class="formation-token-name">${escapeHtml(hero.name)}</span>
       <span class="formation-token-level">Lv.${hero.level}</span>
@@ -215,7 +222,7 @@ const renderHeroCard = (view: FormationPageViewModel): string => {
   const slotText = hero.slot ? `${rowNames[hero.slot.row]}·${positionNames[hero.slot.position]}位` : '未在阵中'
   return `<aside class="formation-hero-card panel" data-testid="formation-hero-card">
     <span class="formation-card-corner" aria-hidden="true"></span>
-    <div class="formation-hero-head">${renderGradeSeal(hero)}<div><small>${escapeHtml(hero.source)} · ${escapeHtml(hero.category)}门</small><h2>${escapeHtml(hero.name)}</h2><p>侠客 · 行走江湖</p></div><span class="formation-level-badge"><b>${hero.level}</b><i>等级</i></span></div>
+    <div class="formation-hero-head">${renderPortrait(hero, 'formation-card-portrait')}${renderGradeSeal(hero)}<div><small>${escapeHtml(hero.source)} · ${escapeHtml(hero.category)}门</small><h2>${escapeHtml(hero.name)}</h2><p>侠客 · 行走江湖</p></div><span class="formation-level-badge"><b>${hero.level}</b><i>等级</i></span></div>
     <div class="formation-hero-fit"><b>宜</b><span>${escapeHtml(fitText[hero.category] ?? '身随阵势，择位而行。')}</span></div>
     <div class="formation-card-title">五维禀赋</div>
     ${renderRadar(hero)}

@@ -1,4 +1,5 @@
 import { escapeHtml, formatNumber } from './html'
+import { worldSceneAsset } from './world-scene-assets'
 
 export interface JianghuWorldCardView {
   id: string
@@ -25,6 +26,11 @@ export interface StageListViewModel {
 
 const stars = (difficulty: number): string => '★'.repeat(Math.max(1, Math.min(5, difficulty)))
 
+const renderWorldScene = (worldId: string): string => {
+  const scene = worldSceneAsset(worldId)
+  return scene ? `<img class="world-card-scene" src="${escapeHtml(scene)}" alt="" aria-hidden="true" draggable="false">` : ''
+}
+
 export const renderWorldOverview = (view: WorldOverviewViewModel): string => `
   <section class="world-overview" data-testid="world-overview">
     <header class="page-heading">
@@ -45,6 +51,7 @@ export const renderWorldOverview = (view: WorldOverviewViewModel): string => `
           <button type="button" class="world-card${world.unlocked ? '' : ' locked'}"
             data-action="enter-world" data-world-id="${escapeHtml(world.id)}"
             data-testid="world-${escapeHtml(world.id)}" ${world.unlocked ? '' : 'disabled'}>
+            ${renderWorldScene(world.id)}
             <span class="world-index">${String(world.index).padStart(2, '0')}</span>
             <strong>${escapeHtml(world.name)}</strong>
             <small>${world.unlocked

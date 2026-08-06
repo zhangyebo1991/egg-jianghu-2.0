@@ -87,9 +87,9 @@ test('战场纵向排列且敌我前排在中线两侧相邻', async ({ page }) 
   const layout = await page.evaluate(() => {
     const rect = (selector: string) => document.querySelector<HTMLElement>(selector)!.getBoundingClientRect()
     return {
-      enemy: rect('.enemy-side'),
+      enemy: rect('.battle-half.enemy'),
       divider: rect('.battle-divider'),
-      party: rect('.party-side'),
+      party: rect('.battle-half.party'),
       enemyBack: rect('[data-enemy-slot="back-0"]'),
       enemyFront: rect('[data-enemy-slot="front-0"]'),
       partyFront: rect('[data-formation-slot="front-0"]'),
@@ -449,9 +449,10 @@ test('每个小关第十波显示 Boss 精英和小怪', async ({ page }) => {
     window.__EGG_JIANGHU__.showWave(10, 19)
   })
   await expect(page.getByRole('heading', { name: '第 10 / 10 波' })).toBeVisible()
-  await expect(page.getByTestId('enemy-board').locator('[data-rank="boss"]')).toHaveCount(1)
-  await expect(page.getByTestId('enemy-board').locator('[data-rank="elite"]')).toHaveCount(1)
-  await expect(page.getByTestId('enemy-board').locator('[data-rank="normal"]')).toHaveCount(1)
+  const enemyBoard = page.getByRole('region', { name: '敌方阵容' })
+  await expect(enemyBoard.locator('[data-rank="boss"]')).toHaveCount(1)
+  await expect(enemyBoard.locator('[data-rank="elite"]')).toHaveCount(1)
+  await expect(enemyBoard.locator('[data-rank="normal"]')).toHaveCount(1)
 })
 
 test('闯荡失败回退上一小关并切换驻守', async ({ page }) => {

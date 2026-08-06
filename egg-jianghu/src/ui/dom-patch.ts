@@ -61,6 +61,17 @@ const patchNode = (current: Node, next: Node): Node => {
 }
 
 function syncChildren(currentParent: PatchParent, nextParent: Element | DocumentFragment): void {
+  const nextChildren = [...nextParent.childNodes]
+  const nextKeys = new Set(nextChildren.flatMap((node) => {
+    const key = elementKey(node)
+    return key ? [key] : []
+  }))
+
+  for (const node of [...currentParent.childNodes]) {
+    const key = elementKey(node)
+    if (key && !nextKeys.has(key)) currentParent.removeChild(node)
+  }
+
   const existing = [...currentParent.childNodes]
   const used = new Set<Node>()
   const keyed = new Map(existing.flatMap((node) => {
@@ -68,7 +79,7 @@ function syncChildren(currentParent: PatchParent, nextParent: Element | Document
     return key ? [[key, node] as const] : []
   }))
 
-  ;[...nextParent.childNodes].forEach((nextChild, index) => {
+  ;nextChildren.forEach((nextChild, index) => {
     const key = elementKey(nextChild)
     const atIndex = currentParent.childNodes[index]
     let candidate: Node | undefined = key ? keyed.get(key) : undefined

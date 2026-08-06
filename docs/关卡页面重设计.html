@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>关卡 · 挂机战斗 — 蛋蛋江湖 2.0 高保真重设计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   关卡挂机战斗页重设计 · 蛋蛋江湖 2.0
+   设计语言：墨底宣纸 · 朱砂印 · 金漆匾 · 经脉行功
+   布局铁律：整页锁定 100vh，唯战报栏内部滚动，绝不滚屏
+   ============================================================ */
+:root {
+  --ink-950: #0c0e0b;
+  --ink-900: #11140f;
+  --ink-850: #171b14;
+  --ink-800: #1f241c;
+  --ink-700: #2a3026;
+  --paper: #e8e1d3;
+  --paper-dim: #b3ad9e;
+  --paper-mute: #7d7f72;
+  --xuan: #e9dec3;
+  --xuan-deep: #ddceaa;
+  --xuan-ink: #2b2519;
+  --cinnabar: #b5503c;
+  --cinnabar-bright: #cf6b53;
+  --cinnabar-deep: #8a3a2b;
+  --gold: #c9a35c;
+  --gold-bright: #e6c67f;
+  --gold-deep: #8f6f3a;
+  --jade: #7fa88d;
+  --jade-dim: #57705f;
+  --azure: #6f9fb8;
+  --line: #31382e;
+  --line-soft: #252a22;
+  --font-brush: "Ma Shan Zheng", "Noto Serif SC", serif;
+  --font-song: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-song);
+  color: var(--paper);
+  background:
+    radial-gradient(1100px 500px at 78% -10%, rgb(127 168 141 / 9%), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgb(181 80 60 / 6%), transparent 55%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+  font-synthesis: none;
+  overflow: hidden;               /* 单屏铁律 */
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+::selection { background: rgb(181 80 60 / 55%); color: #fff4e8; }
+
+/* 纸颗粒覆盖层 */
+.grain {
+  position: fixed; inset: -50%; z-index: 60; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.055; mix-blend-mode: overlay;
+}
+
+/* ============ 游戏外壳 · 侧边栏（与势力页同源） ============ */
+.app-shell { display: grid; grid-template-columns: 200px minmax(0, 1fr); height: 100vh; }
+
+.game-sidebar {
+  height: 100vh;
+  display: flex; flex-direction: column; gap: 22px;
+  padding: 24px 18px 18px;
+  border-right: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, rgb(23 27 20 / 72%), rgb(13 16 12 / 88%));
+}
+.brand-block { display: flex; align-items: center; gap: 12px; }
+.brand-seal {
+  width: 42px; height: 42px; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 23px; color: #f6e3d2;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  border: 1px solid #c96f58; border-radius: 6px;
+  box-shadow: inset 0 0 0 3px #411811, 0 4px 14px rgb(0 0 0 / 40%);
+  transform: rotate(-2deg);
+}
+.brand-block strong { display: block; font-size: 15px; letter-spacing: 0.1em; color: #efe4cf; white-space: nowrap; }
+.brand-block small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); white-space: nowrap; }
+
+.game-nav { display: grid; gap: 5px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 12px; border-radius: 6px; text-align: left;
+  color: var(--paper-dim); transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  position: relative;
+}
+.nav-item .nav-mark {
+  width: 28px; height: 28px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 15px;
+  border: 1px solid var(--line); border-radius: 5px; color: var(--paper-mute);
+  transition: all 0.25s var(--ease-out);
+}
+.nav-item strong { font-size: 14px; letter-spacing: 0.28em; font-weight: 500; }
+.nav-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.nav-item.active { color: #f3e9d5; background: rgb(233 222 195 / 5%); }
+.nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px;
+  background: var(--cinnabar); border-radius: 2px;
+}
+.nav-item.active .nav-mark { border-color: var(--cinnabar-deep); color: var(--cinnabar-bright); }
+
+.world-subnav { display: grid; gap: 3px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.world-subnav .world-back {
+  text-align: left; padding: 5px 12px; font-size: 11px; letter-spacing: 0.18em;
+  color: var(--paper-mute); transition: color 0.2s;
+}
+.world-subnav .world-back:hover { color: var(--gold-bright); }
+.world-subnav .ws-item {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 7px 12px; border-radius: 5px; text-align: left;
+  font-size: 13px; letter-spacing: 0.32em; color: var(--paper-dim);
+  transition: all 0.25s var(--ease-out);
+}
+.world-subnav .ws-item small { font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); font-style: normal; }
+.world-subnav .ws-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.world-subnav .ws-item.active { color: var(--gold-bright); background: rgb(201 163 92 / 8%); }
+.world-subnav .ws-item.active small { color: var(--gold); }
+
+.sidebar-landscape { margin-top: auto; height: 68px; position: relative; overflow: hidden; border-radius: 6px; flex: none; }
+.sidebar-landscape::before {
+  content: ""; position: absolute; inset: auto -12px 0 -12px; height: 52px;
+  background:
+    linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
+    linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
+    linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
+}
+.sidebar-landscape::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 20px;
+  background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
+}
+.sidebar-motto { font-size: 10px; letter-spacing: 0.5em; color: var(--paper-mute); text-align: center; }
+
+/* ============ 主区框架：行锁定，不外溢 ============ */
+.game-main {
+  min-width: 0; height: 100vh;
+  display: grid; grid-template-rows: auto minmax(0, 1fr);
+  padding: 18px 24px 20px;
+  position: relative;
+}
+
+/* 巨字书法背景 —— 氛围层 */
+.ghost-char {
+  position: absolute; right: 2%; top: 46%; transform: translateY(-50%);
+  font-family: var(--font-brush); font-size: min(34vh, 30vw); line-height: 1;
+  color: rgb(233 222 195 / 3.5%); pointer-events: none; user-select: none; z-index: 0;
+  writing-mode: vertical-rl;
+}
+
+/* ============ 顶部战况条 ============ */
+.battle-topbar {
+  position: relative; z-index: 2;
+  display: flex; align-items: stretch; gap: 18px;
+  padding: 12px 18px;
+  border: 1px solid var(--line-soft); border-radius: 8px;
+  background: linear-gradient(160deg, rgb(31 36 28 / 88%), rgb(17 20 15 / 92%));
+  box-shadow: 0 10px 28px rgb(0 0 0 / 28%);
+}
+.stage-id { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.stage-seal {
+  width: 46px; height: 46px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 26px; color: var(--gold-bright);
+  border: 1px solid var(--gold-deep); border-radius: 6px;
+  background: radial-gradient(circle at 35% 30%, rgb(201 163 92 / 16%), rgb(20 24 18 / 60%));
+  box-shadow: inset 0 0 12px rgb(201 163 92 / 12%);
+}
+.stage-id .stage-text small { display: block; font-size: 11px; letter-spacing: 0.22em; color: var(--paper-mute); }
+.stage-id .stage-text h1 {
+  font-size: 21px; font-weight: 700; letter-spacing: 0.1em; color: #f3e9d5; white-space: nowrap;
+}
+.stage-id .stage-text h1 em { font-style: normal; color: var(--gold-bright); }
+
+/* 波次进度：十连珠 */
+.wave-track { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: center; min-width: 0; }
+.wave-beads { display: flex; align-items: center; gap: 8px; }
+.wave-bead {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 1px solid #454c3f; background: var(--ink-800);
+  transition: all 0.4s var(--ease-out); position: relative;
+}
+.wave-bead.cleared { background: var(--gold-deep); border-color: var(--gold); box-shadow: 0 0 6px rgb(201 163 92 / 45%); }
+.wave-bead.current {
+  background: var(--cinnabar); border-color: var(--cinnabar-bright);
+  box-shadow: 0 0 10px rgb(207 107 83 / 65%);
+  animation: beadPulse 1.6s ease-in-out infinite;
+}
+.wave-bead.boss-bead { width: 18px; height: 18px; border-color: var(--cinnabar-deep); }
+.wave-bead.boss-bead::after {
+  content: "帅"; position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 11px; color: rgb(233 222 195 / 60%);
+}
+.wave-bead.boss-bead.cleared::after, .wave-bead.boss-bead.current::after { color: #ffe9d9; }
+@keyframes beadPulse { 50% { transform: scale(1.35); } }
+.wave-label { font-size: 11px; letter-spacing: 0.2em; color: var(--paper-mute); white-space: nowrap; }
+.wave-label strong { color: var(--paper); font-size: 13px; }
+
+/* 背包与收益速览 */
+.topbar-stats { display: flex; align-items: center; gap: 14px; }
+.stat-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; border: 1px solid var(--line-soft); border-radius: 6px;
+  background: rgb(12 14 11 / 55%); white-space: nowrap;
+}
+.stat-chip .chip-mark { font-family: var(--font-brush); font-size: 15px; color: var(--paper-mute); }
+.stat-chip .chip-num { font-size: 13px; font-weight: 600; color: var(--paper); letter-spacing: 0.04em; }
+.stat-chip .chip-num em { font-style: normal; color: var(--gold-bright); }
+.stat-chip.warn { border-color: var(--cinnabar-deep); animation: warnBlink 1.4s ease-in-out infinite; }
+.stat-chip.warn .chip-mark, .stat-chip.warn .chip-num { color: var(--cinnabar-bright); }
+@keyframes warnBlink { 50% { box-shadow: 0 0 12px rgb(181 80 60 / 45%); } }
+
+/* 战斗控制 */
+.battle-controls { display: flex; align-items: center; gap: 8px; }
+.ctl-btn {
+  padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px;
+  font-size: 13px; letter-spacing: 0.18em; color: var(--paper-dim);
+  background: rgb(23 27 20 / 60%);
+  transition: all 0.25s var(--ease-out); white-space: nowrap;
+}
+.ctl-btn:hover { color: var(--paper); border-color: var(--paper-mute); }
+.ctl-btn.active {
+  color: #ffe9d9; border-color: var(--cinnabar); background: rgb(181 80 60 / 18%);
+  box-shadow: inset 0 0 10px rgb(181 80 60 / 22%);
+}
+.ctl-btn.gold.active {
+  color: #ffe9c4; border-color: var(--gold); background: rgb(201 163 92 / 14%);
+  box-shadow: inset 0 0 10px rgb(201 163 92 / 20%);
+}
+.ctl-sep { width: 1px; align-self: stretch; background: var(--line-soft); margin: 2px 4px; }
+.speed-group { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.speed-group .ctl-btn { border: none; border-radius: 0; padding: 8px 11px; letter-spacing: 0; }
+.speed-group .ctl-btn + .ctl-btn { border-left: 1px solid var(--line-soft); }
+.speed-group .ctl-btn.active { color: var(--gold-bright); background: rgb(201 163 92 / 14%); box-shadow: none; }
+</style>
+<style>
+/* ============ 战场区：左战场 + 右战报 ============ */
+.battle-stage {
+  position: relative; z-index: 1; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px;
+  padding-top: 16px;
+}
+
+/* 战场本体：水墨山峦底 + 纸边 */
+.battlefield {
+  position: relative; min-height: 0;
+  display: grid; grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  border: 1px solid var(--line-soft); border-radius: 10px;
+  background:
+    radial-gradient(700px 260px at 50% 0%, rgb(127 168 141 / 7%), transparent 65%),
+    linear-gradient(180deg, rgb(23 27 20 / 82%), rgb(13 16 12 / 90%));
+  box-shadow: inset 0 0 60px rgb(0 0 0 / 35%), 0 14px 34px rgb(0 0 0 / 30%);
+  overflow: hidden;
+}
+/* 水墨远山（纯 CSS） */
+.battlefield::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(163deg, transparent 62%, rgb(87 112 95 / 10%) 62.5%) -4% 100% / 34% 46% no-repeat,
+    linear-gradient(197deg, transparent 58%, rgb(87 112 95 / 13%) 58.5%) 22% 100% / 40% 55% no-repeat,
+    linear-gradient(160deg, transparent 64%, rgb(87 112 95 / 8%) 64.5%) 58% 100% / 36% 42% no-repeat,
+    linear-gradient(200deg, transparent 60%, rgb(87 112 95 / 11%) 60.5%) 84% 100% / 30% 50% no-repeat;
+  mask-image: linear-gradient(180deg, transparent 12%, #000 90%);
+  opacity: 0.9;
+}
+/* 雾气分割线 */
+.battlefield::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 70px;
+  transform: translateY(-50%); pointer-events: none;
+  background: radial-gradient(60% 100% at 50% 50%, rgb(233 222 195 / 4%), transparent 70%);
+}
+
+.battle-half { position: relative; min-height: 0; display: flex; flex-direction: column; padding: 10px 16px 8px; }
+.battle-half.party { padding: 8px 16px 10px; }
+.half-heading {
+  display: flex; align-items: baseline; gap: 10px; flex: none;
+  font-size: 11px; letter-spacing: 0.3em; color: var(--paper-mute); padding: 0 2px 6px;
+}
+.half-heading strong { font-family: var(--font-brush); font-size: 17px; letter-spacing: 0.2em; font-weight: 400; }
+.half-heading.enemy strong { color: var(--cinnabar-bright); }
+.half-heading.party strong { color: var(--jade); }
+.half-heading .half-hint { margin-left: auto; letter-spacing: 0.16em; font-size: 10px; }
+
+.unit-row {
+  flex: 1; min-height: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+}
+.unit-row + .unit-row { margin-top: 10px; }
+
+/* ============ 战斗单位卡 ============ */
+.combat-unit {
+  position: relative; min-height: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: linear-gradient(155deg, rgb(31 36 28 / 78%), rgb(15 18 13 / 85%));
+  transition: border-color 0.3s, box-shadow 0.3s, opacity 0.5s, filter 0.5s;
+  overflow: hidden;
+}
+.combat-unit.enemy { border-color: rgb(138 58 43 / 40%); }
+.combat-unit.enemy::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, var(--cinnabar-deep), transparent);
+}
+.combat-unit.party { border-color: rgb(87 112 95 / 45%); }
+.combat-unit.party::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, var(--jade-dim), transparent);
+}
+.combat-unit[data-rank="elite"] { border-color: rgb(201 163 92 / 55%); }
+.combat-unit[data-rank="boss"] {
+  border-color: var(--gold-deep);
+  background: linear-gradient(155deg, rgb(58 42 26 / 55%), rgb(15 18 13 / 88%));
+  box-shadow: inset 0 0 24px rgb(201 163 92 / 8%);
+}
+.combat-unit.acting { z-index: 5; }
+.combat-unit.lunge-enemy { animation: lungeDown 0.34s var(--ease-snap); }
+.combat-unit.lunge-party { animation: lungeUp 0.34s var(--ease-snap); }
+@keyframes lungeDown { 35% { transform: translateY(12px) scale(1.04); box-shadow: 0 8px 22px rgb(0 0 0 / 45%); } }
+@keyframes lungeUp { 35% { transform: translateY(-12px) scale(1.04); box-shadow: 0 -8px 22px rgb(0 0 0 / 45%); } }
+.combat-unit.skill-glow { animation: skillGlow 0.7s var(--ease-out); }
+@keyframes skillGlow {
+  30% { box-shadow: 0 0 0 2px rgb(230 198 127 / 75%), 0 0 26px rgb(230 198 127 / 55%); border-color: var(--gold-bright); }
+}
+.combat-unit.hit-shake { animation: hitShake 0.3s var(--ease-out); }
+@keyframes hitShake { 25% { transform: translateX(-4px); } 60% { transform: translateX(3px); } }
+.combat-unit.heal-glow { animation: healGlow 0.7s var(--ease-out); }
+@keyframes healGlow { 30% { box-shadow: 0 0 0 2px rgb(127 168 141 / 70%), 0 0 22px rgb(127 168 141 / 45%); border-color: var(--jade); } }
+
+/* 空槽位 */
+.unit-slot-empty {
+  display: grid; place-items: center;
+  border: 1px dashed rgb(49 56 46 / 55%); border-radius: 8px;
+  color: rgb(125 127 114 / 45%); font-size: 10px; letter-spacing: 0.3em;
+}
+
+/* 头像：真素材 + 书法字回退 */
+.unit-portrait {
+  position: relative; flex: none;
+  width: clamp(40px, 6.2vh, 54px); height: clamp(40px, 6.2vh, 54px);
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: radial-gradient(circle at 35% 30%, var(--ink-700), var(--ink-900));
+  display: grid; place-items: center; overflow: hidden;
+}
+.combat-unit[data-rank="elite"] .unit-portrait { border-color: var(--gold-deep); box-shadow: 0 0 8px rgb(201 163 92 / 30%); }
+.combat-unit[data-rank="boss"] .unit-portrait { border-color: var(--gold); box-shadow: 0 0 12px rgb(201 163 92 / 45%); }
+.unit-portrait .portrait-char {
+  font-family: var(--font-brush); font-size: clamp(19px, 3.2vh, 26px);
+  color: var(--paper-dim); line-height: 1;
+}
+.combat-unit.enemy .unit-portrait .portrait-char { color: var(--cinnabar-bright); }
+.unit-portrait img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.unit-portrait .portrait-ring {
+  position: absolute; inset: -1px; border-radius: 50%; pointer-events: none;
+  box-shadow: inset 0 0 8px rgb(0 0 0 / 55%);
+}
+
+.unit-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.unit-head { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.unit-name {
+  font-size: clamp(12px, 1.9vh, 14px); font-weight: 700; letter-spacing: 0.06em;
+  color: #efe4cf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.unit-tag {
+  flex: none; font-size: 9px; letter-spacing: 0.12em; padding: 1px 5px;
+  border: 1px solid var(--line); border-radius: 3px; color: var(--paper-mute);
+}
+.unit-tag.rank-elite { color: var(--gold-bright); border-color: var(--gold-deep); }
+.unit-tag.rank-boss { color: #ffd9a8; border-color: var(--gold); background: rgb(201 163 92 / 12%); }
+.unit-tag.row-tag { margin-left: auto; }
+
+/* 三条计量：气血 / 气机 / 真气 */
+.meter { display: flex; align-items: center; gap: 6px; }
+.meter .meter-label { flex: none; width: 22px; font-size: 9px; letter-spacing: 0.08em; color: var(--paper-mute); }
+.meter .meter-track {
+  flex: 1; height: 5px; border-radius: 3px; overflow: hidden;
+  background: rgb(12 14 11 / 80%); box-shadow: inset 0 1px 2px rgb(0 0 0 / 60%);
+}
+.meter .meter-fill {
+  display: block; height: 100%; border-radius: 3px; width: 0%;
+  transition: width 0.18s linear;
+}
+.meter .meter-num { flex: none; width: 52px; text-align: right; font-size: 9px; color: var(--paper-mute); font-variant-numeric: tabular-nums; }
+.hp-meter .meter-fill { background: linear-gradient(90deg, var(--cinnabar-deep), var(--cinnabar-bright)); box-shadow: 0 0 6px rgb(207 107 83 / 40%); }
+.hp-meter.low .meter-fill { animation: hpFlicker 0.9s ease-in-out infinite; }
+@keyframes hpFlicker { 50% { filter: brightness(1.55); } }
+.gauge-meter .meter-fill { background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright)); }
+.gauge-meter.full .meter-fill { box-shadow: 0 0 8px rgb(230 198 127 / 80%); }
+.energy-meter .meter-track { height: 4px; }
+.energy-meter .meter-fill { background: linear-gradient(90deg, #40607a, var(--azure)); }
+.energy-meter.full .meter-fill { box-shadow: 0 0 8px rgb(111 159 184 / 80%); }
+
+.unit-foot { display: flex; align-items: center; gap: 6px; font-size: 9px; color: var(--paper-mute); }
+.unit-foot .foot-label { letter-spacing: 0.1em; }
+.unit-foot .cool-num { font-variant-numeric: tabular-nums; color: var(--paper-dim); }
+.unit-foot .skill-name {
+  margin-left: auto; font-family: var(--font-brush); font-size: 12px; letter-spacing: 0.1em;
+  color: rgb(201 163 92 / 65%);
+}
+.combat-unit.skill-ready .unit-foot .skill-name { color: var(--gold-bright); text-shadow: 0 0 8px rgb(230 198 127 / 60%); }
+
+/* 阵亡态 */
+.combat-unit.fallen { opacity: 0.38; filter: grayscale(0.9); }
+.combat-unit.fallen::after {
+  content: "陨"; position: absolute; right: 8px; top: 8px;
+  font-family: var(--font-brush); font-size: 22px; color: rgb(207 107 83 / 75%);
+  transform: rotate(12deg);
+}
+
+/* ============ 中军分隔 · 战 ============ */
+.battle-divider {
+  position: relative; z-index: 2; flex: none;
+  display: flex; align-items: center; gap: 14px;
+  padding: 4px 22px;
+}
+.battle-divider .divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent); }
+.divider-seal {
+  width: 34px; height: 34px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 21px; color: #f6e3d2;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  border: 1px solid #c96f58; border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #411811, 0 0 16px rgb(181 80 60 / 40%);
+  transform: rotate(-3deg);
+}
+.divider-status { font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute); white-space: nowrap; }
+.divider-status em { font-style: normal; color: var(--gold-bright); }
+
+/* ============ 伤害飘字与特效 ============ */
+.float-layer { position: absolute; inset: 0; pointer-events: none; z-index: 20; overflow: hidden; }
+.dmg-float {
+  position: absolute; transform: translate(-50%, -50%);
+  font-weight: 900; font-size: clamp(14px, 2.4vh, 19px); color: #f0d9c8;
+  text-shadow: 0 2px 8px rgb(0 0 0 / 80%);
+  animation: dmgRise 0.95s var(--ease-out) forwards;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.dmg-float.crit { color: var(--gold-bright); font-size: clamp(18px, 3vh, 24px); }
+.dmg-float.crit::before { content: "会心 "; font-family: var(--font-brush); font-size: 0.72em; font-weight: 400; }
+.dmg-float.heal { color: var(--jade); }
+.dmg-float.heal::before { content: "+"; }
+.dmg-float.skill-name-float {
+  font-family: var(--font-brush); font-weight: 400; color: var(--gold-bright);
+  font-size: clamp(15px, 2.6vh, 21px); letter-spacing: 0.14em;
+  text-shadow: 0 0 14px rgb(230 198 127 / 55%), 0 2px 8px rgb(0 0 0 / 80%);
+}
+@keyframes dmgRise {
+  0% { opacity: 0; transform: translate(-50%, -30%) scale(0.6); }
+  18% { opacity: 1; transform: translate(-50%, -60%) scale(1.12); }
+  100% { opacity: 0; transform: translate(-50%, -150%) scale(1); }
+}
+.slash-arc {
+  position: absolute; width: 54px; height: 54px; transform: translate(-50%, -50%);
+  border-radius: 50%; border: 2px solid transparent;
+  border-top-color: rgb(240 217 200 / 85%); border-right-color: rgb(240 217 200 / 40%);
+  animation: slashSpin 0.32s var(--ease-out) forwards;
+}
+@keyframes slashSpin {
+  0% { transform: translate(-50%, -50%) rotate(-40deg) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(140deg) scale(1.25); opacity: 0; }
+}
+
+/* 波次更替横幅 */
+.wave-banner {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 30; pointer-events: none;
+  font-family: var(--font-brush); font-size: clamp(30px, 6vh, 44px); letter-spacing: 0.28em;
+  color: var(--xuan); text-shadow: 0 0 30px rgb(201 163 92 / 40%), 0 4px 16px rgb(0 0 0 / 70%);
+  opacity: 0; white-space: nowrap;
+}
+.wave-banner.show { animation: bannerIn 1.7s var(--ease-out) forwards; }
+@keyframes bannerIn {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); filter: blur(6px); }
+  22% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+  78% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.94); }
+}
+
+/* ============ 右侧战报栏 ============ */
+.combat-rail {
+  min-height: 0; display: flex; flex-direction: column;
+  border: 1px solid var(--line-soft); border-radius: 10px;
+  background: linear-gradient(170deg, rgb(23 27 20 / 85%), rgb(13 16 12 / 92%));
+  box-shadow: 0 14px 34px rgb(0 0 0 / 28%);
+  overflow: hidden;
+}
+.rail-section { padding: 12px 14px; border-bottom: 1px dashed var(--line); flex: none; }
+.rail-section:last-child { border-bottom: none; }
+.rail-title { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+.rail-title strong { font-family: var(--font-brush); font-size: 16px; font-weight: 400; letter-spacing: 0.24em; color: var(--gold-bright); }
+.rail-title small { font-size: 10px; letter-spacing: 0.18em; color: var(--paper-mute); }
+.rail-title .rail-extra { margin-left: auto; font-size: 10px; color: var(--paper-mute); letter-spacing: 0.1em; }
+
+/* 收益三格 */
+.loot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.loot-cell {
+  padding: 7px 4px 6px; text-align: center;
+  border: 1px solid var(--line-soft); border-radius: 6px; background: rgb(12 14 11 / 50%);
+}
+.loot-cell .loot-num { display: block; font-size: 15px; font-weight: 700; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+.loot-cell .loot-num.jade { color: var(--jade); }
+.loot-cell .loot-num.paper { color: var(--paper); }
+.loot-cell .loot-label { display: block; margin-top: 2px; font-size: 9px; letter-spacing: 0.24em; color: var(--paper-mute); }
+
+/* 背包容量条 */
+.pack-meter { margin-top: 9px; display: flex; align-items: center; gap: 8px; }
+.pack-meter .pack-label { font-size: 10px; letter-spacing: 0.2em; color: var(--paper-mute); flex: none; }
+.pack-meter .pack-track { flex: 1; height: 4px; border-radius: 2px; background: rgb(12 14 11 / 80%); overflow: hidden; }
+.pack-meter .pack-fill { display: block; height: 100%; background: linear-gradient(90deg, var(--jade-dim), var(--jade)); transition: width 0.4s var(--ease-out); }
+.pack-meter.full .pack-fill { background: linear-gradient(90deg, var(--cinnabar-deep), var(--cinnabar-bright)); }
+.pack-meter .pack-num { font-size: 10px; color: var(--paper-dim); font-variant-numeric: tabular-nums; flex: none; }
+.pack-meter.full .pack-num { color: var(--cinnabar-bright); }
+
+/* 战报滚动区 —— 全页唯一内滚动 */
+.log-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.combat-log {
+  flex: 1; min-height: 0; overflow-y: auto;
+  list-style: none; display: flex; flex-direction: column; gap: 2px;
+  padding: 2px 14px 10px;
+  scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+}
+.combat-log::-webkit-scrollbar { width: 4px; }
+.combat-log::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+.combat-log li {
+  display: flex; gap: 8px; align-items: baseline;
+  padding: 4px 6px; border-radius: 4px;
+  font-size: 11px; line-height: 1.5; color: var(--paper-dim);
+  animation: logIn 0.35s var(--ease-out);
+}
+@keyframes logIn { 0% { opacity: 0; transform: translateY(-6px); } }
+.combat-log li .log-mark { flex: none; font-family: var(--font-brush); font-size: 12px; width: 15px; text-align: center; }
+.combat-log li.log-kill .log-mark { color: var(--cinnabar-bright); }
+.combat-log li.log-skill .log-mark { color: var(--gold-bright); }
+.combat-log li.log-loot { color: var(--gold); }
+.combat-log li.log-loot .log-mark { color: var(--gold-bright); }
+.combat-log li.log-wave { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.combat-log li.log-wave .log-mark { color: var(--gold); }
+.combat-log li.log-defeat { color: var(--paper-mute); }
+.combat-log li.log-heal .log-mark { color: var(--jade); }
+
+/* 机制图例 */
+.mechanic-legend { display: flex; gap: 10px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--paper-mute); letter-spacing: 0.08em; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.legend-dot.d-gauge { background: var(--gold); }
+.legend-dot.d-energy { background: var(--azure); }
+.legend-dot.d-cool { background: var(--paper-mute); }
+
+/* ============ 单屏适配 ============ */
+@media (max-width: 1280px) {
+  .app-shell { grid-template-columns: 176px minmax(0, 1fr); }
+  .battle-stage { grid-template-columns: minmax(0, 1fr) 268px; gap: 14px; }
+  .wave-label { display: none; }
+}
+@media (max-height: 800px) {
+  .game-main { padding: 12px 18px 14px; }
+  .battle-topbar { padding: 9px 14px; }
+  .unit-row { gap: 8px; }
+  .unit-row + .unit-row { margin-top: 8px; }
+  .battle-half { padding: 7px 12px 5px; }
+  .battle-half.party { padding: 5px 12px 7px; }
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="app-shell">
+  <!-- ============ 侧边栏外壳 ============ -->
+  <aside class="game-sidebar">
+    <div class="brand-block">
+      <div class="brand-seal">蛋</div>
+      <div>
+        <strong>蛋蛋江湖 2.0</strong>
+        <small>十步杀一人 · 千里不留行</small>
+      </div>
+    </div>
+    <nav class="game-nav">
+      <button class="nav-item"><span class="nav-mark">邑</span><strong>江湖</strong></button>
+      <button class="nav-item"><span class="nav-mark">侠</span><strong>侠客</strong></button>
+      <button class="nav-item"><span class="nav-mark">阵</span><strong>阵容</strong></button>
+      <button class="nav-item"><span class="nav-mark">囊</span><strong>背包</strong></button>
+    </nav>
+    <div class="world-subnav">
+      <button class="world-back">‹ 返回江湖</button>
+      <button class="ws-item active">关卡<small>牛家村</small></button>
+      <button class="ws-item">势力<small>三派</small></button>
+      <button class="ws-item">城市<small>未至</small></button>
+    </div>
+    <div class="sidebar-landscape" aria-hidden="true"></div>
+    <div class="sidebar-motto">删繁就简 · 省心省力</div>
+  </aside>
+
+  <!-- ============ 主区 ============ -->
+  <main class="game-main">
+    <div class="ghost-char" aria-hidden="true">战</div>
+
+    <!-- 顶部战况条 -->
+    <header class="battle-topbar">
+      <div class="stage-id">
+        <div class="stage-seal">关</div>
+        <div class="stage-text">
+          <small>牛家村 · 第 1 关 · 驻守中</small>
+          <h1>第 <em id="waveNum">1</em> / 10 波</h1>
+        </div>
+      </div>
+
+      <div class="wave-track">
+        <span class="wave-label">波次</span>
+        <div class="wave-beads" id="waveBeads"></div>
+        <span class="wave-label" id="waveHint">敌势未至</span>
+      </div>
+
+      <div class="topbar-stats">
+        <div class="stat-chip" id="packChip" title="背包容量">
+          <span class="chip-mark">囊</span>
+          <span class="chip-num">背包 <em id="packNum">12</em> / 300</span>
+        </div>
+      </div>
+
+      <div class="battle-controls">
+        <button class="ctl-btn active" id="btnGuard" title="驻守：原地迎敌，败退自动重整">驻守</button>
+        <button class="ctl-btn" id="btnRoam" title="闯荡：破阵后自动深入下一关">闯荡</button>
+        <button class="ctl-btn gold" id="btnPause" title="停止战斗">停止</button>
+        <span class="ctl-sep"></span>
+        <div class="speed-group" role="group" aria-label="战斗速度">
+          <button class="ctl-btn active" data-speed="1">1×</button>
+          <button class="ctl-btn" data-speed="2">2×</button>
+          <button class="ctl-btn" data-speed="4">4×</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 战场 + 战报 -->
+    <div class="battle-stage">
+      <section class="battlefield" id="battlefield" aria-label="挂机战场">
+        <!-- 敌方：后排在上，前排临阵 -->
+        <div class="battle-half enemy">
+          <header class="half-heading enemy">
+            <strong>敌方</strong>
+            <span>后排在上 · 前排临阵</span>
+            <span class="half-hint" id="enemyCount"></span>
+          </header>
+          <div class="unit-row" id="enemyBackRow"></div>
+          <div class="unit-row" id="enemyFrontRow"></div>
+        </div>
+
+        <!-- 中军 -->
+        <div class="battle-divider" aria-hidden="true">
+          <span class="divider-line"></span>
+          <span class="divider-status" id="dividerStatus">接战 <em>0</em> 回合</span>
+          <div class="divider-seal">战</div>
+          <span class="divider-status" id="killStatus">斩敌 <em>0</em></span>
+          <span class="divider-line"></span>
+        </div>
+
+        <!-- 我方：前排临阵，后排在下 -->
+        <div class="battle-half party">
+          <header class="half-heading party">
+            <strong>我方</strong>
+            <span>前排临阵 · 后排在下</span>
+            <span class="half-hint">六侠两排</span>
+          </header>
+          <div class="unit-row" id="partyFrontRow"></div>
+          <div class="unit-row" id="partyBackRow"></div>
+        </div>
+
+        <div class="float-layer" id="floatLayer"></div>
+        <div class="wave-banner" id="waveBanner"></div>
+      </section>
+
+      <!-- 右侧战报栏 -->
+      <aside class="combat-rail">
+        <div class="rail-section">
+          <div class="rail-title">
+            <strong>本场收益</strong>
+            <small>即时入账</small>
+            <span class="rail-extra" id="battleDuration">00:00</span>
+          </div>
+          <div class="loot-grid">
+            <div class="loot-cell"><span class="loot-num" id="lootCopper">0</span><span class="loot-label">铜钱</span></div>
+            <div class="loot-cell"><span class="loot-num jade" id="lootEquip">0</span><span class="loot-label">装备</span></div>
+            <div class="loot-cell"><span class="loot-num paper" id="lootKill">0</span><span class="loot-label">斩敌</span></div>
+          </div>
+          <div class="pack-meter" id="packMeter">
+            <span class="pack-label">背包</span>
+            <span class="pack-track"><span class="pack-fill" id="packFill" style="width:4%"></span></span>
+            <span class="pack-num" id="packMeterNum">12 / 300</span>
+          </div>
+        </div>
+
+        <div class="log-wrap">
+          <div class="rail-section" style="border-bottom: none; padding-bottom: 4px;">
+            <div class="rail-title">
+              <strong>战斗札记</strong>
+              <small>新事在上</small>
+            </div>
+          </div>
+          <ol class="combat-log" id="combatLog"></ol>
+        </div>
+
+        <div class="rail-section">
+          <div class="mechanic-legend">
+            <span class="legend-item"><span class="legend-dot d-gauge"></span>气机 · 蓄满出手</span>
+            <span class="legend-item"><span class="legend-dot d-energy"></span>真气 · 满则绝技</span>
+            <span class="legend-item"><span class="legend-dot d-cool"></span>回气 · 冷却</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+<script>
+/* ============================================================
+   数据层 —— 与 egg-jianghu/src 真实配置同源
+   侠客：content/heroes.ts（牛家村卷一班子 + 卷三医者）
+   敌人：content/enemy-names.ts · world_01 词池
+   机制：气机 1000 蓄满出手；真气满则绝技；身法定出手间隔
+   头像：../egg-jianghu/src/assets 真水墨素材，失败回退书法字
+   ============================================================ */
+const ASSET = '../egg-jianghu/src/assets';
+
+const CAREER_CHAR = { 剑: '剑', 刀: '刀', 拳: '拳', 暗: '暗', 医: '医', 内家: '内' };
+
+const PARTY_DEF = [
+  { id: 'hero_guo_jing',    name: '郭靖',   career: '拳',   row: 'front', pos: 0, hp: 340, atk: 34, intervalMs: 4200, energyMax: 100, skill: { name: '降龙十八掌', mult: 2.6, cdMs: 7000 } },
+  { id: 'hero_player',      name: '花花蛋', career: '剑',   row: 'front', pos: 1, hp: 300, atk: 38, intervalMs: 3600, energyMax: 100, skill: { name: '落英神剑',   mult: 2.3, cdMs: 6000 } },
+  { id: 'hero_yang_tiexin', name: '杨铁心', career: '刀',   row: 'front', pos: 2, hp: 320, atk: 36, intervalMs: 4000, energyMax: 100, skill: { name: '杨家枪法',   mult: 2.2, cdMs: 6500 } },
+  { id: 'hero_mu_nianci',   name: '穆念慈', career: '剑',   row: 'back',  pos: 0, hp: 240, atk: 33, intervalMs: 3400, energyMax: 100, skill: { name: '越女剑法',   mult: 2.1, cdMs: 6000 } },
+  { id: 'hero_bao_xiruo',   name: '包惜弱', career: '医',   row: 'back',  pos: 1, hp: 220, atk: 18, intervalMs: 4600, energyMax: 80,  skill: { name: '妙手回春',   heal: 0.38, cdMs: 8000 } },
+  { id: 'hero_huazheng',    name: '华筝',   career: '内家', row: 'back',  pos: 2, hp: 230, atk: 31, intervalMs: 3800, energyMax: 100, skill: { name: '碧海潮生',   mult: 2.4, cdMs: 7000 } },
+];
+
+const ENEMY_POOL = {
+  normal: ['村中泼皮', '无赖闲汉', '偷鸡贼', '地痞', '愣头青', '赶集莽汉'],
+  elite: ['护院拳师', '金兵什长', '回乡兵痞'],
+  boss: ['段天德', '完颜洪烈', '梁子翁', '灵智上人', '侯通海', '沙通天', '彭连虎', '欧阳克', '梅超风', '曲灵风'],
+};
+const ENEMY_SKILL = {
+  elite: { name: '恶虎掏心', mult: 1.8, cdMs: 7000 },
+  boss: { name: '贪狼破军', mult: 2.4, cdMs: 6000 },
+};
+const EQUIP_NAMES = ['精铁剑', '牛皮护腕', '青布甲', '麻绳腰带', '草编靴', '青铜令牌', '束发木冠', '玄铁刀'];
+
+const PORTRAIT = {
+  hero: (id) => `${ASSET}/heroes/${id}.png`,
+  enemy: (rank, key) => {
+    const pool = { normal: 3, elite: 2, boss: 2 }[rank];
+    const hash = [...key].reduce((t, c) => t + c.charCodeAt(0), 0);
+    return `${ASSET}/enemies/${rank}_${hash % pool + 1}.png`;
+  },
+};
+
+/* ============ 状态 ============ */
+const state = {
+  wave: 1, speed: 1, paused: false, mode: 'guard',
+  kills: 0, copper: 0, equips: 0, pack: 12, packCap: 300,
+  elapsedMs: 0, units: [],
+};
+const $ = (id) => document.getElementById(id);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+/* ============ 单位卡渲染 ============ */
+const unitEl = {};
+function unitCard(u) {
+  const side = u.side;
+  const portrait = side === 'party' ? PORTRAIT.hero(u.id) : PORTRAIT.enemy(u.rank, u.id);
+  const fallback = side === 'party' ? (CAREER_CHAR[u.career] ?? u.name[0]) : u.name[0];
+  const rankTag = u.rank === 'elite' ? '<span class="unit-tag rank-elite">精英</span>'
+    : u.rank === 'boss' ? '<span class="unit-tag rank-boss">BOSS</span>' : '';
+  const skillHtml = u.skill ? `<span class="skill-name">${u.skill.name}</span>` : '';
+  const energyHtml = side === 'party'
+    ? `<div class="meter energy-meter"><span class="meter-label">真气</span><span class="meter-track"><span class="meter-fill" data-f="energy"></span></span><span class="meter-num" data-n="energy"></span></div>`
+    : '';
+  const el = document.createElement('article');
+  el.className = `combat-unit ${side}`;
+  el.dataset.rank = u.rank;
+  el.innerHTML = `
+    <div class="unit-portrait">
+      <span class="portrait-char">${fallback}</span>
+      <img src="${portrait}" alt="" draggable="false" onerror="this.remove()">
+      <span class="portrait-ring"></span>
+    </div>
+    <div class="unit-body">
+      <div class="unit-head">
+        <span class="unit-name">${u.name}</span>
+        ${rankTag}
+        <span class="unit-tag row-tag">${u.row === 'front' ? '前排' : '后排'}</span>
+      </div>
+      <div class="meter hp-meter"><span class="meter-label">气血</span><span class="meter-track"><span class="meter-fill" data-f="hp"></span></span><span class="meter-num" data-n="hp"></span></div>
+      <div class="meter gauge-meter"><span class="meter-label">气机</span><span class="meter-track"><span class="meter-fill" data-f="gauge"></span></span><span class="meter-num" data-n="gauge"></span></div>
+      ${energyHtml}
+      <div class="unit-foot">
+        <span class="foot-label">回气</span><span class="cool-num" data-n="cool">0.0s</span>
+        ${skillHtml}
+      </div>
+    </div>`;
+  return el;
+}
+
+function placeUnits() {
+  const rows = {
+    'enemy-back': $('enemyBackRow'), 'enemy-front': $('enemyFrontRow'),
+    'party-front': $('partyFrontRow'), 'party-back': $('partyBackRow'),
+  };
+  Object.values(rows).forEach((r) => (r.innerHTML = ''));
+  for (const key of Object.keys(rows)) {
+    const [side, row] = key.split('-');
+    for (let pos = 0; pos < 3; pos++) {
+      const u = state.units.find((x) => x.side === side && x.row === row && x.pos === pos);
+      if (u) {
+        const card = unitCard(u);
+        rows[key].appendChild(card);
+        unitEl[u.id] = {
+          card,
+          hp: card.querySelector('[data-f="hp"]'), hpN: card.querySelector('[data-n="hp"]'),
+          gauge: card.querySelector('[data-f="gauge"]'), gaugeN: card.querySelector('[data-n="gauge"]'),
+          energy: card.querySelector('[data-f="energy"]'), energyN: card.querySelector('[data-n="energy"]'),
+          cool: card.querySelector('[data-n="cool"]'),
+          hpMeter: card.querySelector('.hp-meter'), gaugeMeter: card.querySelector('.gauge-meter'),
+          energyMeter: card.querySelector('.energy-meter'),
+        };
+      } else {
+        const empty = document.createElement('div');
+        empty.className = 'unit-slot-empty';
+        empty.textContent = `${row === 'front' ? '前排' : '后排'} · ${pos + 1}`;
+        rows[key].appendChild(empty);
+      }
+    }
+  }
+}
+
+/* ============ 波次生成 ============ */
+function spawnWave() {
+  state.units = state.units.filter((u) => u.side === 'party');
+  // 阵亡侠客随新波次重整旗鼓
+  state.units.forEach((u) => { if (!u.alive) { u.alive = true; u.hp = Math.round(u.maxHp * 0.7); } u.gauge = 0; });
+
+  const w = state.wave;
+  const defs = [];
+  const mk = (rank, name, row, pos, hp, atk, intervalMs) => defs.push({
+    id: `e_${w}_${row}${pos}_${name}`, side: 'enemy', name, rank, row, pos,
+    hp, maxHp: hp, atk, intervalMs, gauge: rnd(0, 300), energy: 0, energyMax: 100,
+    coolMs: 0, alive: true, skill: ENEMY_SKILL[rank] ?? null,
+  });
+  const hpScale = 1 + (w - 1) * 0.16, atkScale = 1 + (w - 1) * 0.1;
+  if (w === 10) {
+    mk('boss', ENEMY_POOL.boss[0], 'front', 1, Math.round(720 * hpScale), Math.round(30 * atkScale), 4200);
+    mk('elite', ENEMY_POOL.elite[0], 'front', 0, Math.round(260 * hpScale), Math.round(20 * atkScale), 4800);
+    mk('elite', ENEMY_POOL.elite[1], 'front', 2, Math.round(260 * hpScale), Math.round(20 * atkScale), 4800);
+    mk('normal', pick(ENEMY_POOL.normal), 'back', 0, Math.round(120 * hpScale), Math.round(14 * atkScale), 5200);
+    mk('normal', pick(ENEMY_POOL.normal), 'back', 2, Math.round(120 * hpScale), Math.round(14 * atkScale), 5200);
+  } else if (w >= 7) {
+    mk('elite', ENEMY_POOL.elite[w % 3], 'front', 1, Math.round(250 * hpScale), Math.round(19 * atkScale), 4800);
+    mk('normal', pick(ENEMY_POOL.normal), 'front', 0, Math.round(115 * hpScale), Math.round(13 * atkScale), 5400);
+    mk('normal', pick(ENEMY_POOL.normal), 'front', 2, Math.round(115 * hpScale), Math.round(13 * atkScale), 5400);
+    mk('normal', pick(ENEMY_POOL.normal), 'back', 1, Math.round(105 * hpScale), Math.round(12 * atkScale), 5600);
+  } else {
+    const count = w <= 3 ? 3 : 4;
+    const slots = count === 3
+      ? [['front', 0], ['front', 1], ['front', 2]]
+      : [['front', 0], ['front', 1], ['front', 2], ['back', 1]];
+    slots.forEach(([row, pos]) =>
+      mk('normal', pick(ENEMY_POOL.normal), row, pos, Math.round(110 * hpScale), Math.round(12 * atkScale), 5400));
+  }
+  state.units.push(...defs);
+  placeUnits();
+  refreshWaveUi();
+  banner(w === 10 ? '帅旗至 · 第 10 波' : `第 ${w} 波`);
+  log('wave', '波', w === 10 ? `敌首「${ENEMY_POOL.boss[0]}」亲率众至，第 10 波！` : `敌势再起，进入第 ${w} 波。`);
+}
+
+/* ============ 战斗引擎 ============ */
+const living = (side) => state.units.filter((u) => u.side === side && u.alive);
+function pickTarget(side) {
+  const foes = living(side);
+  return foes.find((u) => u.row === 'front') ?? foes[0] ?? null;
+}
+
+function act(u) {
+  u.gauge = 0;
+  const refs = unitEl[u.id];
+  const useSkill = u.skill && u.energy >= u.energyMax;
+  // 医者：真气满则疗伤
+  if (u.career === '医' && useSkill) {
+    const ally = living('party').sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+    if (ally) {
+      const amount = Math.round(ally.maxHp * u.skill.heal);
+      ally.hp = Math.min(ally.maxHp, ally.hp + amount);
+      u.energy = 0; u.coolMs = u.skill.cdMs;
+      refs.card.classList.add('skill-glow'); setTimeout(() => refs.card.classList.remove('skill-glow'), 720);
+      const ar = unitEl[ally.id]; ar.card.classList.add('heal-glow'); setTimeout(() => ar.card.classList.remove('heal-glow'), 720);
+      floatText(ally, String(amount), 'heal');
+      floatText(u, u.skill.name, 'skill-name-float');
+      log('heal', '愈', `${u.name} 施展「${u.skill.name}」，${ally.name} 气血回转 ${amount}。`);
+      return;
+    }
+  }
+  const targetSide = u.side === 'party' ? 'enemy' : 'party';
+  const target = pickTarget(targetSide);
+  if (!target) return;
+
+  let dmg = u.atk * rnd(0.85, 1.15);
+  let crit = false;
+  if (useSkill) {
+    dmg *= u.skill.mult * rnd(0.95, 1.15);
+    u.energy = 0; u.coolMs = u.skill.cdMs;
+    refs.card.classList.add('skill-glow'); setTimeout(() => refs.card.classList.remove('skill-glow'), 720);
+    floatText(u, u.skill.name, 'skill-name-float');
+    log('skill', '绝', `${u.name} 使出「${u.skill.name}」！`);
+  } else {
+    u.energy = Math.min(u.energyMax, u.energy + 30);
+    crit = Math.random() < 0.15;
+    if (crit) dmg *= 1.6;
+  }
+  dmg = Math.max(1, Math.round(dmg));
+
+  refs.card.classList.add(u.side === 'party' ? 'lunge-party' : 'lunge-enemy');
+  setTimeout(() => refs.card.classList.remove('lunge-party', 'lunge-enemy'), 360);
+  const tRefs = unitEl[target.id];
+  setTimeout(() => {
+    if (!target.alive) return;
+    tRefs.card.classList.add('hit-shake'); setTimeout(() => tRefs.card.classList.remove('hit-shake'), 320);
+    slashAt(target);
+    floatText(target, String(dmg), crit ? 'crit' : '');
+    target.hp = Math.max(0, target.hp - dmg);
+    target.energy = Math.min(target.energyMax ?? 100, (target.energy ?? 0) + 10);
+    if (target.hp <= 0) onFallen(u, target);
+  }, 150);
+}
+
+function onFallen(killer, target) {
+  target.alive = false;
+  refreshUnit(target);   // 致死一击已扣至 0，死亡后立即停刷新，需补最后一次
+  const tRefs = unitEl[target.id];
+  tRefs.card.classList.add('fallen');
+  if (target.side === 'enemy') {
+    state.kills += 1;
+    const copper = target.rank === 'boss' ? 150 : target.rank === 'elite' ? Math.round(rnd(26, 45)) : Math.round(rnd(6, 14));
+    state.copper += copper;
+    log('kill', '刃', `${killer.name} 斩${target.name}，铜钱 +${copper}。`);
+    const dropChance = target.rank === 'boss' ? 1 : target.rank === 'elite' ? 0.6 : 0.3;
+    if (Math.random() < dropChance) {
+      if (state.pack < state.packCap) {
+        state.pack += 1; state.equips += 1;
+        log('loot', '获', `拾得「${pick(EQUIP_NAMES)}」，已入背包。`);
+      } else {
+        log('loot', '获', `背包已满，「${pick(EQUIP_NAMES)}」无处安放。`);
+      }
+    }
+    refreshLootUi();
+    if (!living('enemy').length) setTimeout(nextWave, 1100);
+  } else {
+    log('defeat', '退', `${target.name} 力竭倒地！`);
+    if (!living('party').length) onPartyWipe();
+  }
+}
+
+function onPartyWipe() {
+  log('defeat', '退', '队伍败退，按规则回到驻守重整……');
+  state.paused = true;
+  setTimeout(() => {
+    state.units.forEach((u) => {
+      if (u.side === 'party') { u.alive = true; u.hp = Math.round(u.maxHp * 0.6); u.gauge = 0; u.energy = 0; unitEl[u.id].card.classList.remove('fallen'); }
+    });
+    state.paused = false;
+    log('wave', '波', '众侠重整旗鼓，再度迎敌。');
+  }, 2600);
+}
+
+function nextWave() {
+  if (state.wave >= 10) {
+    state.wave = 1;
+    log('wave', '波', state.mode === 'roam' ? '十波尽破，闯荡深入，再遇新锐。' : '十波尽破，固守原地，敌势复聚。');
+  } else {
+    state.wave += 1;
+  }
+  spawnWave();
+}
+
+/* ============ 逐帧刷新 ============ */
+function refreshUnit(u) {
+  const r = unitEl[u.id]; if (!r) return;
+  const hpPct = (u.hp / u.maxHp) * 100;
+  r.hp.style.width = `${hpPct}%`;
+  r.hpN.textContent = `${Math.ceil(u.hp)} / ${u.maxHp}`;
+  r.hpMeter.classList.toggle('low', u.alive && hpPct <= 30);
+  r.gauge.style.width = `${(u.gauge / 1000) * 100}%`;
+  r.gaugeN.textContent = `${Math.floor(u.gauge)} / 1000`;
+  r.gaugeMeter.classList.toggle('full', u.gauge >= 1000);
+  if (r.energy) {
+    r.energy.style.width = `${(u.energy / u.energyMax) * 100}%`;
+    r.energyN.textContent = `${Math.floor(u.energy)} / ${u.energyMax}`;
+    r.energyMeter.classList.toggle('full', u.energy >= u.energyMax);
+  }
+  r.card.classList.toggle('skill-ready', !!u.skill && u.energy >= u.energyMax);
+  if (r.cool) r.cool.textContent = `${(Math.max(0, u.coolMs) / 1000).toFixed(1)}s`;
+}
+
+function tick() {
+  if (!state.paused) {
+    const dt = 100 * state.speed;
+    state.elapsedMs += dt;
+    for (const u of state.units) {
+      if (!u.alive) continue;
+      u.coolMs = Math.max(0, u.coolMs - dt);
+      u.gauge += (dt / u.intervalMs) * 1000;
+      if (u.gauge >= 1000) act(u);
+      refreshUnit(u);
+    }
+    const foes = living('enemy').length;
+    $('dividerStatus').innerHTML = `第 <em>${state.wave}</em> 波 · 余敌 <em>${foes}</em>`;
+    $('killStatus').innerHTML = `斩敌 <em>${state.kills}</em>`;
+  }
+  const totalSec = Math.floor(state.elapsedMs / 1000);
+  $('battleDuration').textContent = `${String(Math.floor(totalSec / 60)).padStart(2, '0')}:${String(totalSec % 60).padStart(2, '0')}`;
+}
+
+/* ============ 特效 ============ */
+const fieldRect = () => $('battlefield').getBoundingClientRect();
+function unitCenter(u) {
+  const card = unitEl[u.id].card.getBoundingClientRect();
+  const field = fieldRect();
+  return { x: card.left - field.left + card.width / 2, y: card.top - field.top + card.height / 2 };
+}
+function floatText(u, text, cls) {
+  const { x, y } = unitCenter(u);
+  const el = document.createElement('span');
+  el.className = `dmg-float ${cls}`;
+  el.textContent = text;
+  el.style.left = `${x + rnd(-14, 14)}px`;
+  el.style.top = `${y - 8}px`;
+  $('floatLayer').appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+function slashAt(u) {
+  const { x, y } = unitCenter(u);
+  const el = document.createElement('span');
+  el.className = 'slash-arc';
+  el.style.left = `${x}px`; el.style.top = `${y}px`;
+  $('floatLayer').appendChild(el);
+  setTimeout(() => el.remove(), 360);
+}
+function banner(text) {
+  const b = $('waveBanner');
+  b.textContent = text;
+  b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+}
+
+/* ============ 战报 ============ */
+function log(type, mark, text) {
+  const li = document.createElement('li');
+  li.className = `log-${type}`;
+  li.innerHTML = `<span class="log-mark">${mark}</span><span>${text}</span>`;
+  const list = $('combatLog');
+  list.prepend(li);
+  while (list.children.length > 60) list.lastChild.remove();
+}
+
+/* ============ 顶栏 / 收益刷新 ============ */
+function refreshWaveUi() {
+  $('waveNum').textContent = state.wave;
+  document.querySelectorAll('.wave-bead').forEach((b, i) => {
+    b.classList.toggle('cleared', i + 1 < state.wave);
+    b.classList.toggle('current', i + 1 === state.wave);
+  });
+  $('waveHint').textContent = state.wave === 10 ? '帅旗压阵' : state.wave >= 7 ? '精英现身' : '敌势未至';
+}
+function refreshLootUi() {
+  $('lootCopper').textContent = state.copper;
+  $('lootEquip').textContent = state.equips;
+  $('lootKill').textContent = state.kills;
+  $('packNum').textContent = state.pack;
+  $('packMeterNum').textContent = `${state.pack} / ${state.packCap}`;
+  $('packFill').style.width = `${(state.pack / state.packCap) * 100}%`;
+  const full = state.pack >= state.packCap;
+  $('packMeter').classList.toggle('full', full);
+  $('packChip').classList.toggle('warn', full);
+}
+
+/* ============ 控件 ============ */
+document.querySelectorAll('.speed-group .ctl-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.speed-group .ctl-btn').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.speed = Number(btn.dataset.speed);
+    log('wave', '速', `战斗节奏调至 ${btn.dataset.speed}×。`);
+  });
+});
+$('btnGuard').addEventListener('click', () => {
+  state.mode = 'guard';
+  $('btnGuard').classList.add('active'); $('btnRoam').classList.remove('active');
+  log('wave', '守', '转为驻守：原地迎敌，败退自动重整。');
+});
+$('btnRoam').addEventListener('click', () => {
+  state.mode = 'roam';
+  $('btnRoam').classList.add('active'); $('btnGuard').classList.remove('active');
+  log('wave', '闯', '转为闯荡：破阵后自动深入。');
+});
+$('btnPause').addEventListener('click', () => {
+  state.paused = !state.paused;
+  $('btnPause').textContent = state.paused ? '继续' : '停止';
+  $('btnPause').classList.toggle('active', state.paused);
+  log('wave', state.paused ? '止' : '战', state.paused ? '鸣金收兵，战斗暂停。' : '擂鼓再战。');
+});
+
+/* ============ 初始化 ============ */
+(function init() {
+  const beads = $('waveBeads');
+  for (let i = 1; i <= 10; i++) {
+    const b = document.createElement('span');
+    b.className = `wave-bead${i === 10 ? ' boss-bead' : ''}${i === 1 ? ' current' : ''}`;
+    beads.appendChild(b);
+  }
+  state.units = PARTY_DEF.map((d) => ({
+    ...d, side: 'party', rank: 'normal', maxHp: d.hp,
+    gauge: rnd(0, 400), energy: rnd(20, 60), coolMs: 0, alive: true,
+  }));
+  spawnWave();
+  log('loot', '获', '敌人死亡时，铜钱与随机装备立即入账。');
+  refreshLootUi();
+  setInterval(tick, 100);
+})();
+</script>
+</body>
+</html>

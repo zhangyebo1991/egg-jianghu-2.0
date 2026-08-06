@@ -2582,3 +2582,424 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .heroes-page *, .heroes-page *::before, .heroes-page *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---- 图片素材：头像 · 徽章图标 · 世界场景 ---- */
+
+/* 人物头像统一为圆形裁切 */
+.unit-portrait, .r-portrait, .dh-portrait, .formation-roster-portrait, .formation-token-portrait, .formation-card-portrait, .city-portrait, .faction-roster-portrait, .faction-calling-portrait {
+  flex: none;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* 水墨徽章图标统一为圆角纸底小徽 */
+.cc-icon, .ms-icon, .lc-icon, .heart-icon, .city-martial-icon, .city-token-icon, .faction-detail-icon {
+  flex: none;
+  object-fit: cover;
+  border-radius: 50%;
+  background: #f2ecdf;
+}
+
+/* 挂机页 · 战斗单位头像 */
+.unit-portrait { display: block; width: 52px; height: 52px; margin: 0 auto 8px; border: 2px solid #4a5146; box-shadow: 0 2px 8px rgb(0 0 0 / 45%); }
+.combat-unit.enemy .unit-portrait { border-color: #5f453c; }
+.combat-unit[data-rank="elite"] .unit-portrait { border-color: #806657; }
+.combat-unit[data-rank="boss"] .unit-portrait { width: 60px; height: 60px; border-color: #a46a42; }
+
+/* 挂机页 · 战场背景（按当前江湖卷切换场景图） */
+.battlefield.has-scene {
+  background:
+    linear-gradient(180deg, rgb(18 20 16 / 88%), rgb(18 20 16 / 70%) 45%, rgb(18 20 16 / 82%)),
+    var(--battle-scene) center / cover no-repeat,
+    #151914;
+}
+
+/* 侠客页 · 点将谱头像与品级角标 */
+.heroes-page .r-face { position: relative; flex: none; width: 42px; height: 42px; }
+.heroes-page .r-portrait { width: 42px; height: 42px; border: 1.5px solid rgb(201 163 92 / 45%); box-shadow: 0 2px 6px rgb(0 0 0 / 40%); }
+.heroes-page .r-face .r-seal { position: absolute; right: -7px; bottom: -7px; width: 20px; height: 20px; font-size: 12px; }
+
+/* 侠客页 · 列传大头照 */
+.heroes-page .dh-portrait { width: 84px; height: 84px; border: 2.5px solid rgb(201 163 92 / 55%); box-shadow: 0 4px 14px rgb(0 0 0 / 55%); }
+
+/* 侠客页 · 职业卡 / 武功槽 / 已学武功 / 心法 */
+.heroes-page .cc-icon { width: 34px; height: 34px; border: 1px solid var(--line-soft); }
+.heroes-page .ms-icon { width: 34px; height: 34px; border: 1px solid var(--line-soft); }
+.heroes-page .learned-card { position: relative; }
+.heroes-page .lc-icon { position: absolute; top: 12px; left: 14px; width: 34px; height: 34px; border: 1px solid var(--line-soft); }
+.heroes-page .learned-card > div { margin-left: 46px; }
+.heroes-page .heart-icon { width: 20px; height: 20px; }
+.heroes-page .heart-pill:has(.heart-icon)::before { content: none; }
+
+/* 阵容页 · 名册 / 令牌 / 身手帖 */
+.formation-roster-portrait { width: 32px; height: 32px; border: 1.5px solid rgb(201 163 92 / 40%); }
+.formation-token-portrait { width: 44px; height: 44px; margin: -12px 0 6px; border: 1.5px solid rgb(201 163 92 / 60%); box-shadow: 0 2px 6px rgb(0 0 0 / 45%); }
+.formation-card-portrait { width: 64px; height: 64px; border: 2px solid rgb(120 95 55 / 55%); box-shadow: 0 3px 10px rgb(0 0 0 / 35%); }
+
+/* 城市页 · 酒馆头像与武功、信物图标 */
+.city-portrait { width: 38px; height: 38px; border: 1.5px solid #4a5146; }
+.city-martial-icon, .city-token-icon { width: 32px; height: 32px; border: 1px solid #373d34; }
+
+/* 势力页 · 牌匾 / 名册 / 拜帖 / 武功详情 */
+.faction-plaque-icon { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.faction-roster-portrait { width: 26px; height: 26px; border: 1px solid rgb(201 163 92 / 40%); }
+.faction-calling-portrait { width: 54px; height: 54px; border: 2px solid rgb(120 95 55 / 50%); box-shadow: 0 3px 8px rgb(0 0 0 / 30%); }
+.faction-detail-icon { float: left; width: 46px; height: 46px; margin: 2px 14px 4px 0; border: 1px solid rgb(201 163 92 / 45%); }
+
+/* 江湖页 · 世界卡场景图（锁定时随卡片一起去饱和） */
+.world-card-scene { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; opacity: .38; pointer-events: none; }
+.world-card:has(.world-card-scene)::before { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(165deg, rgb(18 21 17 / 58%), rgb(18 21 17 / 22%) 55%, rgb(18 21 17 / 64%)); pointer-events: none; }
+.world-card > strong, .world-card > small, .world-card > em, .world-card > .world-progress { position: relative; z-index: 1; }
+
+/* ============ 关卡战斗页 · 高保真单屏战场 ============ */
+body:has(.idle-page) { overflow: hidden; }
+.game-main:has(> .idle-page) { height: 100vh; min-height: 0; padding: 18px 24px 20px; overflow: hidden; }
+
+.idle-page {
+  --idle-paper: #e8e1d3;
+  --idle-paper-dim: #b3ad9e;
+  --idle-paper-mute: #7d7f72;
+  --idle-cinnabar: #b5503c;
+  --idle-cinnabar-bright: #cf6b53;
+  --idle-cinnabar-deep: #8a3a2b;
+  --idle-gold: #c9a35c;
+  --idle-gold-bright: #e6c67f;
+  --idle-gold-deep: #8f6f3a;
+  --idle-jade: #7fa88d;
+  --idle-jade-dim: #57705f;
+  --idle-azure: #6f9fb8;
+  --idle-line: #31382e;
+  --idle-line-soft: #252a22;
+  --idle-ease-out: cubic-bezier(.22, 1, .36, 1);
+  --idle-ease-snap: cubic-bezier(.77, 0, .175, 1);
+  position: relative;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: var(--idle-paper);
+  font-family: "Faction Song", "Noto Serif SC", "Source Han Serif SC", serif;
+}
+
+.idle-page::before {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(800px 360px at 66% -18%, rgb(127 168 141 / 7%), transparent 66%),
+    radial-gradient(720px 460px at -8% 112%, rgb(181 80 60 / 5%), transparent 58%);
+}
+.idle-page::after {
+  position: absolute;
+  inset: -30px;
+  z-index: 60;
+  content: "";
+  pointer-events: none;
+  opacity: .035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+.idle-ghost-char {
+  position: absolute;
+  top: 49%;
+  right: 1.5%;
+  z-index: -1;
+  color: rgb(233 222 195 / 3%);
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: min(34vh, 30vw);
+  line-height: 1;
+  writing-mode: vertical-rl;
+  pointer-events: none;
+  user-select: none;
+  transform: translateY(-50%);
+}
+
+/* 顶部战况条 */
+.idle-page .battle-topbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  min-width: 0;
+  padding: 11px 16px;
+  border: 1px solid var(--idle-line-soft);
+  border-radius: 8px;
+  background: linear-gradient(160deg, rgb(31 36 28 / 88%), rgb(17 20 15 / 94%));
+  box-shadow: 0 10px 28px rgb(0 0 0 / 28%);
+}
+.idle-page .stage-id { display: flex; align-items: center; gap: 12px; min-width: 190px; }
+.idle-page .stage-seal {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--idle-gold-deep);
+  border-radius: 6px;
+  color: var(--idle-gold-bright);
+  background: radial-gradient(circle at 35% 30%, rgb(201 163 92 / 16%), rgb(20 24 18 / 60%));
+  box-shadow: inset 0 0 12px rgb(201 163 92 / 12%);
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 25px;
+}
+.idle-page .stage-text { display: block; min-width: 0; }
+.idle-page .stage-text small { display: block; overflow: hidden; color: var(--idle-paper-mute); font-size: 10px; letter-spacing: .18em; text-overflow: ellipsis; white-space: nowrap; }
+.idle-page .stage-text h1 { margin: 2px 0 0; color: #f3e9d5; font-size: 20px; letter-spacing: .1em; white-space: nowrap; }
+.idle-page .stage-text h1 em { color: var(--idle-gold-bright); font-style: normal; }
+.idle-page .wave-track { display: flex; min-width: 0; flex: 1; align-items: center; justify-content: center; gap: 10px; }
+.idle-page .wave-beads { display: flex; align-items: center; gap: 6px; }
+.idle-page .wave-bead {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  border: 1px solid #454c3f;
+  border-radius: 50%;
+  background: #1f241c;
+  transition: background .4s var(--idle-ease-out), border-color .4s var(--idle-ease-out), box-shadow .4s var(--idle-ease-out), transform .4s var(--idle-ease-out);
+}
+.idle-page .wave-bead.cleared { border-color: var(--idle-gold); background: var(--idle-gold-deep); box-shadow: 0 0 6px rgb(201 163 92 / 45%); }
+.idle-page .wave-bead.current { border-color: var(--idle-cinnabar-bright); background: var(--idle-cinnabar); box-shadow: 0 0 10px rgb(207 107 83 / 65%); animation: idle-bead-pulse 1.6s ease-in-out infinite; }
+.idle-page .wave-bead.boss-bead { width: 17px; height: 17px; border-color: var(--idle-cinnabar-deep); }
+.idle-page .wave-bead.boss-bead::after { position: absolute; inset: 0; display: grid; content: "帅"; place-items: center; color: rgb(233 222 195 / 60%); font-family: "Faction Brush", serif; font-size: 10px; }
+.idle-page .wave-bead.boss-bead.cleared::after, .idle-page .wave-bead.boss-bead.current::after { color: #ffe9d9; }
+@keyframes idle-bead-pulse { 50% { transform: scale(1.35); } }
+.idle-page .wave-label { color: var(--idle-paper-mute); font-size: 10px; letter-spacing: .16em; white-space: nowrap; }
+.idle-page .wave-label strong { color: var(--idle-paper); font-size: 11px; font-weight: 500; }
+.idle-page .topbar-stats { display: flex; align-items: center; }
+.idle-page .stat-chip { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid var(--idle-line-soft); border-radius: 6px; background: rgb(12 14 11 / 55%); white-space: nowrap; }
+.idle-page .chip-mark { color: var(--idle-paper-mute); font-family: "Faction Brush", serif; font-size: 15px; }
+.idle-page .chip-num { color: var(--idle-paper); font-size: 12px; }
+.idle-page .chip-num em { color: var(--idle-gold-bright); font-style: normal; }
+.idle-page .stat-chip.warn { border-color: var(--idle-cinnabar-deep); animation: idle-warn-blink 1.4s ease-in-out infinite; }
+.idle-page .stat-chip.warn .chip-mark, .idle-page .stat-chip.warn .chip-num { color: var(--idle-cinnabar-bright); }
+@keyframes idle-warn-blink { 50% { box-shadow: 0 0 12px rgb(181 80 60 / 45%); } }
+.idle-page .battle-controls { display: flex; align-items: center; gap: 7px; padding: 0; border: 0; background: transparent; }
+.idle-page .ctl-btn { padding: 7px 12px; border: 1px solid var(--idle-line); border-radius: 6px; color: var(--idle-paper-dim); background: rgb(23 27 20 / 60%); font-size: 12px; letter-spacing: .14em; white-space: nowrap; transition: color .25s var(--idle-ease-out), border-color .25s var(--idle-ease-out), background .25s var(--idle-ease-out), box-shadow .25s var(--idle-ease-out); }
+.idle-page .ctl-btn:hover { color: var(--idle-paper); border-color: var(--idle-paper-mute); }
+.idle-page .ctl-btn.active { color: #ffe9d9; border-color: var(--idle-cinnabar); background: rgb(181 80 60 / 18%); box-shadow: inset 0 0 10px rgb(181 80 60 / 22%); }
+.idle-page .ctl-btn.gold:hover { color: #ffe9c4; border-color: var(--idle-gold); }
+.idle-page .ctl-sep { width: 1px; align-self: stretch; margin: 2px 2px; background: var(--idle-line-soft); }
+.idle-page .speed-group { display: flex; overflow: hidden; border: 1px solid var(--idle-line); border-radius: 6px; }
+.idle-page .speed-group .ctl-btn { min-width: 35px; padding: 7px 9px; border: 0; border-radius: 0; letter-spacing: 0; }
+.idle-page .speed-group .ctl-btn + .ctl-btn { border-left: 1px solid var(--idle-line-soft); }
+.idle-page .speed-group .ctl-btn.active { color: var(--idle-gold-bright); background: rgb(201 163 92 / 14%); box-shadow: none; }
+
+/* 战场与右侧战报 */
+.idle-page .battle-stage { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 16px; min-height: 0; }
+.idle-page .battlefield {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--idle-line-soft);
+  border-radius: 10px;
+  background:
+    radial-gradient(700px 260px at 50% 0%, rgb(127 168 141 / 7%), transparent 65%),
+    linear-gradient(180deg, rgb(23 27 20 / 82%), rgb(13 16 12 / 90%));
+  box-shadow: inset 0 0 60px rgb(0 0 0 / 35%), 0 14px 34px rgb(0 0 0 / 30%);
+}
+.idle-page .battlefield.has-scene {
+  background:
+    radial-gradient(700px 260px at 50% 0%, rgb(127 168 141 / 8%), transparent 65%),
+    linear-gradient(180deg, rgb(17 20 15 / 76%), rgb(10 12 9 / 82%) 50%, rgb(10 12 9 / 88%)),
+    var(--battle-scene) center / cover no-repeat,
+    #11150f;
+}
+.idle-page .battlefield::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  content: "";
+  pointer-events: none;
+  opacity: .74;
+  background: linear-gradient(180deg, rgb(10 13 9 / 12%), rgb(12 15 11 / 26%) 45%, rgb(8 10 7 / 18%));
+}
+.idle-page .battlefield::after { position: absolute; top: 50%; right: 0; left: 0; z-index: 0; height: 70px; content: ""; pointer-events: none; background: radial-gradient(60% 100% at 50% 50%, rgb(233 222 195 / 5%), transparent 70%); transform: translateY(-50%); }
+.idle-page .battle-half { position: relative; z-index: 1; display: grid; grid-template-rows: auto repeat(2, minmax(0, 1fr)); gap: 7px; min-height: 0; padding: 9px 14px 7px; }
+.idle-page .battle-half.party { padding: 7px 14px 9px; }
+.idle-page .half-heading { display: flex; align-items: baseline; gap: 9px; min-height: 20px; padding: 0 2px; color: var(--idle-paper-mute); font-size: 10px; letter-spacing: .26em; }
+.idle-page .half-heading strong { color: var(--idle-cinnabar-bright); font-family: "Faction Brush", serif; font-size: 17px; font-weight: 400; letter-spacing: .18em; }
+.idle-page .half-heading.party strong { color: var(--idle-jade); }
+.idle-page .half-hint { margin-left: auto; font-size: 9px; letter-spacing: .14em; }
+.idle-page .unit-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; min-height: 0; }
+.idle-page .unit-slot { min-width: 0; min-height: 0; }
+.idle-page .unit-slot-empty { display: grid; place-items: center; border: 1px dashed rgb(49 56 46 / 55%); border-radius: 8px; color: rgb(125 127 114 / 38%); font-size: 9px; letter-spacing: .26em; background: rgb(12 14 11 / 12%); }
+.idle-page .combat-unit {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  overflow: hidden;
+  border: 1px solid rgb(87 112 95 / 45%);
+  border-radius: 8px;
+  background: linear-gradient(155deg, rgb(31 36 28 / 86%), rgb(15 18 13 / 90%));
+  box-shadow: none;
+  transition: border-color .3s, box-shadow .3s, opacity .5s, filter .5s;
+}
+.idle-page .combat-unit.enemy { border-color: rgb(138 58 43 / 46%); background: linear-gradient(155deg, rgb(47 31 25 / 84%), rgb(18 16 13 / 92%)); }
+.idle-page .combat-unit::before { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; content: ""; background: linear-gradient(180deg, var(--idle-jade-dim), transparent); }
+.idle-page .combat-unit.enemy::before { background: linear-gradient(180deg, var(--idle-cinnabar-deep), transparent); }
+.idle-page .combat-unit[data-rank="elite"] { border-color: rgb(201 163 92 / 55%); }
+.idle-page .combat-unit[data-rank="boss"] { border-color: var(--idle-gold-deep); background: linear-gradient(155deg, rgb(58 42 26 / 68%), rgb(15 18 13 / 92%)); box-shadow: inset 0 0 24px rgb(201 163 92 / 8%); }
+.idle-page .combat-unit.lunge-enemy { z-index: 5; animation: idle-lunge-down .34s var(--idle-ease-snap); }
+.idle-page .combat-unit.lunge-party { z-index: 5; animation: idle-lunge-up .34s var(--idle-ease-snap); }
+.idle-page .combat-unit.hit-shake { animation: idle-hit-shake .3s var(--idle-ease-out); }
+@keyframes idle-lunge-down { 35% { box-shadow: 0 8px 22px rgb(0 0 0 / 45%); transform: translateY(11px) scale(1.025); } }
+@keyframes idle-lunge-up { 35% { box-shadow: 0 -8px 22px rgb(0 0 0 / 45%); transform: translateY(-11px) scale(1.025); } }
+@keyframes idle-hit-shake { 25% { transform: translateX(-4px); } 60% { transform: translateX(3px); } }
+.idle-page .unit-portrait { position: relative; display: grid; width: clamp(38px, 5.4vh, 50px); height: clamp(38px, 5.4vh, 50px); flex: none; margin: 0; place-items: center; overflow: hidden; border: 1px solid var(--idle-line); border-radius: 50%; background: radial-gradient(circle at 35% 30%, #2a3026, #11140f); box-shadow: 0 2px 8px rgb(0 0 0 / 45%); }
+.idle-page .combat-unit.enemy .unit-portrait { border-color: var(--idle-cinnabar-deep); }
+.idle-page .combat-unit[data-rank="elite"] .unit-portrait { border-color: var(--idle-gold-deep); box-shadow: 0 0 8px rgb(201 163 92 / 30%); }
+.idle-page .combat-unit[data-rank="boss"] .unit-portrait { width: clamp(42px, 5.8vh, 54px); height: clamp(42px, 5.8vh, 54px); border-color: var(--idle-gold); box-shadow: 0 0 12px rgb(201 163 92 / 45%); }
+.idle-page .unit-portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.idle-page .portrait-char { color: var(--idle-paper-dim); font-family: "Faction Brush", serif; font-size: 22px; }
+.idle-page .combat-unit.enemy .portrait-char { color: var(--idle-cinnabar-bright); }
+.idle-page .portrait-ring { position: absolute; inset: -1px; border-radius: 50%; box-shadow: inset 0 0 8px rgb(0 0 0 / 55%); pointer-events: none; }
+.idle-page .unit-body { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.idle-page .unit-head { display: flex; min-width: 0; align-items: baseline; gap: 6px; }
+.idle-page .unit-name { overflow: hidden; color: #efe4cf; font-size: clamp(11px, 1.55vh, 13px); letter-spacing: .04em; text-overflow: ellipsis; white-space: nowrap; }
+.idle-page .unit-tag { flex: none; padding: 1px 4px; border: 1px solid var(--idle-line); border-radius: 3px; color: var(--idle-paper-mute); font-size: 8px; letter-spacing: .08em; }
+.idle-page .unit-tag.rank-elite { color: var(--idle-gold-bright); border-color: var(--idle-gold-deep); }
+.idle-page .unit-tag.rank-boss { color: #ffd9a8; border-color: var(--idle-gold); background: rgb(201 163 92 / 12%); }
+.idle-page .row-tag { margin-left: auto; }
+.idle-page .meter { display: flex; grid-template-columns: none; align-items: center; gap: 5px; margin: 1px 0; color: var(--idle-paper-mute); font-size: 8px; }
+.idle-page .meter-label { width: 21px; flex: none; letter-spacing: .04em; }
+.idle-page .meter-track { height: 4px; flex: 1; overflow: hidden; border-radius: 3px; background: rgb(8 10 7 / 82%); box-shadow: inset 0 1px 2px rgb(0 0 0 / 65%); }
+.idle-page .meter-fill { display: block; width: 0; height: 100%; border-radius: 3px; transition: width .18s linear; }
+.idle-page .meter-num { width: 50px; flex: none; color: var(--idle-paper-mute); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.idle-page .hp-meter .meter-fill { background: linear-gradient(90deg, var(--idle-cinnabar-deep), var(--idle-cinnabar-bright)); box-shadow: 0 0 6px rgb(207 107 83 / 40%); }
+.idle-page .hp-meter.low .meter-fill { animation: idle-hp-flicker .9s ease-in-out infinite; }
+@keyframes idle-hp-flicker { 50% { filter: brightness(1.55); } }
+.idle-page .gauge-meter .meter-fill { background: linear-gradient(90deg, var(--idle-gold-deep), var(--idle-gold-bright)); }
+.idle-page .gauge-meter.full .meter-fill { box-shadow: 0 0 8px rgb(230 198 127 / 80%); }
+.idle-page .energy-meter .meter-track { height: 3px; }
+.idle-page .energy-meter .meter-fill { background: linear-gradient(90deg, #40607a, var(--idle-azure)); }
+.idle-page .energy-meter.full .meter-fill { box-shadow: 0 0 8px rgb(111 159 184 / 80%); }
+.idle-page .unit-foot { display: flex; align-items: center; gap: 5px; color: var(--idle-paper-mute); font-size: 8px; }
+.idle-page .cool-num { color: var(--idle-paper-dim); font-variant-numeric: tabular-nums; }
+.idle-page .skill-name { margin-left: auto; overflow: hidden; color: rgb(201 163 92 / 62%); font-family: "Faction Brush", serif; font-size: 10px; letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
+.idle-page .gauge-meter.full ~ .unit-foot .skill-name, .idle-page .energy-meter.full ~ .unit-foot .skill-name { color: var(--idle-gold-bright); text-shadow: 0 0 8px rgb(230 198 127 / 60%); }
+.idle-page .combat-unit.fallen { opacity: .38; filter: grayscale(.9); }
+.idle-page .combat-unit.fallen::after { position: absolute; top: 7px; right: 7px; content: "陨"; color: rgb(207 107 83 / 75%); font-family: "Faction Brush", serif; font-size: 21px; transform: rotate(12deg); }
+.idle-page .battle-divider { position: relative; z-index: 2; display: flex; height: auto; align-items: center; gap: 12px; padding: 3px 20px; }
+.idle-page .battle-divider::before { content: none; }
+.idle-page .divider-line { height: 1px; flex: 1; background: linear-gradient(90deg, transparent, var(--idle-line), transparent); }
+.idle-page .divider-seal { display: grid; width: 32px; height: 32px; flex: none; place-items: center; border: 1px solid #c96f58; border-radius: 6px; color: #f6e3d2; background: linear-gradient(145deg, #a44636, #7e3327); box-shadow: inset 0 0 0 2px #411811, 0 0 16px rgb(181 80 60 / 40%); font-family: "Faction Brush", serif; font-size: 20px; transform: rotate(-3deg); }
+.idle-page .divider-status { color: var(--idle-paper-mute); font-size: 9px; letter-spacing: .25em; white-space: nowrap; }
+.idle-page .divider-status em { color: var(--idle-gold-bright); font-style: normal; }
+
+/* 战斗特效 */
+.idle-page .unit-aura { position: absolute; inset: 1px; z-index: 6; border: 1px solid transparent; border-radius: 7px; pointer-events: none; }
+.idle-page .unit-aura.skill-aura { animation: idle-skill-aura .72s var(--idle-ease-out) forwards; }
+.idle-page .unit-aura.heal-aura { animation: idle-heal-aura .72s var(--idle-ease-out) forwards; }
+@keyframes idle-skill-aura { 30% { border-color: var(--idle-gold-bright); box-shadow: inset 0 0 18px rgb(230 198 127 / 26%), 0 0 0 2px rgb(230 198 127 / 55%), 0 0 24px rgb(230 198 127 / 45%); } 100% { opacity: 0; } }
+@keyframes idle-heal-aura { 30% { border-color: var(--idle-jade); box-shadow: inset 0 0 18px rgb(127 168 141 / 24%), 0 0 0 2px rgb(127 168 141 / 55%), 0 0 22px rgb(127 168 141 / 42%); } 100% { opacity: 0; } }
+.idle-page .dmg-float { position: absolute; top: 48%; left: 58%; z-index: 20; color: #f0d9c8; font-size: clamp(14px, 2.1vh, 19px); font-weight: 900; font-variant-numeric: tabular-nums; text-shadow: 0 2px 8px rgb(0 0 0 / 80%); white-space: nowrap; pointer-events: none; animation: idle-damage-rise .95s var(--idle-ease-out) forwards; }
+.idle-page .dmg-float.crit { color: var(--idle-gold-bright); font-size: clamp(17px, 2.6vh, 23px); }
+.idle-page .dmg-float.crit::before { content: "会心 "; font-family: "Faction Brush", serif; font-size: .72em; font-weight: 400; }
+.idle-page .dmg-float.heal { color: var(--idle-jade); }
+.idle-page .dmg-float.heal::before { content: "+"; }
+.idle-page .dmg-float.skill-name-float { top: 35%; left: 50%; color: var(--idle-gold-bright); font-family: "Faction Brush", serif; font-size: clamp(14px, 2.2vh, 20px); font-weight: 400; letter-spacing: .12em; text-shadow: 0 0 14px rgb(230 198 127 / 55%), 0 2px 8px rgb(0 0 0 / 80%); }
+@keyframes idle-damage-rise { 0% { opacity: 0; transform: translate(-50%, -20%) scale(.6); } 18% { opacity: 1; transform: translate(-50%, -58%) scale(1.12); } 100% { opacity: 0; transform: translate(-50%, -145%) scale(1); } }
+.idle-page .slash-arc { position: absolute; top: 50%; left: 52%; z-index: 18; width: 48px; height: 48px; border: 2px solid transparent; border-top-color: rgb(240 217 200 / 85%); border-right-color: rgb(240 217 200 / 40%); border-radius: 50%; pointer-events: none; animation: idle-slash-spin .32s var(--idle-ease-out) forwards; }
+@keyframes idle-slash-spin { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(-40deg) scale(.5); } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(140deg) scale(1.25); } }
+.idle-page .wave-banner { position: absolute; top: 50%; left: 50%; z-index: 30; color: #e9dec3; font-family: "Faction Brush", serif; font-size: clamp(28px, 5.4vh, 42px); letter-spacing: .26em; text-shadow: 0 0 30px rgb(201 163 92 / 40%), 0 4px 16px rgb(0 0 0 / 70%); white-space: nowrap; pointer-events: none; animation: idle-banner-in 1.7s var(--idle-ease-out) forwards; }
+@keyframes idle-banner-in { 0% { opacity: 0; filter: blur(6px); transform: translate(-50%, -50%) scale(1.4); } 22% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.94); } }
+
+/* 收益与战报栏 */
+.idle-page .combat-rail { display: flex; min-height: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--idle-line-soft); border-radius: 10px; background: linear-gradient(170deg, rgb(23 27 20 / 88%), rgb(13 16 12 / 94%)); box-shadow: 0 14px 34px rgb(0 0 0 / 28%); }
+.idle-page .rail-section { flex: none; padding: 12px 13px; border-bottom: 1px dashed var(--idle-line); }
+.idle-page .rail-title { display: flex; align-items: baseline; gap: 8px; margin: 0 0 9px; }
+.idle-page .rail-title strong { color: var(--idle-gold-bright); font-family: "Faction Brush", serif; font-size: 16px; font-weight: 400; letter-spacing: .2em; }
+.idle-page .rail-title small { color: var(--idle-paper-mute); font-size: 9px; letter-spacing: .15em; }
+.idle-page .rail-extra { margin-left: auto; color: var(--idle-paper-mute); font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+.idle-page .loot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.idle-page .loot-cell { padding: 7px 3px 6px; border: 1px solid var(--idle-line-soft); border-radius: 6px; background: rgb(12 14 11 / 50%); text-align: center; }
+.idle-page .loot-num { display: block; color: var(--idle-gold-bright); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.idle-page .loot-num.jade { color: var(--idle-jade); }
+.idle-page .loot-num.paper { color: var(--idle-paper); }
+.idle-page .loot-label { display: block; margin-top: 2px; color: var(--idle-paper-mute); font-size: 8px; letter-spacing: .2em; }
+.idle-page .pack-meter { display: flex; align-items: center; gap: 7px; margin-top: 9px; }
+.idle-page .pack-label { flex: none; color: var(--idle-paper-mute); font-size: 9px; letter-spacing: .16em; }
+.idle-page .pack-track { height: 4px; flex: 1; overflow: hidden; border-radius: 2px; background: rgb(12 14 11 / 80%); }
+.idle-page .pack-fill { display: block; height: 100%; background: linear-gradient(90deg, var(--idle-jade-dim), var(--idle-jade)); transition: width .4s var(--idle-ease-out); }
+.idle-page .pack-num { flex: none; color: var(--idle-paper-dim); font-size: 9px; font-variant-numeric: tabular-nums; }
+.idle-page .pack-meter.full .pack-fill { background: linear-gradient(90deg, var(--idle-cinnabar-deep), var(--idle-cinnabar-bright)); }
+.idle-page .pack-meter.full .pack-num { color: var(--idle-cinnabar-bright); }
+.idle-page .log-wrap { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+.idle-page .rail-log-heading { padding-bottom: 3px; border-bottom: 0; }
+.idle-page .rail-log-heading .rail-title { margin-bottom: 0; }
+.idle-page .combat-log { display: flex; min-height: 0; max-height: none; flex: 1; flex-direction: column; gap: 2px; margin: 0; padding: 2px 13px 9px; overflow-y: auto; list-style: none; scrollbar-color: var(--idle-line) transparent; scrollbar-width: thin; }
+.idle-page .combat-log::-webkit-scrollbar { width: 4px; }
+.idle-page .combat-log::-webkit-scrollbar-thumb { border-radius: 2px; background: var(--idle-line); }
+.idle-page .combat-log li { display: flex; align-items: baseline; gap: 7px; margin: 0; padding: 4px 5px; border: 0; border-radius: 4px; color: var(--idle-paper-dim); font-size: 10px; line-height: 1.48; animation: idle-log-in .35s var(--idle-ease-out); }
+@keyframes idle-log-in { from { opacity: 0; transform: translateY(-6px); } }
+.idle-page .log-mark { width: 14px; flex: none; color: var(--idle-paper-mute); font-family: "Faction Brush", serif; font-size: 11px; text-align: center; }
+.idle-page .log-kill .log-mark { color: var(--idle-cinnabar-bright); }
+.idle-page .log-skill .log-mark { color: var(--idle-gold-bright); }
+.idle-page .log-loot { color: var(--idle-gold); }
+.idle-page .log-loot .log-mark, .idle-page .log-wave .log-mark { color: var(--idle-gold-bright); }
+.idle-page .log-wave { color: var(--idle-paper); background: rgb(233 222 195 / 4%); }
+.idle-page .log-defeat { color: var(--idle-paper-mute); }
+.idle-page .log-heal .log-mark { color: var(--idle-jade); }
+.idle-page .mechanic-legend { display: flex; gap: 7px; padding: 9px 12px; border-top: 1px dashed var(--idle-line); border-bottom: 0; }
+.idle-page .legend-item { display: flex; min-width: 0; align-items: center; gap: 4px; color: var(--idle-paper-mute); font-size: 8px; letter-spacing: .03em; white-space: nowrap; }
+.idle-page .legend-dot { width: 7px; height: 7px; flex: none; border-radius: 2px; }
+.idle-page .d-gauge { background: var(--idle-gold); }
+.idle-page .d-energy { background: var(--idle-azure); }
+.idle-page .d-cool { background: var(--idle-paper-mute); }
+
+@media (max-width: 1380px) {
+  .idle-page .battle-topbar { gap: 10px; padding-inline: 12px; }
+  .idle-page .stage-id { min-width: 168px; }
+  .idle-page .wave-track { gap: 7px; }
+  .idle-page .wave-beads { gap: 4px; }
+  .idle-page .wave-bead { width: 11px; height: 11px; }
+  .idle-page .wave-bead.boss-bead { width: 15px; height: 15px; }
+  .idle-page .wave-label:first-child { display: none; }
+  .idle-page .ctl-btn { padding-inline: 9px; }
+  .idle-page .battle-stage { grid-template-columns: minmax(0, 1fr) 268px; gap: 12px; }
+}
+
+@media (max-height: 800px) {
+  .game-main:has(> .idle-page) { padding: 12px 18px 14px; }
+  .idle-page { gap: 11px; }
+  .idle-page .battle-topbar { padding-block: 8px; }
+  .idle-page .stage-seal { width: 38px; height: 38px; font-size: 22px; }
+  .idle-page .stage-text h1 { font-size: 18px; }
+  .idle-page .battle-half { gap: 5px; padding: 6px 10px 4px; }
+  .idle-page .battle-half.party { padding: 4px 10px 6px; }
+  .idle-page .half-heading { min-height: 16px; font-size: 9px; }
+  .idle-page .half-heading strong { font-size: 15px; }
+  .idle-page .unit-row { gap: 6px; }
+  .idle-page .combat-unit { gap: 7px; padding: 5px 7px; }
+  .idle-page .unit-portrait { width: 36px; height: 36px; }
+  .idle-page .combat-unit[data-rank="boss"] .unit-portrait { width: 40px; height: 40px; }
+  .idle-page .unit-name { font-size: 10px; }
+  .idle-page .meter { gap: 4px; margin: 0; font-size: 7px; }
+  .idle-page .meter-num { width: 44px; }
+  .idle-page .skill-name { font-size: 9px; }
+  .idle-page .rail-section { padding: 9px 11px; }
+  .idle-page .loot-cell { padding-block: 5px; }
+  .idle-page .combat-log { padding-inline: 11px; }
+  .idle-page .combat-log li { padding-block: 3px; font-size: 9px; }
+  .idle-page .mechanic-legend { padding-block: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idle-page *, .idle-page *::before, .idle-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
