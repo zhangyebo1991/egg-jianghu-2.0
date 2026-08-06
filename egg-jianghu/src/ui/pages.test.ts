@@ -286,6 +286,8 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-action="formation-auto-arrange"')
     expect(html).toContain('data-action="formation-filter"')
     expect(html).toContain('formation-radar')
+    expect(html).toMatch(/formation-portrait-frame compact[\s\S]*formation-grade-seal/)
+    expect(html).toMatch(/formation-portrait-frame card[\s\S]*formation-grade-seal/)
     expect(html).toContain('在阵')
     expect(html).toContain('data-testid="formation-hero-hero_test"')
     expect(html).toContain('formation-slot-remove')

@@ -8,6 +8,38 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByTestId('world-overview')).toBeVisible()
 })
 
+test('头像品级角标叠在头像右上角且名册不产生横向滚动', async ({ page }) => {
+  await page.getByTestId('tab-formation').click()
+
+  const metrics = await page.evaluate(() => {
+    const rect = (selector: string) => {
+      const element = document.querySelector<HTMLElement>(selector)
+      if (!element) return null
+      const box = element.getBoundingClientRect()
+      return { left: box.left, top: box.top, right: box.right, width: box.width }
+    }
+    const rosterList = document.querySelector<HTMLElement>('.formation-roster-list')
+    return {
+      rosterOverflowX: rosterList ? getComputedStyle(rosterList).overflowX : null,
+      rosterScrollWidth: rosterList?.scrollWidth ?? null,
+      rosterClientWidth: rosterList?.clientWidth ?? null,
+      rosterFrame: rect('.formation-roster-row .formation-portrait-frame'),
+      rosterSeal: rect('.formation-roster-row .formation-portrait-frame > .formation-grade-seal'),
+      detailFrame: rect('.formation-hero-card .formation-portrait-frame'),
+      detailSeal: rect('.formation-hero-card .formation-portrait-frame > .formation-grade-seal'),
+      detailName: rect('.formation-hero-card h2'),
+    }
+  })
+
+  expect(metrics.rosterOverflowX).toBe('hidden')
+  expect(metrics.rosterScrollWidth).toBe(metrics.rosterClientWidth)
+  expect(metrics.rosterSeal?.left).toBeLessThan(metrics.rosterFrame?.right ?? 0)
+  expect(metrics.rosterSeal?.top).toBeLessThan(metrics.rosterFrame?.top ?? 0)
+  expect(metrics.detailSeal?.left).toBeLessThan(metrics.detailFrame?.right ?? 0)
+  expect(metrics.detailSeal?.top).toBeLessThan(metrics.detailFrame?.top ?? 0)
+  expect(metrics.detailName?.width).toBeGreaterThan(0)
+})
+
 const dragToSlot = async (page: Page, source: string, target: string): Promise<void> => {
   const found = await page.evaluate(({ source, target }) => {
     const from = document.querySelector(source)
