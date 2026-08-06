@@ -33,7 +33,7 @@ import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationPositi
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { renderFactionsPage, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
-import { renderHeroesPage, type HeroesEquipmentView, type HeroesPageViewModel } from './ui/heroes-page'
+import { renderHeroesPage, type HeroesEquipmentView, type HeroesHeroView, type HeroesPageViewModel } from './ui/heroes-page'
 import { renderIdlePage, type IdleCombatUnitView, type IdlePageViewModel } from './ui/idle-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
 import { renderStageList, renderWorldOverview, type StageListViewModel, type WorldOverviewViewModel } from './ui/jianghu-page'
@@ -70,6 +70,10 @@ let heroInventoryQualityFilter: EquipmentQuality | 'all' = 'all'
 let heroInventoryPage = 1
 let heroBatchDiscardQuality: EquipmentQuality | 'all' = 'all'
 let showBatchDiscardConfirm = false
+let heroRosterQuery = ''
+let heroRosterGradeFilter = 'all'
+let heroRosterCategoryFilter = 'all'
+let heroRosterLocatePending = false
 let formationSelectedHeroId: string | null = null
 let formationDetailHeroId: string | null = null
 let formationFilter: FormationFilter = 'all'
@@ -102,7 +106,7 @@ let factionSwitchAnimationPending = false
 let factionContributionAnimation: FactionContributionAnimation | null = null
 let factionMotionTimer: number | null = null
 
-const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item'
+const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item, .pack-row'
 const EQUIPMENT_TOOLTIP_GAP = 10
 const EQUIPMENT_TOOLTIP_VIEWPORT_PADDING = 12
 
@@ -222,6 +226,10 @@ const enterPlaying = (nextSession: GameSession): void => {
   heroInventoryPage = 1
   heroBatchDiscardQuality = 'all'
   showBatchDiscardConfirm = false
+  heroRosterQuery = ''
+  heroRosterGradeFilter = 'all'
+  heroRosterCategoryFilter = 'all'
+  heroRosterLocatePending = false
   selectedFactionId = FACTIONS.find((faction) => session.state.unlockedWorldIds.includes(faction.worldId))?.id ?? ''
   selectedFactionMartialId = null
   factionRosterOpen = false
@@ -434,37 +442,81 @@ const heroesViewModel = (): HeroesPageViewModel => {
   const allEquipmentItems = session.state.inventory.map(heroEquipmentView)
   const inventoryItems = allEquipmentItems.filter((item) => !item.equippedByHeroId)
 
+  const buildCareerPath = (currentCareerId: string): Array<{ name: string; state: 'done' | 'current' | 'future'; tier?: string }> => {
+    const current = careerById(currentCareerId)
+    if (!current) return []
+    const base = CAREERS.find((career) => career.category === current.category && career.branch === null)
+    const branchName = current.branch ?? CAREERS.find((career) => career.category === current.category && career.branch !== null)?.branch
+    const tierOrder: Record<string, number> = { 初级: 0, 中级: 1, 高级: 2, 顶级: 3 }
+    const branch = CAREERS
+      .filter((career) => career.category === current.category && career.branch === branchName)
+      .sort((left, right) => tierOrder[left.tier] - tierOrder[right.tier])
+    const path = base ? [base, ...branch] : [current, ...branch.filter((career) => career.id !== current.id)]
+    const currentIndex = Math.max(0, path.findIndex((career) => career.id === current.id))
+    return path.map((career, index) => ({
+      name: career.name,
+      tier: career.tier,
+      state: career.id === current.id ? 'current' : index < currentIndex ? 'done' : 'future',
+    }))
+  }
+
+  const buildHero = ({ definition, progress, name }: ReturnType<typeof recruitedHeroes>[number]): HeroesHeroView => {
+    const career = careerById(progress.currentCareerId) ?? careerById(definition.baseCareerId)
+    const record = progress.careers[progress.currentCareerId]
+    const heroCompatibleCareers = career
+      ? CAREERS.filter((item) => item.category === career.category && item.id !== career.id)
+      : []
+    const category = career?.category ?? '剑'
+    const source = definition.source === 'starter'
+      ? '本队主角'
+      : definition.source === 'tavern'
+        ? '酒馆相逢'
+        : `${FACTIONS.find((faction) => faction.id === definition.factionId)?.name ?? '势力'}门人`
+    return {
+      id: definition.id,
+      name,
+      grade: definition.source === 'starter' ? '主' : definition.grade,
+      recruited: progress.recruited,
+      level: progress.level,
+      careerId: progress.currentCareerId,
+      careerName: career?.name ?? progress.currentCareerId,
+      careerLevel: record?.level ?? 1,
+      careerPerfected: record?.perfected ?? false,
+      availableCareerIds: heroCompatibleCareers.map((item) => item.id),
+      aptitudes: definition.aptitudes,
+      combatStats: buildCombatStats(definition, progress, session.state.inventory),
+      equipmentSlots: EQUIPMENT_SLOTS.map((slot) => ({
+        id: slot,
+        name: equipmentSlotNames[slot],
+        equipment: allEquipmentItems.find((item) => item.uid === progress.equipmentBySlot[slot]) ?? null,
+      })),
+      learnedMartials: Object.entries(progress.learnedMartials).map(([id, learnedRecord]) => {
+        const martial = martialByIdV10(id)
+        return { id, name: martial?.name ?? id, rarity: martial?.rarity ?? '粗浅', level: learnedRecord.level }
+      }),
+      equippedMartialIds: progress.equippedMartialIds,
+      heartMethodId: progress.heartMethodId,
+      category,
+      source,
+      inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
+      careerPath: buildCareerPath(progress.currentCareerId),
+    }
+  }
+
+  const heroes = recruitedHeroes().map(buildHero)
+  const query = heroRosterQuery.trim().toLocaleLowerCase()
+  const rosterHeroes = heroes.filter((hero) =>
+    (!query || hero.name.toLocaleLowerCase().includes(query))
+    && (heroRosterGradeFilter === 'all' || hero.grade === heroRosterGradeFilter)
+    && (heroRosterCategoryFilter === 'all' || hero.category === heroRosterCategoryFilter))
+
   return {
     selectedHeroId: selectedId,
-    heroes: recruitedHeroes().map(({ definition, progress, name }) => {
-      const career = careerById(progress.currentCareerId)
-      const record = progress.careers[progress.currentCareerId]
-      return {
-        id: definition.id,
-        name,
-        grade: definition.grade,
-        recruited: progress.recruited,
-        level: progress.level,
-        careerId: progress.currentCareerId,
-        careerName: career?.name ?? progress.currentCareerId,
-        careerLevel: record?.level ?? 1,
-        careerPerfected: record?.perfected ?? false,
-        availableCareerIds: compatibleCareers.map((item) => item.id),
-        aptitudes: definition.aptitudes,
-        combatStats: buildCombatStats(definition, progress, session.state.inventory),
-        equipmentSlots: EQUIPMENT_SLOTS.map((slot) => ({
-          id: slot,
-          name: equipmentSlotNames[slot],
-          equipment: allEquipmentItems.find((item) => item.uid === progress.equipmentBySlot[slot]) ?? null,
-        })),
-        learnedMartials: Object.entries(progress.learnedMartials).map(([id, learnedRecord]) => {
-          const martial = martialByIdV10(id)
-          return { id, name: martial?.name ?? id, rarity: martial?.rarity ?? '粗浅', level: learnedRecord.level }
-        }),
-        equippedMartialIds: progress.equippedMartialIds,
-        heartMethodId: progress.heartMethodId,
-      }
-    }),
+    heroes,
+    rosterHeroes,
+    rosterQuery: heroRosterQuery,
+    rosterGradeFilter: heroRosterGradeFilter,
+    rosterCategoryFilter: heroRosterCategoryFilter,
     careers: compatibleCareers.map((career) => ({
       id: career.id,
       name: career.name,
@@ -845,6 +897,19 @@ const render = (): void => {
     showResetConfirmation,
     content,
   }))
+  if (heroRosterLocatePending && activeTab === 'heroes') {
+    heroRosterLocatePending = false
+    window.requestAnimationFrame(() => {
+      const heroRow = selectedHeroId
+        ? app.querySelector<HTMLElement>(`[data-testid="hero-${selectedHeroId}"]`)
+        : null
+      heroRow?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      heroRow?.animate([
+        { filter: 'brightness(1.8)', transform: 'translateX(4px)' },
+        { filter: 'brightness(1)', transform: 'translateX(0)' },
+      ], { duration: 650, easing: 'cubic-bezier(.22, 1, .36, 1)' })
+    })
+  }
   if (shouldPlayFactionSwitch) {
     factionSwitchAnimationPending = false
     playFactionSwitchMotion()
@@ -1133,16 +1198,34 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'equipment-equip') commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
   else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
+  else if (action === 'hero-inventory-filter') {
+    const kind = button.dataset.filterKind
+    const value = button.dataset.filterValue ?? 'all'
+    if (kind === 'slot') {
+      heroInventorySlotFilter = value === 'all' || EQUIPMENT_SLOTS.includes(value as EquipmentSlot) ? value as EquipmentSlot | 'all' : 'all'
+    } else if (kind === 'quality') {
+      heroInventoryQualityFilter = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality) ? value as EquipmentQuality | 'all' : 'all'
+    }
+    heroInventoryPage = 1
+  } else if (action === 'hero-batch-discard-filter') {
+    const value = button.dataset.filterValue as EquipmentQuality | undefined
+    heroBatchDiscardQuality = value && EQUIPMENT_QUALITIES.includes(value) ? value : 'all'
+    showBatchDiscardConfirm = heroBatchDiscardQuality !== 'all'
+    heroInventoryPage = 1
+  }
   else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
   else if (action === 'hero-inventory-page') heroInventoryPage = Math.max(1, dataNumber(button, 'page'))
   else if (action === 'request-batch-discard') {
-    if (heroBatchDiscardQuality !== 'all') showBatchDiscardConfirm = true
+    showBatchDiscardConfirm = !showBatchDiscardConfirm
+    heroBatchDiscardQuality = 'all'
   } else if (action === 'cancel-batch-discard') {
     showBatchDiscardConfirm = false
+    heroBatchDiscardQuality = 'all'
   } else if (action === 'confirm-batch-discard') {
     if (heroBatchDiscardQuality !== 'all') {
       commitAction(discardEquipmentByQuality(session.state, heroBatchDiscardQuality))
       showBatchDiscardConfirm = false
+      heroBatchDiscardQuality = 'all'
       heroInventoryPage = 1
     }
   }
@@ -1213,9 +1296,16 @@ app.addEventListener('change', (event) => {
 })
 
 app.addEventListener('input', (event) => {
-  const input = (event.target as HTMLElement).closest<HTMLInputElement>('[data-action="faction-roster-search"]')
-  if (!input) return
-  factionRosterQuery = input.value
+  const target = event.target as HTMLElement
+  const heroRosterInput = target.closest<HTMLInputElement>('[data-action="hero-roster-search"]')
+  if (heroRosterInput) {
+    heroRosterQuery = heroRosterInput.value
+    render()
+    return
+  }
+  const factionRosterInput = target.closest<HTMLInputElement>('[data-action="faction-roster-search"]')
+  if (!factionRosterInput) return
+  factionRosterQuery = factionRosterInput.value
   factionRosterOpen = true
   render()
 })
@@ -1407,6 +1497,18 @@ app.addEventListener('click', (event) => {
     startSelectedStage('guard')
     return
   } else if (action === 'select-hero') selectedHeroId = button.dataset.heroId ?? null
+  else if (action === 'hero-roster-filter') {
+    const kind = button.dataset.filterKind
+    const value = button.dataset.filterValue ?? 'all'
+    if (kind === 'grade' && ['all', '丙', '乙', '甲', '地', '天'].includes(value)) heroRosterGradeFilter = value
+    if (kind === 'category' && ['all', '剑', '刀', '拳', '暗', '医', '内家'].includes(value)) heroRosterCategoryFilter = value
+  } else if (action === 'locate-hero') {
+    normalizeSelectedHero()
+    heroRosterQuery = ''
+    heroRosterGradeFilter = 'all'
+    heroRosterCategoryFilter = 'all'
+    heroRosterLocatePending = Boolean(selectedHeroId)
+  }
   else if (action === 'select-faction') {
     const nextFactionId = button.dataset.factionId ?? selectedFactionId
     if (nextFactionId !== selectedFactionId) {

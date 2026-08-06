@@ -23,9 +23,9 @@ test('侠客页按稀有度批量丢弃并释放背包空间', async ({ page }) 
   const panel = page.getByTestId('hero-inventory-panel')
   await expect(panel.locator('[data-equipment-uid]')).toHaveCount(5)
 
-  await panel.locator('[data-batch-discard-quality]').selectOption('凡品')
   await panel.getByRole('button', { name: '批量丢弃' }).click()
-  await expect(panel).toContainText('确认丢弃 5 件装备')
+  await panel.locator('[data-action="hero-batch-discard-filter"][data-filter-value="凡品"]').click()
+  await expect(panel).toContainText('将丢弃 5 件装备')
 
   await panel.getByRole('button', { name: '确认丢弃' }).click()
   await expect(page.getByRole('status')).toHaveText('已丢弃 5 件凡品及以下装备')
@@ -37,11 +37,11 @@ test('批量丢弃确认条可取消且不改变库存', async ({ page }) => {
   await page.getByTestId('tab-heroes').click()
 
   const panel = page.getByTestId('hero-inventory-panel')
-  await panel.locator('[data-batch-discard-quality]').selectOption('凡品')
   await panel.getByRole('button', { name: '批量丢弃' }).click()
+  await panel.locator('[data-action="hero-batch-discard-filter"][data-filter-value="凡品"]').click()
   await panel.getByRole('button', { name: '取消' }).click()
   await expect(panel.getByRole('button', { name: '确认丢弃' })).toHaveCount(0)
 
-  await expect(panel.locator('[data-batch-discard-quality]')).toBeVisible()
+  await expect(panel.locator('[data-batch-discard-quality]')).toBeHidden()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().inventory)).toHaveLength(3)
 })

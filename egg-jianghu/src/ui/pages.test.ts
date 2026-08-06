@@ -199,6 +199,8 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('src="/src/assets/equipment/slots/weapon.png"')
     expect(html).toContain('旧试剑')
     expect(html).toContain('data-testid="hero-inventory-panel"')
+    expect(html).toContain('class="roster-search"')
+    expect(html).not.toContain('roster-search-wrap')
     expect(html).toContain('data-hero-inventory-filter="slot"')
     expect(html).toContain('data-action="organize-hero-inventory"')
     expect(html).toContain('data-testid="hero-inventory-item-weapon_new"')
@@ -209,24 +211,26 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('双击左键或右键')
   })
 
-  it('物品栏每页最多展示 200 件并可切换分页', () => {
-    const items = Array.from({ length: 201 }, (_, index) => ({
+  it('物品栏每页最多展示 8 件并可切换分页', () => {
+    const items = Array.from({ length: 9 }, (_, index) => ({
       ...inventoryWeapon,
       uid: `paged_${index}`,
     }))
     const firstPage = renderHeroesPage({ ...heroesFixture(), inventoryItems: items, inventoryPage: 1 })
     const secondPage = renderHeroesPage({ ...heroesFixture(), inventoryItems: items, inventoryPage: 2 })
 
-    expect(firstPage.match(/data-testid="hero-inventory-item-/g)).toHaveLength(200)
-    expect(firstPage).toContain('第 1 / 2 页 · 本页 200 件')
+    expect(firstPage.match(/data-testid="hero-inventory-item-/g)).toHaveLength(8)
+    expect(firstPage).toContain('1/2 · 8件')
+    expect(firstPage.match(/data-action="hero-inventory-page" data-page="[123]"/g)).toHaveLength(3)
     expect(secondPage.match(/data-testid="hero-inventory-item-/g)).toHaveLength(1)
-    expect(secondPage).toContain('第 2 / 2 页 · 本页 1 件')
+    expect(secondPage).toContain('2/2 · 1件')
   })
 
   it('物品栏提供按稀有度批量丢弃的品质选择与入口', () => {
     const html = renderHeroesPage(heroesFixture())
     expect(html).toContain('data-batch-discard-quality')
-    expect(html).toMatch(/data-action="request-batch-discard" disabled/)
+    expect(html).toMatch(/data-action="request-batch-discard" aria-expanded="false"/)
+    expect(html).not.toContain('class="batch-panel')
     expect(html).toContain('批量丢弃')
   })
 

@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>侠客 · 蛋蛋江湖 2.0 — 高保真重设计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   侠客页重设计 · 蛋蛋江湖 2.0
+   设计语言：墨底宣纸 · 朱砂印 · 金漆匾 · 点将谱 · 侠客列传
+   ============================================================ */
+:root {
+  --ink-950: #0c0e0b;
+  --ink-900: #11140f;
+  --ink-850: #171b14;
+  --ink-800: #1f241c;
+  --ink-700: #2a3026;
+  --paper: #e8e1d3;
+  --paper-dim: #b3ad9e;
+  --paper-mute: #7d7f72;
+  --xuan: #e9dec3;          /* 宣纸 */
+  --xuan-deep: #ddceaa;
+  --xuan-ink: #2b2519;       /* 纸上墨色 */
+  --cinnabar: #b5503c;       /* 朱砂 */
+  --cinnabar-bright: #cf6b53;
+  --cinnabar-deep: #8a3a2b;
+  --gold: #c9a35c;
+  --gold-bright: #e6c67f;
+  --gold-deep: #8f6f3a;
+  --jade: #7fa88d;
+  --jade-dim: #57705f;
+  --line: #31382e;
+  --line-soft: #252a22;
+  /* 装备品质 */
+  --q-凡品: #8e887d;
+  --q-良品: #4f9168;
+  --q-上品: #4e7fb8;
+  --q-珍品: #8b63a8;
+  --q-绝品: #c9953d;
+  /* 武功品阶 */
+  --r-粗浅: #8e887d;
+  --r-寻常: #4f9168;
+  --r-精妙: #4e7fb8;
+  --r-上乘: #8b63a8;
+  --r-绝学: #c9953d;
+  --font-brush: "Ma Shan Zheng", "Noto Serif SC", serif;
+  --font-song: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: var(--font-song);
+  color: var(--paper);
+  background:
+    radial-gradient(1100px 500px at 82% -10%, rgb(139 99 168 / 7%), transparent 60%),
+    radial-gradient(900px 620px at -12% 108%, rgb(181 80 60 / 6%), transparent 55%),
+    radial-gradient(700px 420px at 45% 118%, rgb(201 163 92 / 5%), transparent 60%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+  font-synthesis: none;
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+::selection { background: rgb(181 80 60 / 55%); color: #fff4e8; }
+
+/* 纸颗粒覆盖层 —— 全场胶片/宣纸质感 */
+.grain {
+  position: fixed; inset: -50%; z-index: 60; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.055; mix-blend-mode: overlay;
+}
+
+/* ============ 游戏外壳 · 侧边栏 ============ */
+.app-shell { display: grid; grid-template-columns: 212px minmax(0, 1fr); min-height: 100vh; }
+
+.game-sidebar {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; gap: 26px;
+  padding: 26px 20px 20px;
+  border-right: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, rgb(23 27 20 / 72%), rgb(13 16 12 / 88%));
+}
+.brand-block { display: flex; align-items: center; gap: 12px; }
+.brand-seal {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 24px; color: #f6e3d2;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  border: 1px solid #c96f58; border-radius: 6px;
+  box-shadow: inset 0 0 0 3px #411811, 0 4px 14px rgb(0 0 0 / 40%);
+  transform: rotate(-2deg);
+}
+.brand-block strong { display: block; font-size: 15px; letter-spacing: 0.1em; color: #efe4cf; white-space: nowrap; }
+.brand-block small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); white-space: nowrap; }
+
+.game-nav { display: grid; gap: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 6px; text-align: left;
+  color: var(--paper-dim); transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  position: relative;
+}
+.nav-item .nav-mark {
+  width: 30px; height: 30px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 16px;
+  border: 1px solid var(--line); border-radius: 5px; color: var(--paper-mute);
+  transition: all 0.25s var(--ease-out);
+}
+.nav-item strong { font-size: 14px; letter-spacing: 0.28em; font-weight: 500; }
+.nav-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.nav-item.active { color: #f3e9d5; background: rgb(233 222 195 / 5%); }
+.nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px;
+  background: var(--cinnabar); border-radius: 2px;
+}
+.nav-item.active .nav-mark { border-color: var(--cinnabar-deep); color: var(--cinnabar-bright); }
+
+.side-note {
+  padding: 14px 12px; border: 1px dashed var(--line); border-radius: 8px;
+  font-size: 10px; line-height: 2.1; letter-spacing: 0.16em; color: var(--paper-mute);
+}
+.side-note b { color: var(--gold); font-weight: 600; }
+
+.sidebar-landscape { margin-top: auto; height: 74px; position: relative; overflow: hidden; border-radius: 6px; }
+.sidebar-landscape::before { /* 远山 */
+  content: ""; position: absolute; inset: auto -12px 0 -12px; height: 56px;
+  background:
+    linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
+    linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
+    linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
+}
+.sidebar-landscape::after { /* 雾 */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
+  background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
+}
+.sidebar-motto { font-size: 10px; letter-spacing: 0.5em; color: var(--paper-mute); text-align: center; }
+
+/* ============ 主区框架 ============ */
+.game-main { min-width: 0; padding: 30px 34px 70px; position: relative; }
+
+/* 巨字书法背景 —— 氛围层 */
+.ghost-char {
+  position: absolute; z-index: 0; pointer-events: none; user-select: none;
+  font-family: var(--font-brush); line-height: 0.9; color: rgb(233 222 195 / 4%);
+}
+.ghost-roster { top: 240px; left: 190px; font-size: 300px; transform: rotate(-5deg); }
+.ghost-martial { top: 860px; right: 260px; font-size: 380px; transform: rotate(5deg); color: rgb(201 163 92 / 4%); }
+.ghost-pack { top: 1500px; left: 300px; font-size: 320px; transform: rotate(-4deg); color: rgb(181 80 60 / 4%); }
+
+.page-head {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+  padding-bottom: 22px; margin-bottom: 26px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.page-head .crumb { font-size: 11px; letter-spacing: 0.3em; color: var(--paper-mute); margin-bottom: 12px; }
+.page-head .crumb b { color: var(--gold); font-weight: 500; }
+.page-head h1 {
+  font-family: var(--font-brush); font-weight: 400;
+  font-size: 58px; line-height: 1; letter-spacing: 0.06em; color: #f2e7d0;
+  text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
+}
+.page-head .latin { margin-top: 10px; font-size: 10px; letter-spacing: 0.42em; color: var(--paper-mute); text-transform: uppercase; }
+
+/* 通宝钱袋 */
+.purse { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border: 1px solid rgb(201 163 92 / 28%); border-radius: 8px; background: linear-gradient(160deg, rgb(201 163 92 / 9%), rgb(201 163 92 / 3%)); }
+.purse svg { flex: none; filter: drop-shadow(0 2px 6px rgb(201 163 92 / 35%)); }
+.purse .purse-num { font-size: 26px; font-weight: 700; color: var(--gold-bright); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; line-height: 1; }
+.purse .purse-label { font-size: 10px; letter-spacing: 0.3em; color: var(--gold); margin-top: 4px; }
+.purse .purse-faction { font-size: 10px; color: var(--paper-mute); letter-spacing: 0.12em; margin-top: 2px; }
+
+/* ============ 三栏舞台 ============ */
+.heroes-stage {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 236px minmax(0, 1fr) 348px;
+  gap: 20px; align-items: start;
+}
+
+/* 区块标题（与势力页同族） */
+.sec-title { display: flex; align-items: baseline; gap: 14px; }
+.sec-title h2 { font-family: var(--font-brush); font-size: 30px; font-weight: 400; letter-spacing: 0.12em; color: #e6d7b4; }
+.sec-title .sub { font-size: 10px; letter-spacing: 0.32em; color: var(--paper-mute); }
+.sec-title .sub i { font-style: normal; color: var(--cinnabar-bright); }
+</style>
+<style>
+/* ============ 点将谱 · 左栏名册 ============ */
+.roster-rail {
+  position: sticky; top: 24px;
+  border-radius: 12px; padding: 3px;
+  background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+.roster-inner {
+  border-radius: 9px; overflow: hidden;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgb(201 163 92 / 6%), transparent 60%),
+    linear-gradient(170deg, var(--ink-850), var(--ink-900) 70%);
+  border: 1px solid rgb(0 0 0 / 40%);
+}
+.roster-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 18px 18px 12px; border-bottom: 1px solid var(--line-soft);
+}
+.roster-head .sec-title h2 { font-size: 26px; }
+.roster-count { text-align: right; }
+.roster-count b { display: block; font-size: 20px; font-weight: 700; color: var(--gold-bright); font-variant-numeric: tabular-nums; line-height: 1; }
+.roster-count span { font-size: 9px; letter-spacing: 0.3em; color: var(--paper-mute); }
+
+.roster-list { display: grid; gap: 6px; padding: 12px 10px; max-height: calc(100vh - 220px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: #3d4438 transparent; }
+.roster-list::-webkit-scrollbar { width: 8px; }
+.roster-list::-webkit-scrollbar-thumb { background: #333a30; border-radius: 4px; }
+
+/* 名帖条 */
+.roster-row {
+  position: relative;
+  width: 100%; display: flex; align-items: center; gap: 11px;
+  padding: 9px 10px; border-radius: 7px; text-align: left;
+  border: 1px solid transparent;
+  transition: background 0.25s var(--ease-out), border-color 0.25s, transform 0.25s var(--ease-out);
+  animation: row-in 0.5s var(--ease-snap) both;
+}
+@keyframes row-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+.roster-row:hover { background: rgb(233 222 195 / 5%); transform: translateX(2px); }
+.roster-row.active {
+  background: linear-gradient(160deg, rgb(201 163 92 / 11%), rgb(201 163 92 / 4%));
+  border-color: rgb(201 163 92 / 38%);
+  box-shadow: inset 2.5px 0 0 var(--gold);
+}
+.roster-row .r-seal {
+  width: 30px; height: 30px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 17px; color: #f8e9da;
+  text-shadow: 0 1px 2px rgb(60 20 12 / 55%);
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 5px 7px 5px 8px / 7px 5px 8px 5px;
+  transform: rotate(3deg);
+  box-shadow: 0 2px 6px rgb(138 58 43 / 40%), inset 0 0 0 1.5px rgb(255 230 210 / 36%), inset 0 -3px 6px rgb(0 0 0 / 26%);
+  transition: transform 0.3s var(--ease-out);
+}
+.roster-row:hover .r-seal { transform: rotate(0deg) scale(1.06); }
+.roster-row .r-seal.g-丙 { background: linear-gradient(150deg, #c9715a, #9c4a36); }
+.roster-row .r-seal.g-甲 { background: linear-gradient(150deg, #a8483a, #7c3026); }
+.roster-row .r-seal.g-地 { background: linear-gradient(150deg, #8f3a30, #63261d); }
+.roster-row .r-seal.g-天 { background: linear-gradient(150deg, #b98a3a, #8a6224); box-shadow: 0 2px 8px rgb(185 138 58 / 50%), inset 0 0 0 1.5px rgb(255 240 210 / 45%), inset 0 -3px 6px rgb(0 0 0 / 26%); }
+.roster-row .r-seal.g-主 { background: linear-gradient(150deg, var(--gold-bright), var(--gold-deep)); color: #2e2208; text-shadow: none; }
+.roster-row .r-body { min-width: 0; flex: 1; }
+.roster-row .r-name { display: block; font-size: 15px; letter-spacing: 0.12em; color: var(--paper); }
+.roster-row.active .r-name { color: var(--gold-bright); }
+.roster-row .r-meta { display: block; margin-top: 3px; font-size: 10px; letter-spacing: 0.1em; color: var(--paper-mute); font-variant-numeric: tabular-nums; }
+.roster-row .r-flag {
+  flex: none; font-size: 9px; letter-spacing: 0.18em; color: var(--gold);
+  border: 1px solid rgb(201 163 92 / 40%); border-radius: 3px; padding: 2px 6px;
+  opacity: 0; transform: translateX(4px); transition: all 0.25s var(--ease-out);
+}
+.roster-row.active .r-flag { opacity: 1; transform: none; }
+.roster-foot {
+  padding: 11px 18px; border-top: 1px solid var(--line-soft);
+  font-size: 10px; letter-spacing: 0.16em; color: var(--paper-mute); line-height: 1.9;
+}
+.roster-foot b { color: var(--jade); font-weight: 600; }
+
+/* ============ 侠客列传 · 中栏 ============ */
+.dossier { display: grid; gap: 20px; min-width: 0; }
+
+/* 列传头 · 金漆匾 */
+.dossier-head {
+  position: relative; overflow: hidden;
+  border-radius: 12px; padding: 3px;
+  background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+  animation: plaque-in 0.6s var(--ease-out) both;
+}
+@keyframes plaque-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.dossier-head-inner {
+  position: relative; border-radius: 9px; overflow: hidden;
+  display: flex; align-items: center; gap: 22px;
+  padding: 24px 28px;
+  background:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 12%) 0 2px, transparent 2px 46px),
+    linear-gradient(165deg, #2c241a, #1d1812 60%, #181410);
+  border: 1px solid #3a3122;
+}
+.dossier-head-inner::after { /* 压角金线 */
+  content: ""; position: absolute; inset: 6px; pointer-events: none;
+  border: 1px solid rgb(201 163 92 / 22%); border-radius: 6px;
+}
+.dh-ghost {
+  position: absolute; right: 96px; top: 50%; transform: translateY(-50%) rotate(6deg);
+  font-family: var(--font-brush); font-size: 150px; line-height: 1;
+  color: rgb(233 222 195 / 5%); pointer-events: none; user-select: none;
+}
+.dh-seal {
+  flex: none; width: 64px; height: 64px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 38px; color: #f8e9da;
+  text-shadow: 0 1px 3px rgb(60 20 12 / 55%);
+  background: linear-gradient(150deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  border-radius: 9px 12px 8px 13px / 12px 8px 13px 9px;
+  transform: rotate(4deg);
+  box-shadow: 0 4px 12px rgb(138 58 43 / 45%), inset 0 0 0 2px rgb(255 230 210 / 40%), inset 0 -6px 10px rgb(0 0 0 / 28%);
+}
+.dh-seal.g-丙 { background: linear-gradient(150deg, #c9715a, #9c4a36); }
+.dh-seal.g-甲 { background: linear-gradient(150deg, #a8483a, #7c3026); }
+.dh-seal.g-地 { background: linear-gradient(150deg, #8f3a30, #63261d); }
+.dh-seal.g-天 { background: linear-gradient(150deg, #b98a3a, #8a6224); box-shadow: 0 4px 14px rgb(185 138 58 / 50%), inset 0 0 0 2px rgb(255 240 210 / 45%), inset 0 -6px 10px rgb(0 0 0 / 28%); }
+.dh-seal.g-主 { background: linear-gradient(150deg, var(--gold-bright), var(--gold-deep)); color: #2e2208; text-shadow: none; }
+.dh-main { min-width: 0; }
+.dh-kicker { font-size: 10px; letter-spacing: 0.34em; color: rgb(233 222 195 / 45%); margin-bottom: 6px; }
+.dh-kicker i { font-style: normal; color: var(--gold); }
+.dh-name { font-family: var(--font-brush); font-size: 52px; line-height: 1.02; letter-spacing: 0.08em; color: #f2e7d0; text-shadow: 0 5px 22px rgb(0 0 0 / 50%); }
+.dh-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.dh-tag {
+  font-size: 10px; letter-spacing: 0.2em; color: var(--paper-dim);
+  border: 1px solid var(--line); border-radius: 4px; padding: 3px 9px;
+  background: rgb(12 14 11 / 35%);
+}
+.dh-tag.hot { color: var(--cinnabar-bright); border-color: rgb(181 80 60 / 42%); }
+.dh-tag.gold { color: var(--gold-bright); border-color: rgb(201 163 92 / 42%); }
+.dh-level { margin-left: auto; text-align: right; flex: none; z-index: 1; }
+.dh-level small { display: block; font-size: 10px; letter-spacing: 0.34em; color: var(--paper-mute); }
+.dh-level b { display: block; margin-top: 4px; font-size: 40px; font-weight: 900; color: var(--gold-bright); font-variant-numeric: tabular-nums; line-height: 1; text-shadow: 0 4px 18px rgb(201 163 92 / 30%); }
+.dh-level .dh-career { display: block; margin-top: 6px; font-size: 11px; letter-spacing: 0.22em; color: var(--paper-dim); }
+.dh-vertical {
+  flex: none; align-self: stretch; display: grid; place-items: center;
+  writing-mode: vertical-rl; font-family: var(--font-brush);
+  font-size: 17px; letter-spacing: 0.5em; color: rgb(233 222 195 / 30%);
+  border-left: 1px dashed rgb(201 163 92 / 25%); padding-left: 14px; margin-left: 4px;
+}
+
+/* 列传区块（墨底卷） */
+.dossier-sec {
+  position: relative;
+  border-radius: 12px;
+  background:
+    radial-gradient(900px 300px at 50% -80px, rgb(201 163 92 / 6%), transparent 70%),
+    linear-gradient(170deg, var(--ink-850), var(--ink-900) 70%);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 35%);
+  animation: plaque-in 0.6s var(--ease-out) both;
+}
+.dossier-sec::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, #3a3122, #241d12); }
+.dossier-sec::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, #3a3122, #241d12); }
+.dossier-sec > header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 20px 26px 4px;
+}
+.dossier-sec > .sec-body { padding: 14px 26px 24px; }
+
+/* ============ 根骨资质 · 五维雷达 + 战斗修为 ============ */
+.aptitude-grid { display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 24px; align-items: start; }
+.radar-box { position: relative; display: grid; justify-items: center; }
+.radar-svg { display: block; width: 236px; height: 236px; }
+.radar-svg .ring { fill: none; stroke: rgb(233 222 195 / 10%); stroke-width: 1; }
+.radar-svg .ring.radar-paper { fill: rgb(233 222 195 / 3%); }
+.radar-svg .axis { stroke: rgb(233 222 195 / 12%); stroke-width: 1; stroke-dasharray: 2 4; }
+.radar-svg .apt-poly {
+  fill: rgb(201 163 92 / 20%); stroke: var(--gold-bright); stroke-width: 2; stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgb(201 163 92 / 35%));
+}
+.radar-svg .apt-dot { fill: var(--gold-bright); stroke: #2e2208; stroke-width: 1.4; }
+.radar-svg .apt-label { font-size: 12px; letter-spacing: 0.1em; fill: var(--paper-dim); font-family: var(--font-song); }
+.radar-svg .apt-label .apt-val { fill: var(--gold-bright); font-weight: 700; }
+.radar-total { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+.radar-total b { display: block; font-size: 26px; font-weight: 900; color: var(--gold-bright); font-variant-numeric: tabular-nums; line-height: 1; }
+.radar-total span { display: block; margin-top: 4px; font-size: 9px; letter-spacing: 0.3em; color: var(--paper-mute); }
+
+.combat-stats { display: grid; gap: 14px; }
+.stat-cluster > header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+.stat-cluster > header h3 { font-size: 13px; letter-spacing: 0.3em; color: #d8c9a4; font-weight: 600; }
+.stat-cluster > header span { font-size: 9px; letter-spacing: 0.2em; color: var(--paper-mute); }
+.stat-cluster .chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.st-chip {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto;
+  column-gap: 9px; align-items: center;
+  padding: 9px 11px; border-radius: 7px;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 25%));
+  transition: border-color 0.25s, transform 0.25s var(--ease-out);
+}
+.st-chip:hover { border-color: rgb(201 163 92 / 35%); transform: translateY(-1px); }
+.st-chip i {
+  grid-row: 1 / 3; width: 26px; height: 26px; display: grid; place-items: center;
+  font-style: normal; font-family: var(--font-brush); font-size: 13px; color: var(--gold);
+  border: 1px solid rgb(201 163 92 / 30%); border-radius: 5px;
+  background: rgb(201 163 92 / 7%);
+}
+.st-chip dt { font-size: 10px; letter-spacing: 0.14em; color: var(--paper-mute); }
+.st-chip dd { font-size: 16px; font-weight: 700; color: var(--paper); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.st-chip.hot dd { color: var(--cinnabar-bright); }
+</style>
+<style>
+/* ============ 随身装备 · 人形装备位 ============ */
+.pd-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr;
+  gap: 12px;
+}
+.pd-slot {
+  position: relative;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto;
+  column-gap: 12px; align-items: center;
+  padding: 12px 14px; border-radius: 8px;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 28%));
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s var(--ease-out);
+}
+.pd-slot[data-quality] { border-color: color-mix(in srgb, var(--qc, var(--line)) 55%, transparent); }
+.pd-slot:hover { transform: translateY(-2px); border-color: var(--qc, var(--gold)); box-shadow: 0 10px 24px rgb(0 0 0 / 35%); z-index: 5; }
+.pd-icon {
+  grid-row: 1 / 4; width: 46px; height: 46px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 24px;
+  color: var(--qc, var(--paper-mute));
+  background: radial-gradient(circle at 38% 30%, var(--ink-700), var(--ink-900) 78%);
+  border: 1.6px solid color-mix(in srgb, var(--qc, #55584e) 75%, #fff 8%); border-radius: 8px;
+  box-shadow: inset 0 2px 8px rgb(0 0 0 / 55%), 0 0 12px color-mix(in srgb, var(--qc, transparent) 25%, transparent);
+}
+.pd-slot.empty .pd-icon { border-style: dashed; opacity: 0.6; box-shadow: inset 0 2px 8px rgb(0 0 0 / 55%); }
+.pd-slot .pd-slot-name { font-size: 9px; letter-spacing: 0.3em; color: var(--paper-mute); }
+.pd-slot .pd-item-name { font-size: 15px; letter-spacing: 0.1em; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pd-slot.empty .pd-item-name { color: rgb(233 222 195 / 30%); }
+.pd-slot .pd-item-meta { font-size: 10px; letter-spacing: 0.12em; color: var(--qc, var(--paper-mute)); font-variant-numeric: tabular-nums; }
+.pd-lock {
+  position: absolute; top: 7px; right: 8px;
+  font-size: 9px; letter-spacing: 0.1em; color: var(--gold);
+  border: 1px solid rgb(201 163 92 / 45%); border-radius: 3px; padding: 1px 5px;
+  background: rgb(12 14 11 / 55%);
+}
+.pd-unequip {
+  position: absolute; right: 8px; bottom: 8px;
+  font-size: 10px; letter-spacing: 0.2em; color: var(--cinnabar-bright);
+  border: 1px solid rgb(181 80 60 / 45%); border-radius: 4px; padding: 2px 8px;
+  background: rgb(12 14 11 / 65%);
+  opacity: 0; transform: translateY(3px); transition: all 0.22s var(--ease-out);
+}
+.pd-slot:hover .pd-unequip { opacity: 1; transform: none; }
+.pd-unequip:hover { background: rgb(181 80 60 / 18%); }
+.pd-slot[data-quality="凡品"] { --qc: var(--q-凡品); }
+.pd-slot[data-quality="良品"] { --qc: var(--q-良品); }
+.pd-slot[data-quality="上品"] { --qc: var(--q-上品); }
+.pd-slot[data-quality="珍品"] { --qc: var(--q-珍品); }
+.pd-slot[data-quality="绝品"] { --qc: var(--q-绝品); }
+
+/* 人形立影（中柱） */
+.pd-sil {
+  grid-row: 1 / 5; grid-column: 2;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  border-radius: 10px; border: 1px dashed rgb(201 163 92 / 22%);
+  background:
+    radial-gradient(60% 40% at 50% 30%, rgb(201 163 92 / 7%), transparent 70%),
+    linear-gradient(180deg, rgb(233 222 195 / 2%), transparent);
+  min-height: 300px;
+}
+.pd-sil .sil-char {
+  font-family: var(--font-brush); font-size: 128px; line-height: 1;
+  color: rgb(233 222 195 / 8%);
+  text-shadow: 0 0 30px rgb(201 163 92 / 12%);
+}
+.pd-sil .sil-dantian {
+  position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%);
+  width: 12px; height: 12px; border-radius: 50%;
+  background: radial-gradient(circle, #ffd9a0 0%, #f08a3c 45%, rgb(240 138 60 / 0%) 78%);
+  box-shadow: 0 0 12px 4px rgb(240 138 60 / 45%);
+  animation: ember 2.8s ease-in-out infinite;
+}
+@keyframes ember { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; box-shadow: 0 0 16px 6px rgb(240 138 60 / 65%); } }
+.pd-sil .sil-cap { font-size: 10px; letter-spacing: 0.42em; text-indent: 0.42em; color: var(--paper-mute); }
+.pd-sil .sil-sum {
+  display: flex; gap: 12px; padding: 7px 12px; border-radius: 6px;
+  border: 1px solid var(--line); background: rgb(12 14 11 / 45%);
+  font-size: 10px; letter-spacing: 0.14em; color: var(--paper-mute); font-variant-numeric: tabular-nums;
+}
+.pd-sil .sil-sum b { color: var(--gold-bright); font-weight: 700; }
+.pd-pos-head  { grid-column: 1; grid-row: 1; }
+.pd-pos-armor { grid-column: 1; grid-row: 2; }
+.pd-pos-waist { grid-column: 1; grid-row: 3; }
+.pd-pos-boots { grid-column: 1; grid-row: 4; }
+.pd-pos-weapon{ grid-column: 3; grid-row: 1; }
+.pd-pos-wrist { grid-column: 3; grid-row: 2; }
+.pd-pos-token { grid-column: 3; grid-row: 3; }
+.pd-pos-extra { grid-column: 3; grid-row: 4; }
+.pd-extra {
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
+  padding: 12px 14px; border-radius: 8px;
+  border: 1px dashed var(--line); background: rgb(12 14 11 / 22%);
+}
+.pd-extra .pe-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; letter-spacing: 0.18em; color: var(--paper-mute); }
+.pd-extra .pe-row b { color: var(--paper); font-variant-numeric: tabular-nums; }
+.pd-extra .pe-hint { margin-top: 2px; font-size: 9px; letter-spacing: 0.12em; line-height: 1.8; color: rgb(125 127 114 / 75%); }
+
+/* 装备悬浮笺（属性 + 对比） */
+.eq-tip {
+  position: absolute; z-index: 30; width: 300px;
+  left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%) translateY(6px);
+  padding: 0; border-radius: 9px; overflow: hidden;
+  color: var(--xuan-ink);
+  background:
+    radial-gradient(140% 90% at 50% 0%, rgb(255 250 235 / 55%), transparent 60%),
+    linear-gradient(172deg, var(--xuan), var(--xuan-deep));
+  box-shadow: 0 20px 44px rgb(0 0 0 / 55%), inset 0 0 0 1px rgb(120 95 55 / 20%);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s var(--ease-out), transform 0.22s var(--ease-out);
+}
+.pd-slot:hover .eq-tip, .pack-row:hover .eq-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+.eq-tip header { padding: 12px 16px 10px; border-bottom: 1px dashed rgb(120 95 55 / 40%); }
+.eq-tip header small { font-size: 9px; letter-spacing: 0.26em; color: #8a7a55; }
+.eq-tip header strong { display: block; margin-top: 3px; font-family: var(--font-brush); font-size: 22px; letter-spacing: 0.08em; font-weight: 400; color: #2e2717; }
+.eq-tip header em { display: block; margin-top: 4px; font-style: normal; font-size: 10px; letter-spacing: 0.16em; color: var(--qc, #75643f); font-weight: 700; }
+.eq-tip .eq-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.eq-tip .eq-cols.single { grid-template-columns: 1fr; }
+.eq-tip .eq-col { padding: 10px 16px 12px; }
+.eq-tip .eq-col + .eq-col { border-left: 1px dashed rgb(120 95 55 / 40%); background: rgb(120 95 55 / 7%); }
+.eq-tip .eq-col > small { display: block; font-size: 9px; letter-spacing: 0.24em; color: #8a7a55; margin-bottom: 7px; }
+.eq-tip .eq-col > strong { display: block; font-size: 12px; color: #4d4023; margin-bottom: 6px; letter-spacing: 0.06em; }
+.eq-line { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; line-height: 1.95; color: #4d4023; }
+.eq-line b { color: #8a6420; font-variant-numeric: tabular-nums; }
+.eq-line.better b { color: #4f7d46; }
+.eq-tip footer { padding: 9px 16px; border-top: 1px dashed rgb(120 95 55 / 40%); font-size: 10px; letter-spacing: 0.14em; color: #75643f; }
+
+/* ============ 职业进阶 ============ */
+.career-path { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-bottom: 18px; }
+.career-path::before {
+  content: ""; position: absolute; left: 8%; right: 8%; top: 21px; height: 2px;
+  background: repeating-linear-gradient(90deg, rgb(233 222 195 / 18%) 0 6px, transparent 6px 12px);
+}
+.cp-node { position: relative; display: grid; justify-items: center; gap: 9px; padding: 0 6px; text-align: center; }
+.cp-dot {
+  position: relative; z-index: 1; width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 21px;
+  background: radial-gradient(circle at 38% 32%, var(--ink-700), var(--ink-900) 75%);
+  border: 1.6px dashed var(--paper-mute); color: var(--paper-mute);
+}
+.cp-node.done .cp-dot { border-style: solid; border-color: var(--jade-dim); color: var(--jade); }
+.cp-node.current .cp-dot {
+  border-style: solid; border-color: var(--gold); color: var(--gold-bright);
+  background: radial-gradient(circle at 38% 30%, #4a3d27, #2c2415 72%);
+  box-shadow: 0 0 16px rgb(201 163 92 / 45%);
+  animation: cp-pulse 2.4s var(--ease-out) infinite;
+}
+@keyframes cp-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgb(201 163 92 / 40%); } 55% { box-shadow: 0 0 0 11px rgb(201 163 92 / 0%); } }
+.cp-node.future { opacity: 0.5; }
+.cp-tier { font-size: 9px; letter-spacing: 0.3em; text-indent: 0.3em; color: var(--paper-mute); }
+.cp-node.current .cp-tier { color: var(--gold); }
+.cp-name { font-size: 15px; letter-spacing: 0.12em; color: var(--paper); }
+.cp-node.current .cp-name { color: var(--gold-bright); font-weight: 600; }
+.cp-lv { font-size: 10px; color: var(--paper-mute); font-variant-numeric: tabular-nums; }
+.cp-lv b { color: var(--gold-bright); }
+
+.career-strip {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 13px 18px; margin-bottom: 16px; border-radius: 8px;
+  border: 1px solid rgb(201 163 92 / 26%);
+  background: linear-gradient(160deg, rgb(201 163 92 / 8%), rgb(201 163 92 / 2%));
+}
+.career-strip .cs-label { font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute); }
+.career-strip .cs-name { font-family: var(--font-brush); font-size: 24px; letter-spacing: 0.1em; color: #eadcb8; }
+.career-strip .cs-lv { font-size: 11px; color: var(--paper-dim); letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
+.career-strip .cs-lv b { color: var(--gold-bright); font-size: 15px; }
+.btn-perfect {
+  margin-left: auto; padding: 10px 22px; border-radius: 6px; white-space: nowrap;
+  font-size: 12px; letter-spacing: 0.3em; text-indent: 0.3em; font-weight: 600;
+  color: #2e2208; background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep));
+  box-shadow: 0 6px 18px rgb(201 163 92 / 35%);
+  transition: transform 0.2s var(--ease-out), filter 0.2s;
+}
+.btn-perfect:hover { filter: brightness(1.08); transform: translateY(-2px); }
+.btn-perfect:active { transform: translateY(1px); }
+.btn-perfect:disabled { filter: grayscale(0.7) brightness(0.7); cursor: not-allowed; transform: none; }
+.btn-perfect.done { background: linear-gradient(160deg, #57705f, #3d5245); color: #cfe3d6; box-shadow: none; }
+
+.career-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.career-card {
+  position: relative; display: grid; gap: 7px; justify-items: start;
+  padding: 14px 16px; border-radius: 8px; text-align: left;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 28%));
+  transition: border-color 0.25s, transform 0.25s var(--ease-out);
+}
+.career-card:hover { border-color: rgb(201 163 92 / 35%); transform: translateY(-2px); }
+.career-card .cc-tier { font-size: 9px; letter-spacing: 0.26em; color: var(--paper-mute); }
+.career-card .cc-name { font-size: 16px; letter-spacing: 0.12em; color: var(--paper); }
+.career-card .cc-state { font-size: 10px; letter-spacing: 0.14em; }
+.career-card .cc-state.ok { color: var(--jade); }
+.career-card .cc-state.token { color: var(--gold); }
+.career-card .cc-state.no { color: rgb(233 222 195 / 30%); }
+.career-card .cc-btn {
+  margin-top: 4px; padding: 7px 18px; border-radius: 5px;
+  font-size: 11px; letter-spacing: 0.28em; text-indent: 0.28em;
+  color: #f6e9d6; background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  box-shadow: 0 3px 10px rgb(138 58 43 / 35%);
+  transition: transform 0.2s var(--ease-out), filter 0.2s;
+}
+.career-card .cc-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.career-card .cc-btn.switch { background: none; border: 1px solid rgb(127 168 141 / 50%); color: var(--jade); box-shadow: none; }
+.career-card .cc-btn.switch:hover { background: rgb(127 168 141 / 10%); }
+.career-card .cc-btn:disabled { filter: grayscale(0.8) brightness(0.6); cursor: not-allowed; transform: none; }
+
+/* ============ 四槽武功 + 已习得 ============ */
+.martial-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 22px; align-items: start; }
+.martial-slots { display: grid; gap: 10px; }
+.mslot {
+  position: relative; display: flex; align-items: center; gap: 13px;
+  padding: 12px 14px; border-radius: 8px;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 28%));
+  transition: border-color 0.25s, transform 0.25s var(--ease-out);
+}
+.mslot:hover { transform: translateX(3px); border-color: rgb(201 163 92 / 30%); }
+.mslot.empty { border-style: dashed; background: rgb(12 14 11 / 18%); }
+.mslot .ms-no {
+  flex: none; width: 38px; height: 38px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 22px;
+  color: var(--rc, var(--paper-mute));
+  border: 1.5px solid color-mix(in srgb, var(--rc, #55584e) 70%, #fff 6%); border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, var(--ink-700), var(--ink-900) 76%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--rc, transparent) 22%, transparent);
+}
+.mslot.empty .ms-no { border-style: dashed; opacity: 0.55; box-shadow: none; }
+.mslot .ms-name { font-size: 14.5px; letter-spacing: 0.08em; color: var(--paper); }
+.mslot.empty .ms-name { color: rgb(233 222 195 / 30%); }
+.mslot .ms-meta { display: block; margin-top: 3px; font-size: 10px; letter-spacing: 0.12em; color: var(--rc, var(--paper-mute)); font-variant-numeric: tabular-nums; }
+.mslot .ms-unequip {
+  margin-left: auto; flex: none; padding: 4px 10px; border-radius: 4px;
+  font-size: 10px; letter-spacing: 0.2em; color: var(--cinnabar-bright);
+  border: 1px solid rgb(181 80 60 / 45%);
+  opacity: 0; transform: translateX(4px); transition: all 0.22s var(--ease-out);
+}
+.mslot:hover .ms-unequip { opacity: 1; transform: none; }
+.mslot .ms-unequip:hover { background: rgb(181 80 60 / 15%); }
+.mslot[data-rarity="粗浅"] { --rc: var(--r-粗浅); }
+.mslot[data-rarity="寻常"] { --rc: var(--r-寻常); }
+.mslot[data-rarity="精妙"] { --rc: var(--r-精妙); }
+.mslot[data-rarity="上乘"] { --rc: var(--r-上乘); }
+.mslot[data-rarity="绝学"] { --rc: var(--r-绝学); }
+.slots-hint { margin-top: 10px; font-size: 10px; letter-spacing: 0.14em; line-height: 1.9; color: var(--paper-mute); }
+
+.learned-list { display: grid; gap: 10px; }
+.learned-card {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px;
+  padding: 12px 16px; border-radius: 8px;
+  border: 1px solid var(--line-soft); border-left: 3px solid var(--rc, var(--line));
+  background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 28%));
+  transition: border-color 0.25s, transform 0.25s var(--ease-out);
+  animation: row-in 0.45s var(--ease-snap) both;
+}
+.learned-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--rc, var(--line)) 60%, transparent); border-left-color: var(--rc, var(--line)); }
+.learned-card[data-rarity="粗浅"] { --rc: var(--r-粗浅); }
+.learned-card[data-rarity="寻常"] { --rc: var(--r-寻常); }
+.learned-card[data-rarity="精妙"] { --rc: var(--r-精妙); }
+.learned-card[data-rarity="上乘"] { --rc: var(--r-上乘); }
+.learned-card[data-rarity="绝学"] { --rc: var(--r-绝学); }
+.learned-card .lc-name { font-size: 15px; letter-spacing: 0.08em; color: var(--paper); }
+.learned-card .lc-meta { display: flex; gap: 10px; margin-top: 4px; font-size: 10px; letter-spacing: 0.14em; color: var(--paper-mute); font-variant-numeric: tabular-nums; }
+.learned-card .lc-meta .lc-rarity { color: var(--rc); font-weight: 700; }
+.learned-card .lc-meta .lc-equipped { color: var(--gold); }
+.learned-card .lc-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.lc-btn {
+  padding: 6px 12px; border-radius: 5px; font-size: 11px; letter-spacing: 0.2em;
+  border: 1px solid var(--line); color: var(--paper-dim);
+  transition: all 0.2s var(--ease-out); white-space: nowrap;
+}
+.lc-btn:hover { border-color: var(--gold); color: var(--gold-bright); background: rgb(201 163 92 / 8%); }
+.lc-btn.slot-btn {
+  width: 28px; height: 28px; padding: 0; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 14px; border-radius: 50%;
+}
+.lc-btn.slot-btn.in { border-color: var(--gold); color: #2e2208; background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep)); }
+.lc-btn.danger:hover { border-color: var(--cinnabar); color: var(--cinnabar-bright); background: rgb(181 80 60 / 10%); }
+.learned-empty { padding: 26px 0; text-align: center; font-size: 12px; letter-spacing: 0.3em; color: var(--paper-mute); }
+
+/* ============ 主修心法 ============ */
+.heart-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.heart-pill {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 16px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--paper-dim);
+  background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 28%));
+  font-size: 13px; letter-spacing: 0.14em;
+  transition: all 0.25s var(--ease-out);
+}
+.heart-pill::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--paper-mute); opacity: 0.5; transition: all 0.25s;
+}
+.heart-pill:hover { border-color: var(--gold); color: var(--paper); transform: translateY(-1px); }
+.heart-pill.active {
+  border-color: var(--gold); color: var(--gold-bright);
+  background: linear-gradient(160deg, rgb(201 163 92 / 14%), rgb(201 163 92 / 4%));
+  box-shadow: 0 0 16px rgb(201 163 92 / 18%);
+}
+.heart-pill.active::before { background: var(--gold-bright); opacity: 1; box-shadow: 0 0 8px rgb(230 198 127 / 80%); }
+.heart-pill small { font-size: 9px; letter-spacing: 0.2em; color: var(--gold); }
+</style>
+<style>
+/* ============ 行囊 · 右栏背包 ============ */
+.pack-rail {
+  position: sticky; top: 24px;
+  border-radius: 12px; padding: 3px;
+  background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+.pack-inner {
+  border-radius: 9px;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgb(201 163 92 / 6%), transparent 60%),
+    linear-gradient(170deg, var(--ink-850), var(--ink-900) 70%);
+  border: 1px solid rgb(0 0 0 / 40%);
+}
+.pack-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 18px 18px 12px; border-bottom: 1px solid var(--line-soft);
+}
+.pack-head .sec-title h2 { font-size: 26px; }
+.pack-cap { text-align: right; }
+.pack-cap b { font-size: 15px; font-weight: 700; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+.pack-cap span { font-size: 11px; color: var(--paper-mute); font-variant-numeric: tabular-nums; }
+.pack-cap .cap-bar { width: 86px; height: 3px; margin: 6px 0 0 auto; border-radius: 2px; background: rgb(233 222 195 / 12%); overflow: hidden; }
+.pack-cap .cap-bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright)); }
+
+.pack-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 13px 18px 10px; }
+.pack-tools label { display: grid; gap: 5px; font-size: 9px; letter-spacing: 0.26em; color: var(--paper-mute); }
+.pack-tools select {
+  width: 100%; padding: 7px 9px; border-radius: 5px; outline: none;
+  border: 1px solid var(--line); background: var(--ink-950); color: var(--paper);
+  font-family: var(--font-song); font-size: 12px; letter-spacing: 0.06em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pack-tools select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgb(201 163 92 / 14%); }
+.pack-tool-btns { display: flex; gap: 8px; padding: 0 18px 12px; }
+.pk-btn {
+  flex: 1; padding: 8px 0; border-radius: 5px; text-align: center;
+  font-size: 11px; letter-spacing: 0.24em; text-indent: 0.24em;
+  border: 1px solid var(--line); color: var(--paper-dim);
+  transition: all 0.2s var(--ease-out);
+}
+.pk-btn:hover { border-color: var(--gold); color: var(--gold-bright); background: rgb(201 163 92 / 8%); }
+.pk-btn.danger { border-color: rgb(181 80 60 / 40%); color: var(--cinnabar-bright); }
+.pk-btn.danger:hover { background: rgb(181 80 60 / 12%); border-color: var(--cinnabar); }
+.pk-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pk-btn:disabled:hover { background: none; border-color: rgb(181 80 60 / 40%); color: var(--cinnabar-bright); }
+
+/* 批量丢弃确认条 */
+.pack-confirm {
+  margin: 0 18px 12px; padding: 12px 14px; border-radius: 7px;
+  border: 1px solid rgb(181 80 60 / 45%);
+  background: linear-gradient(160deg, rgb(181 80 60 / 14%), rgb(181 80 60 / 5%));
+  display: grid; gap: 8px;
+  animation: pop-in 0.35s var(--ease-out);
+}
+@keyframes pop-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.pack-confirm strong { font-size: 12.5px; letter-spacing: 0.1em; color: #efd9cf; }
+.pack-confirm span { font-size: 10px; letter-spacing: 0.1em; color: var(--paper-mute); }
+.pack-confirm .pc-btns { display: flex; gap: 8px; margin-top: 2px; }
+.pc-yes {
+  flex: 1; padding: 7px 0; border-radius: 5px; font-size: 11px; letter-spacing: 0.24em; text-indent: 0.24em;
+  color: #f8e9db; background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar-deep));
+  box-shadow: 0 3px 10px rgb(138 58 43 / 40%);
+  transition: filter 0.2s, transform 0.2s;
+}
+.pc-yes:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.pc-yes:disabled { filter: grayscale(0.8) brightness(0.65); cursor: not-allowed; transform: none; }
+.pc-no { padding: 7px 16px; border-radius: 5px; font-size: 11px; letter-spacing: 0.2em; border: 1px solid var(--line); color: var(--paper-dim); }
+.pc-no:hover { border-color: var(--paper-dim); color: var(--paper); }
+
+/* 物品清单 */
+.pack-list { display: grid; gap: 6px; padding: 4px 12px 10px; max-height: 470px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #3d4438 transparent; }
+.pack-list::-webkit-scrollbar { width: 8px; }
+.pack-list::-webkit-scrollbar-thumb { background: #333a30; border-radius: 4px; }
+.pack-row {
+  position: relative; width: 100%;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 11px; align-items: center;
+  padding: 8px 10px; border-radius: 7px; text-align: left;
+  border: 1px solid transparent;
+  transition: background 0.22s var(--ease-out), border-color 0.22s, transform 0.22s var(--ease-out);
+  animation: row-in 0.4s var(--ease-snap) both;
+}
+.pack-row:hover { background: rgb(233 222 195 / 5%); border-color: color-mix(in srgb, var(--qc, var(--line)) 45%, transparent); transform: translateX(-2px); z-index: 6; }
+.pack-row[data-quality="凡品"] { --qc: var(--q-凡品); }
+.pack-row[data-quality="良品"] { --qc: var(--q-良品); }
+.pack-row[data-quality="上品"] { --qc: var(--q-上品); }
+.pack-row[data-quality="珍品"] { --qc: var(--q-珍品); }
+.pack-row[data-quality="绝品"] { --qc: var(--q-绝品); }
+.pack-row.current { background: rgb(201 163 92 / 7%); border-color: rgb(201 163 92 / 30%); }
+.pack-row.occupied { opacity: 0.62; }
+.pack-row .pr-icon {
+  width: 34px; height: 34px; display: grid; place-items: center; flex: none;
+  font-family: var(--font-brush); font-size: 17px; color: var(--qc);
+  border: 1.4px solid color-mix(in srgb, var(--qc) 70%, #fff 8%); border-radius: 6px;
+  background: radial-gradient(circle at 38% 30%, var(--ink-700), var(--ink-900) 78%);
+}
+.pack-row .pr-body { min-width: 0; }
+.pack-row .pr-name { display: block; font-size: 13.5px; letter-spacing: 0.08em; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pack-row.current .pr-name { color: var(--gold-bright); }
+.pack-row .pr-meta { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: 0.12em; color: var(--paper-mute); font-variant-numeric: tabular-nums; }
+.pack-row .pr-meta .pr-q { color: var(--qc); font-weight: 700; }
+.pack-row .pr-meta .pr-owner { color: var(--gold); }
+.pack-row .pr-slot-tag { font-size: 9px; letter-spacing: 0.2em; color: var(--paper-mute); border: 1px solid var(--line); border-radius: 3px; padding: 2px 6px; white-space: nowrap; }
+.pack-row .eq-tip { left: auto; right: calc(100% + 12px); bottom: auto; top: 50%; transform: translateY(-50%) translateX(-8px); }
+.pack-row:hover .eq-tip { opacity: 1; transform: translateY(-50%) translateX(0); }
+.pack-empty { padding: 34px 18px 30px; text-align: center; }
+.pack-empty strong { display: block; font-family: var(--font-brush); font-size: 20px; font-weight: 400; letter-spacing: 0.2em; color: rgb(233 222 195 / 45%); }
+.pack-empty span { display: block; margin-top: 8px; font-size: 10px; letter-spacing: 0.22em; color: var(--paper-mute); }
+
+/* 分页 */
+.pack-page {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 14px 12px; border-top: 1px solid var(--line-soft);
+}
+.pack-page .pg-btn {
+  padding: 6px 11px; border-radius: 5px; font-size: 11px; letter-spacing: 0.14em;
+  border: 1px solid var(--line); color: var(--paper-dim);
+  transition: all 0.2s var(--ease-out); white-space: nowrap;
+}
+.pack-page .pg-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-bright); }
+.pack-page .pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pack-page .pg-nums { display: flex; gap: 4px; }
+.pack-page .pg-num {
+  width: 26px; height: 26px; border-radius: 5px; display: grid; place-items: center;
+  font-size: 11px; color: var(--paper-mute); border: 1px solid transparent;
+  font-variant-numeric: tabular-nums;
+}
+.pack-page .pg-num:hover { color: var(--paper); border-color: var(--line); }
+.pack-page .pg-num.active { color: #2e2208; background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep)); font-weight: 700; }
+.pack-foot { padding: 0 18px 14px; font-size: 9.5px; letter-spacing: 0.16em; color: var(--paper-mute); }
+
+/* ============ 通知 toast ============ */
+.toast-zone { position: fixed; right: 26px; bottom: 24px; z-index: 80; display: grid; gap: 10px; justify-items: end; }
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px; border-radius: 6px;
+  background: linear-gradient(160deg, #262c22, #171b14);
+  border: 1px solid var(--line); border-left: 3px solid var(--gold);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 50%);
+  font-size: 13px; letter-spacing: 0.1em; color: var(--paper);
+  animation: toast-in 0.5s var(--ease-snap);
+}
+.toast.err { border-left-color: var(--cinnabar); }
+.toast .t-mark { font-family: var(--font-brush); color: var(--gold-bright); font-size: 16px; }
+.toast.err .t-mark { color: var(--cinnabar-bright); }
+.toast.out { transition: opacity 0.4s, transform 0.4s; opacity: 0; transform: translateY(8px); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+.page-foot { position: relative; z-index: 1; text-align: center; padding: 34px 0 4px; font-size: 10px; letter-spacing: 0.4em; color: rgb(233 222 195 / 26%); }
+
+/* ============ 响应式 ============ */
+@media (max-width: 1440px) {
+  .heroes-stage { grid-template-columns: 216px minmax(0, 1fr) 316px; }
+  .stat-cluster .chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1180px) {
+  .heroes-stage { grid-template-columns: 200px minmax(0, 1fr); }
+  .pack-rail { grid-column: 1 / -1; position: static; }
+  .pack-list { max-height: 360px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pack-row .eq-tip { right: auto; left: 50%; top: auto; bottom: calc(100% + 10px); transform: translateX(-50%) translateY(6px); }
+  .pack-row:hover .eq-tip { transform: translateX(-50%) translateY(0); }
+}
+@media (max-width: 980px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .game-sidebar { display: none; }
+  .game-main { padding: 24px 18px 60px; }
+  .heroes-stage { grid-template-columns: 1fr; }
+  .roster-rail { position: static; }
+  .roster-list { max-height: 300px; }
+  .aptitude-grid { grid-template-columns: 1fr; justify-items: center; }
+  .martial-layout { grid-template-columns: 1fr; }
+  .ghost-char { display: none; }
+}
+@media (max-width: 640px) {
+  .page-head { flex-direction: column; align-items: flex-start; }
+  .page-head h1 { font-size: 44px; }
+  .dossier-head-inner { flex-wrap: wrap; }
+  .dh-vertical { display: none; }
+  .stat-cluster .chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pd-sil { display: none; }
+  .pd-pos-head, .pd-pos-armor, .pd-pos-waist, .pd-pos-boots, .pd-pos-weapon, .pd-pos-wrist, .pd-pos-token, .pd-pos-extra { grid-column: auto; grid-row: auto; }
+  .career-path { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 0; }
+  .career-path::before { display: none; }
+  .career-cards { grid-template-columns: 1fr; }
+  .pack-list { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+/* ============ 二轮增补：名册搜索筛选 · 武侠化筛选印 · 浮动属性笺 ============ */
+/* 名册 · 寻侠 */
+.roster-head .sec-title h2 { white-space: nowrap; }
+.roster-head-right { display: flex; align-items: center; gap: 10px; }
+.btn-locate {
+  font-size: 10px; letter-spacing: 0.2em; color: var(--gold);
+  border: 1px solid rgb(201 163 92 / 40%); border-radius: 4px; padding: 4px 9px;
+  transition: all 0.2s var(--ease-out); white-space: nowrap;
+}
+.btn-locate:hover { background: rgb(201 163 92 / 10%); transform: translateY(-1px); }
+.roster-search-row { display: grid; gap: 9px; padding: 11px 14px 8px; border-bottom: 1px solid var(--line-soft); }
+.roster-search {
+  width: 100%; padding: 8px 11px;
+  border: 1px solid var(--line); border-radius: 5px; outline: none;
+  background: var(--ink-950); color: var(--paper); font-family: var(--font-song);
+  font-size: 12px; letter-spacing: 0.08em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.roster-search:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgb(201 163 92 / 14%); }
+.roster-search::placeholder { color: var(--paper-mute); }
+
+/* 筛选印（品级/脉系/部位/品质通用） */
+/* 筛选印：单行连排，均分不折行 */
+.chip-row { display: flex; flex-wrap: nowrap; gap: 4px; align-items: center; }
+.chip-row .chip-label { flex: none; font-size: 9px; letter-spacing: 0.24em; color: var(--paper-mute); margin-right: 3px; }
+.fchip {
+  flex: 1 1 0; min-width: 0; height: 24px; padding: 0 2px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  font-size: 11px; letter-spacing: 0.06em; color: var(--paper-mute); white-space: nowrap;
+  border: 1px solid var(--line); border-radius: 5px;
+  transition: all 0.2s var(--ease-out);
+}
+.fchip:hover { color: var(--paper); border-color: var(--paper-dim); transform: translateY(-1px); }
+.fchip.seal { font-family: var(--font-brush); font-size: 13px; border-radius: 5px 6px 5px 7px / 6px 5px 7px 5px; }
+.fchip.active { color: #2e2208; background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep)); border-color: var(--gold); font-weight: 700; }
+.fchip.seal.active { text-shadow: none; }
+.fchip.seal.active.g-丙 { background: linear-gradient(150deg, #c9715a, #9c4a36); color: #f8e9da; border-color: #d98a72; }
+.fchip.seal.active.g-乙 { background: linear-gradient(150deg, #c15b46, #93402e); color: #f8e9da; border-color: #d07a64; }
+.fchip.seal.active.g-甲 { background: linear-gradient(150deg, #a8483a, #7c3026); color: #f8e9da; border-color: #c06a5a; }
+.fchip.seal.active.g-地 { background: linear-gradient(150deg, #8f3a30, #63261d); color: #f8e9da; border-color: #b05a4c; }
+.fchip.seal.active.g-天 { background: linear-gradient(150deg, #b98a3a, #8a6224); color: #fdf2d8; border-color: #d8ac58; }
+.fchip.qc i { width: 6px; height: 6px; border-radius: 50%; background: var(--qc, var(--paper-mute)); flex: none; }
+.fchip.qc.active { color: var(--qc); border-color: var(--qc); background: color-mix(in srgb, var(--qc) 13%, transparent); font-weight: 600; }
+.fchip.qc.active i { box-shadow: 0 0 6px var(--qc); }
+.fchip.danger.active { color: var(--cinnabar-bright); border-color: var(--cinnabar); background: rgb(181 80 60 / 14%); font-weight: 600; }
+
+/* 名册分组（脉系） */
+.roster-ghead {
+  position: sticky; top: -12px; z-index: 2;
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 9px 6px 6px; margin: 0 -4px;
+  background: linear-gradient(180deg, #1a1f17 82%, rgb(26 31 23 / 0%));
+  font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute);
+}
+.roster-ghead b { color: #d8c9a4; font-weight: 600; }
+.roster-ghead .gcount { margin-left: auto; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
+.roster-none { padding: 30px 0 26px; text-align: center; color: var(--paper-mute); font-size: 12px; letter-spacing: 0.3em; }
+
+/* 行囊筛选区 */
+.pack-chips { display: grid; gap: 9px; padding: 13px 18px 11px; border-bottom: 1px solid var(--line-soft); }
+.pack-chips .chip-label { width: 30px; }
+
+/* 批量丢弃面板 */
+.batch-panel {
+  margin: 0 18px 12px; padding: 12px 14px; border-radius: 7px;
+  border: 1px solid rgb(181 80 60 / 45%);
+  background: linear-gradient(160deg, rgb(181 80 60 / 12%), rgb(181 80 60 / 4%));
+  display: grid; gap: 10px;
+  animation: pop-in 0.35s var(--ease-out);
+}
+.batch-panel .bp-tip { font-size: 10px; letter-spacing: 0.12em; line-height: 1.8; color: var(--paper-mute); }
+.batch-panel .bp-count { font-size: 12px; letter-spacing: 0.08em; color: #efd9cf; }
+.batch-panel .bp-count b { color: var(--cinnabar-bright); font-size: 16px; font-variant-numeric: tabular-nums; }
+.batch-panel .bp-btns { display: flex; gap: 8px; }
+
+/* 浮动属性笺（JS 定位，规避滚动容器裁剪） */
+#floatTip {
+  position: fixed; z-index: 90; width: 300px; pointer-events: none;
+  opacity: 0; transform: translateY(5px);
+  transition: opacity 0.18s var(--ease-out), transform 0.18s var(--ease-out);
+}
+#floatTip.show { opacity: 1; transform: none; }
+#floatTip .eq-tip { position: static; left: auto; bottom: auto; width: auto; opacity: 1; transform: none; pointer-events: none; }
+#floatTip .stat-tip-body { padding: 10px 16px 12px; font-size: 11.5px; line-height: 1.95; color: #4d4023; letter-spacing: 0.04em; }
+#floatTip .stat-tip-body b { color: #8a6420; }
+/* 行囊内的静态浮窗改为仅作数据源，不再 CSS 悬停展示 */
+.pack-row .eq-tip { display: none; }
+/* 属性 chips 可悬停提示 */
+.st-chip { cursor: help; }
+.st-chip:hover { border-color: var(--gold); }
+.radar-svg .apt-label { cursor: help; }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="app-shell">
+  <!-- ======== 游戏外壳 ======== -->
+  <aside class="game-sidebar">
+    <div class="brand-block">
+      <span class="brand-seal">蛋</span>
+      <span><strong>蛋蛋江湖 2.0</strong><small>十万里一剑 · 不负侠者行</small></span>
+    </div>
+    <nav class="game-nav" aria-label="游戏区域">
+      <button type="button" class="nav-item"><span class="nav-mark">邑</span><strong>江湖</strong></button>
+      <button type="button" class="nav-item active"><span class="nav-mark">侠</span><strong>侠客</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">阵</span><strong>阵容</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">囊</span><strong>背包</strong></button>
+    </nav>
+    <p class="side-note">在队侠客 <b>三十四人</b> · 未收录者，可往<b>城市酒馆</b>相邀，或为<b>势力门人</b>以贡献为聘。</p>
+    <div class="sidebar-landscape" aria-hidden="true"></div>
+    <span class="sidebar-motto">朝悟道 · 暮练剑</span>
+  </aside>
+
+  <!-- ======== 侠客主区 ======== -->
+  <main class="game-main">
+    <span class="ghost-char ghost-roster" aria-hidden="true">侠</span>
+    <span class="ghost-char ghost-martial" aria-hidden="true">武</span>
+    <span class="ghost-char ghost-pack" aria-hidden="true">囊</span>
+
+    <header class="page-head">
+      <div>
+        <p class="crumb">侠客 · <b>点将谱</b> · 群侠列传</p>
+        <h1>侠客</h1>
+        <p class="latin">Heroes · The Roster &amp; Records</p>
+      </div>
+      <div class="purse" id="purse">
+        <svg width="34" height="30" viewBox="0 0 34 30" fill="none" aria-hidden="true">
+          <path d="M17 3 C10 3 5 8 4.5 14 C4 20 9 26 17 26 C25 26 30 20 29.5 14 C29 8 24 3 17 3 Z" fill="url(#ingot)" stroke="#8f6f3a" stroke-width="1"/>
+          <ellipse cx="17" cy="9.5" rx="5.5" ry="3" fill="#f2ddab" opacity="0.85"/>
+          <defs><linearGradient id="ingot" x1="4" y1="4" x2="30" y2="26"><stop stop-color="#e6c67f"/><stop offset="1" stop-color="#a37e3f"/></linearGradient></defs>
+        </svg>
+        <div>
+          <div class="purse-num" id="purseNum">0</div>
+          <div class="purse-label">牛家村通宝</div>
+          <div class="purse-faction">第一卷 · 通用货币</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="heroes-stage">
+      <!-- 点将谱 -->
+      <aside class="roster-rail" id="rosterRail">
+        <div class="roster-inner">
+          <header class="roster-head">
+            <div class="sec-title"><h2>点将谱</h2></div>
+            <div class="roster-head-right">
+              <button type="button" class="btn-locate" id="btnLocate">定位</button>
+              <div class="roster-count"><b id="rosterNum">0</b><span>在队</span></div>
+            </div>
+          </header>
+          <div class="roster-search-row">
+            <input type="search" class="roster-search" id="rosterSearch" placeholder="以名相寻…" autocomplete="off">
+            <div class="chip-row" id="rosterGradeChips"></div>
+            <div class="chip-row" id="rosterCatChips"></div>
+          </div>
+          <div class="roster-list" id="rosterList"></div>
+          <footer class="roster-foot">品级印 <b>丙乙甲地天</b> · 点将即阅其列传</footer>
+        </div>
+      </aside>
+
+      <!-- 侠客列传 -->
+      <section class="dossier" id="dossier"></section>
+
+      <!-- 行囊 -->
+      <aside class="pack-rail" id="packRail">
+        <div class="pack-inner">
+          <header class="pack-head">
+            <div class="sec-title"><h2>行囊</h2></div>
+            <div class="pack-cap">
+              <div><b id="packCount">0</b> <span>/ 200</span></div>
+              <div class="cap-bar"><i id="packCapBar" style="width:0%"></i></div>
+            </div>
+          </header>
+          <div id="packToolsZone"></div>
+          <div class="pack-list" id="packList"></div>
+          <nav class="pack-page" id="packPage" aria-label="行囊分页"></nav>
+          <footer class="pack-foot">悬停查看属性笺 · 双击为当前侠客装备</footer>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="page-foot">蛋蛋江湖 2.0 · 侠客页高保真重设计 · 数据与规则取自游戏真实配置</footer>
+  </main>
+</div>
+
+<div id="floatTip" aria-hidden="true"></div>
+<div class="toast-zone" id="toastZone"></div>
+
+<script>
+/* ============================================================
+   数据层 —— 名称/规则与 egg-jianghu/src 真实配置一致
+   品级：酒馆侠客按卷序定品（1-3卷乙 / 4-6卷甲 / 7-8卷地 / 9-10卷天）
+   装备品质：凡品→良品→上品→珍品→绝品（倍率 1 / 1.18 / 1.42 / 1.72 / 2.08）
+   武功品阶：粗浅→寻常→精妙→上乘→绝学
+   职业：基础职 → 双线进阶（中级/高级/顶级），圆满心得需职业 Lv.20
+   ============================================================ */
+const SLOTS = [
+  { id: 'weapon', name: '兵刃', mark: '兵', pos: 'weapon' },
+  { id: 'head',   name: '冠巾', mark: '冠', pos: 'head' },
+  { id: 'armor',  name: '衣甲', mark: '甲', pos: 'armor' },
+  { id: 'wrist',  name: '护腕', mark: '腕', pos: 'wrist' },
+  { id: 'waist',  name: '腰佩', mark: '佩', pos: 'waist' },
+  { id: 'boots',  name: '履靴', mark: '履', pos: 'boots' },
+  { id: 'token',  name: '信物', mark: '信', pos: 'token' },
+];
+const QUALITIES = ['凡品', '良品', '上品', '珍品', '绝品'];
+const CN = ['壹', '贰', '叁', '肆'];
+
+/* ---------- 名册（只列已招募；姓名/职业/品级按真实配置规则） ----------
+   品级规则：1-3卷乙 / 4-6卷甲 / 7-8卷地 / 9-10卷天（factionGrade）
+   格式：[姓名, 脉系, 卷序, 品级, 等级] */
+const TAVERN_ROWS = [
+  ['郭靖', '拳', 1, '乙', 24], ['杨铁心', '刀', 1, '乙', 21], ['穆念慈', '剑', 1, '乙', 19],
+  ['哲别', '刀', 2, '乙', 16], ['拖雷', '拳', 2, '乙', 15], ['华筝', '内家', 2, '乙', 14],
+  ['郭啸天', '刀', 3, '乙', 14], ['包惜弱', '医', 3, '乙', 12], ['李萍', '拳', 3, '乙', 11],
+  ['康敏', '暗', 4, '甲', 10], ['秦红棉', '刀', 4, '甲', 9], ['王夫人', '内家', 4, '甲', 9],
+  ['木婉清', '暗', 5, '甲', 8], ['王语嫣', '内家', 5, '甲', 8], ['段正淳', '剑', 5, '甲', 7],
+  ['郭芙', '剑', 6, '甲', 7], ['完颜萍', '刀', 6, '甲', 6], ['耶律燕', '拳', 6, '甲', 6],
+  ['赵敏', '暗', 7, '地', 6], ['谢逊', '刀', 7, '地', 5], ['小昭', '内家', 7, '地', 5],
+  ['段誉', '内家', 8, '地', 5], ['钟灵', '暗', 8, '地', 4], ['阮星竹', '剑', 8, '地', 4],
+  ['阿朱', '暗', 9, '天', 4], ['阿碧', '内家', 9, '天', 3], ['游坦之', '拳', 9, '天', 3],
+  ['鸠摩智', '内家', 10, '天', 3], ['慕容博', '剑', 10, '天', 3], ['薛慕华', '医', 10, '天', 2],
+];
+const BASE_CAREER = { 剑: '剑客', 刀: '刀客', 拳: '拳师', 暗: '暗客', 医: '医者', 内家: '内家' };
+const ROSTER = [
+  { id: 'hero_player', name: '无名少侠', grade: '主', cat: '剑', career: '剑客', lv: 12, src: '主角' },
+  ...TAVERN_ROWS.map(([name, cat, w, grade, lv], i) => ({
+    id: name === '郭靖' ? 'hero_guo_jing' : name === '杨铁心' ? 'hero_yang_tiexin' : name === '穆念慈' ? 'hero_mu_nianci' : `hero_t${i}`,
+    name, grade, cat, career: name === '郭靖' ? '长拳师' : BASE_CAREER[cat], lv, src: '酒馆相逢',
+  })),
+  { id: 'hero_hong_qigong', name: '洪七公', grade: '乙', cat: '拳', career: '拳师', lv: 18, src: '丐帮门人' },
+  { id: 'hero_cheng_ying', name: '程英', grade: '乙', cat: '医', career: '医者', lv: 15, src: '桃花岛门人' },
+  { id: 'hero_huang_rong', name: '黄蓉', grade: '甲', cat: '拳', career: '拳师', lv: 9, src: '势力门人' },
+];
+const CAT_ORDER = ['剑', '刀', '拳', '暗', '医', '内家'];
+const CAT_LABEL = { 剑: '剑之脉', 刀: '刀之脉', 拳: '拳之脉', 暗: '暗之脉', 医: '医之脉', 内家: '内家之脉' };
+
+/* ---------- 郭靖列传（手工演示数据，其余侠客由规则生成） ---------- */
+const GUO_JING = {
+  aptitude: { 臂力: 10, 悟性: 7, 体魄: 9, 身法: 7, 定力: 7 },
+  stats: [
+    ['气血真气', '生死之本', [
+      ['气血', 486], ['真气', 120], ['初始真气', 30], ['真气回复', 4],
+    ]],
+    ['攻防根基', '已计入等级、职业、心法与装备', [
+      ['外功', 86], ['内功', 21], ['外防', 34], ['内防', 18], ['有效身法', 15],
+    ]],
+    ['几率节奏', '百分制', [
+      ['命中修正', '104%'], ['闪避', '6%'], ['控制抗性', '8%'], ['暴击', '7%'], ['暴击倍率', '150%'],
+      ['冷却缩减', '4%'], ['气机加速', '2%'], ['武势加成', '3%'], ['生存加成', '3%'], ['圆满加成', '0%'],
+    ]],
+  ],
+  careerPath: [
+    { tier: '初级', name: '拳师', state: 'done' },
+    { tier: '中级 · 刚拳', name: '长拳师', state: 'current', lv: 20 },
+    { tier: '高级 · 刚拳', name: '震山拳师', state: 'future' },
+    { tier: '顶级 · 刚拳', name: '通臂宗师', state: 'future' },
+  ],
+  careerOptions: [
+    { tier: '中级 · 绵掌', name: '绵掌师', state: 'ok', note: '已解锁', btn: 'switch', label: '切换' },
+    { tier: '高级 · 刚拳', name: '震山拳师', state: 'token', note: '信物已备', btn: 'change', label: '转职' },
+    { tier: '高级 · 绵掌', name: '化劲掌师', state: 'no', note: '缺少信物', btn: 'change', label: '转职', disabled: true },
+  ],
+  careerLv: 20, perfected: false,
+  equipment: {
+    weapon: { name: '铁尺', quality: '良品', lv: 8, base: ['外功', 13], affix: [['气血', 45]] },
+    head:   { name: '斗笠', quality: '凡品', lv: 5, base: ['内防', 8], affix: [] },
+    armor:  { name: '蓝布长衫', quality: '良品', lv: 6, base: ['外防', 11], affix: [['身法', 3]] },
+    wrist:  { name: '藤护腕', quality: '上品', lv: 7, base: ['命中', 10], affix: [['会心', 3, '%'], ['外功', 6]] },
+    waist:  null,
+    boots:  { name: '芒鞋', quality: '良品', lv: 5, base: ['身法', 9], affix: [['闪避', 2, '%']] },
+    token:  { name: '半枚玉佩', quality: '珍品', lv: 9, base: ['行气', 12], affix: [['气血', 61], ['定力', 4], ['回气', 3, '%']] },
+  },
+  slots: ['丐帮·刚拳真传', '丐帮·刚拳进境', '丐帮·刚拳初传', null],
+  martials: [
+    { name: '丐帮·刚拳初传', rarity: '粗浅', lv: 20 },
+    { name: '丐帮·刚拳进境', rarity: '寻常', lv: 12 },
+    { name: '丐帮·刚拳真传', rarity: '精妙', lv: 4 },
+    { name: '丐帮·绵掌初传', rarity: '粗浅', lv: 1 },
+    { name: '第一卷通用拳法', rarity: '粗浅', lv: 8 },
+  ],
+  hearts: [
+    { name: '丐帮心法', equipped: true },
+    { name: '第一卷通用心法', equipped: false },
+    { name: '第二卷通用心法', equipped: false },
+  ],
+};
+
+/* ---------- 行囊（名称取自 equipment-names 真实配置） ---------- */
+const mkItem = (uid, name, slot, quality, lv, base, affix = [], owner = null, locked = false) =>
+  ({ uid, name, slot, quality, lv, base, affix, owner, locked });
+const PACK = [
+  mkItem('u01', '鎏金长剑', 'weapon', '珍品', 12, ['外功', 26], [['会心', 5, '%'], ['内功', 9], ['气血', 52]], null, true),
+  mkItem('u02', '铁尺', 'weapon', '良品', 8, ['外功', 13], [['气血', 45]], '郭靖'),
+  mkItem('u03', '雁翎刀', 'weapon', '上品', 10, ['外功', 18], [['外功', 7], ['会心', 2, '%']], '杨铁心'),
+  mkItem('u04', '铁桨', 'weapon', '凡品', 5, ['外功', 8]),
+  mkItem('u05', '斗笠', 'head', '凡品', 5, ['内防', 8], [], '郭靖'),
+  mkItem('u06', '束发金冠', 'head', '珍品', 11, ['内防', 17], [['定力', 4], ['气血', 58], ['内功', 6]]),
+  mkItem('u07', '蓝布长衫', 'armor', '良品', 6, ['外防', 11], [['身法', 3]], '郭靖'),
+  mkItem('u08', '水靠', 'armor', '上品', 9, ['外防', 15], [['气血', 40], ['闪避', 2, '%']]),
+  mkItem('u09', '粗布短衣', 'armor', '凡品', 3, ['外防', 6]),
+  mkItem('u10', '羊皮袄', 'armor', '凡品', 4, ['外防', 7]),
+  mkItem('u11', '藤护腕', 'wrist', '上品', 7, ['命中', 10], [['会心', 3, '%'], ['外功', 6]], '郭靖'),
+  mkItem('u12', '铜钉护腕', 'wrist', '良品', 7, ['命中', 8], [['外功', 4]]),
+  mkItem('u13', '玉带', 'waist', '上品', 8, ['气血', 66], [['内防', 5], ['定力', 2]]),
+  mkItem('u14', '芒鞋', 'boots', '良品', 5, ['身法', 9], [['闪避', 2, '%']], '郭靖'),
+  mkItem('u15', '云头靴', 'boots', '珍品', 12, ['身法', 21], [['闪避', 4, '%'], ['身法', 5], ['回气', 2, '%']], '穆念慈'),
+  mkItem('u16', '快靴', 'boots', '良品', 6, ['身法', 10], [['气血', 30]]),
+  mkItem('u17', '半枚玉佩', 'token', '珍品', 9, ['行气', 12], [['气血', 61], ['定力', 4], ['回气', 3, '%']], '郭靖'),
+  mkItem('u18', '段家腰牌', 'token', '上品', 9, ['行气', 10], [['回气', 2, '%'], ['气血', 26]]),
+];
+</script>
+<script>
+/* ============================================================
+   渲染与交互
+   ============================================================ */
+const $ = (sel) => document.querySelector(sel);
+const fmt = (n) => n.toLocaleString('zh-CN');
+const slotById = (id) => SLOTS.find((s) => s.id === id);
+const heroName = () => ROSTER.find((h) => h.id === state.selectedId)?.name;
+
+function toast(msg, err = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (err ? ' err' : '');
+  el.innerHTML = `<span class="t-mark">${err ? '✕' : '❋'}</span><span>${msg}</span>`;
+  $('#toastZone').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 450); }, 2600);
+}
+
+/* ---------- 状态 ---------- */
+const state = {
+  selectedId: 'hero_guo_jing',
+  rosterQuery: '',
+  rosterGrade: 'all',
+  rosterCat: 'all',
+  slotFilter: 'all',
+  qualityFilter: 'all',
+  batchOpen: false,
+  batchQuality: 'all',
+  page: 1,
+};
+const PAGE_SIZE = 8;
+
+/* ---------- 属性释义（公式取自 combat/stats.ts 真实实现） ---------- */
+const STAT_DESC = {
+  气血: '承受伤害的根本，归零即败北。<br>源自 <b>体魄×15 + 定力×4</b>，再经品级、职业、等级与圆满加成缩放。',
+  真气: '施展武功所需之气，上限固定为 <b>100</b>。',
+  初始真气: '开战即携的真气，固定 <b>20</b>，决定起手能放几式。',
+  真气回复: '每回合回复的真气，基础 <b>5</b>，主修心法的「行气」可增益。',
+  外功: '外家招式（剑刀拳暗）的伤害根本。<br>源自 <b>臂力×4 + 身法</b>，外家职业加成 <b>15%</b>。',
+  内功: '内家功法（医/内家）的伤害与治疗效果。<br>源自 <b>悟性×4 + 定力</b>，内家职业加成 <b>15%</b>。',
+  外防: '减免外功伤害。<br>源自 <b>体魄×2.5 + 臂力</b>。',
+  内防: '减免内功伤害。<br>源自 <b>定力×2.5 + 悟性</b>。',
+  有效身法: '决定出手先后，高者先行。<br>源自 <b>身法×6</b>，受心法「气机加速」增益。',
+  命中修正: '提升命中，上限 <b>20%</b>。<br>源自 悟性×0.5% + 身法×0.3%。',
+  闪避: '避开攻击的几率，上限 <b>70%</b>。<br>源自 身法×1%。',
+  控制抗性: '抵抗眩晕、封穴等控制，上限 <b>80%</b>。<br>源自 定力×1.2%。',
+  暴击: '造成会心一击的几率。<br>源自 悟性×0.6% + 身法×0.4%。',
+  暴击倍率: '会心一击的伤害倍率，基础 <b>150%</b>。',
+  冷却缩减: '缩短武功冷却，上限 <b>60%</b>，由心法与装备「回气」提供。',
+  气机加速: '加快气机积累（出手节奏），由主修心法提供。',
+  武势加成: '武势（攻击向）加成，由主修心法提供。',
+  生存加成: '生存向加成，由主修心法提供。',
+  圆满加成: '每个已圆满职业带来 <b>+5%</b> 全属性，可累加。',
+};
+const APT_DESC = {
+  臂力: '刚猛之本。<br>外功 <b>×4</b>，兼固外防。刀拳侠客尤重之。',
+  悟性: '聪慧之根。<br>内功 <b>×4</b>，兼提升命中（0.5%/点）与会心（0.6%/点）。',
+  体魄: '筋骨之基。<br>气血 <b>×15</b>，兼固外防（×2.5）。',
+  身法: '迅捷之源。<br>有效身法 <b>×6</b> 定出手先后，兼增闪避（1%/点）与命中。',
+  定力: '心性之守。<br>内防 <b>×2.5</b>，兼长气血（×4）与控制抗性（1.2%/点）。',
+};
+
+/* ---------- 职业双线（真实配置） ---------- */
+const LINES = {
+  剑: { b1: ['剑客', '游剑客', '追风剑师', '无痕剑宗'], b2: ['剑客', '重剑客', '镇岳剑师', '玄铁剑宗'], l1: '快剑', l2: '重剑' },
+  刀: { b1: ['刀客', '快刀客', '追魂刀师', '无影刀宗'], b2: ['刀客', '狂刀客', '血战刀师', '百战刀宗'], l1: '快刀', l2: '狂刀' },
+  拳: { b1: ['拳师', '长拳师', '震山拳师', '通臂宗师'], b2: ['拳师', '绵掌师', '化劲掌师', '化境宗师'], l1: '刚拳', l2: '绵掌' },
+  暗: { b1: ['暗客', '影客', '追命使', '无踪魁首'], b2: ['暗客', '毒手', '百毒使', '毒门魁首'], l1: '影刺', l2: '毒术' },
+  医: { b1: ['医者', '仁心医士', '杏林圣手', '岐黄国手'], b2: ['医者', '调息医士', '经脉医师', '药王'], l1: '疗伤', l2: '药理' },
+  内家: { b1: ['内家', '运气士', '周天师', '气宗'], b2: ['内家', '护气士', '铁衣护法', '金刚宗师'], l1: '运气', l2: '护体' },
+};
+const TIERS = ['初级', '中级', '高级', '顶级'];
+
+/* ---------- 列传数据：郭靖手工，其余按规则生成 ---------- */
+const HERO_LIVE = {};
+function detailFor(hero) {
+  if (HERO_LIVE[hero.id]) return HERO_LIVE[hero.id];
+  if (hero.id === 'hero_guo_jing') {
+    HERO_LIVE[hero.id] = JSON.parse(JSON.stringify(GUO_JING));
+    HERO_LIVE[hero.id].line = 'b1'; HERO_LIVE[hero.id].pathIdx = 1;
+    return HERO_LIVE[hero.id];
+  }
+  // 生成规则：资质 = 基础 8 + 脉系加成（与 aptitudesFor 同族）
+  const apt = { 臂力: 8, 悟性: 8, 体魄: 8, 身法: 8, 定力: 8 };
+  if (hero.cat === '剑' || hero.cat === '暗') apt.身法 += 3;
+  if (hero.cat === '刀' || hero.cat === '拳') apt.臂力 += 3;
+  if (hero.cat === '拳') apt.体魄 += 2;
+  if (hero.cat === '医' || hero.cat === '内家') apt.悟性 += 3;
+  if (hero.cat === '内家') apt.定力 += 2;
+  const lv = hero.lv;
+  const line = LINES[hero.cat];
+  const d = {
+    aptitude: apt,
+    stats: [
+      ['气血真气', '生死之本', [['气血', 160 + lv * 14], ['真气', 60 + lv * 3], ['初始真气', 20 + Math.floor(lv / 2)], ['真气回复', 2 + Math.floor(lv / 10)]]],
+      ['攻防根基', '已计入等级、职业、心法与装备', [['外功', 20 + lv * 3], ['内功', 12 + lv * 2], ['外防', 8 + lv], ['内防', 6 + lv], ['有效身法', 5 + Math.floor(lv / 2)]]],
+      ['几率节奏', '百分制', [['命中修正', '100%'], ['闪避', '4%'], ['控制抗性', '5%'], ['暴击', '5%'], ['暴击倍率', '150%'], ['冷却缩减', '0%'], ['气机加速', '0%'], ['武势加成', '0%'], ['生存加成', '0%'], ['圆满加成', '0%']]],
+    ],
+    line: 'b1', pathIdx: 0, careerLv: Math.min(lv, 20), perfected: false,
+    careerOptions: [
+      { tier: `中级 · ${line.l1}`, name: line.b1[1], state: 'token', note: '信物已备', btn: 'change', label: '转职' },
+      { tier: `中级 · ${line.l2}`, name: line.b2[1], state: 'no', note: '缺少信物', btn: 'change', label: '转职', disabled: true },
+    ],
+    equipment: { weapon: null, head: null, armor: null, wrist: null, waist: null, boots: null, token: null },
+    slots: [null, null, null, null],
+    martials: [{ name: `第一卷通用${hero.cat}法`, rarity: '粗浅', lv: Math.max(1, Math.floor(lv / 3)) }],
+    hearts: [{ name: '第一卷通用心法', equipped: true }, { name: '第二卷通用心法', equipped: false }],
+  };
+  // 与行囊联动：行囊里主人是该侠客的物品，穿到对应槽位
+  PACK.filter((it) => it.owner === hero.name).forEach((it) => {
+    d.equipment[it.slot] = { name: it.name, quality: it.quality, lv: it.lv, base: it.base, affix: it.affix };
+  });
+  HERO_LIVE[hero.id] = d;
+  return d;
+}
+
+/* ---------- 五维雷达 ---------- */
+function radarSVG(apt) {
+  const keys = Object.keys(apt);
+  const MAX = 12, C = 118, R = 82;
+  const pt = (i, r) => {
+    const a = (-90 + i * 72) * Math.PI / 180;
+    return [C + r * Math.cos(a), C + r * Math.sin(a)];
+  };
+  const rings = [0.33, 0.66, 1].map((k, ri) =>
+    `<polygon class="ring${ri === 2 ? ' radar-paper' : ''}" points="${keys.map((_, i) => pt(i, R * k).join(',')).join(' ')}"/>`).join('');
+  const axes = keys.map((_, i) => `<line class="axis" x1="${C}" y1="${C}" x2="${pt(i, R)[0]}" y2="${pt(i, R)[1]}"/>`).join('');
+  const poly = keys.map((k, i) => pt(i, R * Math.min(1, apt[k] / MAX)).join(',')).join(' ');
+  const dots = keys.map((k, i) => { const [x, y] = pt(i, R * Math.min(1, apt[k] / MAX)); return `<circle class="apt-dot" cx="${x}" cy="${y}" r="3.4"/>`; }).join('');
+  const labels = keys.map((k, i) => {
+    const [x, y] = pt(i, R + 18);
+    return `<text class="apt-label" data-apt="${k}" x="${x}" y="${y + 4}" text-anchor="middle">${k}<tspan class="apt-val" dx="4">${apt[k]}</tspan></text>`;
+  }).join('');
+  return `<svg class="radar-svg" viewBox="0 0 236 236" aria-hidden="true">${rings}${axes}<polygon class="apt-poly" points="${poly}"/>${dots}${labels}</svg>`;
+}
+
+/* ---------- 装备悬浮笺 ---------- */
+const affixLine = ([name, val, pct]) => `<div class="eq-line"><span>${name}</span><b>+${val}${pct ? '%' : ''}</b></div>`;
+function eqTipHTML(item, comparison = null, footNote = '') {
+  const cols = comparison
+    ? `<div class="eq-cols">
+        <div class="eq-col"><small>此件属性</small><div class="eq-line"><span>${item.base[0]}</span><b>+${item.base[1]}</b></div>${item.affix.map(affixLine).join('')}</div>
+        <div class="eq-col"><small>当前穿戴</small><strong>${comparison ? comparison.name : '此位空悬'}</strong>${comparison ? `<div class="eq-line"><span>${comparison.base[0]}</span><b>+${comparison.base[1]}</b></div>${comparison.affix.map(affixLine).join('')}` : ''}</div>
+      </div>`
+    : `<div class="eq-cols single">
+        <div class="eq-col"><small>装备属性</small><div class="eq-line"><span>${item.base[0]}</span><b>+${item.base[1]}</b></div>${item.affix.map(affixLine).join('')}</div>
+      </div>`;
+  return `<div class="eq-tip" style="--qc:var(--q-${item.quality})" role="tooltip">
+    <header><small>${slotById(item.slot ?? item.slotId ?? 'weapon').name} · Lv.${item.lv}</small><strong>${item.name}</strong><em>${item.quality}${item.locked ? ' · 已锁定' : ''}</em></header>
+    ${cols}
+    <footer>${footNote}</footer>
+  </div>`;
+}
+
+/* ---------- 点将谱 ---------- */
+function rosterFiltered() {
+  const q = state.rosterQuery.trim();
+  return ROSTER.filter((h) =>
+    (!q || h.name.includes(q))
+    && (state.rosterGrade === 'all' || h.grade === state.rosterGrade)
+    && (state.rosterCat === 'all' || h.cat === state.rosterCat));
+}
+function renderRosterChips() {
+  const grades = ['all', '丙', '乙', '甲', '地', '天'];
+  $('#rosterGradeChips').innerHTML = '<span class="chip-label">品级</span>' + grades.map((g) =>
+    `<button type="button" class="fchip seal${g !== 'all' ? ` g-${g}` : ''}${state.rosterGrade === g ? ' active' : ''}" data-grade="${g}">${g === 'all' ? '全' : g}</button>`).join('');
+  const cats = ['all', ...CAT_ORDER];
+  $('#rosterCatChips').innerHTML = '<span class="chip-label">脉系</span>' + cats.map((c) =>
+    `<button type="button" class="fchip${state.rosterCat === c ? ' active' : ''}" data-cat="${c}" title="${c === 'all' ? '全部脉系' : CAT_LABEL[c]}">${c === 'all' ? '全' : c === '内家' ? '内' : c}</button>`).join('');
+}
+function renderRoster() {
+  $('#rosterNum').textContent = ROSTER.length;
+  renderRosterChips();
+  const list = rosterFiltered();
+  const rowHTML = (h, i) => `
+    <button type="button" class="roster-row${h.id === state.selectedId ? ' active' : ''}" data-hero="${h.id}" style="animation-delay:${Math.min(i, 12) * 35}ms">
+      <span class="r-seal g-${h.grade}">${h.grade === '主' ? '主' : h.grade}</span>
+      <span class="r-body">
+        <span class="r-name">${h.name}</span>
+        <span class="r-meta">${h.career} · Lv.${h.lv}</span>
+      </span>
+      ${h.id === state.selectedId ? '<span class="r-flag">列传中</span>' : ''}
+    </button>`;
+  // 主角单独一组，其余按脉系分组（组头吸顶）
+  const player = list.filter((h) => h.grade === '主');
+  const groups = [];
+  if (player.length) groups.push({ label: '天命所归', heroes: player });
+  CAT_ORDER.forEach((cat) => {
+    const heroes = list.filter((h) => h.grade !== '主' && h.cat === cat);
+    if (heroes.length) groups.push({ label: CAT_LABEL[cat], heroes });
+  });
+  let idx = 0;
+  $('#rosterList').innerHTML = groups.map((g) => `
+    <div class="roster-ghead"><b>${g.label}</b><span class="gcount">${g.heroes.length} 人</span></div>
+    ${g.heroes.map((h) => rowHTML(h, idx++)).join('')}`).join('')
+    || '<div class="roster-none">查无此侠</div>';
+}
+
+/* ---------- 列传 · 头 ---------- */
+function renderHead(hero) {
+  return `<div class="dossier-head">
+    <div class="dossier-head-inner">
+      <span class="dh-ghost" aria-hidden="true">${hero.cat}</span>
+      <span class="dh-seal g-${hero.grade}">${hero.grade === '主' ? '主' : hero.grade}</span>
+      <div class="dh-main">
+        <p class="dh-kicker">侠客列传 · <i>${hero.cat}之脉 第${ROSTER.indexOf(hero) + 1}篇</i></p>
+        <h2 class="dh-name">${hero.name}</h2>
+        <div class="dh-tags">
+          <span class="dh-tag gold">${hero.grade === '主' ? '天命主角' : hero.grade + '品侠客'}</span>
+          <span class="dh-tag">${hero.cat}之脉系</span>
+          <span class="dh-tag">${hero.src}</span>
+          ${detailFor(hero).perfected ? '<span class="dh-tag hot">圆满心得已悟</span>' : ''}
+        </div>
+      </div>
+      <div class="dh-level">
+        <small>侠客</small>
+        <b>Lv.${hero.lv}</b>
+        <span class="dh-career">${hero.career}</span>
+      </div>
+      <span class="dh-vertical">侠之大者 · 为国为民</span>
+    </div>
+  </div>`;
+}
+
+/* ---------- 列传 · 根骨资质 ---------- */
+const statMarks = { 气血: '♥', 真气: '●', 初始真气: '✣', 真气回复: '◉', 外功: '剑', 内功: '气', 外防: '盾', 内防: '甲', 有效身法: '影', 命中修正: '羽', 闪避: '闪', 控制抗性: '定', 暴击: '暴', 暴击倍率: '破', 冷却缩减: '冷', 气机加速: '速', 武势加成: '势', 生存加成: '生', 圆满加成: '圆' };
+function renderAptitude(hero) {
+  const d = detailFor(hero);
+  const total = Object.values(d.aptitude).reduce((a, b) => a + b, 0);
+  return `<section class="dossier-sec">
+    <header><div class="sec-title"><h2>根骨资质</h2><span class="sub">其壹 · 五维天资 · <i>战斗修为</i></span></div></header>
+    <div class="sec-body aptitude-grid">
+      <div class="radar-box">${radarSVG(d.aptitude)}<div class="radar-total"><b>${total}</b><span>天资总和</span></div></div>
+      <div class="combat-stats">
+        ${d.stats.map(([title, sub, rows]) => `<section class="stat-cluster">
+          <header><h3>${title}</h3><span>${sub}</span></header>
+          <div class="chips">${rows.map(([label, val]) => `<div class="st-chip${label === '圆满加成' && d.perfected ? ' hot' : ''}"><i>${statMarks[label] ?? '◇'}</i><dt>${label}</dt><dd>${val}</dd></div>`).join('')}</div>
+        </section>`).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ---------- 列传 · 随身装备 ---------- */
+function renderEquip(hero) {
+  const d = detailFor(hero);
+  const worn = SLOTS.filter((s) => d.equipment[s.id]).length;
+  const slotHTML = (s) => {
+    const item = d.equipment[s.id];
+    if (!item) {
+      return `<article class="pd-slot empty pd-pos-${s.pos}">
+        <span class="pd-icon">${s.mark}</span>
+        <span class="pd-slot-name">${s.name}</span>
+        <strong class="pd-item-name">虚位以待</strong>
+        <span class="pd-item-meta">未装备</span>
+      </article>`;
+    }
+    return `<article class="pd-slot pd-pos-${s.pos}" data-quality="${item.quality}" data-slot="${s.id}">
+      <span class="pd-icon">${s.mark}</span>
+      <span class="pd-slot-name">${s.name}</span>
+      <strong class="pd-item-name">${item.name}</strong>
+      <span class="pd-item-meta">${item.quality} · Lv.${item.lv}</span>
+      <button type="button" class="pd-unequip" data-action="unequip" data-slot="${s.id}">卸下</button>
+      ${eqTipHTML({ ...item, slot: s.id }, null, '双击行囊中物品，可替换此位')}
+    </article>`;
+  };
+  return `<section class="dossier-sec">
+    <header><div class="sec-title"><h2>随身装备</h2><span class="sub">其贰 · 七部位 · <i>悬停查看属性</i></span></div></header>
+    <div class="sec-body pd-grid">
+      <div class="pd-sil">
+        <span class="sil-char">${hero.cat}</span>
+        <span class="sil-dantian" aria-hidden="true"></span>
+        <div class="sil-sum"><span>穿戴 <b>${worn} / 7</b></span><span>精良 <b>${SLOTS.filter((s) => { const it = d.equipment[s.id]; return it && QUALITIES.indexOf(it.quality) >= 2; }).length}</b></span></div>
+        <span class="sil-cap">立身中正 · 气沉丹田</span>
+      </div>
+      ${SLOTS.map(slotHTML).join('')}
+      <div class="pd-extra pd-pos-extra">
+        <div class="pe-row"><span>已穿戴</span><b>${SLOTS.filter((s) => d.equipment[s.id]).length} 件</b></div>
+        <div class="pe-row"><span>珍品以上</span><b>${SLOTS.filter((s) => { const it = d.equipment[s.id]; return it && QUALITIES.indexOf(it.quality) >= 3; }).length} 件</b></div>
+        <p class="pe-hint">悬停装备格查看属性笺<br>行囊物品双击即可穿戴</p>
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ---------- 列传 · 职业进阶 ---------- */
+function renderCareer(hero) {
+  const d = detailFor(hero);
+  const line = LINES[hero.cat];
+  const branch = line[d.line];
+  const label = line[d.line === 'b1' ? 'l1' : 'l2'];
+  const path = branch.map((name, i) => ({
+    tier: i === 0 ? TIERS[0] : `${TIERS[i]} · ${label}`,
+    name,
+    state: i < d.pathIdx ? 'done' : i === d.pathIdx ? 'current' : 'future',
+  }));
+  const canPerfect = d.careerLv >= 20 && !d.perfected;
+  return `<section class="dossier-sec">
+    <header><div class="sec-title"><h2>职业进阶</h2><span class="sub">其叁 · ${label}一脉 · <i>圆满心得需职业 Lv.20</i></span></div></header>
+    <div class="sec-body">
+      <div class="career-path">
+        ${path.map((n) => `<div class="cp-node ${n.state}">
+          <span class="cp-dot">${n.name[0]}</span>
+          <span class="cp-tier">${n.tier}</span>
+          <span class="cp-name">${n.name}</span>
+          ${n.state === 'current' ? `<span class="cp-lv">职业 <b>Lv.${d.careerLv}</b></span>` : n.state === 'done' ? '<span class="cp-lv">已历</span>' : '<span class="cp-lv">未至</span>'}
+        </div>`).join('')}
+      </div>
+      <div class="career-strip">
+        <span class="cs-label">当前职业</span>
+        <span class="cs-name">${hero.career}</span>
+        <span class="cs-lv">职业 <b>Lv.${d.careerLv}</b>${d.careerLv >= 20 ? ' · 已至圆满' : ''}</span>
+        <button type="button" class="btn-perfect${d.perfected ? ' done' : ''}" data-action="perfect" ${canPerfect ? '' : 'disabled'}>${d.perfected ? '圆满心得已领悟' : '领悟圆满心得'}</button>
+      </div>
+      <div class="career-cards">
+        ${d.careerOptions.map((c, ci) => `<article class="career-card">
+          <span class="cc-tier">${c.tier}</span>
+          <strong class="cc-name">${c.name}</strong>
+          <span class="cc-state ${c.state}">${c.note}</span>
+          <button type="button" class="cc-btn ${c.btn === 'switch' ? 'switch' : ''}" data-action="career-${c.btn}" data-idx="${ci}" ${c.disabled ? 'disabled' : ''}>${c.label}</button>
+        </article>`).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ---------- 列传 · 四槽武功 ---------- */
+function renderMartial(hero) {
+  const d = detailFor(hero);
+  const slotOf = (name) => d.slots.indexOf(name);
+  const slots = d.slots.map((name, i) => {
+    const m = name ? d.martials.find((x) => x.name === name) : null;
+    if (!m) return `<div class="mslot empty"><span class="ms-no">${CN[i]}</span><div><span class="ms-name">空槽</span><span class="ms-meta">第${CN[i]}顺位 · 虚位</span></div></div>`;
+    return `<div class="mslot" data-rarity="${m.rarity}">
+      <span class="ms-no">${CN[i]}</span>
+      <div><span class="ms-name">${m.name}</span><span class="ms-meta">${m.rarity} · Lv.${m.lv} · 第${CN[i]}顺位</span></div>
+      <button type="button" class="ms-unequip" data-action="slot-clear" data-slot="${i}">卸下</button>
+    </div>`;
+  }).join('');
+  const learned = d.martials.map((m, mi) => {
+    const inSlot = slotOf(m.name);
+    return `<article class="learned-card" data-rarity="${m.rarity}" style="animation-delay:${mi * 50}ms">
+      <div>
+        <strong class="lc-name">${m.name}</strong>
+        <div class="lc-meta">
+          <span class="lc-rarity">${m.rarity}</span><span>Lv.${m.lv}</span>
+          ${inSlot >= 0 ? `<span class="lc-equipped">已列第${CN[inSlot]}槽</span>` : ''}
+        </div>
+      </div>
+      <div class="lc-actions">
+        <button type="button" class="lc-btn" data-action="martial-up" data-idx="${mi}">升级</button>
+        ${[0, 1, 2, 3].map((i) => `<button type="button" class="lc-btn slot-btn${inSlot === i ? ' in' : ''}" data-action="martial-slot" data-idx="${mi}" data-slot="${i}" title="装入第${CN[i]}槽">${i + 1}</button>`).join('')}
+        <button type="button" class="lc-btn danger" data-action="martial-forget" data-idx="${mi}">遗忘</button>
+      </div>
+    </article>`;
+  }).join('') || '<p class="learned-empty">尚未习得武功</p>';
+  return `<section class="dossier-sec">
+    <header><div class="sec-title"><h2>四槽武功</h2><span class="sub">其肆 · 出战四式 · <i>按顺位出手</i></span></div></header>
+    <div class="sec-body martial-layout">
+      <div>
+        <div class="martial-slots">${slots}</div>
+        <p class="slots-hint">战斗中自第壹槽起依序施展；<br>高顺位宜放真气充裕之快招。</p>
+      </div>
+      <div class="learned-list">${learned}</div>
+    </div>
+  </section>`;
+}
+
+/* ---------- 列传 · 主修心法 ---------- */
+function renderHearts(hero) {
+  const d = detailFor(hero);
+  return `<section class="dossier-sec">
+    <header><div class="sec-title"><h2>主修心法</h2><span class="sub">其伍 · 择一而修 · <i>行气之根本</i></span></div></header>
+    <div class="sec-body heart-row">
+      ${d.hearts.map((h, hi) => `<button type="button" class="heart-pill${h.equipped ? ' active' : ''}" data-action="heart" data-idx="${hi}">${h.name}${h.equipped ? '<small>主修中</small>' : ''}</button>`).join('')}
+    </div>
+  </section>`;
+}
+
+/* ---------- 列传整页 ---------- */
+function renderDossier() {
+  const hero = ROSTER.find((h) => h.id === state.selectedId) ?? ROSTER[0];
+  $('#dossier').innerHTML = renderHead(hero) + renderAptitude(hero) + renderEquip(hero) + renderCareer(hero) + renderMartial(hero) + renderHearts(hero);
+}
+
+/* ---------- 行囊 ---------- */
+function packFiltered() {
+  return PACK.filter((it) =>
+    (state.slotFilter === 'all' || it.slot === state.slotFilter)
+    && (state.qualityFilter === 'all' || it.quality === state.qualityFilter));
+}
+function batchCount() {
+  const th = QUALITIES.indexOf(state.batchQuality);
+  return PACK.filter((it) => QUALITIES.indexOf(it.quality) <= th && !it.locked && !it.owner).length;
+}
+function renderPack() {
+  $('#packCount').textContent = PACK.length;
+  $('#packCapBar').style.width = Math.min(100, PACK.length / 200 * 100) + '%';
+
+  // 筛选印 + 批量丢弃面板（武侠化 chips，取代下拉框）
+  const slotChips = ['all', ...SLOTS.map((s) => s.id)].map((id) => id === 'all'
+    ? `<button type="button" class="fchip${state.slotFilter === 'all' ? ' active' : ''}" data-pslot="all">全</button>`
+    : `<button type="button" class="fchip seal${state.slotFilter === id ? ' active' : ''}" data-pslot="${id}" title="${slotById(id).name}">${slotById(id).mark}</button>`).join('');
+  const qualityChips = ['all', ...QUALITIES].map((q) => q === 'all'
+    ? `<button type="button" class="fchip${state.qualityFilter === 'all' ? ' active' : ''}" data-pquality="all">全</button>`
+    : `<button type="button" class="fchip qc${state.qualityFilter === q ? ' active' : ''}" data-pquality="${q}" style="--qc:var(--q-${q})"><i></i>${q[0]}</button>`).join('');
+  const batchPanel = state.batchOpen ? `<div class="batch-panel">
+      <p class="bp-tip">择一品质为界，<b style="color:var(--cinnabar-bright)">含该品质以下</b>尽数丢弃；<br>已装备与已锁定者不受影响。</p>
+      <div class="chip-row">${QUALITIES.map((q) => `<button type="button" class="fchip danger qc${state.batchQuality === q ? ' active' : ''}" data-bquality="${q}" style="--qc:var(--q-${q})"><i></i>${q[0]}</button>`).join('')}</div>
+      <p class="bp-count">${state.batchQuality === 'all' ? '尚未择定品质' : `将丢弃 <b>${batchCount()}</b> 件装备`}</p>
+      <div class="bp-btns">
+        <button type="button" class="pc-yes" id="pcYes" ${state.batchQuality === 'all' || batchCount() === 0 ? 'disabled' : ''}>确认丢弃</button>
+        <button type="button" class="pc-no" id="pcNo">收手</button>
+      </div>
+    </div>` : '';
+  $('#packToolsZone').innerHTML = `
+    <div class="pack-chips">
+      <div class="chip-row"><span class="chip-label">部位</span>${slotChips}</div>
+      <div class="chip-row"><span class="chip-label">品质</span>${qualityChips}</div>
+    </div>
+    <div class="pack-tool-btns">
+      <button type="button" class="pk-btn" id="btnOrganize">整理</button>
+      <button type="button" class="pk-btn danger" id="btnBatch">${state.batchOpen ? '收起丢弃' : '批量丢弃'}</button>
+    </div>
+    ${batchPanel}`;
+
+  // 清单 + 分页
+  const filtered = packFiltered();
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  state.page = Math.min(pageCount, Math.max(1, state.page));
+  const visible = filtered.slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE);
+  const current = heroName();
+  const hero = ROSTER.find((h) => h.id === state.selectedId);
+  const d = detailFor(hero);
+  $('#packList').innerHTML = visible.map((it, i) => {
+    const isCurrent = it.owner === current;
+    const worn = d.equipment[it.slot];
+    const comparison = isCurrent ? null : worn;
+    return `<button type="button" class="pack-row${isCurrent ? ' current' : it.owner ? ' occupied' : ''}" data-quality="${it.quality}" data-uid="${it.uid}" style="animation-delay:${i * 35}ms" aria-label="查看 ${it.name}">
+      <span class="pr-icon">${slotById(it.slot).mark}</span>
+      <span class="pr-body">
+        <span class="pr-name">${it.name}${it.locked ? ' <span class="pd-lock" style="position:static">锁</span>' : ''}</span>
+        <span class="pr-meta"><span class="pr-q">${it.quality}</span> · Lv.${it.lv}${isCurrent ? ' · <span class="pr-owner">已装备</span>' : it.owner ? ` · <span class="pr-owner">${it.owner}</span>` : ''}</span>
+      </span>
+      <span class="pr-slot-tag">${slotById(it.slot).name}</span>
+      ${eqTipHTML(it, comparison, isCurrent ? '正穿于当前侠客' : it.owner ? `由 ${it.owner} 穿戴 · 双击仍可换装` : '双击左键，为当前侠客装备')}
+    </button>`;
+  }).join('') || `<div class="pack-empty"><strong>行囊空空</strong><span>调整筛选，或往江湖战斗获取</span></div>`;
+
+  $('#packPage').innerHTML = `
+    <button type="button" class="pg-btn" data-page="${state.page - 1}" ${state.page <= 1 ? 'disabled' : ''}>上一页</button>
+    <div class="pg-nums">${Array.from({ length: pageCount }, (_, i) => `<button type="button" class="pg-num${i + 1 === state.page ? ' active' : ''}" data-page="${i + 1}">${i + 1}</button>`).join('')}</div>
+    <span style="font-size:10px;color:var(--paper-mute);letter-spacing:0.1em">${state.page}/${pageCount} · ${visible.length}件</span>
+    <button type="button" class="pg-btn" data-page="${state.page + 1}" ${state.page >= pageCount ? 'disabled' : ''}>下一页</button>`;
+}
+
+/* ---------- 联动：穿/脱装备同步行囊归属 ---------- */
+function equipTo(hero, item) {
+  const d = detailFor(hero);
+  const prev = d.equipment[item.slot];
+  if (prev) {
+    const prevPack = PACK.find((p) => p.name === prev.name && p.owner === hero.name);
+    if (prevPack) prevPack.owner = null;
+  }
+  if (item.owner && item.owner !== hero.name) toast(`自 ${item.owner} 身上解下 ${item.name}`);
+  item.owner = hero.name;
+  d.equipment[item.slot] = { name: item.name, quality: item.quality, lv: item.lv, base: item.base, affix: item.affix };
+  toast(`${hero.name} 装备了 ${item.name}`);
+}
+function unequip(hero, slotId) {
+  const d = detailFor(hero);
+  const item = d.equipment[slotId];
+  if (!item) return;
+  const packItem = PACK.find((p) => p.name === item.name && p.owner === hero.name);
+  if (packItem) packItem.owner = null;
+  d.equipment[slotId] = null;
+  toast(`已卸下 ${item.name}`);
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  const row = t.closest('.roster-row');
+  if (row) {
+    state.selectedId = row.dataset.hero;
+    renderAll();
+    return;
+  }
+  const act = t.closest('[data-action]');
+  if (!act) {
+    // 名册筛选印
+    const gChip = t.closest('[data-grade]');
+    if (gChip) { state.rosterGrade = gChip.dataset.grade; renderRoster(); return; }
+    const cChip = t.closest('[data-cat]');
+    if (cChip) { state.rosterCat = cChip.dataset.cat; renderRoster(); return; }
+    // 行囊筛选印
+    const sChip = t.closest('[data-pslot]');
+    if (sChip) { state.slotFilter = sChip.dataset.pslot; state.page = 1; renderPack(); return; }
+    const qChip = t.closest('[data-pquality]');
+    if (qChip) { state.qualityFilter = qChip.dataset.pquality; state.page = 1; renderPack(); return; }
+    const bChip = t.closest('[data-bquality]');
+    if (bChip) { state.batchQuality = bChip.dataset.bquality; renderPack(); return; }
+
+    if (t.closest('#pcYes')) {
+      const th = QUALITIES.indexOf(state.batchQuality);
+      const n = batchCount();
+      for (let i = PACK.length - 1; i >= 0; i--) {
+        const it = PACK[i];
+        if (QUALITIES.indexOf(it.quality) <= th && !it.locked && !it.owner) PACK.splice(i, 1);
+      }
+      state.batchOpen = false;
+      state.batchQuality = 'all';
+      state.page = 1;
+      toast(`已丢弃 ${n} 件装备`);
+      renderPack();
+    } else if (t.closest('#pcNo')) {
+      state.batchOpen = false;
+      state.batchQuality = 'all';
+      renderPack();
+    } else if (t.closest('#btnOrganize')) {
+      PACK.sort((a, b) => QUALITIES.indexOf(b.quality) - QUALITIES.indexOf(a.quality)
+        || SLOTS.findIndex((s) => s.id === a.slot) - SLOTS.findIndex((s) => s.id === b.slot));
+      state.page = 1;
+      toast('行囊已整理');
+      renderPack();
+    } else if (t.closest('#btnBatch')) {
+      state.batchOpen = !state.batchOpen;
+      state.batchQuality = 'all';
+      renderPack();
+    } else if (t.closest('#btnLocate')) {
+      const active = $('#rosterList .roster-row.active');
+      if (active) active.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      else toast('当前侠客不在此筛选之中', true);
+    } else {
+      const pg = t.closest('[data-page]');
+      if (pg) { state.page = Number(pg.dataset.page); renderPack(); }
+    }
+    return;
+  }
+
+  const hero = ROSTER.find((h) => h.id === state.selectedId);
+  const d = detailFor(hero);
+  const action = act.dataset.action;
+
+  if (action === 'unequip') { unequip(hero, act.dataset.slot); renderAll(); }
+
+  if (action === 'perfect') {
+    d.perfected = true;
+    const row5 = d.stats[2][2].find(([label]) => label === '圆满加成');
+    if (row5) row5[1] = '5%';
+    toast(`${hero.name} 领悟圆满心得 · 全属性小成`);
+    renderAll();
+  }
+  if (action === 'career-switch' || action === 'career-change') {
+    const c = d.careerOptions[Number(act.dataset.idx)];
+    if (!c || c.disabled) return;
+    const line = LINES[hero.cat];
+    if (action === 'career-switch') {
+      d.line = d.line === 'b1' ? 'b2' : 'b1';
+      hero.career = c.name;
+      toast(`已切换至 ${c.name}（${line[d.line === 'b1' ? 'l1' : 'l2']}一脉）`);
+    } else {
+      const names = [...line.b1, ...line.b2];
+      const idx = names.indexOf(c.name);
+      if (idx >= 0) { d.line = idx < 4 ? 'b1' : 'b2'; d.pathIdx = idx % 4; }
+      hero.career = c.name;
+      toast(`转职成功 · ${hero.name} 现为 ${c.name}`);
+    }
+    renderAll();
+  }
+  if (action === 'martial-up') {
+    const m = d.martials[Number(act.dataset.idx)];
+    m.lv += 1;
+    toast(`${m.name} 升至 Lv.${m.lv}`);
+    renderDossier();
+  }
+  if (action === 'martial-slot') {
+    const m = d.martials[Number(act.dataset.idx)];
+    const slot = Number(act.dataset.slot);
+    const old = d.slots.indexOf(m.name);
+    if (old >= 0) d.slots[old] = null;
+    d.slots[slot] = m.name;
+    toast(`${m.name} 列入第${CN[slot]}槽`);
+    renderDossier();
+  }
+  if (action === 'slot-clear') {
+    const slot = Number(act.dataset.slot);
+    toast(`已卸下 ${d.slots[slot]}`);
+    d.slots[slot] = null;
+    renderDossier();
+  }
+  if (action === 'martial-forget') {
+    const m = d.martials[Number(act.dataset.idx)];
+    const inSlot = d.slots.indexOf(m.name);
+    if (inSlot >= 0) d.slots[inSlot] = null;
+    d.martials.splice(Number(act.dataset.idx), 1);
+    toast(`已遗忘 ${m.name} · 返还八成心得`);
+    renderDossier();
+  }
+  if (action === 'heart') {
+    d.hearts.forEach((h, hi) => h.equipped = hi === Number(act.dataset.idx));
+    toast(`改修 ${d.hearts[Number(act.dataset.idx)].name}`);
+    renderDossier();
+  }
+});
+
+// 双击装备
+document.addEventListener('dblclick', (e) => {
+  const rowEl = e.target.closest('.pack-row');
+  if (!rowEl) return;
+  const item = PACK.find((p) => p.uid === rowEl.dataset.uid);
+  const hero = ROSTER.find((h) => h.id === state.selectedId);
+  if (!item) return;
+  if (item.owner === hero.name) { toast('此件已穿在当前侠客身上', true); return; }
+  if (item.locked) { toast('已锁定的装备需先解锁', true); return; }
+  equipTo(hero, item);
+  renderAll();
+});
+
+// 名册搜索
+$('#rosterSearch').addEventListener('input', (e) => { state.rosterQuery = e.target.value; renderRoster(); });
+
+/* ---------- 浮动属性笺（规避滚动容器裁剪，JS fixed 定位） ---------- */
+const floatTip = $('#floatTip');
+function statTipHTML(title, desc) {
+  return `<div class="eq-tip"><header><small>属性释义</small><strong>${title}</strong></header><div class="stat-tip-body">${desc}</div></div>`;
+}
+function showTip(html, rect, mode) {
+  floatTip.innerHTML = html;
+  floatTip.classList.add('show');
+  const tw = 300, th = floatTip.offsetHeight;
+  let x, y;
+  if (mode === 'left') {
+    x = rect.left - tw - 12;
+    y = rect.top + rect.height / 2 - th / 2;
+  } else {
+    x = rect.left + rect.width / 2 - tw / 2;
+    y = rect.top - th - 10;
+    if (y < 10) y = rect.bottom + 10; // 上方不足则落在下方
+  }
+  x = Math.max(10, Math.min(window.innerWidth - tw - 10, x));
+  y = Math.max(10, Math.min(window.innerHeight - th - 10, y));
+  floatTip.style.left = `${x}px`;
+  floatTip.style.top = `${y}px`;
+}
+function hideTip() { floatTip.classList.remove('show'); }
+
+document.addEventListener('mouseover', (e) => {
+  // 行囊物品 → 属性笺（含与当前穿戴对比）
+  const packRow = e.target.closest('.pack-row');
+  if (packRow && !packRow.contains(e.relatedTarget)) {
+    const tip = packRow.querySelector('.eq-tip');
+    if (tip) showTip(tip.outerHTML, packRow.getBoundingClientRect(), 'left');
+    return;
+  }
+  // 战斗属性 → 释义
+  const chip = e.target.closest('.st-chip');
+  if (chip && !chip.contains(e.relatedTarget)) {
+    const label = chip.querySelector('dt')?.textContent;
+    if (STAT_DESC[label]) showTip(statTipHTML(label, STAT_DESC[label]), chip.getBoundingClientRect(), 'top');
+    return;
+  }
+  // 五维天资（SVG 文字） → 释义
+  const apt = e.target.closest('.apt-label');
+  if (apt) {
+    const key = apt.dataset.apt;
+    if (key && APT_DESC[key] && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.apt-label') === apt)) {
+      showTip(statTipHTML(`${key} · 天资`, APT_DESC[key]), apt.getBoundingClientRect(), 'top');
+    }
+  }
+});
+document.addEventListener('mouseout', (e) => {
+  const from = e.target.closest ? (e.target.closest('.pack-row') || e.target.closest('.st-chip') || e.target.closest('.apt-label')) : null;
+  if (!from) return;
+  if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.pack-row, .st-chip, .apt-label') === from) return;
+  hideTip();
+});
+document.addEventListener('scroll', hideTip, true);
+document.addEventListener('click', (e) => { if (!e.target.closest('.pack-row')) hideTip(); });
+
+/* ---------- 钱袋数字动画 ---------- */
+let purseShown = 0;
+function animatePurse(to) {
+  const from = purseShown, t0 = performance.now();
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / 700);
+    const v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+    $('#purseNum').textContent = fmt(v);
+    if (k < 1) requestAnimationFrame(step); else purseShown = to;
+  };
+  requestAnimationFrame(step);
+}
+
+/* ---------- 初始化 ---------- */
+function renderAll() {
+  renderRoster();
+  renderDossier();
+  renderPack();
+}
+renderAll();
+animatePurse(12840);
+</script>
+</body>
+</html>
