@@ -81,6 +81,14 @@ export const equipmentBaseStatValue = (
   * EQUIPMENT_QUALITY_MULTIPLIERS[EQUIPMENT_QUALITIES.indexOf(equipment.quality)],
 )
 
+export const equipmentAffixRange = (
+  definition: EquipmentAffixDefinitionV10,
+  level: number,
+): { min: number; max: number } => ({
+  min: definition.min + Math.floor(level / 10),
+  max: definition.max + Math.floor(level / 5),
+})
+
 export const rollAffixes = (
   quality: EquipmentQuality,
   level: number,
@@ -91,8 +99,7 @@ export const rollAffixes = (
   return Array.from({ length: count }, () => {
     const index = rng.nextInt(0, pool.length)
     const affix = pool.splice(index, 1)[0]
-    const scaledMin = affix.min + Math.floor(level / 10)
-    const scaledMax = affix.max + Math.floor(level / 5)
-    return { id: affix.id, value: rng.nextInt(scaledMin, scaledMax + 1) }
+    const range = equipmentAffixRange(affix, level)
+    return { id: affix.id, value: rng.nextInt(range.min, range.max + 1) }
   })
 }

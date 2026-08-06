@@ -25,9 +25,9 @@ const worldSections: Array<{ id: JianghuSection; label: string }> = [
 ]
 
 export const renderShell = (view: ShellViewModel): string => {
-  const worldContext = view.activeTab === 'idle' ? view.worldContext : null
+  const worldContext = view.worldContext
   return `
-    <div class="app-shell">
+    <div class="app-shell" data-active-tab="${view.activeTab}">
       <aside class="game-sidebar">
         <div class="brand-block">
           <span class="brand-seal" aria-hidden="true">蛋</span>

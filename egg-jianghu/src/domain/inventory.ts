@@ -64,6 +64,16 @@ export const toggleEquipmentLock = (state: GameStateV10, equipmentUid: string): 
   return { ok: true, message: equipment.locked ? '装备已锁定' : '装备已解锁' }
 }
 
+export const discardEquipment = (state: GameStateV10, equipmentUid: string): ActionResult => {
+  const equipment = state.inventory.find((item) => item.uid === equipmentUid)
+  if (!equipment) return { ok: false, message: '装备不存在' }
+  if (equipment.locked) return { ok: false, message: '此物已上锁，先解锁再丢弃' }
+  if (isEquipmentEquipped(state, equipmentUid)) return { ok: false, message: '已穿戴装备请先到侠客页卸下' }
+
+  state.inventory = state.inventory.filter((item) => item.uid !== equipmentUid)
+  return { ok: true, message: `已丢弃 ${equipmentDefinitionById(equipment.definitionId)?.name ?? '装备'}` }
+}
+
 export const organizeInventory = (state: GameStateV10): ActionResult => {
   state.inventory.sort((left, right) => {
     const leftDefinition = equipmentDefinitionById(left.definitionId)

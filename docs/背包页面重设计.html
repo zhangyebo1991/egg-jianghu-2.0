@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>背包 · 蛋蛋江湖 2.0 — 高保真重设计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   背包页重设计 · 蛋蛋江湖 2.0
+   设计语言：墨底宣纸 · 朱砂印 · 金漆匾 · 百宝囊
+   纯背包页：已装备不入囊，穿戴/卸下在侠客页操作
+   PC 端整页一屏呈现（囊格内部滚动），安卓端详情弹窗
+   ============================================================ */
+:root {
+  --ink-950: #0c0e0b;
+  --ink-900: #11140f;
+  --ink-850: #171b14;
+  --ink-800: #1f241c;
+  --ink-700: #2a3026;
+  --paper: #e8e1d3;
+  --paper-dim: #b3ad9e;
+  --paper-mute: #7d7f72;
+  --xuan: #e9dec3;          /* 宣纸 */
+  --xuan-deep: #ddceaa;
+  --xuan-ink: #2b2519;       /* 纸上墨色 */
+  --cinnabar: #b5503c;       /* 朱砂 */
+  --cinnabar-bright: #cf6b53;
+  --cinnabar-deep: #8a3a2b;
+  --gold: #c9a35c;
+  --gold-bright: #e6c67f;
+  --gold-deep: #8f6f3a;
+  --jade: #7fa88d;
+  --jade-dim: #57705f;
+  --line: #31382e;
+  --line-soft: #252a22;
+  /* 装备品质五色 */
+  --q-凡品: #8e887d;
+  --q-良品: #4f9168;
+  --q-上品: #4e7fb8;
+  --q-珍品: #8b63a8;
+  --q-绝品: #c9953d;
+  --font-brush: "Ma Shan Zheng", "Noto Serif SC", serif;
+  --font-song: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: var(--font-song);
+  color: var(--paper);
+  background:
+    radial-gradient(1100px 500px at 78% -10%, rgb(127 168 141 / 9%), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgb(181 80 60 / 6%), transparent 55%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+  font-synthesis: none;
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+::selection { background: rgb(181 80 60 / 55%); color: #fff4e8; }
+
+/* 纸颗粒覆盖层 —— 全场胶片/宣纸质感 */
+.grain {
+  position: fixed; inset: -50%; z-index: 60; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.055; mix-blend-mode: overlay;
+}
+
+/* ============ 游戏外壳 · 侧边栏 ============ */
+.app-shell { display: grid; grid-template-columns: 212px minmax(0, 1fr); min-height: 100vh; }
+
+.game-sidebar {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; gap: 26px;
+  padding: 26px 20px 20px;
+  border-right: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, rgb(23 27 20 / 72%), rgb(13 16 12 / 88%));
+}
+.brand-block { display: flex; align-items: center; gap: 12px; }
+.brand-seal {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 24px; color: #f6e3d2;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  border: 1px solid #c96f58; border-radius: 6px;
+  box-shadow: inset 0 0 0 3px #411811, 0 4px 14px rgb(0 0 0 / 40%);
+  transform: rotate(-2deg);
+}
+.brand-block strong { display: block; font-size: 15px; letter-spacing: 0.1em; color: #efe4cf; white-space: nowrap; }
+.brand-block small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); white-space: nowrap; }
+
+.game-nav { display: grid; gap: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 6px; text-align: left;
+  color: var(--paper-dim); transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  position: relative;
+}
+.nav-item .nav-mark {
+  width: 30px; height: 30px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 16px;
+  border: 1px solid var(--line); border-radius: 5px; color: var(--paper-mute);
+  transition: all 0.25s var(--ease-out);
+}
+.nav-item strong { font-size: 14px; letter-spacing: 0.28em; font-weight: 500; }
+.nav-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+.nav-item.active { color: #f3e9d5; background: rgb(233 222 195 / 5%); }
+.nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px;
+  background: var(--cinnabar); border-radius: 2px;
+}
+.nav-item.active .nav-mark { border-color: var(--cinnabar-deep); color: var(--cinnabar-bright); }
+
+.world-subnav { display: grid; gap: 4px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.world-subnav .world-back {
+  text-align: left; padding: 6px 12px; font-size: 11px; letter-spacing: 0.18em;
+  color: var(--paper-mute); transition: color 0.2s;
+}
+.world-subnav .world-back:hover { color: var(--gold-bright); }
+.world-subnav .ws-item {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 8px 12px; border-radius: 5px; text-align: left;
+  font-size: 13px; letter-spacing: 0.32em; color: var(--paper-dim);
+  transition: all 0.25s var(--ease-out);
+}
+.world-subnav .ws-item small { font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); font-style: normal; }
+.world-subnav .ws-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
+
+.sidebar-landscape { margin-top: auto; height: 74px; position: relative; overflow: hidden; border-radius: 6px; }
+.sidebar-landscape::before { /* 远山 */
+  content: ""; position: absolute; inset: auto -12px 0 -12px; height: 56px;
+  background:
+    linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
+    linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
+    linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
+}
+.sidebar-landscape::after { /* 雾 */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
+  background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
+}
+.sidebar-motto { font-size: 10px; letter-spacing: 0.5em; color: var(--paper-mute); text-align: center; }
+
+/* ============ 主区框架 · 单屏锁定 ============ */
+.game-main {
+  min-width: 0; height: 100vh;
+  display: flex; flex-direction: column;
+  padding: 26px 36px 20px;
+  position: relative; overflow: hidden;
+}
+
+/* 巨字书法背景 —— 氛围层 */
+.ghost-char {
+  position: absolute; z-index: 0; pointer-events: none; user-select: none;
+  font-family: var(--font-brush); line-height: 0.9; color: rgb(233 222 195 / 4%);
+}
+.ghost-bag { top: 6%; right: -40px; font-size: 420px; transform: rotate(6deg); }
+
+.page-head {
+  position: relative; z-index: 1; flex: none;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+  padding-bottom: 16px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.page-head .crumb { font-size: 11px; letter-spacing: 0.3em; color: var(--paper-mute); margin-bottom: 10px; }
+.page-head .crumb b { color: var(--gold); font-weight: 500; }
+.page-head h1 {
+  font-family: var(--font-brush); font-weight: 400;
+  font-size: 44px; line-height: 1; letter-spacing: 0.06em; color: #f2e7d0;
+  text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
+}
+.page-head .latin { margin-top: 8px; font-size: 10px; letter-spacing: 0.42em; color: var(--paper-mute); text-transform: uppercase; }
+
+/* 页头右注 */
+.head-note { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-bottom: 4px; }
+.head-note .hn-main { font-size: 12px; letter-spacing: 0.22em; color: var(--paper-dim); }
+.head-note .hn-main b { color: var(--gold-bright); font-weight: 600; }
+.head-note .hn-sub { font-size: 10px; letter-spacing: 0.18em; color: var(--paper-mute); }
+</style>
+<style>
+/* ============ 百宝囊 · 木框囊袋 ============ */
+.bag-layout {
+  position: relative; z-index: 1; flex: 1; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) 348px; gap: 18px;
+}
+
+.bag-board {
+  min-height: 0; display: flex; flex-direction: column;
+  border-radius: 12px; padding: 3px;             /* 木框 */
+  background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+.bag-inner {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+  border-radius: 9px; overflow: hidden;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 14%) 0 2px, transparent 2px 64px),
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 6%) 0 1px, transparent 1px 7px),
+    linear-gradient(165deg, #2f2819, #221c10 55%, #292216);
+  border: 1px solid rgb(0 0 0 / 40%);
+}
+.bag-head {
+  flex: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 16px 22px 12px;
+}
+.bag-title { display: flex; align-items: baseline; gap: 14px; }
+.bag-title h2 { font-family: var(--font-brush); font-size: 30px; font-weight: 400; letter-spacing: 0.12em; color: #ecdcb9; }
+.bag-title .sub { font-size: 10px; letter-spacing: 0.3em; color: rgb(233 222 195 / 42%); }
+.bag-title .sub i { font-style: normal; color: var(--cinnabar-bright); }
+
+/* 容量 + 操作 */
+.bag-side { display: flex; align-items: center; gap: 16px; }
+.capacity { display: flex; flex-direction: column; gap: 5px; min-width: 108px; }
+.capacity .cap-num { font-size: 12px; letter-spacing: 0.12em; color: var(--paper-dim); font-variant-numeric: tabular-nums; }
+.capacity .cap-num b { color: var(--gold-bright); font-size: 15px; font-weight: 700; }
+.capacity .cap-bar { height: 3px; border-radius: 2px; background: rgb(233 222 195 / 10%); overflow: hidden; }
+.capacity .cap-bar i { display: block; height: 100%; width: 12%; border-radius: 2px; background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright)); }
+
+.bag-actions { display: flex; gap: 8px; }
+.ink-btn {
+  padding: 8px 14px; border-radius: 6px; font-size: 12px; letter-spacing: 0.2em;
+  border: 1px solid var(--line); color: var(--paper-dim);
+  background: rgb(23 27 20 / 45%);
+  transition: all 0.25s var(--ease-out);
+}
+.ink-btn:hover { border-color: var(--gold-deep); color: var(--gold-bright); }
+.ink-btn.danger:hover { border-color: var(--cinnabar-deep); color: var(--cinnabar-bright); }
+
+/* 部位筛选 · 简签 */
+.slot-tabs {
+  flex: none; display: flex; gap: 4px; flex-wrap: wrap;
+  padding: 0 22px 12px;
+  border-bottom: 1px solid rgb(0 0 0 / 35%);
+}
+.slot-tab {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 6px 11px; border-radius: 5px;
+  font-size: 12px; letter-spacing: 0.18em; color: var(--paper-mute);
+  transition: all 0.22s var(--ease-out);
+}
+.slot-tab small { font-size: 10px; color: var(--paper-mute); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.slot-tab:hover { color: var(--paper); background: rgb(233 222 195 / 5%); }
+.slot-tab.active { color: var(--gold-bright); background: rgb(201 163 92 / 10%); box-shadow: inset 0 -2px 0 var(--gold); }
+.slot-tab.active small { color: var(--gold); }
+
+/* 囊格 · 内部滚动，页面不滚 */
+.bag-grid-wrap { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 22px 20px; scrollbar-width: thin; scrollbar-color: #4a4231 transparent; }
+.bag-grid-wrap::-webkit-scrollbar { width: 8px; }
+.bag-grid-wrap::-webkit-scrollbar-thumb { background: #4a4231; border-radius: 4px; }
+.bag-grid-wrap::-webkit-scrollbar-track { background: transparent; }
+
+.bag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+
+.cell {
+  position: relative; aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  border-radius: 8px; text-align: center;
+  background: linear-gradient(160deg, rgb(14 17 13 / 72%), rgb(10 12 9 / 82%));
+  border: 1px solid var(--line);
+  transition: transform 0.22s var(--ease-out), border-color 0.22s, box-shadow 0.22s;
+}
+.cell::before { /* 品质光晕 */
+  content: ""; position: absolute; inset: 0; border-radius: 8px; pointer-events: none;
+  background: radial-gradient(70% 55% at 50% 30%, var(--qc, transparent) 0%, transparent 70%);
+  opacity: 0.14; transition: opacity 0.22s;
+}
+.cell:hover { transform: translateY(-3px); border-color: var(--qb, var(--line)); box-shadow: 0 10px 22px rgb(0 0 0 / 38%); }
+.cell:hover::before { opacity: 0.3; }
+.cell.selected {
+  border-color: var(--qb, var(--gold));
+  box-shadow: 0 0 0 1px var(--qb, var(--gold)), 0 12px 26px rgb(0 0 0 / 42%);
+}
+.cell.selected::before { opacity: 0.34; }
+.cell .glyph {
+  font-family: var(--font-brush); font-size: 30px; line-height: 1;
+  color: var(--qb, var(--paper-dim));
+  text-shadow: 0 3px 10px rgb(0 0 0 / 50%);
+}
+.cell .cname { font-size: 10px; letter-spacing: 0.06em; color: var(--paper-dim); max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell .lvl {
+  position: absolute; top: 5px; right: 6px;
+  font-size: 9px; letter-spacing: 0.04em; color: var(--paper-mute);
+  font-variant-numeric: tabular-nums;
+}
+.cell .lock-mark {
+  position: absolute; top: 5px; left: 6px;
+  width: 15px; height: 15px; display: grid; place-items: center;
+  font-size: 9px; color: #2e2208; background: var(--gold-bright);
+  border-radius: 3px; box-shadow: 0 2px 6px rgb(0 0 0 / 40%);
+}
+/* 品质描边 */
+.cell.q-凡品 { --qb: var(--q-凡品); --qc: var(--q-凡品); }
+.cell.q-良品 { --qb: var(--q-良品); --qc: var(--q-良品); }
+.cell.q-上品 { --qb: var(--q-上品); --qc: var(--q-上品); }
+.cell.q-珍品 { --qb: var(--q-珍品); --qc: var(--q-珍品); }
+.cell.q-绝品 { --qb: var(--q-绝品); --qc: var(--q-绝品); }
+.cell.q-绝品 { border-color: rgb(201 149 61 / 40%); }
+.cell.q-绝品 .glyph { text-shadow: 0 0 14px rgb(201 149 61 / 55%); }
+
+/* 空囊 */
+.bag-empty {
+  grid-column: 1 / -1; padding: 56px 0 50px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.bag-empty .empty-seal {
+  width: 52px; height: 52px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 26px; color: var(--paper-mute);
+  border: 1px dashed var(--line); border-radius: 50%;
+}
+.bag-empty strong { font-size: 14px; letter-spacing: 0.3em; color: var(--paper-dim); font-weight: 500; }
+.bag-empty span { font-size: 11px; letter-spacing: 0.16em; color: var(--paper-mute); }
+
+/* 品质图例 */
+.bag-legend {
+  flex: none; display: flex; align-items: center; gap: 14px;
+  padding: 10px 22px 12px; border-top: 1px solid rgb(0 0 0 / 35%);
+  font-size: 10px; letter-spacing: 0.16em; color: var(--paper-mute);
+}
+.bag-legend .lg { display: flex; align-items: center; gap: 5px; }
+.bag-legend .lg::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c); box-shadow: 0 0 6px var(--c); }
+.bag-legend .lg.凡品 { --c: var(--q-凡品); }
+.bag-legend .lg.良品 { --c: var(--q-良品); }
+.bag-legend .lg.上品 { --c: var(--q-上品); }
+.bag-legend .lg.珍品 { --c: var(--q-珍品); }
+.bag-legend .lg.绝品 { --c: var(--q-绝品); }
+</style>
+<style>
+/* ============ 鉴宝笺 · 宣纸详情（PC 侧栏 / 移动端弹窗） ============ */
+.appraise {
+  min-height: 0; display: flex; flex-direction: column;
+  border-radius: 12px; padding: 3px;
+  background: linear-gradient(160deg, #4a3d27, #2e2618 55%, #3a3122);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+.appraise-paper {
+  flex: 1; min-height: 0; overflow-y: auto;
+  border-radius: 9px; position: relative;
+  display: flex; flex-direction: column;
+  padding: 22px 22px 18px;
+  color: var(--xuan-ink);
+  background:
+    repeating-linear-gradient(0deg, rgb(90 70 40 / 4%) 0 1px, transparent 1px 5px),
+    radial-gradient(120% 90% at 50% 0%, #efe4c9 0%, var(--xuan) 55%, var(--xuan-deep) 100%);
+  scrollbar-width: thin; scrollbar-color: #b3a075 transparent;
+}
+.appraise-paper::-webkit-scrollbar { width: 6px; }
+.appraise-paper::-webkit-scrollbar-thumb { background: #b3a075; border-radius: 3px; }
+.appraise-paper::after { /* 宣纸朱砂角印 */
+  content: "鉴"; position: absolute; right: 16px; top: 16px;
+  width: 34px; height: 34px; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 19px; color: #f6e3d2;
+  background: linear-gradient(145deg, #b5503c, #8a3a2b);
+  border-radius: 5px; transform: rotate(3deg);
+  box-shadow: inset 0 0 0 2px rgb(255 230 210 / 28%), 0 3px 8px rgb(90 40 25 / 30%);
+  opacity: 0.92;
+}
+.appraise-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.appraise-head .slot-tag {
+  padding: 3px 9px; border-radius: 4px; font-size: 10px; letter-spacing: 0.22em;
+  color: var(--xuan-ink); border: 1px solid rgb(43 37 25 / 30%);
+}
+.appraise-head .q-tag { font-size: 11px; letter-spacing: 0.22em; font-weight: 700; color: var(--qb); }
+.appraise-name {
+  font-family: var(--font-brush); font-size: 34px; font-weight: 400; line-height: 1.1;
+  color: #241f13; letter-spacing: 0.04em;
+}
+.appraise-latin { margin-top: 6px; font-size: 9px; letter-spacing: 0.34em; color: rgb(43 37 25 / 45%); text-transform: uppercase; }
+
+.appraise-base {
+  margin-top: 16px; padding: 12px 14px;
+  display: flex; align-items: baseline; justify-content: space-between;
+  border-top: 1px solid rgb(43 37 25 / 18%); border-bottom: 1px solid rgb(43 37 25 / 18%);
+}
+.appraise-base .ab-label { font-size: 11px; letter-spacing: 0.3em; color: rgb(43 37 25 / 60%); }
+.appraise-base .ab-value { font-size: 26px; font-weight: 900; color: #3a2f1c; font-variant-numeric: tabular-nums; }
+.appraise-base .ab-value small { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; color: rgb(43 37 25 / 55%); margin-left: 4px; }
+
+.affix-list { margin-top: 12px; display: grid; gap: 8px; }
+.affix-row { display: flex; align-items: center; gap: 10px; }
+.affix-row .af-name { width: 34px; flex: none; font-size: 11px; letter-spacing: 0.14em; color: rgb(43 37 25 / 70%); }
+.affix-row .af-bar { flex: 1; height: 3px; border-radius: 2px; background: rgb(43 37 25 / 10%); overflow: hidden; }
+.affix-row .af-bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #8f6f3a, #c9a35c); }
+.affix-row .af-value { flex: none; font-size: 12px; font-weight: 700; color: #3a2f1c; font-variant-numeric: tabular-nums; }
+.affix-empty { font-size: 11px; letter-spacing: 0.2em; color: rgb(43 37 25 / 40%); padding: 4px 0; }
+
+/* 笺上操作 */
+.appraise-actions { margin-top: auto; padding-top: 18px; display: grid; gap: 8px; }
+.act-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.act-ghost {
+  padding: 11px 12px; border-radius: 7px;
+  font-size: 13px; letter-spacing: 0.24em; color: rgb(43 37 25 / 75%);
+  border: 1px solid rgb(43 37 25 / 30%); background: rgb(255 250 235 / 30%);
+  transition: all 0.22s var(--ease-out);
+}
+.act-ghost:hover { border-color: rgb(43 37 25 / 55%); color: #241f13; background: rgb(255 250 235 / 55%); }
+.act-ghost.on { color: #7a5a18; border-color: rgb(143 111 58 / 60%); background: rgb(201 163 92 / 16%); }
+.appraise-note { margin-top: 8px; font-size: 10px; letter-spacing: 0.14em; line-height: 1.8; color: rgb(43 37 25 / 45%); }
+.appraise-note b { color: #7a5a18; font-weight: 600; }
+
+/* 未选中态 */
+.appraise-blank {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  color: rgb(43 37 25 / 45%);
+}
+.appraise-blank .blank-char { font-family: var(--font-brush); font-size: 64px; color: rgb(43 37 25 / 16%); }
+.appraise-blank span { font-size: 11px; letter-spacing: 0.3em; text-align: center; line-height: 2; }
+
+/* 弹窗关闭钮（仅移动端显示） */
+.appraise-close { display: none; }
+
+/* ============ 飞鸽 toast ============ */
+.toast {
+  position: fixed; left: 50%; bottom: 34px; z-index: 80;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 20px; border-radius: 8px;
+  font-size: 12px; letter-spacing: 0.18em; color: #f2e7d0;
+  background: linear-gradient(160deg, #2a3026, #171b14);
+  border: 1px solid var(--gold-deep);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 50%);
+  opacity: 0; pointer-events: none;
+}
+.toast.show { animation: toast-in 0.35s var(--ease-out) forwards, toast-out 0.4s ease 2.4s forwards; }
+.toast::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold-bright); box-shadow: 0 0 8px rgb(201 163 92 / 80%); }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 14px) scale(0.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@keyframes toast-out { to { opacity: 0; transform: translate(-50%, 10px); } }
+
+.page-foot { position: relative; z-index: 1; flex: none; text-align: center; padding-top: 12px; font-size: 9px; letter-spacing: 0.4em; color: rgb(233 222 195 / 26%); }
+
+/* ============ 响应式 ============ */
+@media (max-width: 1240px) {
+  .bag-layout { grid-template-columns: minmax(0, 1fr) 316px; }
+  .bag-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+}
+@media (max-width: 980px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .game-sidebar { display: none; }
+  /* 安卓端：解除单屏锁定，纵向流式 */
+  .game-main { height: auto; min-height: 100vh; overflow: visible; padding: 20px 16px 40px; }
+  .page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .head-note { align-items: flex-start; }
+  .bag-layout { grid-template-columns: 1fr; }
+  .bag-board { min-height: 420px; }
+  .ghost-bag { font-size: 260px; top: 2%; }
+
+  /* 鉴宝笺 → 点击物品弹出的详情弹窗 */
+  .appraise {
+    position: fixed; inset: 0; z-index: 70;
+    display: none; padding: 0; border-radius: 0;
+    background: rgb(8 10 7 / 72%);
+    backdrop-filter: blur(3px);
+    box-shadow: none;
+  }
+  .appraise.open { display: flex; align-items: center; justify-content: center; padding: 30px 20px; }
+  .appraise.open .appraise-paper {
+    flex: none; width: min(420px, 100%); max-height: 100%;
+    box-shadow: 0 0 0 3px #3a3122, 0 30px 70px rgb(0 0 0 / 60%);
+    animation: sheet-in 0.32s var(--ease-out);
+  }
+  @keyframes sheet-in { from { opacity: 0; transform: translateY(26px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .appraise-close {
+    position: absolute; top: 14px; right: 14px; z-index: 2;
+    width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 15px; line-height: 1; color: var(--paper);
+    background: linear-gradient(160deg, #2a3026, #171b14);
+    border: 1px solid var(--gold-deep);
+    box-shadow: 0 8px 20px rgb(0 0 0 / 45%);
+    transition: transform 0.2s var(--ease-out);
+  }
+  .appraise-close:hover { transform: rotate(90deg); }
+}
+@media (max-width: 640px) {
+  .page-head h1 { font-size: 34px; }
+  .bag-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .bag-side { width: 100%; justify-content: space-between; }
+  .bag-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+  .bag-grid-wrap { padding: 12px 14px 16px; }
+  .slot-tabs { padding: 0 14px 10px; }
+  .bag-head, .bag-legend { padding-left: 14px; padding-right: 14px; }
+  .cell .glyph { font-size: 24px; }
+  .ghost-char { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="app-shell">
+  <!-- ======== 游戏外壳 ======== -->
+  <aside class="game-sidebar">
+    <div class="brand-block">
+      <span class="brand-seal">蛋</span>
+      <span><strong>蛋蛋江湖 2.0</strong><small>十万里一剑 · 不负侠者行</small></span>
+    </div>
+    <nav class="game-nav" aria-label="游戏区域">
+      <button type="button" class="nav-item"><span class="nav-mark">邑</span><strong>江湖</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">侠</span><strong>侠客</strong></button>
+      <button type="button" class="nav-item"><span class="nav-mark">阵</span><strong>阵容</strong></button>
+      <button type="button" class="nav-item active"><span class="nav-mark">囊</span><strong>背包</strong></button>
+    </nav>
+    <nav class="world-subnav" aria-label="牛家村">
+      <button type="button" class="world-back">← 返回江湖</button>
+      <button type="button" class="ws-item">关卡<small>STAGES</small></button>
+      <button type="button" class="ws-item">势力<small>FACTIONS</small></button>
+      <button type="button" class="ws-item">城市<small>CITY</small></button>
+    </nav>
+    <div class="sidebar-landscape" aria-hidden="true"></div>
+    <span class="sidebar-motto">朝悟道 · 暮练剑</span>
+  </aside>
+
+  <!-- ======== 背包主区 ======== -->
+  <main class="game-main">
+    <span class="ghost-char ghost-bag" aria-hidden="true">囊</span>
+
+    <header class="page-head">
+      <div>
+        <div class="crumb">行囊 · <b>即时掉落</b> · 牛家村</div>
+        <h1>装备背包</h1>
+        <div class="latin">Inventory · Spoils of the Jianghu</div>
+      </div>
+      <div class="head-note">
+        <span class="hn-main">纯行囊之地 · <b>已装备不入此囊</b></span>
+        <span class="hn-sub">穿戴与卸下 · 请往侠客页操办</span>
+      </div>
+    </header>
+
+    <div class="bag-layout">
+      <!-- 百宝囊 -->
+      <section class="bag-board" aria-label="百宝囊">
+        <div class="bag-inner">
+          <header class="bag-head">
+            <div class="bag-title">
+              <h2>百宝囊</h2>
+              <span class="sub">敌人殒命 · <i>随机装备即刻入囊</i></span>
+            </div>
+            <div class="bag-side">
+              <div class="capacity">
+                <span class="cap-num"><b id="capNow">0</b> / 300</span>
+                <span class="cap-bar"><i id="capBar"></i></span>
+              </div>
+              <div class="bag-actions">
+                <button type="button" class="ink-btn" id="btnOrganize">整理囊袋</button>
+                <button type="button" class="ink-btn danger" id="btnDiscard">丢弃凡品</button>
+              </div>
+            </div>
+          </header>
+          <nav class="slot-tabs" id="slotTabs" aria-label="部位筛选"></nav>
+          <div class="bag-grid-wrap">
+            <div class="bag-grid" id="bagGrid"></div>
+          </div>
+          <footer class="bag-legend">
+            <span class="lg 凡品">凡品</span>
+            <span class="lg 良品">良品</span>
+            <span class="lg 上品">上品</span>
+            <span class="lg 珍品">珍品</span>
+            <span class="lg 绝品">绝品</span>
+          </footer>
+        </div>
+      </section>
+
+      <!-- 鉴宝笺：PC 为右侧常驻，移动端为点击弹窗 -->
+      <aside class="appraise" id="appraise" aria-label="装备详情">
+        <button type="button" class="appraise-close" id="appraiseClose" aria-label="关闭详情">✕</button>
+        <div class="appraise-paper" id="appraisePaper"></div>
+      </aside>
+    </div>
+
+    <footer class="page-foot">蛋蛋江湖 2.0 · 背包页高保真重设计 · 墨底宣纸 / 朱砂印 / 金漆匾</footer>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ================= 演示数据（取自游戏真实装备表；已装备者不入囊） ================= */
+const SLOT_ORDER = ['weapon', 'head', 'armor', 'wrist', 'waist', 'boots', 'token'];
+const SLOT_NAMES = { weapon: '兵刃', head: '冠巾', armor: '衣甲', wrist: '护腕', waist: '腰佩', boots: '履靴', token: '信物' };
+const SLOT_GLYPH = { weapon: '刃', head: '冠', armor: '甲', wrist: '腕', waist: '佩', boots: '靴', token: '信' };
+const BASE_STAT = { weapon: '攻击', head: '内防', armor: '外防', wrist: '命中', waist: '气血', boots: '身法', token: '行气' };
+const QUALITY_ORDER = ['凡品', '良品', '上品', '珍品', '绝品'];
+const CAPACITY = 300;
+
+/* affixes 条数随品质递增（凡品无词缀），p 为词条饱满度用于条显 */
+let ITEMS = [
+  { uid: 'eq01', name: '星辰道袍', slot: 'armor', level: 44, quality: '绝品', locked: false, base: 96, affixes: [{ n: '气血', v: 88, p: 90 }, { n: '内防', v: 16, p: 84 }, { n: '定力', v: 7, p: 78 }, { n: '行气', v: 5, p: 76 }] },
+  { uid: 'eq02', name: '珍珑棋谱', slot: 'token', level: 42, quality: '珍品', locked: false, base: 14, affixes: [{ n: '行气', v: 5, p: 82 }, { n: '回气', v: 6, p: 86 }, { n: '内功', v: 19, p: 74 }] },
+  { uid: 'eq03', name: '玉骨折扇', slot: 'weapon', level: 36, quality: '珍品', locked: false, base: 81, affixes: [{ n: '内功', v: 18, p: 76 }, { n: '身法', v: 8, p: 72 }, { n: '会心', v: 4, p: 52 }] },
+  { uid: 'eq04', name: '虎头刀', slot: 'weapon', level: 39, quality: '上品', locked: false, base: 79, affixes: [{ n: '外功', v: 15, p: 62 }, { n: '外防', v: 11, p: 48 }] },
+  { uid: 'eq05', name: '英雄巾', slot: 'head', level: 38, quality: '上品', locked: false, base: 55, affixes: [{ n: '内防', v: 12, p: 58 }, { n: '定力', v: 5, p: 50 }] },
+  { uid: 'eq06', name: '凌云靴', slot: 'boots', level: 40, quality: '上品', locked: false, base: 24, affixes: [{ n: '身法', v: 8, p: 68 }, { n: '行气', v: 4, p: 52 }] },
+  { uid: 'eq07', name: '铁鳞护腕', slot: 'wrist', level: 37, quality: '良品', locked: false, base: 21, affixes: [{ n: '命中', v: 9, p: 44 }] },
+  { uid: 'eq08', name: '犀角带', slot: 'waist', level: 37, quality: '良品', locked: false, base: 96, affixes: [{ n: '气血', v: 48, p: 46 }] },
+  { uid: 'eq09', name: '聚贤令', slot: 'token', level: 38, quality: '良品', locked: false, base: 11, affixes: [{ n: '回气', v: 4, p: 40 }] },
+  { uid: 'eq10', name: '鎏金长剑', slot: 'weapon', level: 22, quality: '良品', locked: false, base: 43, affixes: [{ n: '外功', v: 9, p: 38 }] },
+  { uid: 'eq11', name: '半枚玉佩', slot: 'token', level: 8, quality: '良品', locked: true, base: 6, affixes: [{ n: '行气', v: 2, p: 26 }] },
+  { uid: 'eq12', name: '柴刀', slot: 'weapon', level: 6, quality: '凡品', locked: false, base: 14, affixes: [] },
+  { uid: 'eq13', name: '斗笠', slot: 'head', level: 5, quality: '凡品', locked: false, base: 9, affixes: [] },
+  { uid: 'eq14', name: '粗布短衣', slot: 'armor', level: 7, quality: '凡品', locked: false, base: 12, affixes: [] },
+  { uid: 'eq15', name: '芒鞋', slot: 'boots', level: 4, quality: '凡品', locked: false, base: 8, affixes: [] },
+  { uid: 'eq16', name: '裹腕麻布', slot: 'wrist', level: 5, quality: '凡品', locked: false, base: 7, affixes: [] },
+];
+
+/* ================= 状态 ================= */
+const state = { filter: 'all', selectedUid: 'eq01' };
+
+const $ = (id) => document.getElementById(id);
+const isMobile = () => window.innerWidth <= 980;
+
+let toastTimer = null;
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2900);
+}
+
+/* ================= 弹窗开合（仅移动端生效） ================= */
+function openAppraise() {
+  if (!isMobile()) return;
+  $('appraise').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeAppraise() {
+  $('appraise').classList.remove('open');
+  document.body.style.overflow = '';
+}
+$('appraiseClose').addEventListener('click', (e) => { e.stopPropagation(); closeAppraise(); });
+$('appraise').addEventListener('click', (e) => { if (e.target === $('appraise')) closeAppraise(); });
+
+/* ================= 渲染 · 部位筛选 ================= */
+function renderTabs() {
+  const tabs = [{ key: 'all', name: '全部', count: ITEMS.length },
+    ...SLOT_ORDER.map((s) => ({ key: s, name: SLOT_NAMES[s], count: ITEMS.filter((it) => it.slot === s).length }))];
+  $('slotTabs').innerHTML = tabs.map((t) => `
+    <button type="button" class="slot-tab ${state.filter === t.key ? 'active' : ''}" data-slot="${t.key}">
+      ${t.name}<small>${t.count}</small>
+    </button>`).join('');
+  $('slotTabs').querySelectorAll('.slot-tab').forEach((tab) => {
+    tab.addEventListener('click', () => { state.filter = tab.dataset.slot; renderGrid(); renderTabs(); });
+  });
+}
+
+/* ================= 渲染 · 囊格 ================= */
+function visibleItems() {
+  return state.filter === 'all' ? ITEMS : ITEMS.filter((it) => it.slot === state.filter);
+}
+function renderGrid() {
+  const list = visibleItems();
+  $('bagGrid').innerHTML = list.map((it) => `
+    <button type="button" class="cell q-${it.quality} ${it.uid === state.selectedUid ? 'selected' : ''}"
+            data-uid="${it.uid}" title="${it.name} · ${it.quality}">
+      ${it.locked ? '<span class="lock-mark">锁</span>' : ''}
+      <span class="lvl">Lv.${it.level}</span>
+      <span class="glyph">${SLOT_GLYPH[it.slot]}</span>
+      <span class="cname">${it.name}</span>
+    </button>`).join('') || `
+    <div class="bag-empty">
+      <span class="empty-seal">空</span>
+      <strong>囊 中 无 物</strong>
+      <span>敌人殒命之时，随机装备即刻入囊。</span>
+    </div>`;
+  $('bagGrid').querySelectorAll('.cell').forEach((cell) => {
+    cell.addEventListener('click', () => {
+      state.selectedUid = cell.dataset.uid;
+      renderGrid(); renderAppraise(); openAppraise();
+    });
+  });
+  $('capNow').textContent = ITEMS.length;
+  $('capBar').style.width = Math.max(2, (ITEMS.length / CAPACITY) * 100) + '%';
+}
+
+/* ================= 渲染 · 鉴宝笺 ================= */
+function renderAppraise() {
+  const paper = $('appraisePaper');
+  const it = ITEMS.find((x) => x.uid === state.selectedUid);
+  if (!it) {
+    paper.innerHTML = `
+      <div class="appraise-blank">
+        <span class="blank-char">鉴</span>
+        <span>点 选 囊 中 一 物<br>细 细 端 详</span>
+      </div>`;
+    return;
+  }
+  paper.innerHTML = `
+    <div class="appraise-head">
+      <span class="slot-tag">${SLOT_NAMES[it.slot]}</span>
+      <span class="q-tag q-${it.quality}" style="--qb:${qualityColor(it.quality)}">${it.quality}</span>
+      <span class="slot-tag">Lv.${it.level}</span>
+    </div>
+    <h3 class="appraise-name">${it.name}</h3>
+    <div class="appraise-latin">${it.quality} · ${SLOT_NAMES[it.slot]} · Level ${it.level}</div>
+    <div class="appraise-base">
+      <span class="ab-label">${BASE_STAT[it.slot]}</span>
+      <span class="ab-value">${it.base}<small>基础</small></span>
+    </div>
+    <div class="affix-list">
+      ${it.affixes.length ? it.affixes.map((af) => `
+        <div class="affix-row">
+          <span class="af-name">${af.n}</span>
+          <span class="af-bar"><i style="width:${af.p}%"></i></span>
+          <span class="af-value">+${af.v}</span>
+        </div>`).join('') : '<div class="affix-empty">凡品无词缀 · 聊胜于无</div>'}
+    </div>
+    <div class="appraise-actions">
+      <div class="act-row">
+        <button type="button" class="act-ghost ${it.locked ? 'on' : ''}" id="actLock">${it.locked ? '解 锁' : '锁 定'}</button>
+        <button type="button" class="act-ghost" id="actDrop">丢 弃</button>
+      </div>
+      <div class="appraise-note">
+        ${it.locked ? '<b>已锁定</b> · 不参与批量丢弃，亦不误手。' : '锁定后可免于「批量丢弃」误伤。'}
+      </div>
+    </div>`;
+
+  $('actLock').addEventListener('click', () => {
+    it.locked = !it.locked;
+    toast(it.locked ? `${it.name} 已上锁` : `${it.name} 已解锁`);
+    renderAll();
+  });
+  $('actDrop').addEventListener('click', () => {
+    if (it.locked) { toast('此物已上锁，先解锁再丢弃'); return; }
+    ITEMS = ITEMS.filter((x) => x.uid !== it.uid);
+    state.selectedUid = (visibleItems()[0] || {}).uid || null;
+    toast(`${it.name} 已丢弃`);
+    closeAppraise();
+    renderAll();
+  });
+}
+
+function qualityColor(q) {
+  return getComputedStyle(document.documentElement).getPropertyValue('--q-' + q).trim() || '#8e887d';
+}
+
+/* ================= 顶部操作 ================= */
+$('btnOrganize').addEventListener('click', () => {
+  ITEMS.sort((a, b) =>
+    SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot)
+    || QUALITY_ORDER.indexOf(b.quality) - QUALITY_ORDER.indexOf(a.quality)
+    || b.level - a.level);
+  toast('囊袋已按部位、品质、等级整理');
+  renderAll();
+});
+$('btnDiscard').addEventListener('click', () => {
+  const doomed = ITEMS.filter((it) => it.quality === '凡品' && !it.locked);
+  if (!doomed.length) { toast('没有可丢弃的凡品装备'); return; }
+  const ids = new Set(doomed.map((it) => it.uid));
+  ITEMS = ITEMS.filter((it) => !ids.has(it.uid));
+  if (state.selectedUid && ids.has(state.selectedUid)) {
+    state.selectedUid = (visibleItems()[0] || {}).uid || null;
+    closeAppraise();
+  }
+  toast(`已丢弃 ${doomed.length} 件凡品装备`);
+  renderAll();
+});
+
+/* ================= 总渲染 ================= */
+function renderAll() { renderTabs(); renderGrid(); renderAppraise(); }
+renderAll();
+</script>
+</body>
+</html>

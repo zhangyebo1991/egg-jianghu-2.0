@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   addEquipment,
   backpackEquipment,
+  discardEquipment,
   discardEquipmentByQuality,
   equipEquipment,
   INVENTORY_CAPACITY,
@@ -103,6 +104,29 @@ describe('装备背包', () => {
 
     expect(organizeInventory(state).ok).toBe(true)
     expect(state.inventory.map((item) => item.uid)).toEqual(['weapon_high', 'weapon_low', 'head'])
+  })
+
+  describe('单件丢弃', () => {
+    it('真实删除未锁定且未穿戴的装备', () => {
+      const state = createInitialStateV10()
+      state.inventory = [equipment('keep'), equipment('drop')]
+
+      expect(discardEquipment(state, 'drop')).toEqual({ ok: true, message: '已丢弃 柴刀' })
+      expect(state.inventory.map((item) => item.uid)).toEqual(['keep'])
+    })
+
+    it('保护锁定和已穿戴装备', () => {
+      const state = createNewGameStateV10('测试')
+      state.inventory = [
+        { ...equipment('locked'), locked: true },
+        equipment('worn'),
+      ]
+      state.heroes.hero_player.equipmentBySlot.weapon = 'worn'
+
+      expect(discardEquipment(state, 'locked')).toEqual({ ok: false, message: '此物已上锁，先解锁再丢弃' })
+      expect(discardEquipment(state, 'worn')).toEqual({ ok: false, message: '已穿戴装备请先到侠客页卸下' })
+      expect(state.inventory).toHaveLength(2)
+    })
   })
 
   describe('按稀有度批量丢弃', () => {

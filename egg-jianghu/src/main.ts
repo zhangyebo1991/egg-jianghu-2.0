@@ -11,6 +11,7 @@ import {
   EQUIPMENT_AFFIXES,
   EQUIPMENT_QUALITIES,
   EQUIPMENT_SLOTS,
+  equipmentAffixRange,
   equipmentBaseStatValue,
   equipmentDefinitionById,
   type EquipmentSlot,
@@ -21,7 +22,7 @@ import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTI
 import { WORLDS } from './content/worlds'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
-import { backpackEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
+import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
 import { MAX_MARTIAL_LEVEL, equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
@@ -43,7 +44,7 @@ import {
   type IdleCombatUnitView,
   type IdlePageViewModel,
 } from './ui/idle-page'
-import { renderInventoryPage, type InventoryPageViewModel } from './ui/inventory-page'
+import { renderInventoryPage, type InventoryItemView, type InventoryPageViewModel } from './ui/inventory-page'
 import { renderStageList, renderWorldOverview, type StageListViewModel, type WorldOverviewViewModel } from './ui/jianghu-page'
 import { createDomPatcher } from './ui/dom-patch'
 import { renderShell, type JianghuSection, type TabId } from './ui/shell'
@@ -73,6 +74,10 @@ let jianghuSection: JianghuSection = 'stages'
 let selectedWorldId = ''
 let selectedStage = 1
 let selectedHeroId: string | null = null
+let inventorySlotFilter: EquipmentSlot | 'all' = 'all'
+let selectedInventoryUid: string | null = null
+let inventoryDetailOpen = false
+let pendingInventoryDropUids: string[] = []
 let heroInventorySlotFilter: EquipmentSlot | 'all' = 'all'
 let heroInventoryQualityFilter: EquipmentQuality | 'all' = 'all'
 let heroInventoryPage = 1
@@ -348,6 +353,10 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
   selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
   selectedHeroId = Object.keys(session.state.heroes)[0] ?? null
+  inventorySlotFilter = 'all'
+  selectedInventoryUid = null
+  inventoryDetailOpen = false
+  pendingInventoryDropUids = []
   heroInventorySlotFilter = 'all'
   heroInventoryQualityFilter = 'all'
   heroInventoryPage = 1
@@ -963,30 +972,95 @@ const cityViewModel = (): CityPageViewModel => {
   }
 }
 
-const inventoryViewModel = (): InventoryPageViewModel => {
-  const selectedId = normalizeSelectedHero()
-  const heroes = recruitedHeroes().map(({ definition, name }) => ({ id: definition.id, name }))
+const inventorySlotNames: Record<EquipmentSlot, string> = {
+  weapon: '兵刃',
+  head: '冠巾',
+  armor: '衣甲',
+  wrist: '护腕',
+  waist: '腰佩',
+  boots: '履靴',
+  token: '信物',
+}
+
+const inventorySlotGlyphs: Record<EquipmentSlot, string> = {
+  weapon: '刃',
+  head: '冠',
+  armor: '甲',
+  wrist: '腕',
+  waist: '佩',
+  boots: '靴',
+  token: '信',
+}
+
+const inventoryBaseStatNames: Record<string, string> = {
+  attack: '攻击',
+  internalDefense: '内防',
+  externalDefense: '外防',
+  accuracy: '命中',
+  maxHp: '气血',
+  agility: '身法',
+  energyRecovery: '行气',
+}
+
+const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
+  const definition = equipmentDefinitionById(item.definitionId)
+  const slot = definition?.slot ?? 'weapon'
   return {
-    selectedHeroId: selectedId,
-    heroes,
-    capacity: INVENTORY_CAPACITY,
-    items: backpackEquipment(session.state).map((item) => {
-      const definition = equipmentDefinitionById(item.definitionId)
+    uid: item.uid,
+    name: definition?.name ?? '无名装备',
+    slot,
+    slotName: inventorySlotNames[slot],
+    glyph: inventorySlotGlyphs[slot],
+    level: item.level,
+    quality: item.quality,
+    locked: item.locked,
+    baseStat: {
+      name: inventoryBaseStatNames[definition?.baseStatId ?? ''] ?? '基础属性',
+      value: definition ? equipmentBaseStatValue(definition, item) : item.level,
+    },
+    affixes: item.affixes.map((affix) => {
+      const definitionAffix = EQUIPMENT_AFFIXES.find((candidate) => candidate.id === affix.id)
+      const range = definitionAffix
+        ? equipmentAffixRange(definitionAffix, item.level)
+        : { min: affix.value, max: affix.value + 1 }
+      const ratio = range.max > range.min
+        ? Math.min(100, Math.max(0, Math.round((affix.value - range.min) / (range.max - range.min) * 100)))
+        : 100
       return {
-        uid: item.uid,
-        name: definition?.name ?? item.definitionId,
-        slot: definition?.slot ?? 'weapon',
-        slotName: definition?.slot === 'weapon' ? '兵刃' : definition?.slot === 'head' ? '冠巾' : definition?.slot === 'armor' ? '衣甲' : definition?.slot === 'wrist' ? '护腕' : definition?.slot === 'waist' ? '腰佩' : definition?.slot === 'boots' ? '履靴' : '信物',
-        level: item.level,
-        quality: item.quality,
-        locked: item.locked,
-        equippedByHeroId: equipmentOwnerId(session.state, item.uid),
-        affixes: item.affixes.map((affix) => ({
-          name: EQUIPMENT_AFFIXES.find((definitionAffix) => definitionAffix.id === affix.id)?.name ?? affix.id,
-          value: affix.value,
-        })),
+        name: definitionAffix?.name ?? '词缀',
+        value: affix.value,
+        min: range.min,
+        max: range.max,
+        ratio,
       }
     }),
+  }
+}
+
+const inventoryViewModel = (): InventoryPageViewModel => {
+  const allItems = backpackEquipment(session.state).map(inventoryItemView)
+  const selectedItem = allItems.find((item) => item.uid === selectedInventoryUid) ?? allItems[0] ?? null
+  if (selectedItem && selectedInventoryUid !== selectedItem.uid) selectedInventoryUid = selectedItem.uid
+  if (!selectedItem) selectedInventoryUid = null
+  const visibleItems = inventorySlotFilter === 'all'
+    ? allItems
+    : allItems.filter((item) => item.slot === inventorySlotFilter)
+  const slotTabs = [
+    { id: 'all' as const, name: '全部', count: allItems.length },
+    ...EQUIPMENT_SLOTS.map((slot) => ({ id: slot, name: inventorySlotNames[slot], count: allItems.filter((item) => item.slot === slot).length })),
+  ]
+  const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
+  return {
+    worldName: world.name,
+    capacity: INVENTORY_CAPACITY,
+    itemCount: allItems.length,
+    capacityRatio: Math.max(2, Math.min(100, allItems.length / INVENTORY_CAPACITY * 100)),
+    slotFilter: inventorySlotFilter,
+    slotTabs,
+    selectedUid: selectedInventoryUid,
+    detailOpen: inventoryDetailOpen,
+    items: visibleItems,
+    selectedItem,
   }
 }
 
@@ -1012,6 +1086,7 @@ const renderJianghuContent = (): string => {
 
 const render = (): void => {
   if (appScreen !== 'playing') {
+    toast.classList.remove('inventory-toast')
     patchApp(renderStartPage({
       screen: appScreen,
       hasSave,
@@ -1021,6 +1096,7 @@ const render = (): void => {
       busy: startBusy,
     }))
     positionOpenEquipmentTooltip()
+    syncInventoryDetailScrollLock()
     return
   }
   normalizeSelectedWorld()
@@ -1038,7 +1114,7 @@ const render = (): void => {
         : renderInventoryPage(inventoryViewModel())
   patchApp(renderShell({
     activeTab,
-    worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
+    worldContext: activeTab === 'inventory' || (activeTab === 'idle' && jianghuView !== 'worlds')
       ? { worldName: world.name, activeSection: jianghuSection }
       : null,
     hasCombatReturn: Boolean(session.combat && !(activeTab === 'idle' && jianghuView === 'combat')),
@@ -1064,6 +1140,9 @@ const render = (): void => {
   }
   updateFactionContributionAnimation()
   positionOpenEquipmentTooltip()
+  toast.classList.toggle('inventory-toast', activeTab === 'inventory')
+  syncInventoryDetailScrollLock()
+  playInventoryDropMotion()
 }
 
 const createAndEnter = (playerName: string, expectedSnapshot: string | null): void => {
@@ -1201,6 +1280,66 @@ const playFactionSwitchMotion = (): void => {
   }, 1_100)
 }
 
+const queueInventoryDropAnimations = (uids: string[]): void => {
+  pendingInventoryDropUids = [...new Set([...pendingInventoryDropUids, ...uids])].slice(-24)
+}
+
+const syncInventoryDetailScrollLock = (): void => {
+  const mobile = typeof window.matchMedia === 'function'
+    && window.matchMedia('(max-width: 980px)').matches
+  document.body.style.overflow = activeTab === 'inventory' && inventoryDetailOpen && mobile ? 'hidden' : ''
+}
+
+const playInventoryDropMotion = (): void => {
+  if (activeTab !== 'inventory' || pendingInventoryDropUids.length === 0) return
+  if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    pendingInventoryDropUids = []
+    return
+  }
+
+  const cells = [...app.querySelectorAll<HTMLElement>('[data-action="inventory-select"][data-equipment-uid]')]
+  const targets = pendingInventoryDropUids
+    .map((uid) => cells.find((cell) => cell.dataset.equipmentUid === uid))
+    .filter((cell): cell is HTMLElement => Boolean(cell))
+  if (targets.length === 0) return
+  const targetIds = new Set(targets.map((target) => target.dataset.equipmentUid))
+  pendingInventoryDropUids = pendingInventoryDropUids.filter((uid) => !targetIds.has(uid))
+
+  targets.forEach((target, index) => {
+    target.getAnimations().forEach((animation) => animation.cancel())
+    const color = getComputedStyle(target).getPropertyValue('--rarity').trim() || '#c9a35c'
+    const animation = target.animate([
+      {
+        opacity: 0,
+        filter: 'blur(4px)',
+        transform: 'translateY(-28px) scale(.72) rotate(-6deg)',
+        boxShadow: `0 0 0 0 transparent`,
+      },
+      {
+        opacity: 1,
+        filter: 'blur(0)',
+        transform: 'translateY(7px) scale(1.08) rotate(2deg)',
+        boxShadow: `0 0 0 4px ${color}, 0 0 28px ${color}`,
+        offset: .58,
+      },
+      {
+        opacity: 1,
+        filter: 'blur(0)',
+        transform: 'translateY(0) scale(1) rotate(0)',
+        boxShadow: `0 0 0 1px ${color}, 0 10px 22px rgb(0 0 0 / 38%)`,
+      },
+    ], {
+      duration: 760,
+      delay: index * 90,
+      easing: 'cubic-bezier(.22, 1, .36, 1)',
+      fill: 'both',
+    })
+    animation.onfinish = () => animation.cancel()
+  })
+}
+
+window.addEventListener('resize', syncInventoryDetailScrollLock)
+
 const clearDragOver = (): void => {
   app.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'))
 }
@@ -1333,6 +1472,36 @@ const performAction = (button: HTMLButtonElement): void => {
     } else notify(result.message, true)
   } else if (action === 'faction-recruit') commitAction(recruitFromFaction(session.state, button.dataset.factionId ?? '', heroId))
   else if (action === 'city-martial-learn') commitAction(learnCityMartial(session.state, heroId, button.dataset.martialId ?? ''))
+  else if (action === 'inventory-select') {
+    selectedInventoryUid = button.dataset.equipmentUid ?? null
+    inventoryDetailOpen = true
+  } else if (action === 'inventory-close-detail') {
+    inventoryDetailOpen = false
+  } else if (action === 'inventory-filter') {
+    const nextFilter = button.dataset.inventorySlot ?? 'all'
+    inventorySlotFilter = nextFilter === 'all' || EQUIPMENT_SLOTS.includes(nextFilter as EquipmentSlot)
+      ? nextFilter as EquipmentSlot | 'all'
+      : 'all'
+    const visibleItems = backpackEquipment(session.state).filter((item) =>
+      inventorySlotFilter === 'all' || equipmentDefinitionById(item.definitionId)?.slot === inventorySlotFilter)
+    if (!visibleItems.some((item) => item.uid === selectedInventoryUid)) selectedInventoryUid = visibleItems[0]?.uid ?? null
+  } else if (action === 'inventory-organize') commitAction(organizeInventory(session.state))
+  else if (action === 'inventory-discard-common') {
+    const result = discardEquipmentByQuality(session.state, '凡品')
+    if (selectedInventoryUid && !session.state.inventory.some((item) => item.uid === selectedInventoryUid)) {
+      selectedInventoryUid = null
+      inventoryDetailOpen = false
+    }
+    commitAction(result)
+  } else if (action === 'inventory-toggle-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
+  else if (action === 'inventory-discard') {
+    const result = discardEquipment(session.state, button.dataset.equipmentUid ?? '')
+    if (result.ok) {
+      selectedInventoryUid = null
+      inventoryDetailOpen = false
+    }
+    commitAction(result)
+  }
   else if (action === 'equipment-equip') commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
   else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
@@ -1591,6 +1760,7 @@ app.addEventListener('click', (event) => {
   const tab = target.closest<HTMLElement>('[data-tab]')?.dataset.tab as TabId | undefined
   if (tab) {
     activeTab = tab
+    if (tab !== 'inventory') inventoryDetailOpen = false
     if (tab === 'idle') {
       jianghuView = 'worlds'
       jianghuSection = 'stages'
@@ -1722,10 +1892,14 @@ const runGameLoop = (): void => {
   if (runtimePulse.tickCount === 0 && combatTickCount === 0) return
   try {
     if (combatTickCount > 0) {
+      const inventoryBefore = new Set(session.state.inventory.map((item) => item.uid))
       cacheCombatUnits()
       const events = session.advanceRealtimeTicks(combatTickCount)
       cacheCombatUnits()
       presentCombatEvents(events, now)
+      queueInventoryDropAnimations(session.state.inventory
+        .filter((item) => !inventoryBefore.has(item.uid))
+        .map((item) => item.uid))
       trackedCombat = session.combat
     }
     session.advanceRuntime(runtimePulse.elapsedMs)
@@ -1798,6 +1972,7 @@ const debugSettleEnemy = (seed: number, rank: CombatRank = 'normal'): string[] =
     stage: 1,
     seed,
   })
+  queueInventoryDropAnimations(result.addedEquipmentUids)
   saveSession()
   render()
   return result.addedEquipmentUids
@@ -1859,10 +2034,14 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   },
   advanceCombat: (ticks) => {
     ensurePlaying()
+    const inventoryBefore = new Set(session.state.inventory.map((item) => item.uid))
     cacheCombatUnits()
     const events = session.advanceTicks(ticks)
     cacheCombatUnits()
     presentCombatEvents(events, performance.now())
+    queueInventoryDropAnimations(session.state.inventory
+      .filter((item) => !inventoryBefore.has(item.uid))
+      .map((item) => item.uid))
     render()
     return events
   },

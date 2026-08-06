@@ -1652,6 +1652,556 @@ body {
   .faction-ghost { display: none; }
 }
 
+/* ============ 背包页 · 墨底宣纸 / 朱砂印 / 百宝囊 ============ */
+.app-shell[data-active-tab="inventory"] {
+  grid-template-columns: 212px minmax(0, 1fr);
+}
+
+.app-shell[data-active-tab="inventory"] .game-sidebar {
+  gap: 26px;
+  padding: 26px 20px 20px;
+  background: linear-gradient(180deg, rgb(23 27 20 / 72%), rgb(13 16 12 / 88%));
+}
+
+.app-shell[data-active-tab="inventory"] .brand-block { gap: 12px; }
+.app-shell[data-active-tab="inventory"] .brand-seal {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 1px solid #c96f58;
+  border-radius: 6px;
+  color: #f6e3d2;
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 24px;
+  font-weight: 400;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  box-shadow: inset 0 0 0 3px #411811, 0 4px 14px rgb(0 0 0 / 40%);
+  transform: rotate(-2deg);
+}
+
+.app-shell[data-active-tab="inventory"] .brand-block strong { font-size: 15px; letter-spacing: .1em; }
+.app-shell[data-active-tab="inventory"] .brand-block small { margin-top: 3px; font-size: 9px; letter-spacing: .14em; }
+.app-shell[data-active-tab="inventory"] .game-nav { gap: 6px; }
+.app-shell[data-active-tab="inventory"] .nav-item {
+  position: relative;
+  gap: 12px;
+  padding: 10px 12px;
+  border-color: transparent;
+  border-radius: 6px;
+  color: #b3ad9e;
+  background: transparent;
+  transition: color .25s cubic-bezier(.22, 1, .36, 1), background .25s cubic-bezier(.22, 1, .36, 1);
+}
+.app-shell[data-active-tab="inventory"] .nav-item:hover:not(:disabled) { color: #e8e1d3; background: rgb(233 222 195 / 4%); }
+.app-shell[data-active-tab="inventory"] .nav-item.active { color: #f3e9d5; background: rgb(233 222 195 / 5%); }
+.app-shell[data-active-tab="inventory"] .nav-item.active::before {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  width: 2px;
+  content: "";
+  border-radius: 2px;
+  background: #b5503c;
+}
+.app-shell[data-active-tab="inventory"] .nav-item .nav-mark {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 1px solid #31382e;
+  border-radius: 5px;
+  color: #7d7f72;
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 16px;
+  transition: all .25s cubic-bezier(.22, 1, .36, 1);
+}
+.app-shell[data-active-tab="inventory"] .nav-item.active .nav-mark { border-color: #8a3a2b; color: #cf6b53; }
+.app-shell[data-active-tab="inventory"] .nav-item strong { font-size: 14px; font-weight: 500; letter-spacing: .28em; }
+
+.app-shell[data-active-tab="inventory"] .world-subnav {
+  gap: 4px;
+  padding: 18px 0 0;
+  border-top: 1px dashed #31382e;
+}
+.app-shell[data-active-tab="inventory"] .world-subnav button {
+  position: relative;
+  padding: 8px 12px;
+  border-color: transparent;
+  border-radius: 5px;
+  color: #b3ad9e;
+  font-size: 13px;
+  letter-spacing: .32em;
+  background: transparent;
+}
+.app-shell[data-active-tab="inventory"] .world-subnav button::after {
+  margin-left: 8px;
+  color: #7d7f72;
+  font-size: 9px;
+  letter-spacing: .14em;
+}
+.app-shell[data-active-tab="inventory"] .world-subnav button[data-jianghu-section="stages"]::after { content: "STAGES"; }
+.app-shell[data-active-tab="inventory"] .world-subnav button[data-jianghu-section="factions"]::after { content: "FACTIONS"; }
+.app-shell[data-active-tab="inventory"] .world-subnav button[data-jianghu-section="city"]::after { content: "CITY"; }
+.app-shell[data-active-tab="inventory"] .world-subnav button:hover:not(:disabled) { color: #e8e1d3; background: rgb(233 222 195 / 4%); }
+.app-shell[data-active-tab="inventory"] .world-subnav button.active { color: #e6c67f; border-color: transparent; background: rgb(201 163 92 / 8%); }
+.app-shell[data-active-tab="inventory"] .world-subnav .world-back {
+  margin-bottom: 0;
+  color: #7d7f72;
+  font-size: 11px;
+  letter-spacing: .18em;
+}
+.app-shell[data-active-tab="inventory"] .world-subnav .world-back::after { content: none; }
+.app-shell[data-active-tab="inventory"] .sidebar-landscape { height: 74px; border-radius: 6px; }
+.app-shell[data-active-tab="inventory"] .sidebar-landscape::before {
+  position: absolute;
+  right: -12px;
+  bottom: 0;
+  left: -12px;
+  height: 56px;
+  content: "";
+  background:
+    linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
+    linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
+    linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
+}
+.app-shell[data-active-tab="inventory"] .sidebar-landscape::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 22px;
+  content: "";
+  background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
+}
+.app-shell[data-active-tab="inventory"] .sidebar-motto { color: #7d7f72; font-size: 10px; letter-spacing: .5em; text-align: center; }
+
+.game-main[data-page="inventory"] {
+  position: relative;
+  min-width: 0;
+  height: 100vh;
+  min-height: 0;
+  padding: 26px 36px 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 500px at 78% -10%, rgb(127 168 141 / 9%), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgb(181 80 60 / 6%), transparent 55%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+}
+
+.inventory-page {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  color: #e8e1d3;
+  font-family: "Faction Song", "Noto Serif SC", "Source Han Serif SC", serif;
+  font-synthesis: none;
+}
+.inventory-page::after {
+  position: fixed;
+  inset: -50%;
+  z-index: 20;
+  pointer-events: none;
+  content: "";
+  opacity: .035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+.inventory-ghost-char {
+  position: absolute;
+  top: 6%;
+  right: -40px;
+  z-index: 0;
+  color: rgb(233 222 195 / 4%);
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 420px;
+  line-height: .9;
+  pointer-events: none;
+  user-select: none;
+  transform: rotate(6deg);
+}
+.inventory-page-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #252a22;
+}
+.inventory-crumb { margin-bottom: 10px; color: #7d7f72; font-size: 11px; letter-spacing: .3em; }
+.inventory-crumb b { color: #c9a35c; font-weight: 500; }
+.inventory-page-head h1 {
+  margin: 0;
+  color: #f2e7d0;
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 44px;
+  font-weight: 400;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
+}
+.inventory-latin { margin-top: 8px; color: #7d7f72; font-size: 10px; letter-spacing: .42em; text-transform: uppercase; }
+.inventory-head-note { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-bottom: 4px; }
+.inventory-head-note span { color: #b3ad9e; font-size: 12px; letter-spacing: .22em; }
+.inventory-head-note b { color: #e6c67f; font-weight: 600; }
+.inventory-head-note small { color: #7d7f72; font-size: 10px; letter-spacing: .18em; }
+
+.inventory-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) 348px;
+  gap: 18px;
+}
+.inventory-board,
+.inventory-appraise {
+  min-width: 0;
+  min-height: 0;
+  padding: 3px;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+.inventory-board { display: flex; flex-direction: column; background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618); }
+.inventory-board-inner {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(0 0 0 / 40%);
+  border-radius: 9px;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 14%) 0 2px, transparent 2px 64px),
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 6%) 0 1px, transparent 1px 7px),
+    linear-gradient(165deg, #2f2819, #221c10 55%, #292216);
+}
+.inventory-board-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 22px 12px;
+}
+.inventory-board-title { display: flex; min-width: 0; align-items: baseline; gap: 14px; }
+.inventory-board-title h2 {
+  margin: 0;
+  color: #ecdcb9;
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: .12em;
+  white-space: nowrap;
+}
+.inventory-board-title span { color: rgb(233 222 195 / 42%); font-size: 10px; letter-spacing: .3em; white-space: nowrap; }
+.inventory-board-title i { color: #cf6b53; font-style: normal; }
+.inventory-board-side { display: flex; align-items: center; gap: 16px; }
+.inventory-capacity { display: flex; min-width: 108px; flex-direction: column; gap: 5px; }
+.inventory-capacity-number { color: #b3ad9e; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .12em; }
+.inventory-capacity-number b { color: #e6c67f; font-size: 15px; font-weight: 700; }
+.inventory-capacity-bar { display: block; height: 3px; overflow: hidden; border-radius: 2px; background: rgb(233 222 195 / 10%); }
+.inventory-capacity-bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #8f6f3a, #e6c67f); }
+.inventory-actions { display: flex; gap: 8px; }
+.inventory-ink-button {
+  padding: 8px 14px;
+  border: 1px solid #31382e;
+  border-radius: 6px;
+  color: #b3ad9e;
+  font-size: 12px;
+  letter-spacing: .2em;
+  background: rgb(23 27 20 / 45%);
+  transition: all .25s cubic-bezier(.22, 1, .36, 1);
+}
+.inventory-ink-button:hover:not(:disabled) { border-color: #8f6f3a; color: #e6c67f; background: rgb(23 27 20 / 68%); }
+.inventory-ink-button.danger:hover:not(:disabled) { border-color: #8a3a2b; color: #cf6b53; }
+
+.inventory-slot-tabs {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 0 22px 12px;
+  border-bottom: 1px solid rgb(0 0 0 / 35%);
+  scrollbar-width: none;
+}
+.inventory-slot-tabs::-webkit-scrollbar { display: none; }
+.inventory-slot-tab {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: none;
+  padding: 6px 11px;
+  border: 0;
+  border-radius: 5px;
+  color: #7d7f72;
+  font-size: 12px;
+  letter-spacing: .18em;
+  background: transparent;
+  transition: all .22s cubic-bezier(.22, 1, .36, 1);
+}
+.inventory-slot-tab small { color: #7d7f72; font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.inventory-slot-tab:hover:not(:disabled) { color: #e8e1d3; background: rgb(233 222 195 / 5%); }
+.inventory-slot-tab.active { color: #e6c67f; background: rgb(201 163 92 / 10%); box-shadow: inset 0 -2px 0 #c9a35c; }
+.inventory-slot-tab.active small { color: #c9a35c; }
+
+.inventory-grid-wrap {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 22px 20px;
+  scrollbar-color: #4a4231 transparent;
+  scrollbar-width: thin;
+}
+.inventory-grid-wrap::-webkit-scrollbar { width: 8px; }
+.inventory-grid-wrap::-webkit-scrollbar-thumb { border-radius: 4px; background: #4a4231; }
+.inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.inventory-cell {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #31382e;
+  border-radius: 8px;
+  color: #b3ad9e;
+  text-align: center;
+  background: linear-gradient(160deg, rgb(14 17 13 / 72%), rgb(10 12 9 / 82%));
+  transition: transform .22s cubic-bezier(.22, 1, .36, 1), border-color .22s, box-shadow .22s;
+}
+.inventory-cell::before {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  content: "";
+  opacity: .14;
+  pointer-events: none;
+  background: radial-gradient(70% 55% at 50% 30%, var(--rarity, transparent) 0%, transparent 70%);
+  transition: opacity .22s;
+}
+.inventory-cell:hover:not(:disabled) { border-color: var(--rarity, #31382e); color: #b3ad9e; box-shadow: 0 10px 22px rgb(0 0 0 / 38%); transform: translateY(-3px); }
+.inventory-cell:hover:not(:disabled)::before { opacity: .3; }
+.inventory-cell[aria-pressed="true"] {
+  border-color: var(--rarity, #c9a35c);
+  box-shadow: 0 0 0 1px var(--rarity, #c9a35c), 0 12px 26px rgb(0 0 0 / 42%);
+}
+.inventory-cell[aria-pressed="true"]::before { opacity: .34; }
+.inventory-cell[data-rarity="绝品"] { border-color: rgb(201 149 61 / 40%); }
+.inventory-cell[data-rarity="绝品"] .inventory-cell-glyph { text-shadow: 0 0 14px rgb(201 149 61 / 55%); }
+.inventory-cell-glyph { color: var(--rarity, #b3ad9e); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 30px; line-height: 1; text-shadow: 0 3px 10px rgb(0 0 0 / 50%); }
+.inventory-cell-name { max-width: 92%; overflow: hidden; color: #b3ad9e; font-size: 10px; letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
+.inventory-cell-level { position: absolute; top: 5px; right: 6px; color: #7d7f72; font-size: 9px; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.inventory-lock-mark {
+  position: absolute;
+  top: 5px;
+  left: 6px;
+  display: grid;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  border-radius: 3px;
+  color: #2e2208;
+  font-size: 9px;
+  background: #e6c67f;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 40%);
+}
+.inventory-empty {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  padding: 56px 0 50px;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+.inventory-empty-seal { display: grid; width: 52px; height: 52px; place-items: center; border: 1px dashed #31382e; border-radius: 50%; color: #7d7f72; font-family: "Faction Brush", serif; font-size: 26px; }
+.inventory-empty strong { color: #b3ad9e; font-size: 14px; font-weight: 500; letter-spacing: .3em; }
+.inventory-empty span { color: #7d7f72; font-size: 11px; letter-spacing: .16em; }
+.inventory-legend { display: flex; flex: none; align-items: center; gap: 14px; padding: 10px 22px 12px; border-top: 1px solid rgb(0 0 0 / 35%); color: #7d7f72; font-size: 10px; letter-spacing: .16em; }
+.inventory-legend span { display: flex; align-items: center; gap: 5px; }
+.inventory-legend span::before { width: 8px; height: 8px; content: ""; border-radius: 2px; background: var(--rarity); box-shadow: 0 0 6px var(--rarity); }
+
+.inventory-appraise { display: flex; flex-direction: column; background: linear-gradient(160deg, #4a3d27, #2e2618 55%, #3a3122); }
+.inventory-appraise-paper {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 22px 18px;
+  flex-direction: column;
+  border-radius: 9px;
+  color: #2b2519;
+  background:
+    repeating-linear-gradient(0deg, rgb(90 70 40 / 4%) 0 1px, transparent 1px 5px),
+    radial-gradient(120% 90% at 50% 0%, #efe4c9 0%, #e9dec3 55%, #ddceaa 100%);
+  scrollbar-color: #b3a075 transparent;
+  scrollbar-width: thin;
+}
+.inventory-appraise-paper::-webkit-scrollbar { width: 6px; }
+.inventory-appraise-paper::-webkit-scrollbar-thumb { border-radius: 3px; background: #b3a075; }
+.inventory-appraise-paper::after {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  content: "鉴";
+  border-radius: 5px;
+  color: #f6e3d2;
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 19px;
+  background: linear-gradient(145deg, #b5503c, #8a3a2b);
+  box-shadow: inset 0 0 0 2px rgb(255 230 210 / 28%), 0 3px 8px rgb(90 40 25 / 30%);
+  opacity: .92;
+  transform: rotate(3deg);
+}
+.inventory-appraise-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.inventory-slot-tag { padding: 3px 9px; border: 1px solid rgb(43 37 25 / 30%); border-radius: 4px; color: #2b2519; font-size: 10px; letter-spacing: .22em; }
+.inventory-quality-tag { color: var(--rarity, #75643f); font-size: 11px; font-weight: 700; letter-spacing: .22em; }
+.inventory-appraise-name { margin: 0; color: #241f13; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 34px; font-weight: 400; letter-spacing: .04em; line-height: 1.1; }
+.inventory-appraise-latin { margin-top: 6px; color: rgb(43 37 25 / 45%); font-size: 9px; letter-spacing: .34em; text-transform: uppercase; }
+.inventory-base-stat { display: flex; align-items: baseline; justify-content: space-between; margin-top: 16px; padding: 12px 14px; border-top: 1px solid rgb(43 37 25 / 18%); border-bottom: 1px solid rgb(43 37 25 / 18%); }
+.inventory-base-label { color: rgb(43 37 25 / 60%); font-size: 11px; letter-spacing: .3em; }
+.inventory-base-value { color: #3a2f1c; font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.inventory-base-value small { margin-left: 4px; color: rgb(43 37 25 / 55%); font-size: 11px; font-weight: 500; letter-spacing: .1em; }
+.inventory-affix-list { display: grid; gap: 8px; margin-top: 12px; }
+.inventory-affix-row { display: flex; align-items: center; gap: 10px; }
+.inventory-affix-name { width: 34px; flex: none; color: rgb(43 37 25 / 70%); font-size: 11px; letter-spacing: .14em; }
+.inventory-affix-bar { height: 3px; flex: 1; overflow: hidden; border-radius: 2px; background: rgb(43 37 25 / 10%); }
+.inventory-affix-bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #8f6f3a, #c9a35c); }
+.inventory-affix-value { flex: none; color: #3a2f1c; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.inventory-affix-empty { padding: 4px 0; color: rgb(43 37 25 / 40%); font-size: 11px; letter-spacing: .2em; }
+.inventory-appraise-actions { display: grid; gap: 8px; margin-top: auto; padding-top: 18px; }
+.inventory-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.inventory-action-ghost { padding: 11px 12px; border: 1px solid rgb(43 37 25 / 30%); border-radius: 7px; color: rgb(43 37 25 / 75%); font-size: 13px; letter-spacing: .24em; background: rgb(255 250 235 / 30%); transition: all .22s cubic-bezier(.22, 1, .36, 1); }
+.inventory-action-ghost:hover:not(:disabled) { border-color: rgb(43 37 25 / 55%); color: #241f13; background: rgb(255 250 235 / 55%); }
+.inventory-action-ghost.on { border-color: rgb(143 111 58 / 60%); color: #7a5a18; background: rgb(201 163 92 / 16%); }
+.inventory-appraise-note { margin-top: 8px; color: rgb(43 37 25 / 45%); font-size: 10px; letter-spacing: .14em; line-height: 1.8; }
+.inventory-appraise-note b { color: #7a5a18; font-weight: 600; }
+.inventory-appraise-blank { display: flex; min-height: 0; flex: 1; align-items: center; justify-content: center; flex-direction: column; gap: 14px; color: rgb(43 37 25 / 45%); }
+.inventory-blank-char { color: rgb(43 37 25 / 16%); font-family: "Faction Brush", serif; font-size: 64px; }
+.inventory-appraise-blank > span:last-child { font-size: 11px; letter-spacing: .3em; line-height: 2; text-align: center; }
+.inventory-appraise-close { display: none; }
+.inventory-page-foot { position: relative; z-index: 1; flex: none; padding-top: 12px; color: rgb(233 222 195 / 26%); font-size: 9px; letter-spacing: .4em; text-align: center; }
+
+.toast.inventory-toast {
+  right: auto;
+  bottom: 34px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 20px;
+  border: 1px solid #8f6f3a;
+  border-radius: 8px;
+  color: #f2e7d0;
+  background: linear-gradient(160deg, #2a3026, #171b14);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 50%);
+  letter-spacing: .18em;
+  transform: translateX(-50%);
+  animation: inventory-toast-in .35s cubic-bezier(.22, 1, .36, 1);
+}
+.toast.inventory-toast::before { width: 8px; height: 8px; content: ""; border-radius: 50%; background: #e6c67f; box-shadow: 0 0 8px rgb(201 163 92 / 80%); }
+@keyframes inventory-toast-in { from { opacity: 0; transform: translate(-50%, 14px) scale(.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+
+@media (max-width: 1240px) {
+  .inventory-layout { grid-template-columns: minmax(0, 1fr) 316px; }
+  .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+}
+
+@media (max-width: 980px) {
+  .app-shell[data-active-tab="inventory"] { grid-template-columns: 1fr; }
+  .app-shell[data-active-tab="inventory"] .game-sidebar { display: none; }
+  .game-main[data-page="inventory"] { height: auto; min-height: 100vh; padding: 20px 16px 40px; overflow: visible; }
+  .inventory-page { height: auto; min-height: calc(100vh - 60px); overflow: visible; }
+  .inventory-page-head { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .inventory-head-note { align-items: flex-start; }
+  .inventory-layout { grid-template-columns: 1fr; }
+  .inventory-board { min-height: 420px; }
+  .inventory-ghost-char { top: 2%; font-size: 260px; }
+  .inventory-appraise {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: none;
+    padding: 30px 20px;
+    border-radius: 0;
+    background: rgb(8 10 7 / 72%);
+    backdrop-filter: blur(3px);
+    box-shadow: none;
+  }
+  .inventory-appraise.open { display: flex; align-items: center; justify-content: center; }
+  .inventory-appraise.open .inventory-appraise-paper {
+    width: min(420px, 100%);
+    max-height: 100%;
+    flex: none;
+    box-shadow: 0 0 0 3px #3a3122, 0 30px 70px rgb(0 0 0 / 60%);
+    animation: inventory-sheet-in .32s cubic-bezier(.22, 1, .36, 1);
+  }
+  @keyframes inventory-sheet-in { from { opacity: 0; transform: translateY(26px) scale(.97); } to { opacity: 1; transform: none; } }
+  .inventory-appraise-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid #8f6f3a;
+    border-radius: 50%;
+    color: #e8e1d3;
+    font-size: 15px;
+    line-height: 1;
+    background: linear-gradient(160deg, #2a3026, #171b14);
+    box-shadow: 0 8px 20px rgb(0 0 0 / 45%);
+    transition: transform .2s cubic-bezier(.22, 1, .36, 1);
+  }
+  .inventory-appraise-close:hover:not(:disabled) { color: #e8e1d3; transform: rotate(90deg); }
+}
+
+@media (max-width: 640px) {
+  .game-main[data-page="inventory"] { padding: 20px 12px 32px; }
+  .inventory-page-head h1 { font-size: 34px; }
+  .inventory-board-head { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .inventory-board-side { width: 100%; justify-content: space-between; }
+  .inventory-board-title { gap: 9px; }
+  .inventory-board-title h2 { font-size: 27px; }
+  .inventory-board-title span { overflow: hidden; font-size: 9px; letter-spacing: .2em; text-overflow: ellipsis; }
+  .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+  .inventory-grid-wrap { padding: 12px 14px 16px; }
+  .inventory-slot-tabs { padding: 0 14px 10px; }
+  .inventory-board-head, .inventory-legend { padding-right: 14px; padding-left: 14px; }
+  .inventory-cell-glyph { font-size: 24px; }
+  .inventory-ghost-char { display: none; }
+  .inventory-page-foot { font-size: 8px; letter-spacing: .25em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-page *,
+  .toast.inventory-toast {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}
+
 @media (max-width: 430px) {
   .faction-section-title span, .faction-disciples-head span { font-size: 9px; letter-spacing: .18em; }
   .faction-plaque-contrib { display: none; }

@@ -122,14 +122,26 @@ const cityFixture = (): CityPageViewModel => ({
 })
 
 const inventoryFixture = (): InventoryPageViewModel => ({
-  selectedHeroId: 'hero_test',
-  heroes: [{ id: 'hero_test', name: '试剑人' }],
+  worldName: '牛家村',
   capacity: 300,
+  itemCount: 1,
+  capacityRatio: 1,
+  slotFilter: 'all',
+  slotTabs: [{ id: 'all', name: '全部', count: 1 }],
+  selectedUid: 'equipment_1',
+  detailOpen: false,
   items: [{
     uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '兵刃',
-    level: 1, quality: '良品', locked: false, equippedByHeroId: null,
-    affixes: [{ name: '外功', value: 4 }],
+    glyph: '刃', level: 1, quality: '良品', locked: false,
+    baseStat: { name: '攻击', value: 10 },
+    affixes: [{ name: '外功', value: 4, min: 3, max: 18, ratio: 7 }],
   }],
+  selectedItem: {
+    uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '兵刃',
+    glyph: '刃', level: 1, quality: '良品', locked: false,
+    baseStat: { name: '攻击', value: 10 },
+    affixes: [{ name: '外功', value: 4, min: 3, max: 18, ratio: 7 }],
+  },
 })
 
 const formationFixture = (): FormationPageViewModel => ({
