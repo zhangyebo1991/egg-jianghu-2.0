@@ -1780,7 +1780,7 @@ body {
   min-width: 0;
   height: 100vh;
   min-height: 0;
-  padding: 26px 36px 20px;
+  padding: 28px 38px 22px;
   overflow: hidden;
   background:
     radial-gradient(1100px 500px at 78% -10%, rgb(127 168 141 / 9%), transparent 60%),
@@ -1831,8 +1831,8 @@ body {
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
   border-bottom: 1px solid #252a22;
 }
 .inventory-crumb { margin-bottom: 10px; color: #7d7f72; font-size: 11px; letter-spacing: .3em; }
@@ -1841,22 +1841,48 @@ body {
   margin: 0;
   color: #f2e7d0;
   font-family: "Faction Brush", "Noto Serif SC", serif;
-  font-size: 44px;
+  font-size: 54px;
   font-weight: 400;
   letter-spacing: .06em;
   line-height: 1;
   text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
 }
-.inventory-latin { margin-top: 8px; color: #7d7f72; font-size: 10px; letter-spacing: .42em; text-transform: uppercase; }
-.inventory-head-note { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-bottom: 4px; }
-.inventory-head-note span { color: #b3ad9e; font-size: 12px; letter-spacing: .22em; }
-.inventory-head-note b { color: #e6c67f; font-weight: 600; }
-.inventory-head-note small { color: #7d7f72; font-size: 10px; letter-spacing: .18em; }
+.inventory-latin { margin-top: 9px; color: #7d7f72; font-size: 10px; letter-spacing: .42em; text-transform: uppercase; }
+.inventory-head-note {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border: 1px solid rgb(201 163 92 / 28%);
+  border-radius: 8px;
+  background: linear-gradient(160deg, rgb(201 163 92 / 9%), rgb(201 163 92 / 3%));
+}
+.inventory-head-note-seal {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  place-items: center;
+  border: 1px solid rgb(201 163 92 / 45%);
+  border-radius: 6px;
+  color: #e6c67f;
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 17px;
+  background: rgb(201 163 92 / 8%);
+  transform: rotate(-3deg);
+}
+.inventory-head-note-copy { display: grid; gap: 4px; }
+.inventory-head-note-copy span { color: #e8e1d3; font-size: 12px; letter-spacing: .16em; }
+.inventory-head-note-copy b { color: #e6c67f; font-weight: 600; }
+.inventory-head-note-copy small { color: #7d7f72; font-size: 10px; letter-spacing: .18em; }
 
 .inventory-layout {
   position: relative;
   z-index: 1;
   display: grid;
+  width: 100%;
+  margin: 0;
   min-width: 0;
   min-height: 0;
   flex: 1;
@@ -1867,23 +1893,27 @@ body {
 .inventory-appraise {
   min-width: 0;
   min-height: 0;
-  padding: 3px;
-  border-radius: 12px;
-  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+  border-radius: 10px;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 30%);
 }
-.inventory-board { display: flex; flex-direction: column; background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618); }
+.inventory-board {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px solid #31382e;
+  background:
+    radial-gradient(640px 300px at 88% -8%, rgb(201 163 92 / 6%), transparent 60%),
+    linear-gradient(170deg, rgb(31 36 28 / 55%), rgb(17 20 15 / 82%));
+}
 .inventory-board-inner {
   display: flex;
   min-height: 0;
   flex: 1;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgb(0 0 0 / 40%);
-  border-radius: 9px;
-  background:
-    repeating-linear-gradient(0deg, rgb(0 0 0 / 14%) 0 2px, transparent 2px 64px),
-    repeating-linear-gradient(90deg, rgb(0 0 0 / 6%) 0 1px, transparent 1px 7px),
-    linear-gradient(165deg, #2f2819, #221c10 55%, #292216);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 .inventory-board-head {
   display: flex;
@@ -1896,7 +1926,7 @@ body {
 .inventory-board-title { display: flex; min-width: 0; align-items: baseline; gap: 14px; }
 .inventory-board-title h2 {
   margin: 0;
-  color: #ecdcb9;
+  color: #f2e7d0;
   font-family: "Faction Brush", "Noto Serif SC", serif;
   font-size: 30px;
   font-weight: 400;
@@ -1929,9 +1959,10 @@ body {
   display: flex;
   flex: none;
   gap: 4px;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  overflow-x: visible;
   padding: 0 22px 12px;
-  border-bottom: 1px solid rgb(0 0 0 / 35%);
+  border-bottom: 1px dashed #31382e;
   scrollbar-width: none;
 }
 .inventory-slot-tabs::-webkit-scrollbar { display: none; }
@@ -1955,6 +1986,7 @@ body {
 .inventory-slot-tab.active small { color: #c9a35c; }
 
 .inventory-grid-wrap {
+  position: relative;
   min-height: 0;
   flex: 1;
   overflow-y: auto;
@@ -1962,9 +1994,25 @@ body {
   scrollbar-color: #4a4231 transparent;
   scrollbar-width: thin;
 }
+.inventory-grid-wrap::after {
+  position: sticky;
+  right: -10px;
+  bottom: -30px;
+  float: right;
+  z-index: 0;
+  margin-top: -120px;
+  margin-left: -160px;
+  content: "囊";
+  color: rgb(233 222 195 / 3.5%);
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 190px;
+  line-height: 1;
+  pointer-events: none;
+  transform: rotate(6deg);
+}
 .inventory-grid-wrap::-webkit-scrollbar { width: 8px; }
 .inventory-grid-wrap::-webkit-scrollbar-thumb { border-radius: 4px; background: #4a4231; }
-.inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.inventory-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
 .inventory-cell {
   position: relative;
   display: flex;
@@ -1973,14 +2021,14 @@ body {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   padding: 0;
   overflow: hidden;
   border: 1px solid #31382e;
   border-radius: 8px;
   color: #b3ad9e;
   text-align: center;
-  background: linear-gradient(160deg, rgb(14 17 13 / 72%), rgb(10 12 9 / 82%));
+  background: linear-gradient(165deg, rgb(31 36 28 / 62%), rgb(15 18 13 / 78%));
   transition: transform .22s cubic-bezier(.22, 1, .36, 1), border-color .22s, box-shadow .22s;
 }
 .inventory-cell::before {
@@ -1990,8 +2038,20 @@ body {
   content: "";
   opacity: .14;
   pointer-events: none;
-  background: radial-gradient(70% 55% at 50% 30%, var(--rarity, transparent) 0%, transparent 70%);
+  background: radial-gradient(72% 58% at 50% 32%, var(--rarity, transparent) 0%, transparent 72%);
   transition: opacity .22s;
+}
+.inventory-cell::after {
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  left: 0;
+  width: 2px;
+  content: "";
+  border-radius: 2px;
+  background: var(--rarity, #31382e);
+  opacity: .75;
+  pointer-events: none;
 }
 .inventory-cell:hover:not(:disabled) { border-color: var(--rarity, #31382e); color: #b3ad9e; box-shadow: 0 10px 22px rgb(0 0 0 / 38%); transform: translateY(-3px); }
 .inventory-cell:hover:not(:disabled)::before { opacity: .3; }
@@ -2001,9 +2061,11 @@ body {
 }
 .inventory-cell[aria-pressed="true"]::before { opacity: .34; }
 .inventory-cell[data-rarity="绝品"] { border-color: rgb(201 149 61 / 40%); }
-.inventory-cell[data-rarity="绝品"] .inventory-cell-glyph { text-shadow: 0 0 14px rgb(201 149 61 / 55%); }
-.inventory-cell-glyph { color: var(--rarity, #b3ad9e); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 30px; line-height: 1; text-shadow: 0 3px 10px rgb(0 0 0 / 50%); }
-.inventory-cell-name { max-width: 92%; overflow: hidden; color: #b3ad9e; font-size: 10px; letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
+.inventory-cell[data-rarity="绝品"] .inventory-cell-icon { filter: drop-shadow(0 0 10px rgb(201 149 61 / 45%)); }
+.inventory-cell-icon { display: block; width: 34px; height: 34px; color: var(--rarity, #b3ad9e); filter: drop-shadow(0 3px 8px rgb(0 0 0 / 45%)); }
+.inventory-cell-icon svg { display: block; width: 100%; height: 100%; }
+.inventory-cell-name { max-width: 92%; overflow: hidden; color: #e8e1d3; font-size: 10px; letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
+.inventory-cell-slot { color: #7d7f72; font-size: 9px; letter-spacing: .2em; }
 .inventory-cell-level { position: absolute; top: 5px; right: 6px; color: #7d7f72; font-size: 9px; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 .inventory-lock-mark {
   position: absolute;
@@ -2031,11 +2093,18 @@ body {
 .inventory-empty-seal { display: grid; width: 52px; height: 52px; place-items: center; border: 1px dashed #31382e; border-radius: 50%; color: #7d7f72; font-family: "Faction Brush", serif; font-size: 26px; }
 .inventory-empty strong { color: #b3ad9e; font-size: 14px; font-weight: 500; letter-spacing: .3em; }
 .inventory-empty span { color: #7d7f72; font-size: 11px; letter-spacing: .16em; }
-.inventory-legend { display: flex; flex: none; align-items: center; gap: 14px; padding: 10px 22px 12px; border-top: 1px solid rgb(0 0 0 / 35%); color: #7d7f72; font-size: 10px; letter-spacing: .16em; }
+.inventory-legend { display: flex; flex: none; align-items: center; gap: 14px; padding: 10px 22px 12px; border-top: 1px dashed #31382e; color: #7d7f72; font-size: 10px; letter-spacing: .16em; }
 .inventory-legend span { display: flex; align-items: center; gap: 5px; }
 .inventory-legend span::before { width: 8px; height: 8px; content: ""; border-radius: 2px; background: var(--rarity); box-shadow: 0 0 6px var(--rarity); }
+.inventory-legend .凡品 { --rarity: #8e887d; }
+.inventory-legend .良品 { --rarity: #4f9168; }
+.inventory-legend .上品 { --rarity: #4e7fb8; }
+.inventory-legend .珍品 { --rarity: #8b63a8; }
+.inventory-legend .绝品 { --rarity: #c9953d; }
+.inventory-legend b { color: #b3ad9e; font-weight: 600; font-variant-numeric: tabular-nums; }
+.inventory-legend-total { margin-left: auto; }
 
-.inventory-appraise { display: flex; flex-direction: column; background: linear-gradient(160deg, #4a3d27, #2e2618 55%, #3a3122); }
+.inventory-appraise { display: flex; flex-direction: column; padding: 8px; border: 1px solid rgb(201 163 92 / 30%); background: linear-gradient(170deg, rgb(31 36 28 / 66%), rgb(14 17 12 / 85%)); }
 .inventory-appraise-paper {
   position: relative;
   display: flex;
@@ -2044,7 +2113,7 @@ body {
   overflow-y: auto;
   padding: 22px 22px 18px;
   flex-direction: column;
-  border-radius: 9px;
+  border-radius: 7px;
   color: #2b2519;
   background:
     repeating-linear-gradient(0deg, rgb(90 70 40 / 4%) 0 1px, transparent 1px 5px),
@@ -2075,9 +2144,12 @@ body {
 .inventory-appraise-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .inventory-slot-tag { padding: 3px 9px; border: 1px solid rgb(43 37 25 / 30%); border-radius: 4px; color: #2b2519; font-size: 10px; letter-spacing: .22em; }
 .inventory-quality-tag { color: var(--rarity, #75643f); font-size: 11px; font-weight: 700; letter-spacing: .22em; }
-.inventory-appraise-name { margin: 0; color: #241f13; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 34px; font-weight: 400; letter-spacing: .04em; line-height: 1.1; }
+.inventory-appraise-figure { display: flex; height: 72px; align-items: center; gap: 16px; margin: 2px 0 10px; }
+.inventory-figure-ring { display: grid; width: 68px; height: 68px; flex: none; place-items: center; border: 1px dashed rgb(43 37 25 / 35%); border-radius: 50%; color: var(--rarity, #7a5a18); }
+.inventory-figure-ring svg { width: 36px; height: 36px; }
+.inventory-appraise-name { margin: 0; color: #241f13; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 32px; font-weight: 400; letter-spacing: .04em; line-height: 1.15; }
 .inventory-appraise-latin { margin-top: 6px; color: rgb(43 37 25 / 45%); font-size: 9px; letter-spacing: .34em; text-transform: uppercase; }
-.inventory-base-stat { display: flex; align-items: baseline; justify-content: space-between; margin-top: 16px; padding: 12px 14px; border-top: 1px solid rgb(43 37 25 / 18%); border-bottom: 1px solid rgb(43 37 25 / 18%); }
+.inventory-base-stat { display: flex; align-items: baseline; justify-content: space-between; margin-top: 12px; padding: 12px 14px; border-top: 1px solid rgb(43 37 25 / 18%); border-bottom: 1px solid rgb(43 37 25 / 18%); }
 .inventory-base-label { color: rgb(43 37 25 / 60%); font-size: 11px; letter-spacing: .3em; }
 .inventory-base-value { color: #3a2f1c; font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; }
 .inventory-base-value small { margin-left: 4px; color: rgb(43 37 25 / 55%); font-size: 11px; font-weight: 500; letter-spacing: .1em; }
@@ -2123,7 +2195,7 @@ body {
 
 @media (max-width: 1240px) {
   .inventory-layout { grid-template-columns: minmax(0, 1fr) 316px; }
-  .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
 }
 
 @media (max-width: 980px) {
@@ -2132,7 +2204,7 @@ body {
   .game-main[data-page="inventory"] { height: auto; min-height: 100vh; padding: 20px 16px 40px; overflow: visible; }
   .inventory-page { height: auto; min-height: calc(100vh - 60px); overflow: visible; }
   .inventory-page-head { align-items: flex-start; flex-direction: column; gap: 12px; }
-  .inventory-head-note { align-items: flex-start; }
+  .inventory-head-note { align-self: flex-start; }
   .inventory-layout { grid-template-columns: 1fr; }
   .inventory-board { min-height: 420px; }
   .inventory-ghost-char { top: 2%; font-size: 260px; }
@@ -2179,17 +2251,21 @@ body {
 
 @media (max-width: 640px) {
   .game-main[data-page="inventory"] { padding: 20px 12px 32px; }
-  .inventory-page-head h1 { font-size: 34px; }
+  .inventory-page-head h1 { font-size: 38px; }
   .inventory-board-head { align-items: flex-start; flex-direction: column; gap: 12px; }
   .inventory-board-side { width: 100%; justify-content: space-between; }
   .inventory-board-title { gap: 9px; }
-  .inventory-board-title h2 { font-size: 27px; }
+  .inventory-board-title h2 { font-size: 30px; }
   .inventory-board-title span { overflow: hidden; font-size: 9px; letter-spacing: .2em; text-overflow: ellipsis; }
-  .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+  .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
   .inventory-grid-wrap { padding: 12px 14px 16px; }
+  .inventory-grid-wrap::after { font-size: 130px; }
   .inventory-slot-tabs { padding: 0 14px 10px; }
   .inventory-board-head, .inventory-legend { padding-right: 14px; padding-left: 14px; }
-  .inventory-cell-glyph { font-size: 24px; }
+  .inventory-legend { flex-wrap: wrap; gap: 8px 12px; }
+  .inventory-legend-total { margin-left: 0; }
+  .inventory-cell-icon { width: 28px; height: 28px; }
+  .inventory-cell-slot { display: none; }
   .inventory-ghost-char { display: none; }
   .inventory-page-foot { font-size: 8px; letter-spacing: .25em; }
 }

@@ -126,19 +126,20 @@ const inventoryFixture = (): InventoryPageViewModel => ({
   capacity: 300,
   itemCount: 1,
   capacityRatio: 1,
+  qualityCounts: { 凡品: 0, 良品: 1, 上品: 0, 珍品: 0, 绝品: 0 },
   slotFilter: 'all',
   slotTabs: [{ id: 'all', name: '全部', count: 1 }],
   selectedUid: 'equipment_1',
   detailOpen: false,
   items: [{
     uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '兵刃',
-    glyph: '刃', level: 1, quality: '良品', locked: false,
+    level: 1, quality: '良品', locked: false,
     baseStat: { name: '攻击', value: 10 },
     affixes: [{ name: '外功', value: 4, min: 3, max: 18, ratio: 7 }],
   }],
   selectedItem: {
     uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '兵刃',
-    glyph: '刃', level: 1, quality: '良品', locked: false,
+    level: 1, quality: '良品', locked: false,
     baseStat: { name: '攻击', value: 10 },
     affixes: [{ name: '外功', value: 4, min: 3, max: 18, ratio: 7 }],
   },
@@ -278,6 +279,16 @@ describe('version 10 长期循环页面', () => {
   it('城市和背包页没有抽卡、残页与铁匠铺', () => {
     const html = renderCityPage(cityFixture()) + renderInventoryPage(inventoryFixture())
     expect(html).not.toMatch(/十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解/)
+  })
+
+  it('背包页按原型输出部位线稿、详情器影和品质件数', () => {
+    const html = renderInventoryPage({ ...inventoryFixture(), detailOpen: true })
+    expect(html).toContain('class="inventory-cell-icon"')
+    expect(html).toContain('class="inventory-cell-slot"')
+    expect(html).toContain('class="inventory-appraise-figure"')
+    expect(html).toContain('class="inventory-figure-ring"')
+    expect(html).toContain('良品<b>1</b>')
+    expect(html).toContain('共 1 件 · 囊容 300')
   })
 
   it('当前大关没有势力或城市内容时显示本卷空状态', () => {

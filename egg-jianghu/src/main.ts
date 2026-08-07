@@ -1026,16 +1026,6 @@ const inventorySlotNames: Record<EquipmentSlot, string> = {
   token: '信物',
 }
 
-const inventorySlotGlyphs: Record<EquipmentSlot, string> = {
-  weapon: '刃',
-  head: '冠',
-  armor: '甲',
-  wrist: '腕',
-  waist: '佩',
-  boots: '靴',
-  token: '信',
-}
-
 const inventoryBaseStatNames: Record<string, string> = {
   attack: '攻击',
   internalDefense: '内防',
@@ -1054,7 +1044,6 @@ const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
     name: definition?.name ?? '无名装备',
     slot,
     slotName: inventorySlotNames[slot],
-    glyph: inventorySlotGlyphs[slot],
     level: item.level,
     quality: item.quality,
     locked: item.locked,
@@ -1093,12 +1082,17 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     { id: 'all' as const, name: '全部', count: allItems.length },
     ...EQUIPMENT_SLOTS.map((slot) => ({ id: slot, name: inventorySlotNames[slot], count: allItems.filter((item) => item.slot === slot).length })),
   ]
+  const qualityCounts = EQUIPMENT_QUALITIES.reduce((counts, quality) => {
+    counts[quality] = allItems.filter((item) => item.quality === quality).length
+    return counts
+  }, {} as Record<EquipmentQuality, number>)
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   return {
     worldName: world.name,
     capacity: INVENTORY_CAPACITY,
     itemCount: allItems.length,
     capacityRatio: Math.max(2, Math.min(100, allItems.length / INVENTORY_CAPACITY * 100)),
+    qualityCounts,
     slotFilter: inventorySlotFilter,
     slotTabs,
     selectedUid: selectedInventoryUid,

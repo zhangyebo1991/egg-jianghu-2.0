@@ -1,4 +1,4 @@
-import type { EquipmentSlot } from '../content/equipment'
+import { EQUIPMENT_QUALITIES, type EquipmentSlot } from '../content/equipment'
 import type { EquipmentQuality } from '../domain/types'
 import { escapeHtml } from './html'
 
@@ -15,7 +15,6 @@ export interface InventoryItemView {
   name: string
   slot: EquipmentSlot
   slotName: string
-  glyph: string
   level: number
   quality: EquipmentQuality
   locked: boolean
@@ -34,6 +33,7 @@ export interface InventoryPageViewModel {
   capacity: number
   itemCount: number
   capacityRatio: number
+  qualityCounts: Record<EquipmentQuality, number>
   slotFilter: 'all' | EquipmentSlot
   slotTabs: InventorySlotTabView[]
   selectedUid: string | null
@@ -41,6 +41,18 @@ export interface InventoryPageViewModel {
   items: InventoryItemView[]
   selectedItem: InventoryItemView | null
 }
+
+const SLOT_ICON_MARKUP: Record<EquipmentSlot, string> = {
+  weapon: '<path d="M4.5 19.5 L15.5 8.5"/><path d="M15.5 8.5 l4 -4"/><path d="M13 6.5 l4.5 4.5"/><path d="M7.5 16.5 l-2.5 4.5 4.5 -2.5"/>',
+  head: '<path d="M5 12 a7 5.5 0 0 1 14 0"/><path d="M4.5 12 h15"/><path d="M9 12.5 l-2.5 5 M15 12.5 l2.5 5"/>',
+  armor: '<path d="M9 4.5 l-4.5 3 2 4.5 2 -1.2 V20 h7 v-9.2 l2 1.2 2 -4.5 -4.5 -3"/><path d="M9 4.5 a3 3 0 0 0 6 0"/><path d="M12.5 11 v9"/>',
+  wrist: '<rect x="7" y="5.5" width="10" height="13" rx="2.5"/><path d="M7 10 h10 M7 14.5 h10"/>',
+  waist: '<path d="M12 3.5 v2.5"/><circle cx="12" cy="11.5" r="4.5"/><circle cx="12" cy="11.5" r="1.6"/><path d="M12 16 v4 M10.4 16.5 L9 20.5 M13.6 16.5 L15 20.5"/>',
+  boots: '<path d="M7 4 h6 v6.5 c3 0 5.5 1.8 5.5 5 V17 H7 Z"/><path d="M7 14.5 h11.5"/>',
+  token: '<rect x="7" y="3.5" width="10" height="17" rx="2"/><path d="M12 7.5 v4.5"/><path d="M10.2 12 h3.6"/><path d="M9.8 16.5 h4.4"/>',
+}
+
+const renderSlotIcon = (slot: EquipmentSlot): string => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SLOT_ICON_MARKUP[slot]}</svg>`
 
 const renderSlotTabs = (view: InventoryPageViewModel): string => view.slotTabs.map((tab) => `
   <button type="button" class="inventory-slot-tab${view.slotFilter === tab.id ? ' active' : ''}"
@@ -56,8 +68,9 @@ const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null
     aria-label="${escapeHtml(`${item.name}，${item.quality}，等级 ${item.level}`)}">
     ${item.locked ? '<span class="inventory-lock-mark" aria-label="已锁定">锁</span>' : ''}
     <span class="inventory-cell-level">Lv.${item.level}</span>
-    <span class="inventory-cell-glyph" aria-hidden="true">${escapeHtml(item.glyph)}</span>
+    <span class="inventory-cell-icon" aria-hidden="true">${renderSlotIcon(item.slot)}</span>
     <span class="inventory-cell-name">${escapeHtml(item.name)}</span>
+    <span class="inventory-cell-slot">${escapeHtml(item.slotName)}</span>
   </button>`
 
 const renderInventoryGrid = (view: InventoryPageViewModel): string => view.items.length
@@ -88,8 +101,13 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
     <span class="inventory-quality-tag" data-rarity="${escapeHtml(item.quality)}">${escapeHtml(item.quality)}</span>
     <span class="inventory-slot-tag">Lv.${item.level}</span>
   </div>
-  <h2 class="inventory-appraise-name">${escapeHtml(item.name)}</h2>
-  <div class="inventory-appraise-latin">${escapeHtml(item.quality)} · ${escapeHtml(item.slotName)} · Level ${item.level}</div>
+  <div class="inventory-appraise-figure">
+    <span class="inventory-figure-ring" data-rarity="${escapeHtml(item.quality)}">${renderSlotIcon(item.slot)}</span>
+    <div>
+      <h2 class="inventory-appraise-name">${escapeHtml(item.name)}</h2>
+      <div class="inventory-appraise-latin">${escapeHtml(item.quality)} · ${escapeHtml(item.slotName)} · Level ${item.level}</div>
+    </div>
+  </div>
   <div class="inventory-base-stat">
     <span class="inventory-base-label">${escapeHtml(item.baseStat.name)}</span>
     <span class="inventory-base-value">${item.baseStat.value}<small>基础</small></span>
@@ -120,8 +138,11 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
       <div class="inventory-latin">Inventory · Spoils of the Jianghu</div>
     </div>
     <div class="inventory-head-note">
-      <span>纯行囊之地 · <b>已装备不入此囊</b></span>
-      <small>穿戴与卸下 · 请往侠客页操办</small>
+      <span class="inventory-head-note-seal" aria-hidden="true">囊</span>
+      <div class="inventory-head-note-copy">
+        <span>纯行囊之地 · <b>已装备不入此囊</b></span>
+        <small>穿戴与卸下 · 请往侠客页操办</small>
+      </div>
     </div>
   </header>
 
@@ -147,8 +168,8 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
         <nav class="inventory-slot-tabs" aria-label="部位筛选">${renderSlotTabs(view)}</nav>
         <div class="inventory-grid-wrap"><div class="inventory-grid">${renderInventoryGrid(view)}</div></div>
         <footer class="inventory-legend">
-          <span class="凡品">凡品</span><span class="良品">良品</span><span class="上品">上品</span>
-          <span class="珍品">珍品</span><span class="绝品">绝品</span>
+          ${EQUIPMENT_QUALITIES.map((quality) => `<span class="${quality}">${quality}<b>${view.qualityCounts[quality]}</b></span>`).join('')}
+          <span class="inventory-legend-total">共 ${view.itemCount} 件 · 囊容 ${view.capacity}</span>
         </footer>
       </div>
     </section>
@@ -159,5 +180,5 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
     </aside>
   </div>
 
-  <footer class="inventory-page-foot">蛋蛋江湖 2.0 · 背包页高保真重设计 · 墨底宣纸 / 朱砂印 / 金漆匾</footer>
+  <footer class="inventory-page-foot">蛋蛋江湖 2.0 · 背包页重设计 v2 · 墨底宣纸 / 朱砂印 / 金漆匾</footer>
 </section>`
