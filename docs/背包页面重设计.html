@@ -9,10 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   背包页重设计 · 蛋蛋江湖 2.0
-   设计语言：墨底宣纸 · 朱砂印 · 金漆匾 · 百宝囊
-   纯背包页：已装备不入囊，穿戴/卸下在侠客页操作
-   PC 端整页一屏呈现（囊格内部滚动），安卓端详情弹窗
+   背包页重设计 v2 · 蛋蛋江湖 2.0
+   设计语言：墨底宣纸 · 朱砂印 · 金漆匾（与势力/江湖页同源）
+   v2：去棕黄木板，归墨绿体系；囊格以部位水墨图标替代单字
+   铁律：PC 单屏不滚屏；安卓端自适应可滚动
    ============================================================ */
 :root {
   --ink-950: #0c0e0b;
@@ -23,10 +23,10 @@
   --paper: #e8e1d3;
   --paper-dim: #b3ad9e;
   --paper-mute: #7d7f72;
-  --xuan: #e9dec3;          /* 宣纸 */
+  --xuan: #e9dec3;
   --xuan-deep: #ddceaa;
-  --xuan-ink: #2b2519;       /* 纸上墨色 */
-  --cinnabar: #b5503c;       /* 朱砂 */
+  --xuan-ink: #2b2519;
+  --cinnabar: #b5503c;
   --cinnabar-bright: #cf6b53;
   --cinnabar-deep: #8a3a2b;
   --gold: #c9a35c;
@@ -63,14 +63,20 @@ body {
 button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
 ::selection { background: rgb(181 80 60 / 55%); color: #fff4e8; }
 
-/* 纸颗粒覆盖层 —— 全场胶片/宣纸质感 */
+/* 纸颗粒覆盖层 */
 .grain {
   position: fixed; inset: -50%; z-index: 60; pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   opacity: 0.055; mix-blend-mode: overlay;
 }
 
-/* ============ 游戏外壳 · 侧边栏 ============ */
+/* ============ PC 单屏铁律 ============ */
+@media (min-width: 981px) {
+  html, body { height: 100%; overflow: hidden; }
+  .app-shell { height: 100vh; }
+}
+
+/* ============ 游戏外壳 · 侧边栏（与势力/江湖页同源） ============ */
 .app-shell { display: grid; grid-template-columns: 212px minmax(0, 1fr); min-height: 100vh; }
 
 .game-sidebar {
@@ -115,92 +121,100 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 }
 .nav-item.active .nav-mark { border-color: var(--cinnabar-deep); color: var(--cinnabar-bright); }
 
-.world-subnav { display: grid; gap: 4px; padding-top: 18px; border-top: 1px dashed var(--line); }
-.world-subnav .world-back {
-  text-align: left; padding: 6px 12px; font-size: 11px; letter-spacing: 0.18em;
-  color: var(--paper-mute); transition: color 0.2s;
-}
-.world-subnav .world-back:hover { color: var(--gold-bright); }
-.world-subnav .ws-item {
-  display: flex; align-items: baseline; gap: 10px;
-  padding: 8px 12px; border-radius: 5px; text-align: left;
-  font-size: 13px; letter-spacing: 0.32em; color: var(--paper-dim);
-  transition: all 0.25s var(--ease-out);
-}
-.world-subnav .ws-item small { font-size: 9px; letter-spacing: 0.14em; color: var(--paper-mute); font-style: normal; }
-.world-subnav .ws-item:hover { color: var(--paper); background: rgb(233 222 195 / 4%); }
-
 .sidebar-landscape { margin-top: auto; height: 74px; position: relative; overflow: hidden; border-radius: 6px; }
-.sidebar-landscape::before { /* 远山 */
+.sidebar-landscape::before {
   content: ""; position: absolute; inset: auto -12px 0 -12px; height: 56px;
   background:
     linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
     linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
     linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
 }
-.sidebar-landscape::after { /* 雾 */
+.sidebar-landscape::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
   background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
 }
 .sidebar-motto { font-size: 10px; letter-spacing: 0.5em; color: var(--paper-mute); text-align: center; }
 
-/* ============ 主区框架 · 单屏锁定 ============ */
-.game-main {
-  min-width: 0; height: 100vh;
-  display: flex; flex-direction: column;
-  padding: 26px 36px 20px;
-  position: relative; overflow: hidden;
+/* ============ 移动端顶栏（≤980px 出现） ============ */
+.mobile-topbar {
+  display: none; position: sticky; top: 0; z-index: 50;
+  align-items: center; gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  background: rgb(13 16 12 / 92%); backdrop-filter: blur(8px);
 }
+.mobile-topbar .brand-seal { width: 34px; height: 34px; font-size: 18px; }
+.mobile-topbar .mt-title { font-size: 13px; letter-spacing: 0.12em; color: #efe4cf; white-space: nowrap; }
+.mt-nav { display: flex; gap: 6px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+.mt-nav::-webkit-scrollbar { display: none; }
+.mt-chip {
+  flex: none; padding: 7px 13px; border-radius: 999px; font-size: 12px; letter-spacing: 0.18em;
+  color: var(--paper-dim); border: 1px solid var(--line); white-space: nowrap;
+}
+.mt-chip.active { color: #f6e3d2; border-color: var(--cinnabar-deep); background: rgb(181 80 60 / 16%); }
 
-/* 巨字书法背景 —— 氛围层 */
+/* ============ 主区框架 ============ */
+.game-main {
+  min-width: 0; position: relative;
+  padding: 28px 38px 22px;
+  display: flex; flex-direction: column; min-height: 0;
+}
+@media (min-width: 981px) { .game-main { height: 100vh; overflow: hidden; } }
+
 .ghost-char {
   position: absolute; z-index: 0; pointer-events: none; user-select: none;
-  font-family: var(--font-brush); line-height: 0.9; color: rgb(233 222 195 / 4%);
+  top: 120px; right: -18px; font-size: 400px; line-height: 0.9;
+  font-family: var(--font-brush); color: rgb(233 222 195 / 4%);
+  transform: rotate(5deg);
 }
-.ghost-bag { top: 6%; right: -40px; font-size: 420px; transform: rotate(6deg); }
 
 .page-head {
   position: relative; z-index: 1; flex: none;
   display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
-  padding-bottom: 16px; margin-bottom: 16px;
+  padding-bottom: 18px; margin-bottom: 18px;
   border-bottom: 1px solid var(--line-soft);
 }
 .page-head .crumb { font-size: 11px; letter-spacing: 0.3em; color: var(--paper-mute); margin-bottom: 10px; }
 .page-head .crumb b { color: var(--gold); font-weight: 500; }
 .page-head h1 {
   font-family: var(--font-brush); font-weight: 400;
-  font-size: 44px; line-height: 1; letter-spacing: 0.06em; color: #f2e7d0;
+  font-size: 54px; line-height: 1; letter-spacing: 0.06em; color: #f2e7d0;
   text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
 }
-.page-head .latin { margin-top: 8px; font-size: 10px; letter-spacing: 0.42em; color: var(--paper-mute); text-transform: uppercase; }
+.page-head .latin { margin-top: 9px; font-size: 10px; letter-spacing: 0.42em; color: var(--paper-mute); text-transform: uppercase; }
 
-/* 页头右注 */
-.head-note { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-bottom: 4px; }
-.head-note .hn-main { font-size: 12px; letter-spacing: 0.22em; color: var(--paper-dim); }
-.head-note .hn-main b { color: var(--gold-bright); font-weight: 600; }
-.head-note .hn-sub { font-size: 10px; letter-spacing: 0.18em; color: var(--paper-mute); }
-</style>
-<style>
-/* ============ 百宝囊 · 木框囊袋 ============ */
+/* 页首右侧提示牌 */
+.head-widget {
+  display: flex; align-items: center; gap: 12px; flex: none;
+  padding: 12px 18px; border-radius: 8px;
+  border: 1px solid rgb(201 163 92 / 28%);
+  background: linear-gradient(160deg, rgb(201 163 92 / 9%), rgb(201 163 92 / 3%));
+}
+.head-widget .hw-seal {
+  width: 34px; height: 34px; flex: none; display: grid; place-items: center;
+  font-family: var(--font-brush); font-size: 17px; color: var(--gold-bright);
+  border: 1px solid rgb(201 163 92 / 45%); border-radius: 6px; transform: rotate(-3deg);
+  background: rgb(201 163 92 / 8%);
+}
+.head-widget .hw-main { font-size: 12px; letter-spacing: 0.16em; color: var(--paper); }
+.head-widget .hw-main b { color: var(--gold-bright); font-weight: 600; }
+.head-widget .hw-sub { font-size: 10px; letter-spacing: 0.18em; color: var(--paper-mute); margin-top: 4px; }
+
+/* ============================================================
+   百宝囊 · 墨绿面板（去木板，同江湖页关山面板质感）
+   ============================================================ */
 .bag-layout {
   position: relative; z-index: 1; flex: 1; min-height: 0;
   display: grid; grid-template-columns: minmax(0, 1fr) 348px; gap: 18px;
 }
 
-.bag-board {
-  min-height: 0; display: flex; flex-direction: column;
-  border-radius: 12px; padding: 3px;             /* 木框 */
-  background: linear-gradient(160deg, #3d3323, #241d13 55%, #2e2618);
-  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
-}
-.bag-inner {
-  flex: 1; min-height: 0; display: flex; flex-direction: column;
-  border-radius: 9px; overflow: hidden;
+.bag-panel {
+  min-height: 0; display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 10px;
   background:
-    repeating-linear-gradient(0deg, rgb(0 0 0 / 14%) 0 2px, transparent 2px 64px),
-    repeating-linear-gradient(90deg, rgb(0 0 0 / 6%) 0 1px, transparent 1px 7px),
-    linear-gradient(165deg, #2f2819, #221c10 55%, #292216);
-  border: 1px solid rgb(0 0 0 / 40%);
+    radial-gradient(640px 300px at 88% -8%, rgb(201 163 92 / 6%), transparent 60%),
+    linear-gradient(170deg, rgb(31 36 28 / 55%), rgb(17 20 15 / 82%));
+  box-shadow: 0 10px 26px rgb(0 0 0 / 30%);
 }
 .bag-head {
   flex: none;
@@ -208,8 +222,8 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   padding: 16px 22px 12px;
 }
 .bag-title { display: flex; align-items: baseline; gap: 14px; }
-.bag-title h2 { font-family: var(--font-brush); font-size: 30px; font-weight: 400; letter-spacing: 0.12em; color: #ecdcb9; }
-.bag-title .sub { font-size: 10px; letter-spacing: 0.3em; color: rgb(233 222 195 / 42%); }
+.bag-title h2 { font-family: var(--font-brush); font-size: 30px; font-weight: 400; letter-spacing: 0.12em; color: #f2e7d0; }
+.bag-title .sub { font-size: 10px; letter-spacing: 0.3em; color: var(--paper-mute); }
 .bag-title .sub i { font-style: normal; color: var(--cinnabar-bright); }
 
 /* 容量 + 操作 */
@@ -234,7 +248,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .slot-tabs {
   flex: none; display: flex; gap: 4px; flex-wrap: wrap;
   padding: 0 22px 12px;
-  border-bottom: 1px solid rgb(0 0 0 / 35%);
+  border-bottom: 1px dashed var(--line);
 }
 .slot-tab {
   display: flex; align-items: baseline; gap: 6px;
@@ -247,26 +261,38 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .slot-tab.active { color: var(--gold-bright); background: rgb(201 163 92 / 10%); box-shadow: inset 0 -2px 0 var(--gold); }
 .slot-tab.active small { color: var(--gold); }
 
-/* 囊格 · 内部滚动，页面不滚 */
-.bag-grid-wrap { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 22px 20px; scrollbar-width: thin; scrollbar-color: #4a4231 transparent; }
+/* 囊格区 · 内部滚动，页面不滚 */
+.bag-grid-wrap { position: relative; flex: 1; min-height: 0; overflow-y: auto; padding: 16px 22px 20px; scrollbar-width: thin; scrollbar-color: #3a4234 transparent; }
 .bag-grid-wrap::-webkit-scrollbar { width: 8px; }
-.bag-grid-wrap::-webkit-scrollbar-thumb { background: #4a4231; border-radius: 4px; }
+.bag-grid-wrap::-webkit-scrollbar-thumb { background: #3a4234; border-radius: 4px; }
 .bag-grid-wrap::-webkit-scrollbar-track { background: transparent; }
+/* 囊字水印，填补空旷 */
+.bag-grid-wrap::after {
+  content: "囊"; position: sticky; float: right; bottom: -30px; right: -10px;
+  margin-top: -120px; margin-left: -160px; pointer-events: none;
+  font-family: var(--font-brush); font-size: 190px; line-height: 1;
+  color: rgb(233 222 195 / 3.5%); transform: rotate(6deg);
+}
 
-.bag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.bag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
 
+/* 囊格：部位水墨图标 + 品质缘色 */
 .cell {
-  position: relative; aspect-ratio: 1;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  position: relative; aspect-ratio: 1; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   border-radius: 8px; text-align: center;
-  background: linear-gradient(160deg, rgb(14 17 13 / 72%), rgb(10 12 9 / 82%));
+  background: linear-gradient(165deg, rgb(31 36 28 / 62%), rgb(15 18 13 / 78%));
   border: 1px solid var(--line);
   transition: transform 0.22s var(--ease-out), border-color 0.22s, box-shadow 0.22s;
 }
 .cell::before { /* 品质光晕 */
-  content: ""; position: absolute; inset: 0; border-radius: 8px; pointer-events: none;
-  background: radial-gradient(70% 55% at 50% 30%, var(--qc, transparent) 0%, transparent 70%);
-  opacity: 0.14; transition: opacity 0.22s;
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(72% 58% at 50% 32%, var(--qc, transparent) 0%, transparent 72%);
+  opacity: 0.15; transition: opacity 0.22s;
+}
+.cell::after { /* 品质缘 */
+  content: ""; position: absolute; left: 0; top: 12%; bottom: 12%; width: 2px;
+  border-radius: 2px; background: var(--qb, var(--line)); opacity: 0.75;
 }
 .cell:hover { transform: translateY(-3px); border-color: var(--qb, var(--line)); box-shadow: 0 10px 22px rgb(0 0 0 / 38%); }
 .cell:hover::before { opacity: 0.3; }
@@ -275,31 +301,29 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   box-shadow: 0 0 0 1px var(--qb, var(--gold)), 0 12px 26px rgb(0 0 0 / 42%);
 }
 .cell.selected::before { opacity: 0.34; }
-.cell .glyph {
-  font-family: var(--font-brush); font-size: 30px; line-height: 1;
-  color: var(--qb, var(--paper-dim));
-  text-shadow: 0 3px 10px rgb(0 0 0 / 50%);
-}
-.cell .cname { font-size: 10px; letter-spacing: 0.06em; color: var(--paper-dim); max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell .icon { width: 34px; height: 34px; color: var(--qb, var(--paper-dim)); filter: drop-shadow(0 3px 8px rgb(0 0 0 / 45%)); }
+.cell .cname { font-size: 10px; letter-spacing: 0.06em; color: var(--paper); max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell .cslot { font-size: 9px; letter-spacing: 0.2em; color: var(--paper-mute); }
 .cell .lvl {
   position: absolute; top: 5px; right: 6px;
   font-size: 9px; letter-spacing: 0.04em; color: var(--paper-mute);
   font-variant-numeric: tabular-nums;
 }
 .cell .lock-mark {
-  position: absolute; top: 5px; left: 6px;
+  position: absolute; top: 5px; left: 6px; z-index: 1;
   width: 15px; height: 15px; display: grid; place-items: center;
   font-size: 9px; color: #2e2208; background: var(--gold-bright);
   border-radius: 3px; box-shadow: 0 2px 6px rgb(0 0 0 / 40%);
 }
-/* 品质描边 */
+/* 品质变量 */
 .cell.q-凡品 { --qb: var(--q-凡品); --qc: var(--q-凡品); }
 .cell.q-良品 { --qb: var(--q-良品); --qc: var(--q-良品); }
 .cell.q-上品 { --qb: var(--q-上品); --qc: var(--q-上品); }
 .cell.q-珍品 { --qb: var(--q-珍品); --qc: var(--q-珍品); }
 .cell.q-绝品 { --qb: var(--q-绝品); --qc: var(--q-绝品); }
 .cell.q-绝品 { border-color: rgb(201 149 61 / 40%); }
-.cell.q-绝品 .glyph { text-shadow: 0 0 14px rgb(201 149 61 / 55%); }
+.cell.q-绝品 .icon { filter: drop-shadow(0 0 10px rgb(201 149 61 / 45%)); }
+.cell.q-绝品 .cname { color: var(--gold-bright); }
 
 /* 空囊 */
 .bag-empty {
@@ -314,31 +338,35 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .bag-empty strong { font-size: 14px; letter-spacing: 0.3em; color: var(--paper-dim); font-weight: 500; }
 .bag-empty span { font-size: 11px; letter-spacing: 0.16em; color: var(--paper-mute); }
 
-/* 品质图例 */
+/* 品质图例（含件数） */
 .bag-legend {
   flex: none; display: flex; align-items: center; gap: 14px;
-  padding: 10px 22px 12px; border-top: 1px solid rgb(0 0 0 / 35%);
+  padding: 10px 22px 12px; border-top: 1px dashed var(--line);
   font-size: 10px; letter-spacing: 0.16em; color: var(--paper-mute);
 }
 .bag-legend .lg { display: flex; align-items: center; gap: 5px; }
 .bag-legend .lg::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c); box-shadow: 0 0 6px var(--c); }
+.bag-legend .lg b { font-weight: 600; color: var(--paper-dim); font-variant-numeric: tabular-nums; }
 .bag-legend .lg.凡品 { --c: var(--q-凡品); }
 .bag-legend .lg.良品 { --c: var(--q-良品); }
 .bag-legend .lg.上品 { --c: var(--q-上品); }
 .bag-legend .lg.珍品 { --c: var(--q-珍品); }
 .bag-legend .lg.绝品 { --c: var(--q-绝品); }
-</style>
-<style>
-/* ============ 鉴宝笺 · 宣纸详情（PC 侧栏 / 移动端弹窗） ============ */
+
+/* ============================================================
+   鉴宝笺 · 宣纸详情（PC 侧栏 / 移动端弹窗）
+   v2：外框去棕，改墨底描金
+   ============================================================ */
 .appraise {
   min-height: 0; display: flex; flex-direction: column;
-  border-radius: 12px; padding: 3px;
-  background: linear-gradient(160deg, #4a3d27, #2e2618 55%, #3a3122);
-  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+  border: 1px solid rgb(201 163 92 / 30%); border-radius: 10px;
+  background: linear-gradient(170deg, rgb(31 36 28 / 66%), rgb(14 17 12 / 85%));
+  box-shadow: 0 10px 26px rgb(0 0 0 / 30%);
+  padding: 8px;
 }
 .appraise-paper {
   flex: 1; min-height: 0; overflow-y: auto;
-  border-radius: 9px; position: relative;
+  border-radius: 7px; position: relative;
   display: flex; flex-direction: column;
   padding: 22px 22px 18px;
   color: var(--xuan-ink);
@@ -364,14 +392,26 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   color: var(--xuan-ink); border: 1px solid rgb(43 37 25 / 30%);
 }
 .appraise-head .q-tag { font-size: 11px; letter-spacing: 0.22em; font-weight: 700; color: var(--qb); }
+
+/* 器影：详情中的部位大图标 */
+.appraise-figure {
+  margin: 2px 0 10px; height: 72px;
+  display: flex; align-items: center; gap: 16px;
+}
+.appraise-figure .fig-ring {
+  width: 68px; height: 68px; flex: none; display: grid; place-items: center;
+  border: 1px dashed rgb(43 37 25 / 35%); border-radius: 50%;
+  color: var(--qb, #7a5a18);
+}
+.appraise-figure .fig-ring svg { width: 36px; height: 36px; }
 .appraise-name {
-  font-family: var(--font-brush); font-size: 34px; font-weight: 400; line-height: 1.1;
+  font-family: var(--font-brush); font-size: 32px; font-weight: 400; line-height: 1.15;
   color: #241f13; letter-spacing: 0.04em;
 }
-.appraise-latin { margin-top: 6px; font-size: 9px; letter-spacing: 0.34em; color: rgb(43 37 25 / 45%); text-transform: uppercase; }
+.appraise-latin { margin-top: 5px; font-size: 9px; letter-spacing: 0.34em; color: rgb(43 37 25 / 45%); text-transform: uppercase; }
 
 .appraise-base {
-  margin-top: 16px; padding: 12px 14px;
+  margin-top: 12px; padding: 12px 14px;
   display: flex; align-items: baseline; justify-content: space-between;
   border-top: 1px solid rgb(43 37 25 / 18%); border-bottom: 1px solid rgb(43 37 25 / 18%);
 }
@@ -416,41 +456,42 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .toast {
   position: fixed; left: 50%; bottom: 34px; z-index: 80;
   transform: translateX(-50%);
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 20px; border-radius: 8px;
-  font-size: 12px; letter-spacing: 0.18em; color: #f2e7d0;
-  background: linear-gradient(160deg, #2a3026, #171b14);
-  border: 1px solid var(--gold-deep);
-  box-shadow: 0 16px 40px rgb(0 0 0 / 50%);
-  opacity: 0; pointer-events: none;
+  padding: 11px 22px; border-radius: 8px;
+  border: 1px solid rgb(201 163 92 / 45%);
+  background: linear-gradient(165deg, #241f15, #171310);
+  color: var(--gold-bright); font-size: 13px; letter-spacing: 0.14em;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 50%);
+  opacity: 0; pointer-events: none; white-space: nowrap;
 }
 .toast.show { animation: toast-in 0.35s var(--ease-out) forwards, toast-out 0.4s ease 2.4s forwards; }
-.toast::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold-bright); box-shadow: 0 0 8px rgb(201 163 92 / 80%); }
+.toast::before { content: "·"; margin-right: 8px; color: var(--gold-bright); }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 14px) scale(0.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 @keyframes toast-out { to { opacity: 0; transform: translate(-50%, 10px); } }
 
-.page-foot { position: relative; z-index: 1; flex: none; text-align: center; padding-top: 12px; font-size: 9px; letter-spacing: 0.4em; color: rgb(233 222 195 / 26%); }
+.page-foot { position: relative; z-index: 1; flex: none; text-align: center; padding-top: 12px; font-size: 10px; letter-spacing: 0.4em; color: rgb(233 222 195 / 26%); }
 
 /* ============ 响应式 ============ */
 @media (max-width: 1240px) {
+  .game-main { padding: 24px 26px 18px; }
+  .page-head h1 { font-size: 46px; }
   .bag-layout { grid-template-columns: minmax(0, 1fr) 316px; }
-  .bag-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  .bag-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
 }
 @media (max-width: 980px) {
   .app-shell { grid-template-columns: 1fr; }
   .game-sidebar { display: none; }
+  .mobile-topbar { display: flex; }
   /* 安卓端：解除单屏锁定，纵向流式 */
-  .game-main { height: auto; min-height: 100vh; overflow: visible; padding: 20px 16px 40px; }
-  .page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .head-note { align-items: flex-start; }
+  .game-main { height: auto; min-height: 100vh; overflow: visible; padding: 20px 18px 40px; }
+  .page-head { flex-direction: column; align-items: flex-start; gap: 14px; }
   .bag-layout { grid-template-columns: 1fr; }
-  .bag-board { min-height: 420px; }
-  .ghost-bag { font-size: 260px; top: 2%; }
+  .bag-panel { min-height: 480px; }
+  .ghost-char { font-size: 280px; top: 4%; }
 
   /* 鉴宝笺 → 点击物品弹出的详情弹窗 */
   .appraise {
     position: fixed; inset: 0; z-index: 70;
-    display: none; padding: 0; border-radius: 0;
+    display: none; padding: 0; border: none; border-radius: 0;
     background: rgb(8 10 7 / 72%);
     backdrop-filter: blur(3px);
     box-shadow: none;
@@ -458,7 +499,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   .appraise.open { display: flex; align-items: center; justify-content: center; padding: 30px 20px; }
   .appraise.open .appraise-paper {
     flex: none; width: min(420px, 100%); max-height: 100%;
-    box-shadow: 0 0 0 3px #3a3122, 0 30px 70px rgb(0 0 0 / 60%);
+    box-shadow: 0 0 0 3px var(--ink-700), 0 30px 70px rgb(0 0 0 / 60%);
     animation: sheet-in 0.32s var(--ease-out);
   }
   @keyframes sheet-in { from { opacity: 0; transform: translateY(26px) scale(0.97); } to { opacity: 1; transform: none; } }
@@ -475,20 +516,36 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   .appraise-close:hover { transform: rotate(90deg); }
 }
 @media (max-width: 640px) {
-  .page-head h1 { font-size: 34px; }
+  .page-head h1 { font-size: 38px; }
+  .ghost-char { display: none; }
   .bag-head { flex-direction: column; align-items: flex-start; gap: 12px; }
   .bag-side { width: 100%; justify-content: space-between; }
-  .bag-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+  .bag-grid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
   .bag-grid-wrap { padding: 12px 14px 16px; }
+  .bag-grid-wrap::after { font-size: 130px; }
   .slot-tabs { padding: 0 14px 10px; }
   .bag-head, .bag-legend { padding-left: 14px; padding-right: 14px; }
-  .cell .glyph { font-size: 24px; }
-  .ghost-char { display: none; }
+  .bag-legend { flex-wrap: wrap; gap: 8px 12px; }
+  .cell .icon { width: 28px; height: 28px; }
+  .cell .cslot { display: none; }
+  .toast { max-width: 86vw; white-space: normal; text-align: center; }
 }
 </style>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
+
+<!-- 移动端顶栏 -->
+<header class="mobile-topbar">
+  <span class="brand-seal">蛋</span>
+  <span class="mt-title">蛋蛋江湖 2.0</span>
+  <nav class="mt-nav" aria-label="游戏区域">
+    <button type="button" class="mt-chip">江湖</button>
+    <button type="button" class="mt-chip">侠客</button>
+    <button type="button" class="mt-chip">阵容</button>
+    <button type="button" class="mt-chip active">背包</button>
+  </nav>
+</header>
 
 <div class="app-shell">
   <!-- ======== 游戏外壳 ======== -->
@@ -503,64 +560,53 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
       <button type="button" class="nav-item"><span class="nav-mark">阵</span><strong>阵容</strong></button>
       <button type="button" class="nav-item active"><span class="nav-mark">囊</span><strong>背包</strong></button>
     </nav>
-    <nav class="world-subnav" aria-label="牛家村">
-      <button type="button" class="world-back">← 返回江湖</button>
-      <button type="button" class="ws-item">关卡<small>STAGES</small></button>
-      <button type="button" class="ws-item">势力<small>FACTIONS</small></button>
-      <button type="button" class="ws-item">城市<small>CITY</small></button>
-    </nav>
     <div class="sidebar-landscape" aria-hidden="true"></div>
     <span class="sidebar-motto">朝悟道 · 暮练剑</span>
   </aside>
 
   <!-- ======== 背包主区 ======== -->
   <main class="game-main">
-    <span class="ghost-char ghost-bag" aria-hidden="true">囊</span>
+    <span class="ghost-char" aria-hidden="true">囊</span>
 
     <header class="page-head">
       <div>
-        <div class="crumb">行囊 · <b>即时掉落</b> · 牛家村</div>
+        <p class="crumb">行囊 · <b>即时掉落</b> · 牛家村</p>
         <h1>装备背包</h1>
-        <div class="latin">Inventory · Spoils of the Jianghu</div>
+        <p class="latin">Inventory · Spoils of the Jianghu</p>
       </div>
-      <div class="head-note">
-        <span class="hn-main">纯行囊之地 · <b>已装备不入此囊</b></span>
-        <span class="hn-sub">穿戴与卸下 · 请往侠客页操办</span>
+      <div class="head-widget">
+        <span class="hw-seal">囊</span>
+        <div>
+          <div class="hw-main">纯行囊之地 · <b>已装备不入此囊</b></div>
+          <div class="hw-sub">穿戴与卸下 · 请往侠客页操办</div>
+        </div>
       </div>
     </header>
 
     <div class="bag-layout">
       <!-- 百宝囊 -->
-      <section class="bag-board" aria-label="百宝囊">
-        <div class="bag-inner">
-          <header class="bag-head">
-            <div class="bag-title">
-              <h2>百宝囊</h2>
-              <span class="sub">敌人殒命 · <i>随机装备即刻入囊</i></span>
-            </div>
-            <div class="bag-side">
-              <div class="capacity">
-                <span class="cap-num"><b id="capNow">0</b> / 300</span>
-                <span class="cap-bar"><i id="capBar"></i></span>
-              </div>
-              <div class="bag-actions">
-                <button type="button" class="ink-btn" id="btnOrganize">整理囊袋</button>
-                <button type="button" class="ink-btn danger" id="btnDiscard">丢弃凡品</button>
-              </div>
-            </div>
-          </header>
-          <nav class="slot-tabs" id="slotTabs" aria-label="部位筛选"></nav>
-          <div class="bag-grid-wrap">
-            <div class="bag-grid" id="bagGrid"></div>
+      <section class="bag-panel" aria-label="百宝囊">
+        <header class="bag-head">
+          <div class="bag-title">
+            <h2>百宝囊</h2>
+            <span class="sub">敌人殒命 · <i>随机装备即刻入囊</i></span>
           </div>
-          <footer class="bag-legend">
-            <span class="lg 凡品">凡品</span>
-            <span class="lg 良品">良品</span>
-            <span class="lg 上品">上品</span>
-            <span class="lg 珍品">珍品</span>
-            <span class="lg 绝品">绝品</span>
-          </footer>
+          <div class="bag-side">
+            <div class="capacity">
+              <span class="cap-num"><b id="capNow">0</b> / 300</span>
+              <span class="cap-bar"><i id="capBar"></i></span>
+            </div>
+            <div class="bag-actions">
+              <button type="button" class="ink-btn" id="btnOrganize">整理囊袋</button>
+              <button type="button" class="ink-btn danger" id="btnDiscard">丢弃凡品</button>
+            </div>
+          </div>
+        </header>
+        <nav class="slot-tabs" id="slotTabs" aria-label="部位筛选"></nav>
+        <div class="bag-grid-wrap">
+          <div class="bag-grid" id="bagGrid"></div>
         </div>
+        <footer class="bag-legend" id="bagLegend"></footer>
       </section>
 
       <!-- 鉴宝笺：PC 为右侧常驻，移动端为点击弹窗 -->
@@ -570,7 +616,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
       </aside>
     </div>
 
-    <footer class="page-foot">蛋蛋江湖 2.0 · 背包页高保真重设计 · 墨底宣纸 / 朱砂印 / 金漆匾</footer>
+    <footer class="page-foot">蛋蛋江湖 2.0 · 背包页重设计 v2 · 墨底宣纸 / 朱砂印 / 金漆匾</footer>
   </main>
 </div>
 
@@ -580,10 +626,21 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 /* ================= 演示数据（取自游戏真实装备表；已装备者不入囊） ================= */
 const SLOT_ORDER = ['weapon', 'head', 'armor', 'wrist', 'waist', 'boots', 'token'];
 const SLOT_NAMES = { weapon: '兵刃', head: '冠巾', armor: '衣甲', wrist: '护腕', waist: '腰佩', boots: '履靴', token: '信物' };
-const SLOT_GLYPH = { weapon: '刃', head: '冠', armor: '甲', wrist: '腕', waist: '佩', boots: '靴', token: '信' };
 const BASE_STAT = { weapon: '攻击', head: '内防', armor: '外防', wrist: '命中', waist: '气血', boots: '身法', token: '行气' };
 const QUALITY_ORDER = ['凡品', '良品', '上品', '珍品', '绝品'];
 const CAPACITY = 300;
+
+/* 部位水墨图标（stroke 风格，随品质着色） */
+const ICON_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+const SLOT_ICON = {
+  weapon: ICON_OPEN + '<path d="M4.5 19.5 L15.5 8.5"/><path d="M15.5 8.5 l4 -4"/><path d="M13 6.5 l4.5 4.5"/><path d="M7.5 16.5 l-2.5 4.5 4.5 -2.5"/></svg>',
+  head:   ICON_OPEN + '<path d="M5 12 a7 5.5 0 0 1 14 0"/><path d="M4.5 12 h15"/><path d="M9 12.5 l-2.5 5 M15 12.5 l2.5 5"/></svg>',
+  armor:  ICON_OPEN + '<path d="M9 4.5 l-4.5 3 2 4.5 2 -1.2 V20 h7 v-9.2 l2 1.2 2 -4.5 -4.5 -3"/><path d="M9 4.5 a3 3 0 0 0 6 0"/><path d="M12.5 11 v9"/></svg>',
+  wrist:  ICON_OPEN + '<rect x="7" y="5.5" width="10" height="13" rx="2.5"/><path d="M7 10 h10 M7 14.5 h10"/></svg>',
+  waist:  ICON_OPEN + '<path d="M12 3.5 v2.5"/><circle cx="12" cy="11.5" r="4.5"/><circle cx="12" cy="11.5" r="1.6"/><path d="M12 16 v4 M10.4 16.5 L9 20.5 M13.6 16.5 L15 20.5"/></svg>',
+  boots:  ICON_OPEN + '<path d="M7 4 h6 v6.5 c3 0 5.5 1.8 5.5 5 V17 H7 Z"/><path d="M7 14.5 h11.5"/></svg>',
+  token:  ICON_OPEN + '<rect x="7" y="3.5" width="10" height="17" rx="2"/><path d="M12 7.5 v4.5"/><path d="M10.2 12 h3.6"/><path d="M9.8 16.5 h4.4"/></svg>',
+};
 
 /* affixes 条数随品质递增（凡品无词缀），p 为词条饱满度用于条显 */
 let ITEMS = [
@@ -648,6 +705,14 @@ function renderTabs() {
   });
 }
 
+/* ================= 渲染 · 品质图例（含件数） ================= */
+function renderLegend() {
+  $('bagLegend').innerHTML = QUALITY_ORDER.map((q) => {
+    const n = ITEMS.filter((it) => it.quality === q).length;
+    return `<span class="lg ${q}">${q} <b>${n}</b></span>`;
+  }).join('') + `<span style="margin-left:auto">共 ${ITEMS.length} 件 · 囊容 300</span>`;
+}
+
 /* ================= 渲染 · 囊格 ================= */
 function visibleItems() {
   return state.filter === 'all' ? ITEMS : ITEMS.filter((it) => it.slot === state.filter);
@@ -659,8 +724,9 @@ function renderGrid() {
             data-uid="${it.uid}" title="${it.name} · ${it.quality}">
       ${it.locked ? '<span class="lock-mark">锁</span>' : ''}
       <span class="lvl">Lv.${it.level}</span>
-      <span class="glyph">${SLOT_GLYPH[it.slot]}</span>
+      <span class="icon">${SLOT_ICON[it.slot]}</span>
       <span class="cname">${it.name}</span>
+      <span class="cslot">${SLOT_NAMES[it.slot]}</span>
     </button>`).join('') || `
     <div class="bag-empty">
       <span class="empty-seal">空</span>
@@ -692,11 +758,16 @@ function renderAppraise() {
   paper.innerHTML = `
     <div class="appraise-head">
       <span class="slot-tag">${SLOT_NAMES[it.slot]}</span>
-      <span class="q-tag q-${it.quality}" style="--qb:${qualityColor(it.quality)}">${it.quality}</span>
+      <span class="q-tag" style="--qb:${qualityColor(it.quality)}">${it.quality}</span>
       <span class="slot-tag">Lv.${it.level}</span>
     </div>
-    <h3 class="appraise-name">${it.name}</h3>
-    <div class="appraise-latin">${it.quality} · ${SLOT_NAMES[it.slot]} · Level ${it.level}</div>
+    <div class="appraise-figure">
+      <span class="fig-ring" style="--qb:${qualityColor(it.quality)}">${SLOT_ICON[it.slot]}</span>
+      <div>
+        <h3 class="appraise-name">${it.name}</h3>
+        <div class="appraise-latin">${it.quality} · ${SLOT_NAMES[it.slot]} · Level ${it.level}</div>
+      </div>
+    </div>
     <div class="appraise-base">
       <span class="ab-label">${BASE_STAT[it.slot]}</span>
       <span class="ab-value">${it.base}<small>基础</small></span>
@@ -761,7 +832,7 @@ $('btnDiscard').addEventListener('click', () => {
 });
 
 /* ================= 总渲染 ================= */
-function renderAll() { renderTabs(); renderGrid(); renderAppraise(); }
+function renderAll() { renderTabs(); renderGrid(); renderLegend(); renderAppraise(); }
 renderAll();
 </script>
 </body>

@@ -3506,6 +3506,488 @@ body:has(.idle-page) { overflow: hidden; }
 .idle-page .combat-log li { display: flex; align-items: baseline; gap: 7px; margin: 0; padding: 4px 5px; border: 0; border-radius: 4px; color: var(--idle-paper-dim); font-size: 10px; line-height: 1.48; animation: idle-log-in .35s var(--idle-ease-out); }
 @keyframes idle-log-in { from { opacity: 0; transform: translateY(-6px); } }
 .idle-page .log-mark { width: 14px; flex: none; color: var(--idle-paper-mute); font-family: "Faction Brush", serif; font-size: 11px; text-align: center; }
+
+/* ============ 江湖页 · 十卷风云高保真重设计（仅作用于江湖页） ============ */
+.jianghu-shell {
+  --jianghu-ink-950: #0c0e0b;
+  --jianghu-ink-900: #11140f;
+  --jianghu-ink-850: #171b14;
+  --jianghu-ink-800: #1f241c;
+  --jianghu-ink-700: #2a3026;
+  --jianghu-paper: #e8e1d3;
+  --jianghu-paper-dim: #b3ad9e;
+  --jianghu-paper-mute: #7d7f72;
+  --jianghu-xuan: #e9dec3;
+  --jianghu-cinnabar: #b5503c;
+  --jianghu-cinnabar-bright: #cf6b53;
+  --jianghu-cinnabar-deep: #8a3a2b;
+  --jianghu-gold: #c9a35c;
+  --jianghu-gold-bright: #e6c67f;
+  --jianghu-gold-deep: #8f6f3a;
+  --jianghu-jade: #7fa88d;
+  --jianghu-jade-dim: #57705f;
+  --jianghu-line: #31382e;
+  --jianghu-line-soft: #252a22;
+  grid-template-columns: 212px minmax(0, 1fr);
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 500px at 78% -10%, rgb(127 168 141 / 9%), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgb(181 80 60 / 6%), transparent 55%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+}
+
+body:has(.jianghu-shell) {
+  background:
+    radial-gradient(1100px 500px at 78% -10%, rgb(127 168 141 / 9%), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgb(181 80 60 / 6%), transparent 55%),
+    linear-gradient(150deg, #0e110d, #141812 52%, #0d100c);
+  overflow-x: hidden;
+}
+
+.jianghu-shell .game-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding: 26px 20px 20px;
+  overflow-y: auto;
+  border-right: 1px solid var(--jianghu-line-soft);
+  background: linear-gradient(180deg, rgb(23 27 20 / 72%), rgb(13 16 12 / 88%));
+  backdrop-filter: none;
+}
+
+.jianghu-shell .brand-block { gap: 12px; }
+.jianghu-shell .brand-seal {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c96f58;
+  border-radius: 6px;
+  color: #f6e3d2;
+  background: linear-gradient(145deg, #a44636, #7e3327);
+  box-shadow: inset 0 0 0 3px #411811, 0 4px 14px rgb(0 0 0 / 40%);
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 24px;
+  font-weight: 400;
+  transform: rotate(-2deg);
+}
+.jianghu-shell .brand-block strong { color: #efe4cf; font-size: 15px; letter-spacing: .1em; }
+.jianghu-shell .brand-block small { color: var(--jianghu-paper-mute); font-size: 9px; letter-spacing: .14em; }
+
+.jianghu-shell .game-nav { display: grid; gap: 6px; }
+.jianghu-shell .nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--jianghu-paper-dim);
+  background: transparent;
+  text-align: left;
+  transition: color .25s cubic-bezier(.22, 1, .36, 1), background .25s cubic-bezier(.22, 1, .36, 1);
+}
+.jianghu-shell .nav-item .nav-mark {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--jianghu-line);
+  border-radius: 5px;
+  color: var(--jianghu-paper-mute);
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 16px;
+  transition: all .25s cubic-bezier(.22, 1, .36, 1);
+}
+.jianghu-shell .nav-item strong { font-size: 14px; font-weight: 500; letter-spacing: .28em; }
+.jianghu-shell .nav-item:hover { color: var(--jianghu-paper); background: rgb(233 222 195 / 4%); }
+.jianghu-shell .nav-item.active { color: #f3e9d5; background: rgb(233 222 195 / 5%); }
+.jianghu-shell .nav-item.active::before {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  width: 2px;
+  content: "";
+  border-radius: 2px;
+  background: var(--jianghu-cinnabar);
+}
+.jianghu-shell .nav-item.active .nav-mark { border-color: var(--jianghu-cinnabar-deep); color: var(--jianghu-cinnabar-bright); }
+
+.jianghu-shell .world-subnav {
+  display: grid;
+  gap: 4px;
+  padding: 18px 0 0;
+  border-top: 1px dashed var(--jianghu-line);
+}
+.jianghu-shell .world-subnav button {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--jianghu-paper-dim);
+  background: transparent;
+  font-size: 13px;
+  letter-spacing: .32em;
+  text-align: left;
+  transition: all .25s cubic-bezier(.22, 1, .36, 1);
+}
+.jianghu-shell .world-subnav button.world-back {
+  padding: 6px 12px;
+  color: var(--jianghu-paper-mute);
+  font-size: 11px;
+  letter-spacing: .18em;
+}
+.jianghu-shell .world-subnav button:hover { color: var(--jianghu-paper); background: rgb(233 222 195 / 4%); }
+.jianghu-shell .world-subnav button.active { color: var(--jianghu-gold-bright); background: rgb(201 163 92 / 8%); }
+.jianghu-shell .world-subnav button[data-jianghu-section="stages"]::after { content: "  STAGES"; }
+.jianghu-shell .world-subnav button[data-jianghu-section="factions"]::after { content: "  FACTIONS"; }
+.jianghu-shell .world-subnav button[data-jianghu-section="city"]::after { content: "  CITY"; }
+.jianghu-shell .world-subnav button::after { color: var(--jianghu-paper-mute); font-size: 9px; letter-spacing: .14em; }
+
+.jianghu-shell .sidebar-landscape {
+  position: relative;
+  height: 74px;
+  margin-top: auto;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.jianghu-shell .sidebar-landscape::before {
+  position: absolute;
+  right: -12px;
+  bottom: 0;
+  left: -12px;
+  height: 56px;
+  content: "";
+  background:
+    linear-gradient(155deg, transparent 58%, rgb(87 112 95 / 34%) 58.5%) 0 100% / 46% 100% no-repeat,
+    linear-gradient(205deg, transparent 55%, rgb(87 112 95 / 26%) 55.5%) 38% 100% / 52% 100% no-repeat,
+    linear-gradient(160deg, transparent 62%, rgb(87 112 95 / 18%) 62.5%) 76% 100% / 42% 100% no-repeat;
+}
+.jianghu-shell .sidebar-landscape::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 22px;
+  content: "";
+  background: linear-gradient(180deg, transparent, rgb(13 16 12 / 85%));
+}
+.jianghu-shell .sidebar-motto { color: var(--jianghu-paper-mute); font-size: 10px; letter-spacing: .5em; text-align: center; }
+
+.jianghu-shell .jianghu-mobile-topbar { display: none; }
+.jianghu-shell .game-main {
+  position: relative;
+  min-width: 0;
+  height: 100vh;
+  min-height: 0;
+  padding: 28px 38px 22px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.jianghu-page {
+  position: relative;
+  z-index: 0;
+  width: min(1800px, 100%);
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  font-family: "Faction Song", "Noto Serif SC", "Microsoft YaHei", serif;
+}
+.jianghu-page .ghost-char {
+  position: absolute;
+  top: 150px;
+  right: -24px;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  color: rgb(233 222 195 / 4%);
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 400px;
+  line-height: .9;
+  transform: rotate(5deg);
+  transition: opacity .5s cubic-bezier(.22, 1, .36, 1);
+}
+.jianghu-view {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.jianghu-page.is-entering { animation: jianghu-view-in .45s cubic-bezier(.22, 1, .36, 1); }
+.jianghu-overview-page.is-entering .world-card {
+  animation: jianghu-card-in .55s cubic-bezier(.22, 1, .36, 1) backwards;
+  animation-delay: calc(var(--card-index) * 45ms);
+}
+@keyframes jianghu-view-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes jianghu-card-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.jianghu-page .page-head {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 0 18px;
+  margin: 0 0 18px;
+  border-bottom: 1px solid var(--jianghu-line-soft);
+}
+.jianghu-page .page-head .crumb { margin: 0 0 10px; color: var(--jianghu-paper-mute); font-size: 11px; letter-spacing: .3em; }
+.jianghu-page .page-head .crumb b { color: var(--jianghu-gold); font-weight: 500; }
+.jianghu-page .page-head h1 {
+  margin: 0;
+  color: #f2e7d0;
+  font-family: "Faction Brush", "Noto Serif SC", serif;
+  font-size: 54px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: .06em;
+  text-shadow: 0 6px 30px rgb(0 0 0 / 45%);
+}
+.jianghu-page .page-head .latin { margin: 9px 0 0; color: var(--jianghu-paper-mute); font-size: 10px; letter-spacing: .42em; text-transform: uppercase; }
+.jianghu-page .head-widget {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  padding: 12px 18px;
+  border: 1px solid rgb(201 163 92 / 28%);
+  border-radius: 8px;
+  background: linear-gradient(160deg, rgb(201 163 92 / 9%), rgb(201 163 92 / 3%));
+}
+.jianghu-page .head-widget svg { flex: none; filter: drop-shadow(0 2px 6px rgb(201 163 92 / 35%)); }
+.jianghu-page .head-widget .hw-num { color: var(--jianghu-gold-bright); font-size: 25px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.jianghu-page .head-widget .hw-num small { color: var(--jianghu-gold); font-size: 13px; font-weight: 500; }
+.jianghu-page .head-widget .hw-label { margin-top: 4px; color: var(--jianghu-gold); font-size: 10px; letter-spacing: .3em; }
+.jianghu-page .head-widget .hw-sub { margin-top: 2px; color: var(--jianghu-paper-mute); font-size: 10px; letter-spacing: .12em; }
+.jianghu-page .back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin: 0 0 14px;
+  border: 1px solid var(--jianghu-line);
+  border-radius: 6px;
+  color: var(--jianghu-paper-dim);
+  background: transparent;
+  font-size: 12px;
+  letter-spacing: .22em;
+  transition: all .25s cubic-bezier(.22, 1, .36, 1);
+}
+.jianghu-page .back-btn:hover { border-color: var(--jianghu-gold-deep); color: var(--jianghu-gold-bright); background: rgb(201 163 92 / 6%); }
+
+.jianghu-page .world-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(2, clamp(280px, 38.4vh, 384px));
+  grid-auto-rows: clamp(280px, 38.4vh, 384px);
+  gap: 14px;
+  overflow-y: auto;
+  scrollbar-color: var(--jianghu-line) transparent;
+  scrollbar-width: thin;
+}
+.jianghu-page .world-grid::-webkit-scrollbar { width: 5px; }
+.jianghu-page .world-grid::-webkit-scrollbar-thumb { border-radius: 3px; background: var(--jianghu-line); }
+.jianghu-page .world-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--jianghu-line);
+  border-radius: 10px;
+  color: var(--jianghu-paper);
+  background: var(--jianghu-ink-850);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 30%);
+  text-align: left;
+  transition: transform .35s cubic-bezier(.22, 1, .36, 1), border-color .35s, box-shadow .35s, filter .35s;
+}
+.jianghu-page .world-card:disabled { opacity: 1; }
+.jianghu-page .world-card:hover:not(:disabled) { border-color: rgb(201 163 92 / 55%); box-shadow: 0 16px 34px rgb(0 0 0 / 42%); transform: translateY(-3px); }
+.jianghu-page .world-card .wc-scene { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; opacity: .78; transition: transform .6s cubic-bezier(.22, 1, .36, 1), opacity .35s, filter .35s; }
+.jianghu-page .world-card:hover:not(:disabled) .wc-scene { opacity: .9; transform: scale(1.05); }
+.jianghu-page .world-card .wc-shade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgb(12 14 11 / 34%) 0%, rgb(12 14 11 / 5%) 34%, rgb(12 14 11 / 62%) 62%, rgb(10 12 9 / 94%) 100%); }
+.jianghu-page .world-card .wc-top { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; }
+.jianghu-page .world-card .wc-vol { padding: 4px 9px; border: 1px solid rgb(233 222 195 / 16%); border-radius: 4px; color: var(--jianghu-xuan); background: rgb(12 14 11 / 66%); backdrop-filter: blur(3px); font-size: 10px; letter-spacing: .26em; }
+.jianghu-page .world-card .wc-seal { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 5px; font-family: "Faction Brush", serif; font-size: 17px; transform: rotate(3deg); }
+.jianghu-page .world-card .wc-seal.s-cleared { border: 1px solid #d9b877; color: #f2e0b8; background: linear-gradient(145deg, #a67c3e, #7d5b28); box-shadow: inset 0 0 0 2px rgb(65 45 16 / 55%), 0 3px 10px rgb(0 0 0 / 40%); }
+.jianghu-page .world-card .wc-seal.s-current { border: 1px solid #c96f58; color: #f6e3d2; background: linear-gradient(145deg, #a44636, #7e3327); box-shadow: inset 0 0 0 2px #411811, 0 3px 10px rgb(0 0 0 / 40%); }
+.jianghu-page .world-card .wc-seal.s-open { border: 1px dashed var(--jianghu-jade-dim); color: var(--jianghu-jade); background: rgb(23 27 20 / 72%); }
+.jianghu-page .world-card .wc-body { position: absolute; right: 0; bottom: 0; left: 0; z-index: 2; display: block; padding: 10px 13px 12px; }
+.jianghu-page .world-card .wc-name { display: block; color: #f4ead3; font-family: "Faction Brush", serif; font-size: 25px; font-weight: 400; line-height: 1.05; text-shadow: 0 3px 12px rgb(0 0 0 / 60%); }
+.jianghu-page .world-card .wc-meta { display: flex; align-items: baseline; gap: 8px; margin-top: 5px; color: var(--jianghu-paper-dim); font-size: 10px; letter-spacing: .1em; }
+.jianghu-page .world-card .wc-meta .stars { color: var(--jianghu-gold-bright); font-size: 11px; letter-spacing: .06em; }
+.jianghu-page .world-card .wc-meta .power b { color: var(--jianghu-paper); font-weight: 600; font-variant-numeric: tabular-nums; }
+.jianghu-page .world-card .wc-progress { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.jianghu-page .world-card .wc-progress .track { flex: 1; height: 4px; overflow: hidden; border-radius: 3px; background: rgb(233 222 195 / 12%); }
+.jianghu-page .world-card .wc-progress .fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--jianghu-gold-deep), var(--jianghu-gold-bright)); }
+.jianghu-page .world-card .wc-progress.cleared .fill { background: linear-gradient(90deg, var(--jianghu-jade-dim), var(--jianghu-jade)); }
+.jianghu-page .world-card .wc-progress .ptext { flex: none; color: var(--jianghu-paper-dim); font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+.jianghu-page .world-card .wc-factions { display: block; overflow: hidden; margin-top: 6px; color: rgb(179 173 158 / 78%); font-size: 10px; letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
+.jianghu-page .world-card.is-current { border-color: rgb(181 80 60 / 70%); box-shadow: 0 14px 34px rgb(0 0 0 / 44%), inset 0 0 0 1px rgb(207 107 83 / 26%); }
+.jianghu-page .world-card.is-current::after { position: absolute; top: 52px; right: -1px; z-index: 2; padding: 3px 8px 3px 10px; content: "行至此处"; border-radius: 4px 0 0 4px; color: #f6e3d2; background: linear-gradient(90deg, rgb(138 58 43 / 92%), rgb(181 80 60 / 92%)); box-shadow: 0 3px 10px rgb(0 0 0 / 35%); font-size: 9px; letter-spacing: .24em; }
+.jianghu-page .world-card.is-cleared { border-color: rgb(201 163 92 / 34%); }
+.jianghu-page .world-card.is-locked { cursor: not-allowed; filter: saturate(.25) brightness(.72); }
+.jianghu-page .world-card.is-locked:hover { border-color: var(--jianghu-line); box-shadow: 0 10px 26px rgb(0 0 0 / 30%); transform: none; }
+.jianghu-page .world-card .wc-lock { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgb(10 12 9 / 46%); }
+.jianghu-page .world-card .lock-ring { width: 52px; height: 52px; display: grid; place-items: center; border: 1px dashed rgb(179 173 158 / 50%); border-radius: 50%; color: var(--jianghu-paper-dim); font-family: "Faction Brush", serif; font-size: 21px; }
+.jianghu-page .world-card .lock-text { color: var(--jianghu-paper-mute); font-size: 10px; letter-spacing: .22em; }
+.jianghu-page .world-card .lock-text b { color: var(--jianghu-paper-dim); font-weight: 500; }
+
+.jianghu-page .stage-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 336px minmax(0, 1fr); gap: 18px; }
+.jianghu-page .scroll-panel, .jianghu-page .path-panel { min-height: 0; overflow: hidden; border: 1px solid var(--jianghu-line); border-radius: 10px; box-shadow: 0 10px 26px rgb(0 0 0 / 30%); }
+.jianghu-page .scroll-panel { display: flex; flex-direction: column; background: linear-gradient(175deg, var(--jianghu-ink-850), var(--jianghu-ink-900)); }
+.jianghu-page .sp-scene { position: relative; flex: none; height: 31%; min-height: 128px; overflow: hidden; }
+.jianghu-page .sp-scene img { width: 100%; height: 100%; object-fit: cover; opacity: .9; }
+.jianghu-page .sp-scene::after { position: absolute; inset: 0; content: ""; background: linear-gradient(180deg, transparent 46%, rgb(17 20 15 / 96%) 100%); }
+.jianghu-page .sp-scene .sp-scene-empty { position: absolute; inset: 0; display: grid; place-items: center; color: rgb(233 222 195 / 16%); font-family: "Faction Brush", serif; font-size: 90px; }
+.jianghu-page .sp-scene .sp-vol { position: absolute; bottom: 10px; left: 14px; z-index: 1; color: var(--jianghu-gold-bright); font-size: 10px; letter-spacing: .3em; }
+.jianghu-page .sp-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 14px 18px 16px; overflow: hidden; }
+.jianghu-page .sp-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; color: var(--jianghu-paper); font-size: 12px; }
+.jianghu-page .sp-row .k { flex: none; color: var(--jianghu-paper-mute); font-size: 10px; letter-spacing: .3em; }
+.jianghu-page .sp-row .v { color: var(--jianghu-paper); font-variant-numeric: tabular-nums; }
+.jianghu-page .sp-row .v.stars { color: var(--jianghu-gold-bright); letter-spacing: .08em; }
+.jianghu-page .sp-factions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.jianghu-page .sp-fchip { padding: 4px 9px; border: 1px solid var(--jianghu-line); border-radius: 4px; color: var(--jianghu-xuan); background: rgb(233 222 195 / 5%); font-size: 11px; letter-spacing: .08em; }
+.jianghu-page .sp-fchip small { margin-left: 5px; color: var(--jianghu-paper-mute); font-size: 9px; letter-spacing: .1em; }
+.jianghu-page .sp-progress { margin-top: 2px; }
+.jianghu-page .sp-progress .track { height: 5px; overflow: hidden; border-radius: 3px; background: rgb(233 222 195 / 10%); }
+.jianghu-page .sp-progress .fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--jianghu-gold-deep), var(--jianghu-gold-bright)); }
+.jianghu-page .sp-progress .ptext { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; color: var(--jianghu-paper-dim); font-size: 10px; letter-spacing: .14em; }
+.jianghu-page .sp-flavor { margin: auto 0 0; padding-top: 12px; border-top: 1px dashed var(--jianghu-line); color: var(--jianghu-paper-dim); font-size: 11px; line-height: 1.9; letter-spacing: .06em; }
+
+.jianghu-page .path-panel { position: relative; display: flex; flex-direction: column; padding: 16px 22px 12px; background: radial-gradient(620px 300px at 85% -10%, rgb(201 163 92 / 6%), transparent 60%), linear-gradient(170deg, rgb(31 36 28 / 55%), rgb(17 20 15 / 78%)); }
+.jianghu-page .path-head { flex: none; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 0 0 12px; border-bottom: 1px dashed var(--jianghu-line); }
+.jianghu-page .path-head .ph-title { color: var(--jianghu-paper); font-size: 13px; letter-spacing: .3em; }
+.jianghu-page .path-head .ph-title small { margin-left: 10px; color: var(--jianghu-paper-mute); font-size: 10px; letter-spacing: .18em; }
+.jianghu-page .path-coin { display: flex; align-items: center; gap: 9px; color: var(--jianghu-paper-mute); font-size: 11px; letter-spacing: .14em; }
+.jianghu-page .path-coin b { color: var(--jianghu-gold-bright); font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.jianghu-page .path-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; }
+.jianghu-page .path-lane { position: relative; display: flex; justify-content: space-between; padding: 0 10px; }
+.jianghu-page .path-lane::before { position: absolute; top: 31px; right: 56px; left: 56px; content: ""; border-top: 2px dashed rgb(233 222 195 / 13%); }
+.jianghu-page .path-lane.lane-b { flex-direction: row-reverse; }
+.jianghu-page .path-lane.lane-b::before { border-color: rgb(233 222 195 / 9%); }
+.jianghu-page .path-turn { position: relative; flex: none; height: 30px; }
+.jianghu-page .path-turn::before { position: absolute; top: -4px; right: 53px; bottom: -4px; content: ""; border-left: 2px dashed rgb(233 222 195 / 13%); }
+.jianghu-page .stage-node { position: relative; z-index: 1; display: flex; width: 86px; flex: none; flex-direction: column; align-items: center; gap: 7px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; transition: transform .3s cubic-bezier(.22, 1, .36, 1); }
+.jianghu-page .stage-node:disabled { opacity: 1; }
+.jianghu-page .stage-node .sn-dot { position: relative; width: 62px; height: 62px; display: grid; place-items: center; border: 2px solid var(--jianghu-line); border-radius: 50%; color: var(--jianghu-paper-dim); background: radial-gradient(circle at 34% 28%, #242a1f, #14180f 72%); box-shadow: 0 6px 16px rgb(0 0 0 / 38%); font-family: "Faction Brush", serif; font-size: 23px; line-height: 1; transition: all .3s cubic-bezier(.22, 1, .36, 1); }
+.jianghu-page .stage-node .sn-name { color: var(--jianghu-paper-dim); font-size: 11px; letter-spacing: .22em; }
+.jianghu-page .stage-node .sn-state { color: var(--jianghu-paper-mute); font-size: 9px; letter-spacing: .12em; white-space: nowrap; }
+.jianghu-page .stage-node.is-cleared .sn-dot { border-color: var(--jianghu-jade-dim); color: var(--jianghu-jade); }
+.jianghu-page .stage-node.is-cleared .sn-dot::after { position: absolute; top: -7px; right: -7px; width: 21px; height: 21px; display: grid; place-items: center; content: "驻"; border: 1px solid var(--jianghu-jade-dim); border-radius: 4px; color: #dceada; background: linear-gradient(145deg, #4d6b58, #39523f); font-family: "Faction Brush", serif; font-size: 11px; transform: rotate(4deg); }
+.jianghu-page .stage-node.is-cleared .sn-state { color: var(--jianghu-jade-dim); }
+.jianghu-page .stage-node.is-cleared:hover { transform: translateY(-4px); }
+.jianghu-page .stage-node.is-cleared:hover .sn-dot { border-color: var(--jianghu-jade); box-shadow: 0 10px 22px rgb(0 0 0 / 44%), 0 0 0 4px rgb(127 168 141 / 10%); }
+.jianghu-page .stage-node.is-current .sn-dot { border-color: var(--jianghu-cinnabar-bright); color: #f6e3d2; background: radial-gradient(circle at 34% 28%, #a44636, #6e2c20 74%); animation: jianghu-node-breathe 2.4s ease-in-out infinite; }
+@keyframes jianghu-node-breathe { 0%, 100% { box-shadow: 0 6px 16px rgb(0 0 0 / 38%), 0 0 0 0 rgb(207 107 83 / 34%); } 50% { box-shadow: 0 6px 16px rgb(0 0 0 / 38%), 0 0 0 9px rgb(207 107 83 / 0%); } }
+.jianghu-page .stage-node.is-current .sn-name { color: #f2e7d0; }
+.jianghu-page .stage-node.is-current .sn-state { color: var(--jianghu-cinnabar-bright); }
+.jianghu-page .stage-node.is-current:hover { transform: translateY(-4px) scale(1.04); }
+.jianghu-page .stage-node.is-locked { cursor: not-allowed; }
+.jianghu-page .stage-node.is-locked .sn-dot { border-color: rgb(49 56 46 / 85%); border-style: dashed; color: rgb(125 127 114 / 72%); box-shadow: none; }
+.jianghu-page .stage-node.is-locked .sn-name, .jianghu-page .stage-node.is-locked .sn-state { color: rgb(125 127 114 / 66%); }
+.jianghu-page .path-foot { flex: none; display: flex; justify-content: space-between; gap: 14px; padding-top: 10px; border-top: 1px dashed var(--jianghu-line); color: var(--jianghu-paper-mute); font-size: 10px; letter-spacing: .16em; }
+.jianghu-page .path-foot .legend { display: flex; gap: 14px; }
+.jianghu-page .path-foot .legend i { font-style: normal; }
+.jianghu-page .path-foot .legend i::before { margin-right: 5px; content: "●"; font-size: 8px; vertical-align: 1px; }
+.jianghu-page .path-foot .legend .lg-cleared::before { color: var(--jianghu-jade); }
+.jianghu-page .path-foot .legend .lg-current::before { color: var(--jianghu-cinnabar-bright); }
+.jianghu-page .path-foot .legend .lg-locked::before { color: var(--jianghu-paper-mute); }
+.jianghu-page .page-foot { position: relative; z-index: 1; flex: none; padding-top: 12px; color: rgb(233 222 195 / 26%); font-size: 10px; letter-spacing: .4em; text-align: center; }
+body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-radius: 8px; color: var(--jianghu-gold-bright); background: linear-gradient(165deg, #241f15, #171310); box-shadow: 0 14px 34px rgb(0 0 0 / 50%); letter-spacing: .14em; }
+
+@media (min-width: 981px) {
+  html:has(.jianghu-shell), body:has(.jianghu-shell) { height: 100%; overflow: hidden; }
+  .jianghu-shell { height: 100vh; }
+}
+
+@media (max-width: 1240px) {
+  .jianghu-shell .game-main { padding: 24px 26px 18px; }
+  .jianghu-page .page-head h1 { font-size: 46px; }
+  .jianghu-page .stage-layout { grid-template-columns: 300px minmax(0, 1fr); }
+  .jianghu-page .stage-node { width: 76px; }
+  .jianghu-page .path-lane { padding: 0 6px; }
+  .jianghu-page .path-lane::before { right: 48px; left: 48px; }
+  .jianghu-page .path-turn::before { right: 44px; }
+}
+
+@media (max-width: 980px) {
+  body:has(.jianghu-shell) { overflow-y: auto; }
+  .jianghu-shell { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .jianghu-shell .game-sidebar { display: none; }
+  .jianghu-shell .jianghu-mobile-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+    grid-column: 1;
+    grid-row: 1;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--jianghu-line-soft);
+    background: rgb(13 16 12 / 92%);
+    backdrop-filter: blur(8px);
+  }
+  .jianghu-shell .jianghu-mobile-topbar .brand-seal { width: 34px; height: 34px; font-size: 18px; }
+  .jianghu-shell .jianghu-mobile-topbar .mt-title { color: #efe4cf; font-size: 13px; letter-spacing: .12em; white-space: nowrap; }
+  .jianghu-shell .jianghu-mobile-topbar .mt-nav { display: flex; min-width: 0; flex: 1 1 auto; gap: 6px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+  .jianghu-shell .jianghu-mobile-topbar .mt-nav::-webkit-scrollbar { display: none; }
+  .jianghu-shell .jianghu-mobile-topbar .mt-chip { flex: none; padding: 7px 13px; border: 1px solid var(--jianghu-line); border-radius: 999px; color: var(--jianghu-paper-dim); background: transparent; font-size: 12px; letter-spacing: .18em; white-space: nowrap; }
+  .jianghu-shell .jianghu-mobile-topbar .mt-chip.active { border-color: var(--jianghu-cinnabar-deep); color: #f6e3d2; background: rgb(181 80 60 / 16%); }
+  .jianghu-shell .game-main { grid-column: 1; grid-row: 2; height: auto; min-height: calc(100vh - 55px); padding: 20px 18px 40px; overflow: visible; }
+  .jianghu-page { height: auto; min-height: 0; }
+  .jianghu-page .ghost-char { top: 90px; font-size: 300px; }
+  .jianghu-page .world-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: 208px; }
+  .jianghu-page .stage-layout { grid-template-columns: 1fr; }
+  .jianghu-page .sp-scene { height: 150px; }
+  .jianghu-page .sp-body { overflow: visible; }
+  .jianghu-page .path-panel { min-height: 430px; }
+}
+
+@media (max-width: 640px) {
+  .jianghu-shell .jianghu-mobile-topbar { padding-right: 10px; padding-left: 10px; }
+  .jianghu-page .page-head { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .jianghu-page .page-head h1 { font-size: 40px; }
+  .jianghu-page .ghost-char { display: none; }
+  .jianghu-page .world-grid { grid-template-columns: 1fr; grid-auto-rows: 118px; gap: 10px; }
+  .jianghu-page .world-card.is-current::after { top: 46px; }
+  .jianghu-page .world-card .wc-name { font-size: 21px; }
+  .jianghu-page .world-card .wc-factions { display: none; }
+  .jianghu-page .path-panel { min-height: 400px; padding: 14px 14px 10px; }
+  .jianghu-page .path-scroll { justify-content: center; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .jianghu-page .path-scroll::-webkit-scrollbar { display: none; }
+  .jianghu-page .path-lane, .jianghu-page .path-turn { min-width: 560px; }
+  .jianghu-page .path-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .jianghu-page .path-foot { flex-direction: column; gap: 6px; }
+  body:has(.jianghu-shell) > .toast { right: auto; bottom: 20px; left: 50%; max-width: 86vw; transform: translateX(-50%); white-space: normal; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jianghu-page.is-entering,
+  .jianghu-overview-page.is-entering .world-card,
+  .jianghu-page .stage-node.is-current .sn-dot { animation: none !important; }
+  .jianghu-page *, .jianghu-shell .nav-item, .jianghu-shell .world-subnav button { transition-duration: 0.01ms !important; }
+}
 .idle-page .log-kill .log-mark { color: var(--idle-cinnabar-bright); }
 .idle-page .log-skill .log-mark { color: var(--idle-gold-bright); }
 .idle-page .log-loot { color: var(--idle-gold); }
@@ -3559,4 +4041,190 @@ body:has(.idle-page) { overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   .idle-page *, .idle-page *::before, .idle-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* ============ 全局游戏外壳 · 统一采用阵容页左侧边栏 ============ */
+.app-shell[data-active-tab] { grid-template-columns: 176px minmax(0, 1fr); }
+
+.app-shell[data-active-tab] .game-sidebar {
+  isolation: isolate;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 10px 18px;
+  overflow: hidden auto;
+  border-right-color: rgb(193 164 107 / 28%);
+  background:
+    linear-gradient(180deg, rgb(9 14 11 / 98%), rgb(7 12 9 / 96%)),
+    radial-gradient(circle at 50% 28%, rgb(81 107 87 / 14%), transparent 45%);
+  box-shadow: 9px 0 28px rgb(0 0 0 / 22%);
+  backdrop-filter: none;
+}
+
+.app-shell[data-active-tab] .brand-block {
+  position: relative;
+  z-index: 2;
+  min-height: 90px;
+  gap: 9px;
+  padding: 18px 2px 14px 3px;
+  border-bottom: 1px solid rgb(193 164 107 / 10%);
+}
+.app-shell[data-active-tab] .brand-block > span:last-child { gap: 5px; }
+.app-shell[data-active-tab] .brand-block strong { color: #efe3c4; font-size: 15px; letter-spacing: .025em; text-shadow: 0 2px 10px #000; }
+.app-shell[data-active-tab] .brand-block small { color: #756e5a; font-size: 8px; letter-spacing: .06em; }
+.app-shell[data-active-tab] .brand-seal {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  color: #f0d7a3;
+  border-radius: 0;
+  border-color: #b76a50;
+  outline: 1px solid rgb(183 106 80 / 42%);
+  outline-offset: 2px;
+  background: #60261f;
+  box-shadow: inset 0 0 11px rgb(255 176 114 / 13%);
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+  font-size: 16px;
+  font-weight: 800;
+  transform: none;
+}
+
+.app-shell[data-active-tab] .game-nav { position: relative; z-index: 3; gap: 5px; padding-top: 22px; }
+.app-shell[data-active-tab] .nav-item {
+  position: relative;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 1px;
+  color: #c9bea0;
+  background: transparent;
+}
+.app-shell[data-active-tab] .nav-item .nav-mark {
+  width: 27px;
+  height: 27px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: #aa9870;
+  font-size: 12px;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+  border-color: rgb(193 164 107 / 28%);
+  border-radius: 50%;
+  background: rgb(16 23 19 / 75%);
+}
+.app-shell[data-active-tab] .nav-item strong { font-size: 16px; font-weight: 700; letter-spacing: .12em; }
+.app-shell[data-active-tab] .nav-item:hover:not(:disabled) { color: #f0dfb6; border-color: rgb(193 164 107 / 18%); background: rgb(179 151 91 / 6%); }
+.app-shell[data-active-tab] .nav-item.active {
+  color: #f4e4b9;
+  border-color: rgb(193 164 107 / 38%);
+  background: linear-gradient(90deg, rgb(193 164 107 / 16%), transparent 90%), rgb(35 42 34 / 72%);
+  box-shadow: inset 3px 0 0 rgb(211 175 102 / 80%);
+}
+.app-shell[data-active-tab] .nav-item.active::before { display: none; content: none; }
+.app-shell[data-active-tab] .nav-item.active::after {
+  position: absolute;
+  right: 8px;
+  width: 3px;
+  height: 3px;
+  content: "";
+  border-radius: 50%;
+  background: #e2c788;
+  box-shadow: 0 0 8px #e2c788;
+}
+.app-shell[data-active-tab] .nav-item.active .nav-mark {
+  color: #f0d9a0;
+  border-color: rgb(223 190 119 / 72%);
+  background: rgb(95 77 42 / 38%);
+  box-shadow: 0 0 18px rgb(205 164 83 / 18%);
+}
+
+.app-shell[data-active-tab] .world-subnav {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  gap: 5px;
+  margin-top: 14px;
+  padding: 14px 0 0 18px;
+  border-top: 1px solid rgb(193 164 107 / 20%);
+}
+.app-shell[data-active-tab] .world-subnav button {
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: #c9bea0;
+  background: transparent;
+  font-size: 12px;
+  letter-spacing: normal;
+  text-align: left;
+}
+.app-shell[data-active-tab] .world-subnav button:hover { color: #f0dfb6; border-color: rgb(193 164 107 / 18%); background: rgb(179 151 91 / 6%); }
+.app-shell[data-active-tab] .world-subnav button.active { color: #e2c788; border-color: #5b503e; background: #27251e; }
+.app-shell[data-active-tab] .world-subnav button::after { content: none !important; }
+.app-shell[data-active-tab] .world-subnav button.world-back { margin-bottom: 4px; padding: 6px 9px; color: #898b7d; font-size: 10px; }
+
+.app-shell[data-active-tab] .sidebar-danger-zone { position: relative; z-index: 4; margin-top: auto; padding-bottom: 28px; }
+.app-shell[data-active-tab] .sidebar-motto {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 24px;
+  left: 0;
+  color: #665d4a;
+  font-size: 8px;
+  letter-spacing: .14em;
+  text-align: center;
+  pointer-events: none;
+}
+.app-shell[data-active-tab] .sidebar-landscape {
+  position: absolute;
+  z-index: -1;
+  right: -28px;
+  bottom: 22px;
+  left: -22px;
+  height: 300px;
+  overflow: visible;
+  border-radius: 0;
+  opacity: .3;
+  pointer-events: none;
+}
+.app-shell[data-active-tab] .sidebar-landscape::before,
+.app-shell[data-active-tab] .sidebar-landscape::after {
+  position: absolute;
+  bottom: 0;
+  content: "";
+  background: linear-gradient(140deg, #21352c, #0f1d17);
+  filter: drop-shadow(0 -12px 16px rgb(19 35 28 / 72%));
+}
+.app-shell[data-active-tab] .sidebar-landscape::before { left: -25px; width: 126px; height: 210px; clip-path: polygon(0 100%, 0 65%, 28% 49%, 42% 20%, 55% 48%, 72% 36%, 100% 72%, 100% 100%); }
+.app-shell[data-active-tab] .sidebar-landscape::after { right: -24px; width: 138px; height: 180px; clip-path: polygon(0 100%, 0 70%, 23% 58%, 42% 24%, 57% 52%, 76% 35%, 100% 66%, 100% 100%); opacity: .8; }
+.app-shell[data-active-tab] .jianghu-mobile-topbar { display: none !important; }
+
+@media (max-width: 980px) {
+  .app-shell[data-active-tab] { grid-template-columns: 176px minmax(0, 1fr); grid-template-rows: none; }
+  .app-shell[data-active-tab] .game-sidebar { display: flex !important; }
+  .jianghu-shell .game-main { grid-column: auto; grid-row: auto; height: auto; min-height: 100vh; overflow: visible; }
+}
+
+@media (max-width: 760px) {
+  .app-shell[data-active-tab] { grid-template-columns: 64px minmax(0, 1fr); }
+  .app-shell[data-active-tab] .game-sidebar { gap: 12px; padding: 8px 5px; overflow: visible; }
+  .app-shell[data-active-tab] .brand-block { min-height: auto; justify-content: center; padding: 0; border-bottom: 0; }
+  .app-shell[data-active-tab] .brand-block > span:last-child { display: none; }
+  .app-shell[data-active-tab] .brand-seal { width: 36px; height: 36px; }
+  .app-shell[data-active-tab] .game-nav { gap: 4px; padding-top: 0; }
+  .app-shell[data-active-tab] .nav-item { display: grid; min-height: 50px; justify-content: center; gap: 2px; padding: 7px 3px; }
+  .app-shell[data-active-tab] .nav-item .nav-mark { width: 24px; height: 24px; margin: auto; }
+  .app-shell[data-active-tab] .nav-item strong { display: none; }
+  .app-shell[data-active-tab] .nav-item.active::after { display: none; }
+  .app-shell[data-active-tab] .sidebar-landscape, .app-shell[data-active-tab] .sidebar-motto { display: none; }
+  .app-shell[data-active-tab] .sidebar-danger-zone { padding-bottom: 0; }
+  .app-shell[data-active-tab] .world-subnav { padding: 10px 0 0; }
+  .app-shell[data-active-tab] .world-subnav button { padding: 6px 2px; text-align: center; font-size: 9px; }
 }

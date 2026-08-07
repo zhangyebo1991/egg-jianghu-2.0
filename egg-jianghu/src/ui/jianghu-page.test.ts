@@ -46,7 +46,7 @@ describe('江湖层级页', () => {
     }] })
 
     expect(html).toMatch(/data-testid="world-world_11"[^>]*disabled/)
-    expect(html).toContain('未开放 · 无法进入')
+    expect(html).toContain('尚未开放')
     expect(html).not.toContain('world-progress')
     expect(html).not.toContain('推荐战力')
     expect(html).not.toContain('本地势力')
@@ -59,7 +59,7 @@ describe('江湖层级页', () => {
       difficulty: 1, recommendedPower: 6600, clearedStages: 0, factionNames: [],
     }] })
 
-    expect(html).toContain('尚未解锁 · 通关上一卷开放')
+    expect(html).toContain('通关上一卷后开启')
     expect(html).not.toContain('推荐战力')
   })
 })

@@ -38,6 +38,22 @@ describe('应用 Shell', () => {
     expect(html).toContain('data-action="resume-combat"')
   })
 
+  it('江湖页面不额外创建第二套导航，统一复用阵容式左侧栏', () => {
+    const html = renderShell({
+      activeTab: 'idle',
+      worldContext: null,
+      hasCombatReturn: false,
+      showResetConfirmation: false,
+      jianghuChrome: true,
+      content: '<p>内容</p>',
+    })
+
+    expect(html).toContain('class="app-shell jianghu-shell"')
+    expect(html).toContain('data-testid="tab-formation"')
+    expect(html).not.toContain('jianghu-mobile-topbar')
+    expect(html).not.toContain('mobile-tab-')
+  })
+
   it('默认在侧栏底部显示删档重开入口', () => {
     const html = renderShell({
       activeTab: 'idle',

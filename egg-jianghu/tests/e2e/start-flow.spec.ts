@@ -130,6 +130,8 @@ test('覆盖前重新检查存档并在存档变化后要求再次确认', async
 test('移动端删档确认使用可读且可操作的居中面板', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await createGame(page, '燕七')
+  await page.getByTestId('tab-heroes').click()
+  await expect(page.getByTestId('tab-heroes')).toBeVisible()
   await page.locator('[data-action="request-reset-save"]').click()
 
   const confirmation = page.getByTestId('reset-save-confirmation')

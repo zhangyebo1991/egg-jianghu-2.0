@@ -103,7 +103,7 @@ test('战场纵向排列且敌我前排在中线两侧相邻', async ({ page }) 
   expect(layout.partyFront.top).toBeLessThan(layout.partyBack.top)
 })
 
-test('桌面与移动端导航始终位于内容左侧', async ({ page }) => {
+test('桌面与移动端均使用阵容式左侧栏', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   const desktop = await page.evaluate(() => {
     const sidebar = document.querySelector('.game-sidebar')!.getBoundingClientRect()
@@ -111,26 +111,89 @@ test('桌面与移动端导航始终位于内容左侧', async ({ page }) => {
     return { sidebar: { x: sidebar.x, width: sidebar.width, height: sidebar.height }, mainX: main.x }
   })
   expect(desktop.sidebar.x).toBe(0)
-  expect(desktop.sidebar.width).toBeGreaterThanOrEqual(140)
+  expect(desktop.sidebar.width).toBe(176)
   expect(desktop.sidebar.height).toBe(800)
   expect(desktop.mainX).toBeGreaterThanOrEqual(desktop.sidebar.width)
 
   await page.setViewportSize({ width: 390, height: 844 })
   const mobile = await page.evaluate(() => {
-    const sidebar = document.querySelector('.game-sidebar')!.getBoundingClientRect()
+    const sidebar = document.querySelector('.game-sidebar')!
     const main = document.querySelector('.game-main')!.getBoundingClientRect()
     return {
-      sidebar: { x: sidebar.x, width: sidebar.width, height: sidebar.height },
+      sidebarDisplay: getComputedStyle(sidebar).display,
+      sidebarWidth: sidebar.getBoundingClientRect().width,
       mainX: main.x,
+      mainTop: main.y,
+      topbarCount: document.querySelectorAll('.jianghu-mobile-topbar').length,
       scrollWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
     }
   })
-  expect(mobile.sidebar.x).toBe(0)
-  expect(mobile.sidebar.width).toBeLessThanOrEqual(80)
-  expect(mobile.sidebar.height).toBe(844)
-  expect(mobile.mainX).toBeGreaterThanOrEqual(mobile.sidebar.width)
+  expect(mobile.sidebarDisplay).toBe('flex')
+  expect(mobile.sidebarWidth).toBe(64)
+  expect(mobile.mainX).toBe(64)
+  expect(mobile.mainTop).toBe(0)
+  expect(mobile.topbarCount).toBe(0)
   expect(mobile.scrollWidth).toBeLessThanOrEqual(mobile.viewportWidth)
+})
+
+test('四个页面共享同一套阵容式侧栏外观', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const metrics = []
+  for (const tab of ['idle', 'heroes', 'formation', 'inventory'] as const) {
+    await page.getByTestId(`tab-${tab}`).click()
+    metrics.push(await page.evaluate(() => {
+      const sidebar = document.querySelector<HTMLElement>('.game-sidebar')!
+      const seal = document.querySelector<HTMLElement>('.brand-seal')!
+      const navItem = document.querySelector<HTMLElement>('.nav-item')!
+      const navMark = document.querySelector<HTMLElement>('.nav-mark')!
+      const sealStyle = getComputedStyle(seal)
+      const navStyle = getComputedStyle(navItem)
+      const markStyle = getComputedStyle(navMark)
+      return {
+        sidebarWidth: sidebar.getBoundingClientRect().width,
+        sidebarPadding: getComputedStyle(sidebar).padding,
+        sealRadius: sealStyle.borderRadius,
+        sealFont: sealStyle.fontFamily,
+        navHeight: navItem.getBoundingClientRect().height,
+        navRadius: navStyle.borderRadius,
+        markRadius: markStyle.borderRadius,
+        markFont: markStyle.fontFamily,
+        topbarCount: document.querySelectorAll('.jianghu-mobile-topbar').length,
+      }
+    }))
+  }
+
+  expect(new Set(metrics.map((item) => JSON.stringify(item))).size).toBe(1)
+  expect(metrics[0]).toMatchObject({
+    sidebarWidth: 176,
+    sidebarPadding: '0px 10px 18px',
+    sealRadius: '0px',
+    navHeight: 58,
+    navRadius: '1px',
+    markRadius: '50%',
+    topbarCount: 0,
+  })
+})
+
+test('江湖总览保留三十卷且未开放卷仍可滚动查看', async ({ page }) => {
+  await expect(page.locator('.world-card')).toHaveCount(30)
+  const layout = await page.evaluate(() => {
+    const grid = document.querySelector<HTMLElement>('.world-grid')!
+    const first = document.querySelector<HTMLElement>('[data-testid="world-world_01"]')!
+    const eleventh = document.querySelector<HTMLElement>('[data-testid="world-world_11"]')!
+    return {
+      overflowY: getComputedStyle(grid).overflowY,
+      gridScrollHeight: grid.scrollHeight,
+      gridClientHeight: grid.clientHeight,
+      firstHeight: first.getBoundingClientRect().height,
+      eleventhHeight: eleventh.getBoundingClientRect().height,
+    }
+  })
+  expect(layout.overflowY).toBe('auto')
+  expect(layout.gridScrollHeight).toBeGreaterThan(layout.gridClientHeight)
+  expect(layout.firstHeight).toBeGreaterThan(250)
+  expect(layout.eleventhHeight).toBeGreaterThan(250)
 })
 
 test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) => {
@@ -576,11 +639,13 @@ test('重载页面后长期收益保留但必须重新选择关卡', async ({ pa
 
 test('页面不出现离线收益抽卡残页铁匠铺和首次奖励', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  for (const tab of ['idle', 'heroes', 'inventory'] as const) {
-    await page.getByTestId(`tab-${tab}`).click()
-    await expect(page.getByTestId(`tab-${tab}`)).toHaveAttribute('aria-current', 'page')
-  }
+  await expect(page.getByTestId('tab-idle')).toHaveAttribute('aria-current', 'page')
+  await page.getByTestId('tab-heroes').click()
+  await expect(page.getByTestId('tab-heroes')).toHaveAttribute('aria-current', 'page')
   await page.getByTestId('tab-idle').click()
-  await expect(page.getByTestId('world-overview')).toBeVisible()
+  await expect(page.getByTestId('tab-idle')).toHaveAttribute('aria-current', 'page')
+  await page.getByTestId('tab-inventory').click()
+  await expect(page.getByTestId('tab-inventory')).toHaveAttribute('aria-current', 'page')
+  await expect(page.locator('.world-subnav')).toHaveCount(0)
   expect(await page.locator('body').innerText()).not.toMatch(/离线收益|十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解|首次通关|首次奖励|叩关/)
 })

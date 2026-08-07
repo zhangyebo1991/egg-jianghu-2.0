@@ -8,6 +8,7 @@ export interface ShellViewModel {
   worldContext: { worldName: string; activeSection: JianghuSection } | null
   hasCombatReturn: boolean
   showResetConfirmation: boolean
+  jianghuChrome?: boolean
   content: string
 }
 
@@ -26,8 +27,9 @@ const worldSections: Array<{ id: JianghuSection; label: string }> = [
 
 export const renderShell = (view: ShellViewModel): string => {
   const worldContext = view.worldContext
+  const jianghuChrome = view.jianghuChrome === true
   return `
-    <div class="app-shell" data-active-tab="${view.activeTab}">
+    <div class="app-shell${jianghuChrome ? ' jianghu-shell' : ''}" data-active-tab="${view.activeTab}">
       <aside class="game-sidebar">
         <div class="brand-block">
           <span class="brand-seal" aria-hidden="true">蛋</span>

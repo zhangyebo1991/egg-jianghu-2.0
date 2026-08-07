@@ -20,6 +20,7 @@ import { FACTIONS } from './content/factions'
 import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10 } from './content/heroes'
 import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTIALS, heartMethodByIdV10, martialByIdV10 } from './content/martials'
 import { WORLDS } from './content/worlds'
+import { worldPresentation } from './content/world-presentations'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
 import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
@@ -71,6 +72,7 @@ let session: GameSession
 let activeTab: TabId = 'idle'
 let jianghuView: JianghuView = 'worlds'
 let jianghuSection: JianghuSection = 'stages'
+let jianghuMotionPending: 'overview' | 'stage' | null = null
 let selectedWorldId = ''
 let selectedStage = 1
 let selectedHeroId: string | null = null
@@ -350,6 +352,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   activeTab = 'idle'
   jianghuView = 'worlds'
   jianghuSection = 'stages'
+  jianghuMotionPending = 'overview'
   selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
   selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
   selectedHeroId = Object.keys(session.state.heroes)[0] ?? null
@@ -480,29 +483,70 @@ const idleViewModel = (): IdlePageViewModel => {
   }
 }
 
-const worldOverviewViewModel = (): WorldOverviewViewModel => ({
-  worlds: WORLDS.map((world) => ({
-    id: world.id,
-    name: world.name,
-    index: world.index,
-    released: world.released,
-    unlocked: session.state.unlockedWorldIds.includes(world.id),
-    difficulty: world.released ? Math.min(5, Math.ceil(world.index / 2)) : 0,
-    recommendedPower: world.released ? Math.round(4000 * 1.65 ** (world.index - 1)) : 0,
-    clearedStages: world.released ? (session.state.clearedStageByWorld[world.id] ?? 0) : 0,
-    factionNames: world.released ? FACTIONS.filter((faction) => faction.worldId === world.id).map((faction) => faction.name) : [],
-  })),
-})
+const worldOverviewViewModel = (): WorldOverviewViewModel => {
+  const currentWorld = WORLDS.find((world) => world.released
+    && session.state.unlockedWorldIds.includes(world.id)
+    && (session.state.clearedStageByWorld[world.id] ?? 0) < 10)
+  const worlds = WORLDS.map((world) => {
+    const unlocked = session.state.unlockedWorldIds.includes(world.id)
+    const clearedStages = world.released ? (session.state.clearedStageByWorld[world.id] ?? 0) : 0
+    const state = !world.released || !unlocked
+      ? 'locked' as const
+      : clearedStages >= 10
+        ? 'cleared' as const
+        : world.id === currentWorld?.id
+          ? 'current' as const
+          : 'open' as const
+    const factions = FACTIONS.filter((faction) => faction.worldId === world.id)
+    const presentation = worldPresentation(world.id)
+    return {
+      id: world.id,
+      name: world.name,
+      index: world.index,
+      released: world.released,
+      unlocked,
+      difficulty: world.released ? Math.min(5, Math.ceil(world.index / 2)) : 0,
+      recommendedPower: world.released ? Math.round(4000 * 1.65 ** (world.index - 1)) : 0,
+      clearedStages,
+      factionNames: world.released ? factions.map((faction) => faction.name) : [],
+      factions: world.released ? factions.map((faction) => ({ name: faction.name, category: faction.category })) : [],
+      state,
+      latinName: presentation.latinName,
+      flavor: presentation.flavor,
+      currencyName: presentation.currencyName,
+      lockText: !world.released ? '尚未开放' : world.index > 1 ? `通关 ${WORLDS[world.index - 2]?.name ?? '上一卷'} 后开启` : '尚未开放',
+    }
+  })
+  return {
+    worlds,
+    totalClearedStages: worlds.reduce((total, world) => total + world.clearedStages, 0),
+    totalStageCount: WORLDS.filter((world) => world.released).length * 10,
+    currentWorldId: currentWorld?.id,
+    currentWorldName: currentWorld?.name,
+  }
+}
 
 const stageListViewModel = (): StageListViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const cleared = session.state.clearedStageByWorld[world.id] ?? 0
+  const presentation = worldPresentation(world.id)
+  const factions = FACTIONS.filter((faction) => faction.worldId === world.id)
   return {
     worldId: world.id,
     worldName: world.name,
+    worldIndex: world.index,
+    worldLatinName: presentation.latinName,
     worldCurrency: session.state.worldCurrency[world.id] ?? 0,
+    currencyName: presentation.currencyName,
+    difficulty: world.released ? Math.min(5, Math.ceil(world.index / 2)) : 0,
+    recommendedPower: world.released ? Math.round(4000 * 1.65 ** (world.index - 1)) : 0,
+    clearedStages: cleared,
+    flavor: presentation.flavor,
+    factions: factions.map((faction) => ({ name: faction.name, category: faction.category })),
+    stageNames: presentation.stageNames,
     stages: Array.from({ length: 10 }, (_, index) => ({
       stage: index + 1,
+      name: presentation.stageNames[index] ?? `第${index + 1}关`,
       unlocked: index + 1 <= Math.min(10, Math.max(1, cleared + 1)),
       cleared: index + 1 <= cleared,
     })),
@@ -1084,6 +1128,20 @@ const renderJianghuContent = (): string => {
   return renderStageList(stageListViewModel())
 }
 
+const playPendingJianghuMotion = (): void => {
+  if (!jianghuMotionPending) return
+  const page = app.querySelector<HTMLElement>('.jianghu-page')
+  if (!page) return
+  page.classList.remove('is-entering')
+  void page.offsetWidth
+  page.classList.add('is-entering')
+  const animatedPage = page
+  const cardCount = page.querySelectorAll('.world-card').length
+  const motionDuration = cardCount > 0 ? 650 + Math.max(0, cardCount - 1) * 45 : 1100
+  window.setTimeout(() => animatedPage.classList.remove('is-entering'), motionDuration)
+  jianghuMotionPending = null
+}
+
 const render = (): void => {
   if (appScreen !== 'playing') {
     toast.classList.remove('inventory-toast')
@@ -1114,13 +1172,15 @@ const render = (): void => {
         : renderInventoryPage(inventoryViewModel())
   patchApp(renderShell({
     activeTab,
-    worldContext: activeTab === 'inventory' || (activeTab === 'idle' && jianghuView !== 'worlds')
+    worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
       ? { worldName: world.name, activeSection: jianghuSection }
       : null,
     hasCombatReturn: Boolean(session.combat && !(activeTab === 'idle' && jianghuView === 'combat')),
     showResetConfirmation,
+    jianghuChrome: activeTab === 'idle' && jianghuView !== 'combat',
     content,
   }))
+  if (activeTab === 'idle' && jianghuView !== 'combat') playPendingJianghuMotion()
   if (heroRosterLocatePending && activeTab === 'heroes') {
     heroRosterLocatePending = false
     window.requestAnimationFrame(() => {
@@ -1764,6 +1824,7 @@ app.addEventListener('click', (event) => {
     if (tab === 'idle') {
       jianghuView = 'worlds'
       jianghuSection = 'stages'
+      jianghuMotionPending = 'overview'
     }
     render()
     return
@@ -1774,6 +1835,7 @@ app.addEventListener('click', (event) => {
     activeTab = 'idle'
     jianghuView = 'world'
     jianghuSection = worldSection
+    if (worldSection === 'stages') jianghuMotionPending = 'stage'
     render()
     return
   }
@@ -1800,6 +1862,7 @@ app.addEventListener('click', (event) => {
     factionRosterQuery = ''
     jianghuView = 'world'
     jianghuSection = 'stages'
+    jianghuMotionPending = 'stage'
   } else if (action === 'start-stage') {
     selectedStage = Number(button.dataset.stage) || 1
     startSelectedStage('guard')
@@ -1841,6 +1904,7 @@ app.addEventListener('click', (event) => {
     combatEffects = []
     combatRunPresentation = null
     combatUnitCache.clear()
+    jianghuMotionPending = 'stage'
   } else if (action === 'resume-combat' && session.combat) {
     activeTab = 'idle'
     selectedWorldId = session.combat.state.worldId
@@ -1850,6 +1914,7 @@ app.addEventListener('click', (event) => {
   } else if (action === 'return-worlds') {
     jianghuView = 'worlds'
     jianghuSection = 'stages'
+    jianghuMotionPending = 'overview'
   } else if (action?.startsWith('speed-')) {
     const speed = Number(action.slice(-1))
     if (speed === 1 || speed === 2 || speed === 4) {
@@ -2017,6 +2082,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     if (tab === 'idle') {
       jianghuView = 'worlds'
       jianghuSection = 'stages'
+      jianghuMotionPending = 'overview'
     }
     render()
   },
