@@ -1157,7 +1157,7 @@ body {
 
 .game-main[data-page="heroes"] .hero-inventory-panel > footer { flex: 0 0 auto; margin-top: 10px; color: #6d6958; letter-spacing: .1em; }
 .game-main[data-page="heroes"] .hero-inventory-empty { grid-column: 1 / -1; }
-.game-main[data-page="heroes"] .equipment-tooltip { border-color: #8c7345; background: rgb(9 14 11 / 98%); }
+.game-main[data-page="heroes"] .equipment-tooltip { border-color: #8c7345; }
 
 @media (max-width: 1180px) {
   .game-main[data-page="heroes"] { height: auto; min-height: 100vh; overflow: auto; }
@@ -2936,7 +2936,34 @@ body {
 .heroes-page .stat-cluster > header span { color: var(--paper-mute); font-size: 9px; letter-spacing: .2em; }
 .heroes-page .stat-cluster .chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .heroes-page .st-chip { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 9px; align-items: center; padding: 9px 11px; border: 1px solid var(--line-soft); border-radius: 7px; background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 25%)); transition: border-color .25s, transform .25s cubic-bezier(.22,1,.36,1); }
+.heroes-page .st-chip { cursor: help; }
 .heroes-page .st-chip:hover { border-color: rgb(201 163 92 / 35%); transform: translateY(-1px); }
+.heroes-page .apt-label { cursor: help; }
+
+/* 属性释义浮动卡片（与装备 tooltip 同源宣纸风） */
+.stat-tooltip {
+  position: fixed;
+  inset: auto;
+  z-index: 95;
+  width: min(282px, calc(100vw - 24px));
+  margin: 0;
+  padding: 12px 14px 13px;
+  border: 1px solid #8c7345;
+  border-radius: 9px;
+  color: var(--xuan-ink, #2b2519);
+  background: radial-gradient(140% 90% at 50% 0%, rgb(255 250 235 / 55%), transparent 60%), linear-gradient(172deg, var(--xuan, #e8e1d3), var(--xuan-deep, #ddceaa));
+  box-shadow: 0 20px 44px rgb(0 0 0 / 55%), inset 0 0 0 1px rgb(120 95 55 / 20%);
+  font-size: 11px;
+  line-height: 1.75;
+  pointer-events: none;
+  display: none;
+}
+.stat-tooltip:popover-open { display: block; }
+.stat-tooltip > header { display: grid; gap: 2px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed rgb(120 95 55 / 40%); }
+.stat-tooltip > header small { color: #8a7a55; font-size: 9px; letter-spacing: .26em; }
+.stat-tooltip > header strong { color: #2e2717; font-family: var(--font-brush, "Noto Serif SC", serif); font-size: 19px; font-weight: 400; letter-spacing: .06em; }
+.stat-tooltip .stat-tip-body { color: #4d4023; font-size: 11px; letter-spacing: .03em; line-height: 1.75; }
+.stat-tooltip .stat-tip-body b { color: #8a6420; font-weight: 700; }
 .heroes-page .st-chip i { grid-row: 1 / 3; width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid rgb(201 163 92 / 30%); border-radius: 5px; color: var(--gold); background: rgb(201 163 92 / 7%); font-family: var(--font-brush); font-size: 13px; font-style: normal; }
 .heroes-page .st-chip dt { color: var(--paper-mute); font-size: 10px; letter-spacing: .14em; }
 .heroes-page .st-chip dd { margin: 0; color: var(--heroes-paper); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.25; }

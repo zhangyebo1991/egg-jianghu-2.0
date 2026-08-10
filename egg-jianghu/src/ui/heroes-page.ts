@@ -147,7 +147,7 @@ const renderAptitudeRadar = (aptitudes: HeroAptitudes): string => {
   }).join('')
   const labels = aptitudeKeys.map(({ key, label }, index) => {
     const [x, y] = radarPoint(index, 108)
-    return `<text class="radar-label" x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle">${label}<tspan class="radar-value" dx="4">${aptitudes[key]}</tspan></text>`
+    return `<text class="radar-label apt-label" data-apt-label="${escapeHtml(label)}" x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle">${label}<tspan class="radar-value" dx="4">${aptitudes[key]}</tspan></text>`
   }).join('')
   return `<svg class="radar-svg" viewBox="0 0 236 236" role="img" aria-label="五维根骨资质">${rings}${axes}<polygon class="radar-shape" points="${shape}"></polygon>${dots}${labels}</svg>`
 }

@@ -20,6 +20,7 @@ import { FACTIONS } from './content/factions'
 import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10 } from './content/heroes'
 import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTIALS, heartMethodByIdV10, martialByIdV10 } from './content/martials'
 import { WORLDS } from './content/worlds'
+import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
@@ -330,6 +331,78 @@ const showEquipmentTooltip = (anchor: HTMLElement): void => {
     openEquipmentTooltipAnchor = null
   }
 }
+/* ---------- 属性释义浮动卡片（根骨资质 / 战斗属性 / 雷达轴） ---------- */
+let statTooltip: HTMLDivElement | null = null
+let statTooltipAnchor: HTMLElement | null = null
+const STAT_TOOLTIP_GAP = 10
+const STAT_TOOLTIP_VIEWPORT_PADDING = 8
+
+const ensureStatTooltip = (): HTMLDivElement => {
+  if (statTooltip?.isConnected) return statTooltip
+  const el = document.createElement('div')
+  el.className = 'stat-tooltip'
+  el.setAttribute('popover', 'manual')
+  el.setAttribute('role', 'tooltip')
+  document.body.append(el)
+  statTooltip = el
+  return el
+}
+
+const positionStatTooltip = (): void => {
+  const tooltip = statTooltip
+  const anchor = statTooltipAnchor
+  if (!tooltip?.isConnected || !anchor?.isConnected) return
+  const anchorRect = anchor.getBoundingClientRect()
+  const tooltipRect = tooltip.getBoundingClientRect()
+  const viewportWidth = document.documentElement.clientWidth
+  const viewportHeight = document.documentElement.clientHeight
+  const pad = STAT_TOOLTIP_VIEWPORT_PADDING
+  const gap = STAT_TOOLTIP_GAP
+  const roomAbove = anchorRect.top - pad
+  const roomBelow = viewportHeight - anchorRect.bottom - pad
+  const useBelow = roomAbove < tooltipRect.height + gap && roomBelow >= tooltipRect.height + gap
+  const top = useBelow
+    ? anchorRect.bottom + gap
+    : Math.max(pad, anchorRect.top - tooltipRect.height - gap)
+  const left = Math.min(
+    Math.max(pad, anchorRect.left + (anchorRect.width - tooltipRect.width) / 2),
+    viewportWidth - tooltipRect.width - pad,
+  )
+  tooltip.style.left = `${Math.round(left)}px`
+  tooltip.style.top = `${Math.round(top)}px`
+  tooltip.dataset.placement = useBelow ? 'below' : 'above'
+}
+
+const showStatTooltip = (anchor: HTMLElement, label: string, desc: string): void => {
+  const tooltip = ensureStatTooltip()
+  tooltip.innerHTML =
+    `<header><small>属性释义</small><strong>${label}</strong></header><div class="stat-tip-body">${desc}</div>`
+  statTooltipAnchor = anchor
+  tooltip.style.left = '0px'
+  tooltip.style.top = '0px'
+  try {
+    tooltip.showPopover()
+  } catch {
+    tooltip.style.display = 'block'
+  }
+  positionStatTooltip()
+}
+
+const hideStatTooltip = (): void => {
+  const tooltip = statTooltip
+  if (!tooltip?.isConnected) return
+  statTooltipAnchor = null
+  if (tooltip.matches(':popover-open')) {
+    try {
+      tooltip.hidePopover()
+    } catch {
+      tooltip.style.display = 'none'
+    }
+  } else {
+    tooltip.style.display = 'none'
+  }
+}
+
 let toastTimer = 0
 
 try {
@@ -1416,6 +1489,39 @@ app.addEventListener('pointerout', (event) => {
 
 app.addEventListener('scroll', positionOpenEquipmentTooltip, true)
 window.addEventListener('resize', positionOpenEquipmentTooltip)
+
+// 属性释义浮动卡片：hover 属性 chip / 雷达轴时显示
+app.addEventListener('pointerover', (event) => {
+  const target = event.target
+  if (!(target instanceof Element)) return
+  const chip = target.closest<HTMLElement>('.st-chip[data-stat-label]')
+  if (chip) {
+    const label = chip.dataset.statLabel ?? ''
+    const desc = STAT_DESC[label]
+    if (desc) showStatTooltip(chip, label, desc)
+    return
+  }
+  const apt = target.closest<HTMLElement>('[data-apt-label]')
+  if (apt) {
+    const label = apt.dataset.aptLabel ?? ''
+    const desc = APT_DESC[label]
+    if (desc) showStatTooltip(apt, label, desc)
+  }
+})
+
+app.addEventListener('pointerout', (event) => {
+  const target = event.target
+  if (!(target instanceof Element)) return
+  const anchor = target.closest<HTMLElement>('.st-chip[data-stat-label], [data-apt-label]')
+  if (!anchor || anchor !== statTooltipAnchor) return
+  if (event.relatedTarget instanceof Node && anchor.contains(event.relatedTarget)) return
+  hideStatTooltip()
+})
+
+app.addEventListener('scroll', hideStatTooltip, true)
+window.addEventListener('resize', () => {
+  if (statTooltip?.matches(':popover-open')) positionStatTooltip()
+})
 
 app.addEventListener('pointerdown', (event) => {
   const target = event.target as HTMLElement
