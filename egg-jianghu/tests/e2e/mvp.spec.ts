@@ -615,6 +615,9 @@ test('势力页支持切换匾额、点将谱搜索和经脉研习', async ({ pa
 
   await page.getByTestId('faction-martial-qingfeng_hall_a1').click()
   await expect(page.getByTestId('faction-martial-detail')).toContainText('全真剑法')
+  await expect(page.getByTestId('faction-martial-detail')).toContainText('两段连击')
+  await expect(page.getByTestId('faction-martial-detail')).toContainText('《射雕英雄传》')
+  await expect(page.getByTestId('faction-martial-detail')).toContainText('◈连击')
   await page.getByRole('button', { name: /研习 · 贡献 80/ }).click()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_mu_nianci.learnedMartials.qingfeng_hall_a1?.level)).toBe(1)
 })

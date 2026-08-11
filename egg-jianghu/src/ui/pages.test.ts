@@ -109,6 +109,8 @@ const factionsFixture = (): FactionsPageViewModel => ({
     learned: false, level: 0, state: 'next', energyCost: 12, cooldownMs: 2200, power: 1.15,
     previousName: null, careerNames: ['剑客', '游剑客'], careerCompatible: true, affordable: true,
     actionDisabled: false, actionReason: null, selected: true,
+    description: '两段连击，剑势平正', origin: '《射雕英雄传》', stageName: '初传',
+    powerNote: '1.15 ×2段(总1.27)', tags: ['单体', '连击'],
   },
 })
 
@@ -336,5 +338,34 @@ describe('version 10 长期循环页面', () => {
     const selectedHtml = renderFormationPage({ ...formationFixture(), selectedHeroId: 'hero_test' })
     expect(selectedHtml).toMatch(/data-hero-id="hero_test"[^>]*class="[^"]*\bactive\b/)
     expect(selectedHtml).not.toMatch(/data-hero-id="hero_shen"[^>]*class="[^"]*\bactive\b/)
+  })
+
+  it('传承卡片渲染 lore：阶段/出处/描述/威力说明/机制标签', () => {
+    const html = renderFactionsPage(factionsFixture())
+    expect(html).toContain('快剑第一式 · 初传')
+    expect(html).toContain('《射雕英雄传》')
+    expect(html).toContain('「两段连击，剑势平正」')
+    expect(html).toContain('1.15 ×2段(总1.27)')
+    expect(html).toContain('◈单体')
+    expect(html).toContain('◈连击')
+  })
+
+  it('withLore 注入 lore 字段，无 lore 时原样返回', async () => {
+    const { withLore } = await import('./factions-page')
+    const base = factionsFixture().selectedMartial!
+    const enriched = withLore(base, { description: 'd', origin: 'o', stageName: '初传', powerNote: 'p', tags: ['单体'] })
+    expect(enriched.description).toBe('d')
+    expect(enriched.tags).toEqual(['单体'])
+    expect(withLore(base, undefined)).toBe(base)
+  })
+
+  it('lore 缺失时卡片不崩且威力回退到 power', () => {
+    const base = factionsFixture()
+    const noLore = { ...base, selectedMartial: { ...base.selectedMartial!, description: undefined, origin: undefined, stageName: undefined, powerNote: undefined, tags: undefined } }
+    const html = renderFactionsPage(noLore)
+    expect(html).toContain('1.15')        // power.toFixed(2) 兜底（fixture power=1.15）
+    expect(html).not.toContain('undefined')
+    expect(html).not.toContain('「」')
+    expect(html).not.toContain('◈')
   })
 })
