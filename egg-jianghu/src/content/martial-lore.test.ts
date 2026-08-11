@@ -1,0 +1,36 @@
+import { describe, expect, it } from 'vitest'
+import { MARTIAL_LORE } from './martial-lore'
+
+describe('MARTIAL_LORE 生成数据', () => {
+  it('覆盖全部势力/通用/心法 id', () => {
+    const ids = Object.keys(MARTIAL_LORE)
+    expect(ids.filter((id) => /_[abcd][12]$/.test(id))).toHaveLength(240)
+    expect(ids.filter((id) => id.includes('_common_'))).toHaveLength(60)
+    expect(ids.filter((id) => id.includes('_heart_'))).toHaveLength(40)
+  })
+
+  it('全真剑法解析为玩家向 lore', () => {
+    const lore = MARTIAL_LORE['qingfeng_hall_a1']
+    expect(lore).toBeDefined()
+    expect(lore.description).toContain('两段连击')
+    expect(lore.origin).toBe('《射雕英雄传》')
+    expect(lore.stageName).toBe('初传')
+    expect(lore.powerNote).toBe('1.15 ×2段(总1.27)')
+    expect(lore.tags).toEqual(['单体', '连击'])
+  })
+
+  it('铁布衫防御向：无威力、护体与金钟标签', () => {
+    const lore = MARTIAL_LORE['world_01_common_inner_01']
+    expect(lore.powerNote).toBe('')
+    expect(lore.tags).toEqual(['护体', '金钟'])
+  })
+
+  it('所有 tag 已去掉【扩展】与英文目标脚手架', () => {
+    for (const lore of Object.values(MARTIAL_LORE)) {
+      for (const tag of lore.tags) {
+        expect(tag).not.toContain('【扩展】')
+        expect(tag).not.toMatch(/^(damage|heal|guard|revive|cleanse|dispel)·/)
+      }
+    }
+  })
+})
