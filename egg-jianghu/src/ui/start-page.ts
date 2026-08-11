@@ -13,18 +13,20 @@ const disabled = (value: boolean): string => value ? ' disabled' : ''
 
 const renderTitlePage = (view: StartPageViewModel): string => `
   <main class="start-page" data-testid="title-page">
-    <section class="start-card panel" aria-labelledby="game-title">
-      <span class="start-seal" aria-hidden="true">蛋</span>
-      <header class="start-heading">
-        <p>江湖卷首</p>
+    <section class="start-hero" aria-labelledby="game-title">
+      <p class="start-kicker"><span>江湖卷首</span></p>
+      <div class="start-title-wrap">
         <h1 id="game-title">蛋蛋江湖 2.0</h1>
-        <span>十卷风云 · 六侠同行</span>
-      </header>
+        <span class="start-seal" aria-hidden="true">蛋</span>
+      </div>
+      <span class="start-tagline">十卷风云 · 六侠同行</span>
+      <div class="start-divider" aria-hidden="true"></div>
       <div class="start-actions">
         <button type="button" class="primary" data-action="new-game"${disabled(view.busy)}>新建游戏</button>
         <button type="button" data-action="continue-game"${disabled(!view.hasSave || view.busy)}>继续游戏</button>
       </div>
     </section>
+    <footer class="start-foot" aria-hidden="true">闭关挂机 · 亦可问鼎江湖</footer>
   </main>`
 
 const renderOverwriteConfirmation = (view: StartPageViewModel): string => `
