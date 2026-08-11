@@ -113,12 +113,14 @@ const factionsFixture = (): FactionsPageViewModel => ({
 })
 
 const cityFixture = (): CityPageViewModel => ({
-  worldId: 'world_01', worldName: '青石卷', worldCurrency: 1000,
-  selectedHeroId: 'hero_test',
+  worldId: 'world_01', worldIndex: 1, worldName: '青石卷', worldCurrency: 1000,
+  selectedHeroId: 'hero_test', selectedHeroName: '试剑人',
   heroes: [{ id: 'hero_test', name: '试剑人' }],
-  tavernHeroes: [{ id: 'hero_guo_jing', name: '郭靖', grade: '乙', cost: 240, recruited: false }],
-  martials: [{ id: 'world_01_common_sword_01', name: '青石剑法', rarity: '粗浅', cost: 200, learned: false }],
-  careerTokens: [{ id: 'token_sword_swift_mid', name: '游剑客信物', tier: '中级', cost: 300, owned: false }],
+  tavernHeroes: [{ id: 'hero_guo_jing', name: '郭靖', grade: '乙', category: '拳', careerName: '拳师', cost: 240, recruited: false, line: '憨厚少年，根骨清奇。' }],
+  martials: [{ id: 'world_01_common_sword_01', name: '青石剑法', rarity: '粗浅', category: '剑', cost: 200, energyCost: 11, cooldownMs: 2500, power: 0.95, learned: false, compatible: true, selected: true }],
+  fitCount: 1,
+  careerTokens: [{ id: 'token_sword_swift_mid', name: '游剑客信物', tier: '中级', category: '剑', cost: 300, owned: false }],
+  lockedTiers: [{ tier: '高级', cost: 800, minWorld: 4 }],
 })
 
 const inventoryFixture = (): InventoryPageViewModel => ({
@@ -279,6 +281,22 @@ describe('version 10 长期循环页面', () => {
   it('城市和背包页没有抽卡、残页与铁匠铺', () => {
     const html = renderCityPage(cityFixture()) + renderInventoryPage(inventoryFixture())
     expect(html).not.toMatch(/十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解/)
+  })
+
+  it('城市页按城中长街输出三铺并保留交互契约', () => {
+    const html = renderCityPage(cityFixture())
+    expect(html).toContain('data-testid="city-page"')
+    expect(html).toContain('无名酒馆')
+    expect(html).toContain('城南武馆')
+    expect(html).toContain('恒昌当铺')
+    expect(html).toContain('data-testid="tavern-hero_guo_jing"')
+    expect(html).toContain('data-action="tavern-recruit"')
+    expect(html).toContain('data-action="select-hero-input"')
+    expect(html).toContain('data-action="select-city-martial"')
+    expect(html).toContain('data-action="city-martial-learn"')
+    expect(html).toContain('data-action="career-buy-token"')
+    expect(html).toContain('aria-label="直接邀请"')
+    expect(html).toContain('class="hn-line">憨厚少年，根骨清奇。')
   })
 
   it('背包页按原型输出部位线稿、详情器影和品质件数', () => {

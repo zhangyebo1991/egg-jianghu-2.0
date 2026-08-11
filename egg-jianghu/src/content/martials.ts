@@ -1,4 +1,5 @@
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
+import { CITY_MARTIAL_NAMES, FACTION_MARTIAL_NAMES, HEART_METHOD_NAMES } from './martial-names'
 import type { CareerCategory } from './careers'
 import type { Rarity } from '../domain/types'
 
@@ -85,7 +86,7 @@ export const FACTION_MARTIALS: MartialDefinitionV10[] = FACTIONS.flatMap((factio
     const id = `${faction.id}_${letter}${branchIndex}`
     return {
       id,
-      name: `${faction.name}·${faction.branchLabels[branchIndex - 1]}${stageNames[stageOffset]}`,
+      name: FACTION_MARTIAL_NAMES[id] ?? `${faction.name}·${faction.branchLabels[branchIndex - 1]}${stageNames[stageOffset]}`,
       source: 'faction' as const,
       factionId: faction.id,
       worldId: faction.worldId,
@@ -117,7 +118,7 @@ export const CITY_MARTIALS: MartialDefinitionV10[] = Array.from({ length: 10 }, 
     const baseCareer = categoryCareerIds[category][0]
     return {
       id: `${worldId}_common_${baseCareer}_01`,
-      name: `${worldId}通用${category}法`,
+      name: CITY_MARTIAL_NAMES[`${worldId}_common_${baseCareer}_01`] ?? `${worldId}通用${category}法`,
       source: 'city' as const,
       factionId: null,
       worldId,
@@ -140,7 +141,7 @@ export const CITY_MARTIALS: MartialDefinitionV10[] = Array.from({ length: 10 }, 
 
 export const FACTION_HEART_METHODS: HeartMethodDefinitionV10[] = FACTIONS.map((faction) => ({
   id: `${faction.id}_heart_01`,
-  name: `${faction.name}心法`,
+  name: HEART_METHOD_NAMES[`${faction.id}_heart_01`] ?? `${faction.name}心法`,
   source: 'faction',
   factionId: faction.id,
   worldId: faction.worldId,
@@ -160,7 +161,7 @@ export const CITY_HEART_METHODS: HeartMethodDefinitionV10[] = Array.from({ lengt
   const worldId = `world_${String(worldIndex).padStart(2, '0')}`
   return {
     id: `${worldId}_heart_common`,
-    name: `第${worldIndex}卷通用心法`,
+    name: HEART_METHOD_NAMES[`${worldId}_heart_common`] ?? `第${worldIndex}卷通用心法`,
     source: 'city',
     factionId: null,
     worldId,

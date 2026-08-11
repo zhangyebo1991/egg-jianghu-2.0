@@ -20,6 +20,8 @@ export interface HeroDefinitionV10 {
   cost: number
   factionId: string | null
   aptitudes: HeroAptitudes
+  /** 酒馆英雄帖上的一句话点评（仅部分侠客有） */
+  line?: string
 }
 
 // [id, 姓名, 基础职业, 江湖卷]
@@ -121,6 +123,13 @@ const aptitudesFor = (category: CareerCategory, worldIdx: number): HeroAptitudes
   return aptitude
 }
 
+// 酒馆英雄帖点评（取自 docs/城市页面重设计.html 设计稿文案，按侠客 id 索引）。
+const TAVERN_HERO_LINES: Record<string, string> = {
+  hero_guo_jing: '憨厚少年，根骨清奇，一副拳掌可托付。',
+  hero_yang_tiexin: '忠良之后，枪刀沉雄，性如烈火。',
+  hero_mu_nianci: '身世飘零，剑里藏柔，心志愈坚。',
+}
+
 export const TAVERN_HEROES: HeroDefinitionV10[] = TAVERN_HERO_ROWS.map(
   ([id, name, baseCareerId, worldId]) => ({
     id,
@@ -132,6 +141,7 @@ export const TAVERN_HEROES: HeroDefinitionV10[] = TAVERN_HERO_ROWS.map(
     cost: 200 + worldIndex(worldId) * 40,
     factionId: null,
     aptitudes: aptitudesFor(careerCategoryById[baseCareerId] ?? '剑', worldIndex(worldId)),
+    ...(TAVERN_HERO_LINES[id] ? { line: TAVERN_HERO_LINES[id] } : {}),
   }),
 )
 

@@ -97,6 +97,7 @@ let dragHeroId: string | null = null
 let dragCandidateHeroId: string | null = null
 let selectedFactionId = ''
 let selectedFactionMartialId: string | null = null
+let selectedCityMartialId: string | null = null
 let factionRosterOpen = false
 let factionRosterQuery = ''
 let combatSpeed: 1 | 2 | 4 = 1
@@ -1059,33 +1060,58 @@ const cityViewModel = (): CityPageViewModel => {
   const selectedCareer = selectedProgress ? careerById(selectedProgress.currentCareerId) : undefined
   const worldIndex = Number(world.id.slice(-2)) || 1
   const tierAvailable = (tier: string): boolean => tier === '中级' || tier === '高级' && worldIndex >= 4 || tier === '顶级' && worldIndex >= 7
+  const cityMartials = CITY_MARTIALS.filter((martial) => martial.worldId === world.id)
+  if (!cityMartials.some((martial) => martial.id === selectedCityMartialId)) {
+    selectedCityMartialId = cityMartials[0]?.id ?? null
+  }
+  const recruited = recruitedHeroes()
+  const martials = cityMartials.map((martial) => ({
+    id: martial.id,
+    name: martial.name,
+    rarity: martial.rarity,
+    category: martial.category as string,
+    cost: martial.currencySource.amount,
+    energyCost: martial.energyCost,
+    cooldownMs: martial.cooldownMs,
+    power: martial.power,
+    learned: Boolean(selectedProgress?.learnedMartials[martial.id]),
+    compatible: selectedProgress ? martial.careerIds.includes(selectedProgress.currentCareerId) : false,
+    selected: martial.id === selectedCityMartialId,
+  }))
   return {
     worldId: world.id,
+    worldIndex,
     worldName: world.name,
     worldCurrency: session.state.worldCurrency[world.id] ?? 0,
     selectedHeroId: selectedId,
-    heroes: recruitedHeroes().map(({ definition, name }) => ({ id: definition.id, name })),
-    tavernHeroes: TAVERN_HEROES.filter((hero) => hero.worldId === world.id).map((hero) => ({
-      id: hero.id,
-      name: hero.name,
-      grade: hero.grade,
-      cost: hero.cost,
-      recruited: Boolean(session.state.heroes[hero.id]?.recruited),
-    })),
-    martials: CITY_MARTIALS.filter((martial) => martial.worldId === world.id).map((martial) => ({
-      id: martial.id,
-      name: martial.name.replace(world.id, world.name),
-      rarity: martial.rarity,
-      cost: martial.currencySource.amount,
-      learned: Boolean(selectedProgress?.learnedMartials[martial.id]),
-    })),
+    selectedHeroName: recruited.find((hero) => hero.definition.id === selectedId)?.name ?? null,
+    heroes: recruited.map(({ definition, name }) => ({ id: definition.id, name })),
+    tavernHeroes: TAVERN_HEROES.filter((hero) => hero.worldId === world.id).map((hero) => {
+      const baseCareer = careerById(hero.baseCareerId)
+      return {
+        id: hero.id,
+        name: hero.name,
+        grade: hero.grade,
+        category: baseCareer?.category ?? '剑',
+        careerName: baseCareer?.name ?? '侠客',
+        cost: hero.cost,
+        recruited: Boolean(session.state.heroes[hero.id]?.recruited),
+        line: hero.line ?? null,
+      }
+    }),
+    martials,
+    fitCount: martials.filter((martial) => martial.compatible).length,
     careerTokens: CAREERS.filter((career) => career.previousId && tierAvailable(career.tier) && (!selectedCareer || career.category === selectedCareer.category)).map((career) => ({
       id: `token_${career.id}`,
       name: `${career.name}信物`,
       tier: career.tier,
+      category: career.category as string,
       cost: tokenCost(career.tier),
       owned: session.state.careerTokens.includes(`token_${career.id}`),
     })),
+    lockedTiers: (['高级', '顶级'] as const)
+      .filter((tier) => !tierAvailable(tier))
+      .map((tier) => ({ tier, cost: tokenCost(tier), minWorld: tier === '高级' ? 4 : 7 })),
   }
 }
 
@@ -1620,6 +1646,7 @@ const performAction = (button: HTMLButtonElement): void => {
     factionRosterOpen = false
     factionRosterQuery = ''
   } else if (action === 'select-martial') selectedFactionMartialId = button.dataset.martialId ?? selectedFactionMartialId
+  else if (action === 'select-city-martial') selectedCityMartialId = button.dataset.martialId ?? selectedCityMartialId
   else if (action === 'heart-method-equip') commitAction(equipHeartMethod(session.state, heroId, button.dataset.heartMethodId ?? ''))
   else if (action === 'quest-accept') commitAction(acceptQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
   else if (action === 'quest-cancel') commitAction(cancelQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))

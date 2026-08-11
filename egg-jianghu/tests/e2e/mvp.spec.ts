@@ -103,7 +103,7 @@ test('战场纵向排列且敌我前排在中线两侧相邻', async ({ page }) 
   expect(layout.partyFront.top).toBeLessThan(layout.partyBack.top)
 })
 
-test('桌面与移动端均使用阵容式左侧栏', async ({ page }) => {
+test('桌面与移动端均使用统一左侧栏', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   const desktop = await page.evaluate(() => {
     const sidebar = document.querySelector('.game-sidebar')!.getBoundingClientRect()
@@ -111,7 +111,7 @@ test('桌面与移动端均使用阵容式左侧栏', async ({ page }) => {
     return { sidebar: { x: sidebar.x, width: sidebar.width, height: sidebar.height }, mainX: main.x }
   })
   expect(desktop.sidebar.x).toBe(0)
-  expect(desktop.sidebar.width).toBe(176)
+  expect(desktop.sidebar.width).toBe(212)
   expect(desktop.sidebar.height).toBe(800)
   expect(desktop.mainX).toBeGreaterThanOrEqual(desktop.sidebar.width)
 
@@ -137,7 +137,7 @@ test('桌面与移动端均使用阵容式左侧栏', async ({ page }) => {
   expect(mobile.scrollWidth).toBeLessThanOrEqual(mobile.viewportWidth)
 })
 
-test('四个页面共享同一套阵容式侧栏外观', async ({ page }) => {
+test('四个页面共享同一套侧栏外观', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   const metrics = []
   for (const tab of ['idle', 'heroes', 'formation', 'inventory'] as const) {
@@ -166,12 +166,12 @@ test('四个页面共享同一套阵容式侧栏外观', async ({ page }) => {
 
   expect(new Set(metrics.map((item) => JSON.stringify(item))).size).toBe(1)
   expect(metrics[0]).toMatchObject({
-    sidebarWidth: 176,
-    sidebarPadding: '0px 10px 18px',
-    sealRadius: '0px',
-    navHeight: 58,
-    navRadius: '1px',
-    markRadius: '50%',
+    sidebarWidth: 212,
+    sidebarPadding: '26px 20px 20px',
+    sealRadius: '6px',
+    navHeight: 50,
+    navRadius: '6px',
+    markRadius: '5px',
     topbarCount: 0,
   })
 })
@@ -614,7 +614,7 @@ test('势力页支持切换匾额、点将谱搜索和经脉研习', async ({ pa
   await expect(page.locator('[data-action="toggle-faction-roster"]')).toContainText('穆念慈')
 
   await page.getByTestId('faction-martial-qingfeng_hall_a1').click()
-  await expect(page.getByTestId('faction-martial-detail')).toContainText('快剑初传')
+  await expect(page.getByTestId('faction-martial-detail')).toContainText('全真剑法')
   await page.getByRole('button', { name: /研习 · 贡献 80/ }).click()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_mu_nianci.learnedMartials.qingfeng_hall_a1?.level)).toBe(1)
 })

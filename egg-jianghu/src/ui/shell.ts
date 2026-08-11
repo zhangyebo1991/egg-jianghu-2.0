@@ -64,7 +64,7 @@ export const renderShell = (view: ShellViewModel): string => {
               </section>`
             : '<button type="button" class="sidebar-danger-link" data-action="request-reset-save">删档重开</button>'}
         </div>
-        <div class="sidebar-landscape" aria-hidden="true"><i></i><b></b></div>
+        <div class="sidebar-landscape" aria-hidden="true"></div>
         <span class="sidebar-motto" aria-hidden="true">朝悟道 · 暮练剑</span>
       </aside>
       <main class="game-main" data-page="${view.activeTab}">${view.content}</main>
