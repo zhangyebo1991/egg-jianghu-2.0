@@ -25,10 +25,11 @@ describe('MARTIAL_LORE 生成数据', () => {
     expect(lore.tags).toEqual(['护体', '金钟'])
   })
 
-  it('所有 tag 已去掉【扩展】与英文目标脚手架', () => {
+  it('所有 tag 已去掉【...】状态标与英文目标脚手架', () => {
     for (const lore of Object.values(MARTIAL_LORE)) {
       for (const tag of lore.tags) {
-        expect(tag).not.toContain('【扩展】')
+        // 任何【...】方括号状态标（【现有】【扩展】【现有近似】【拟】...）都属脚手架残留
+        expect(tag).not.toMatch(/【[^】]*】/)
         // 任何以英文动词（含裸动词与未规范分隔符形态）开头的 tag 都属脚手架残留
         expect(tag).not.toMatch(/^(damage|heal|guard|revive|cleanse|dispel)/)
       }
