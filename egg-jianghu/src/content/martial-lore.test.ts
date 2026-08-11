@@ -29,7 +29,8 @@ describe('MARTIAL_LORE 生成数据', () => {
     for (const lore of Object.values(MARTIAL_LORE)) {
       for (const tag of lore.tags) {
         expect(tag).not.toContain('【扩展】')
-        expect(tag).not.toMatch(/^(damage|heal|guard|revive|cleanse|dispel)·/)
+        // 任何以英文动词（含裸动词与未规范分隔符形态）开头的 tag 都属脚手架残留
+        expect(tag).not.toMatch(/^(damage|heal|guard|revive|cleanse|dispel)/)
       }
     }
   })
