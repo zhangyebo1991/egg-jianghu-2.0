@@ -1,6 +1,7 @@
 import { escapeHtml, formatNumber } from './html'
 import { careerCategoryIconAsset, martialIconAsset } from './career-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
+import type { MartialLore } from '../content/martial-lore'
 
 export type FactionMartialState = 'learned' | 'next' | 'locked'
 
@@ -24,7 +25,25 @@ export interface FactionMartialView {
   actionDisabled: boolean
   actionReason: string | null
   selected: boolean
+  description?: string
+  origin?: string
+  stageName?: string
+  powerNote?: string
+  tags?: string[]
 }
+
+/** 将展示性 lore 富化进武术视图；无 lore 时原样返回，保证旧数据/未覆盖 id 不崩 */
+export const withLore = (view: FactionMartialView, lore?: MartialLore): FactionMartialView =>
+  lore
+    ? {
+      ...view,
+      description: lore.description,
+      origin: lore.origin,
+      stageName: lore.stageName,
+      powerNote: lore.powerNote,
+      tags: lore.tags,
+    }
+    : view
 
 export interface FactionRosterHeroView {
   id: string
@@ -190,18 +209,23 @@ const renderMartialDetail = (view: FactionsPageViewModel): string => {
   const actionLabel = martial.actionDisabled
     ? martial.actionReason ?? (martial.learned ? '暂不可升级' : '暂不可研习')
     : `${martial.learned ? '升级' : '研习'} · 贡献 ${formatNumber(actionCost)}`
+  const stageSuffix = martial.stageName ? ` · ${escapeHtml(martial.stageName)}` : ''
+  const powerDisplay = martial.powerNote || martial.power.toFixed(2)
   return `<div class="faction-martial-detail ${martial.state}" data-testid="faction-martial-detail">
     <div class="faction-detail-copy">
+      ${martial.origin ? `<span class="faction-detail-origin">${escapeHtml(martial.origin)}</span>` : ''}
       <img class="faction-detail-icon" src="${escapeHtml(martialIconAsset(martial.id))}" alt="" aria-hidden="true" draggable="false">
-      <div class="faction-detail-name">${escapeHtml(martial.name)}${martial.learned ? ` <small>Lv.${martial.level}</small>` : ''}</div>
+      <div class="faction-detail-name">${escapeHtml(martial.name)}${stageSuffix}${martial.learned ? ` <small>Lv.${martial.level}</small>` : ''}</div>
+      ${martial.description ? `<p class="faction-detail-desc">「${escapeHtml(martial.description)}」</p>` : ''}
       <div class="faction-detail-stats">
         <span>品阶 <b data-rarity="${escapeHtml(martial.rarity)}">${escapeHtml(martial.rarity)}</b></span>
         <span>耗气 <b>${martial.energyCost}</b></span>
         <span>调息 <b>${formatCooldown(martial.cooldownMs)}</b></span>
-        <span>威力 <b>${martial.power.toFixed(2)}</b></span>
+        <span>威力 <b>${escapeHtml(powerDisplay)}</b></span>
         ${martial.previousName ? `<span>前置 <b>${escapeHtml(martial.previousName)} Lv.20</b></span>` : ''}
         <span>适配 <b>${escapeHtml(martial.careerNames.join(' / '))}</b></span>
       </div>
+      ${martial.tags && martial.tags.length > 0 ? `<div class="faction-detail-tags">${martial.tags.map((tag) => `<i>◈${escapeHtml(tag)}</i>`).join('')}</div>` : ''}
     </div>
     <div class="faction-detail-action">
       <span>${view.selectedHero ? `研习对象 · ${escapeHtml(view.selectedHero.name)}` : '请先选择研习对象'}</span>

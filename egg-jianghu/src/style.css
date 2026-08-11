@@ -1727,6 +1727,10 @@ body {
 .faction-detail-stats [data-rarity] { color: var(--rarity); }
 .faction-detail-action { display: grid; justify-items: end; gap: 8px; }
 .faction-detail-action > span { color: var(--faction-jade); font-size: 10px; letter-spacing: .12em; white-space: nowrap; }
+.faction-detail-origin { float: right; color: var(--faction-paper-mute); font-size: 11px; letter-spacing: .04em; }
+.faction-detail-desc { margin: 6px 0 0; color: var(--faction-paper-mute); font-size: 12px; font-style: italic; line-height: 1.7; letter-spacing: .02em; }
+.faction-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.faction-detail-tags i { padding: 1px 8px; border: 1px solid rgb(201 163 92 / 30%); border-radius: 999px; color: var(--faction-jade); font-style: normal; font-size: 10px; letter-spacing: .08em; }
 .faction-learn-button { padding: 11px 26px; border: 0; border-radius: 6px; color: #f6e9d6; font-size: 13px; font-weight: 600; letter-spacing: .2em; background: linear-gradient(160deg, var(--faction-cinnabar-bright), var(--faction-cinnabar-deep)); box-shadow: 0 6px 18px rgb(138 58 43 / 40%); }
 .faction-learn-button.upgrade { color: #2e2208; background: linear-gradient(160deg, var(--faction-gold-bright), var(--faction-gold-deep)); box-shadow: 0 6px 18px rgb(201 163 92 / 35%); }
 
@@ -1798,6 +1802,7 @@ body {
   .faction-martial-detail { grid-template-columns: 1fr; gap: 12px; margin: 4px 12px 18px; padding: 14px 16px; }
   .faction-detail-action { align-items: stretch; justify-items: stretch; }
   .faction-detail-action > span { text-align: left; }
+  .faction-detail-origin { float: none; display: block; margin-bottom: 2px; }
   .faction-learn-button { width: 100%; }
   .faction-calling-cards { grid-template-columns: 1fr; gap: 12px; padding-inline: 6px; }
   .faction-disciples-head { margin: 0 6px 14px; }
