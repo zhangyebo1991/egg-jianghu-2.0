@@ -3948,6 +3948,14 @@ body:has(.jianghu-shell) {
   background: transparent;
 }
 
+/* 势力 / 城市为长文档页：桌面固定外壳内由主区自行滚动，避免内容被 100vh 裁剪 */
+.jianghu-shell .game-main:has(.faction-page),
+.jianghu-shell .game-main:has(.city-layout) {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3d4438 transparent;
+}
+
 .jianghu-page {
   position: relative;
   z-index: 0;

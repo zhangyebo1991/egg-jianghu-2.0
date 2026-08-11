@@ -619,6 +619,25 @@ test('势力页支持切换匾额、点将谱搜索和经脉研习', async ({ pa
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_mu_nianci.learnedMartials.qingfeng_hall_a1?.level)).toBe(1)
 })
 
+test('势力页主区可滚动查看传承与门人拜帖', async ({ page }) => {
+  await openWorldSection(page, 'factions')
+  const main = page.locator('.game-main')
+  await expect(page.getByTestId('faction-meridian')).toBeAttached()
+  await expect(page.getByTestId('faction-invite-panel')).toBeAttached()
+
+  const metrics = await main.evaluate((element) => ({
+    overflowY: getComputedStyle(element).overflowY,
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }))
+  expect(metrics.overflowY).toBe('auto')
+  expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight)
+
+  await main.evaluate((element) => { element.scrollTop = element.scrollHeight })
+  const panelBottom = await page.getByTestId('faction-invite-panel').evaluate((element) => element.getBoundingClientRect().bottom)
+  expect(panelBottom).toBeLessThanOrEqual((page.viewportSize()?.height ?? 0) + 1)
+})
+
 test('重载页面后长期收益保留但必须重新选择关卡', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
