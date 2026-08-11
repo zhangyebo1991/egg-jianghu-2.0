@@ -34,7 +34,8 @@ import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
 import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
-import { renderFactionsPage, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
+import { MARTIAL_LORE } from './content/martial-lore'
+import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
 import { renderHeroesPage, type HeroesEquipmentView, type HeroesHeroView, type HeroesPageViewModel } from './ui/heroes-page'
 import {
@@ -965,7 +966,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
     else if (Object.keys(heroProgress?.learnedMartials ?? {}).length >= 20 && !learned) actionReason = '已满 20 门'
     else if (contribution < actionCost) actionReason = '贡献不足'
 
-    return {
+    return withLore({
       id: martial.id,
       name: martial.name,
       stage: martial.stage,
@@ -985,7 +986,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
       actionDisabled: actionReason !== null,
       actionReason,
       selected: martial.id === selectedFactionMartialId,
-    }
+    }, MARTIAL_LORE[martial.id])
   })
   const selectedMartial = martialViews.find((martial) => martial.id === selectedFactionMartialId) ?? null
   const recruited = recruitedHeroes()
