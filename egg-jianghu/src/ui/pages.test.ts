@@ -338,6 +338,16 @@ describe('version 10 长期循环页面', () => {
     const enriched = withLore(base, { description: 'd', origin: 'o', stageName: '初传', powerNote: 'p', tags: ['单体'] })
     expect(enriched.description).toBe('d')
     expect(enriched.tags).toEqual(['单体'])
-    expect(withLore(base, undefined)).toEqual(base)
+    expect(withLore(base, undefined)).toBe(base)
+  })
+
+  it('lore 缺失时卡片不崩且威力回退到 power', () => {
+    const base = factionsFixture()
+    const noLore = { ...base, selectedMartial: { ...base.selectedMartial!, description: undefined, origin: undefined, stageName: undefined, powerNote: undefined, tags: undefined } }
+    const html = renderFactionsPage(noLore)
+    expect(html).toContain('1.15')        // power.toFixed(2) 兜底（fixture power=1.15）
+    expect(html).not.toContain('undefined')
+    expect(html).not.toContain('「」')
+    expect(html).not.toContain('◈')
   })
 })

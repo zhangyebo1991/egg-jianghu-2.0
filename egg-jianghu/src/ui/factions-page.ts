@@ -41,7 +41,7 @@ export const withLore = (view: FactionMartialView, lore?: MartialLore): FactionM
       origin: lore.origin,
       stageName: lore.stageName,
       powerNote: lore.powerNote,
-      tags: lore.tags,
+      tags: lore.tags.slice(),
     }
     : view
 
