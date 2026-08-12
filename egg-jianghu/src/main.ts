@@ -695,7 +695,7 @@ const heroEquipmentView = (item: EquipmentInstance): HeroesEquipmentView => {
         ?? equipmentStatNames[affix.id]
         ?? affix.id,
       value: affix.value,
-      percent: percentEquipmentStats.has(affix.id),
+      percent: percentEquipmentStats.has(affix.id) || /^\d+$/.test(affix.id),
     })),
   }
 }

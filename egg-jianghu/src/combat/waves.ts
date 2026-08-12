@@ -1,4 +1,5 @@
 import { createRng } from './rng'
+import { panelToAttributeMap } from './stats'
 import { enemyName } from '../content/enemy-names'
 import type { CombatRank, CombatSnapshot, CombatUnit } from './types'
 
@@ -29,6 +30,16 @@ const createEnemy = (
   const worldIndex = Number(worldId.slice(-2)) || 1
   const scale = (1 + (worldIndex - 1) * 0.6 + (stage - 1) * 0.09 + (wave - 1) * 0.025) * enemyRankMultiplier[rank]
   const maxHp = Math.floor((70 + rng.nextInt(0, 21)) * scale)
+  const effectiveAgility = 35 + worldIndex * 4 + stage + rng.nextInt(0, 8)
+  const externalAttack = Math.floor((25 + worldIndex * 8 + stage * 2) * enemyRankMultiplier[rank])
+  const internalAttack = Math.floor((20 + worldIndex * 7 + stage * 2) * enemyRankMultiplier[rank])
+  const externalDefense = Math.floor((12 + worldIndex * 5 + stage) * enemyRankMultiplier[rank])
+  const internalDefense = Math.floor((10 + worldIndex * 5 + stage) * enemyRankMultiplier[rank])
+  const accuracy = 0.02 + worldIndex * 0.005
+  const evade = Math.min(0.35, 0.03 + worldIndex * 0.01)
+  const criticalChance = Math.min(0.35, 0.04 + worldIndex * 0.01)
+  const criticalMultiplier = 1.5
+  const controlResistance = rank === 'boss' ? 0.55 : rank === 'elite' ? 0.3 : 0.1
   const row = index < 3 ? 'front' : 'back'
   const position = (index % 3) as 0 | 1 | 2
   const rankId = rank === 'boss' ? 'boss' : rank === 'elite' ? `elite_${index + 1}` : `normal_${index + 1}`
@@ -46,22 +57,38 @@ const createEnemy = (
     energy: 20,
     maxEnergy: 100,
     gauge: 0,
-    effectiveAgility: 35 + worldIndex * 4 + stage + rng.nextInt(0, 8),
-    externalAttack: Math.floor((25 + worldIndex * 8 + stage * 2) * enemyRankMultiplier[rank]),
-    internalAttack: Math.floor((20 + worldIndex * 7 + stage * 2) * enemyRankMultiplier[rank]),
-    externalDefense: Math.floor((12 + worldIndex * 5 + stage) * enemyRankMultiplier[rank]),
-    internalDefense: Math.floor((10 + worldIndex * 5 + stage) * enemyRankMultiplier[rank]),
-    accuracy: 0.02 + worldIndex * 0.005,
-    evade: Math.min(0.35, 0.03 + worldIndex * 0.01),
-    criticalChance: Math.min(0.35, 0.04 + worldIndex * 0.01),
-    criticalMultiplier: 1.5,
-    controlResistance: rank === 'boss' ? 0.55 : rank === 'elite' ? 0.3 : 0.1,
+    effectiveAgility,
+    externalAttack,
+    internalAttack,
+    externalDefense,
+    internalDefense,
+    accuracy,
+    evade,
+    criticalChance,
+    criticalMultiplier,
+    controlResistance,
     controlDiminishing: {},
     cooldowns: {},
     statuses: [],
     momentum: {},
     skillIds: [null, null, null, null],
     baseSkillId: 'enemy_base',
+    attributes: panelToAttributeMap({
+      maxHp,
+      effectiveAgility,
+      externalAttack,
+      externalDefense,
+      internalAttack,
+      internalDefense,
+      accuracy,
+      evade,
+      criticalChance,
+      criticalMultiplier,
+      controlResistance,
+      initialEnergy: 20,
+      energyRecovery: 0,
+      cooldownRate: 0,
+    }),
   }
 }
 

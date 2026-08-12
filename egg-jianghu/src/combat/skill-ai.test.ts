@@ -33,6 +33,7 @@ const unit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
   momentum: {},
   skillIds: [],
   baseSkillId: 'base',
+  attributes: {},
   ...overrides,
 })
 

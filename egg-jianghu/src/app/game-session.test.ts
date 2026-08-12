@@ -3,6 +3,7 @@ import { recruitFromTavern } from '../domain/recruitment'
 import { SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
 import { createNewGameStateV10 } from '../domain/state'
 import { GameSession } from './game-session'
+import { panelToAttributeMap } from '../combat/stats'
 
 const memoryStorage = (): StorageLike & { values: Map<string, string> } => {
   const values = new Map<string, string>()
@@ -30,6 +31,12 @@ const makePartyOverwhelming = (session: GameSession): void => {
     hero.externalDefense = hero.internalDefense = 5000
     hero.effectiveAgility = 10_000
     hero.accuracy = 1
+    hero.attributes = panelToAttributeMap({
+      ...hero,
+      initialEnergy: hero.energy,
+      energyRecovery: 0,
+      cooldownRate: 0,
+    })
   }
 }
 

@@ -2,40 +2,62 @@ import { describe, expect, it } from 'vitest'
 import { createCombatEngine } from './engine'
 import { advanceToNextWave, createWave, isWaveCleared } from './waves'
 import type { CombatStartInput, CombatUnit } from './types'
+import { panelToAttributeMap } from './stats'
 
-const partyUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
-  id: 'hero_strong',
-  name: '强力侠客',
-  careerId: 'sword',
-  side: 'party',
-  row: 'front',
-  position: 0,
-  formationOrder: 0,
-  rank: 'normal',
-  alive: true,
-  hp: 5000,
-  maxHp: 5000,
-  energy: 20,
-  maxEnergy: 100,
-  gauge: 0,
-  effectiveAgility: 2500,
-  externalAttack: 5000,
-  internalAttack: 1000,
-  externalDefense: 1000,
-  internalDefense: 1000,
-  accuracy: 1,
-  evade: 0.7,
-  criticalChance: 0,
-  criticalMultiplier: 1.5,
-  controlResistance: 0.5,
-  controlDiminishing: {},
-  cooldowns: {},
-  statuses: [],
-  momentum: {},
-  skillIds: [null, null, null, null],
-  baseSkillId: 'base_sword',
-  ...overrides,
-})
+const partyUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => {
+  const merged: CombatUnit = {
+    id: 'hero_strong',
+    name: '强力侠客',
+    careerId: 'sword',
+    side: 'party',
+    row: 'front',
+    position: 0,
+    formationOrder: 0,
+    rank: 'normal',
+    alive: true,
+    hp: 5000,
+    maxHp: 5000,
+    energy: 20,
+    maxEnergy: 100,
+    gauge: 0,
+    effectiveAgility: 2500,
+    externalAttack: 5000,
+    internalAttack: 1000,
+    externalDefense: 1000,
+    internalDefense: 1000,
+    accuracy: 1,
+    evade: 0.7,
+    criticalChance: 0,
+    criticalMultiplier: 1.5,
+    controlResistance: 0.5,
+    controlDiminishing: {},
+    cooldowns: {},
+    statuses: [],
+    momentum: {},
+    skillIds: [null, null, null, null],
+    baseSkillId: 'base_sword',
+    attributes: {},
+    ...overrides,
+  }
+  // 诸天引擎读 attributes，从散落字段镜像（与 production buildCombatParty 一致）
+  merged.attributes = panelToAttributeMap({
+    maxHp: merged.maxHp,
+    effectiveAgility: merged.effectiveAgility,
+    externalAttack: merged.externalAttack,
+    externalDefense: merged.externalDefense,
+    internalAttack: merged.internalAttack,
+    internalDefense: merged.internalDefense,
+    accuracy: merged.accuracy,
+    evade: merged.evade,
+    criticalChance: merged.criticalChance,
+    criticalMultiplier: merged.criticalMultiplier,
+    controlResistance: merged.controlResistance,
+    initialEnergy: merged.energy,
+    energyRecovery: 5,
+    cooldownRate: 0,
+  })
+  return merged
+}
 
 describe('十波战斗', () => {
   it('每个小关的第十波都含 Boss、精英和小怪', () => {

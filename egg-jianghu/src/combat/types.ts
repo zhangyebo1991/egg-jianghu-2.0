@@ -1,4 +1,5 @@
 import type { CampaignMode, FormationPosition, FormationRow } from '../domain/types'
+import type { AttributeMap } from '../content/attributes'
 
 export type CombatSide = 'party' | 'enemy'
 export type CombatRank = 'normal' | 'elite' | 'boss'
@@ -47,6 +48,8 @@ export interface CombatUnit {
   momentum: Record<string, number>
   skillIds: Array<string | null>
   baseSkillId: string
+  /** 诸天模型统一属性面板（属性 id → 数值）；与上方散落字段并行，Phase 2 起战斗公式改读此字段 */
+  attributes: AttributeMap
 }
 
 export interface CombatSummon extends CombatUnit {

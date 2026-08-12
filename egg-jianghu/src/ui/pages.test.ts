@@ -195,16 +195,22 @@ describe('version 10 长期循环页面', () => {
     expect(html).not.toContain('六侠阵容')
   })
 
-  it('侠客页展示基础属性与计入养成加成后的战斗属性', () => {
+  it('侠客页用诸天六标签页展示属性（基础/附加/特殊/元素/专精/武器）', () => {
     const html = renderHeroesPage(heroesFixture())
     expect(html).toContain('data-testid="hero-stats"')
-    expect(html).toContain('基础属性')
+    expect(html).toContain('诸天属性')
+    expect(html).toContain('class="attr-tab-label" data-attr-tab="basic"')
+    expect(html).toContain('data-attr-tab="additive"')
+    expect(html).toContain('data-attr-tab="element"')
+    expect(html).toContain('data-attr-tab="mastery"')
+    expect(html).toContain('data-attr-tab="weapon"')
     expect(html).toContain('臂力</dt><dd>10')
-    expect(html).toContain('战斗属性')
-    expect(html).toContain('气血</dt><dd>520')
-    expect(html).toContain('有效身法</dt><dd>92.4')
+    expect(html).toContain('生命</dt><dd>520')
+    expect(html).toContain('速度</dt><dd>92.4')
+    expect(html).toContain('物攻')
+    expect(html).toContain('暴击几率')
+    expect(html).toContain('物理增伤')
     expect(html).toContain('命中修正</dt><dd>7.3%')
-    expect(html).toContain('圆满加成</dt><dd>5%')
   })
 
   it('侠客页展示装备栏、可筛选物品及同部位装备对比', () => {

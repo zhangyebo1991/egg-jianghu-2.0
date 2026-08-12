@@ -1,9 +1,11 @@
 import { MARTIALS_V10, martialByIdV10 } from '../content/martials'
+import { factionById } from '../content/factions'
 import type { CampaignMode } from '../domain/types'
-import { calculateDamage, hitChance } from './damage'
+import { calculateDamage, hitChance, rollCritical } from './damage'
+import { SX, attr, ELEMENT_IDS } from './attribute-ids'
 import { createRng, type Rng } from './rng'
 import { selectSkill, type CombatSkillDefinition } from './skill-ai'
-import { tickStatuses } from './statuses'
+import { applyStatus, tickStatuses } from './statuses'
 import { selectTargets } from './targeting'
 import { advanceGaugeAndCooldowns, COMBAT_TICK_MS, readyOrder } from './timeline'
 import type {
@@ -129,29 +131,64 @@ const executeAction = (state: CombatSnapshot, actor: CombatUnit, rng: Rng): Comb
 
   for (const target of targets) {
     if (semantic === 'heal') {
-      const amount = Math.max(1, Math.floor(actor.internalAttack * (martial?.power ?? 0.8)))
+      const healBonus = attr(actor.attributes, SX.治疗加成)
+      const amount = Math.max(1, Math.floor(attr(actor.attributes, SX.法攻) * (martial?.power ?? 1.0) * (1 + healBonus / 100)))
       target.hp = Math.min(target.maxHp, target.hp + amount)
       events.push({ type: 'healing', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, amount })
       continue
     }
 
-    if (rng.nextFloat() > hitChance(actor.accuracy - target.evade)) continue
     const route = martial?.damageRoute === 'internal' || (!martial && baseRoute(actor) === 'internal') ? 'internal' : 'external'
-    const isCritical = rng.nextFloat() < actor.criticalChance
-    const critical = isCritical ? actor.criticalMultiplier : 1
+    if (rng.nextFloat() > hitChance(attr(target.attributes, SX.闪避修正), attr(actor.attributes, SX.命中修正))) continue
+    const isPhysical = route === 'external'
+    const skillCategory = martial?.skillCategory ?? 0
+    const weaponType = martial?.weaponType ?? 0
+    const element = martial?.element ?? 0
+    const elementIds = element ? ELEMENT_IDS[element] : null
+    const faction = martial?.factionId ? factionById(martial.factionId) : undefined
+    const { isCritical, coefficient: criticalCoeff } = rollCritical(
+      attr(actor.attributes, SX.暴击几率),
+      attr(actor.attributes, SX.暴击伤害),
+      rng.nextFloat(),
+    )
     const amount = calculateDamage({
-      attack: route === 'external' ? actor.externalAttack : actor.internalAttack,
-      defense: route === 'external' ? target.externalDefense : target.internalDefense,
-      power: martial?.power ?? 0.8,
-      additive: 0,
-      critical,
-      momentum: 0,
-      reduction: 0,
-      vulnerability: 0,
-      final: 0,
+      attack: attr(actor.attributes, isPhysical ? SX.物攻 : SX.法攻),
+      defense: attr(target.attributes, isPhysical ? SX.物防 : SX.法防),
+      skillCoeff: martial?.power ?? 1.0,
+      factionPower: faction ? attr(actor.attributes, faction.factionPowerSxId) : 0,
+      elementPower: elementIds ? attr(actor.attributes, elementIds.groupPower) : 0,
+      damageType: attr(actor.attributes, isPhysical ? SX.物理增伤 : SX.法术增伤),
+      basicAttack: isBase ? attr(actor.attributes, SX.普攻增伤) : 0,
+      elementDamage: elementIds ? attr(actor.attributes, elementIds.damage) : 0,
+      specialization: skillCategory ? attr(actor.attributes, 60 + skillCategory - 1) : 0,
+      mastery: weaponType ? attr(actor.attributes, 92 + weaponType - 1) : 0,
+      typeReduction: attr(target.attributes, isPhysical ? SX.物理减伤 : SX.法术减伤),
+      elementResist: elementIds ? attr(target.attributes, elementIds.resist) : 0,
+      receivedType: attr(target.attributes, isPhysical ? SX.受物理伤害 : SX.受法术伤害),
+      receivedElement: elementIds ? attr(target.attributes, elementIds.received) : 0,
+      receivedAll: attr(target.attributes, SX.受所有伤害),
+      finalDamage: attr(actor.attributes, SX.最终增伤),
+      finalReduction: attr(target.attributes, SX.最终减伤),
+      critical: criticalCoeff,
+      buffMultiplier: 0,
     })
     target.hp = Math.max(0, target.hp - amount)
     events.push({ type: 'damage', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, amount, critical: isCritical })
+    if (martial?.statusTrigger && target.alive && rng.nextFloat() < martial.statusTrigger.chance) {
+      const trigger = martial.statusTrigger
+      const isDot = trigger.category === 'damage-over-time'
+      const baseAtk = isPhysical ? attr(actor.attributes, SX.物攻) : attr(actor.attributes, SX.法攻)
+      applyStatus(target, {
+        id: trigger.id,
+        remainingMs: trigger.durationMs,
+        mode: trigger.mode,
+        stacks: 1,
+        value: isDot ? Math.max(1, Math.floor(baseAtk * (trigger.valueRatio ?? 0))) : 0,
+        tickIntervalMs: trigger.tickIntervalMs,
+        sourceId: actor.id,
+        category: trigger.category,
+      })
+    }
     if (target.hp === 0 && target.alive) {
       target.alive = false
       if (target.side === 'enemy') events.push(emitDefeat(state, target, rng))
@@ -166,6 +203,7 @@ const tickOnce = (state: CombatSnapshot, rng: Rng): CombatEvent[] => {
 
   for (const actor of readyOrder(activeUnits(state))) {
     if (!actor.alive || state.result !== 'fighting') continue
+    if (actor.statuses.some((status) => status.category === 'control' && status.remainingMs > 0)) continue
     events.push(...executeAction(state, actor, rng))
     if (isWaveCleared(state.enemies)) break
   }

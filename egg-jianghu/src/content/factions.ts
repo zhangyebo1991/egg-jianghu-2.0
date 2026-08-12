@@ -7,6 +7,8 @@ export interface FactionDefinition {
   category: CareerCategory
   worldId: string
   branchLabels: readonly [string, string]
+  /** 诸天技能组威力属性 id（sx153-194 段），决定该势力武功的技能组威力乘区 */
+  factionPowerSxId: number
 }
 
 const branchLabelsFor = (category: CareerCategory): readonly [string, string] => {
@@ -53,7 +55,14 @@ export const FACTION_ROWS = [
 ] as const satisfies ReadonlyArray<readonly [string, string, CareerCategory, string]>
 
 export const FACTIONS: FactionDefinition[] = FACTION_ROWS.map(
-  ([id, name, category, worldId]) => ({ id, name, category, worldId, branchLabels: branchLabelsFor(category) }),
+  ([id, name, category, worldId], index) => ({
+    id,
+    name,
+    category,
+    worldId,
+    branchLabels: branchLabelsFor(category),
+    factionPowerSxId: 153 + index,
+  }),
 )
 
 export const RARITY_BUDGET_BY_WORLD: Record<string, readonly Rarity[]> = {

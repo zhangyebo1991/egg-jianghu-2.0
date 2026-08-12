@@ -1,6 +1,6 @@
 import { createCombatEngine, type CombatEngine } from '../combat/engine'
 import { createRng, type Rng } from '../combat/rng'
-import { buildCombatStats } from '../combat/stats'
+import { buildCombatStats, buildAttributeMap } from '../combat/stats'
 import type { CombatEvent, CombatStartInput, CombatUnit, StageSelectionInput } from '../combat/types'
 import { FACTIONS } from '../content/factions'
 import { heroByIdV10, heroDisplayNameV10 } from '../content/heroes'
@@ -54,6 +54,7 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       momentum: {},
       skillIds: [...progress.equippedMartialIds],
       baseSkillId: `base_${progress.currentCareerId}`,
+      attributes: buildAttributeMap(definition, progress, state.inventory),
     }]
   })
 

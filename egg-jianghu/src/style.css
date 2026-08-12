@@ -3280,6 +3280,28 @@ body {
 .heroes-page .radar-total b { display: block; color: var(--gold-bright); font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
 .heroes-page .radar-total span { display: block; margin-top: 4px; color: var(--paper-mute); font-size: 9px; letter-spacing: .3em; }
 .heroes-page .combat-stats { display: grid; gap: 14px; }
+
+/* 诸天属性标签页（纯 CSS :has() 切换，对齐诸天真实 UI：基础/附加/特殊/元素/专精/武器） */
+.heroes-page .attr-tab-radio { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.heroes-page .attr-tab-bar { display: flex; flex-wrap: wrap; gap: 6px; }
+.heroes-page .attr-tab-label { padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; letter-spacing: .08em; color: var(--paper-mute); border: 1px solid var(--line-soft); background: rgb(12 14 11 / 25%); transition: all .18s; }
+.heroes-page .attr-tab-label:hover { color: var(--heroes-paper); border-color: rgb(201 163 92 / 35%); }
+.heroes-page .attr-panel { display: none; }
+.heroes-page .attr-group { display: grid; gap: 8px; margin-top: 10px; }
+.heroes-page .attr-group-title { font-size: 11px; letter-spacing: .16em; color: var(--paper-mute); border-left: 2px solid rgb(201 163 92 / 45%); padding-left: 8px; }
+.heroes-page .attr-group .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="basic"]:checked) .attr-panel[data-attr-tab="basic"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="additive"]:checked) .attr-panel[data-attr-tab="additive"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="special"]:checked) .attr-panel[data-attr-tab="special"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="element"]:checked) .attr-panel[data-attr-tab="element"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="mastery"]:checked) .attr-panel[data-attr-tab="mastery"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="weapon"]:checked) .attr-panel[data-attr-tab="weapon"] { display: block; }
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="basic"]:checked) .attr-tab-label[data-attr-tab="basic"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="additive"]:checked) .attr-tab-label[data-attr-tab="additive"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="special"]:checked) .attr-tab-label[data-attr-tab="special"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="element"]:checked) .attr-tab-label[data-attr-tab="element"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="mastery"]:checked) .attr-tab-label[data-attr-tab="mastery"],
+.heroes-page .attr-tabs:has(.attr-tab-radio[data-attr-tab="weapon"]:checked) .attr-tab-label[data-attr-tab="weapon"] { color: var(--gold-bright); border-color: rgb(201 163 92 / 60%); background: rgb(201 163 92 / 12%); }
 .heroes-page .stat-cluster > header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
 .heroes-page .stat-cluster > header h3 { margin: 0; color: #d8c9a4; font-size: 13px; font-weight: 600; letter-spacing: .3em; }
 .heroes-page .stat-cluster > header span { color: var(--paper-mute); font-size: 9px; letter-spacing: .2em; }

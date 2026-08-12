@@ -1,5 +1,6 @@
 import { escapeHtml } from './html'
-import type { CombatStats } from '../combat/stats'
+import { panelToAttributeMap, type CombatStats } from '../combat/stats'
+import { ATTRIBUTES, type AttributeMap } from '../content/attributes'
 import { EQUIPMENT_QUALITIES, type EquipmentSlot } from '../content/equipment'
 import type { HeroAptitudes } from '../content/heroes'
 import type { EquipmentQuality } from '../domain/types'
@@ -108,13 +109,17 @@ const paginationWindow = (page: number, pageCount: number): number[] => {
 }
 
 const formatNumber = (value: number): string => Number.isInteger(value) ? String(value) : value.toFixed(1)
-const formatPercent = (value: number): string => `${(value * 100).toFixed(value * 100 % 1 === 0 ? 0 : 1)}%`
 
 const statMarks: Record<string, string> = {
-  臂力: '力', 悟性: '悟', 体魄: '骨', 身法: '身', 定力: '心', 气血: '♥', 真气: '●',
-  初始真气: '✣', 真气回复: '◉', 外功: '剑', 内功: '气', 外防: '盾', 内防: '甲',
-  有效身法: '影', 命中修正: '羽', 闪避: '闪', 控制抗性: '定', 暴击: '暴',
-  暴击倍率: '破', 冷却缩减: '冷', 气机加速: '速', 武势加成: '势', 生存加成: '生', 圆满加成: '圆',
+  臂力: '力', 悟性: '悟', 体魄: '骨', 身法: '身', 定力: '心',
+  // 诸天核心面板 sx6-11
+  生命: '♥', 速度: '影', 物攻: '剑', 物防: '盾', 法攻: '气', 法防: '甲',
+  // 诸天附加·输出 sx12-27
+  暴击几率: '暴', 暴击伤害: '破', 物理增伤: '攻', 法术增伤: '法', 普攻增伤: '拳', 最终增伤: '终', 吸血: '血',
+  // 诸天附加·防御
+  物理减伤: '减', 法术减伤: '御', 最终减伤: '护', 命中修正: '羽', 闪避修正: '闪',
+  // 诸天特殊·资源
+  初始能量: '✣', 能量回复: '◉', 技能冷却: '冷',
 }
 
 const aptitudeKeys: Array<{ key: keyof HeroAptitudes; label: string }> = [
@@ -155,18 +160,35 @@ const renderAptitudeRadar = (aptitudes: HeroAptitudes): string => {
 const renderCombatChip = (label: string, value: string | number, hot = false): string =>
   `<div class="st-chip${hot ? ' hot' : ''}" data-stat-label="${escapeHtml(label)}" title="${escapeHtml(label)}"><i aria-hidden="true">${statMarks[label] ?? '◇'}</i><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(formatStatValue(value))}</dd></div>`
 
-const renderStatCluster = (title: string, subtitle: string, rows: Array<[string, string | number, boolean?]>): string =>
-  `<section class="stat-cluster"><header><h3>${escapeHtml(title)}</h3><span>${escapeHtml(subtitle)}</span></header><div class="chips">${rows.map(([label, value, hot]) => renderCombatChip(label, value, hot)).join('')}</div></section>`
+const formatAttr = (value: number, unit: string): string => {
+  if (unit === '百分比') return `${formatNumber(value)}%`
+  if (unit === '每秒') return `${formatNumber(value)}/s`
+  return formatNumber(value)
+}
+
+/** 诸天角色面板标签页（对齐诸天真实 UI：基础/附加/特殊/元素/专精/武器）。 */
+const ATTR_TABS: Array<{ tab: string; label: string; cats: string[] }> = [
+  { tab: 'basic', label: '基础', cats: ['核心', '能力'] },
+  { tab: 'additive', label: '附加', cats: ['附加'] },
+  { tab: 'special', label: '特殊', cats: ['特殊'] },
+  { tab: 'element', label: '元素', cats: ['元素'] },
+  { tab: 'mastery', label: '专精', cats: ['技能效果'] },
+  { tab: 'weapon', label: '武器', cats: ['熟练伤害'] },
+]
+const ATTR_TAB_CATS = ATTR_TABS.flatMap((t) => t.cats)
+
+const renderAttrChips = (cats: readonly string[], attrs: AttributeMap): string =>
+  cats.map((cat) => {
+    const items = ATTRIBUTES.filter((a) => a.category === cat)
+    if (items.length === 0) return ''
+    return `<div class="attr-group"><span class="attr-group-title">${escapeHtml(cat)}</span><div class="chips">${items.map((a) => renderCombatChip(a.name, formatAttr(attrs[a.id] ?? 0, a.unit))).join('')}</div></div>`
+  }).join('')
 
 const renderAccessibleHeroStats = (hero: HeroesHeroView): string => {
-  const stats = hero.combatStats
+  const attrs = panelToAttributeMap(hero.combatStats, hero.aptitudes)
   const rows: Array<[string, string | number]> = [
     ...aptitudeKeys.map(({ key, label }) => [label, hero.aptitudes[key]] as [string, number]),
-    ['气血', stats.maxHp], ['真气', stats.maxEnergy], ['初始真气', stats.initialEnergy], ['真气回复', stats.energyRecovery],
-    ['外功', stats.externalAttack], ['内功', stats.internalAttack], ['外防', stats.externalDefense], ['内防', stats.internalDefense], ['有效身法', stats.effectiveAgility],
-    ['命中修正', formatPercent(stats.accuracy)], ['闪避', formatPercent(stats.evade)], ['控制抗性', formatPercent(stats.controlResistance)],
-    ['暴击', formatPercent(stats.criticalChance)], ['暴击倍率', formatPercent(stats.criticalMultiplier)], ['冷却缩减', formatPercent(stats.cooldownRate)],
-    ['气机加速', formatPercent(stats.gaugeRate)], ['武势加成', formatPercent(stats.momentumBonus)], ['生存加成', formatPercent(stats.survivalBonus)], ['圆满加成', formatPercent(stats.perfectedBonusPool)],
+    ...ATTRIBUTES.filter((a) => ATTR_TAB_CATS.includes(a.category)).map((a) => [a.name, formatAttr(attrs[a.id] ?? 0, a.unit)] as [string, string]),
   ]
   return `<dl class="hero-stats-a11y" aria-label="侠客属性明细">${rows.map(([label, value]) => {
     const aptitude = aptitudeKeys.some(({ label: aptitudeLabel }) => aptitudeLabel === label)
@@ -186,25 +208,25 @@ const renderHeroPortrait = (hero: HeroesHeroView, className: string): string => 
 
 const renderHeroStats = (hero: HeroesHeroView): string => {
   const aptitudes = hero.aptitudes
-  const stats = hero.combatStats
+  const attrs = panelToAttributeMap(hero.combatStats, aptitudes)
   const aptitudeTotal = aptitudeKeys.reduce((total, { key }) => total + aptitudes[key], 0)
+  const uid = hero.id
+  const radios = ATTR_TABS.map((t, i) =>
+    `<input type="radio" name="attrtab-${escapeHtml(uid)}" id="attrtab-${escapeHtml(uid)}-${t.tab}" class="attr-tab-radio" data-attr-tab="${t.tab}"${i === 0 ? ' checked' : ''}>`,
+  ).join('')
+  const labels = ATTR_TABS.map((t) =>
+    `<label for="attrtab-${escapeHtml(uid)}-${t.tab}" class="attr-tab-label" data-attr-tab="${t.tab}">${escapeHtml(t.label)}</label>`,
+  ).join('')
+  const panels = ATTR_TABS.map((t) =>
+    `<div class="attr-panel" data-attr-tab="${t.tab}">${renderAttrChips(t.cats, attrs)}</div>`,
+  ).join('')
   return `<section class="dossier-sec hero-stats-section" data-testid="hero-stats">
-    <header><div class="sec-title"><h2>根骨资质</h2><span class="sub">其壹 · 五维天资 · <i>基础属性与战斗属性</i></span></div></header>
+    <header><div class="sec-title"><h2>根骨资质</h2><span class="sub">其壹 · 五维天资 · <i>诸天属性 · 基础 / 附加 / 特殊 / 元素 / 专精 / 武器</i></span></div></header>
     <div class="sec-body aptitude-grid">
       <div class="radar-box">${renderAptitudeRadar(aptitudes)}<div class="radar-total"><b>${aptitudeTotal}</b><span>天资总和</span></div></div>
-      <div class="combat-stats">
-        ${renderStatCluster('气血真气', '生死之本', [
-          ['气血', stats.maxHp], ['真气', stats.maxEnergy], ['初始真气', stats.initialEnergy], ['真气回复', stats.energyRecovery],
-        ])}
-        ${renderStatCluster('战斗属性', '已计入等级、职业、心法与装备', [
-          ['外功', stats.externalAttack], ['内功', stats.internalAttack], ['外防', stats.externalDefense], ['内防', stats.internalDefense], ['有效身法', stats.effectiveAgility],
-        ])}
-        ${renderStatCluster('几率节奏', '百分制', [
-          ['命中修正', formatPercent(stats.accuracy)], ['闪避', formatPercent(stats.evade)], ['控制抗性', formatPercent(stats.controlResistance)],
-          ['暴击', formatPercent(stats.criticalChance)], ['暴击倍率', formatPercent(stats.criticalMultiplier)], ['冷却缩减', formatPercent(stats.cooldownRate)],
-          ['气机加速', formatPercent(stats.gaugeRate)], ['武势加成', formatPercent(stats.momentumBonus)], ['生存加成', formatPercent(stats.survivalBonus)],
-          ['圆满加成', formatPercent(stats.perfectedBonusPool), stats.perfectedBonusPool > 0],
-        ])}
+      <div class="combat-stats attr-tabs">
+        <div class="attr-tab-bar">${radios}${labels}</div>
+        <div class="attr-panels">${panels}</div>
         ${renderAccessibleHeroStats(hero)}
       </div>
     </div>

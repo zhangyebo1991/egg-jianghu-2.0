@@ -1,6 +1,7 @@
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
 import { CITY_MARTIAL_NAMES, FACTION_MARTIAL_NAMES, HEART_METHOD_NAMES } from './martial-names'
 import type { CareerCategory } from './careers'
+import type { StatusMode } from '../combat/types'
 import type { Rarity } from '../domain/types'
 
 export type DamageRoute = 'external' | 'internal' | 'healing'
@@ -10,6 +11,18 @@ export interface MartialCost {
   kind: 'worldCurrency' | 'contribution'
   id: string
   amount: number
+}
+
+export interface MartialStatusTrigger {
+  id: string
+  category: 'damage-over-time' | 'control'
+  /** 触发概率 0-1 */
+  chance: number
+  durationMs: number
+  /** DoT 每 tick 伤害 = 攻击力 × valueRatio（控制类不用） */
+  tickIntervalMs?: number
+  valueRatio?: number
+  mode: StatusMode
 }
 
 export interface MartialDefinitionV10 {
@@ -28,6 +41,14 @@ export interface MartialDefinitionV10 {
   energyCost: number
   cooldownMs: number
   power: number
+  /** 诸天技能类别 id（jn[4]：3=武功/12=功法/16=医术…），决定专精增伤乘区（sx60-75） */
+  skillCategory: number
+  /** 诸天武器类型 id（wp[7]：2=刀剑/3=拳指/4=暗器…0=无），决定武器熟练增伤（sx92-101） */
+  weaponType: number
+  /** 诸天元素 id（0-8：0=无/1雷…8黑暗），决定元素增伤/抗性/元素组威力乘区 */
+  element: number
+  /** 触发的状态（中毒/流血等 DoT），命中后按概率附加到目标 */
+  statusTrigger?: MartialStatusTrigger
   previousId: string | null
   careerIds: string[]
   currencySource: MartialCost
@@ -75,6 +96,24 @@ const forceFor = (category: CareerCategory, branchIndex: 1 | 2): MartialForce =>
   return branchIndex === 1 ? 'hard' : 'soft'
 }
 
+/** egg 职业类别 → 诸天技能标签（技能类别 id / 武器类型 id / 元素 id）。
+ * 技能类别映射 jn[4]：3=武功、12=功法、16=医术；武器映射 wp[7]：2=刀剑、3=拳指、4=暗器。 */
+const MARTIAL_TAGS: Record<CareerCategory, { skillCategory: number; weaponType: number; element: number }> = {
+  剑: { skillCategory: 3, weaponType: 2, element: 0 },
+  刀: { skillCategory: 3, weaponType: 2, element: 0 },
+  拳: { skillCategory: 3, weaponType: 3, element: 0 },
+  暗: { skillCategory: 3, weaponType: 4, element: 0 },
+  医: { skillCategory: 16, weaponType: 0, element: 6 },
+  内家: { skillCategory: 12, weaponType: 0, element: 0 },
+}
+
+/** 按 category 赋予状态触发：暗→中毒、拳→流血（DoT），剑→点穴（控制）。 */
+const MARTIAL_STATUS: Partial<Record<CareerCategory, MartialStatusTrigger>> = {
+  暗: { id: 'poison', category: 'damage-over-time', chance: 0.3, durationMs: 5000, tickIntervalMs: 1000, valueRatio: 0.1, mode: 'stack' },
+  拳: { id: 'bleed', category: 'damage-over-time', chance: 0.25, durationMs: 4000, tickIntervalMs: 1000, valueRatio: 0.08, mode: 'stack' },
+  剑: { id: 'acupoint', category: 'control', chance: 0.15, durationMs: 2000, mode: 'strongest' },
+}
+
 const stageLetters = ['a', 'b', 'c', 'd'] as const
 const stageNames = ['初传', '进境', '真传', '秘传'] as const
 
@@ -97,6 +136,8 @@ export const FACTION_MARTIALS: MartialDefinitionV10[] = FACTIONS.flatMap((factio
       category: faction.category,
       damageRoute: routeForCategory(faction.category),
       force: forceFor(faction.category, branchIndex),
+      ...MARTIAL_TAGS[faction.category],
+      statusTrigger: MARTIAL_STATUS[faction.category],
       energyCost: 8 + stage * 4,
       cooldownMs: 1800 + stage * 400,
       power: 0.8 + stage * 0.35,
@@ -129,6 +170,8 @@ export const CITY_MARTIALS: MartialDefinitionV10[] = Array.from({ length: 10 }, 
       category,
       damageRoute: routeForCategory(category),
       force: forceFor(category, 1),
+      ...MARTIAL_TAGS[category],
+      statusTrigger: MARTIAL_STATUS[category],
       energyCost: 10 + worldIndex,
       cooldownMs: 2500,
       power: 0.9 + worldIndex * 0.05,

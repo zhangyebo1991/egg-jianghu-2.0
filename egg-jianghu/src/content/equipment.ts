@@ -58,6 +58,7 @@ export const EQUIPMENT_DEFINITIONS: EquipmentDefinitionV10[] = Array.from({ leng
 }).flat()
 
 export const EQUIPMENT_AFFIXES: EquipmentAffixDefinitionV10[] = [
+  // 核心面板词条（egg 字段 id，进 CombatStats）
   { id: 'externalAttack', name: '外功', min: 3, max: 18 },
   { id: 'internalAttack', name: '内功', min: 3, max: 18 },
   { id: 'maxHp', name: '气血', min: 12, max: 80 },
@@ -68,6 +69,17 @@ export const EQUIPMENT_AFFIXES: EquipmentAffixDefinitionV10[] = [
   { id: 'cooldownRate', name: '回气', min: 1, max: 6 },
   { id: 'criticalChance', name: '会心', min: 1, max: 7 },
   { id: 'controlResistance', name: '定力', min: 1, max: 7 },
+  // 诸天附加词条（id = sx 属性编号；buildAttributeMap 直接累加进 AttributeMap，单位百分点）
+  { id: '13', name: '暴伤', min: 5, max: 30 },
+  { id: '14', name: '吸血', min: 1, max: 8 },
+  { id: '16', name: '疗效', min: 2, max: 15 },
+  { id: '17', name: '护盾', min: 2, max: 15 },
+  { id: '20', name: '物增', min: 3, max: 18 },
+  { id: '21', name: '物减', min: 2, max: 12 },
+  { id: '22', name: '法增', min: 3, max: 18 },
+  { id: '23', name: '法减', min: 2, max: 12 },
+  { id: '26', name: '终增', min: 2, max: 12 },
+  { id: '27', name: '终减', min: 1, max: 8 },
 ]
 
 export const equipmentDefinitionById = (id: string): EquipmentDefinitionV10 | undefined =>
