@@ -20,7 +20,18 @@
   --purple: #b9a4f2;
   --orange: #f39d74;
   --red: #e98686;
+  --green: #8fd17a;
   --mono: 'DM Mono', 'Cascadia Mono', Consolas, monospace;
+  /* 技能图鉴富文本配色别名（gen-codex.py 生成的 descHtml 使用） */
+  --c-red: var(--red);
+  --c-orange: var(--orange);
+  --c-gold: var(--gold);
+  --c-cyan: var(--cyan);
+  --c-purple: var(--purple);
+  --c-green: #8fd17a;
+  --c-fuchsia: #e79cf0;
+  --c-text: var(--paper);
+  --c-muted: var(--muted);
   /* 间距标尺：仅供本次新增的 Tab / 头部 / 待核验队列 / 说明条使用 */
   --space-1: 4px;
   --space-2: 8px;
@@ -1043,6 +1054,794 @@ button {
 
   .source-row {
     margin-top: 13px;
+  }
+}
+
+/* ===========================================================
+   技能图鉴（Codex）
+   =========================================================== */
+.codex-panel {
+  padding: 0 0 80px;
+}
+
+.codex-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 22px 0 26px;
+  border-bottom: 1px solid var(--line);
+}
+
+.codex-intro h2 {
+  margin: 8px 0 10px;
+  color: var(--paper);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+}
+
+.codex-intro > div:first-child > p {
+  margin: 0;
+  max-width: 720px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.codex-intro-stats {
+  display: flex;
+  gap: 22px;
+  padding-top: 6px;
+}
+
+.codex-intro-stats div {
+  display: grid;
+  text-align: right;
+}
+
+.codex-intro-stats strong {
+  color: var(--gold);
+  font: 800 26px var(--mono);
+  letter-spacing: -0.04em;
+}
+
+.codex-intro-stats span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.codex-body {
+  padding-top: 22px;
+}
+
+/* 三栏布局：侧栏 / 主区 / 详情 */
+.cx-layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr) 360px;
+  gap: 22px;
+}
+
+.cx-side {
+  border-right: 1px solid var(--line);
+  padding-right: 18px;
+  min-height: 200px;
+}
+
+.cx-side-head {
+  margin-bottom: 16px;
+}
+
+.cx-side-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.cx-faction-nav {
+  display: grid;
+  gap: 18px;
+}
+
+.cx-faction-group {
+  display: grid;
+}
+
+.cx-series-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  color: var(--cyan);
+  font: 9px var(--mono);
+  letter-spacing: 0.06em;
+}
+
+.cx-series-heading small {
+  color: var(--muted);
+}
+
+.cx-faction-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: transparent;
+  color: var(--muted-strong);
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  transition: 140ms ease;
+}
+
+.cx-faction-btn:hover {
+  background: var(--surface);
+  color: var(--paper);
+}
+
+.cx-faction-btn.is-active {
+  border-left-color: var(--gold);
+  background: var(--surface);
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.cx-faction-btn small {
+  color: var(--muted);
+  font: 9px var(--mono);
+}
+
+/* 主区 */
+.cx-main {
+  min-width: 0;
+}
+
+.cx-faction-detail {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.cx-faction-head {
+  margin-bottom: 6px;
+}
+
+.cx-faction-head h2 {
+  margin: 6px 0 12px;
+  color: var(--paper);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.cx-faction-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cx-faction-desc {
+  margin: 14px 0 8px;
+  color: var(--muted-strong);
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.cx-section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 22px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cx-section-title h4 {
+  margin: 0;
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.cx-section-title small {
+  color: var(--muted);
+  font: 10px var(--mono);
+}
+
+.cx-empty-inline {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* 技能列表行 */
+.cx-skill-list {
+  display: grid;
+  gap: 6px;
+}
+
+.cx-skill-row {
+  display: grid;
+  gap: 5px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-left: 2px solid transparent;
+  background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: 140ms ease;
+}
+
+.cx-skill-row:hover {
+  border-color: rgba(227, 184, 109, 0.45);
+  background: var(--surface-raised);
+}
+
+.cx-skill-row.is-active {
+  border-left-color: var(--gold);
+  background: var(--surface-raised);
+}
+
+.cx-skill-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cx-skill-name {
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cx-skill-badges {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cx-skill-kind {
+  color: var(--c-gold);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.cx-skill-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  color: var(--muted);
+  font: 10px var(--mono);
+}
+
+/* 详情面板 */
+.cx-detail {
+  padding: 0 0 0 4px;
+  min-width: 0;
+}
+
+.cx-detail-kicker {
+  margin: 0 0 12px;
+  color: var(--gold);
+  font: 9px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cx-skill-detail {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(160deg, var(--surface-raised), var(--surface));
+}
+
+.cx-skill-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cx-skill-detail-head h3 {
+  margin: 6px 0 0;
+  color: var(--paper);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.cx-skill-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cx-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cx-stat-label {
+  color: var(--muted);
+  font: 10px var(--mono);
+}
+
+.cx-stat-value {
+  color: var(--muted-strong);
+  font-size: 12px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cx-skill-desc {
+  color: var(--paper);
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.cx-skill-desc-en {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.cx-taught-by {
+  margin: 14px 0 0;
+  color: var(--cyan);
+  font: 10px var(--mono);
+}
+
+/* 徽章 */
+.cx-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border: 1px solid var(--line-strong);
+  color: var(--muted-strong);
+  font: 9px var(--mono);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* 角色卡 */
+.cx-char-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cx-char-grid-wide {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cx-char-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-left: 2px solid transparent;
+  background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: 140ms ease;
+}
+
+.cx-char-card:hover,
+.cx-char-card.is-active {
+  border-color: rgba(185, 164, 242, 0.5);
+  border-left-color: var(--purple);
+  background: var(--surface-raised);
+}
+
+.cx-char-card header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cx-char-card strong {
+  color: var(--paper);
+  font-size: 13px;
+}
+
+.cx-char-title {
+  color: var(--c-gold);
+  font-size: 10px;
+}
+
+.cx-growth {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: var(--muted);
+  font: 10px var(--mono);
+}
+
+.cx-char-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cx-char-price {
+  color: var(--c-gold);
+  font: 10px var(--mono);
+}
+
+.cx-char-skills {
+  color: var(--muted);
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cx-char-plane {
+  color: var(--muted);
+  font: 9px var(--mono);
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 角色详情：招募价格 + 位面声望 */
+.cx-recruit-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cx-recruit-none {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* 角色详情 */
+.cx-char-detail {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(160deg, var(--surface-raised), var(--surface));
+}
+
+.cx-growth-detail {
+  display: grid;
+  gap: 7px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cx-growth-bar {
+  display: grid;
+  grid-template-columns: 18px 1fr 26px;
+  align-items: center;
+  gap: 8px;
+}
+
+.cx-growth-bar-label {
+  color: var(--paper);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cx-growth-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.cx-growth-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-gold), var(--c-orange));
+  border-radius: 3px;
+}
+
+.cx-growth-bar-val {
+  color: var(--muted-strong);
+  font: 10px var(--mono);
+  text-align: right;
+}
+
+.cx-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font: 11px var(--mono);
+}
+
+.cx-stat-row strong {
+  color: var(--c-gold);
+  font-size: 14px;
+}
+
+.cx-bio {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* 筛选侧栏 */
+.cx-filters {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.cx-filter {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font: 10px var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.cx-filter input,
+.cx-filter select,
+.cx-passive-search,
+.cx-item-controls input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--paper);
+  font: 12px var(--mono);
+  outline: 0;
+}
+
+.cx-filter input:focus,
+.cx-filter select:focus,
+.cx-passive-search:focus,
+.cx-item-controls input:focus {
+  border-color: rgba(227, 184, 109, 0.7);
+}
+
+.cx-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted-strong);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.cx-check input {
+  accent-color: var(--gold);
+}
+
+.cx-filter-count {
+  margin: 0;
+  color: var(--gold);
+  font: 10px var(--mono);
+}
+
+.cx-skill-main {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.cx-char-main {
+  min-width: 0;
+}
+
+/* 单栏视图（被动 / 物品） */
+.cx-single {
+  display: grid;
+  gap: 18px;
+}
+
+.cx-single-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cx-single-head h2 {
+  margin: 8px 0 8px;
+  color: var(--paper);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.cx-passive-controls,
+.cx-item-controls {
+  display: grid;
+  gap: 10px;
+  min-width: 280px;
+}
+
+.cx-tier-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cx-tier-chips button {
+  padding: 5px 11px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: 10px var(--mono);
+  transition: 140ms ease;
+}
+
+.cx-tier-chips button:hover {
+  color: var(--paper);
+}
+
+.cx-tier-chips button.is-active {
+  border-color: var(--c-orange);
+  color: var(--c-orange);
+}
+
+.cx-passive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.cx-passive-card {
+  padding: 13px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.cx-passive-card strong {
+  color: var(--paper);
+  font-size: 13px;
+}
+
+.cx-passive-tiers {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.cx-passive-tier {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cx-passive-cost {
+  color: var(--c-gold);
+  font: 10px var(--mono);
+}
+
+.cx-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.cx-item-card {
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.cx-item-card header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cx-item-card strong {
+  color: var(--paper);
+  font-size: 12px;
+}
+
+.cx-item-price {
+  color: var(--c-gold);
+  font: 10px var(--mono);
+}
+
+.cx-item-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.cx-item-more {
+  color: var(--muted);
+  font: 11px var(--mono);
+  text-align: center;
+}
+
+/* Codex 响应式 */
+@media (max-width: 1180px) {
+  .cx-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+
+  .cx-detail {
+    grid-column: 1 / -1;
+  }
+
+  .codex-intro {
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 820px) {
+  .cx-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cx-side {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 0 0 18px;
+  }
+
+  .cx-char-grid-wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .codex-intro-stats {
+    flex-wrap: wrap;
+  }
+
+  .cx-single-head {
+    flex-direction: column;
+  }
+
+  .cx-passive-controls,
+  .cx-item-controls {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .cx-char-grid,
+  .cx-char-grid-wide {
+    grid-template-columns: 1fr;
+  }
+
+  .cx-skill-stats {
+    grid-template-columns: 1fr;
   }
 }
 

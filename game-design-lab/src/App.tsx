@@ -5,6 +5,7 @@ import AttributePanel from './components/AttributePanel'
 import MechanismPanel from './components/MechanismPanel'
 import QuestionsPanel from './components/QuestionsPanel'
 import ProjectNoteBand from './components/ProjectNoteBand'
+import CodexPanel from './components/codex/CodexPanel'
 import { tabId, tabPanelId } from './components/TabList'
 import { useHashRoute } from './hooks/useHashRoute'
 import { researchSubjects } from './data/subjects'
@@ -60,6 +61,8 @@ function App() {
                   subject={subject}
                   sectionId={section.id}
                 />
+              ) : section.id === 'codex' ? (
+                <CodexPanel key={`${subject.id}:${section.id}`} />
               ) : section.id === 'mechanics' ? (
                 <MechanismPanel section={section} notes={subject.mechanismNotes} />
               ) : (

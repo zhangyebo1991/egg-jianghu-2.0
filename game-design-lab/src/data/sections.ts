@@ -1,7 +1,7 @@
 import type { ResearchCategory } from './research'
 
-/** 二级 Tab 的内容入口标识：三个属性分类 + 机制观察 + 待核验队列。 */
-export type SectionId = ResearchCategory | 'mechanics' | 'questions'
+/** 二级 Tab 的内容入口标识：三个属性分类 + 技能图鉴 + 机制观察 + 待核验队列。 */
+export type SectionId = ResearchCategory | 'codex' | 'mechanics' | 'questions'
 
 export type SectionMeta = {
   id: SectionId
@@ -33,6 +33,13 @@ export const sectionMeta: SectionMeta[] = [
     eyebrow: 'SPECIAL',
     description: '召唤、标签与非战斗成长',
     accent: '--purple',
+  },
+  {
+    id: 'codex',
+    label: '技能图鉴',
+    eyebrow: 'CODEX',
+    description: '诸天刷宝录势力 / 技能 / 角色 / 物品',
+    accent: '--green',
   },
   {
     id: 'mechanics',

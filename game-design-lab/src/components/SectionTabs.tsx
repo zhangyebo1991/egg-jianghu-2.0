@@ -1,5 +1,6 @@
 import TabList, { type TabItem } from './TabList'
 import { sectionMeta, type SectionId } from '../data/sections'
+import { codexStats } from '../data/codex'
 import type { ResearchSubject } from '../data/subjects'
 
 type Props = {
@@ -15,12 +16,7 @@ export default function SectionTabs({ subject, activeId, onSelect, panelId }: Pr
     label: section.label,
     eyebrow: section.eyebrow,
     accent: section.accent,
-    count:
-      section.id === 'mechanics'
-        ? subject.mechanismNotes.length
-        : section.id === 'questions'
-          ? subject.openQuestions.length
-          : subject.attributes.filter((entry) => entry.category === section.id).length,
+    count: countFor(section.id, subject),
   }))
 
   return (
@@ -33,4 +29,11 @@ export default function SectionTabs({ subject, activeId, onSelect, panelId }: Pr
       variant="section"
     />
   )
+}
+
+function countFor(id: SectionId, subject: ResearchSubject): number {
+  if (id === 'codex') return codexStats.total
+  if (id === 'mechanics') return subject.mechanismNotes.length
+  if (id === 'questions') return subject.openQuestions.length
+  return subject.attributes.filter((entry) => entry.category === id).length
 }
