@@ -52,7 +52,9 @@ export const buildCombatStats = (
   const heartMethod = progress.heartMethodId ? heartMethodByIdV10(progress.heartMethodId) : undefined
 
   // 原版《诸天刷宝录》资质→面板公式（c3runtime.js 源码逆向，证据等级 A）。
-  // 指数底数 1.0095：资质每 +1，指数项 × 1.0095^10 ≈ ×1.099。见 docs/诸天刷宝录_资质面板公式_源码逆向.md
+  // 指数底数 1.0095：资质每 +1，指数项 × 1.0095^10 ≈ ×1.099。
+  // 6 项核心属性（生命/速度/物攻/物防/法攻/法防）均以「体」资质推导（c3runtime 基础核心属性function 统一读 ExpObject(人物编号, 3, 1)，3 = 体）。
+  // 见 docs/诸天刷宝录_资质面板公式_源码逆向.md
   const aptitudeIndex = (value: number): number => Math.pow(1.0095, value * 10)
 
   const stats: CombatStats = {
@@ -61,16 +63,16 @@ export const buildCombatStats = (
     maxEnergy: 100,
     initialEnergy: 20,
     energyRecovery: 5 + (heartMethod?.energyRecovery ?? 0),
-    // 物攻：指数 ×1（勇）
-    externalAttack: Math.floor((100 + aptitudeIndex(aptitude.strength) * 5) * sharedScale * externalCareerBonus),
-    // 物防：指数 ×1（体）—— 与物攻同模板，sx.json 物防="指数"
+    // 物攻：指数 ×1（体）—— 原版 6 核心属性均由体资质推导，见 docs 逆向文档
+    externalAttack: Math.floor((100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale * externalCareerBonus),
+    // 物防：指数 ×1（体）—— 与物攻同模板
     externalDefense: Math.floor((100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
-    // 法攻：指数 ×0.5（智）
-    internalAttack: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.insight) * 5) * sharedScale * internalCareerBonus),
-    // 法防：指数 ×0.5（精）—— 与法攻同模板，sx.json 法防="指数"
-    internalDefense: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.resolve) * 5) * sharedScale),
-    // 速度：敏（原版为乘法直引，精确公式待补，暂沿用现有结构）
-    effectiveAgility: Math.max(1, (20 + aptitude.agility * 6) * (1 + (heartMethod?.gaugeRate ?? 0))),
+    // 法攻：指数 ×0.5（体）
+    internalAttack: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale * internalCareerBonus),
+    // 法防：指数 ×0.5（体）—— 与法攻同模板
+    internalDefense: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
+    // 速度：线性 150 + 体/4（原版唯一非指数核心项，白板号体=10 → 152.5）
+    effectiveAgility: Math.max(1, (150 + aptitude.constitution / 4) * (1 + (heartMethod?.gaugeRate ?? 0))),
     accuracy: Math.min(0.2, aptitude.insight * 0.005 + aptitude.agility * 0.003),
     evade: Math.min(0.7, aptitude.agility * 0.01),
     controlResistance: Math.min(0.8, aptitude.resolve * 0.012),
