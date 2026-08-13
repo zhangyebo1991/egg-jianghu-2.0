@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buyCareerToken, learnCityMartial, spend } from './city'
+import { learnCityMartial, spend } from './city'
 import { equipEquipment, toggleEquipmentLock } from './inventory'
 import { upgradeMartial } from './martial-training'
 import { recruitFromFaction } from './recruitment'
@@ -47,15 +47,6 @@ describe('城市、势力与装备操作', () => {
     expect(recruitFromFaction(state, 'qingfeng_hall', 'hero_qingfeng_hall_01').ok).toBe(true)
     expect(state.contribution.qingfeng_hall).toBe(0)
     expect(state.heroes.hero_qingfeng_hall_01.recruited).toBe(true)
-  })
-
-  it('顶级转职信物只在配置的更高世界出售', () => {
-    const state = unlockedThrough(3)
-    expect(buyCareerToken(state, 'world_03', 'token_sword_swift_top').ok).toBe(false)
-
-    const later = unlockedThrough(7)
-    expect(buyCareerToken(later, 'world_07', 'token_sword_swift_top').ok).toBe(true)
-    expect(later.careerTokens).toContain('token_sword_swift_top')
   })
 
   it('失败交易不会留下部分扣款或升级', () => {

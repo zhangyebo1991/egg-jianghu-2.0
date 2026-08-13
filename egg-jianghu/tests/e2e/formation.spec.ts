@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByTestId('world-overview')).toBeVisible()
 })
 
-test('头像品级角标叠在头像右上角且名册不产生横向滚动', async ({ page }) => {
+test('头像品级角标叠在头像右下角且名册不产生横向滚动', async ({ page }) => {
   await page.getByTestId('tab-formation').click()
 
   const metrics = await page.evaluate(() => {
@@ -16,7 +16,7 @@ test('头像品级角标叠在头像右上角且名册不产生横向滚动', as
       const element = document.querySelector<HTMLElement>(selector)
       if (!element) return null
       const box = element.getBoundingClientRect()
-      return { left: box.left, top: box.top, right: box.right, width: box.width }
+      return { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width }
     }
     const rosterList = document.querySelector<HTMLElement>('.formation-roster-list')
     return {
@@ -34,9 +34,9 @@ test('头像品级角标叠在头像右上角且名册不产生横向滚动', as
   expect(metrics.rosterOverflowX).toBe('hidden')
   expect(metrics.rosterScrollWidth).toBe(metrics.rosterClientWidth)
   expect(metrics.rosterSeal?.left).toBeLessThan(metrics.rosterFrame?.right ?? 0)
-  expect(metrics.rosterSeal?.top).toBeLessThan(metrics.rosterFrame?.top ?? 0)
+  expect(metrics.rosterSeal?.bottom).toBeGreaterThan(metrics.rosterFrame?.bottom ?? 0)
   expect(metrics.detailSeal?.left).toBeLessThan(metrics.detailFrame?.right ?? 0)
-  expect(metrics.detailSeal?.top).toBeLessThan(metrics.detailFrame?.top ?? 0)
+  expect(metrics.detailSeal?.bottom).toBeGreaterThan(metrics.detailFrame?.bottom ?? 0)
   expect(metrics.detailName?.width).toBeGreaterThan(0)
 })
 

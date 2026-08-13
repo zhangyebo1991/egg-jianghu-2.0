@@ -1,3 +1,4 @@
+import { STARTER_CAREER_ID } from './careers'
 import { FACTIONS } from './factions'
 import type { CareerCategory } from './careers'
 import type { HeroGrade, HeroProgressV10 } from '../domain/types'
@@ -64,7 +65,7 @@ export const PLAYER_HERO_V10: HeroDefinitionV10 = {
   id: PLAYER_HERO_ID,
   name: '无名少侠',
   grade: '丙',
-  baseCareerId: 'sword',
+  baseCareerId: STARTER_CAREER_ID,
   worldId: 'world_01',
   source: 'starter',
   cost: 0,
@@ -78,15 +79,6 @@ export const PLAYER_HERO_V10: HeroDefinitionV10 = {
     agility: 10,
     resolve: 10,
   },
-}
-
-const careerByCategory: Record<CareerCategory, string> = {
-  剑: 'sword',
-  刀: 'blade',
-  拳: 'fist',
-  暗: 'shadow',
-  医: 'doctor',
-  内家: 'inner',
 }
 
 const careerCategoryById: Record<string, CareerCategory> = {
@@ -137,7 +129,7 @@ export const TAVERN_HEROES: HeroDefinitionV10[] = TAVERN_HERO_ROWS.map(
     id,
     name,
     grade: factionGrade(worldId),
-    baseCareerId,
+    baseCareerId: STARTER_CAREER_ID,
     worldId,
     source: 'tavern',
     cost: 200 + worldIndex(worldId) * 40,
@@ -188,7 +180,7 @@ export const FACTION_HEROES: HeroDefinitionV10[] = FACTIONS.flatMap((faction) =>
     id: `hero_${faction.id}_${String(index + 1).padStart(2, '0')}`,
     name,
     grade: factionGrade(faction.worldId),
-    baseCareerId: careerByCategory[faction.category],
+    baseCareerId: STARTER_CAREER_ID,
     worldId: faction.worldId,
     source: 'faction',
     cost: 600 + worldIdx * 200,
@@ -198,6 +190,14 @@ export const FACTION_HEROES: HeroDefinitionV10[] = FACTIONS.flatMap((faction) =>
 })
 
 export const HEROES_V10: HeroDefinitionV10[] = [PLAYER_HERO_V10, ...TAVERN_HEROES, ...FACTION_HEROES]
+
+export const heroMeridianCategory = (hero: HeroDefinitionV10): CareerCategory => {
+  if (hero.source === 'faction' && hero.factionId) {
+    return FACTIONS.find((faction) => faction.id === hero.factionId)?.category ?? '剑'
+  }
+  const row = TAVERN_HERO_ROWS.find((item) => item[0] === hero.id)
+  return careerCategoryById[row?.[2] ?? ''] ?? '剑'
+}
 
 export const heroByIdV10 = (id: string): HeroDefinitionV10 | undefined =>
   HEROES_V10.find((hero) => hero.id === id)

@@ -29,7 +29,6 @@ export interface CombatStats {
 }
 
 const gradeMultiplier = { 丙: 0.9, 乙: 1, 甲: 1.08, 地: 1.16, 天: 1.25 } as const
-const tierMultiplier = { 初级: 1, 中级: 1.08, 高级: 1.17, 顶级: 1.28 } as const
 
 export const buildCombatStats = (
   definition: HeroDefinitionV10,
@@ -40,16 +39,11 @@ export const buildCombatStats = (
   const career = careerById(progress.currentCareerId)
   const careerRecord = progress.careers[progress.currentCareerId]
   const careerLevel = careerRecord?.level ?? 1
-  const perfectedCount = Object.values(progress.careers).filter((record) => record.perfected).length
-  const perfectedBonusPool = perfectedCount * 0.05
+  const growth = career?.growth
   const grade = gradeMultiplier[definition.grade]
-  const tier = career ? tierMultiplier[career.tier] : 1
   const levelScale = 1 + Math.max(0, progress.level - 1) * 0.035
   const careerScale = 1 + Math.max(0, careerLevel - 1) * 0.02
-  const sharedScale = grade * tier * levelScale * careerScale * (1 + perfectedBonusPool)
-
-  const externalCareerBonus = career && ['剑', '刀', '拳', '暗'].includes(career.category) ? 1.15 : 1
-  const internalCareerBonus = career && ['医', '内家'].includes(career.category) ? 1.15 : 1
+  const sharedScale = grade * levelScale * careerScale
   const heartMethod = progress.heartMethodId ? heartMethodByIdV10(progress.heartMethodId) : undefined
 
   // 原版《诸天刷宝录》资质→面板公式（c3runtime.js 源码逆向，证据等级 A）。
@@ -74,17 +68,16 @@ export const buildCombatStats = (
     initialEnergy: 0,
     // 能量回复：原版 sx29 白板 1（用户实测）；egg 战斗循环另有行动回能机制（未确证粒度前保持）
     energyRecovery: 1 + (heartMethod?.energyRecovery ?? 0),
-    // 物攻：攻击模板 ×1（体）—— 白板 117；外家职业（剑刀拳暗）另 +15%
-    externalAttack: Math.floor(attackBase(aptitude.constitution) * sharedScale * externalCareerBonus),
-    // 物防：防御模板 ×0.5（体）—— 白板 58
-    externalDefense: Math.floor(0.5 * defenseBase(aptitude.constitution) * sharedScale),
-    // 法攻：攻击模板 ×1（体）—— 白板 117；内家职业（医/内家）另 +15%
-    internalAttack: Math.floor(attackBase(aptitude.constitution) * sharedScale * internalCareerBonus),
-    // 法防：防御模板 ×0.5（体）—— 白板 58
-    internalDefense: Math.floor(0.5 * defenseBase(aptitude.constitution) * sharedScale),
-    // 速度：线性（原版唯一非指数核心项）。基准经白板面板校准锚定体=10 → 150（权威文档），
-    // 保留逆向线性成长率 体/4（docs/诸天刷宝录_资质面板公式_源码逆向.md §3.2）
-    effectiveAgility: Math.max(1, (150 + (aptitude.constitution - 10) / 4) * (1 + (heartMethod?.gaugeRate ?? 0))),
+    // 物攻：攻击模板 × 职业物攻系数
+    externalAttack: Math.floor(attackBase(aptitude.constitution) * sharedScale * (growth?.physicalAttack ?? 1)),
+    // 物防：防御模板 ×0.5 × 职业物防系数
+    externalDefense: Math.floor(0.5 * defenseBase(aptitude.constitution) * sharedScale * (growth?.physicalDefense ?? 1)),
+    // 法攻：攻击模板 × 职业法攻系数
+    internalAttack: Math.floor(attackBase(aptitude.constitution) * sharedScale * (growth?.magicAttack ?? 1)),
+    // 法防：防御模板 ×0.5 × 职业法防系数
+    internalDefense: Math.floor(0.5 * defenseBase(aptitude.constitution) * sharedScale * (growth?.magicDefense ?? 1)),
+    // 速度：线性模板 × 职业速度系数
+    effectiveAgility: Math.max(1, (150 + (aptitude.constitution - 10) / 4) * (growth?.speed ?? 1) * (1 + (heartMethod?.gaugeRate ?? 0))),
     // 命中修正：原版 sx18 走特定属性统计默认分支（无资质/固有基础），白板 0；战斗命中率 = 97×(100+命中)/(100+闪避)
     accuracy: 0,
     // 闪避修正：原版 sx19 同上，白板 0
@@ -99,7 +92,7 @@ export const buildCombatStats = (
     gaugeRate: heartMethod?.gaugeRate ?? 0,
     momentumBonus: heartMethod?.momentumBonus ?? 0,
     survivalBonus: heartMethod?.survivalBonus ?? 0,
-    perfectedBonusPool,
+    perfectedBonusPool: 0,
   }
 
   const applyBonus = (id: string, value: number): void => {

@@ -15,13 +15,13 @@ const enemyDefeatedEvent = (overrides: Partial<Extract<CombatEvent, { type: 'ene
 })
 
 describe('击杀即时结算', () => {
-  it('敌人死亡事件立即生成装备实例，不等待波次结束', () => {
+  it('敌人死亡事件立即结算货币与职业经验，本阶段不掉装备', () => {
     const state = createInitialStateV10()
 
     const result = settleCombatEvent(state, enemyDefeatedEvent())
 
-    expect(result.addedEquipmentUids.length).toBeGreaterThan(0)
-    expect(state.inventory).toHaveLength(result.addedEquipmentUids.length)
+    expect(result.addedEquipmentUids).toEqual([])
+    expect(state.inventory).toHaveLength(0)
     expect(result.needsSave).toBe(true)
   })
 

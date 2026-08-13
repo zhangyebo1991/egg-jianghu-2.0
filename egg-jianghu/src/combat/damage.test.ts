@@ -64,55 +64,53 @@ describe('诸天闪避与暴击判定', () => {
 })
 
 describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生）', () => {
-  it('五维资质决定成长，圆满心得只进入统一加法池', () => {
+  it('职业六维系数进入攻防与速度，圆满池恒为 0', () => {
     const definition: HeroDefinitionV10 = {
       id: 'fixture',
       name: '测试侠客',
       grade: '乙',
-      baseCareerId: 'sword',
+      baseCareerId: 'job_1',
       worldId: 'world_01',
       source: 'tavern',
       cost: 0,
       factionId: null,
       aptitudes: { strength: 12, insight: 6, constitution: 10, agility: 8, resolve: 7 },
     }
-    const progress = createHeroProgress('sword')
-    progress.careers.sword.level = 20
-    progress.careers.sword.perfected = true
-    progress.careers.sword_swift_mid = { level: 20, experience: 0, perfected: true }
+    const progress = createHeroProgress('job_1')
+    const baseline = buildCombatStats(definition, progress)
+    progress.currentCareerId = 'job_5'
+    progress.careers.job_5 = { level: 1, experience: 0 }
 
-    const stats = buildCombatStats(definition, progress)
+    const archer = buildCombatStats(definition, progress)
 
-    expect(stats.externalAttack).toBeGreaterThan(stats.internalAttack)
-    expect(stats.perfectedBonusPool).toBeCloseTo(0.1)
+    expect(archer.externalAttack).toBeGreaterThan(baseline.externalAttack)
+    expect(archer.effectiveAgility).toBeLessThan(baseline.effectiveAgility)
+    expect(archer.perfectedBonusPool).toBe(0)
   })
 
-  it('白板号参考面板对齐权威文档（体=10、乙级、Lv1 无圆满）', () => {
+  it('白板号参考面板对齐白丁成长系数', () => {
     const definition: HeroDefinitionV10 = {
-      id: 'fixture', name: '白板号', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
+      id: 'fixture', name: '白板号', grade: '乙', baseCareerId: 'job_1', worldId: 'world_01',
       source: 'tavern', cost: 0, factionId: null,
       aptitudes: { strength: 10, insight: 10, constitution: 10, agility: 10, resolve: 10 },
     }
-    const stats = buildCombatStats(definition, createHeroProgress('sword'))
+    const stats = buildCombatStats(definition, createHeroProgress('job_1'))
 
-    // 权威文档 docs/诸天刷宝录_角色属性面板_白板号.md：生命580 / 速度150 / 物攻117 / 物防58 / 法攻117 / 法防58。
-    // 物防/法防/生命/法攻不受外家职业加成 → 与文档逐项一致；
-    // 物攻 134 = 攻击模板 117 × 剑客外家加成 1.15（法攻无该加成故为 117，物攻≠法攻是蛋蛋职业设计）。
     expect(stats.maxHp).toBe(580)
-    expect(stats.effectiveAgility).toBe(150)
-    expect(stats.externalDefense).toBe(58)
-    expect(stats.internalAttack).toBe(117)
-    expect(stats.internalDefense).toBe(58)
-    expect(stats.externalAttack).toBe(134)
+    expect(stats.effectiveAgility).toBe(135)
+    expect(stats.externalDefense).toBe(52)
+    expect(stats.internalAttack).toBe(105)
+    expect(stats.internalDefense).toBe(52)
+    expect(stats.externalAttack).toBe(105)
   })
 
   it('已穿戴装备的基础属性与词条进入战斗面板', () => {
     const definition: HeroDefinitionV10 = {
-      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
+      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'job_1', worldId: 'world_01',
       source: 'tavern', cost: 0, factionId: null,
       aptitudes: { strength: 10, insight: 8, constitution: 8, agility: 8, resolve: 8 },
     }
-    const progress = createHeroProgress('sword')
+    const progress = createHeroProgress('job_1')
     const baseline = buildCombatStats(definition, progress)
     progress.equipmentBySlot.weapon = 'weapon_uid'
     const equipment: EquipmentInstance[] = [{
@@ -125,11 +123,11 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
 
   it('护腕基础命中正确换算为百分比加成', () => {
     const definition: HeroDefinitionV10 = {
-      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
+      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'job_1', worldId: 'world_01',
       source: 'tavern', cost: 0, factionId: null,
       aptitudes: { strength: 8, insight: 8, constitution: 8, agility: 8, resolve: 8 },
     }
-    const progress = createHeroProgress('sword')
+    const progress = createHeroProgress('job_1')
     const baseline = buildCombatStats(definition, progress)
     progress.equipmentBySlot.wrist = 'wrist_uid'
     const wrist: EquipmentInstance = {
@@ -141,11 +139,11 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
 
   it('战斗面板只计入当前装备套，其他套不生效', () => {
     const definition: HeroDefinitionV10 = {
-      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
+      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'job_1', worldId: 'world_01',
       source: 'tavern', cost: 0, factionId: null,
       aptitudes: { strength: 10, insight: 8, constitution: 8, agility: 8, resolve: 8 },
     }
-    const progress = createHeroProgress('sword')
+    const progress = createHeroProgress('job_1')
     const baseline = buildCombatStats(definition, progress)
     const equipment: EquipmentInstance[] = [{
       uid: 'weapon_uid', definitionId: 'world_01_weapon', level: 1, quality: '上品',

@@ -1,4 +1,4 @@
-import { careerById } from '../content/careers'
+import { heroByIdV10, heroMeridianCategory } from '../content/heroes'
 import { escapeHtml, percent } from './html'
 import { enemyPortraitAsset, heroPortraitAsset } from './portrait-assets'
 import { worldSceneAsset } from './world-scene-assets'
@@ -98,7 +98,8 @@ const renderGauge = (
   </div>`
 
 const renderUnitPortrait = (unit: IdleCombatUnitView, side: 'party' | 'enemy'): string => {
-  const category = careerById(unit.careerId ?? '')?.category ?? '剑'
+  const definition = heroByIdV10(unit.id)
+  const category = definition ? heroMeridianCategory(definition) : '剑'
   const portrait = side === 'party'
     ? heroPortraitAsset(unit.id, category)
     : enemyPortraitAsset(unit.rank, unit.id)
@@ -183,7 +184,7 @@ const renderWaveTrack = (wave: number): string => Array.from({ length: 10 }, (_,
 }).join('')
 
 const renderCombatLog = (logs: IdleCombatLogView[]): string => {
-  if (!logs.length) return '<li class="log-loot"><span class="log-mark">获</span><span>敌人死亡时，铜钱与随机装备立即入账。</span></li>'
+  if (!logs.length) return '<li class="log-loot"><span class="log-mark">获</span><span>敌人死亡时，本卷货币立即入账。</span></li>'
   return logs.slice(-60).reverse().map((entry) => `<li class="log-${entry.kind}" data-testid="combat-log-${entry.id}">
     <span class="log-mark">${escapeHtml(entry.mark)}</span><span>${escapeHtml(entry.text)}</span>
   </li>`).join('')

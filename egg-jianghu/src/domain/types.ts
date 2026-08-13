@@ -32,7 +32,6 @@ export interface LearnedMartial {
 export interface CareerRecord {
   level: number
   experience: number
-  perfected: boolean
 }
 
 export interface HeroProgressV10 {
@@ -85,11 +84,11 @@ export interface EquipmentInstance {
 }
 
 export interface GameStateV10 {
-  version: 10
+  version: 11
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
   heroes: Record<string, HeroProgressV10>
-  careerTokens: string[]
+  jobBooks: Record<string, number>
   formation: FormationSlot[]
   unlockedWorldIds: string[]
   clearedStageByWorld: Record<string, number>

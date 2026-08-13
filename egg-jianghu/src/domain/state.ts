@@ -1,3 +1,4 @@
+import { STARTER_CAREER_ID } from '../content/careers'
 import { PLAYER_HERO_ID } from '../content/heroes'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
@@ -13,7 +14,6 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
       [careerId]: {
         level: 1,
         experience: 0,
-        perfected: false,
       },
     },
     currentCareerId: careerId,
@@ -27,11 +27,11 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
 }
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
-  version: 10,
+  version: 11,
   worldCurrency: { world_01: 1000 },
   contribution: {},
   heroes: {},
-  careerTokens: [],
+  jobBooks: {},
   formation: [],
   unlockedWorldIds: ['world_01'],
   clearedStageByWorld: { world_01: 0 },
@@ -56,7 +56,7 @@ export const normalizePlayerName = (input: string): string => {
 export const createNewGameStateV10 = (playerName: string, now = Date.now()): GameStateV10 => {
   const state = createInitialStateV10(now)
   state.heroes[PLAYER_HERO_ID] = {
-    ...createHeroProgress('sword'),
+    ...createHeroProgress(STARTER_CAREER_ID),
     customName: normalizePlayerName(playerName),
   }
   state.formation = [{ heroId: PLAYER_HERO_ID, row: 'front', position: 0 }]

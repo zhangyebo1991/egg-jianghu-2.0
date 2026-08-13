@@ -1,5 +1,6 @@
-import { MARTIALS_V10, martialByIdV10 } from '../content/martials'
+import { martialByIdV10 } from '../content/martials'
 import { factionById } from '../content/factions'
+import { careerById } from '../content/careers'
 import type { CampaignMode } from '../domain/types'
 import { calculateDamage, hitChance, rollCritical } from './damage'
 import { SX, attr, ELEMENT_IDS } from './attribute-ids'
@@ -23,19 +24,7 @@ export interface CombatEngine {
   stop(): CombatEvent[]
 }
 
-const ACTIVE_SKILLS: Record<string, CombatSkillDefinition> = Object.fromEntries(
-  MARTIALS_V10.map((martial) => [martial.id, {
-    id: martial.id,
-    energyCost: martial.energyCost,
-    cooldownMs: martial.cooldownMs,
-    semantic: martial.damageRoute === 'healing' ? 'heal' : 'damage',
-    target: {
-      shape: 'single',
-      reach: martial.damageRoute === 'external' ? 'melee' : 'ranged',
-    },
-    careerIds: martial.careerIds,
-  } satisfies CombatSkillDefinition]),
-)
+const ACTIVE_SKILLS: Record<string, CombatSkillDefinition> = {}
 
 const createCombatSnapshot = (input: CombatStartInput): CombatSnapshot => ({
   seed: input.seed,
@@ -99,8 +88,11 @@ const tickRealtime = (state: CombatSnapshot, rng: Rng): CombatEvent[] => {
   return events
 }
 
-const baseRoute = (actor: CombatUnit): 'external' | 'internal' =>
-  actor.careerId?.startsWith('doctor') || actor.careerId?.startsWith('inner') ? 'internal' : 'external'
+const baseRoute = (actor: CombatUnit): 'external' | 'internal' => {
+  const career = careerById(actor.careerId ?? '')
+  if (!career) return 'external'
+  return career.growth.magicAttack > career.growth.physicalAttack ? 'internal' : 'external'
+}
 
 const executeAction = (state: CombatSnapshot, actor: CombatUnit, rng: Rng): CombatEvent[] => {
   const events: CombatEvent[] = []

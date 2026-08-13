@@ -16,7 +16,6 @@ const tabs: Array<{ id: TabId; label: string; mark: string }> = [
   { id: 'idle', label: '江湖', mark: '邑' },
   { id: 'heroes', label: '侠客', mark: '侠' },
   { id: 'formation', label: '阵容', mark: '阵' },
-  { id: 'inventory', label: '背包', mark: '囊' },
 ]
 
 const worldSections: Array<{ id: JianghuSection; label: string }> = [

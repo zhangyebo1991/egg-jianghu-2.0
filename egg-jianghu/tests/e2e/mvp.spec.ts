@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 let pageErrors: string[]
 
@@ -31,18 +31,6 @@ const enterWorld = async (page: Page, worldId = 'world_01'): Promise<void> => {
 const openWorldSection = async (page: Page, section: 'stages' | 'factions' | 'city'): Promise<void> => {
   await enterWorld(page)
   await page.getByTestId(`world-section-${section}`).click()
-}
-
-const expectTooltipInsideViewport = async (page: Page, tooltip: Locator): Promise<void> => {
-  await expect.poll(() => tooltip.evaluate((element) => element.matches(':popover-open'))).toBe(true)
-  const bounds = await tooltip.boundingBox()
-  const viewport = page.viewportSize()
-  expect(bounds).not.toBeNull()
-  expect(viewport).not.toBeNull()
-  expect(bounds!.x).toBeGreaterThanOrEqual(0)
-  expect(bounds!.y).toBeGreaterThanOrEqual(0)
-  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport!.width)
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport!.height)
 }
 
 test('江湖按大关小关分层并在点击小关后立即驻守', async ({ page }) => {
@@ -137,10 +125,10 @@ test('桌面与移动端均使用统一左侧栏', async ({ page }) => {
   expect(mobile.scrollWidth).toBeLessThanOrEqual(mobile.viewportWidth)
 })
 
-test('四个页面共享同一套侧栏外观', async ({ page }) => {
+test('三个全局入口共享同一套侧栏外观', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   const metrics = []
-  for (const tab of ['idle', 'heroes', 'formation', 'inventory'] as const) {
+  for (const tab of ['idle', 'heroes', 'formation'] as const) {
     await page.getByTestId(`tab-${tab}`).click()
     metrics.push(await page.evaluate(() => {
       const sidebar = document.querySelector<HTMLElement>('.game-sidebar')!
@@ -300,157 +288,63 @@ test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => 
   expect(stableAcrossCombatTicks).toEqual({ tab: true, stop: true })
 })
 
-test('侠客页展示基础属性与实时战斗属性', async ({ page }) => {
+test('侠客页展示当前职业与诸天属性', async ({ page }) => {
   await page.setViewportSize({ width: 1676, height: 941 })
   await page.getByTestId('tab-heroes').click()
 
   const rosterList = page.getByTestId('hero-roster-list')
   await expect(rosterList).toHaveCSS('overflow-x', 'hidden')
 
-  const equipmentIcons = page.getByTestId('hero-equipment-slots').locator('img.equipment-art')
-  await expect(equipmentIcons).toHaveCount(7)
-  expect(await equipmentIcons.evaluateAll((icons) => icons.every((icon) => {
-    const image = icon as HTMLImageElement
-    return image.complete && image.naturalWidth === 256 && image.naturalHeight === 256
-      && image.dataset.iconSource === 'slot'
-  }))).toBe(true)
+  const career = page.getByTestId('hero-career-panel')
+  await expect(career).toBeVisible()
+  await expect(career).toContainText('白丁')
+  await expect(career).toContainText('职业')
+  await expect(career).toContainText('Lv.1')
+  await expect(career).toContainText('可用技能类型')
+  await expect(page.getByTestId('hero-equipment-slots')).toHaveCount(0)
+  await expect(page.locator('.heroes-page .martial-slots')).toHaveCount(0)
 
   const stats = page.getByTestId('hero-stats')
-  await expect(stats).toContainText('基础属性')
-  await expect(stats.locator('[data-stat-label="臂力"] dd')).toHaveText('8')
-  await expect(stats).toContainText('战斗属性')
-  await expect(stats.locator('[data-stat-label="气血"] dd')).toHaveText('240')
-  await expect(stats.locator('[data-stat-label="外功"] dd')).toHaveText('63')
-  await expect(stats.locator('[data-stat-label="命中修正"] dd')).toHaveText('6.7%')
+  await expect(stats).toContainText('诸天属性')
+  await expect(stats.locator('[data-stat-label="臂力"] dd')).toHaveText('10')
+  await expect(stats.locator('[data-stat-label="生命"] dd')).not.toHaveText('0')
+  await expect(stats.locator('[data-stat-label="物攻"] dd')).not.toHaveText('0')
+  await expect(stats.locator('[data-stat-label="命中修正"] dd')).toHaveText('0%')
 
-  const martialSlots = page.locator('.heroes-page .martial-slots')
-  expect(await martialSlots.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(/\s+/).filter(Boolean).length)).toBe(1)
   await page.setViewportSize({ width: 390, height: 844 })
-  expect(await martialSlots.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(/\s+/).filter(Boolean).length)).toBe(1)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('侠客页物品栏支持筛选整理、双击或右键装备及同部位对比', async ({ page }) => {
+test('侠客页不再展示装备栏与行囊', async ({ page }) => {
   await page.setViewportSize({ width: 1676, height: 941 })
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(2))
   await page.getByTestId('tab-heroes').click()
 
-  const panel = page.getByTestId('hero-inventory-panel')
-  await expect(panel).toBeVisible()
-  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(2)
-  expect(await panel.locator('img.equipment-art').evaluateAll((icons) => icons.every((icon) => {
-    const image = icon as HTMLImageElement
-    return image.complete && image.naturalWidth === 256 && image.naturalHeight === 256
-  }))).toBe(true)
+  await expect(page.getByTestId('hero-inventory-panel')).toHaveCount(0)
+  await expect(page.getByTestId('hero-equipment-slots')).toHaveCount(0)
+  await expect(page.getByTestId('hero-career-panel')).toBeVisible()
+  await expect(page.getByTestId('open-career-tree')).toBeVisible()
+
   const columnOrder = await page.evaluate(() => {
     const roster = document.querySelector('.hero-roster')!.getBoundingClientRect()
     const detail = document.querySelector('.hero-workbench')!.getBoundingClientRect()
-    const inventory = document.querySelector('.hero-inventory-panel')!.getBoundingClientRect()
-    return { rosterRight: roster.right, detailLeft: detail.left, detailRight: detail.right, inventoryLeft: inventory.left }
+    return { rosterRight: roster.right, detailLeft: detail.left }
   })
   expect(columnOrder.rosterRight).toBeLessThanOrEqual(columnOrder.detailLeft)
-  expect(columnOrder.detailRight).toBeLessThanOrEqual(columnOrder.inventoryLeft)
-
-  await page.getByTestId('hero-inventory-item-debug-equipment-0').dblclick()
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_player.equipmentBySlot.weapon))
-    .toBe('debug-equipment-0')
-  await expect(page.getByTestId('hero-inventory-item-debug-equipment-0')).toHaveCount(0)
-  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(1)
-  await expect(panel).toContainText('1 / 300')
-
-  const slot = page.getByTestId('hero-equipment-slot-weapon')
-  await expect(slot).toContainText('柴刀')
-  await slot.hover()
-  const equippedTooltip = slot.locator(':scope > .equipment-tooltip')
-  await expect(equippedTooltip).toBeVisible()
-  await expectTooltipInsideViewport(page, equippedTooltip)
-  await slot.click({ position: { x: 8, y: 8 } })
-  await page.getByTestId('selected-hero').locator(':scope > header').hover()
-  await expect(slot.locator(':scope > .equipment-tooltip')).toBeHidden()
-
-  const replacement = page.getByTestId('hero-inventory-item-debug-equipment-1')
-  await replacement.hover()
-  const comparison = replacement.locator(':scope > .equipment-tooltip')
-  await expect(comparison).toBeVisible()
-  await expectTooltipInsideViewport(page, comparison)
-  await expect(comparison).toContainText('当前查看')
-  await expect(comparison).toContainText('当前穿戴')
-  await replacement.click()
-  await page.getByTestId('selected-hero').locator(':scope > header').hover()
-  await expect(comparison).toBeHidden()
-
-  await replacement.click({ button: 'right' })
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_player.equipmentBySlot.weapon))
-    .toBe('debug-equipment-1')
-  await expect(page.getByTestId('hero-inventory-item-debug-equipment-1')).toHaveCount(0)
-  await expect(page.getByTestId('hero-inventory-item-debug-equipment-0')).toBeVisible()
-
-  await panel.locator('[data-action="hero-inventory-filter"][data-filter-kind="slot"][data-filter-value="head"]').click()
-  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(0)
-  await panel.locator('[data-action="hero-inventory-filter"][data-filter-kind="slot"][data-filter-value="weapon"]').click()
-  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(1)
-  await panel.getByRole('button', { name: '整理' }).click()
-  await expect(page.getByRole('status')).toHaveText('物品已按部位、品质和等级整理')
-
-  await slot.getByRole('button', { name: '卸下' }).click()
-  await expect(slot).toContainText('未装备')
-  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(2)
-  await expect(page.getByTestId('hero-inventory-item-debug-equipment-1')).toBeVisible()
-
-  await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(300))
-  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(8)
-  await expect(panel).toContainText('1/38 · 8件')
-  const inventoryGrid = await panel.locator('.hero-inventory-list').evaluate((element) => {
-    const style = getComputedStyle(element)
-    return { columns: style.gridTemplateColumns.split(' ').length, overflow: style.overflow }
-  })
-  expect(inventoryGrid).toEqual({ columns: 1, overflow: 'visible' })
-  await panel.getByRole('button', { name: '下一页' }).click()
-  await expect(panel.locator('[data-equipment-uid]')).toHaveCount(8)
-  await expect(panel).toContainText('2/38 · 8件')
 
   await page.setViewportSize({ width: 390, height: 844 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('侠客页行囊分页在单页和双页时保持页码左对齐与状态右对齐', async ({ page }) => {
-  await page.setViewportSize({ width: 1676, height: 941 })
+test('侠客页打开转职树可查看职业节点与转职书', async ({ page }) => {
   await page.getByTestId('tab-heroes').click()
-
-  const panel = page.getByTestId('hero-inventory-panel')
-  const status = panel.locator('.pack-page-status')
-  await expect(status).toHaveText('1/1 · 0件')
-
-  const readPaginationLayout = async () => page.evaluate(() => {
-    const nav = document.querySelector('.hero-inventory-panel .pack-page')!
-    const previous = nav.querySelector('.pg-btn:first-of-type')!.getBoundingClientRect()
-    const number = nav.querySelector('.pg-num')!.getBoundingClientRect()
-    const current = nav.querySelector('.pack-page-status')!.getBoundingClientRect()
-    const next = nav.querySelector('.pg-btn:last-of-type')!.getBoundingClientRect()
-    return {
-      display: getComputedStyle(nav).display,
-      numberLeft: number.left,
-      previousRight: previous.right,
-      statusRight: current.right,
-      nextLeft: next.left,
-      statusFontSize: getComputedStyle(nav.querySelector('.pack-page-status')!).fontSize,
-    }
-  })
-
-  const singlePageLayout = await readPaginationLayout()
-  expect(singlePageLayout.display).toBe('grid')
-  expect(singlePageLayout.numberLeft).toBeGreaterThanOrEqual(singlePageLayout.previousRight)
-  expect(singlePageLayout.statusRight).toBeLessThanOrEqual(singlePageLayout.nextLeft)
-  expect(singlePageLayout.nextLeft - singlePageLayout.statusRight).toBeLessThan(12)
-  expect(singlePageLayout.statusFontSize).toBe('9px')
-
-  await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(9))
-  await expect(status).toHaveText('1/2 · 8件')
-  await panel.getByRole('button', { name: '下一页' }).click()
-  await expect(status).toHaveText('2/2 · 1件')
-  const doublePageLayout = await readPaginationLayout()
-  expect(doublePageLayout.numberLeft).toBeGreaterThanOrEqual(doublePageLayout.previousRight)
-  expect(doublePageLayout.statusRight).toBeLessThanOrEqual(doublePageLayout.nextLeft)
+  await page.getByTestId('open-career-tree').click()
+  await expect(page.getByTestId('career-tree')).toBeVisible()
+  await expect(page.getByTestId('career-node-job_1')).toBeVisible()
+  await page.getByTestId('career-node-job_5').click()
+  await expect(page.getByTestId('career-tree-detail')).toContainText('弓手')
+  await expect(page.getByTestId('career-tree-detail')).toContainText('弓手转职书')
+  await expect(page.getByTestId('career-change')).toBeDisabled()
 })
 
 test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
@@ -471,37 +365,37 @@ test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
   ]))
 })
 
-test('职业 Lv.10 转职且侠客等级保持不变', async ({ page }) => {
+test('白丁 Lv.5 持弓手转职书可转职且侠客等级保持不变', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-    window.__EGG_JIANGHU__.setHeroCareerLevel('hero_mu_nianci', 'sword', 10)
+    window.__EGG_JIANGHU__.setHeroCareerLevel('hero_mu_nianci', 'job_1', 5)
+    window.__EGG_JIANGHU__.grantJobBook('job_5', 1)
   })
   const heroLevel = await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_mu_nianci.level)
 
-  await openWorldSection(page, 'city')
-  await page.locator('[data-action="career-buy-token"][data-token-id="token_sword_swift_mid"]').click()
   await page.getByTestId('tab-heroes').click()
-  await page.locator('[data-action="career-change"][data-career-id="sword_swift_mid"]').click()
+  await page.getByTestId('hero-hero_mu_nianci').click()
+  await page.getByTestId('open-career-tree').click()
+  await page.getByTestId('career-node-job_5').click()
+  await expect(page.getByTestId('career-change')).toBeEnabled()
+  await page.getByTestId('career-change').click()
 
   const hero = await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_mu_nianci)
   expect(hero.level).toBe(heroLevel)
-  expect(hero.currentCareerId).toBe('sword_swift_mid')
-  expect(hero.careers.sword.level).toBe(10)
-  expect(hero.careers.sword_swift_mid.level).toBe(1)
+  expect(hero.currentCareerId).toBe('job_5')
+  expect(hero.careers.job_1.level).toBe(5)
+  expect(hero.careers.job_5.level).toBe(1)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().jobBooks.job_5 ?? 0)).toBe(0)
 })
 
-test('四槽按优先级跳过不满足条件的武功', async ({ page }) => {
+test('战斗使用当前职业普攻', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
     window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
-    window.__EGG_JIANGHU__.seedLearnedMartial('hero_mu_nianci', 'qingfeng_hall_d1', 1, 0)
-    window.__EGG_JIANGHU__.seedLearnedMartial('hero_mu_nianci', 'qingfeng_hall_a1', 1, 1)
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 73)
-    window.__EGG_JIANGHU__.setHeroCooldown('hero_mu_nianci', 'qingfeng_hall_d1', 10_000)
   })
   const events = await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(100))
-  expect(events).toContainEqual(expect.objectContaining({ type: 'skill-skipped', skillId: 'qingfeng_hall_d1', reason: '武功尚在回气' }))
-  expect(events).toContainEqual(expect.objectContaining({ type: 'skill-used', skillId: 'qingfeng_hall_a1' }))
+  expect(events).toContainEqual(expect.objectContaining({ type: 'skill-used', skillId: 'base_job_1' }))
 })
 
 test('每个小关第十波显示 Boss 精英和小怪', async ({ page }) => {
@@ -530,14 +424,16 @@ test('闯荡失败回退上一小关并切换驻守', async ({ page }) => {
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.wave)).toBe(1)
 })
 
-test('敌人死亡时装备立即进入背包', async ({ page }) => {
+test('敌人死亡时货币立即入账且本阶段不掉装备', async ({ page }) => {
+  const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().worldCurrency.world_01 ?? 0)
   const added = await page.evaluate(() => window.__EGG_JIANGHU__.settleEnemy(101, 'boss'))
-  expect(added.length).toBeGreaterThanOrEqual(2)
-  await page.getByTestId('tab-inventory').click()
-  await expect(page.locator('[data-testid^="equipment-"]')).toHaveCount(added.length)
+  const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
+  expect(added).toEqual([])
+  expect(after.inventory).toHaveLength(0)
+  expect(after.worldCurrency.world_01).toBeGreaterThan(before)
 })
 
-test('第 301 件装备被拒绝且战斗继续', async ({ page }) => {
+test('击杀不因背包容量中断战斗', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
     window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
@@ -548,7 +444,6 @@ test('第 301 件装备被拒绝且战斗继续', async ({ page }) => {
   const state = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
   expect(added).toEqual([])
   expect(state.inventory).toHaveLength(300)
-  expect(state.statistics.equipmentMissedAtCapacity).toBeGreaterThan(0)
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.result)).toBe('fighting')
 })
 
@@ -594,9 +489,8 @@ test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page 
   expect(after.slice(1)).not.toEqual(before.slice(1))
 })
 
-test('势力页支持切换匾额、点将谱搜索和经脉研习', async ({ page }) => {
+test('势力页支持切换匾额和门人拜帖', async ({ page }) => {
   await page.evaluate(() => {
-    window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
     window.__EGG_JIANGHU__.grantContribution('qingfeng_hall', 1000)
   })
   await openWorldSection(page, 'factions')
@@ -605,27 +499,16 @@ test('势力页支持切换匾额、点将谱搜索和经脉研习', async ({ pa
   await expect(page.getByTestId('faction-plaque-tieyi_school')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('faction-page-title')).toBeVisible()
   await page.getByTestId('faction-plaque-qingfeng_hall').click()
-
-  await page.locator('[data-action="toggle-faction-roster"]').click()
-  await expect(page.getByTestId('faction-roster')).toBeVisible()
-  await page.getByRole('searchbox', { name: '搜索研习对象' }).fill('穆念慈')
-  await expect(page.getByTestId('faction-roster-hero_mu_nianci')).toBeVisible()
-  await page.getByTestId('faction-roster-hero_mu_nianci').click()
-  await expect(page.locator('[data-action="toggle-faction-roster"]')).toContainText('穆念慈')
-
-  await page.getByTestId('faction-martial-qingfeng_hall_a1').click()
-  await expect(page.getByTestId('faction-martial-detail')).toContainText('全真剑法')
-  await expect(page.getByTestId('faction-martial-detail')).toContainText('两段连击')
-  await expect(page.getByTestId('faction-martial-detail')).toContainText('《射雕英雄传》')
-  await expect(page.getByTestId('faction-martial-detail')).toContainText('◈连击')
-  await page.getByRole('button', { name: /研习 · 贡献 80/ }).click()
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_mu_nianci.learnedMartials.qingfeng_hall_a1?.level)).toBe(1)
+  await expect(page.getByTestId('faction-plaque-qingfeng_hall')).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('faction-invite-panel')).toBeVisible()
+  await expect(page.getByTestId('faction-hero-hero_qingfeng_hall_01')).toContainText('孙不二')
+  await expect(page.getByTestId('faction-meridian')).toHaveCount(0)
 })
 
-test('势力页主区可滚动查看传承与门人拜帖', async ({ page }) => {
+test('势力页主区可滚动查看悬榜与门人拜帖', async ({ page }) => {
   await openWorldSection(page, 'factions')
   const main = page.locator('.game-main')
-  await expect(page.getByTestId('faction-meridian')).toBeAttached()
+  await expect(page.getByTestId('faction-quest-board')).toBeAttached()
   await expect(page.getByTestId('faction-invite-panel')).toBeAttached()
 
   const metrics = await main.evaluate((element) => ({
@@ -666,8 +549,8 @@ test('页面不出现离线收益抽卡残页铁匠铺和首次奖励', async ({
   await expect(page.getByTestId('tab-heroes')).toHaveAttribute('aria-current', 'page')
   await page.getByTestId('tab-idle').click()
   await expect(page.getByTestId('tab-idle')).toHaveAttribute('aria-current', 'page')
-  await page.getByTestId('tab-inventory').click()
-  await expect(page.getByTestId('tab-inventory')).toHaveAttribute('aria-current', 'page')
+  await page.getByTestId('tab-formation').click()
+  await expect(page.getByTestId('tab-formation')).toHaveAttribute('aria-current', 'page')
   await expect(page.locator('.world-subnav')).toHaveCount(0)
   expect(await page.locator('body').innerText()).not.toMatch(/离线收益|十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解|首次通关|首次奖励|叩关/)
 })

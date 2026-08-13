@@ -1,69 +1,11 @@
-import { createRng, type Rng } from '../combat/rng'
-import type { CombatEvent, CombatRank } from '../combat/types'
-import {
-  EQUIPMENT_QUALITIES,
-  EQUIPMENT_SLOTS,
-  rollAffixes,
-} from '../content/equipment'
+import type { CombatEvent } from '../combat/types'
 import { addCareerExperience } from './careers'
-import { addEquipment } from './inventory'
 import { applyKillToQuests } from './quests'
-import type { EquipmentInstance, EquipmentQuality, GameStateV10 } from './types'
+import type { GameStateV10 } from './types'
 
 export interface CombatSettlementResult {
   needsSave: boolean
   addedEquipmentUids: string[]
-}
-
-const qualityWeights: Record<CombatRank, readonly number[]> = {
-  normal: [70, 22, 7, 1, 0],
-  elite: [35, 35, 20, 8, 2],
-  boss: [10, 25, 35, 22, 8],
-}
-
-const weightedQuality = (rank: CombatRank, worldIndex: number, rng: Rng): EquipmentQuality => {
-  const weights = [...qualityWeights[rank]]
-  const promotion = Math.floor((worldIndex - 1) / 2)
-  for (let step = 0; step < promotion; step += 1) {
-    for (let index = weights.length - 1; index > 0; index -= 1) {
-      const moved = Math.floor(weights[index - 1] * 0.08)
-      weights[index - 1] -= moved
-      weights[index] += moved
-    }
-  }
-  const total = weights.reduce((sum, weight) => sum + weight, 0)
-  let roll = rng.nextFloat() * total
-  for (let index = 0; index < weights.length; index += 1) {
-    roll -= weights[index]
-    if (roll < 0) return EQUIPMENT_QUALITIES[index]
-  }
-  return '凡品'
-}
-
-const dropCount = (rank: CombatRank, rng: Rng): number => {
-  if (rank === 'boss') return 2 + (rng.nextFloat() < 0.5 ? 1 : 0)
-  if (rank === 'elite') return 1 + (rng.nextFloat() < 0.25 ? 1 : 0)
-  return rng.nextFloat() < 0.35 ? 1 : 0
-}
-
-const createEquipmentDrops = (
-  event: Extract<CombatEvent, { type: 'enemy-defeated' }>,
-): EquipmentInstance[] => {
-  const rng = createRng(event.seed)
-  const worldIndex = Number(event.worldId.slice(-2)) || 1
-  const level = (worldIndex - 1) * 10 + event.stage
-  return Array.from({ length: dropCount(event.rank, rng) }, (_, index) => {
-    const slot = rng.pick(EQUIPMENT_SLOTS)
-    const quality = weightedQuality(event.rank, worldIndex, rng)
-    return {
-      uid: `${event.enemyId}-${event.seed.toString(36)}-${index}`,
-      definitionId: `${event.worldId}_${slot}`,
-      level,
-      quality,
-      affixes: rollAffixes(quality, level, rng),
-      locked: false,
-    }
-  })
 }
 
 const grantKillProgress = (
@@ -103,9 +45,5 @@ export const settleCombatEvent = (
     rank: event.rank,
     bossId: event.rank === 'boss' ? event.enemyId : null,
   })
-  const addedEquipmentUids: string[] = []
-  for (const equipment of createEquipmentDrops(event)) {
-    if (addEquipment(state, equipment).ok) addedEquipmentUids.push(equipment.uid)
-  }
-  return { needsSave: true, addedEquipmentUids }
+  return { needsSave: true, addedEquipmentUids: [] }
 }

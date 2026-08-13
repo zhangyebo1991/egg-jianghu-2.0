@@ -5,17 +5,6 @@ import { heroPortraitAsset } from './portrait-assets'
 
 export type FormationFilter = 'all' | '剑' | '刀' | '拳' | '暗' | '医' | '内家'
 
-export interface FormationCareerView {
-  name: string
-  state: 'done' | 'current' | 'future'
-}
-
-export interface FormationMartialView {
-  name: string
-  rarity: string
-  level: number
-}
-
 export interface FormationHeroView {
   id: string
   name: string
@@ -26,11 +15,8 @@ export interface FormationHeroView {
   source: string
   careerName: string
   careerLevel: number
-  careerPath: FormationCareerView[]
   aptitudes: HeroAptitudes
   combatStats: Pick<CombatStats, 'maxHp' | 'externalAttack' | 'internalAttack' | 'externalDefense' | 'internalDefense' | 'effectiveAgility'>
-  equippedMartials: Array<FormationMartialView | null>
-  heartMethodName: string | null
   slot: { row: 'front' | 'back'; position: 0 | 1 | 2 } | null
 }
 
@@ -211,13 +197,8 @@ const renderRadar = (hero: FormationHeroView): string => {
   return `<svg class="formation-radar" width="200" height="190" viewBox="0 0 200 190" role="img" aria-label="${escapeHtml(hero.name)}五维资质"><polygon class="ring" points="${axes.map((_, index) => point(index, radius / 3).map((value) => value.toFixed(1)).join(',')).join(' ')}"></polygon>${polygon(radius * 2 / 3, 'ring')} ${polygon(radius, 'ring outer')}${lines}<polygon class="shape" points="${shape}"></polygon>${dots}${labels}</svg>`
 }
 
-const renderCareerPath = (hero: FormationHeroView): string => `<div class="formation-career-path">${hero.careerPath.map((career, index) => `${index ? '<span class="formation-career-arrow">›</span>' : ''}<span class="formation-career-node ${career.state}">${escapeHtml(career.name)}</span>`).join('')}</div>`
-
-const renderMartials = (hero: FormationHeroView): string => `${hero.equippedMartials.map((martial, index) => martial
-  ? `<span class="formation-martial-chip"><small>武学 ${positionNames[index] ?? '肆'}</small>${escapeHtml(martial.name)}<em>${escapeHtml(martial.rarity)} · Lv.${martial.level}</em></span>`
-  : `<span class="formation-martial-chip empty"><small>武学 ${positionNames[index] ?? '肆'}</small>虚位</span>`).join('')}${hero.heartMethodName
-  ? `<span class="formation-martial-chip heart"><small>心法</small>${escapeHtml(hero.heartMethodName)}</span>`
-  : '<span class="formation-martial-chip heart empty"><small>心法</small>未装备心法</span>'}`
+const renderCurrentCareer = (hero: FormationHeroView): string =>
+  `<div class="formation-career-now" data-testid="formation-career"><strong>${escapeHtml(hero.careerName)}</strong><span>职业 Lv.${hero.careerLevel}</span></div>`
 
 const renderHeroCard = (view: FormationPageViewModel): string => {
   const hero = heroAt(view, view.selectedHeroId)
@@ -229,10 +210,8 @@ const renderHeroCard = (view: FormationPageViewModel): string => {
     <div class="formation-hero-fit"><b>宜</b><span>${escapeHtml(fitText[hero.category] ?? '身随阵势，择位而行。')}</span></div>
     <div class="formation-card-title">五维禀赋</div>
     ${renderRadar(hero)}
-    <div class="formation-card-title">职业进境 <small>职业 Lv.${hero.careerLevel}</small></div>
-    ${renderCareerPath(hero)}
-    <div class="formation-card-title">随身武学</div>
-    <div class="formation-martials">${renderMartials(hero)}</div>
+    <div class="formation-card-title">当前职业</div>
+    ${renderCurrentCareer(hero)}
     <div class="formation-card-foot"><span>现居 <b>${escapeHtml(slotText)}</b></span>${hero.slot ? `<button type="button" class="formation-btn-line" data-action="formation-remove" data-hero-id="${escapeHtml(hero.id)}">遣其下阵</button>` : ''}</div>
   </aside>`
 }

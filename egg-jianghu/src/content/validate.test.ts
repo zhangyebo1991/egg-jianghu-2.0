@@ -13,7 +13,7 @@ describe('首发内容目录', () => {
     expect(WORLDS).toHaveLength(30)
     expect(FACTIONS).toHaveLength(30)
     expect(FACTION_MARTIALS).toHaveLength(240)
-    expect(CAREERS).toHaveLength(42)
+    expect(CAREERS).toHaveLength(41)
     expect(JSON.stringify(createInitialStateV10())).not.toMatch(/pages|秘籍残页|offline|combat/)
   })
 
@@ -21,11 +21,13 @@ describe('首发内容目录', () => {
     expect(validateContent()).toEqual([])
   })
 
-  it('包含 6 初级、12 中级、12 高级和 12 顶级职业', () => {
-    expect(CAREERS.filter((career) => career.tier === '初级')).toHaveLength(6)
-    expect(CAREERS.filter((career) => career.tier === '中级')).toHaveLength(12)
-    expect(CAREERS.filter((career) => career.tier === '高级')).toHaveLength(12)
-    expect(CAREERS.filter((career) => career.tier === '顶级')).toHaveLength(12)
+  it('包含诸天 1 初级、5 一阶、10 二阶、10 三阶、10 四阶和 5 五阶职业', () => {
+    expect(CAREERS.filter((career) => career.tier === '初级')).toHaveLength(1)
+    expect(CAREERS.filter((career) => career.tier === '一阶')).toHaveLength(5)
+    expect(CAREERS.filter((career) => career.tier === '二阶')).toHaveLength(10)
+    expect(CAREERS.filter((career) => career.tier === '三阶')).toHaveLength(10)
+    expect(CAREERS.filter((career) => career.tier === '四阶')).toHaveLength(10)
+    expect(CAREERS.filter((career) => career.tier === '五阶')).toHaveLength(5)
   })
 
   it('已开放 10 卷各 3 势力且未开放卷无势力', () => {

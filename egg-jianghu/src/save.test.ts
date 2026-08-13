@@ -52,11 +52,11 @@ describe('version 10 公开存档入口', () => {
     expect(loaded.state).toEqual(createInitialStateV10(500))
   })
 
-  it('导出与导入只接受 version 10', () => {
+  it('导出与导入只接受 version 11', () => {
     const state = createInitialStateV10(100)
     state.worldCurrency.world_01 = 987
     const serialized = exportSave(state, 200)
-    expect(JSON.parse(serialized).version).toBe(10)
+    expect(JSON.parse(serialized).version).toBe(11)
     expect(importSave(serialized, 300).state.worldCurrency.world_01).toBe(987)
     expect(() => importSave(JSON.stringify({ version: 9 }), 300)).toThrow('存档版本不受支持')
   })

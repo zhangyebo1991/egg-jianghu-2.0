@@ -6,7 +6,7 @@ import { buildCombatStats } from './combat/stats'
 import { COMBAT_TICK_MS } from './combat/timeline'
 import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
 import { createWave, enemyDisplayName } from './combat/waves'
-import { CAREERS, careerById } from './content/careers'
+import { CAREERS, CAREER_GROWTH_FIELDS, STARTER_CAREER_ID, careerById, careerJobBookName, careerSkillTypeNames, careersInRank, formatGrowthCoeff, growthGrade } from './content/careers'
 import {
   EQUIPMENT_AFFIXES,
   EQUIPMENT_QUALITIES,
@@ -18,14 +18,13 @@ import {
   type EquipmentSlot,
 } from './content/equipment'
 import { FACTIONS } from './content/factions'
-import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10 } from './content/heroes'
-import { CITY_HEART_METHODS, CITY_MARTIALS, FACTION_HEART_METHODS, FACTION_MARTIALS, heartMethodByIdV10, martialByIdV10 } from './content/martials'
+import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
+import { FACTION_MARTIALS, martialByIdV10 } from './content/martials'
 import { WORLDS } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
-import { changeCareer, perfectCareer } from './domain/careers'
-import { buyCareerToken, learnCityMartial } from './domain/city'
-import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, averageItemLevel } from './domain/inventory'
+import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
+import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, INVENTORY_CAPACITY, organizeInventory, switchEquipmentSet, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
 import { MAX_MARTIAL_LEVEL, equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
@@ -38,7 +37,7 @@ import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { MARTIAL_LORE } from './content/martial-lore'
 import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
-import { renderHeroesPage, type HeroesEquipmentView, type HeroesHeroView, type HeroesPageViewModel } from './ui/heroes-page'
+import { renderHeroesPage, type HeroesHeroView, type HeroesPageViewModel } from './ui/heroes-page'
 import {
   renderIdlePage,
   type IdleCombatEffectKind,
@@ -83,9 +82,6 @@ let inventorySlotFilter: EquipmentSlot | 'all' = 'all'
 let selectedInventoryUid: string | null = null
 let inventoryDetailOpen = false
 let pendingInventoryDropUids: string[] = []
-let heroInventorySlotFilter: EquipmentSlot | 'all' = 'all'
-let heroInventoryQualityFilter: EquipmentQuality | 'all' = 'all'
-let heroInventoryPage = 1
 let heroBatchDiscardQuality: EquipmentQuality | 'all' = 'all'
 let showBatchDiscardConfirm = false
 let heroRosterQuery = ''
@@ -99,7 +95,8 @@ let dragHeroId: string | null = null
 let dragCandidateHeroId: string | null = null
 let selectedFactionId = ''
 let selectedFactionMartialId: string | null = null
-let selectedCityMartialId: string | null = null
+let careerTreeOpen = false
+let selectedTreeCareerId: string | null = null
 let factionRosterOpen = false
 let factionRosterQuery = ''
 let combatSpeed: 1 | 2 | 4 = 1
@@ -432,13 +429,12 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
   selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
   selectedHeroId = Object.keys(session.state.heroes)[0] ?? null
+  careerTreeOpen = false
+  selectedTreeCareerId = null
   inventorySlotFilter = 'all'
   selectedInventoryUid = null
   inventoryDetailOpen = false
   pendingInventoryDropUids = []
-  heroInventorySlotFilter = 'all'
-  heroInventoryQualityFilter = 'all'
-  heroInventoryPage = 1
   heroBatchDiscardQuality = 'all'
   showBatchDiscardConfirm = false
   heroRosterQuery = ''
@@ -640,105 +636,30 @@ const normalizeSelectedHero = (): string | null => {
   return selectedHeroId
 }
 
-const equipmentStatNames: Record<string, string> = {
-  attack: '外功 / 内功',
-  externalAttack: '外功',
-  internalAttack: '内功',
-  maxHp: '气血',
-  externalDefense: '外防',
-  internalDefense: '内防',
-  agility: '身法',
-  effectiveAgility: '有效身法',
-  accuracy: '命中修正',
-  energyRecovery: '真气回复',
-  cooldownRate: '冷却缩减',
-  criticalChance: '暴击',
-  controlResistance: '控制抗性',
-}
-
-const percentEquipmentStats = new Set(['accuracy', 'cooldownRate', 'criticalChance', 'controlResistance'])
-
-const heroEquipmentView = (item: EquipmentInstance): HeroesEquipmentView => {
-  const definition = equipmentDefinitionById(item.definitionId)
-  const ownerId = equipmentOwnerId(session.state, item.uid)
-  const ownerDefinition = ownerId ? heroByIdV10(ownerId) : undefined
-  const ownerProgress = ownerId ? session.state.heroes[ownerId] : undefined
-  const slot = definition?.slot ?? 'weapon'
-  const baseStatId = definition?.baseStatId ?? 'attack'
-  return {
-    uid: item.uid,
-    definitionId: item.definitionId,
-    name: definition?.name ?? item.definitionId,
-    slot,
-    slotName: EQUIPMENT_SLOT_NAMES[slot],
-    level: item.level,
-    quality: item.quality,
-    locked: item.locked,
-    equippedByHeroId: ownerId,
-    equippedByHeroName: ownerDefinition && ownerProgress ? heroDisplayNameV10(ownerDefinition, ownerProgress) : null,
-    baseStat: {
-      name: equipmentStatNames[baseStatId] ?? baseStatId,
-      value: definition ? equipmentBaseStatValue(definition, item) : 0,
-      percent: percentEquipmentStats.has(baseStatId),
-    },
-    affixes: item.affixes.map((affix) => ({
-      name: EQUIPMENT_AFFIXES.find((definitionAffix) => definitionAffix.id === affix.id)?.name
-        ?? equipmentStatNames[affix.id]
-        ?? affix.id,
-      value: affix.value,
-      percent: percentEquipmentStats.has(affix.id) || /^\d+$/.test(affix.id),
-    })),
-  }
-}
+const careerGrowthView = (career: NonNullable<ReturnType<typeof careerById>>) =>
+  CAREER_GROWTH_FIELDS.map((field) => ({
+    id: field.id,
+    label: field.label,
+    grade: growthGrade(career.growth[field.id]),
+    coeff: formatGrowthCoeff(career.growth[field.id]),
+  }))
 
 const heroesViewModel = (): HeroesPageViewModel => {
   const selectedId = normalizeSelectedHero()
   const selectedProgress = selectedId ? session.state.heroes[selectedId] : undefined
-  const currentCareer = selectedProgress ? careerById(selectedProgress.currentCareerId) : undefined
-  const learned = selectedProgress ? Object.entries(selectedProgress.learnedMartials).map(([id, record]) => {
-    const martial = martialByIdV10(id)
-    return { id, name: martial?.name ?? id, rarity: martial?.rarity ?? '粗浅', level: record.level }
-  }) : []
-  const compatibleCareers = currentCareer
-    ? CAREERS.filter((career) => career.category === currentCareer.category && career.id !== currentCareer.id)
-    : []
-  const compatibleHeartMethods = selectedProgress
-    ? [...FACTION_HEART_METHODS, ...CITY_HEART_METHODS].filter((method) =>
-      session.state.unlockedWorldIds.includes(method.worldId) && method.careerIds.includes(selectedProgress.currentCareerId))
-    : []
-  const allEquipmentItems = session.state.inventory.map(heroEquipmentView)
-  const inventoryItems = allEquipmentItems.filter((item) => !item.equippedByHeroId)
-
-  const buildCareerPath = (currentCareerId: string): Array<{ name: string; state: 'done' | 'current' | 'future'; tier?: string }> => {
-    const current = careerById(currentCareerId)
-    if (!current) return []
-    const base = CAREERS.find((career) => career.category === current.category && career.branch === null)
-    const branchName = current.branch ?? CAREERS.find((career) => career.category === current.category && career.branch !== null)?.branch
-    const tierOrder: Record<string, number> = { 初级: 0, 中级: 1, 高级: 2, 顶级: 3 }
-    const branch = CAREERS
-      .filter((career) => career.category === current.category && career.branch === branchName)
-      .sort((left, right) => tierOrder[left.tier] - tierOrder[right.tier])
-    const path = base ? [base, ...branch] : [current, ...branch.filter((career) => career.id !== current.id)]
-    const currentIndex = Math.max(0, path.findIndex((career) => career.id === current.id))
-    return path.map((career, index) => ({
-      name: career.name,
-      tier: career.tier,
-      state: career.id === current.id ? 'current' : index < currentIndex ? 'done' : 'future',
-    }))
-  }
+  const inCombat = Boolean(session.combat)
 
   const buildHero = ({ definition, progress, name }: ReturnType<typeof recruitedHeroes>[number]): HeroesHeroView => {
     const career = careerById(progress.currentCareerId) ?? careerById(definition.baseCareerId)
     const record = progress.careers[progress.currentCareerId]
-    const heroCompatibleCareers = career
-      ? CAREERS.filter((item) => item.category === career.category && item.id !== career.id)
-      : []
-    const category = career?.category ?? '剑'
     const source = definition.source === 'starter'
       ? '本队主角'
       : definition.source === 'tavern'
         ? '酒馆相逢'
         : `${FACTIONS.find((faction) => faction.id === definition.factionId)?.name ?? '势力'}门人`
+    const required = career
+      ? careerExperienceForNextLevel(career.rank, record?.level ?? 1, progress.level)
+      : 1
     return {
       id: definition.id,
       name,
@@ -748,27 +669,23 @@ const heroesViewModel = (): HeroesPageViewModel => {
       careerId: progress.currentCareerId,
       careerName: career?.name ?? progress.currentCareerId,
       careerLevel: record?.level ?? 1,
-      careerPerfected: record?.perfected ?? false,
-      availableCareerIds: heroCompatibleCareers.map((item) => item.id),
+      careerTier: career?.tier ?? '初级',
+      skillTypeNames: career ? careerSkillTypeNames(career) : ['通用'],
+      growth: career ? careerGrowthView(career) : [],
+      careerExperience: record?.experience ?? 0,
+      careerExperienceRequired: required,
+      careerMaxed: (record?.level ?? 1) >= CAREER_MAX_LEVEL,
+      learnedCareers: Object.entries(progress.careers).map(([id, learned]) => ({
+        id,
+        name: careerById(id)?.name ?? id,
+        level: learned.level,
+        current: id === progress.currentCareerId,
+      })),
       aptitudes: definition.aptitudes,
       combatStats: buildCombatStats(definition, progress, session.state.inventory),
-      activeEquipmentSetIndex: progress.activeEquipmentSetIndex ?? 0,
-      averageItemLevel: averageItemLevel(progress, session.state.inventory),
-      equipmentSlots: EQUIPMENT_SLOTS.map((slot) => ({
-        id: slot,
-        name: EQUIPMENT_SLOT_NAMES[slot],
-        equipment: allEquipmentItems.find((item) => item.uid === progress.equipmentBySlot[slot]) ?? null,
-      })),
-      learnedMartials: Object.entries(progress.learnedMartials).map(([id, learnedRecord]) => {
-        const martial = martialByIdV10(id)
-        return { id, name: martial?.name ?? id, rarity: martial?.rarity ?? '粗浅', level: learnedRecord.level }
-      }),
-      equippedMartialIds: progress.equippedMartialIds,
-      heartMethodId: progress.heartMethodId,
-      category,
+      category: heroMeridianCategory(definition),
       source,
       inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
-      careerPath: buildCareerPath(progress.currentCareerId),
     }
   }
 
@@ -779,6 +696,54 @@ const heroesViewModel = (): HeroesPageViewModel => {
     && (heroRosterGradeFilter === 'all' || hero.grade === heroRosterGradeFilter)
     && (heroRosterCategoryFilter === 'all' || hero.category === heroRosterCategoryFilter))
 
+  const treeCareerId = selectedTreeCareerId && CAREERS.some((career) => career.id === selectedTreeCareerId)
+    ? selectedTreeCareerId
+    : selectedProgress?.currentCareerId ?? STARTER_CAREER_ID
+  const treeNodes = CAREERS.map((career) => {
+    const siblings = careersInRank(career.rank)
+    return {
+      id: career.id,
+      name: career.name,
+      rank: career.rank,
+      indexInRank: Math.max(0, siblings.findIndex((item) => item.id === career.id)),
+      rankCount: Math.max(1, siblings.length),
+      tier: career.tier,
+      learned: Boolean(selectedProgress?.careers[career.id]),
+      current: selectedProgress?.currentCareerId === career.id,
+      selected: treeCareerId === career.id,
+    }
+  })
+  const selectedCareer = careerById(treeCareerId)
+  const preview = selectedProgress && selectedCareer
+    ? previewCareerChange(selectedProgress, selectedCareer.id, session.state.jobBooks, inCombat)
+    : null
+  const treeDetail = selectedCareer && selectedProgress
+    ? {
+      id: selectedCareer.id,
+      name: selectedCareer.name,
+      description: selectedCareer.description,
+      tier: selectedCareer.tier,
+      skillTypeNames: careerSkillTypeNames(selectedCareer),
+      growth: careerGrowthView(selectedCareer),
+      requirements: selectedCareer.requirements.map((requirement) => ({
+        name: careerById(requirement.careerId)?.name ?? requirement.careerId,
+        requiredLevel: requirement.level,
+        currentLevel: selectedProgress.careers[requirement.careerId]?.level ?? 0,
+        met: (selectedProgress.careers[requirement.careerId]?.level ?? 0) >= requirement.level,
+      })),
+      bookName: careerJobBookName(selectedCareer),
+      bookOwned: (session.state.jobBooks[selectedCareer.id] ?? 0) > 0,
+      learned: Boolean(selectedProgress.careers[selectedCareer.id]),
+      current: selectedProgress.currentCareerId === selectedCareer.id,
+      actionLabel: preview?.kind === 'switch'
+        ? '可直接转职'
+        : preview?.kind === 'current'
+          ? '当前职业'
+          : preview?.ok ? '转职' : preview?.message ?? '不可转职',
+      actionDisabled: !preview?.ok,
+    }
+    : null
+
   return {
     selectedHeroId: selectedId,
     heroes,
@@ -786,44 +751,14 @@ const heroesViewModel = (): HeroesPageViewModel => {
     rosterQuery: heroRosterQuery,
     rosterGradeFilter: heroRosterGradeFilter,
     rosterCategoryFilter: heroRosterCategoryFilter,
-    careers: compatibleCareers.map((career) => ({
-      id: career.id,
-      name: career.name,
-      tier: career.tier,
-      owned: Boolean(selectedProgress?.careers[career.id]),
-      tokenOwned: session.state.careerTokens.includes(`token_${career.id}`),
-    })),
-    martials: learned.map((martial) => ({ ...martial, learned: true })),
-    heartMethods: compatibleHeartMethods.map((method) => ({
-      id: method.id,
-      name: method.name,
-      equipped: selectedProgress?.heartMethodId === method.id,
-    })),
-    inventoryItems,
-    inventoryCapacity: INVENTORY_CAPACITY,
-    inventorySlotFilter: heroInventorySlotFilter,
-    inventoryQualityFilter: heroInventoryQualityFilter,
-    inventoryPage: heroInventoryPage,
-    batchDiscardQuality: heroBatchDiscardQuality,
-    batchDiscardConfirm: showBatchDiscardConfirm,
+    careerTreeOpen,
+    treeNodes,
+    treeLinks: CAREERS.flatMap((career) => career.requirements.map((requirement) => ({
+      fromId: requirement.careerId,
+      toId: career.id,
+    }))),
+    treeDetail,
   }
-}
-
-const formationCareerPath = (currentCareerId: string): FormationPageViewModel['heroes'][number]['careerPath'] => {
-  const current = careerById(currentCareerId)
-  if (!current) return []
-  const base = CAREERS.find((career) => career.category === current.category && career.branch === null)
-  const branchName = current.branch ?? CAREERS.find((career) => career.category === current.category && career.branch !== null)?.branch
-  const tierOrder: Record<string, number> = { 初级: 0, 中级: 1, 高级: 2, 顶级: 3 }
-  const branch = CAREERS
-    .filter((career) => career.category === current.category && career.branch === branchName)
-    .sort((left, right) => tierOrder[left.tier] - tierOrder[right.tier])
-  const path = base ? [base, ...branch] : [current, ...branch.filter((career) => career.id !== current.id)]
-  const currentIndex = Math.max(0, path.findIndex((career) => career.id === current.id))
-  return path.map((career, index) => ({
-    name: career.name,
-    state: career.id === current.id ? 'current' : index < currentIndex ? 'done' : 'future',
-  }))
 }
 
 const formationSourceLabel = (definition: (typeof HEROES_V10)[number]): string => {
@@ -843,11 +778,10 @@ const formationViewModel = (): FormationPageViewModel => {
       grade: definition.grade,
       level: progress.level,
       inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
-      category: currentCareer?.category ?? '剑',
+      category: heroMeridianCategory(definition),
       source: formationSourceLabel(definition),
       careerName: currentCareer?.name ?? progress.currentCareerId,
       careerLevel: careerRecord?.level ?? 1,
-      careerPath: formationCareerPath(progress.currentCareerId),
       aptitudes: definition.aptitudes,
       combatStats: {
         maxHp: combatStats.maxHp,
@@ -857,14 +791,6 @@ const formationViewModel = (): FormationPageViewModel => {
         internalDefense: combatStats.internalDefense,
         effectiveAgility: combatStats.effectiveAgility,
       },
-      equippedMartials: progress.equippedMartialIds.map((martialId) => {
-        if (!martialId) return null
-        const martial = martialByIdV10(martialId)
-        return martial
-          ? { name: martial.name, rarity: martial.rarity, level: progress.learnedMartials[martialId]?.level ?? 1 }
-          : null
-      }),
-      heartMethodName: progress.heartMethodId ? heartMethodByIdV10(progress.heartMethodId)?.name ?? null : null,
       slot: session.state.formation.find((slot) => slot.heroId === definition.id) ?? null,
     }
   })
@@ -879,9 +805,8 @@ const formationFilterOptions: FormationFilter[] = ['all', '剑', '刀', '拳', '
 
 const formationHeroCategory = (heroId: string): FormationFilter | null => {
   const definition = heroByIdV10(heroId)
-  const progress = session.state.heroes[heroId]
-  if (!definition || !progress) return null
-  return careerById(progress.currentCareerId)?.category ?? careerById(definition.baseCareerId)?.category ?? null
+  if (!definition || !session.state.heroes[heroId]) return null
+  return heroMeridianCategory(definition)
 }
 
 const autoArrangeFormation = (): ActionResult => {
@@ -985,8 +910,8 @@ const factionsViewModel = (): FactionsPageViewModel => {
   const selectedMartial = martialViews.find((martial) => martial.id === selectedFactionMartialId) ?? null
   const recruited = recruitedHeroes()
   const careerCategoryOf = (heroId: string): string => {
-    const progress = session.state.heroes[heroId]
-    return careerById(progress?.currentCareerId ?? '')?.category ?? '未知'
+    const definition = heroByIdV10(heroId)
+    return definition ? heroMeridianCategory(definition) : '未知'
   }
   const rosterQuery = factionRosterQuery.trim()
   const roster = recruited
@@ -1045,67 +970,27 @@ const factionsViewModel = (): FactionsPageViewModel => {
   }
 }
 
-const tokenCost = (tier: string): number => tier === '中级' ? 300 : tier === '高级' ? 800 : tier === '顶级' ? 2000 : 0
-
 const cityViewModel = (): CityPageViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
-  const selectedId = normalizeSelectedHero()
-  const selectedProgress = selectedId ? session.state.heroes[selectedId] : undefined
-  const selectedCareer = selectedProgress ? careerById(selectedProgress.currentCareerId) : undefined
   const worldIndex = Number(world.id.slice(-2)) || 1
-  const tierAvailable = (tier: string): boolean => tier === '中级' || tier === '高级' && worldIndex >= 4 || tier === '顶级' && worldIndex >= 7
-  const cityMartials = CITY_MARTIALS.filter((martial) => martial.worldId === world.id)
-  if (!cityMartials.some((martial) => martial.id === selectedCityMartialId)) {
-    selectedCityMartialId = cityMartials[0]?.id ?? null
-  }
-  const recruited = recruitedHeroes()
-  const martials = cityMartials.map((martial) => ({
-    id: martial.id,
-    name: martial.name,
-    rarity: martial.rarity,
-    category: martial.category as string,
-    cost: martial.currencySource.amount,
-    energyCost: martial.energyCost,
-    cooldownMs: martial.cooldownMs,
-    power: martial.power,
-    learned: Boolean(selectedProgress?.learnedMartials[martial.id]),
-    compatible: selectedProgress ? martial.careerIds.includes(selectedProgress.currentCareerId) : false,
-    selected: martial.id === selectedCityMartialId,
-  }))
   return {
     worldId: world.id,
     worldIndex,
     worldName: world.name,
     worldCurrency: session.state.worldCurrency[world.id] ?? 0,
-    selectedHeroId: selectedId,
-    selectedHeroName: recruited.find((hero) => hero.definition.id === selectedId)?.name ?? null,
-    heroes: recruited.map(({ definition, name }) => ({ id: definition.id, name })),
     tavernHeroes: TAVERN_HEROES.filter((hero) => hero.worldId === world.id).map((hero) => {
-      const baseCareer = careerById(hero.baseCareerId)
+      const career = careerById(hero.baseCareerId)
       return {
         id: hero.id,
         name: hero.name,
         grade: hero.grade,
-        category: baseCareer?.category ?? '剑',
-        careerName: baseCareer?.name ?? '侠客',
+        category: heroMeridianCategory(hero),
+        careerName: career?.name ?? '白丁',
         cost: hero.cost,
         recruited: Boolean(session.state.heroes[hero.id]?.recruited),
         line: hero.line ?? null,
       }
     }),
-    martials,
-    fitCount: martials.filter((martial) => martial.compatible).length,
-    careerTokens: CAREERS.filter((career) => career.previousId && tierAvailable(career.tier) && (!selectedCareer || career.category === selectedCareer.category)).map((career) => ({
-      id: `token_${career.id}`,
-      name: `${career.name}信物`,
-      tier: career.tier,
-      category: career.category as string,
-      cost: tokenCost(career.tier),
-      owned: session.state.careerTokens.includes(`token_${career.id}`),
-    })),
-    lockedTiers: (['高级', '顶级'] as const)
-      .filter((tier) => !tierAvailable(tier))
-      .map((tier) => ({ tier, cost: tokenCost(tier), minWorld: tier === '高级' ? 4 : 7 })),
   }
 }
 
@@ -1616,9 +1501,22 @@ const performAction = (button: HTMLButtonElement): void => {
       formationDetailHeroId = slotHeroId
     }
   }
-  else if (action === 'career-change') commitAction(changeCareer(session.state.heroes[heroId], button.dataset.careerId ?? '', session.state.careerTokens))
-  else if (action === 'career-perfect') commitAction(perfectCareer(session.state.heroes[heroId], button.dataset.careerId ?? ''))
-  else if (action === 'career-buy-token') commitAction(buyCareerToken(session.state, button.dataset.worldId ?? selectedWorldId, button.dataset.tokenId ?? ''))
+  else if (action === 'career-change') {
+    const hero = session.state.heroes[heroId]
+    if (!hero) notify('侠客尚未加入', true)
+    else {
+      const result = changeCareer(hero, button.dataset.careerId ?? '', session.state.jobBooks, Boolean(session.combat))
+      commitAction(result)
+      if (result.ok) careerTreeOpen = false
+    }
+  } else if (action === 'open-career-tree') {
+    careerTreeOpen = true
+    selectedTreeCareerId = session.state.heroes[heroId]?.currentCareerId ?? STARTER_CAREER_ID
+  } else if (action === 'close-career-tree') {
+    careerTreeOpen = false
+  } else if (action === 'select-career-node') {
+    selectedTreeCareerId = button.dataset.careerId ?? selectedTreeCareerId
+  }
   else if (action === 'martial-learn') commitAction(learnFactionMartial(session.state, heroId, button.dataset.martialId ?? ''))
   else if (action === 'martial-upgrade') commitAction(upgradeMartial(session.state, heroId, button.dataset.martialId ?? ''))
   else if (action === 'martial-equip') commitAction(equipMartial(session.state, heroId, button.dataset.martialId ?? '', dataNumber(button, 'slot')))
@@ -1631,8 +1529,7 @@ const performAction = (button: HTMLButtonElement): void => {
     selectedHeroId = button.dataset.heroId ?? selectedHeroId
     factionRosterOpen = false
     factionRosterQuery = ''
-  } else if (action === 'select-martial') selectedFactionMartialId = button.dataset.martialId ?? selectedFactionMartialId
-  else if (action === 'select-city-martial') selectedCityMartialId = button.dataset.martialId ?? selectedCityMartialId
+  }   else if (action === 'select-martial') selectedFactionMartialId = button.dataset.martialId ?? selectedFactionMartialId
   else if (action === 'heart-method-equip') commitAction(equipHeartMethod(session.state, heroId, button.dataset.heartMethodId ?? ''))
   else if (action === 'quest-accept') commitAction(acceptQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
   else if (action === 'quest-cancel') commitAction(cancelQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
@@ -1644,7 +1541,6 @@ const performAction = (button: HTMLButtonElement): void => {
       if (saveSession()) notify('邀请成功')
     } else notify(result.message, true)
   } else if (action === 'faction-recruit') commitAction(recruitFromFaction(session.state, button.dataset.factionId ?? '', heroId))
-  else if (action === 'city-martial-learn') commitAction(learnCityMartial(session.state, heroId, button.dataset.martialId ?? ''))
   else if (action === 'inventory-select') {
     selectedInventoryUid = button.dataset.equipmentUid ?? null
     inventoryDetailOpen = true
@@ -1679,23 +1575,12 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
   else if (action === 'equipment-set-switch') commitAction(switchEquipmentSet(session.state, heroId, dataNumber(button, 'setIndex')))
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
-  else if (action === 'hero-inventory-filter') {
-    const kind = button.dataset.filterKind
-    const value = button.dataset.filterValue ?? 'all'
-    if (kind === 'slot') {
-      heroInventorySlotFilter = value === 'all' || EQUIPMENT_SLOTS.includes(value as EquipmentSlot) ? value as EquipmentSlot | 'all' : 'all'
-    } else if (kind === 'quality') {
-      heroInventoryQualityFilter = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality) ? value as EquipmentQuality | 'all' : 'all'
-    }
-    heroInventoryPage = 1
-  } else if (action === 'hero-batch-discard-filter') {
+  else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
+  else if (action === 'hero-batch-discard-filter') {
     const value = button.dataset.filterValue as EquipmentQuality | undefined
     heroBatchDiscardQuality = value && EQUIPMENT_QUALITIES.includes(value) ? value : 'all'
     showBatchDiscardConfirm = heroBatchDiscardQuality !== 'all'
-    heroInventoryPage = 1
   }
-  else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
-  else if (action === 'hero-inventory-page') heroInventoryPage = Math.max(1, dataNumber(button, 'page'))
   else if (action === 'request-batch-discard') {
     showBatchDiscardConfirm = !showBatchDiscardConfirm
     heroBatchDiscardQuality = 'all'
@@ -1707,7 +1592,6 @@ const performAction = (button: HTMLButtonElement): void => {
       commitAction(discardEquipmentByQuality(session.state, heroBatchDiscardQuality))
       showBatchDiscardConfirm = false
       heroBatchDiscardQuality = 'all'
-      heroInventoryPage = 1
     }
   }
 }
@@ -1754,25 +1638,13 @@ app.addEventListener('change', (event) => {
   const target = event.target as HTMLElement
   const select = target.closest<HTMLSelectElement>('[data-action="select-hero-input"]')
   if (select) selectedHeroId = select.value || null
-  const inventoryFilter = target.closest<HTMLSelectElement>('[data-hero-inventory-filter]')
-  if (inventoryFilter?.dataset.heroInventoryFilter === 'slot') {
-    const value = inventoryFilter.value as EquipmentSlot | 'all'
-    heroInventorySlotFilter = value === 'all' || EQUIPMENT_SLOTS.includes(value as EquipmentSlot) ? value : 'all'
-    heroInventoryPage = 1
-  }
-  if (inventoryFilter?.dataset.heroInventoryFilter === 'quality') {
-    const value = inventoryFilter.value as EquipmentQuality | 'all'
-    heroInventoryQualityFilter = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality) ? value : 'all'
-    heroInventoryPage = 1
-  }
   const batchDiscardSelect = target.closest<HTMLSelectElement>('[data-batch-discard-quality]')
   if (batchDiscardSelect) {
     const value = batchDiscardSelect.value as EquipmentQuality | 'all'
     heroBatchDiscardQuality = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality) ? value : 'all'
     showBatchDiscardConfirm = false
-    heroInventoryPage = 1
   }
-  if (!select && !inventoryFilter && !batchDiscardSelect) return
+  if (!select && !batchDiscardSelect) return
   render()
 })
 
@@ -1981,7 +1853,11 @@ app.addEventListener('click', (event) => {
     selectedStage = Number(button.dataset.stage) || 1
     startSelectedStage('guard')
     return
-  } else if (action === 'select-hero') selectedHeroId = button.dataset.heroId ?? null
+  } else if (action === 'select-hero') {
+    selectedHeroId = button.dataset.heroId ?? null
+    careerTreeOpen = false
+    selectedTreeCareerId = null
+  }
   else if (action === 'hero-roster-filter') {
     const kind = button.dataset.filterKind
     const value = button.dataset.filterValue ?? 'all'
@@ -2174,6 +2050,7 @@ declare global {
       recruitHero: (heroId: string) => void
       placeHero: (heroId: string, row: FormationRow, position: FormationPosition) => void
       setHeroCareerLevel: (heroId: string, careerId: string, level: number) => void
+      grantJobBook: (careerId: string, count?: number) => void
       seedLearnedMartial: (heroId: string, martialId: string, level: number, slot?: number) => void
       setHeroCooldown: (heroId: string, martialId: string, remainingMs: number) => void
       fillInventory: (count: number) => void
@@ -2234,8 +2111,14 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     ensurePlaying()
     const hero = session.state.heroes[heroId]
     if (!hero) throw new Error('侠客尚未加入')
-    hero.careers[careerId] = { level, experience: 0, perfected: false }
+    hero.careers[careerId] = { level, experience: 0 }
     hero.currentCareerId = careerId
+    saveSession()
+    render()
+  },
+  grantJobBook: (careerId, count = 1) => {
+    ensurePlaying()
+    session.state.jobBooks[careerId] = (session.state.jobBooks[careerId] ?? 0) + Math.max(0, Math.floor(count))
     saveSession()
     render()
   },

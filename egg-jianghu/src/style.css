@@ -2965,7 +2965,8 @@ body {
 .formation-radar .shape { fill: rgb(181 80 60 / 22%); stroke: var(--formation-cinnabar-deep); stroke-width: 1.6; }
 .formation-radar .dot { fill: var(--formation-cinnabar-deep); }
 .formation-radar text { fill: #6b5b3d; font-family: "Faction Song", "Noto Serif SC", serif; font-size: 10px; letter-spacing: .06em; }
-.formation-career-path { display: flex; align-items: center; gap: 5px; margin-bottom: 16px; }
+.formation-career-now { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; color: var(--paper-dim); }
+.formation-career-now strong { color: var(--gold-bright); font-family: var(--font-brush); font-size: 26px; font-weight: 400; letter-spacing: .08em; }
 .formation-career-node { flex: 1; min-width: 0; overflow: hidden; padding: 6px 2px; color: #8a7a55; font-size: 10px; letter-spacing: .04em; text-align: center; text-overflow: ellipsis; white-space: nowrap; border: 1px dashed rgb(120 95 55 / 45%); border-radius: 4px; }
 .formation-career-node.done { color: #4a3c22; border-style: solid; border-color: rgb(138 100 32 / 55%); background: rgb(201 163 92 / 14%); }
 .formation-career-node.current { color: #f8e9db; font-weight: 700; border-style: solid; border-color: var(--formation-cinnabar-deep); background: linear-gradient(160deg, var(--formation-cinnabar-bright), var(--formation-cinnabar-deep)); box-shadow: 0 2px 8px rgb(138 58 43 / 35%); }
@@ -3158,7 +3159,7 @@ body {
 .heroes-page .page-head .crumb b { color: var(--gold); font-weight: 500; }
 .heroes-page .page-head h1 { margin: 0; color: #f2e7d0; font-family: var(--font-brush); font-size: 58px; font-weight: 400; line-height: 1; letter-spacing: .06em; text-shadow: 0 6px 30px rgb(0 0 0 / 45%); }
 .heroes-page .page-head .latin { margin: 10px 0 0; color: var(--paper-mute); font-size: 10px; letter-spacing: .42em; text-transform: uppercase; }
-.heroes-stage { position: relative; z-index: 1; display: grid; grid-template-columns: 236px minmax(0, 1fr) 348px; gap: 20px; align-items: start; }
+.heroes-stage { position: relative; z-index: 1; display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 20px; align-items: start; }
 .heroes-page .sec-title { display: flex; align-items: baseline; gap: 14px; }
 .heroes-page .sec-title h2 { margin: 0; color: #e6d7b4; font-family: var(--font-brush); font-size: 30px; font-weight: 400; letter-spacing: .12em; }
 .heroes-page .sec-title .sub { color: var(--paper-mute); font-size: 10px; letter-spacing: .32em; }
@@ -3431,6 +3432,84 @@ body {
   letter-spacing: .16em;
 }
 
+.heroes-page .career-now {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  border: 1px solid rgb(201 163 92 / 26%);
+  border-radius: 8px;
+  background: linear-gradient(160deg, rgb(201 163 92 / 8%), rgb(201 163 92 / 2%));
+}
+.heroes-page .cn-icon { width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 8px 16px rgb(0 0 0 / 35%)); }
+.heroes-page .cn-copy { display: grid; gap: 4px; min-width: 0; }
+.heroes-page .cn-tier { color: var(--paper-mute); font-size: 10px; letter-spacing: .3em; }
+.heroes-page .cn-name { color: #eadcb8; font-family: var(--font-brush); font-size: 28px; letter-spacing: .08em; }
+.heroes-page .cn-lv { color: var(--paper-dim); font-size: 11px; letter-spacing: .12em; }
+.heroes-page .cn-lv b { color: var(--gold-bright); font-size: 16px; }
+.heroes-page .cn-xp { min-width: 140px; text-align: right; color: var(--paper-mute); font-size: 11px; font-variant-numeric: tabular-nums; }
+.heroes-page .cn-bar { display: block; height: 6px; margin-top: 8px; overflow: hidden; border-radius: 99px; background: rgb(12 14 11 / 55%); }
+.heroes-page .cn-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright)); }
+.heroes-page .cn-skills { margin: 0 0 14px; color: var(--paper-dim); font-size: 12px; letter-spacing: .14em; }
+.heroes-page .cn-skills b { color: var(--gold); font-weight: 600; }
+.heroes-page .cg-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.heroes-page .cg-cell { display: grid; justify-items: center; gap: 2px; padding: 10px 6px; border: 1px solid var(--line-soft); border-radius: 6px; background: rgb(12 14 11 / 22%); }
+.heroes-page .cg-cell span { color: var(--paper-mute); font-size: 10px; letter-spacing: .18em; }
+.heroes-page .cg-cell b { color: var(--gold-bright); font-family: var(--font-brush); font-size: 20px; }
+.heroes-page .cg-cell em { color: var(--paper-dim); font-size: 11px; font-style: normal; font-variant-numeric: tabular-nums; }
+.heroes-page .learned-careers { margin-bottom: 16px; }
+.heroes-page .lc-head { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--paper-mute); font-size: 11px; letter-spacing: .22em; }
+.heroes-page .lc-head b { color: var(--gold); }
+.heroes-page .learned-careers ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.heroes-page .learned-careers li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line-soft); border-radius: 6px; color: var(--paper-dim); font-size: 12px; }
+.heroes-page .learned-careers li.current { border-color: rgb(201 163 92 / 45%); color: var(--gold-bright); }
+.heroes-page .learned-careers img { width: 22px; height: 22px; object-fit: contain; }
+.heroes-page .career-actions { display: flex; justify-content: flex-end; }
+.heroes-page .btn-career-tree { padding: 10px 26px; border-radius: 6px; color: #2e2208; background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep)); box-shadow: 0 6px 18px rgb(201 163 92 / 35%); font-size: 13px; font-weight: 600; letter-spacing: .32em; text-indent: .32em; }
+.heroes-page .btn-career-tree:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.career-tree-overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; background: rgb(8 10 8 / 72%); backdrop-filter: blur(8px); }
+.career-tree-dialog { display: grid; grid-template-rows: auto minmax(0, 1fr); width: min(1180px, 100%); max-height: calc(100vh - 40px); overflow: hidden; border: 1px solid rgb(201 163 92 / 28%); border-radius: 14px; background: linear-gradient(170deg, #1c1a16, #12110e 70%); box-shadow: 0 30px 80px rgb(0 0 0 / 55%); }
+.career-tree-dialog header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 18px 22px 14px; border-bottom: 1px solid var(--line-soft); }
+.career-tree-dialog header p { margin: 0 0 6px; color: var(--paper-mute); font-size: 11px; letter-spacing: .28em; }
+.career-tree-dialog header h2 { margin: 0; color: #eadcb8; font-family: var(--font-brush); font-size: 32px; font-weight: 400; }
+.career-tree-dialog .ct-close { padding: 8px 16px; border: 1px solid rgb(201 163 92 / 35%); border-radius: 6px; color: var(--gold); letter-spacing: .24em; }
+.career-tree-dialog .ct-body { display: grid; grid-template-columns: minmax(0, 1fr) 280px; min-height: 0; }
+.career-tree-dialog .ct-tree { position: relative; display: grid; grid-template-rows: repeat(6, minmax(72px, 1fr)); gap: 8px; padding: 18px; overflow: auto; }
+.career-tree-dialog .ct-links { position: absolute; inset: 18px; width: calc(100% - 36px); height: calc(100% - 36px); pointer-events: none; }
+.career-tree-dialog .ct-links line { stroke: rgb(201 163 92 / 28%); stroke-width: 2; }
+.career-tree-dialog .ct-rank { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(var(--ct-count), minmax(0, 1fr)); gap: 6px; }
+.career-tree-dialog .ct-node { display: grid; justify-items: center; gap: 4px; min-width: 0; padding: 6px 4px; border: 1px dashed rgb(233 222 195 / 18%); border-radius: 8px; color: var(--paper-mute); background: rgb(12 14 11 / 35%); }
+.career-tree-dialog .ct-node img { width: 28px; height: 28px; object-fit: contain; }
+.career-tree-dialog .ct-node strong { overflow: hidden; max-width: 100%; color: var(--heroes-paper); font-size: 12px; letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
+.career-tree-dialog .ct-node small { color: var(--paper-mute); font-size: 9px; letter-spacing: .16em; }
+.career-tree-dialog .ct-node.learned { border-style: solid; border-color: rgb(127 168 141 / 45%); }
+.career-tree-dialog .ct-node.current, .career-tree-dialog .ct-node.selected { border-style: solid; border-color: var(--gold); color: var(--gold-bright); background: rgb(201 163 92 / 10%); }
+.career-tree-dialog .ct-detail { overflow: auto; padding: 18px; border-left: 1px solid var(--line-soft); }
+.career-tree-dialog .ct-detail img { width: 48px; height: 48px; object-fit: contain; }
+.career-tree-dialog .ct-detail .ct-tier { display: block; margin: 8px 0 4px; color: var(--paper-mute); font-size: 10px; letter-spacing: .28em; }
+.career-tree-dialog .ct-detail h3 { margin: 0 0 8px; color: #eadcb8; font-family: var(--font-brush); font-size: 28px; font-weight: 400; }
+.career-tree-dialog .ct-detail p { margin: 0 0 12px; color: var(--paper-dim); font-size: 12px; line-height: 1.7; }
+.career-tree-dialog .ct-skills { margin-bottom: 12px; color: var(--gold); font-size: 12px; }
+.career-tree-dialog .ct-detail .cg-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.career-tree-dialog .ct-reqs span { color: var(--paper-mute); font-size: 11px; letter-spacing: .2em; }
+.career-tree-dialog .ct-reqs ul { margin: 8px 0 14px; padding: 0; list-style: none; }
+.career-tree-dialog .ct-reqs li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; color: var(--cinnabar-bright); font-size: 12px; }
+.career-tree-dialog .ct-reqs li.ok { color: var(--jade); }
+.career-tree-dialog .ct-book { margin-bottom: 14px; color: var(--paper-dim); font-size: 12px; }
+.career-tree-dialog .ct-action { width: 100%; padding: 10px 16px; border-radius: 6px; color: #2e2208; background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep)); letter-spacing: .28em; }
+.career-tree-dialog .ct-action.switch { color: var(--jade); border: 1px solid rgb(127 168 141 / 50%); background: none; }
+.career-tree-dialog .ct-action:disabled { filter: grayscale(.7) brightness(.7); cursor: not-allowed; }
+.career-tree-dialog .ct-detail.empty { display: grid; place-items: center; color: var(--paper-mute); letter-spacing: .2em; }
+@media (max-width: 980px) {
+  .career-tree-dialog .ct-body { grid-template-columns: 1fr; }
+  .career-tree-dialog .ct-detail { border-left: 0; border-top: 1px solid var(--line-soft); }
+  .heroes-page .cg-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .heroes-page .career-now { grid-template-columns: 48px minmax(0, 1fr); }
+  .heroes-page .cn-xp { grid-column: 1 / -1; text-align: left; }
+}
+
 /* 职业、武功、心法 */
 .heroes-page .career-path { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-bottom: 18px; }
 .heroes-page .career-path::before { content: ""; position: absolute; top: 21px; right: 8%; left: 8%; height: 2px; background: repeating-linear-gradient(90deg, rgb(233 222 195 / 18%) 0 6px, transparent 6px 12px); }
@@ -3606,7 +3685,7 @@ body {
 }
 
 @media (max-width: 1440px) {
-  .heroes-stage { grid-template-columns: 216px minmax(0, 1fr) 316px; }
+  .heroes-stage { grid-template-columns: 216px minmax(0, 1fr); }
   .heroes-page .stat-cluster .chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 1180px) {

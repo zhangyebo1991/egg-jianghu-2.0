@@ -3,7 +3,7 @@ import { HEROES_V10 } from '../content/heroes'
 import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
-export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v10'
+export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v11'
 
 export interface StorageLike {
   getItem(key: string): string | null
@@ -33,7 +33,6 @@ const isCareerRecord = (value: unknown): boolean =>
   isRecord(value)
   && isFiniteNumber(value.level)
   && isFiniteNumber(value.experience)
-  && typeof value.perfected === 'boolean'
 
 const isLearnedMartial = (value: unknown): boolean =>
   isRecord(value)
@@ -77,11 +76,11 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 }
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
-  version: 10,
+  version: 11,
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
   heroes: structuredClone(state.heroes),
-  careerTokens: structuredClone(state.careerTokens),
+  jobBooks: structuredClone(state.jobBooks),
   formation: structuredClone(state.formation),
   unlockedWorldIds: structuredClone(state.unlockedWorldIds),
   clearedStageByWorld: structuredClone(state.clearedStageByWorld),
@@ -104,7 +103,7 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
-    || raw.version !== 10
+    || raw.version !== 11
     || !Array.isArray(raw.inventory)
     || !Array.isArray(raw.formation)
     || !isRecord(raw.heroes)
@@ -118,7 +117,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     worldCurrency: isRecord(raw.worldCurrency) ? structuredClone(raw.worldCurrency) as GameStateV10['worldCurrency'] : state.worldCurrency,
     contribution: isRecord(raw.contribution) ? structuredClone(raw.contribution) as GameStateV10['contribution'] : state.contribution,
     heroes: structuredClone(raw.heroes) as GameStateV10['heroes'],
-    careerTokens: Array.isArray(raw.careerTokens) ? structuredClone(raw.careerTokens) as string[] : state.careerTokens,
+    jobBooks: isNumberRecord(raw.jobBooks) ? structuredClone(raw.jobBooks) as GameStateV10['jobBooks'] : state.jobBooks,
     formation: structuredClone(raw.formation) as GameStateV10['formation'],
     unlockedWorldIds: Array.isArray(raw.unlockedWorldIds) ? structuredClone(raw.unlockedWorldIds) as string[] : state.unlockedWorldIds,
     clearedStageByWorld: isRecord(raw.clearedStageByWorld) ? structuredClone(raw.clearedStageByWorld) as GameStateV10['clearedStageByWorld'] : state.clearedStageByWorld,

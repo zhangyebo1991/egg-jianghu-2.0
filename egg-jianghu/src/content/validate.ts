@@ -20,8 +20,9 @@ export const validateContent = (): string[] => {
   if (martialIds.size !== FACTION_MARTIALS.length) errors.push('势力武功 id 重复')
 
   for (const career of CAREERS) {
-    if (career.previousId && !careerIds.has(career.previousId)) errors.push(`${career.id} 前置职业不存在`)
-    if (career.nextId && !careerIds.has(career.nextId)) errors.push(`${career.id} 后继职业不存在`)
+    for (const requirement of career.requirements) {
+      if (!careerIds.has(requirement.careerId)) errors.push(`${career.id} 前置职业不存在`)
+    }
   }
 
   for (const faction of FACTIONS) {

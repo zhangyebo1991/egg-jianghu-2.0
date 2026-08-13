@@ -60,7 +60,7 @@ describe('version 10 存档', () => {
     saveGameV10(storage, state, 2000)
 
     const raw = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
-    expect(raw.version).toBe(10)
+    expect(raw.version).toBe(11)
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })
@@ -125,13 +125,10 @@ describe('version 10 存档', () => {
   it.each([
     ['职业记录不是对象', (hero: Record<string, unknown>) => { hero.careers = { sword: null } }],
     ['职业等级不是有限数字', (hero: Record<string, unknown>) => {
-      hero.careers = { sword: { level: '1', experience: 0, perfected: false } }
+      hero.careers = { job_1: { level: '1', experience: 0 } }
     }],
     ['职业经验不是有限数字', (hero: Record<string, unknown>) => {
-      hero.careers = { sword: { level: 1, experience: '0', perfected: false } }
-    }],
-    ['职业圆满状态不是布尔值', (hero: Record<string, unknown>) => {
-      hero.careers = { sword: { level: 1, experience: 0, perfected: 'no' } }
+      hero.careers = { job_1: { level: 1, experience: '0' } }
     }],
     ['已学武功不是对象', (hero: Record<string, unknown>) => { hero.learnedMartials = { foo: null } }],
     ['武功等级不是有限数字', (hero: Record<string, unknown>) => {
@@ -167,7 +164,7 @@ describe('version 10 存档', () => {
 
   it('拒绝嵌套侠客字段中的无限数字', () => {
     const raw = createNewGameStateV10('燕七', 1000)
-    raw.heroes.hero_player.careers.sword.level = Number.POSITIVE_INFINITY
+    raw.heroes.hero_player.careers.job_1.level = Number.POSITIVE_INFINITY
 
     expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
   })

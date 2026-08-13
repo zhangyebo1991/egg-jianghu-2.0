@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderShell } from './shell'
 
 describe('应用 Shell', () => {
-  it('仅显示四个全局入口且不显示顶部资源和自动存档', () => {
+  it('仅显示三个全局入口且不显示顶部资源和自动存档', () => {
     const html = renderShell({
       activeTab: 'idle',
       worldContext: null,
@@ -15,7 +15,7 @@ describe('应用 Shell', () => {
     expect(html).toContain('data-testid="tab-idle"')
     expect(html).toContain('data-testid="tab-heroes"')
     expect(html).toContain('data-testid="tab-formation"')
-    expect(html).toContain('data-testid="tab-inventory"')
+    expect(html).not.toContain('data-testid="tab-inventory"')
     expect(html).toContain('class="nav-mark"')
     expect(html).toContain('class="sidebar-landscape"')
     expect(html).toContain('十万里一剑 · 不负侠者行')
