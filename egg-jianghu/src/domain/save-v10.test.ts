@@ -60,7 +60,7 @@ describe('version 10 存档', () => {
     saveGameV10(storage, state, 2000)
 
     const raw = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
-    expect(raw.version).toBe(12)
+    expect(raw.version).toBe(13)
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })
@@ -81,8 +81,8 @@ describe('version 10 存档', () => {
     const state = createNewGameStateV10('燕七', 1000)
     state.heroes.hero_shen_yanqiu = structuredClone(state.heroes.hero_player)
     state.formation = [
-      { heroId: 'hero_player', row: 'front', position: 0 },
-      { heroId: 'hero_shen_yanqiu', row: 'back', position: 0 },
+      { heroId: 'hero_player', row: 1, col: 0 },
+      { heroId: 'hero_shen_yanqiu', row: 0, col: 1 },
     ]
     saveGameV10(storage, state, 1000)
 
@@ -90,7 +90,7 @@ describe('version 10 存档', () => {
 
     expect(loaded.state.heroes.hero_shen_yanqiu).toBeUndefined()
     expect(loaded.state.heroes.hero_player).toBeDefined()
-    expect(loaded.state.formation).toEqual([{ heroId: 'hero_player', row: 'front', position: 0 }])
+    expect(loaded.state.formation).toEqual([{ heroId: 'hero_player', row: 1, col: 0 }])
   })
 
   it('玩家自定义姓名不是字符串时把存档标记为损坏', () => {

@@ -8,8 +8,10 @@ export interface IdleCombatUnitView {
   name: string
   rank: 'normal' | 'elite' | 'boss'
   careerId?: string
-  row: 'front' | 'back'
-  position: 0 | 1 | 2
+  /** 路：0 上、1 中、2 下 */
+  row: 0 | 1 | 2
+  /** 列：0 最前（贴中线），4 最后 */
+  col: 0 | 1 | 2 | 3 | 4
   hp: number
   maxHp: number
   energy: number
@@ -77,6 +79,9 @@ export interface IdlePageViewModel {
 }
 
 const rankLabel = { normal: '', elite: '精英', boss: 'BOSS' } as const
+const laneNames = ['上路', '中路', '下路'] as const
+const LANE_ROWS = [0, 1, 2] as const
+const LANE_COLS = [0, 1, 2, 3, 4] as const
 const motionKinds = new Set<IdleCombatEffectKind>(['lunge-party', 'lunge-enemy', 'hit-shake'])
 
 const formatDuration = (elapsedMs: number): string => {
@@ -146,7 +151,7 @@ const renderUnit = (
       <span class="unit-head">
         <strong class="unit-name">${escapeHtml(unit.name)}</strong>
         ${rank ? `<span class="unit-tag rank-${unit.rank}">${rank}</span>` : ''}
-        <span class="unit-tag row-tag">${unit.row === 'front' ? '前排' : '后排'}</span>
+        <span class="unit-tag row-tag">${laneNames[unit.row]}</span>
       </span>
       ${renderGauge('气血', unit.hp, unit.maxHp, 'hp-meter', unit.alive && hpPercent <= 30 ? 'low' : '')}
       ${renderGauge('气机', unit.gauge, 1000, 'gauge-meter', unit.gauge >= 1000 ? 'full' : '')}
@@ -157,20 +162,31 @@ const renderUnit = (
   </article>`
 }
 
-const renderRow = (
+// 左右对峙：双方 col 0 都贴中线，我方格子自左向右为 col 4→0，敌方镜像
+const renderLane = (
   units: IdleCombatUnitView[],
   side: 'party' | 'enemy',
-  row: 'front' | 'back',
+  row: 0 | 1 | 2,
   effects: IdleCombatEffectView[],
-): string => `<div class="unit-row ${side}-${row}" data-combat-row="${side}-${row}">
-  ${([0, 1, 2] as const).map((position) => {
-    const unit = units.find((candidate) => candidate.row === row && candidate.position === position)
+): string => {
+  const cols = side === 'party' ? [...LANE_COLS].reverse() : [...LANE_COLS]
+  return `<div class="unit-lane ${side}" data-combat-lane="${side}-${row}" style="--lane:${row}">
+  ${cols.map((col) => {
+    const unit = units.find((candidate) => candidate.row === row && candidate.col === col)
     const slotAttribute = side === 'enemy' ? 'data-enemy-slot' : 'data-formation-slot'
-    return `<div class="unit-slot ${unit ? 'filled' : 'unit-slot-empty'}" ${slotAttribute}="${row}-${position}" data-row="${row}" data-position="${position}">
-      ${unit ? renderUnit(unit, side, effects) : `<span>${row === 'front' ? '前排' : '后排'} · ${position + 1}</span>`}
+    return `<div class="unit-cell ${unit ? 'filled' : 'unit-cell-empty'}" ${slotAttribute}="${row}-${col}" data-row="${row}" data-col="${col}">
+      <span class="cell-tile" aria-hidden="true"></span>
+      ${unit ? renderUnit(unit, side, effects) : ''}
     </div>`
   }).join('')}
 </div>`
+}
+
+const renderLanes = (
+  units: IdleCombatUnitView[],
+  side: 'party' | 'enemy',
+  effects: IdleCombatEffectView[],
+): string => LANE_ROWS.map((row) => renderLane(units, side, row, effects)).join('')
 
 const renderWaveTrack = (wave: number): string => Array.from({ length: 10 }, (_, index) => {
   const number = index + 1
@@ -227,16 +243,14 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
 
       <div class="battle-stage">
         <section class="battlefield${scene ? ' has-scene' : ''}" data-testid="battlefield" aria-label="挂机战场"${scene ? ` style="--battle-scene:url('${escapeHtml(scene)}')"` : ''}>
-          <section class="battle-half enemy" aria-label="敌方阵容">
-            <header class="half-heading enemy"><strong>敌方</strong><span>后排在上 · 前排临阵</span><span class="half-hint">余敌 ${enemyCount}</span></header>
-            ${renderRow(view.combat.enemies, 'enemy', 'back', view.effects)}
-            ${renderRow(view.combat.enemies, 'enemy', 'front', view.effects)}
-          </section>
-          <div class="battle-divider" aria-hidden="true"><span class="divider-line"></span><span class="divider-status">第 <em>${view.combat.wave}</em> 波 · 余敌 <em>${enemyCount}</em></span><span class="divider-seal">战</span><span class="divider-status">斩敌 <em>${view.stats.kills}</em></span><span class="divider-line"></span></div>
           <section class="battle-half party" aria-label="我方阵容">
-            <header class="half-heading party"><strong>我方</strong><span>前排临阵 · 后排在下</span><span class="half-hint">六侠两排</span></header>
-            ${renderRow(view.combat.party, 'party', 'front', view.effects)}
-            ${renderRow(view.combat.party, 'party', 'back', view.effects)}
+            <header class="half-heading party"><strong>我方</strong><span>三路五列 · 前列临阵</span><span class="half-hint">六侠成阵</span></header>
+            <div class="battle-grid party">${renderLanes(view.combat.party, 'party', view.effects)}</div>
+          </section>
+          <div class="battle-divider" aria-hidden="true"><span class="divider-line"></span><span class="divider-status">第 <em>${view.combat.wave}</em> 波</span><span class="divider-seal">战</span><span class="divider-status">斩敌 <em>${view.stats.kills}</em></span><span class="divider-line"></span></div>
+          <section class="battle-half enemy" aria-label="敌方阵容">
+            <header class="half-heading enemy"><strong>敌方</strong><span>自右来犯 · 前列临阵</span><span class="half-hint">余敌 ${enemyCount}</span></header>
+            <div class="battle-grid enemy">${renderLanes(view.combat.enemies, 'enemy', view.effects)}</div>
           </section>
           ${waveEffects.map((effect) => `<div class="wave-banner" data-testid="combat-effect-${effect.id}" aria-hidden="true">${escapeHtml(effect.text ?? '')}</div>`).join('')}
         </section>

@@ -38,7 +38,7 @@ describe('新建玩家角色', () => {
           customName: '江湖少侠',
         },
       },
-      formation: [{ heroId: PLAYER_HERO_ID, row: 'front', position: 0 }],
+      formation: [{ heroId: PLAYER_HERO_ID, row: 1, col: 0 }],
     })
   })
 

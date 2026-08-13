@@ -30,7 +30,7 @@ describe('江湖战斗页', () => {
     expect(html).not.toContain('首次通关')
   })
 
-  it('战斗页显示波次、六侠两排、气机、真气、回气与满仓警告', () => {
+  it('战斗页显示波次、三路五列、气机、真气、回气与满仓警告', () => {
     const html = renderIdlePage(fixtureViewModel({
       inventoryCount: 300,
       combat: {
@@ -38,13 +38,14 @@ describe('江湖战斗页', () => {
         wave: 10,
         party: [],
         enemies: [
-          { id: 'boss', name: '首领', rank: 'boss', row: 'front', position: 0, hp: 100, maxHp: 100, energy: 20, maxEnergy: 100, gauge: 500, cooldownMs: 2300, alive: true, skillName: '首领绝技' },
+          { id: 'boss', name: '首领', rank: 'boss', row: 1, col: 1, hp: 100, maxHp: 100, energy: 20, maxEnergy: 100, gauge: 500, cooldownMs: 2300, alive: true, skillName: '首领绝技' },
         ],
       },
     }))
 
     expect(html).toContain('第 <em>10</em> / 10 波')
-    expect(html.match(/data-formation-slot=/g)).toHaveLength(6)
+    expect(html.match(/data-formation-slot=/g)).toHaveLength(15)
+    expect(html.match(/data-enemy-slot=/g)).toHaveLength(15)
     expect(html).toContain('气机')
     expect(html).toContain('真气')
     expect(html).toContain('回气')
@@ -52,26 +53,29 @@ describe('江湖战斗页', () => {
     expect(html).toContain('class="pack-meter full"')
   })
 
-  it('按敌上我下展示战场，且双方前排在中线两侧相邻', () => {
-    const unit = (id: string, row: 'front' | 'back', position: 0 | 1 | 2) => ({
-      id, name: id, rank: 'normal' as const, row, position, hp: 100, maxHp: 100,
+  it('按我左敌右展示战场，双方最前列贴中线镜像对峙', () => {
+    const unit = (id: string, row: 0 | 1 | 2, col: 0 | 1 | 2 | 3 | 4) => ({
+      id, name: id, rank: 'normal' as const, row, col, hp: 100, maxHp: 100,
       energy: 20, maxEnergy: 100, gauge: 0, cooldownMs: 0, alive: true, skillName: '蓄势待发',
     })
     const html = renderIdlePage(fixtureViewModel({
       combat: {
         mode: 'guard',
         wave: 1,
-        enemies: [unit('敌后', 'back', 0), unit('敌前', 'front', 0)],
-        party: [unit('我前', 'front', 0), unit('我后', 'back', 0)],
+        enemies: [unit('敌后', 1, 4), unit('敌前', 1, 0)],
+        party: [unit('我前', 1, 0), unit('我后', 1, 4)],
       },
     }))
 
-    expect(html.indexOf('class="battle-half enemy"')).toBeLessThan(html.indexOf('class="battle-divider"'))
-    expect(html.indexOf('class="battle-divider"')).toBeLessThan(html.indexOf('class="battle-half party"'))
-    expect(html.indexOf('data-enemy-slot="back-0"')).toBeLessThan(html.indexOf('data-enemy-slot="front-0"'))
-    expect(html.indexOf('data-formation-slot="front-0"')).toBeLessThan(html.indexOf('data-formation-slot="back-0"'))
+    expect(html.indexOf('class="battle-half party"')).toBeLessThan(html.indexOf('class="battle-divider"'))
+    expect(html.indexOf('class="battle-divider"')).toBeLessThan(html.indexOf('class="battle-half enemy"'))
+    // 我方一行从左到右是 col 4→0（最前列贴中线），敌方镜像 col 0→4
+    expect(html.indexOf('data-formation-slot="1-4"')).toBeLessThan(html.indexOf('data-formation-slot="1-0"'))
+    expect(html.indexOf('data-enemy-slot="1-0"')).toBeLessThan(html.indexOf('data-enemy-slot="1-4"'))
     expect(html).toContain('data-rank="normal"')
-    expect(html).toContain('<span class="unit-tag row-tag">前排</span>')
+    expect(html).toContain('<span class="unit-tag row-tag">中路</span>')
+    expect(html.match(/data-combat-lane="party-\d"/g)).toHaveLength(3)
+    expect(html.match(/data-combat-lane="enemy-\d"/g)).toHaveLength(3)
   })
 
   it('战斗控制暴露稳定 data-action 并标记当前模式', () => {
@@ -90,7 +94,7 @@ describe('江湖战斗页', () => {
         mode: 'roam',
         wave: 7,
         party: [{
-          id: 'hero', name: '少侠', rank: 'normal', row: 'front', position: 0,
+          id: 'hero', name: '少侠', rank: 'normal', row: 1, col: 0,
           hp: 25, maxHp: 100, energy: 100, maxEnergy: 100, gauge: 1000,
           cooldownMs: 1200, alive: true, skillName: '落英神剑',
         }],

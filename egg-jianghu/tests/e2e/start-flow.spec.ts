@@ -50,7 +50,7 @@ test('重载后可继续并保留姓名与初始阵型', async ({ page }) => {
 
   const state = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
   expect(state.heroes.hero_player.customName).toBe('燕七')
-  expect(state.formation).toContainEqual({ heroId: 'hero_player', row: 'front', position: 0 })
+  expect(state.formation).toContainEqual({ heroId: 'hero_player', row: 1, col: 0 })
 })
 
 test('覆盖存档可取消保留旧角色，也可确认创建新角色', async ({ page }) => {
@@ -104,24 +104,24 @@ test('未请求删档时忽略伪造的确认操作并保留当前进度', async
   })
 
   await expect(page.getByTestId('world-overview')).toBeVisible()
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v12'))).not.toBeNull()
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v13'))).not.toBeNull()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_player.customName)).toBe('燕七')
 })
 
 test('覆盖前重新检查存档并在存档变化后要求再次确认', async ({ page }) => {
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').fill('燕七')
-  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v12', 'marker-1'))
+  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v13', 'marker-1'))
   await page.getByLabel('玩家姓名').press('Enter')
 
   await expect(page.getByTestId('overwrite-confirmation')).toBeVisible()
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v12'))).toBe('marker-1')
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v13'))).toBe('marker-1')
 
-  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v12', 'marker-2'))
+  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v13', 'marker-2'))
   await page.getByRole('button', { name: '确认覆盖并开始' }).click()
   await expect(page.getByTestId('overwrite-confirmation')).toBeVisible()
   await expect(page.getByRole('status')).toHaveText('存档已发生变化，请重新确认覆盖')
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v12'))).toBe('marker-2')
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v13'))).toBe('marker-2')
 
   await page.getByRole('button', { name: '确认覆盖并开始' }).click()
   await expect(page.getByTestId('world-overview')).toBeVisible()
@@ -169,14 +169,14 @@ test('多标签页同步存档状态且旧会话不能覆盖外部删档或新�
   await expect(secondPage.getByRole('status')).toHaveText('存档已在其他窗口发生变化，请重新选择继续或新建游戏')
   await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeDisabled()
   await secondPage.waitForTimeout(600)
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v12'))).toBeNull()
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v13'))).toBeNull()
 
   await page.getByLabel('玩家姓名').fill('新少侠')
   await page.getByLabel('玩家姓名').press('Enter')
   await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeEnabled()
   await secondPage.waitForTimeout(600)
   expect(await page.evaluate(() => {
-    const raw = window.localStorage.getItem('egg-jianghu-2-save-v12')
+    const raw = window.localStorage.getItem('egg-jianghu-2-save-v13')
     return raw ? JSON.parse(raw).heroes.hero_player.customName : null
   })).toBe('新少侠')
   expect(secondPageErrors).toEqual([])
@@ -186,7 +186,7 @@ test('多标签页同步存档状态且旧会话不能覆盖外部删档或新�
 test('损坏的玩家姓名存档拒绝继续且不会被当前会话覆盖', async ({ page }) => {
   await createGame(page, '燕七')
   const corruptedSave = await page.evaluate(() => {
-    const key = 'egg-jianghu-2-save-v12'
+    const key = 'egg-jianghu-2-save-v13'
     const raw = JSON.parse(window.localStorage.getItem(key)!)
     raw.heroes.hero_player.customName = 42
     const serialized = JSON.stringify(raw)
@@ -198,6 +198,6 @@ test('损坏的玩家姓名存档拒绝继续且不会被当前会话覆盖', as
   await page.getByRole('button', { name: '继续游戏' }).click()
   await expect(page.getByTestId('title-page')).toBeVisible()
   await expect(page.getByRole('status')).toHaveText('存档无法读取')
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v12'))).toBe(corruptedSave)
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v13'))).toBe(corruptedSave)
   await page.waitForTimeout(350)
 })

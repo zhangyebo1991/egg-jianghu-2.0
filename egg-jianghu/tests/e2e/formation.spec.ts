@@ -57,22 +57,22 @@ const dragToSlot = async (page: Page, source: string, target: string): Promise<v
 test('桌面拖拽：已占格拖到另一已占格交换位置', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_guo_jing')
-    window.__EGG_JIANGHU__.placeHero('hero_guo_jing', 'back', 0)
+    window.__EGG_JIANGHU__.placeHero('hero_guo_jing', 0, 2)
   })
   await page.getByTestId('tab-formation').click()
 
-  await dragToSlot(page, '[data-row="front"][data-position="0"]', '[data-row="back"][data-position="0"]')
+  await dragToSlot(page, '.formation-slot[data-row="1"][data-col="0"]', '.formation-slot[data-row="0"][data-col="2"]')
 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
   expect(formation).toEqual(expect.arrayContaining([
-    { heroId: 'hero_player', row: 'back', position: 0 },
-    { heroId: 'hero_guo_jing', row: 'front', position: 0 },
+    { heroId: 'hero_player', row: 0, col: 2 },
+    { heroId: 'hero_guo_jing', row: 1, col: 0 },
   ]))
 })
 
 test('桌面拖拽：已占格拖到名单区下阵', async ({ page }) => {
   await page.getByTestId('tab-formation').click()
-  await dragToSlot(page, '[data-row="front"][data-position="0"]', '.formation-roster')
+  await dragToSlot(page, '.formation-slot[data-row="1"][data-col="0"]', '.formation-roster')
 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
   expect(formation).toEqual([])
@@ -80,10 +80,10 @@ test('桌面拖拽：已占格拖到名单区下阵', async ({ page }) => {
 
 test('桌面点击已占格不产生任何阵容变化', async ({ page }) => {
   await page.getByTestId('tab-formation').click()
-  await page.locator('[data-row="front"][data-position="0"]').click()
+  await page.locator('.formation-slot[data-row="1"][data-col="0"]').click()
 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
-  expect(formation).toEqual([{ heroId: 'hero_player', row: 'front', position: 0 }])
+  expect(formation).toEqual([{ heroId: 'hero_player', row: 1, col: 0 }])
 })
 
 test.describe('触屏视口', () => {
@@ -96,16 +96,16 @@ test.describe('触屏视口', () => {
     await page.getByTestId('tab-formation').click()
 
     await page.getByTestId('formation-hero-hero_guo_jing').click()
-    await page.locator('[data-row="back"][data-position="1"]').click()
+    await page.locator('.formation-slot[data-row="2"][data-col="1"]').click()
 
     let formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
     expect(formation).toEqual(expect.arrayContaining([
-      { heroId: 'hero_player', row: 'front', position: 0 },
-      { heroId: 'hero_guo_jing', row: 'back', position: 1 },
+      { heroId: 'hero_player', row: 1, col: 0 },
+      { heroId: 'hero_guo_jing', row: 2, col: 1 },
     ]))
 
     await page.locator('.formation-slot-remove[data-hero-id="hero_guo_jing"]').click()
     formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
-    expect(formation).toEqual([{ heroId: 'hero_player', row: 'front', position: 0 }])
+    expect(formation).toEqual([{ heroId: 'hero_player', row: 1, col: 0 }])
   })
 })

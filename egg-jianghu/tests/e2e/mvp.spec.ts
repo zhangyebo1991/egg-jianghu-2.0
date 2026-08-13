@@ -19,7 +19,7 @@ test.afterEach(() => {
 const prepareParty = async (page: Page): Promise<void> => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
   })
 }
 
@@ -36,7 +36,7 @@ const openWorldSection = async (page: Page, section: 'stages' | 'factions' | 'ci
 test('江湖按大关小关分层并在点击小关后立即驻守', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
   })
   await expect(page.getByTestId('world-overview')).toBeVisible()
   await expect(page.getByTestId('stage-1')).toHaveCount(0)
@@ -56,19 +56,19 @@ test('江湖按大关小关分层并在点击小关后立即驻守', async ({ pa
   })
 })
 
-test('战场纵向排列且敌我前排在中线两侧相邻', async ({ page }) => {
+test('战场左右对峙且敌我最前列在中线两侧相邻', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1000 })
   await page.evaluate(() => {
     const placements = [
-      ['hero_mu_nianci', 'front', 1],
-      ['hero_yang_tiexin', 'front', 2],
-      ['hero_qingfeng_hall_01', 'back', 0],
-      ['hero_tieyi_school_01', 'back', 1],
-      ['hero_renxin_hall_01', 'back', 2],
+      ['hero_mu_nianci', 0, 0],
+      ['hero_yang_tiexin', 2, 0],
+      ['hero_qingfeng_hall_01', 1, 1],
+      ['hero_tieyi_school_01', 0, 2],
+      ['hero_renxin_hall_01', 2, 2],
     ] as const
-    for (const [heroId, row, position] of placements) {
+    for (const [heroId, row, col] of placements) {
       window.__EGG_JIANGHU__.recruitHero(heroId)
-      window.__EGG_JIANGHU__.placeHero(heroId, row, position)
+      window.__EGG_JIANGHU__.placeHero(heroId, row, col)
     }
   })
   await page.getByTestId('world-world_01').click()
@@ -81,17 +81,18 @@ test('战场纵向排列且敌我前排在中线两侧相邻', async ({ page }) 
       enemy: rect('.battle-half.enemy'),
       divider: rect('.battle-divider'),
       party: rect('.battle-half.party'),
-      enemyBack: rect('[data-enemy-slot="back-0"]'),
-      enemyFront: rect('[data-enemy-slot="front-0"]'),
-      partyFront: rect('[data-formation-slot="front-0"]'),
-      partyBack: rect('[data-formation-slot="back-0"]'),
+      enemyFront: rect('[data-enemy-slot="1-0"]'),
+      enemyBack: rect('[data-enemy-slot="1-4"]'),
+      partyFront: rect('[data-formation-slot="1-0"]'),
+      partyBack: rect('[data-formation-slot="1-4"]'),
     }
   })
 
-  expect(layout.enemy.bottom).toBeLessThanOrEqual(layout.divider.top)
-  expect(layout.divider.bottom).toBeLessThanOrEqual(layout.party.top)
-  expect(layout.enemyBack.top).toBeLessThan(layout.enemyFront.top)
-  expect(layout.partyFront.top).toBeLessThan(layout.partyBack.top)
+  expect(layout.party.right).toBeLessThanOrEqual(layout.divider.left + 1)
+  expect(layout.divider.right).toBeLessThanOrEqual(layout.enemy.left + 1)
+  expect(layout.partyBack.left).toBeLessThan(layout.partyFront.left)
+  expect(layout.partyFront.right).toBeLessThanOrEqual(layout.enemyFront.left)
+  expect(layout.enemyFront.right).toBeLessThanOrEqual(layout.enemyBack.right)
 })
 
 test('桌面与移动端均使用统一左侧栏', async ({ page }) => {
@@ -345,13 +346,13 @@ test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
   await page.getByTestId('tab-formation').click()
   await expect(page.getByTestId('formation-page')).toBeVisible()
 
-  await page.dragAndDrop('[data-testid="formation-hero-hero_mu_nianci"]', '[data-row="front"][data-position="0"]')
-  await page.dragAndDrop('[data-testid="formation-hero-hero_yang_tiexin"]', '[data-row="back"][data-position="0"]')
+  await page.dragAndDrop('[data-testid="formation-hero-hero_mu_nianci"]', '.formation-slot[data-row="0"][data-col="0"]')
+  await page.dragAndDrop('[data-testid="formation-hero-hero_yang_tiexin"]', '.formation-slot[data-row="2"][data-col="3"]')
 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
   expect(formation).toEqual(expect.arrayContaining([
-    { heroId: 'hero_mu_nianci', row: 'front', position: 0 },
-    { heroId: 'hero_yang_tiexin', row: 'back', position: 0 },
+    { heroId: 'hero_mu_nianci', row: 0, col: 0 },
+    { heroId: 'hero_yang_tiexin', row: 2, col: 3 },
   ]))
 })
 
@@ -381,7 +382,7 @@ test('白丁 Lv.5 持弓手转职书可转职且侠客等级保持不变', async
 test('战斗使用当前职业普攻', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 73)
   })
   const events = await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(100))
@@ -391,7 +392,7 @@ test('战斗使用当前职业普攻', async ({ page }) => {
 test('每个小关第十波显示 Boss 精英和小怪', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 19)
     window.__EGG_JIANGHU__.showWave(10, 19)
   })
@@ -405,7 +406,7 @@ test('每个小关第十波显示 Boss 精英和小怪', async ({ page }) => {
 test('闯荡失败回退上一小关并切换驻守', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
     window.__EGG_JIANGHU__.setClearedStage('world_01', 3)
     window.__EGG_JIANGHU__.startStage('world_01', 4, 'roam', 31)
     window.__EGG_JIANGHU__.forceCombatResult('defeat')
@@ -426,7 +427,7 @@ test('敌人死亡时货币立即入账且本阶段不掉装备', async ({ page 
 test('击杀不因背包容量中断战斗', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 103)
     window.__EGG_JIANGHU__.fillInventory(300)
   })
@@ -518,7 +519,7 @@ test('势力页主区可滚动查看悬榜与门人拜帖', async ({ page }) => 
 test('重载页面后长期收益保留但必须重新选择关卡', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 'front', 0)
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 307)
     window.__EGG_JIANGHU__.settleEnemy(307, 'boss')
   })

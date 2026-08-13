@@ -1,4 +1,4 @@
-import type { CampaignMode, FormationPosition, FormationRow } from '../domain/types'
+import type { CampaignMode, FormationColumn, FormationRow } from '../domain/types'
 import type { AttributeMap } from '../content/attributes'
 
 export type CombatSide = 'party' | 'enemy'
@@ -23,7 +23,7 @@ export interface CombatUnit {
   careerId?: string
   side: CombatSide
   row: FormationRow
-  position: FormationPosition
+  col: FormationColumn
   formationOrder: number
   rank: CombatRank
   alive: boolean

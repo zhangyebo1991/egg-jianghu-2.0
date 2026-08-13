@@ -111,7 +111,11 @@ const executeAction = (state: CombatSnapshot, actor: CombatUnit, rng: Rng): Comb
   const semantic = martial?.damageRoute === 'healing' ? 'heal' : 'damage'
   const targets = semantic === 'heal'
     ? selectTargets(allies.filter((unit) => unit.alive && unit.hp < unit.maxHp), { shape: 'single', reach: 'ranged' })
-    : selectTargets(opponents, { shape: 'single', reach: martial?.damageRoute === 'external' || isBase ? 'melee' : 'ranged' })
+    : selectTargets(opponents, {
+      shape: 'single',
+      reach: martial?.damageRoute === 'external' || isBase ? 'melee' : 'ranged',
+      sourceRow: actor.row,
+    })
   if (targets.length === 0) return events
 
   if (martial) {

@@ -18,7 +18,7 @@ const memoryStorage = (): StorageLike & { values: Map<string, string> } => {
 const sessionWithParty = (storage = memoryStorage()): GameSession => {
   const session = GameSession.create(storage, 1000)
   recruitFromTavern(session.state, 'hero_mu_nianci')
-  session.state.formation = [{ heroId: 'hero_mu_nianci', row: 'front', position: 0 }]
+  session.state.formation = [{ heroId: 'hero_mu_nianci', row: 1, col: 0 }]
   session.save(1000)
   return session
 }
@@ -50,7 +50,7 @@ describe('GameSession', () => {
 
     expect(session.state.heroes.hero_player?.customName).toBe('燕七')
     expect(saved.heroes.hero_player.customName).toBe('燕七')
-    expect(saved.formation).toEqual([{ heroId: 'hero_player', row: 'front', position: 0 }])
+    expect(saved.formation).toEqual([{ heroId: 'hero_player', row: 1, col: 0 }])
   })
 
   it('继续旧的有效空角色存档时不补玩家角色', () => {

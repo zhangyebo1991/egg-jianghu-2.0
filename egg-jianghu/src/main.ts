@@ -33,7 +33,7 @@ import { settleCombatEvent } from './domain/rewards'
 import { clearSaveV10, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
-import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationPosition, FormationRow, GameStateV10 } from './domain/types'
+import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationColumn, FormationRow, GameStateV10 } from './domain/types'
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { MARTIAL_LORE } from './content/martial-lore'
 import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
@@ -517,7 +517,7 @@ const unitView = (unit: CombatUnit): IdleCombatUnitView => {
     rank: unit.rank,
     careerId: unit.careerId,
     row: unit.row,
-    position: unit.position,
+    col: unit.col,
     hp: unit.hp,
     maxHp: unit.maxHp,
     energy: unit.energy,
@@ -832,6 +832,16 @@ const formationHeroCategory = (heroId: string): FormationFilter | null => {
   return heroMeridianCategory(definition)
 }
 
+// 自动列阵站位序：近战自中路前列铺开，远程/辅助居第三、四列
+const AUTO_FRONT_SLOTS: Array<{ row: FormationRow; col: FormationColumn }> = [
+  { row: 1, col: 0 }, { row: 0, col: 0 }, { row: 2, col: 0 },
+  { row: 1, col: 1 }, { row: 0, col: 1 }, { row: 2, col: 1 },
+]
+const AUTO_BACK_SLOTS: Array<{ row: FormationRow; col: FormationColumn }> = [
+  { row: 1, col: 2 }, { row: 0, col: 2 }, { row: 2, col: 2 },
+  { row: 1, col: 3 }, { row: 0, col: 3 }, { row: 2, col: 3 },
+]
+
 const autoArrangeFormation = (): ActionResult => {
   const placedIds = session.state.formation
     .map((slot) => slot.heroId)
@@ -847,22 +857,18 @@ const autoArrangeFormation = (): ActionResult => {
   const frontPreferred = placedIds
     .filter((heroId) => {
       const category = formationHeroCategory(heroId)
-      return category === '拳' || category === '内家'
+      return category === '拳' || category === '刀' || category === '剑'
     })
     .sort((left, right) => stableCompare(left, right, constitutionOf))
   const others = placedIds
     .filter((heroId) => !frontPreferred.includes(heroId))
     .sort((left, right) => stableCompare(left, right, levelOf))
-  const front = frontPreferred.slice(0, 3)
-  const pool = [...frontPreferred.slice(3), ...others]
-  while (front.length < 3 && pool.length) front.push(pool.shift()!)
-  const back = pool.slice(0, 3)
 
   session.state.formation = [
-    ...front.map((heroId, position) => ({ heroId, row: 'front' as const, position: position as FormationPosition })),
-    ...back.map((heroId, position) => ({ heroId, row: 'back' as const, position: position as FormationPosition })),
+    ...frontPreferred.map((heroId, index) => ({ heroId, ...AUTO_FRONT_SLOTS[index] })),
+    ...others.map((heroId, index) => ({ heroId, ...AUTO_BACK_SLOTS[index] })),
   ]
-  return { ok: true, message: '自动列阵毕 · 拳内居前承伤' }
+  return { ok: true, message: '自动列阵毕 · 近者居前 远者居后' }
 }
 
 const clearFormation = (): ActionResult => {
@@ -1486,9 +1492,9 @@ app.addEventListener('drop', (event) => {
   const slot = target.closest<HTMLElement>('.formation-slot')
   if (slot) {
     event.preventDefault()
-    const row = slot.dataset.row as FormationRow
-    const position = dataNumber(slot, 'position') as FormationPosition
-    commitAction(placeFormation(session.state, droppedHeroId, row, position))
+    const row = dataNumber(slot, 'row') as FormationRow
+    const col = dataNumber(slot, 'col') as FormationColumn
+    commitAction(placeFormation(session.state, droppedHeroId, row, col))
   } else if (target.closest('.formation-roster')) {
     event.preventDefault()
     commitAction(removeFormation(session.state, droppedHeroId))
@@ -1524,7 +1530,7 @@ const performAction = (button: HTMLButtonElement): void => {
   } else if (action === 'formation-slot-tap') {
     const slotHeroId = button.dataset.heroId ?? null
     if (formationSelectedHeroId) {
-      commitAction(placeFormation(session.state, formationSelectedHeroId, button.dataset.row as FormationRow, dataNumber(button, 'position') as FormationPosition))
+      commitAction(placeFormation(session.state, formationSelectedHeroId, dataNumber(button, 'row') as FormationRow, dataNumber(button, 'col') as FormationColumn))
       formationDetailHeroId = formationSelectedHeroId
       formationSelectedHeroId = null
     } else if (slotHeroId) {
@@ -2117,7 +2123,7 @@ declare global {
       grantWorldCurrency: (worldId: string, amount: number) => void
       grantContribution: (factionId: string, amount: number) => void
       recruitHero: (heroId: string) => void
-      placeHero: (heroId: string, row: FormationRow, position: FormationPosition) => void
+      placeHero: (heroId: string, row: FormationRow, col: FormationColumn) => void
       setHeroCareerLevel: (heroId: string, careerId: string, level: number) => void
       grantJobBook: (careerId: string, count?: number) => void
       seedLearnedMartial: (heroId: string, martialId: string, level: number, slot?: number) => void
@@ -2185,7 +2191,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   grantWorldCurrency: (worldId, amount) => { ensurePlaying(); session.state.worldCurrency[worldId] = amount; saveSession(); render() },
   grantContribution: (factionId, amount) => { ensurePlaying(); session.state.contribution[factionId] = amount; saveSession(); render() },
   recruitHero: debugRecruit,
-  placeHero: (heroId, row, position) => { ensurePlaying(); commitAction(placeFormation(session.state, heroId, row, position)); render() },
+  placeHero: (heroId, row, col) => { ensurePlaying(); commitAction(placeFormation(session.state, heroId, row, col)); render() },
   setHeroCareerLevel: (heroId, careerId, level) => {
     ensurePlaying()
     const hero = session.state.heroes[heroId]

@@ -1,9 +1,31 @@
 import { createRng } from './rng'
 import { panelToAttributeMap } from './stats'
 import { enemyName } from '../content/enemy-names'
+import type { FormationColumn, FormationRow } from '../domain/types'
 import type { CombatRank, CombatSnapshot, CombatUnit } from './types'
 
 export { enemyDisplayName } from '../content/enemy-names'
+
+interface EnemySlot {
+  row: FormationRow
+  col: FormationColumn
+}
+
+// 内置敌方阵型模板：普通敌前列铺开、精英居次列、boss 中路居中（参照诸天 zx 阵型思路）
+const WAVE_FORMATIONS: Record<number, EnemySlot[]> = {
+  1: [{ row: 1, col: 0 }],
+  2: [{ row: 0, col: 0 }, { row: 2, col: 0 }],
+  3: [{ row: 0, col: 0 }, { row: 2, col: 0 }, { row: 1, col: 1 }],
+  4: [{ row: 0, col: 0 }, { row: 2, col: 0 }, { row: 1, col: 0 }, { row: 1, col: 1 }],
+}
+
+// 第 10 波：boss 中路居中，精英上路前列，小怪下路前列
+const BOSS_FORMATION: EnemySlot[] = [{ row: 1, col: 1 }, { row: 0, col: 0 }, { row: 2, col: 0 }]
+
+const waveSlots = (wave: number, count: number): EnemySlot[] => {
+  const template = wave === 10 ? BOSS_FORMATION : WAVE_FORMATIONS[count] ?? WAVE_FORMATIONS[4]
+  return Array.from({ length: count }, (_, index) => template[index % template.length])
+}
 
 export interface CombatWave {
   worldId: string
@@ -26,6 +48,7 @@ const createEnemy = (
   wave: number,
   rank: CombatRank,
   index: number,
+  slot: EnemySlot,
   seed: number,
 ): CombatUnit => {
   const rng = createRng(seed)
@@ -47,16 +70,14 @@ const createEnemy = (
   const criticalChance = Math.min(0.35, 0.04 + worldIndex * 0.01)
   const criticalMultiplier = 1.5
   const controlResistance = rank === 'boss' ? 0.55 : rank === 'elite' ? 0.3 : 0.1
-  const row = index < 3 ? 'front' : 'back'
-  const position = (index % 3) as 0 | 1 | 2
   const rankId = rank === 'boss' ? 'boss' : rank === 'elite' ? `elite_${index + 1}` : `normal_${index + 1}`
   return {
     id: `${worldId}_stage_${String(stage).padStart(2, '0')}_${rankId}`,
     name: enemyName(worldId, rank, stage, index + 1),
     side: 'enemy',
-    row,
-    position,
-    formationOrder: 6 + index,
+    row: slot.row,
+    col: slot.col,
+    formationOrder: 15 + slot.row * 5 + slot.col,
     rank,
     alive: true,
     hp: maxHp,
@@ -115,12 +136,13 @@ export const createWave = (
 ): CombatWave => {
   if (stage < 1 || stage > 10 || wave < 1 || wave > 10) throw new Error('小关或波次超出范围')
   const ranks = ranksForWave(wave)
+  const slots = waveSlots(wave, ranks.length)
   return {
     worldId,
     difficulty,
     stage,
     wave,
-    enemies: ranks.map((rank, index) => createEnemy(worldId, difficulty, stage, wave, rank, index, seed + wave * 101 + index * 17)),
+    enemies: ranks.map((rank, index) => createEnemy(worldId, difficulty, stage, wave, rank, index, slots[index], seed + wave * 101 + index * 17)),
   }
 }
 

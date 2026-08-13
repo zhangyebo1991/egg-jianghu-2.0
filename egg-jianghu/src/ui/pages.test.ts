@@ -138,14 +138,14 @@ const inventoryFixture = (): InventoryPageViewModel => ({
 const formationFixture = (): FormationPageViewModel => ({
   selectedHeroId: 'hero_test',
   filter: 'all',
-  formation: [{ heroId: 'hero_test', row: 'front', position: 0 }],
+  formation: [{ heroId: 'hero_test', row: 1, col: 0 }],
   heroes: [
     {
       id: 'hero_test', name: '试剑人', grade: '乙', level: 12, inFormation: true,
       category: '剑', source: '本队主角', careerName: '白丁', careerLevel: 5,
       aptitudes: { strength: 8, insight: 8, constitution: 9, agility: 9, resolve: 8 },
       combatStats: { maxHp: 420, externalAttack: 90, internalAttack: 80, externalDefense: 60, internalDefense: 55, effectiveAgility: 74 },
-      slot: { row: 'front', position: 0 },
+      slot: { row: 1, col: 0 },
     },
     {
       id: 'hero_shen', name: '郭靖', grade: '乙', level: 1, inFormation: false,
@@ -246,10 +246,14 @@ describe('version 10 长期循环页面', () => {
       .toContain('本卷城市暂无可用内容')
   })
 
-  it('阵容页输出前后排各三格与待上阵名单', () => {
+  it('阵容页输出三路五列十五格与待上阵名单', () => {
     const html = renderFormationPage(formationFixture())
-    expect(html.match(/data-row="front"/g)).toHaveLength(3)
-    expect(html.match(/data-row="back"/g)).toHaveLength(3)
+    expect(html.match(/data-row="0"/g)).toHaveLength(5)
+    expect(html.match(/data-row="1"/g)).toHaveLength(5)
+    expect(html.match(/data-row="2"/g)).toHaveLength(5)
+    expect(html).toContain('上路')
+    expect(html).toContain('中路')
+    expect(html).toContain('下路')
     expect(html).toContain('点将名册')
     expect(html).toContain('演武场')
     expect(html).toContain('data-testid="formation-hero-card"')

@@ -5,6 +5,9 @@ import { heroPortraitAsset } from './portrait-assets'
 
 export type FormationFilter = 'all' | '剑' | '刀' | '拳' | '暗' | '医' | '内家'
 
+export type FormationLane = 0 | 1 | 2
+export type FormationDepth = 0 | 1 | 2 | 3 | 4
+
 export interface FormationHeroView {
   id: string
   name: string
@@ -17,13 +20,13 @@ export interface FormationHeroView {
   careerLevel: number
   aptitudes: HeroAptitudes
   combatStats: Pick<CombatStats, 'maxHp' | 'externalAttack' | 'internalAttack' | 'externalDefense' | 'internalDefense' | 'effectiveAgility'>
-  slot: { row: 'front' | 'back'; position: 0 | 1 | 2 } | null
+  slot: { row: FormationLane; col: FormationDepth } | null
 }
 
 export interface FormationPageViewModel {
   selectedHeroId: string | null
   filter: FormationFilter
-  formation: Array<{ heroId: string; row: 'front' | 'back'; position: 0 | 1 | 2 }>
+  formation: Array<{ heroId: string; row: FormationLane; col: FormationDepth }>
   heroes: FormationHeroView[]
 }
 
@@ -50,22 +53,24 @@ const gradeClass = (grade: string): string => `g-${grade}`
 const categoryLabel = (category: string): string => category === '内家' ? '内' : category
 
 const fitText: Record<string, string> = {
-  拳: '拳师根骨沉厚，宜列前排，为队友遮拦锋镝。',
-  刀: '刀势沉猛，宜居前以先手破敌，势不可挡。',
+  拳: '拳师根骨沉厚，宜居前列，为队友遮拦锋镝。',
+  刀: '刀势沉猛，宜居前列以先手破敌，势不可挡。',
   剑: '剑走轻灵，前列可抢先手，后列可保其锋。',
   暗: '淬毒暗器，藏于帷幄之中，出手最难提防。',
-  医: '医者仁心，居后方得悬壶续命、安稳施救。',
+  医: '医者仁心，居后列方得悬壶续命、安稳施救。',
   内家: '内家气脉绵长，居后运气，可护全队心脉。',
 }
 
-const trigram: Record<'front' | 'back', [string, string, string]> = {
-  front: ['☰', '☱', '☲'],
-  back: ['☵', '☶', '☷'],
-}
+const FORMATION_LANES: readonly FormationLane[] = [0, 1, 2]
+const FORMATION_DEPTHS: readonly FormationDepth[] = [0, 1, 2, 3, 4]
 
-const rowNames = { front: '前排', back: '后排' } as const
-const positionNames = ['壹', '贰', '叁'] as const
+const laneSigils = ['☰', '☲', '☷'] as const
+const rowNames = ['上路', '中路', '下路'] as const
+const rowMoods = ['先声夺人 · 居高临敌', '中军坐镇 · 承前启后', '奇兵侧翼 · 伺机而动'] as const
+const positionNames = ['壹', '贰', '叁', '肆', '伍'] as const
 const orderNames = ['壹', '贰', '叁', '肆', '伍', '陆'] as const
+
+const slotName = (row: FormationLane, col: FormationDepth): string => `${rowNames[row]}·${positionNames[col]}位`
 
 const synergyDefinitions: Array<{
   id: string
@@ -125,11 +130,11 @@ const renderRoster = (view: FormationPageViewModel): string => {
   </aside>`
 }
 
-const renderFormationSlot = (view: FormationPageViewModel, row: 'front' | 'back', position: 0 | 1 | 2): string => {
-  const slot = view.formation.find((item) => item.row === row && item.position === position)
+const renderFormationSlot = (view: FormationPageViewModel, row: FormationLane, col: FormationDepth): string => {
+  const slot = view.formation.find((item) => item.row === row && item.col === col)
   const hero = heroAt(view, slot?.heroId)
-  const label = `${rowNames[row]}·${positionNames[position]}位`
-  return `<div class="formation-slot${hero ? ' filled' : ''}${hero?.id === view.selectedHeroId ? ' selected' : ''}" data-row="${row}" data-position="${position}" data-action="formation-slot-tap" ${hero ? `data-hero-id="${escapeHtml(hero.id)}" draggable="true"` : ''} data-testid="formation-slot-${row}-${position}" aria-label="${label}">
+  const label = slotName(row, col)
+  return `<div class="formation-slot${hero ? ' filled' : ''}${hero?.id === view.selectedHeroId ? ' selected' : ''}" data-row="${row}" data-col="${col}" data-action="formation-slot-tap" ${hero ? `data-hero-id="${escapeHtml(hero.id)}" draggable="true"` : ''} data-testid="formation-slot-${row}-${col}" aria-label="${label}">
     ${hero ? `<div class="formation-token" draggable="true" data-hero-id="${escapeHtml(hero.id)}">
       <span class="formation-token-hole" aria-hidden="true"></span>
       ${renderPortrait(hero, 'formation-token-portrait')}
@@ -139,29 +144,35 @@ const renderFormationSlot = (view: FormationPageViewModel, row: 'front' | 'back'
       ${renderGradeSeal(hero, true)}
       <button type="button" class="formation-token-remove formation-slot-remove" data-action="formation-remove" data-hero-id="${escapeHtml(hero.id)}" aria-label="下阵 ${escapeHtml(hero.name)}">×</button>
     </div>` : '<div class="formation-token-ghost"><span>虚位</span></div>'}
-    <div class="formation-slot-disc" aria-hidden="true"><span>${trigram[row][position]}</span></div>
+    <div class="formation-slot-disc" aria-hidden="true"><span>${laneSigils[row]}</span></div>
     <div class="formation-slot-label">${label}</div>
   </div>`
 }
 
-const renderFormationRow = (view: FormationPageViewModel, row: 'front' | 'back'): string => `<div class="formation-row ${row}">
-  <div class="formation-row-tag"><span>${rowNames[row]}</span><small>${row === 'front' ? '锋镝所迎 · 受敌先击' : '藏锋蓄锐 · 出手稍缓'}</small></div>
-  <div class="formation-slots">${([0, 1, 2] as const).map((position) => renderFormationSlot(view, row, position)).join('')}</div>
+// 阵面朝右：每路自左向右为 伍→壹（col 4→0），最前列贴敌方来向
+const renderFormationRow = (view: FormationPageViewModel, row: FormationLane): string => `<div class="formation-row lane-${row}" style="--lane:${row}">
+  <div class="formation-row-tag"><span>${rowNames[row]}</span><small>${rowMoods[row]}</small></div>
+  <div class="formation-slots">${[...FORMATION_DEPTHS].reverse().map((col) => renderFormationSlot(view, row, col)).join('')}</div>
 </div>`
 
+const formationOrderKey = (slot: { row: FormationLane; col: FormationDepth }): number => slot.row * 5 + slot.col
+
 const renderFormationField = (view: FormationPageViewModel): string => {
-  const order = [...(['front', 'back'] as const).flatMap((row) => ([0, 1, 2] as const).map((position) => {
-    const slot = view.formation.find((item) => item.row === row && item.position === position)
-    return heroAt(view, slot?.heroId)
-  }))]
+  const order = [...view.formation]
+    .sort((left, right) => formationOrderKey(left) - formationOrderKey(right))
+    .map((slot) => heroAt(view, slot.heroId))
+    .filter((hero): hero is FormationHeroView => Boolean(hero))
+  const orderSlots = Array.from({ length: 6 }, (_, index) => order[index])
   return `<section class="formation-field panel" aria-label="演武场">
     <header class="formation-field-head">
-      <div><div class="formation-field-title"><h2>演武场</h2><span>前后两列 · <i>各陈三将</i></span></div><p>令牌落位，阵势自成 · 拖拽可移动或交换</p></div>
+      <div><div class="formation-field-title"><h2>演武场</h2><span>三路五列 · <i>至多六将</i></span></div><p>令牌落位，阵势自成 · 拖拽可移动或交换</p></div>
       <div class="formation-field-ops"><button type="button" class="formation-btn-gold" data-action="formation-auto-arrange">自动列阵</button><button type="button" class="formation-btn-ghost" data-action="formation-clear">悉数下阵</button></div>
     </header>
-    <div class="formation-enemy-strip" aria-hidden="true"><span class="formation-ember"></span><span>狼烟起处 · 敌军来向</span><i>› › ›</i></div>
-    <div class="formation-field-rows">${renderFormationRow(view, 'front')}${renderFormationRow(view, 'back')}</div>
-    <div class="formation-order-ribbon" data-testid="formation-order"><span class="formation-order-label">出手<br>次第</span>${order.map((hero, index) => `<div class="formation-order-node${hero ? ' lit' : ''}"><span>${orderNames[index]}</span><small>${hero ? escapeHtml(hero.name) : '虚'}</small></div>`).join('')}</div>
+    <div class="formation-field-body">
+      <div class="formation-field-rows">${FORMATION_LANES.map((row) => renderFormationRow(view, row)).join('')}</div>
+      <div class="formation-enemy-strip" aria-hidden="true"><span class="formation-ember"></span><span>狼烟起处 · 敌军自右来袭</span><i>‹ ‹ ‹</i></div>
+    </div>
+    <div class="formation-order-ribbon" data-testid="formation-order"><span class="formation-order-label">出手<br>次第</span>${orderSlots.map((hero, index) => `<div class="formation-order-node${hero ? ' lit' : ''}"><span>${orderNames[index]}</span><small>${hero ? escapeHtml(hero.name) : '虚'}</small></div>`).join('')}</div>
   </section>`
 }
 
@@ -203,7 +214,7 @@ const renderCurrentCareer = (hero: FormationHeroView): string =>
 const renderHeroCard = (view: FormationPageViewModel): string => {
   const hero = heroAt(view, view.selectedHeroId)
   if (!hero) return `<aside class="formation-hero-card panel empty" data-testid="formation-hero-card"><span class="formation-card-corner"></span><div class="formation-card-empty"><b>帖</b><span>点选名册侠客 · 览其身手帖</span></div></aside>`
-  const slotText = hero.slot ? `${rowNames[hero.slot.row]}·${positionNames[hero.slot.position]}位` : '未在阵中'
+  const slotText = hero.slot ? slotName(hero.slot.row, hero.slot.col) : '未在阵中'
   return `<aside class="formation-hero-card panel" data-testid="formation-hero-card">
     <span class="formation-card-corner" aria-hidden="true"></span>
     <div class="formation-hero-head">${renderPortraitWithGrade(hero, 'formation-card-portrait')}<div><small>${escapeHtml(hero.source)} · ${escapeHtml(hero.category)}门</small><h2>${escapeHtml(hero.name)}</h2><p>侠客 · 行走江湖</p></div><span class="formation-level-badge"><b>${hero.level}</b><i>等级</i></span></div>

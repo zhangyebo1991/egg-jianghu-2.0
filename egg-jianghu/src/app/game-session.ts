@@ -19,12 +19,12 @@ import { loadExistingGameV10, loadGameV10, SAVE_KEY_V10, saveGameV10, type Stora
 import { createNewGameStateV10 } from '../domain/state'
 import type { ActionResult, CampaignMode, GameStateV10 } from '../domain/types'
 
-const formationOrder = (row: 'front' | 'back', position: 0 | 1 | 2): number =>
-  (row === 'front' ? 0 : 3) + position
+// 阵位号：row * 5 + col（0-14），与诸天「(排-1)*5+列」对齐
+const formationOrder = (row: 0 | 1 | 2, col: 0 | 1 | 2 | 3 | 4): number => row * 5 + col
 
 export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.formation
   .slice()
-  .sort((left, right) => formationOrder(left.row, left.position) - formationOrder(right.row, right.position))
+  .sort((left, right) => formationOrder(left.row, left.col) - formationOrder(right.row, right.col))
   .flatMap((slot) => {
     const progress = state.heroes[slot.heroId]
     const definition = heroByIdV10(slot.heroId)
@@ -36,8 +36,8 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       careerId: progress.currentCareerId,
       side: 'party' as const,
       row: slot.row,
-      position: slot.position,
-      formationOrder: formationOrder(slot.row, slot.position),
+      col: slot.col,
+      formationOrder: formationOrder(slot.row, slot.col),
       rank: 'normal' as const,
       alive: true,
       hp: stats.maxHp,

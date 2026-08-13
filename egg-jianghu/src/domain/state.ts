@@ -27,7 +27,7 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
 }
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
-  version: 12,
+  version: 13,
   worldCurrency: { world_01: 1000 },
   contribution: {},
   heroes: {},
@@ -59,6 +59,6 @@ export const createNewGameStateV10 = (playerName: string, now = Date.now()): Gam
     ...createHeroProgress(STARTER_CAREER_ID),
     customName: normalizePlayerName(playerName),
   }
-  state.formation = [{ heroId: PLAYER_HERO_ID, row: 'front', position: 0 }]
+  state.formation = [{ heroId: PLAYER_HERO_ID, row: 1, col: 0 }]
   return state
 }

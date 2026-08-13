@@ -1,7 +1,9 @@
 export type HeroGrade = '丙' | '乙' | '甲' | '地' | '天'
 export type Rarity = '粗浅' | '寻常' | '精妙' | '上乘' | '绝学'
-export type FormationRow = 'front' | 'back'
-export type FormationPosition = 0 | 1 | 2
+/** 路（横排）：0 上路、1 中路、2 下路 */
+export type FormationRow = 0 | 1 | 2
+/** 列（纵深）：0 为最前列（贴中线），4 为最后列 */
+export type FormationColumn = 0 | 1 | 2 | 3 | 4
 export type CampaignMode = 'guard' | 'roam'
 export type QuestGrade = HeroGrade
 export type EquipmentQuality = '凡品' | '良品' | '上品' | '珍品' | '绝品'
@@ -52,7 +54,7 @@ export interface HeroProgressV10 {
 export interface FormationSlot {
   heroId: string
   row: FormationRow
-  position: FormationPosition
+  col: FormationColumn
 }
 
 export interface QuestProgress {
@@ -84,7 +86,7 @@ export interface EquipmentInstance {
 }
 
 export interface GameStateV10 {
-  version: 12
+  version: 13
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
   heroes: Record<string, HeroProgressV10>

@@ -3,7 +3,8 @@ import { HEROES_V10 } from '../content/heroes'
 import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
-export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v12'
+// v13：阵容改 3 路 × 5 列。旧 v12 及更早存档不迁移，读不到新 key 即当新开。
+export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v13'
 
 export interface StorageLike {
   getItem(key: string): string | null
@@ -44,6 +45,12 @@ const isLearnedMartial = (value: unknown): boolean =>
 const isUidMap = (value: unknown): value is Record<string, string | null> =>
   isRecord(value) && Object.values(value).every((id) => id === null || typeof id === 'string')
 
+const isFormationSlot = (value: unknown): boolean =>
+  isRecord(value)
+  && typeof value.heroId === 'string'
+  && (value.row === 0 || value.row === 1 || value.row === 2)
+  && (value.col === 0 || value.col === 1 || value.col === 2 || value.col === 3 || value.col === 4)
+
 const isHeroProgress = (value: unknown): boolean => {
   if (!isRecord(value)) return false
   const hasLoadoutField = 'equipmentBySlot' in value
@@ -76,7 +83,7 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 }
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
-  version: 12,
+  version: 13,
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
   heroes: structuredClone(state.heroes),
@@ -103,9 +110,10 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
-    || raw.version !== 12
+    || raw.version !== 13
     || !Array.isArray(raw.inventory)
     || !Array.isArray(raw.formation)
+    || !raw.formation.every(isFormationSlot)
     || !isRecord(raw.heroes)
     || !Object.values(raw.heroes).every(isHeroProgress)) {
     throw new Error('存档版本不受支持或格式无效')
