@@ -119,7 +119,7 @@ const statMarks: Record<string, string> = {
   // 诸天附加·防御
   物理减伤: '减', 法术减伤: '御', 最终减伤: '护', 命中修正: '羽', 闪避修正: '闪',
   // 诸天特殊·资源
-  初始能量: '✣', 能量回复: '◉', 技能冷却: '冷',
+  初始能量: '✣', 能量回复: '◉', 技能冷却: '冷', 技能学习: '学',
 }
 
 const aptitudeKeys: Array<{ key: keyof HeroAptitudes; label: string }> = [

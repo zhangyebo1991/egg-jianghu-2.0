@@ -58,24 +58,33 @@ export const buildCombatStats = (
   // 见 docs/诸天刷宝录_资质面板公式_源码逆向.md
   const aptitudeIndex = (value: number): number => Math.pow(1.0095, value * 10)
 
+  // 核心指数模板校准（权威白板号面板，docs/诸天刷宝录_角色属性面板_白板号.md）：
+  //   模板分配：物攻/法攻共用 ×1、物防/法防共用 ×0.5、生命 ×5（文档：物攻=法攻=117、物防=法防=58、生命=580）。
+  //   逆向基准 100 + 1.0095^(体×10) × 5 在体=10 ≈ 112.87，而白板面板基准为 117（攻击）/116（防御·生命）——
+  //   差值来自原版职业属性系数（逆向文档 §3.3：面板 = 基础 × 职业系数），此处以校准系数落地并取整：
+  //   攻击 ×1.04 → 117；防御·生命 ×1.028 → 116（0.5×116=58、5×116=580）。体=10 时逐项与文档一致。
+  const attackBase = (constitution: number): number => Math.floor((100 + aptitudeIndex(constitution) * 5) * 1.04)
+  const defenseBase = (constitution: number): number => Math.floor((100 + aptitudeIndex(constitution) * 5) * 1.028)
+
   const stats: CombatStats = {
-    // 生命：指数 ×5（体）
-    maxHp: Math.floor(5 * (100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
+    // 生命：防御模板 ×5（体）—— 白板 580
+    maxHp: Math.floor(5 * defenseBase(aptitude.constitution) * sharedScale),
     maxEnergy: 100,
     // 初始能量：原版 sx28 白板 0（用户实测）；战斗开始能量 = 0
     initialEnergy: 0,
     // 能量回复：原版 sx29 白板 1（用户实测）；egg 战斗循环另有行动回能机制（未确证粒度前保持）
     energyRecovery: 1 + (heartMethod?.energyRecovery ?? 0),
-    // 物攻：指数 ×1（体）—— 原版 6 核心属性均由体资质推导，见 docs 逆向文档
-    externalAttack: Math.floor((100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale * externalCareerBonus),
-    // 物防：指数 ×1（体）—— 与物攻同模板
-    externalDefense: Math.floor((100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
-    // 法攻：指数 ×0.5（体）
-    internalAttack: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale * internalCareerBonus),
-    // 法防：指数 ×0.5（体）—— 与法攻同模板
-    internalDefense: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
-    // 速度：线性 150 + 体/4（原版唯一非指数核心项，白板号体=10 → 152.5）
-    effectiveAgility: Math.max(1, (150 + aptitude.constitution / 4) * (1 + (heartMethod?.gaugeRate ?? 0))),
+    // 物攻：攻击模板 ×1（体）—— 白板 117；外家职业（剑刀拳暗）另 +15%
+    externalAttack: Math.floor(attackBase(aptitude.constitution) * sharedScale * externalCareerBonus),
+    // 物防：防御模板 ×0.5（体）—— 白板 58
+    externalDefense: Math.floor(0.5 * defenseBase(aptitude.constitution) * sharedScale),
+    // 法攻：攻击模板 ×1（体）—— 白板 117；内家职业（医/内家）另 +15%
+    internalAttack: Math.floor(attackBase(aptitude.constitution) * sharedScale * internalCareerBonus),
+    // 法防：防御模板 ×0.5（体）—— 白板 58
+    internalDefense: Math.floor(0.5 * defenseBase(aptitude.constitution) * sharedScale),
+    // 速度：线性（原版唯一非指数核心项）。基准经白板面板校准锚定体=10 → 150（权威文档），
+    // 保留逆向线性成长率 体/4（docs/诸天刷宝录_资质面板公式_源码逆向.md §3.2）
+    effectiveAgility: Math.max(1, (150 + (aptitude.constitution - 10) / 4) * (1 + (heartMethod?.gaugeRate ?? 0))),
     // 命中修正：原版 sx18 走特定属性统计默认分支（无资质/固有基础），白板 0；战斗命中率 = 97×(100+命中)/(100+闪避)
     accuracy: 0,
     // 闪避修正：原版 sx19 同上，白板 0
@@ -184,6 +193,8 @@ export const panelToAttributeMap = (
   map[28] = panel.initialEnergy // 初始能量
   map[29] = panel.energyRecovery // 能量回复（语义差异，过渡占位）
   map[37] = panel.cooldownRate * 100 // 技能冷却
+  // 技能学习 sx39：白板基础 = 0。权威面板文档显示的 1% 是命石影响，非固有基础
+  // （sx39 走特定属性统计默认分支 = 养成总和；sx.json 默认 20 是词条基准）。勿补 1%。
   return map
 }
 

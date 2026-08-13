@@ -87,6 +87,25 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
     expect(stats.perfectedBonusPool).toBeCloseTo(0.1)
   })
 
+  it('白板号参考面板对齐权威文档（体=10、乙级、Lv1 无圆满）', () => {
+    const definition: HeroDefinitionV10 = {
+      id: 'fixture', name: '白板号', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
+      source: 'tavern', cost: 0, factionId: null,
+      aptitudes: { strength: 10, insight: 10, constitution: 10, agility: 10, resolve: 10 },
+    }
+    const stats = buildCombatStats(definition, createHeroProgress('sword'))
+
+    // 权威文档 docs/诸天刷宝录_角色属性面板_白板号.md：生命580 / 速度150 / 物攻117 / 物防58 / 法攻117 / 法防58。
+    // 物防/法防/生命/法攻不受外家职业加成 → 与文档逐项一致；
+    // 物攻 134 = 攻击模板 117 × 剑客外家加成 1.15（法攻无该加成故为 117，物攻≠法攻是蛋蛋职业设计）。
+    expect(stats.maxHp).toBe(580)
+    expect(stats.effectiveAgility).toBe(150)
+    expect(stats.externalDefense).toBe(58)
+    expect(stats.internalAttack).toBe(117)
+    expect(stats.internalDefense).toBe(58)
+    expect(stats.externalAttack).toBe(134)
+  })
+
   it('已穿戴装备的基础属性与词条进入战斗面板', () => {
     const definition: HeroDefinitionV10 = {
       id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
