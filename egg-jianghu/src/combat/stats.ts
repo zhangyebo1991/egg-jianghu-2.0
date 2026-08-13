@@ -51,15 +51,25 @@ export const buildCombatStats = (
   const internalCareerBonus = career && ['医', '内家'].includes(career.category) ? 1.15 : 1
   const heartMethod = progress.heartMethodId ? heartMethodByIdV10(progress.heartMethodId) : undefined
 
+  // 原版《诸天刷宝录》资质→面板公式（c3runtime.js 源码逆向，证据等级 A）。
+  // 指数底数 1.0095：资质每 +1，指数项 × 1.0095^10 ≈ ×1.099。见 docs/诸天刷宝录_资质面板公式_源码逆向.md
+  const aptitudeIndex = (value: number): number => Math.pow(1.0095, value * 10)
+
   const stats: CombatStats = {
-    maxHp: Math.floor((100 + aptitude.constitution * 15 + aptitude.resolve * 4) * sharedScale),
+    // 生命：指数 ×5（体）
+    maxHp: Math.floor(5 * (100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
     maxEnergy: 100,
     initialEnergy: 20,
     energyRecovery: 5 + (heartMethod?.energyRecovery ?? 0),
-    externalAttack: Math.floor((20 + aptitude.strength * 4 + aptitude.agility) * sharedScale * externalCareerBonus),
-    internalAttack: Math.floor((20 + aptitude.insight * 4 + aptitude.resolve) * sharedScale * internalCareerBonus),
-    externalDefense: Math.floor((10 + aptitude.constitution * 2.5 + aptitude.strength) * sharedScale),
-    internalDefense: Math.floor((10 + aptitude.resolve * 2.5 + aptitude.insight) * sharedScale),
+    // 物攻：指数 ×1（勇）
+    externalAttack: Math.floor((100 + aptitudeIndex(aptitude.strength) * 5) * sharedScale * externalCareerBonus),
+    // 物防：指数 ×1（体）—— 与物攻同模板，sx.json 物防="指数"
+    externalDefense: Math.floor((100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
+    // 法攻：指数 ×0.5（智）
+    internalAttack: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.insight) * 5) * sharedScale * internalCareerBonus),
+    // 法防：指数 ×0.5（精）—— 与法攻同模板，sx.json 法防="指数"
+    internalDefense: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.resolve) * 5) * sharedScale),
+    // 速度：敏（原版为乘法直引，精确公式待补，暂沿用现有结构）
     effectiveAgility: Math.max(1, (20 + aptitude.agility * 6) * (1 + (heartMethod?.gaugeRate ?? 0))),
     accuracy: Math.min(0.2, aptitude.insight * 0.005 + aptitude.agility * 0.003),
     evade: Math.min(0.7, aptitude.agility * 0.01),

@@ -50,7 +50,7 @@ describe('新建玩家角色', () => {
       source: 'starter',
       cost: 0,
       factionId: null,
-      aptitudes: { strength: 8, insight: 8, constitution: 9, agility: 9, resolve: 8 },
+      aptitudes: { strength: 10, insight: 10, constitution: 10, agility: 10, resolve: 10 },
     })
     expect(HEROES_V10[0]).toBe(PLAYER_HERO_V10)
     expect(HEROES_V10).toEqual([PLAYER_HERO_V10, ...TAVERN_HEROES, ...FACTION_HEROES])

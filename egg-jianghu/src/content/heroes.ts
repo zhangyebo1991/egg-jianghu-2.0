@@ -69,12 +69,14 @@ export const PLAYER_HERO_V10: HeroDefinitionV10 = {
   source: 'starter',
   cost: 0,
   factionId: null,
+  // 白板号资质对齐原版《诸天刷宝录》主角（js.json id=1）：勇/智/体/敏/精全 10，天资总和 50。
+  // 见 docs/诸天刷宝录_资质面板公式_源码逆向.md
   aptitudes: {
-    strength: 8,
-    insight: 8,
-    constitution: 9,
-    agility: 9,
-    resolve: 8,
+    strength: 10,
+    insight: 10,
+    constitution: 10,
+    agility: 10,
+    resolve: 10,
   },
 }
 
