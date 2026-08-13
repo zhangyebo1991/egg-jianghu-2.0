@@ -21,6 +21,7 @@
     "@playwright/test": "^1.54.1",
     "electron": "40.9.3",
     "electron-builder": "^26.15.3",
+    "sharp": "^0.35.3",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "vitest": "^4.0.18"

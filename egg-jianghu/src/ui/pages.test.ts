@@ -208,7 +208,7 @@ describe('version 10 长期循环页面', () => {
     expect(html.match(/data-quest-slot=/g)).toHaveLength(6)
     expect(html).toContain('村中泼皮')
     expect(html).toContain('门人拜帖')
-    expect(html).not.toContain('world_01_stage_01_normal_1')
+    expect(html).not.toContain('world_01_stage_01_mob_1')
     expect(html).not.toContain('data-testid="faction-meridian"')
   })
 

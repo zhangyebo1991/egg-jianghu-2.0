@@ -6,7 +6,7 @@ import { createInitialStateV10 } from './state'
 const enemyDefeatedEvent = (overrides: Partial<Extract<CombatEvent, { type: 'enemy-defeated' }>> = {}): Extract<CombatEvent, { type: 'enemy-defeated' }> => ({
   type: 'enemy-defeated',
   atMs: 1000,
-  enemyId: 'world_01_stage_03_elite_1',
+  enemyId: 'world_01_stage_03_mob_2',
   rank: 'elite',
   worldId: 'world_01',
   stage: 3,

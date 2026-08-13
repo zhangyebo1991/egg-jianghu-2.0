@@ -2095,7 +2095,7 @@ const debugSettleEnemy = (seed: number, rank: CombatRank = 'normal'): string[] =
   const result = settleCombatEvent(session.state, {
     type: 'enemy-defeated',
     atMs: 0,
-    enemyId: `world_01_stage_01_${rank === 'boss' ? 'boss' : rank === 'elite' ? 'elite_1' : 'normal_1'}`,
+    enemyId: `world_01_stage_01_${rank === 'boss' ? 'boss' : 'mob_1'}`,
     rank,
     worldId: 'world_01',
     stage: 1,
@@ -2250,7 +2250,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     ensurePlaying()
     const faction = FACTIONS.find((item) => item.id === factionId)
     if (!faction) throw new Error('势力不存在')
-    const normalId = `${faction.worldId}_stage_01_normal_1`
+    const normalId = `${faction.worldId}_stage_01_mob_1`
     const bossId = `${faction.worldId}_stage_01_boss`
     session.state.encounteredEnemyIds = [...new Set([...session.state.encounteredEnemyIds, normalId, bossId])]
     initializeQuestBoard(session.state, factionId, createRng(seed), 0)

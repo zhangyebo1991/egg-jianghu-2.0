@@ -1,6 +1,6 @@
-import { createRng } from './rng'
+import { createRng, type Rng } from './rng'
 import { panelToAttributeMap } from './stats'
-import { enemyName } from '../content/enemy-names'
+import { stageEnemyGroup, type EnemyDefinition } from '../content/enemies'
 import type { FormationColumn, FormationRow } from '../domain/types'
 import type { CombatRank, CombatSnapshot, CombatUnit } from './types'
 
@@ -35,10 +35,22 @@ export interface CombatWave {
   enemies: CombatUnit[]
 }
 
+// 精英 1.5 对齐诸天「敌人属性function」；boss 维持自有平衡倍率
 const enemyRankMultiplier: Record<CombatRank, number> = {
   normal: 1,
-  elite: 1.65,
+  elite: 1.5,
   boss: 3.1,
+}
+
+interface EnemyIdentity {
+  definition: EnemyDefinition
+  /** mob 为本关小怪序号 0-4；boss 无 */
+  mobIndex: number | null
+}
+
+const enemyId = (worldId: string, stage: number, identity: EnemyIdentity): string => {
+  const prefix = `${worldId}_stage_${String(stage).padStart(2, '0')}`
+  return identity.mobIndex === null ? `${prefix}_boss` : `${prefix}_mob_${identity.mobIndex + 1}`
 }
 
 const createEnemy = (
@@ -47,33 +59,34 @@ const createEnemy = (
   stage: number,
   wave: number,
   rank: CombatRank,
-  index: number,
+  identity: EnemyIdentity,
   slot: EnemySlot,
   seed: number,
 ): CombatUnit => {
   const rng = createRng(seed)
   const worldIndex = Number(worldId.slice(-2)) || 1
   const difficultyIndex = Math.max(1, difficulty)
+  // 六维成长系数（生命/物攻/物防/法防/法攻/速度，基准 100）做同关怪物差异化
+  const growth = identity.definition.growth
   const scale = (1
     + (worldIndex - 1) * 0.6
     + (difficultyIndex - 1) * 0.45
     + (stage - 1) * 0.09
     + (wave - 1) * 0.025) * enemyRankMultiplier[rank]
-  const maxHp = Math.floor((70 + rng.nextInt(0, 21)) * scale)
-  const effectiveAgility = 35 + worldIndex * 4 + difficultyIndex * 3 + stage + rng.nextInt(0, 8)
-  const externalAttack = Math.floor((25 + worldIndex * 8 + difficultyIndex * 6 + stage * 2) * enemyRankMultiplier[rank])
-  const internalAttack = Math.floor((20 + worldIndex * 7 + difficultyIndex * 5 + stage * 2) * enemyRankMultiplier[rank])
-  const externalDefense = Math.floor((12 + worldIndex * 5 + difficultyIndex * 3 + stage) * enemyRankMultiplier[rank])
-  const internalDefense = Math.floor((10 + worldIndex * 5 + difficultyIndex * 3 + stage) * enemyRankMultiplier[rank])
+  const maxHp = Math.floor((70 + rng.nextInt(0, 21)) * scale * growth[0] / 100)
+  const effectiveAgility = Math.floor((35 + worldIndex * 4 + difficultyIndex * 3 + stage + rng.nextInt(0, 8)) * growth[5] / 100)
+  const externalAttack = Math.floor((25 + worldIndex * 8 + difficultyIndex * 6 + stage * 2) * enemyRankMultiplier[rank] * growth[1] / 100)
+  const internalAttack = Math.floor((20 + worldIndex * 7 + difficultyIndex * 5 + stage * 2) * enemyRankMultiplier[rank] * growth[4] / 100)
+  const externalDefense = Math.floor((12 + worldIndex * 5 + difficultyIndex * 3 + stage) * enemyRankMultiplier[rank] * growth[2] / 100)
+  const internalDefense = Math.floor((10 + worldIndex * 5 + difficultyIndex * 3 + stage) * enemyRankMultiplier[rank] * growth[3] / 100)
   const accuracy = 0.02 + worldIndex * 0.005
   const evade = Math.min(0.35, 0.03 + worldIndex * 0.01)
   const criticalChance = Math.min(0.35, 0.04 + worldIndex * 0.01)
   const criticalMultiplier = 1.5
   const controlResistance = rank === 'boss' ? 0.55 : rank === 'elite' ? 0.3 : 0.1
-  const rankId = rank === 'boss' ? 'boss' : rank === 'elite' ? `elite_${index + 1}` : `normal_${index + 1}`
   return {
-    id: `${worldId}_stage_${String(stage).padStart(2, '0')}_${rankId}`,
-    name: enemyName(worldId, rank, stage, index + 1),
+    id: enemyId(worldId, stage, identity),
+    name: identity.definition.name,
     side: 'enemy',
     row: slot.row,
     col: slot.col,
@@ -127,6 +140,12 @@ const ranksForWave = (wave: number): CombatRank[] => {
   return Array.from({ length: count }, (_, index) => wave >= 3 && index === count - 1 && wave % 3 === 0 ? 'elite' : 'normal')
 }
 
+// 从本关 5 小怪中不放回抽取，保证同波不出重复工种（id 亦随之唯一）
+const pickMobIndices = (rng: Rng, count: number): number[] => {
+  const pool = [0, 1, 2, 3, 4]
+  return Array.from({ length: Math.min(count, pool.length) }, () => pool.splice(rng.nextInt(0, pool.length), 1)[0])
+}
+
 export const createWave = (
   worldId: string,
   stage: number,
@@ -135,14 +154,25 @@ export const createWave = (
   difficulty = 1,
 ): CombatWave => {
   if (stage < 1 || stage > 10 || wave < 1 || wave > 10) throw new Error('小关或波次超出范围')
+  const group = stageEnemyGroup(worldId, stage)
+  if (!group) throw new Error(`${worldId} 第 ${stage} 关缺少怪物表`)
   const ranks = ranksForWave(wave)
   const slots = waveSlots(wave, ranks.length)
+  const pickRng = createRng(seed + wave * 101)
+  const mobIndices = pickMobIndices(pickRng, wave === 10 ? ranks.length - 1 : ranks.length)
+  let mobCursor = 0
+  const identities: EnemyIdentity[] = ranks.map((rank) => {
+    if (rank === 'boss') return { definition: group.boss, mobIndex: null }
+    const mobIndex = mobIndices[mobCursor]
+    mobCursor += 1
+    return { definition: group.mobs[mobIndex], mobIndex }
+  })
   return {
     worldId,
     difficulty,
     stage,
     wave,
-    enemies: ranks.map((rank, index) => createEnemy(worldId, difficulty, stage, wave, rank, index, slots[index], seed + wave * 101 + index * 17)),
+    enemies: ranks.map((rank, index) => createEnemy(worldId, difficulty, stage, wave, rank, identities[index], slots[index], seed + wave * 101 + index * 17)),
   }
 }
 

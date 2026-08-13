@@ -447,7 +447,7 @@ test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page 
   await openWorldSection(page, 'factions')
   await expect(page.locator('[data-quest-slot]')).toHaveCount(6)
   await expect(page.locator('.faction-quest-grid')).not.toContainText('world_01_stage_01')
-  await expect(page.locator('.faction-notice h3').first()).toContainText(/^(?:村中泼皮|段天德)$/)
+  await expect(page.locator('.faction-notice h3').first()).toContainText(/^(?:黄巾战士|张角)$/)
   await page.getByTestId('faction-page-title').hover()
   await page.waitForTimeout(750)
   const questCard = page.getByTestId('quest-slot-0')

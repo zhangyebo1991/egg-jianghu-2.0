@@ -17,7 +17,7 @@ const quest = (): QuestProgress => ({
   id: 'quest_qingfeng_0',
   type: 'normal',
   grade: '乙',
-  targetId: 'world_01_stage_01_normal_1',
+  targetId: 'world_01_stage_01_mob_1',
   targetCount: 20,
   rewardContribution: 50,
   generatedAt: 100,
@@ -52,13 +52,13 @@ describe('version 10 公开存档入口', () => {
     expect(loaded.state).toEqual(createInitialStateV10(500))
   })
 
-  it('导出与导入只接受 version 13', () => {
+  it('导出与导入只接受 version 14', () => {
     const state = createInitialStateV10(100)
     state.worldCurrency.world_01 = 987
     const serialized = exportSave(state, 200)
-    expect(JSON.parse(serialized).version).toBe(13)
+    expect(JSON.parse(serialized).version).toBe(14)
     expect(importSave(serialized, 300).state.worldCurrency.world_01).toBe(987)
-    expect(() => importSave(JSON.stringify({ version: 12 }), 300)).toThrow('存档版本不受支持')
+    expect(() => importSave(JSON.stringify({ version: 13 }), 300)).toThrow('存档版本不受支持')
   })
 
   it('忽略 version 1 至 9 的旧 key', () => {

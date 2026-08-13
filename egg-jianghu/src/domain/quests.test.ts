@@ -15,12 +15,12 @@ import type { GameStateV10, QuestProgress } from './types'
 
 const targetState = (): GameStateV10 => {
   const state = createInitialStateV10(0)
-  state.encounteredEnemyIds = ['world_01_stage_01_normal_1', 'world_01_stage_01_boss']
+  state.encounteredEnemyIds = ['world_01_stage_01_mob_1', 'world_01_stage_01_boss']
   initializeQuestBoard(state, 'qingfeng_hall', createRng(9), 0)
   return state
 }
 
-const quest = (id: string, targetId = 'world_01_stage_01_normal_1'): QuestProgress => ({
+const quest = (id: string, targetId = 'world_01_stage_01_mob_1'): QuestProgress => ({
   id,
   type: targetId.endsWith('_boss') ? 'boss' : 'normal',
   grade: '丙',
@@ -85,7 +85,7 @@ describe('势力六格悬榜', () => {
     const matching = createInitialStateV10(0)
     matching.factionBoards.a = { refreshRemainingMs: QUEST_REFRESH_MS, slots: [quest('a'), null, null, null, null, null] }
     matching.factionBoards.b = { refreshRemainingMs: QUEST_REFRESH_MS, slots: [quest('b'), null, null, null, null, null] }
-    applyKillToQuests(matching, { enemyId: 'world_01_stage_01_normal_1', rank: 'normal', bossId: null })
+    applyKillToQuests(matching, { enemyId: 'world_01_stage_01_mob_1', rank: 'normal', bossId: null })
     expect([matching.factionBoards.a.slots[0]!.progress, matching.factionBoards.b.slots[0]!.progress]).toEqual([1, 1])
   })
 

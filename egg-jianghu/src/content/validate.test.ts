@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialStateV10 } from '../domain/state'
 import { CAREERS } from './careers'
-import { ENEMY_NAMES_BY_WORLD } from './enemy-names'
+import { STAGE_ENEMIES } from './enemies'
 import { FACTIONS } from './factions'
 import { HEROES_V10 } from './heroes'
 import { FACTION_MARTIALS } from './martials'
@@ -79,13 +79,11 @@ describe('首发内容目录', () => {
     }
   })
 
-  it('前十个位面具备完整敌人命名表且 Boss 不重名', () => {
-    for (const world of WORLDS.slice(0, 10)) {
-      const names = ENEMY_NAMES_BY_WORLD[world.id]
-      expect(names).toBeDefined()
-      expect(names!.bosses).toHaveLength(10)
-      expect(names!.normal.length).toBeGreaterThanOrEqual(6)
-      expect(names!.elite.length).toBeGreaterThanOrEqual(3)
+  it('全部位面具备完整原版怪物表且校验通过', () => {
+    for (const world of WORLDS) {
+      for (let stage = 1; stage <= 10; stage += 1) {
+        expect(STAGE_ENEMIES[`${world.id}:${stage}`], `${world.id} 第 ${stage} 关缺少怪物表`).toBeDefined()
+      }
     }
     expect(validateContent()).toEqual([])
   })

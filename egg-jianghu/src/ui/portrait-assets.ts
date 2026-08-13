@@ -42,6 +42,7 @@ import elite2 from '../assets/enemies/elite_2.png'
 import normal1 from '../assets/enemies/normal_1.png'
 import normal2 from '../assets/enemies/normal_2.png'
 import normal3 from '../assets/enemies/normal_3.png'
+import { enemyDefinitionById } from '../content/enemy-names'
 import type { CombatRank } from '../combat/types'
 
 const heroPortraits: Record<string, string> = {
@@ -106,8 +107,14 @@ const enemyPortraits: Record<CombatRank, readonly string[]> = {
   boss: [boss1, boss2],
 }
 
-// 同档次敌人按单位 id 稳定分配不同形象，避免一波敌人清一色重复
+// 诸天原版怪物立绘：zt_{drId}.webp，由 scripts/generate-zhutian-enemies.mjs 切图生成
+const zhutianPortraits = import.meta.glob<string>('../assets/enemies/zt/zt_*.webp', { eager: true, import: 'default' })
+
 export const enemyPortraitAsset = (rank: CombatRank, unitKey: string): PortraitAsset => {
+  const definition = enemyDefinitionById(unitKey)
+  const unique = definition ? zhutianPortraits[`../assets/enemies/zt/zt_${definition.drId}.webp`] : undefined
+  if (unique) return { url: unique, source: 'unique' }
+  // 缺图兜底：按档位通用立绘哈希取变体
   const variants = enemyPortraits[rank]
   const hash = [...unitKey].reduce((total, char) => total + char.charCodeAt(0), 0)
   return { url: variants[hash % variants.length], source: 'generic' }

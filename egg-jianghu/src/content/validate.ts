@@ -1,5 +1,5 @@
 import { CAREERS } from './careers'
-import { ENEMY_NAMES_BY_WORLD } from './enemy-names'
+import { STAGE_ENEMIES, type StageEnemyGroup } from './enemies'
 import { EQUIPMENT_SLOTS } from './equipment'
 import { EQUIPMENT_NAMES_BY_WORLD } from './equipment-names'
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
@@ -45,11 +45,14 @@ export const validateContent = (): string[] => {
     if (world.factionIds.length !== 0 && world.factionIds.length !== 3) {
       errors.push(`${world.id} 势力数不是 3`)
     }
-    const names = ENEMY_NAMES_BY_WORLD[world.id]
-    if (names) {
-      if (names.bosses.length !== 10) errors.push(`${world.id} Boss 数不是 10`)
-      if (names.normal.length < 6) errors.push(`${world.id} 普通小怪名少于 6`)
-      if (names.elite.length < 3) errors.push(`${world.id} 精英名少于 3`)
+    for (let stage = 1; stage <= 10; stage += 1) {
+      const group = STAGE_ENEMIES[`${world.id}:${stage}`]
+      if (!group) {
+        errors.push(`${world.id} 第 ${stage} 关缺少怪物表`)
+        continue
+      }
+      if (group.mobs.some((mob) => !mob.name.trim())) errors.push(`${world.id} 第 ${stage} 关小怪名为空`)
+      if (!group.boss.name.trim()) errors.push(`${world.id} 第 ${stage} 关首领名为空`)
     }
     const equipmentNames = EQUIPMENT_NAMES_BY_WORLD[world.id]
     if (equipmentNames) {
@@ -68,7 +71,9 @@ export const validateContent = (): string[] => {
 
   const seenBosses = new Set<string>()
   for (const world of WORLDS) {
-    for (const boss of ENEMY_NAMES_BY_WORLD[world.id]?.bosses ?? []) {
+    for (let stage = 1; stage <= 10; stage += 1) {
+      const boss = STAGE_ENEMIES[`${world.id}:${stage}`]?.boss.name
+      if (!boss) continue
       if (seenBosses.has(boss)) errors.push(`Boss 名重复：${boss}`)
       seenBosses.add(boss)
     }
@@ -114,10 +119,13 @@ export const validateContent = (): string[] => {
     if (count !== 3) errors.push(`${factionId} 势力侠客数不是 3`)
   }
 
+  const groupNames = (group: StageEnemyGroup | undefined): string[] =>
+    group ? [...group.mobs.map((mob) => mob.name), group.boss.name] : []
   const sameWorldEnemy = (hero: { worldId: string; name: string }): boolean => {
-    const names = ENEMY_NAMES_BY_WORLD[hero.worldId]
-    if (!names) return false
-    return names.bosses.includes(hero.name) || names.elite.includes(hero.name) || names.normal.includes(hero.name)
+    for (let stage = 1; stage <= 10; stage += 1) {
+      if (groupNames(STAGE_ENEMIES[`${hero.worldId}:${stage}`]).includes(hero.name)) return true
+    }
+    return false
   }
   for (const hero of HEROES_V10) {
     if (hero.source === 'starter') continue
