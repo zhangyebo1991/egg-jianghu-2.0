@@ -59,6 +59,7 @@ export interface CombatSummon extends CombatUnit {
 export interface CombatSnapshot {
   seed: number
   worldId: string
+  difficulty: number
   stage: number
   mode: CampaignMode
   wave: number
@@ -81,6 +82,7 @@ export type CombatEvent =
 
 export interface StageSelectionInput {
   worldId: string
+  difficulty?: number
   stage: number
   mode: CampaignMode
   seed: number

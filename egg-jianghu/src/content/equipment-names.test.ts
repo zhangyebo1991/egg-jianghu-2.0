@@ -4,9 +4,8 @@ import { EQUIPMENT_NAMES_BY_WORLD, equipmentName } from './equipment-names'
 import { WORLDS } from './worlds'
 
 describe('装备命名表', () => {
-  it('已开放 10 卷各有 8 个槽位装备名且非空', () => {
-    for (const world of WORLDS) {
-      if (!world.released) continue
+  it('前 10 个位面各有 8 个槽位装备名且非空', () => {
+    for (const world of WORLDS.slice(0, 10)) {
       const names = EQUIPMENT_NAMES_BY_WORLD[world.id]
       expect(names, `${world.id} 缺少命名表`).toBeDefined()
       for (const slot of EQUIPMENT_SLOTS) {
@@ -17,8 +16,7 @@ describe('装备命名表', () => {
 
   it('跨大关、跨槽位 80 个装备名全局不重名', () => {
     const seen = new Set<string>()
-    for (const world of WORLDS) {
-      if (!world.released) continue
+    for (const world of WORLDS.slice(0, 10)) {
       for (const slot of EQUIPMENT_SLOTS) {
         const name = EQUIPMENT_NAMES_BY_WORLD[world.id][slot]
         expect(seen.has(name), `装备名重复：${name}`).toBe(false)

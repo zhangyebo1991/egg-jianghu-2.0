@@ -82,6 +82,7 @@ describe('十波战斗', () => {
     const state = {
       seed: 7,
       worldId: 'world_01',
+      difficulty: 1,
       stage: 1,
       mode: 'guard' as const,
       wave: 3,

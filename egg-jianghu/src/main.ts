@@ -20,7 +20,7 @@ import {
 import { FACTIONS } from './content/factions'
 import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
 import { FACTION_MARTIALS, martialByIdV10 } from './content/martials'
-import { WORLDS } from './content/worlds'
+import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
@@ -28,6 +28,7 @@ import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEq
 import { MAX_MARTIAL_LEVEL, equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
+import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
 import { settleCombatEvent } from './domain/rewards'
 import { clearSaveV10, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
@@ -48,7 +49,7 @@ import {
   type IdlePageViewModel,
 } from './ui/idle-page'
 import { renderInventoryPage, type InventoryItemView, type InventoryPageViewModel } from './ui/inventory-page'
-import { renderStageList, renderWorldOverview, type StageListViewModel, type WorldOverviewViewModel } from './ui/jianghu-page'
+import { renderStageList, renderWorldOverview, type PlaneSelectViewModel, type StageListViewModel } from './ui/jianghu-page'
 import { createDomPatcher } from './ui/dom-patch'
 import { renderShell, type JianghuSection, type TabId } from './ui/shell'
 import { renderStartPage } from './ui/start-page'
@@ -76,6 +77,8 @@ let jianghuView: JianghuView = 'worlds'
 let jianghuSection: JianghuSection = 'stages'
 let jianghuMotionPending: 'overview' | 'stage' | null = null
 let selectedWorldId = ''
+let selectedPlaneId = 'world_01'
+let selectedDifficulty = 1
 let selectedStage = 1
 let selectedHeroId: string | null = null
 let inventorySlotFilter: EquipmentSlot | 'all' = 'all'
@@ -427,7 +430,9 @@ const enterPlaying = (nextSession: GameSession): void => {
   jianghuSection = 'stages'
   jianghuMotionPending = 'overview'
   selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
-  selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
+  selectedPlaneId = selectedWorldId
+  selectedDifficulty = 1
+  selectedStage = Math.min(10, Math.max(1, clearedStageOf(session.state.clearedStageByWorldDifficulty, selectedWorldId, selectedDifficulty) + 1))
   selectedHeroId = Object.keys(session.state.heroes)[0] ?? null
   careerTreeOpen = false
   selectedTreeCareerId = null
@@ -555,54 +560,72 @@ const idleViewModel = (): IdlePageViewModel => {
   }
 }
 
-const worldOverviewViewModel = (): WorldOverviewViewModel => {
-  const currentWorld = WORLDS.find((world) => world.released
-    && session.state.unlockedWorldIds.includes(world.id)
-    && (session.state.clearedStageByWorld[world.id] ?? 0) < 10)
-  const worlds = WORLDS.map((world) => {
-    const unlocked = session.state.unlockedWorldIds.includes(world.id)
-    const clearedStages = world.released ? (session.state.clearedStageByWorld[world.id] ?? 0) : 0
-    const state = !world.released || !unlocked
-      ? 'locked' as const
-      : clearedStages >= 10
-        ? 'cleared' as const
-        : world.id === currentWorld?.id
-          ? 'current' as const
-          : 'open' as const
-    const factions = FACTIONS.filter((faction) => faction.worldId === world.id)
-    const presentation = worldPresentation(world.id)
-    return {
+const worldOverviewViewModel = (): PlaneSelectViewModel => {
+  const selected = WORLDS.find((world) => world.id === selectedPlaneId) ?? WORLDS[0]
+  const unlocked = session.state.unlockedWorldIds.includes(selected.id)
+  const highest = highestUnlockedDifficulty(
+    session.state.unlockedWorldIds,
+    session.state.clearedStageByWorldDifficulty,
+    selected.id,
+  )
+  const difficulty = unlocked
+    ? Math.min(Math.max(1, selectedDifficulty), Math.max(1, highest))
+    : 1
+  selectedDifficulty = difficulty
+  const canTravel = unlocked && isDifficultyUnlocked(
+    session.state.unlockedWorldIds,
+    session.state.clearedStageByWorldDifficulty,
+    selected.id,
+    difficulty,
+  )
+  const previous = WORLDS[selected.index - 2]
+  return {
+    planes: WORLDS.map((world) => ({
       id: world.id,
       name: world.name,
       index: world.index,
-      released: world.released,
+      unlocked: session.state.unlockedWorldIds.includes(world.id),
+      selected: world.id === selected.id,
+    })),
+    selected: {
+      id: selected.id,
+      name: selected.name,
+      index: selected.index,
       unlocked,
-      difficulty: world.released ? Math.min(5, Math.ceil(world.index / 2)) : 0,
-      recommendedPower: world.released ? Math.round(4000 * 1.65 ** (world.index - 1)) : 0,
-      clearedStages,
-      factionNames: world.released ? factions.map((faction) => faction.name) : [],
-      factions: world.released ? factions.map((faction) => ({ name: faction.name, category: faction.category })) : [],
-      state,
-      latinName: presentation.latinName,
-      flavor: presentation.flavor,
-      currencyName: presentation.currencyName,
-      lockText: !world.released ? '尚未开放' : world.index > 1 ? `通关 ${WORLDS[world.index - 2]?.name ?? '上一卷'} 后开启` : '尚未开放',
-    }
-  })
-  return {
-    worlds,
-    totalClearedStages: worlds.reduce((total, world) => total + world.clearedStages, 0),
-    totalStageCount: WORLDS.filter((world) => world.released).length * 10,
-    currentWorldId: currentWorld?.id,
-    currentWorldName: currentWorld?.name,
+      flavor: selected.flavor,
+      latinName: selected.latinName,
+      recommendedPower: planeRecommendedPower(selected.index, difficulty),
+      selectedDifficulty: difficulty,
+      canTravel,
+      lockText: unlocked
+        ? '开始穿越'
+        : selected.index > 1
+          ? `通关 ${previous?.name ?? '上一位面'} 基础难度后开启`
+          : '尚未解锁',
+      difficulties: Array.from({ length: 10 }, (_, offset) => {
+        const value = offset + 1
+        return {
+          difficulty: value,
+          label: difficultyLabel(value),
+          unlocked: isDifficultyUnlocked(
+            session.state.unlockedWorldIds,
+            session.state.clearedStageByWorldDifficulty,
+            selected.id,
+            value,
+          ),
+          selected: value === difficulty,
+          cleared: clearedStageOf(session.state.clearedStageByWorldDifficulty, selected.id, value),
+        }
+      }),
+    },
   }
 }
 
 const stageListViewModel = (): StageListViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
-  const cleared = session.state.clearedStageByWorld[world.id] ?? 0
+  const difficulty = selectedDifficulty
+  const cleared = clearedStageOf(session.state.clearedStageByWorldDifficulty, world.id, difficulty)
   const presentation = worldPresentation(world.id)
-  const factions = FACTIONS.filter((faction) => faction.worldId === world.id)
   return {
     worldId: world.id,
     worldName: world.name,
@@ -610,11 +633,11 @@ const stageListViewModel = (): StageListViewModel => {
     worldLatinName: presentation.latinName,
     worldCurrency: session.state.worldCurrency[world.id] ?? 0,
     currencyName: presentation.currencyName,
-    difficulty: world.released ? Math.min(5, Math.ceil(world.index / 2)) : 0,
-    recommendedPower: world.released ? Math.round(4000 * 1.65 ** (world.index - 1)) : 0,
+    difficulty,
+    difficultyLabel: difficultyLabel(difficulty),
+    recommendedPower: planeRecommendedPower(world.index, difficulty),
     clearedStages: cleared,
     flavor: presentation.flavor,
-    factions: factions.map((faction) => ({ name: faction.name, category: faction.category })),
     stageNames: presentation.stageNames,
     stages: Array.from({ length: 10 }, (_, index) => ({
       stage: index + 1,
@@ -1073,6 +1096,7 @@ const inventoryViewModel = (): InventoryPageViewModel => {
 }
 
 const normalizeSelectedWorld = (): void => {
+  if (!WORLDS.some((world) => world.id === selectedPlaneId)) selectedPlaneId = WORLDS[0].id
   if (session.state.unlockedWorldIds.includes(selectedWorldId)) return
   selectedWorldId = session.state.unlockedWorldIds[0] ?? 'world_01'
   selectedStage = 1
@@ -1137,7 +1161,7 @@ const render = (): void => {
   patchApp(renderShell({
     activeTab,
     worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
-      ? { worldName: world.name, activeSection: jianghuSection }
+      ? { worldName: world.name }
       : null,
     hasCombatReturn: Boolean(session.combat && !(activeTab === 'idle' && jianghuView === 'combat')),
     showResetConfirmation,
@@ -1199,7 +1223,13 @@ const createAndEnter = (playerName: string, expectedSnapshot: string | null): vo
 }
 
 const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => {
-  const result = session.startStage({ worldId: selectedWorldId, stage: selectedStage, mode, seed })
+  const result = session.startStage({
+    worldId: selectedWorldId,
+    difficulty: selectedDifficulty,
+    stage: selectedStage,
+    mode,
+    seed,
+  })
   notify(result.message, !result.ok)
   if (result.ok) {
     beginCombatPresentation()
@@ -1820,8 +1850,8 @@ app.addEventListener('click', (event) => {
   if (worldSection) {
     activeTab = 'idle'
     jianghuView = 'world'
-    jianghuSection = worldSection
-    if (worldSection === 'stages') jianghuMotionPending = 'stage'
+    jianghuSection = 'stages'
+    jianghuMotionPending = 'stage'
     render()
     return
   }
@@ -1830,25 +1860,61 @@ app.addEventListener('click', (event) => {
   const { action } = button.dataset
   if (handleStartOrResetAction(action)) return
   if (appScreen !== 'playing') return
-  if (action === 'enter-world' && button.dataset.worldId) {
-    const targetWorld = WORLDS.find((item) => item.id === button.dataset.worldId)
-    if (!targetWorld?.released) {
-      notify('该江湖尚未开放', true)
+  if (action === 'select-plane' && button.dataset.worldId) {
+    selectedPlaneId = button.dataset.worldId
+    const highest = highestUnlockedDifficulty(
+      session.state.unlockedWorldIds,
+      session.state.clearedStageByWorldDifficulty,
+      selectedPlaneId,
+    )
+    selectedDifficulty = session.state.unlockedWorldIds.includes(selectedPlaneId) ? Math.max(1, highest) : 1
+  } else if (action === 'prev-plane' || action === 'next-plane') {
+    const currentIndex = WORLDS.findIndex((world) => world.id === selectedPlaneId)
+    const nextIndex = action === 'prev-plane'
+      ? (currentIndex <= 0 ? WORLDS.length - 1 : currentIndex - 1)
+      : (currentIndex >= WORLDS.length - 1 ? 0 : currentIndex + 1)
+    selectedPlaneId = WORLDS[nextIndex]?.id ?? selectedPlaneId
+    const highest = highestUnlockedDifficulty(
+      session.state.unlockedWorldIds,
+      session.state.clearedStageByWorldDifficulty,
+      selectedPlaneId,
+    )
+    selectedDifficulty = session.state.unlockedWorldIds.includes(selectedPlaneId) ? Math.max(1, highest) : 1
+  } else if (action === 'select-difficulty') {
+    const difficulty = Number(button.dataset.difficulty) || 1
+    if (isDifficultyUnlocked(
+      session.state.unlockedWorldIds,
+      session.state.clearedStageByWorldDifficulty,
+      selectedPlaneId,
+      difficulty,
+    )) {
+      selectedDifficulty = difficulty
+    }
+  } else if (action === 'start-crossing') {
+    if (!session.state.unlockedWorldIds.includes(selectedPlaneId)) {
+      notify('位面尚未解锁', true)
       return
     }
-    if (!session.state.unlockedWorldIds.includes(button.dataset.worldId)) {
-      notify('江湖卷尚未解锁', true)
+    if (!isDifficultyUnlocked(
+      session.state.unlockedWorldIds,
+      session.state.clearedStageByWorldDifficulty,
+      selectedPlaneId,
+      selectedDifficulty,
+    )) {
+      notify('难度尚未解锁', true)
       return
     }
-    selectedWorldId = button.dataset.worldId
-    selectedStage = Math.min(10, Math.max(1, (session.state.clearedStageByWorld[selectedWorldId] ?? 0) + 1))
-    selectedFactionId = FACTIONS.find((faction) => faction.worldId === selectedWorldId)?.id ?? ''
-    selectedFactionMartialId = null
-    factionRosterOpen = false
-    factionRosterQuery = ''
+    selectedWorldId = selectedPlaneId
+    selectedStage = Math.min(10, Math.max(1, clearedStageOf(
+      session.state.clearedStageByWorldDifficulty,
+      selectedWorldId,
+      selectedDifficulty,
+    ) + 1))
     jianghuView = 'world'
     jianghuSection = 'stages'
     jianghuMotionPending = 'stage'
+  } else if (action === 'enter-world' && button.dataset.worldId) {
+    selectedPlaneId = button.dataset.worldId
   } else if (action === 'start-stage') {
     selectedStage = Number(button.dataset.stage) || 1
     startSelectedStage('guard')
@@ -1898,10 +1964,12 @@ app.addEventListener('click', (event) => {
   } else if (action === 'resume-combat' && session.combat) {
     activeTab = 'idle'
     selectedWorldId = session.combat.state.worldId
+    selectedDifficulty = session.combat.state.difficulty
     selectedStage = session.combat.state.stage
     jianghuView = 'combat'
     jianghuSection = 'stages'
   } else if (action === 'return-worlds') {
+    selectedPlaneId = selectedWorldId || selectedPlaneId
     jianghuView = 'worlds'
     jianghuSection = 'stages'
     jianghuMotionPending = 'overview'
@@ -2040,6 +2108,7 @@ declare global {
       getCombat: () => ReturnType<typeof structuredClone>
       getSelection: () => ReturnType<typeof structuredClone>
       setTab: (tab: TabId) => void
+      setJianghuSection: (section: JianghuSection) => void
       startStage: (worldId: string, stage: number, mode: 'guard' | 'roam', seed: number) => void
       setCombatMode: (mode: 'guard' | 'roam') => void
       setClearedStage: (worldId: string, stage: number) => void
@@ -2077,16 +2146,26 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     }
     render()
   },
+  setJianghuSection: (section) => {
+    ensurePlaying()
+    activeTab = 'idle'
+    selectedWorldId = selectedWorldId || session.state.unlockedWorldIds[0] || 'world_01'
+    jianghuView = 'world'
+    jianghuSection = section
+    jianghuMotionPending = section === 'stages' ? 'stage' : null
+    render()
+  },
   startStage: (worldId, stage, mode, seed) => {
     ensurePlaying()
     selectedWorldId = worldId
+    selectedPlaneId = worldId
     selectedStage = stage
     startSelectedStage(mode, seed)
   },
   setCombatMode: (mode) => { ensurePlaying(); commitAction(session.setCombatMode(mode)); render() },
   setClearedStage: (worldId, stage) => {
     ensurePlaying()
-    session.state.clearedStageByWorld[worldId] = Math.max(0, Math.min(10, Math.floor(stage)))
+    session.state.clearedStageByWorldDifficulty[progressKey(worldId, selectedDifficulty)] = Math.max(0, Math.min(10, Math.floor(stage)))
     render()
   },
   advanceCombat: (ticks) => {
@@ -2145,7 +2224,13 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     ensurePlaying()
     if (!session.combat) throw new Error('战斗尚未开始')
     session.combat.state.wave = wave
-    session.combat.state.enemies = createWave(session.combat.state.worldId, session.combat.state.stage, wave, seed).enemies
+    session.combat.state.enemies = createWave(
+      session.combat.state.worldId,
+      session.combat.state.stage,
+      wave,
+      seed,
+      session.combat.state.difficulty,
+    ).enemies
     render()
   },
   forceCombatResult: (result) => {

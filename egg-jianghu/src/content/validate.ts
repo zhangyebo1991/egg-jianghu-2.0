@@ -41,29 +41,25 @@ export const validateContent = (): string[] => {
   }
 
   for (const world of WORLDS) {
-    if (world.released) {
-      if (world.stageIds.length !== 10) errors.push(`${world.id} 小关数不是 10`)
-      if (world.factionIds.length !== 3) errors.push(`${world.id} 势力数不是 3`)
-      if (RARITY_BUDGET_BY_WORLD[world.id]?.length !== 8) errors.push(`${world.id} 稀有度预算不是 8`)
-      const names = ENEMY_NAMES_BY_WORLD[world.id]
-      if (!names) {
-        errors.push(`${world.id} 缺少敌人命名表`)
-      } else {
-        if (names.bosses.length !== 10) errors.push(`${world.id} Boss 数不是 10`)
-        if (names.normal.length < 6) errors.push(`${world.id} 普通小怪名少于 6`)
-        if (names.elite.length < 3) errors.push(`${world.id} 精英名少于 3`)
+    if (world.stageIds.length !== 10) errors.push(`${world.id} 小关数不是 10`)
+    if (world.factionIds.length !== 0 && world.factionIds.length !== 3) {
+      errors.push(`${world.id} 势力数不是 3`)
+    }
+    const names = ENEMY_NAMES_BY_WORLD[world.id]
+    if (names) {
+      if (names.bosses.length !== 10) errors.push(`${world.id} Boss 数不是 10`)
+      if (names.normal.length < 6) errors.push(`${world.id} 普通小怪名少于 6`)
+      if (names.elite.length < 3) errors.push(`${world.id} 精英名少于 3`)
+    }
+    const equipmentNames = EQUIPMENT_NAMES_BY_WORLD[world.id]
+    if (equipmentNames) {
+      for (const slot of EQUIPMENT_SLOTS) {
+        if (!equipmentNames[slot]?.trim()) errors.push(`${world.id} 缺少${slot}装备名`)
       }
-      const equipmentNames = EQUIPMENT_NAMES_BY_WORLD[world.id]
-      if (!equipmentNames) {
-        errors.push(`${world.id} 缺少装备命名表`)
-      } else {
-        for (const slot of EQUIPMENT_SLOTS) {
-          if (!equipmentNames[slot]?.trim()) errors.push(`${world.id} 缺少${slot}装备名`)
-        }
-      }
-    } else {
-      if (world.stageIds.length !== 0) errors.push(`${world.id} 未开放卷不应有小关`)
-      if (world.factionIds.length !== 0) errors.push(`${world.id} 未开放卷不应有势力`)
+    }
+    const budget = RARITY_BUDGET_BY_WORLD[world.id]
+    if (budget && budget.length !== 8) {
+      errors.push(`${world.id} 稀有度预算不是 8`)
     }
     for (const id of world.factionIds) {
       if (!factionIds.has(id)) errors.push(`${world.id} 引用了未知势力 ${id}`)
@@ -72,7 +68,6 @@ export const validateContent = (): string[] => {
 
   const seenBosses = new Set<string>()
   for (const world of WORLDS) {
-    if (!world.released) continue
     for (const boss of ENEMY_NAMES_BY_WORLD[world.id]?.bosses ?? []) {
       if (seenBosses.has(boss)) errors.push(`Boss 名重复：${boss}`)
       seenBosses.add(boss)
@@ -81,7 +76,6 @@ export const validateContent = (): string[] => {
 
   const seenEquipmentNames = new Set<string>()
   for (const world of WORLDS) {
-    if (!world.released) continue
     for (const slot of EQUIPMENT_SLOTS) {
       const name = EQUIPMENT_NAMES_BY_WORLD[world.id]?.[slot]
       if (!name) continue
@@ -95,8 +89,7 @@ export const validateContent = (): string[] => {
 
   for (const world of WORLDS) {
     const tavernHeroes = HEROES_V10.filter((hero) => hero.source === 'tavern' && hero.worldId === world.id)
-    if (world.released && tavernHeroes.length !== 3) errors.push(`${world.id} 酒馆侠客数不是 3`)
-    if (!world.released && tavernHeroes.length !== 0) errors.push(`${world.id} 未开放卷不应有酒馆侠客`)
+    if (tavernHeroes.length !== 0 && tavernHeroes.length !== 3) errors.push(`${world.id} 酒馆侠客数不是 3`)
   }
 
   const factionHeroCounts = new Map<string, number>()
@@ -113,8 +106,8 @@ export const validateContent = (): string[] => {
       continue
     }
     factionHeroCounts.set(factionId, (factionHeroCounts.get(factionId) ?? 0) + 1)
-    if (!WORLDS.find((world) => world.id === faction.worldId && world.released)) {
-      errors.push(`${hero.id} 所属势力未在已开放卷`)
+    if (!WORLDS.find((world) => world.id === faction.worldId)) {
+      errors.push(`${hero.id} 所属势力不在位面目录`)
     }
   }
   for (const [factionId, count] of factionHeroCounts) {

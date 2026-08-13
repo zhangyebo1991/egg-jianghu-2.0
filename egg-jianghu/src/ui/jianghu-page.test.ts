@@ -1,22 +1,41 @@
 import { describe, expect, it } from 'vitest'
 import { renderStageList, renderWorldOverview } from './jianghu-page'
 
-describe('江湖层级页', () => {
-  it('总览显示大关卡但不提前显示小关或战斗', () => {
-    const html = renderWorldOverview({ worlds: [{
-      id: 'world_01',
-      name: '牛家村',
-      index: 1,
-      released: true,
-      unlocked: true,
-      difficulty: 1,
-      recommendedPower: 4000,
-      clearedStages: 3,
-      factionNames: ['全真教', '丐帮', '桃花岛'],
-    }] })
+const overviewFixture = () => ({
+  planes: [
+    { id: 'world_01', name: '东汉三国', index: 1, unlocked: true, selected: true },
+    { id: 'world_02', name: '武侠江湖', index: 2, unlocked: false, selected: false },
+  ],
+  selected: {
+    id: 'world_01',
+    name: '东汉三国',
+    index: 1,
+    unlocked: true,
+    flavor: '烽火燃天地，英雄乱世争。三国风云起。',
+    latinName: 'Eastern Han',
+    recommendedPower: 4000,
+    selectedDifficulty: 1,
+    canTravel: true,
+    lockText: '开始穿越',
+    difficulties: Array.from({ length: 10 }, (_, offset) => ({
+      difficulty: offset + 1,
+      label: offset === 0 ? '基础' : `难度${offset + 1}`,
+      unlocked: offset === 0,
+      selected: offset === 0,
+      cleared: offset === 0 ? 3 : 0,
+    })),
+  },
+})
+
+describe('江湖位面页', () => {
+  it('总览显示当前位面的十个难度且不提前显示小关或战斗', () => {
+    const html = renderWorldOverview(overviewFixture())
 
     expect(html).toContain('data-testid="world-world_01"')
-    expect(html).toContain('data-action="enter-world"')
+    expect(html).toContain('data-action="select-plane"')
+    expect(html).toContain('data-action="start-crossing"')
+    expect(html).toContain('data-testid="difficulty-1"')
+    expect(html).toContain('东汉三国')
     expect(html).not.toContain('data-testid="stage-1"')
     expect(html).not.toContain('data-testid="idle-page"')
   })
@@ -24,8 +43,9 @@ describe('江湖层级页', () => {
   it('大关内显示十个小关且锁定关不可点击', () => {
     const html = renderStageList({
       worldId: 'world_01',
-      worldName: '牛家村',
+      worldName: '东汉三国',
       worldCurrency: 120,
+      difficulty: 1,
       stages: Array.from({ length: 10 }, (_, index) => ({
         stage: index + 1,
         unlocked: index < 4,
@@ -35,31 +55,36 @@ describe('江湖层级页', () => {
 
     expect(html.match(/data-testid="stage-\d+"/g)).toHaveLength(10)
     expect(html).toContain('data-action="start-stage"')
+    expect(html).toContain('黄巾起义')
     expect(html).toMatch(/data-testid="stage-5"[^>]*disabled/)
   })
 
-  it('未开放世界显示无法进入且不带难度进度势力', () => {
-    const html = renderWorldOverview({ worlds: [{
-      id: 'world_11', name: '恒山', index: 11,
-      released: false, unlocked: false,
-      difficulty: 0, recommendedPower: 0, clearedStages: 0, factionNames: [],
-    }] })
+  it('未解锁位面仍可浏览但开始穿越不可用', () => {
+    const html = renderWorldOverview({
+      planes: [{ id: 'world_02', name: '武侠江湖', index: 2, unlocked: false, selected: true }],
+      selected: {
+        id: 'world_02',
+        name: '武侠江湖',
+        index: 2,
+        unlocked: false,
+        flavor: '江湖侠客影，仗剑走天涯。恩怨随风去。',
+        latinName: 'Wuxia Jianghu',
+        recommendedPower: 5400,
+        selectedDifficulty: 1,
+        canTravel: false,
+        lockText: '通关 东汉三国 基础难度后开启',
+        difficulties: Array.from({ length: 10 }, (_, offset) => ({
+          difficulty: offset + 1,
+          label: offset === 0 ? '基础' : `难度${offset + 1}`,
+          unlocked: false,
+          selected: offset === 0,
+          cleared: 0,
+        })),
+      },
+    })
 
-    expect(html).toMatch(/data-testid="world-world_11"[^>]*disabled/)
-    expect(html).toContain('尚未开放')
-    expect(html).not.toContain('world-progress')
-    expect(html).not.toContain('推荐战力')
-    expect(html).not.toContain('本地势力')
-  })
-
-  it('已开放未解锁世界提示通关上一卷', () => {
-    const html = renderWorldOverview({ worlds: [{
-      id: 'world_02', name: '嘉兴', index: 2,
-      released: true, unlocked: false,
-      difficulty: 1, recommendedPower: 6600, clearedStages: 0, factionNames: [],
-    }] })
-
-    expect(html).toContain('通关上一卷后开启')
-    expect(html).not.toContain('推荐战力')
+    expect(html).toContain('通关 东汉三国 基础难度后开启')
+    expect(html).toMatch(/data-testid="start-crossing"[^>]*disabled/)
+    expect(html).toMatch(/data-testid="difficulty-1"[^>]*disabled/)
   })
 })

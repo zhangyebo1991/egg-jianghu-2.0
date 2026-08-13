@@ -3,9 +3,8 @@ import { WORLDS } from './worlds'
 import { ENEMY_NAMES_BY_WORLD, enemyDisplayName, enemyName } from './enemy-names'
 
 describe('敌人命名表', () => {
-  it('已开放 10 卷各有 10 个 Boss、普通名 ≥6、精英名 ≥3', () => {
-    for (const world of WORLDS) {
-      if (!world.released) continue
+  it('前 10 个位面各有 10 个 Boss、普通名 ≥6、精英名 ≥3', () => {
+    for (const world of WORLDS.slice(0, 10)) {
       const names = ENEMY_NAMES_BY_WORLD[world.id]
       expect(names, `${world.id} 缺少命名表`).toBeDefined()
       expect(names!.bosses).toHaveLength(10)
@@ -16,8 +15,7 @@ describe('敌人命名表', () => {
 
   it('跨大关 Boss 不重名', () => {
     const seen = new Set<string>()
-    for (const world of WORLDS) {
-      if (!world.released) continue
+    for (const world of WORLDS.slice(0, 10)) {
       for (const boss of ENEMY_NAMES_BY_WORLD[world.id].bosses) {
         expect(seen.has(boss)).toBe(false)
         seen.add(boss)
@@ -36,7 +34,7 @@ describe('敌人命名表', () => {
     expect(new Set(names).size).toBe(5)
   })
 
-  it('未开放卷沿用通用占位名，坏 ID 返回未知目标', () => {
+  it('没有敌人表的位面沿用通用占位名，坏 ID 返回未知目标', () => {
     expect(enemyDisplayName('world_11_stage_03_boss')).toBe('第3关首领')
     expect(enemyDisplayName('world_20_stage_05_elite_1')).toBe('第5关精英')
     expect(enemyDisplayName('broken_enemy_id')).toBe('未知目标')

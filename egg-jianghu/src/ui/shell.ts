@@ -5,7 +5,7 @@ export type JianghuSection = 'stages' | 'factions' | 'city'
 
 export interface ShellViewModel {
   activeTab: TabId
-  worldContext: { worldName: string; activeSection: JianghuSection } | null
+  worldContext: { worldName: string } | null
   hasCombatReturn: boolean
   showResetConfirmation: boolean
   jianghuChrome?: boolean
@@ -16,12 +16,6 @@ const tabs: Array<{ id: TabId; label: string; mark: string }> = [
   { id: 'idle', label: '江湖', mark: '邑' },
   { id: 'heroes', label: '侠客', mark: '侠' },
   { id: 'formation', label: '阵容', mark: '阵' },
-]
-
-const worldSections: Array<{ id: JianghuSection; label: string }> = [
-  { id: 'stages', label: '关卡' },
-  { id: 'factions', label: '势力' },
-  { id: 'city', label: '城市' },
 ]
 
 export const renderShell = (view: ShellViewModel): string => {
@@ -45,10 +39,6 @@ export const renderShell = (view: ShellViewModel): string => {
         ${worldContext ? `
           <nav class="world-subnav" aria-label="${escapeHtml(worldContext.worldName)}">
             <button type="button" class="world-back" data-action="return-worlds">返回江湖</button>
-            ${worldSections.map((section) => `
-              <button type="button" class="${worldContext.activeSection === section.id ? 'active' : ''}"
-                data-jianghu-section="${section.id}" data-testid="world-section-${section.id}"
-                aria-current="${worldContext.activeSection === section.id ? 'page' : 'false'}">${section.label}</button>`).join('')}
           </nav>` : ''}
         <div class="sidebar-danger-zone">
           ${view.showResetConfirmation

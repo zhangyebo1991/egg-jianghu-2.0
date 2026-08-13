@@ -5,7 +5,14 @@ import type { CombatEvent, CombatStartInput, CombatUnit, StageSelectionInput } f
 import { FACTIONS } from '../content/factions'
 import { heroByIdV10, heroDisplayNameV10 } from '../content/heroes'
 import { WORLDS } from '../content/worlds'
-import { resolveDefeat, resolveVictory, type CampaignSelection } from '../domain/progression'
+import {
+  clearedStageOf,
+  isDifficultyUnlocked,
+  progressKey,
+  resolveDefeat,
+  resolveVictory,
+  type CampaignSelection,
+} from '../domain/progression'
 import { advanceQuestBoards, initializeQuestBoard } from '../domain/quests'
 import { settleCombatEvent } from '../domain/rewards'
 import { loadExistingGameV10, loadGameV10, SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
@@ -116,18 +123,22 @@ export class GameSession {
 
   startStage(input: StageSelectionInput): ActionResult {
     const world = WORLDS.find((item) => item.id === input.worldId)
-    if (!world?.released) return { ok: false, message: '该江湖尚未开放' }
-    if (!this.state.unlockedWorldIds.includes(input.worldId)) return { ok: false, message: '江湖卷尚未解锁' }
+    const difficulty = input.difficulty ?? 1
+    if (!world?.released) return { ok: false, message: '该位面尚未开放' }
+    if (!this.state.unlockedWorldIds.includes(input.worldId)) return { ok: false, message: '位面尚未解锁' }
+    if (!isDifficultyUnlocked(this.state.unlockedWorldIds, this.state.clearedStageByWorldDifficulty, input.worldId, difficulty)) {
+      return { ok: false, message: '难度尚未解锁' }
+    }
     if (!Number.isInteger(input.stage) || input.stage < 1 || input.stage > 10) return { ok: false, message: '小关不存在' }
     const highestUnlockedStage = Math.min(10, Math.max(
       1,
-      (this.state.clearedStageByWorld[input.worldId] ?? 0) + 1,
+      clearedStageOf(this.state.clearedStageByWorldDifficulty, input.worldId, difficulty) + 1,
     ))
     if (input.stage > highestUnlockedStage) return { ok: false, message: '小关尚未解锁' }
-    const combatInput = buildCombatStartInput(this.state, input)
+    const combatInput = buildCombatStartInput(this.state, { ...input, difficulty })
     if (combatInput.party.length === 0) return { ok: false, message: '请先配置出战阵容' }
 
-    this.selection = { worldId: input.worldId, stage: input.stage, mode: input.mode }
+    this.selection = { worldId: input.worldId, difficulty, stage: input.stage, mode: input.mode }
     this.combat = createCombatEngine(combatInput)
     return { ok: true, message: '战斗开始' }
   }
@@ -203,7 +214,10 @@ export class GameSession {
   private restartSelection(selection: CampaignSelection): void {
     this.selection = selection
     this.combat = createCombatEngine(buildCombatStartInput(this.state, {
-      ...selection,
+      worldId: selection.worldId,
+      difficulty: selection.difficulty,
+      stage: selection.stage,
+      mode: selection.mode,
       seed: this.runtimeRng.nextInt(1, 2_147_483_647),
     }))
   }
@@ -212,17 +226,18 @@ export class GameSession {
     if (!this.combat || !this.selection) return false
     if (this.combat.state.result === 'victory') {
       const completed = this.selection
-      this.state.clearedStageByWorld[completed.worldId] = Math.max(
-        this.state.clearedStageByWorld[completed.worldId] ?? 0,
+      const key = progressKey(completed.worldId, completed.difficulty)
+      this.state.clearedStageByWorldDifficulty[key] = Math.max(
+        this.state.clearedStageByWorldDifficulty[key] ?? 0,
         completed.stage,
       )
-      if (completed.stage === 10) {
+      if (completed.stage === 10 && completed.difficulty === 1) {
         const currentIndex = WORLDS.findIndex((world) => world.id === completed.worldId)
         const nextWorld = WORLDS[currentIndex + 1]
         if (nextWorld?.released && !this.state.unlockedWorldIds.includes(nextWorld.id)) {
           this.state.unlockedWorldIds.push(nextWorld.id)
           this.state.worldCurrency[nextWorld.id] ??= 0
-          this.state.clearedStageByWorld[nextWorld.id] ??= 0
+          this.state.clearedStageByWorldDifficulty[progressKey(nextWorld.id, 1)] ??= 0
           this.ensureFactionBoards()
         }
       }

@@ -11,7 +11,7 @@ describe('标题与新建游戏页面', () => {
     expect(html).toContain('data-action="new-game"')
     expect(html).toMatch(/data-action="continue-game"[^>]*disabled/)
     expect(html).toContain('蛋蛋江湖 2.0')
-    expect(html).toContain('十卷风云 · 六侠同行')
+    expect(html).toContain('十三位面 · 择面穿越')
   })
 
   it('有存档时只在未忙碌状态允许继续游戏', () => {

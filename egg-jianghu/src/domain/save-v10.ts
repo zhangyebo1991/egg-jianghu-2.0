@@ -3,7 +3,7 @@ import { HEROES_V10 } from '../content/heroes'
 import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
-export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v11'
+export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v12'
 
 export interface StorageLike {
   getItem(key: string): string | null
@@ -76,14 +76,14 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 }
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
-  version: 11,
+  version: 12,
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
   heroes: structuredClone(state.heroes),
   jobBooks: structuredClone(state.jobBooks),
   formation: structuredClone(state.formation),
   unlockedWorldIds: structuredClone(state.unlockedWorldIds),
-  clearedStageByWorld: structuredClone(state.clearedStageByWorld),
+  clearedStageByWorldDifficulty: structuredClone(state.clearedStageByWorldDifficulty),
   encounteredEnemyIds: structuredClone(state.encounteredEnemyIds),
   factionBoards: structuredClone(state.factionBoards),
   inventory: structuredClone(state.inventory),
@@ -103,7 +103,7 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
-    || raw.version !== 11
+    || raw.version !== 12
     || !Array.isArray(raw.inventory)
     || !Array.isArray(raw.formation)
     || !isRecord(raw.heroes)
@@ -120,7 +120,9 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     jobBooks: isNumberRecord(raw.jobBooks) ? structuredClone(raw.jobBooks) as GameStateV10['jobBooks'] : state.jobBooks,
     formation: structuredClone(raw.formation) as GameStateV10['formation'],
     unlockedWorldIds: Array.isArray(raw.unlockedWorldIds) ? structuredClone(raw.unlockedWorldIds) as string[] : state.unlockedWorldIds,
-    clearedStageByWorld: isRecord(raw.clearedStageByWorld) ? structuredClone(raw.clearedStageByWorld) as GameStateV10['clearedStageByWorld'] : state.clearedStageByWorld,
+    clearedStageByWorldDifficulty: isRecord(raw.clearedStageByWorldDifficulty)
+      ? structuredClone(raw.clearedStageByWorldDifficulty) as GameStateV10['clearedStageByWorldDifficulty']
+      : state.clearedStageByWorldDifficulty,
     encounteredEnemyIds: Array.isArray(raw.encounteredEnemyIds) ? structuredClone(raw.encounteredEnemyIds) as string[] : state.encounteredEnemyIds,
     factionBoards: isRecord(raw.factionBoards) ? structuredClone(raw.factionBoards) as GameStateV10['factionBoards'] : state.factionBoards,
     inventory: structuredClone(raw.inventory) as GameStateV10['inventory'],

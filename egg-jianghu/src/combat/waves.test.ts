@@ -8,7 +8,7 @@ describe('敌人显示名称', () => {
     expect(enemyDisplayName('world_10_stage_10_boss')).toBe('无崖子')
   })
 
-  it('未开放卷沿用通用占位名', () => {
+  it('没有敌人表的位面沿用通用占位名', () => {
     expect(enemyDisplayName('world_11_stage_03_boss')).toBe('第3关首领')
   })
 

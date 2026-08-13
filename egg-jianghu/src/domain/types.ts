@@ -84,14 +84,14 @@ export interface EquipmentInstance {
 }
 
 export interface GameStateV10 {
-  version: 11
+  version: 12
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
   heroes: Record<string, HeroProgressV10>
   jobBooks: Record<string, number>
   formation: FormationSlot[]
   unlockedWorldIds: string[]
-  clearedStageByWorld: Record<string, number>
+  clearedStageByWorldDifficulty: Record<string, number>
   encounteredEnemyIds: string[]
   factionBoards: Record<string, FactionBoardState>
   inventory: EquipmentInstance[]

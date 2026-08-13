@@ -29,13 +29,14 @@ const ACTIVE_SKILLS: Record<string, CombatSkillDefinition> = {}
 const createCombatSnapshot = (input: CombatStartInput): CombatSnapshot => ({
   seed: input.seed,
   worldId: input.worldId,
+  difficulty: input.difficulty ?? 1,
   stage: input.stage,
   mode: input.mode,
   wave: 1,
   elapsedMs: 0,
   result: 'fighting',
   party: structuredClone(input.party),
-  enemies: createWave(input.worldId, input.stage, 1, input.seed).enemies,
+  enemies: createWave(input.worldId, input.stage, 1, input.seed, input.difficulty ?? 1).enemies,
   summons: [],
 })
 

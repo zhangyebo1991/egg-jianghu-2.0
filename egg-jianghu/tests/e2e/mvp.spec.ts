@@ -26,11 +26,11 @@ const prepareParty = async (page: Page): Promise<void> => {
 const enterWorld = async (page: Page, worldId = 'world_01'): Promise<void> => {
   await page.getByTestId('tab-idle').click()
   await page.getByTestId(`world-${worldId}`).click()
+  await page.getByTestId('start-crossing').click()
 }
 
 const openWorldSection = async (page: Page, section: 'stages' | 'factions' | 'city'): Promise<void> => {
-  await enterWorld(page)
-  await page.getByTestId(`world-section-${section}`).click()
+  await page.evaluate((nextSection) => window.__EGG_JIANGHU__.setJianghuSection(nextSection), section)
 }
 
 test('江湖按大关小关分层并在点击小关后立即驻守', async ({ page }) => {
@@ -42,6 +42,7 @@ test('江湖按大关小关分层并在点击小关后立即驻守', async ({ pa
   await expect(page.getByTestId('stage-1')).toHaveCount(0)
 
   await page.getByTestId('world-world_01').click()
+  await page.getByTestId('start-crossing').click()
   await expect(page.getByTestId('stage-overview')).toBeVisible()
   await expect(page.locator('button[data-testid^="stage-"]')).toHaveCount(10)
 
@@ -49,6 +50,7 @@ test('江湖按大关小关分层并在点击小关后立即驻守', async ({ pa
   await expect(page.getByTestId('idle-page')).toBeVisible()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getSelection())).toEqual({
     worldId: 'world_01',
+    difficulty: 1,
     stage: 1,
     mode: 'guard',
   })
@@ -70,6 +72,7 @@ test('战场纵向排列且敌我前排在中线两侧相邻', async ({ page }) 
     }
   })
   await page.getByTestId('world-world_01').click()
+  await page.getByTestId('start-crossing').click()
   await page.getByTestId('stage-1').click()
 
   const layout = await page.evaluate(() => {
@@ -164,24 +167,13 @@ test('三个全局入口共享同一套侧栏外观', async ({ page }) => {
   })
 })
 
-test('江湖总览保留三十卷且未开放卷仍可滚动查看', async ({ page }) => {
-  await expect(page.locator('.world-card')).toHaveCount(30)
-  const layout = await page.evaluate(() => {
-    const grid = document.querySelector<HTMLElement>('.world-grid')!
-    const first = document.querySelector<HTMLElement>('[data-testid="world-world_01"]')!
-    const eleventh = document.querySelector<HTMLElement>('[data-testid="world-world_11"]')!
-    return {
-      overflowY: getComputedStyle(grid).overflowY,
-      gridScrollHeight: grid.scrollHeight,
-      gridClientHeight: grid.clientHeight,
-      firstHeight: first.getBoundingClientRect().height,
-      eleventhHeight: eleventh.getBoundingClientRect().height,
-    }
-  })
-  expect(layout.overflowY).toBe('auto')
-  expect(layout.gridScrollHeight).toBeGreaterThan(layout.gridClientHeight)
-  expect(layout.firstHeight).toBeGreaterThan(250)
-  expect(layout.eleventhHeight).toBeGreaterThan(250)
+test('江湖总览展示十三位面缩略图且未解锁面仍可点选', async ({ page }) => {
+  await expect(page.locator('.plane-thumb')).toHaveCount(13)
+  await expect(page.getByTestId('world-overview')).toBeVisible()
+  await expect(page.getByTestId('start-crossing')).toBeEnabled()
+  await page.getByTestId('world-world_02').click()
+  await expect(page.getByTestId('start-crossing')).toBeDisabled()
+  await expect(page.getByTestId('world-overview')).toContainText('武侠江湖')
 })
 
 test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) => {
@@ -210,14 +202,12 @@ test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) 
   expect(after.inventory).toBeGreaterThanOrEqual(before.inventory)
 })
 
-test('势力和城市只显示当前大关内容', async ({ page }) => {
-  await openWorldSection(page, 'factions')
-  await expect(page.getByText('全真教', { exact: true }).first()).toBeVisible()
-  await expect(page.getByText('陆家庄', { exact: true })).toHaveCount(0)
-
-  await page.getByTestId('world-section-city').click()
-  await expect(page.getByTestId('city-page')).toContainText('牛家村')
-  await expect(page.getByTestId('city-page')).not.toContainText('嘉兴')
+test('江湖关卡页不显示势力和城市入口', async ({ page }) => {
+  await enterWorld(page)
+  await expect(page.getByTestId('stage-overview')).toBeVisible()
+  await expect(page.locator('[data-jianghu-section]')).toHaveCount(0)
+  await expect(page.getByTestId('world-section-factions')).toHaveCount(0)
+  await expect(page.getByTestId('world-section-city')).toHaveCount(0)
 })
 
 test('离页后恢复同一战斗并在停止后返回小关列表', async ({ page }) => {
@@ -235,10 +225,9 @@ test('离页后恢复同一战斗并在停止后返回小关列表', async ({ pa
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat())).toBeNull()
 })
 
-test('返回总览隐藏二级导航且新大关默认进入关卡', async ({ page }) => {
+test('返回总览隐藏二级导航且通关基础后可穿越下一位面', async ({ page }) => {
   await enterWorld(page)
-  await page.getByTestId('world-section-city').click()
-  await page.locator('[data-action="return-worlds"]').click()
+  await page.getByRole('button', { name: '← 返回位面' }).click()
   await expect(page.locator('[data-jianghu-section]')).toHaveCount(0)
 
   await prepareParty(page)
@@ -249,8 +238,9 @@ test('返回总览隐藏二级导航且新大关默认进入关卡', async ({ pa
   })
   await page.getByTestId('tab-idle').click()
   await page.getByTestId('world-world_02').click()
+  await page.getByTestId('start-crossing').click()
   await expect(page.getByTestId('stage-overview')).toBeVisible()
-  await expect(page.getByTestId('world-section-stages')).toHaveClass(/active/)
+  await expect(page.getByTestId('stage-overview')).toContainText('武侠江湖')
 })
 
 test('连续 tick 保持页签按钮节点并支持慢速点击', async ({ page }) => {
@@ -420,7 +410,7 @@ test('闯荡失败回退上一小关并切换驻守', async ({ page }) => {
     window.__EGG_JIANGHU__.startStage('world_01', 4, 'roam', 31)
     window.__EGG_JIANGHU__.forceCombatResult('defeat')
   })
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getSelection())).toEqual({ worldId: 'world_01', stage: 3, mode: 'guard' })
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getSelection())).toEqual({ worldId: 'world_01', difficulty: 1, stage: 3, mode: 'guard' })
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.wave)).toBe(1)
 })
 
@@ -457,6 +447,7 @@ test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page 
   await expect(page.locator('[data-quest-slot]')).toHaveCount(6)
   await expect(page.locator('.faction-quest-grid')).not.toContainText('world_01_stage_01')
   await expect(page.locator('.faction-notice h3').first()).toContainText(/^(?:村中泼皮|段天德)$/)
+  await page.getByTestId('faction-page-title').hover()
   await page.waitForTimeout(750)
   const questCard = page.getByTestId('quest-slot-0')
   const restingTransform = await questCard.evaluate((element) => getComputedStyle(element).transform)

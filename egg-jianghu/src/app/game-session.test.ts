@@ -189,15 +189,15 @@ describe('GameSession', () => {
 
     session.advanceRealtimeTicks(5_000)
 
-    expect(session.state.clearedStageByWorld.world_01).toBeGreaterThanOrEqual(1)
-    expect(session.selection).toEqual({ worldId: 'world_01', stage: 1, mode: 'guard' })
+    expect(session.state.clearedStageByWorldDifficulty['world_01:1']).toBeGreaterThanOrEqual(1)
+    expect(session.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 1, mode: 'guard' })
     expect(session.combat?.state.result).toBe('fighting')
     expect(session.combat?.state.elapsedMs).toBeGreaterThan(0)
   })
 
   it('闯荡失败自动切驻守并重新创建回退关卡', () => {
     const session = sessionWithParty()
-    session.state.clearedStageByWorld.world_01 = 3
+    session.state.clearedStageByWorldDifficulty['world_01:1'] = 3
     expect(session.startStage({ worldId: 'world_01', stage: 4, mode: 'roam', seed: 9 }).ok).toBe(true)
     for (const hero of session.combat!.state.party) {
       hero.hp = hero.maxHp = 1
@@ -211,21 +211,21 @@ describe('GameSession', () => {
 
     session.advanceTicks(1)
 
-    expect(session.selection).toEqual({ worldId: 'world_01', stage: 3, mode: 'guard' })
+    expect(session.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 3, mode: 'guard' })
     expect(session.combat?.state.wave).toBe(1)
     expect(session.combat?.state.result).toBe('fighting')
   })
 
-  it('闯荡通关第十关时解锁下一卷并从第一关继续', () => {
+  it('闯荡通关第十关时解锁下一位面但停在本难度', () => {
     const session = sessionWithParty()
-    session.state.clearedStageByWorld.world_01 = 9
+    session.state.clearedStageByWorldDifficulty['world_01:1'] = 9
     expect(session.startStage({ worldId: 'world_01', stage: 10, mode: 'roam', seed: 22 }).ok).toBe(true)
     makePartyOverwhelming(session)
 
     session.advanceTicks(5000)
 
     expect(session.state.unlockedWorldIds).toContain('world_02')
-    expect(session.selection).toEqual({ worldId: 'world_02', stage: 1, mode: 'roam' })
+    expect(session.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 10, mode: 'guard' })
     expect(session.combat?.state.wave).toBe(1)
   })
 
@@ -247,7 +247,7 @@ describe('GameSession', () => {
     expect(session.setCombatMode('roam')).toEqual({ ok: true, message: '已切换为闯荡' })
 
     expect(session.combat).toBe(engine)
-    expect(session.selection).toEqual({ worldId: 'world_01', stage: 1, mode: 'roam' })
+    expect(session.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 1, mode: 'roam' })
     expect(session.combat!.state).toEqual({ ...before, mode: 'roam' })
   })
 
@@ -266,20 +266,27 @@ describe('GameSession', () => {
     expect(session.combat).toBeNull()
   })
 
-  it('通关世界十不会解锁未开放的世界十一', () => {
+  it('闯荡打完最后一面基础第十关后停在本难度', () => {
     const session = sessionWithParty()
-    session.state.unlockedWorldIds.push('world_10')
-    session.state.clearedStageByWorld.world_10 = 9
-    expect(session.startStage({ worldId: 'world_10', stage: 10, mode: 'roam', seed: 22 }).ok).toBe(true)
+    session.state.unlockedWorldIds.push('world_13')
+    session.state.clearedStageByWorldDifficulty['world_13:1'] = 9
+    expect(session.startStage({ worldId: 'world_13', difficulty: 1, stage: 10, mode: 'roam', seed: 22 }).ok).toBe(true)
     makePartyOverwhelming(session)
     session.advanceTicks(5000)
-    expect(session.selection).toEqual({ worldId: 'world_10', stage: 10, mode: 'guard' })
-    expect(session.state.unlockedWorldIds).not.toContain('world_11')
+    expect(session.selection).toEqual({ worldId: 'world_13', difficulty: 1, stage: 10, mode: 'guard' })
+    expect(session.state.unlockedWorldIds).not.toContain('world_14')
   })
 
-  it('未开放世界即使被写入解锁也不可进入', () => {
+  it('未解锁位面与未知位面不能进入', () => {
     const session = sessionWithParty()
-    session.state.unlockedWorldIds.push('world_11')
-    expect(session.startStage({ worldId: 'world_11', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(false)
+    expect(session.startStage({ worldId: 'world_02', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(false)
+    session.state.unlockedWorldIds.push('world_99')
+    expect(session.startStage({ worldId: 'world_99', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(false)
+  })
+
+  it('未通关基础难度不能进入难度2', () => {
+    const session = sessionWithParty()
+    expect(session.startStage({ worldId: 'world_01', difficulty: 2, stage: 1, mode: 'guard', seed: 1 }))
+      .toEqual({ ok: false, message: '难度尚未解锁' })
   })
 })

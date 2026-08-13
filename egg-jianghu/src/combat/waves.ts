@@ -7,6 +7,7 @@ export { enemyDisplayName } from '../content/enemy-names'
 
 export interface CombatWave {
   worldId: string
+  difficulty: number
   stage: number
   wave: number
   enemies: CombatUnit[]
@@ -20,6 +21,7 @@ const enemyRankMultiplier: Record<CombatRank, number> = {
 
 const createEnemy = (
   worldId: string,
+  difficulty: number,
   stage: number,
   wave: number,
   rank: CombatRank,
@@ -28,13 +30,18 @@ const createEnemy = (
 ): CombatUnit => {
   const rng = createRng(seed)
   const worldIndex = Number(worldId.slice(-2)) || 1
-  const scale = (1 + (worldIndex - 1) * 0.6 + (stage - 1) * 0.09 + (wave - 1) * 0.025) * enemyRankMultiplier[rank]
+  const difficultyIndex = Math.max(1, difficulty)
+  const scale = (1
+    + (worldIndex - 1) * 0.6
+    + (difficultyIndex - 1) * 0.45
+    + (stage - 1) * 0.09
+    + (wave - 1) * 0.025) * enemyRankMultiplier[rank]
   const maxHp = Math.floor((70 + rng.nextInt(0, 21)) * scale)
-  const effectiveAgility = 35 + worldIndex * 4 + stage + rng.nextInt(0, 8)
-  const externalAttack = Math.floor((25 + worldIndex * 8 + stage * 2) * enemyRankMultiplier[rank])
-  const internalAttack = Math.floor((20 + worldIndex * 7 + stage * 2) * enemyRankMultiplier[rank])
-  const externalDefense = Math.floor((12 + worldIndex * 5 + stage) * enemyRankMultiplier[rank])
-  const internalDefense = Math.floor((10 + worldIndex * 5 + stage) * enemyRankMultiplier[rank])
+  const effectiveAgility = 35 + worldIndex * 4 + difficultyIndex * 3 + stage + rng.nextInt(0, 8)
+  const externalAttack = Math.floor((25 + worldIndex * 8 + difficultyIndex * 6 + stage * 2) * enemyRankMultiplier[rank])
+  const internalAttack = Math.floor((20 + worldIndex * 7 + difficultyIndex * 5 + stage * 2) * enemyRankMultiplier[rank])
+  const externalDefense = Math.floor((12 + worldIndex * 5 + difficultyIndex * 3 + stage) * enemyRankMultiplier[rank])
+  const internalDefense = Math.floor((10 + worldIndex * 5 + difficultyIndex * 3 + stage) * enemyRankMultiplier[rank])
   const accuracy = 0.02 + worldIndex * 0.005
   const evade = Math.min(0.35, 0.03 + worldIndex * 0.01)
   const criticalChance = Math.min(0.35, 0.04 + worldIndex * 0.01)
@@ -104,14 +111,16 @@ export const createWave = (
   stage: number,
   wave: number,
   seed: number,
+  difficulty = 1,
 ): CombatWave => {
   if (stage < 1 || stage > 10 || wave < 1 || wave > 10) throw new Error('小关或波次超出范围')
   const ranks = ranksForWave(wave)
   return {
     worldId,
+    difficulty,
     stage,
     wave,
-    enemies: ranks.map((rank, index) => createEnemy(worldId, stage, wave, rank, index, seed + wave * 101 + index * 17)),
+    enemies: ranks.map((rank, index) => createEnemy(worldId, difficulty, stage, wave, rank, index, seed + wave * 101 + index * 17)),
   }
 }
 
@@ -121,5 +130,5 @@ export const isWaveCleared = (enemies: CombatUnit[]): boolean =>
 export const advanceToNextWave = (state: CombatSnapshot): void => {
   if (state.wave >= 10) throw new Error('第十波后不能继续换波')
   state.wave += 1
-  state.enemies = createWave(state.worldId, state.stage, state.wave, state.seed).enemies
+  state.enemies = createWave(state.worldId, state.stage, state.wave, state.seed, state.difficulty).enemies
 }

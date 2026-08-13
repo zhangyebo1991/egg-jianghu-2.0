@@ -22,20 +22,19 @@ describe('应用 Shell', () => {
     expect(html).not.toMatch(/tab-factions|tab-city|势力贡献|装备背包|自动存档|resource-strip/)
   })
 
-  it('进入大关后在江湖下展开关卡势力城市', () => {
+  it('进入位面关卡后侧栏只保留返回江湖', () => {
     const html = renderShell({
       activeTab: 'idle',
-      worldContext: { worldName: '牛家村', activeSection: 'factions' },
+      worldContext: { worldName: '东汉三国' },
       hasCombatReturn: true,
       showResetConfirmation: false,
       content: '<p>内容</p>',
     })
 
-    expect(html).toContain('data-jianghu-section="stages"')
-    expect(html).toContain('data-jianghu-section="factions"')
-    expect(html).toContain('data-jianghu-section="city"')
     expect(html).toContain('data-action="return-worlds"')
     expect(html).toContain('data-action="resume-combat"')
+    expect(html).not.toContain('data-jianghu-section="factions"')
+    expect(html).not.toContain('data-jianghu-section="city"')
   })
 
   it('江湖页面不额外创建第二套导航，统一复用阵容式左侧栏', () => {

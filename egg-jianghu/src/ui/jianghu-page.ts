@@ -1,38 +1,39 @@
+import { difficultyLabel } from '../domain/progression'
 import { worldPresentation } from '../content/world-presentations'
 import { escapeHtml, formatNumber } from './html'
 import { worldSceneAsset } from './world-scene-assets'
 
-export type WorldCardState = 'cleared' | 'current' | 'open' | 'locked'
-
-export interface JianghuFactionView {
-  name: string
-  category?: string
-}
-
-export interface JianghuWorldCardView {
+export interface PlaneThumbView {
   id: string
   name: string
   index: number
   unlocked: boolean
-  released: boolean
-  difficulty: number
-  recommendedPower: number
-  clearedStages: number
-  factionNames: string[]
-  state?: WorldCardState
-  factions?: JianghuFactionView[]
-  latinName?: string
-  flavor?: string
-  currencyName?: string
-  lockText?: string
+  selected: boolean
 }
 
-export interface WorldOverviewViewModel {
-  worlds: JianghuWorldCardView[]
-  totalClearedStages?: number
-  totalStageCount?: number
-  currentWorldId?: string
-  currentWorldName?: string
+export interface PlaneDifficultyView {
+  difficulty: number
+  label: string
+  unlocked: boolean
+  selected: boolean
+  cleared: number
+}
+
+export interface PlaneSelectViewModel {
+  planes: PlaneThumbView[]
+  selected: {
+    id: string
+    name: string
+    index: number
+    unlocked: boolean
+    flavor: string
+    latinName: string
+    recommendedPower: number
+    selectedDifficulty: number
+    canTravel: boolean
+    lockText: string
+    difficulties: PlaneDifficultyView[]
+  }
 }
 
 export interface StageListViewModel {
@@ -43,10 +44,10 @@ export interface StageListViewModel {
   worldCurrency: number
   currencyName?: string
   difficulty?: number
+  difficultyLabel?: string
   recommendedPower?: number
   clearedStages?: number
   flavor?: string
-  factions?: JianghuFactionView[]
   stageNames?: readonly string[]
   stages: Array<{ stage: number; name?: string; unlocked: boolean; cleared: boolean }>
 }
@@ -56,29 +57,7 @@ const LATIN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 
 
 const chineseNumber = (value: number): string => CHINESE_NUMERALS[value - 1] ?? String(value)
 
-const stars = (difficulty: number, empty = false): string => {
-  const filled = Math.max(0, Math.min(5, Math.round(difficulty)))
-  return `${empty ? '☆'.repeat(filled) : '★'.repeat(filled)}${empty ? '' : '☆'.repeat(Math.max(0, 5 - filled))}`
-}
-
-const worldState = (world: JianghuWorldCardView): WorldCardState => {
-  if (!world.released || !world.unlocked) return 'locked'
-  if (world.state) return world.state
-  if (world.clearedStages >= 10) return 'cleared'
-  return 'open'
-}
-
-const renderWorldScene = (worldId: string, className = 'wc-scene'): string => {
-  const scene = worldSceneAsset(worldId)
-  return scene
-    ? `<img class="${className}" src="${escapeHtml(scene)}" alt="" aria-hidden="true" draggable="false">`
-    : ''
-}
-
-const renderWorldFactions = (world: JianghuWorldCardView): string => {
-  const names = world.factions?.map((faction) => faction.name) ?? world.factionNames
-  return names.map((name) => escapeHtml(name)).join(' · ')
-}
+const planeIndexLabel = (index: number): string => `No.${String(index).padStart(3, '0')}`
 
 const renderFlagWidget = (value: number, total: number, label: string, subLabel: string): string => `
   <div class="head-widget">
@@ -88,7 +67,7 @@ const renderFlagWidget = (value: number, total: number, label: string, subLabel:
       <defs><linearGradient id="jianghu-flag-gradient" x1="8" y1="6" x2="27" y2="20"><stop stop-color="#e6c67f"/><stop offset="1" stop-color="#a37e3f"/></linearGradient></defs>
     </svg>
     <div>
-      <div class="hw-num"><b>${formatNumber(value)}</b><small> / ${formatNumber(total)} 关</small></div>
+      <div class="hw-num"><b>${formatNumber(value)}</b><small> / ${formatNumber(total)} 面</small></div>
       <div class="hw-label">${escapeHtml(label)}</div>
       <div class="hw-sub">${escapeHtml(subLabel)}</div>
     </div>
@@ -103,77 +82,93 @@ const renderIngotWidget = (value: number, currencyName: string): string => `
     </svg>
     <div>
       <div class="hw-num">${formatNumber(value)}</div>
-      <div class="hw-label">本卷货币</div>
+      <div class="hw-label">本面货币</div>
       <div class="hw-sub">${escapeHtml(currencyName)} · 驻守所获</div>
     </div>
   </div>`
 
-const renderWorldCard = (world: JianghuWorldCardView): string => {
-  const state = worldState(world)
-  const locked = state === 'locked'
-  const stateLabel = state === 'cleared' ? '已通关' : state === 'current' ? '进行中' : state === 'open' ? '可进入' : '未解锁'
-  const seal = state === 'cleared'
-    ? '<span class="wc-seal s-cleared">通</span>'
-    : state === 'current'
-      ? '<span class="wc-seal s-current">行</span>'
-      : state === 'open'
-        ? '<span class="wc-seal s-open">启</span>'
-        : ''
-  const lockText = world.lockText
-    ?? (!world.released ? '尚未开放' : world.index > 1 ? '通关上一卷后开启' : '尚未开放')
-  const progress = Math.max(0, Math.min(100, world.clearedStages * 10))
-  const body = locked
-    ? `<span class="wc-body"><span class="wc-name">${escapeHtml(world.name)}</span></span>`
-    : `<span class="wc-body">
-        <span class="wc-name">${escapeHtml(world.name)}</span>
-        <span class="wc-meta"><span class="stars">${stars(world.difficulty)}</span><span class="power">推荐战力 <b>${formatNumber(world.recommendedPower)}</b></span></span>
-        <span class="wc-progress${state === 'cleared' ? ' cleared' : ''}">
-          <span class="track"><span class="fill" style="width:${progress}%"></span></span>
-          <span class="ptext">${world.clearedStages}/10 · ${stateLabel}</span>
-        </span>
-        <span class="wc-factions">${renderWorldFactions(world)}</span>
-      </span>`
-  const lock = locked
-    ? `<span class="wc-lock" aria-hidden="true"><span class="lock-ring">封</span><span class="lock-text">${escapeHtml(lockText)}</span></span>`
-    : ''
-  const classes = ['world-card', `is-${state}`].join(' ')
-  const aria = `${state === 'locked' ? '未解锁' : stateLabel} · 第${chineseNumber(world.index)}卷 · ${world.name}`
+const renderDifficultyBar = (item: PlaneDifficultyView): string => {
+  const locked = !item.unlocked
+  const classes = [
+    'plane-diff',
+    item.selected ? 'is-selected' : '',
+    locked ? 'is-locked' : '',
+    item.cleared >= 10 ? 'is-cleared' : '',
+  ].filter(Boolean).join(' ')
+  const aria = `${item.label}${locked ? ' · 未解锁' : item.cleared >= 10 ? ' · 已通关' : ` · ${item.cleared}/10`}`
   return `
-    <button type="button" class="${classes}" data-action="enter-world" data-world-id="${escapeHtml(world.id)}"
-      data-testid="world-${escapeHtml(world.id)}" style="--card-index:${Math.max(0, world.index - 1)}" aria-label="${escapeHtml(aria)}"${locked ? ' disabled' : ''}>
-      ${renderWorldScene(world.id)}
-      <span class="wc-shade" aria-hidden="true"></span>
-      <span class="wc-top"><span class="wc-vol">第${chineseNumber(world.index)}卷</span>${seal}</span>
-      ${body}
-      ${lock}
+    <button type="button" class="${classes}" data-action="select-difficulty" data-difficulty="${item.difficulty}"
+      data-testid="difficulty-${item.difficulty}" aria-label="${escapeHtml(aria)}" aria-pressed="${item.selected}"
+      ${locked ? ' disabled' : ''}>
+      <span class="pd-bar" data-diff="${item.difficulty}"></span>
+      <span class="pd-label">${locked ? '锁' : escapeHtml(item.label)}</span>
     </button>`
 }
 
-export const renderWorldOverview = (view: WorldOverviewViewModel): string => {
-  const totalCleared = view.totalClearedStages ?? view.worlds.reduce((sum, world) => sum + world.clearedStages, 0)
-  const totalStages = view.totalStageCount ?? Math.max(10, view.worlds.filter((world) => world.released).length * 10)
-  const currentWorld = view.currentWorldName
-    ?? view.worlds.find((world) => world.id === view.currentWorldId)?.name
-    ?? view.worlds.find((world) => worldState(world) === 'current')?.name
-  const currentWorldIndex = view.worlds.find((world) => world.id === view.currentWorldId)?.index
-    ?? view.worlds.find((world) => worldState(world) === 'current')?.index
-  const journeySub = currentWorld
-    ? `行至 · 第${chineseNumber(currentWorldIndex ?? 1)}卷 ${currentWorld}`
-    : '十卷俱已踏遍'
+const renderPlaneThumb = (plane: PlaneThumbView): string => {
+  const scene = worldSceneAsset(plane.id)
+  const classes = [
+    'plane-thumb',
+    plane.selected ? 'is-selected' : '',
+    plane.unlocked ? '' : 'is-locked',
+  ].filter(Boolean).join(' ')
+  const aria = `${plane.unlocked ? '' : '未解锁 · '}${plane.name}`
   return `
-    <div class="jianghu-page jianghu-overview-page" data-testid="jianghu-page" data-view="worlds">
-      <span class="ghost-char" aria-hidden="true">江</span>
-      <section class="jianghu-view active" data-testid="world-overview" aria-label="十卷总览">
+    <button type="button" class="${classes}" data-action="select-plane" data-world-id="${escapeHtml(plane.id)}"
+      data-testid="world-${escapeHtml(plane.id)}" aria-label="${escapeHtml(aria)}" aria-pressed="${plane.selected}">
+      ${scene
+        ? `<img src="${escapeHtml(scene)}" alt="" aria-hidden="true" draggable="false">`
+        : `<span class="pt-letter">${escapeHtml(plane.name.slice(0, 1))}</span>`}
+      ${plane.unlocked ? '' : '<span class="pt-lock">未解锁</span>'}
+      <span class="pt-name">${escapeHtml(plane.name)}</span>
+    </button>`
+}
+
+export const renderWorldOverview = (view: PlaneSelectViewModel): string => {
+  const unlockedCount = view.planes.filter((plane) => plane.unlocked).length
+  const selected = view.selected
+  const scene = worldSceneAsset(selected.id)
+  const travelDisabled = !selected.canTravel
+  return `
+    <div class="jianghu-page jianghu-overview-page jianghu-plane-page" data-testid="jianghu-page" data-view="worlds">
+      <span class="ghost-char" aria-hidden="true">${escapeHtml(selected.name.slice(0, 1))}</span>
+      <section class="jianghu-view active" data-testid="world-overview" aria-label="位面选择">
         <header class="page-head">
           <div>
-            <p class="crumb">江湖 · <b>十卷风云</b> · 择卷而行</p>
-            <h1>江湖</h1>
-            <p class="latin">Jianghu · Ten Volumes</p>
+            <p class="crumb">江湖 · <b>十三位面</b> · 择面穿越</p>
+            <h1>${escapeHtml(selected.name)}</h1>
+            <p class="latin">${escapeHtml(selected.latinName)} · ${planeIndexLabel(selected.index)}</p>
           </div>
-          ${renderFlagWidget(totalCleared, totalStages, '关山总程', journeySub)}
+          ${renderFlagWidget(unlockedCount, view.planes.length, '已开位面', selected.unlocked ? '可选择难度穿越' : selected.lockText)}
         </header>
-        <div class="world-grid">${view.worlds.map(renderWorldCard).join('')}</div>
-        <footer class="page-foot">十卷风云 · 逐关而行 · 过关方启下卷</footer>
+
+        <div class="plane-stage">
+          <div class="plane-hero">
+            ${scene
+              ? `<img class="plane-hero-scene" src="${escapeHtml(scene)}" alt="" aria-hidden="true" draggable="false">`
+              : `<span class="plane-hero-empty">${escapeHtml(selected.name.slice(0, 1))}</span>`}
+            <div class="plane-hero-shade"></div>
+            <p class="plane-flavor">${escapeHtml(selected.flavor)}</p>
+          </div>
+
+          <aside class="plane-panel">
+            <p class="plane-no">${planeIndexLabel(selected.index)}</p>
+            <h2>${escapeHtml(selected.name)}</h2>
+            <p class="plane-meta">推荐战力 <b>${formatNumber(selected.recommendedPower)}</b></p>
+            <div class="plane-diffs" role="listbox" aria-label="难度">
+              ${selected.difficulties.map(renderDifficultyBar).join('')}
+            </div>
+            <button type="button" class="plane-travel" data-action="start-crossing" data-testid="start-crossing"
+              ${travelDisabled ? ' disabled' : ''}>${selected.unlocked ? '开始穿越' : escapeHtml(selected.lockText)}</button>
+          </aside>
+        </div>
+
+        <nav class="plane-strip" aria-label="位面列表">
+          <button type="button" class="plane-nav" data-action="prev-plane" data-testid="prev-plane" aria-label="上一位面">‹</button>
+          <div class="plane-thumbs">${view.planes.map(renderPlaneThumb).join('')}</div>
+          <button type="button" class="plane-nav" data-action="next-plane" data-testid="next-plane" aria-label="下一位面">›</button>
+        </nav>
+        <footer class="page-foot">左右切面 · 点选难度 · 开始穿越</footer>
       </section>
     </div>`
 }
@@ -201,27 +196,27 @@ const renderStageScene = (worldId: string, worldName: string): string => {
 }
 
 export const renderStageList = (view: StageListViewModel): string => {
-  const worldPresentation = worldPresentationFor(view)
+  const presentation = worldPresentation(view.worldId)
   const difficulty = view.difficulty ?? 1
   const worldIndex = view.worldIndex ?? 1
-  const factionViews = view.factions ?? []
   const cleared = view.clearedStages ?? view.stages.filter((stage) => stage.cleared).length
   const progress = Math.max(0, Math.min(100, cleared * 10))
-  const latinName = view.worldLatinName ?? worldPresentation.latinName
-  const currencyName = view.currencyName ?? worldPresentation.currencyName
-  const flavor = view.flavor ?? worldPresentation.flavor
-  const stageNames = view.stageNames ?? worldPresentation.stageNames
+  const latinName = view.worldLatinName ?? presentation.latinName
+  const currencyName = view.currencyName ?? presentation.currencyName
+  const flavor = view.flavor ?? presentation.flavor
+  const stageNames = view.stageNames ?? presentation.stageNames
   const stages = view.stages.map((stage) => ({ ...stage, name: stage.name ?? stageNames[stage.stage - 1] }))
+  const label = view.difficultyLabel ?? difficultyLabel(difficulty)
   return `
     <div class="jianghu-page jianghu-stage-page" data-testid="jianghu-page" data-view="world" data-world-id="${escapeHtml(view.worldId)}">
       <span class="ghost-char" aria-hidden="true">${escapeHtml(view.worldName.slice(0, 1))}</span>
-      <section class="jianghu-view active" data-testid="stage-overview" data-world-id="${escapeHtml(view.worldId)}" aria-label="卷内选关">
+      <section class="jianghu-view active" data-testid="stage-overview" data-world-id="${escapeHtml(view.worldId)}" aria-label="面内选关">
         <header class="page-head">
           <div>
-            <button type="button" class="back-btn" data-action="return-worlds">← 返回江湖</button>
-            <p class="crumb">江湖 · <b>第${chineseNumber(worldIndex)}卷</b> · 卷内拾关</p>
+            <button type="button" class="back-btn" data-action="return-worlds">← 返回位面</button>
+            <p class="crumb">江湖 · <b>第${chineseNumber(worldIndex)}面</b> · ${escapeHtml(label)}</p>
             <h1>${escapeHtml(view.worldName)}</h1>
-            <p class="latin">${escapeHtml(latinName)} · Volume ${LATIN_NUMERALS[worldIndex - 1] ?? worldIndex}</p>
+            <p class="latin">${escapeHtml(latinName)} · ${LATIN_NUMERALS[worldIndex - 1] ?? worldIndex}</p>
           </div>
           ${renderIngotWidget(view.worldCurrency, currencyName)}
         </header>
@@ -230,15 +225,14 @@ export const renderStageList = (view: StageListViewModel): string => {
           <aside class="scroll-panel">
             <div class="sp-scene">
               ${renderStageScene(view.worldId, view.worldName)}
-              <span class="sp-vol">第${chineseNumber(worldIndex)}卷 · 卷档</span>
+              <span class="sp-vol">${escapeHtml(label)} · 第${chineseNumber(worldIndex)}面</span>
             </div>
             <div class="sp-body">
-              <div class="sp-row"><span class="k">难 度</span><span class="v stars">${stars(difficulty)}</span></div>
+              <div class="sp-row"><span class="k">难 度</span><span class="v">${escapeHtml(label)}</span></div>
               <div class="sp-row"><span class="k">推荐战力</span><span class="v">${formatNumber(view.recommendedPower ?? 0)}</span></div>
-              <div class="sp-row"><span class="k">本地势力</span><span class="sp-factions">${factionViews.map((faction) => `<span class="sp-fchip">${escapeHtml(faction.name)}${faction.category ? `<small>${escapeHtml(faction.category)}</small>` : ''}</span>`).join('')}</span></div>
               <div class="sp-progress">
                 <div class="track"><div class="fill" style="width:${progress}%"></div></div>
-                <div class="ptext"><span>卷内进度</span><span>已历 ${cleared} / 10 关</span></div>
+                <div class="ptext"><span>本难度进度</span><span>已历 ${cleared} / 10 关</span></div>
               </div>
               <p class="sp-flavor">${escapeHtml(flavor)}</p>
             </div>
@@ -256,7 +250,7 @@ export const renderStageList = (view: StageListViewModel): string => {
             </div>
             <footer class="path-foot">
               <span class="legend"><i class="lg-cleared">已通关 · 可驻守</i><i class="lg-current">当前关 · 可挑战</i><i class="lg-locked">未解锁</i></span>
-              <span>Esc 返回江湖</span>
+              <span>Esc 返回位面</span>
             </footer>
           </div>
         </div>
@@ -264,5 +258,3 @@ export const renderStageList = (view: StageListViewModel): string => {
       </section>
     </div>`
 }
-
-const worldPresentationFor = (view: StageListViewModel) => worldPresentation(view.worldId)

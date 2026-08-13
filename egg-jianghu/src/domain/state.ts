@@ -27,14 +27,14 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
 }
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
-  version: 11,
+  version: 12,
   worldCurrency: { world_01: 1000 },
   contribution: {},
   heroes: {},
   jobBooks: {},
   formation: [],
   unlockedWorldIds: ['world_01'],
-  clearedStageByWorld: { world_01: 0 },
+  clearedStageByWorldDifficulty: { 'world_01:1': 0 },
   encounteredEnemyIds: [],
   factionBoards: {},
   inventory: [],

@@ -19,7 +19,7 @@ const renderTitlePage = (view: StartPageViewModel): string => `
         <h1 id="game-title">蛋蛋江湖 2.0</h1>
         <span class="start-seal" aria-hidden="true">蛋</span>
       </div>
-      <span class="start-tagline">十卷风云 · 六侠同行</span>
+      <span class="start-tagline">十三位面 · 择面穿越</span>
       <div class="start-divider" aria-hidden="true"></div>
       <div class="start-actions">
         <button type="button" class="primary" data-action="new-game"${disabled(view.busy)}>新建游戏</button>
