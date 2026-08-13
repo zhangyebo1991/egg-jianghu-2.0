@@ -10,7 +10,7 @@
  *   减伤   = (1−物法减伤) × (1−元素抗性)                                  ← 两独立乘区，cap 80
  *   受伤害 = (1+受物法) × (1+受元素) × (1+受所有)                         ← 三层独立，cap 95
  *   最终层 = 1 + 最终增伤 − 最终减伤                                       ← 同括号，终减 cap 80
- *   暴击   = 裸系数（1 或 1+暴伤/100）
+ *   暴击   = 裸系数（1 或 暴伤/100；sx13 为总量百分比，白板 150 → 1.5）
  *   增效buff = 1 + 增效buff系数
  *
  * 乘区形态除暴击外均 (1 + 词条/100)；cap 来自 sx.json 第 9 字段（Agent 1 源码确认）。
@@ -44,7 +44,7 @@ export interface DamageMultipliers {
   /** 最终层（%，同括号：终增 − 终减，终减 cap 80） */
   finalDamage: number
   finalReduction: number
-  /** 暴击裸系数（未暴击=1，暴击=1+暴伤/100） */
+  /** 暴击裸系数（未暴击=1，暴击=暴伤/100；sx13 为总量百分比，白板 150 → 1.5） */
   critical: number
   /** 增效 BUFF 系数 % */
   buffMultiplier: number
@@ -85,22 +85,26 @@ export const calculateDamage = (m: DamageMultipliers): number => {
 }
 
 /**
- * 诸天闪避率（闪避计算function，证据 A）。
- * 最终闪避率 = clamp(base 30% + 闪避修正 − 命中修正, 0, 上限)。
- * base 30 是战斗阵位内部量；闪避修正/命中修正默认 5%（sx19/sx18）。
+ * 诸天命中/闪避（闪避计算function，证据 A，c3runtime 58097/58105）。
+ * 命中率 = clamp(97 × (100 + 命中修正) / (100 + 闪避修正), 30, 100)%
+ * 闪避率 = 100 − 命中率。下限 30 = data.json「最低真实命中率」常量（证据 A）。
+ * 白板（命中修正 = 闪避修正 = 0）：命中率 97%、闪避率 3%。修正相等时相互抵消，恒 97%。
  */
-export const evadeRate = (evadeMod: number, hitMod: number): number =>
-  Math.max(0, Math.min(0.95, 0.3 + (evadeMod - hitMod) / 100))
+export const hitChance = (evadeMod: number, hitMod: number, lowerBound = 30): number => {
+  const hitPct = (97 * (100 + hitMod)) / (100 + evadeMod)
+  return Math.max(lowerBound, Math.min(100, hitPct)) / 100
+}
 
-/** 命中率 = 1 − 闪避率（互补，下限 5% 命中保底）。 */
-export const hitChance = (evadeMod: number, hitMod: number): number =>
-  Math.max(0.05, 1 - evadeRate(evadeMod, hitMod))
+/** 闪避率 = 1 − 命中率（原版「闪避」= 100 − 命中率）。 */
+export const evadeRate = (evadeMod: number, hitMod: number, lowerBound = 30): number =>
+  1 - hitChance(evadeMod, hitMod, lowerBound)
 
 /**
- * 诸天暴击系数（暴击计算function，证据 A）。
- * 暴击几率（%，sx12，默认 6）随机判定；暴击系数 = 1 + 暴击伤害/100（sx13，默认 40 → 1.4）。
+ * 诸天暴击判定（暴击计算function + c3runtime 57793 行，证据 A）。
+ * 暴击几率（%，sx12，白板 5）随机判定；暴击系数 = 暴击伤害/100（sx13 为总量百分比，白板 150 → 1.5 倍）。
+ * 注意：sx13 是「暴击伤害总量百分比」（150=150%），系数直接 /100，勿再加 1。
  */
 export const rollCritical = (critRate: number, critDamage: number, roll: number): { isCritical: boolean; coefficient: number } => {
   const isCritical = roll < critRate / 100
-  return { isCritical, coefficient: isCritical ? 1 + critDamage / 100 : 1 }
+  return { isCritical, coefficient: isCritical ? critDamage / 100 : 1 }
 }

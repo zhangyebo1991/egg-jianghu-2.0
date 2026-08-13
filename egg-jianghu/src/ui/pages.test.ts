@@ -30,7 +30,7 @@ const heroesFixture = (): HeroesPageViewModel => ({
       maxHp: 520, maxEnergy: 100, initialEnergy: 20, energyRecovery: 6,
       externalAttack: 88, internalAttack: 62, externalDefense: 51, internalDefense: 44,
       effectiveAgility: 92.4, accuracy: 0.073, evade: 0.11, controlResistance: 0.084,
-      criticalChance: 0.092, criticalMultiplier: 1.5, cooldownRate: 0.02,
+      criticalChance: 0.092, criticalMultiplier: 1.5, cooldownRate: 0.02, lifeSteal: 0,
       gaugeRate: 0.02, momentumBonus: 0.03, survivalBonus: 0.03, perfectedBonusPool: 0.05,
     },
     equipmentSlots: [

@@ -54,7 +54,7 @@ const createEnemy = (
     alive: true,
     hp: maxHp,
     maxHp,
-    energy: 20,
+    energy: 0,
     maxEnergy: 100,
     gauge: 0,
     effectiveAgility,
@@ -85,9 +85,10 @@ const createEnemy = (
       criticalChance,
       criticalMultiplier,
       controlResistance,
-      initialEnergy: 20,
-      energyRecovery: 0,
+      initialEnergy: 0,
+      energyRecovery: 1,
       cooldownRate: 0,
+      lifeSteal: 0,
     }),
   }
 }

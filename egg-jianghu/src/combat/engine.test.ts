@@ -55,6 +55,7 @@ const partyUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => {
     initialEnergy: merged.energy,
     energyRecovery: 5,
     cooldownRate: 0,
+    lifeSteal: 0,
   })
   return merged
 }
@@ -140,5 +141,26 @@ describe('十波战斗', () => {
     const damage = engine.tick(20).find((event) => event.type === 'damage' && event.sourceId === 'hero_strong')
 
     expect(damage).toMatchObject({ type: 'damage', critical: true })
+  })
+
+  it('吸血：伤害后按 sx14/100 回复攻击方（原版 c3runtime 56015）', () => {
+    const engine = createCombatEngine({
+      worldId: 'world_01',
+      stage: 1,
+      mode: 'guard',
+      seed: 3,
+      party: [partyUnit({ id: 'vamp', hp: 100, maxHp: 10_000, externalAttack: 5000, criticalChance: 0 })],
+    })
+    engine.state.party[0].attributes[14] = 100 // 100% 吸血
+    const actor = engine.state.party[0]
+    const damage = engine.tick(50).find((event) => event.type === 'damage' && event.sourceId === 'vamp') as
+      | { amount: number }
+      | undefined
+    expect(damage).toBeDefined()
+    if (damage) {
+      // 吸血回复 = ceil(伤害 × sx14/100)，actor 从 100 回复且不超 maxHp（高敏捷可能多次行动回满）
+      expect(actor.hp).toBeGreaterThan(100)
+      expect(actor.hp).toBeLessThanOrEqual(actor.maxHp)
+    }
   })
 })

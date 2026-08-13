@@ -36,6 +36,7 @@ const makePartyOverwhelming = (session: GameSession): void => {
       initialEnergy: hero.energy,
       energyRecovery: 0,
       cooldownRate: 0,
+      lifeSteal: 0,
     })
   }
 }

@@ -173,6 +173,12 @@ const executeAction = (state: CombatSnapshot, actor: CombatUnit, rng: Rng): Comb
       buffMultiplier: 0,
     })
     target.hp = Math.max(0, target.hp - amount)
+    // 吸血（c3runtime 56015，证据 A）：吸血回复 = ceil(伤害 × sx14/100)，回复给攻击方
+    const lifeSteal = attr(actor.attributes, SX.吸血)
+    if (lifeSteal > 0 && actor.alive) {
+      const steal = Math.ceil((amount * lifeSteal) / 100)
+      actor.hp = Math.min(actor.maxHp, actor.hp + steal)
+    }
     events.push({ type: 'damage', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, amount, critical: isCritical })
     if (martial?.statusTrigger && target.alive && rng.nextFloat() < martial.statusTrigger.chance) {
       const trigger = martial.statusTrigger

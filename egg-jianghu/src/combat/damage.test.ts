@@ -46,19 +46,20 @@ describe('诸天 18 乘区伤害公式', () => {
 })
 
 describe('诸天闪避与暴击判定', () => {
-  it('闪避率 = clamp(0.3 + 闪避修正 − 命中修正)，命中率互补且保底 5%', () => {
-    expect(evadeRate(5, 5)).toBeCloseTo(0.3) // 默认净闪避 30%
-    expect(evadeRate(95, 5)).toBeCloseTo(0.95) // 上限 95%
-    expect(evadeRate(0, 99)).toBe(0) // 下限 0
-    expect(hitChance(5, 5)).toBeCloseTo(0.7) // 1 − 0.3
-    expect(hitChance(95, 5)).toBeCloseTo(0.05) // 命中保底 5%
+  it('命中率 = clamp(97×(100+命中修正)/(100+闪避修正), 30, 100)，闪避率互补', () => {
+    expect(hitChance(0, 0)).toBeCloseTo(0.97) // 白板：97% 命中
+    expect(evadeRate(0, 0)).toBeCloseTo(0.03) // 3% 闪避
+    expect(hitChance(100, 100)).toBeCloseTo(0.97) // 修正相等相互抵消，恒 97%
+    expect(hitChance(300, 0)).toBeCloseTo(0.3) // 最低真实命中率 30%
+    expect(evadeRate(300, 0)).toBeCloseTo(0.7)
+    expect(hitChance(0, 300)).toBeCloseTo(1) // 命中上限 100%
   })
 
-  it('暴击判定：几率阈值与裸系数 1 + 暴伤/100', () => {
-    expect(rollCritical(6, 40, 0.05).isCritical).toBe(true) // 5% < 6%
-    expect(rollCritical(6, 40, 0.05).coefficient).toBeCloseTo(1.4) // 1 + 40/100
-    expect(rollCritical(6, 40, 0.5).isCritical).toBe(false)
-    expect(rollCritical(6, 40, 0.5).coefficient).toBe(1)
+  it('暴击判定：几率阈值与裸系数 sx13/100（白板 5% / 150 → 1.5 倍）', () => {
+    expect(rollCritical(5, 150, 0.03).isCritical).toBe(true) // 3% < 5%
+    expect(rollCritical(5, 150, 0.03).coefficient).toBeCloseTo(1.5) // 150/100
+    expect(rollCritical(5, 150, 0.5).isCritical).toBe(false)
+    expect(rollCritical(5, 150, 0.5).coefficient).toBe(1)
   })
 })
 

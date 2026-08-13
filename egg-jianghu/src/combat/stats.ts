@@ -21,6 +21,7 @@ export interface CombatStats {
   criticalChance: number
   criticalMultiplier: number
   cooldownRate: number
+  lifeSteal: number
   gaugeRate: number
   momentumBonus: number
   survivalBonus: number
@@ -61,8 +62,10 @@ export const buildCombatStats = (
     // 生命：指数 ×5（体）
     maxHp: Math.floor(5 * (100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
     maxEnergy: 100,
-    initialEnergy: 20,
-    energyRecovery: 5 + (heartMethod?.energyRecovery ?? 0),
+    // 初始能量：原版 sx28 白板 0（用户实测）；战斗开始能量 = 0
+    initialEnergy: 0,
+    // 能量回复：原版 sx29 白板 1（用户实测）；egg 战斗循环另有行动回能机制（未确证粒度前保持）
+    energyRecovery: 1 + (heartMethod?.energyRecovery ?? 0),
     // 物攻：指数 ×1（体）—— 原版 6 核心属性均由体资质推导，见 docs 逆向文档
     externalAttack: Math.floor((100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale * externalCareerBonus),
     // 物防：指数 ×1（体）—— 与物攻同模板
@@ -73,12 +76,17 @@ export const buildCombatStats = (
     internalDefense: Math.floor(0.5 * (100 + aptitudeIndex(aptitude.constitution) * 5) * sharedScale),
     // 速度：线性 150 + 体/4（原版唯一非指数核心项，白板号体=10 → 152.5）
     effectiveAgility: Math.max(1, (150 + aptitude.constitution / 4) * (1 + (heartMethod?.gaugeRate ?? 0))),
-    accuracy: Math.min(0.2, aptitude.insight * 0.005 + aptitude.agility * 0.003),
-    evade: Math.min(0.7, aptitude.agility * 0.01),
+    // 命中修正：原版 sx18 走特定属性统计默认分支（无资质/固有基础），白板 0；战斗命中率 = 97×(100+命中)/(100+闪避)
+    accuracy: 0,
+    // 闪避修正：原版 sx19 同上，白板 0
+    evade: 0,
     controlResistance: Math.min(0.8, aptitude.resolve * 0.012),
-    criticalChance: Math.min(1, aptitude.insight * 0.006 + aptitude.agility * 0.004),
+    // 暴击几率：原版不随资质（特定属性统计 sx12 = 角色初始天资 + 天命天资 + 装备总属性，无资质推导项），白板恒 5%
+    criticalChance: 0.05,
     criticalMultiplier: 1.5,
     cooldownRate: Math.min(0.6, heartMethod?.cooldownRate ?? 0),
+    // 吸血比例（%）：原版白板 0（角色属性面板文档，权威）；战斗吸血 = ceil(伤害 × sx14/100)
+    lifeSteal: 0,
     gaugeRate: heartMethod?.gaugeRate ?? 0,
     momentumBonus: heartMethod?.momentumBonus ?? 0,
     survivalBonus: heartMethod?.survivalBonus ?? 0,
@@ -140,6 +148,7 @@ export interface AttributePanelSnapshot {
   initialEnergy: number
   energyRecovery: number
   cooldownRate: number
+  lifeSteal: number
 }
 
 /** 把 egg 面板快照镜像到诸天 AttributeMap。
@@ -166,8 +175,9 @@ export const panelToAttributeMap = (
   map[10] = panel.internalAttack
   map[11] = panel.internalDefense
   // 附加 sx12-27：egg 用小数/比值，诸天用百分比，×100 换算
-  map[12] = panel.criticalChance * 100 // 暴击几率
-  map[13] = (panel.criticalMultiplier - 1) * 100 // 暴击伤害（egg 1.5 → 诸天 50）
+  map[12] = panel.criticalChance * 100 // 暴击几率（egg 0.05 → 诸天 5）
+  map[13] = panel.criticalMultiplier * 100 // 暴击伤害（egg 1.5 → 诸天 150；sx13=总量百分比，战斗系数= sx13/100）
+  map[14] = panel.lifeSteal // 吸血比例（egg 3 → 诸天 3，百分比直传）
   map[18] = panel.accuracy * 100 // 命中修正
   map[19] = panel.evade * 100 // 闪避修正
   // 特殊 sx28-43
