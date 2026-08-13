@@ -3341,7 +3341,7 @@ body {
 .heroes-page .st-chip.hot dd { color: var(--cinnabar-bright); }
 
 /* 装备 */
-.heroes-page .pd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 12px; }
+.heroes-page .pd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)) auto; gap: 12px; }
 .heroes-page .pd-slot { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto; column-gap: 12px; align-items: center; min-width: 0; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 8px; background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 28%)); transition: border-color .25s, box-shadow .25s, transform .25s cubic-bezier(.22,1,.36,1); }
 .heroes-page .pd-slot:hover { z-index: 5; border-color: var(--qc, var(--gold)); box-shadow: 0 10px 24px rgb(0 0 0 / 35%); transform: translateY(-2px); }
 .heroes-page .pd-slot[data-rarity="凡品"] { --qc: var(--q-凡品); }
@@ -3369,17 +3369,67 @@ body {
 .heroes-page .sil-cap { color: var(--paper-mute); font-size: 10px; letter-spacing: .42em; text-indent: .42em; }
 .heroes-page .sil-sum { display: flex; gap: 12px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--paper-mute); background: rgb(12 14 11 / 45%); font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: .14em; }
 .heroes-page .sil-sum b { color: var(--gold-bright); }
-.heroes-page .pd-pos-head { grid-column: 1; grid-row: 1; }
-.heroes-page .pd-pos-armor { grid-column: 1; grid-row: 2; }
-.heroes-page .pd-pos-waist { grid-column: 1; grid-row: 3; }
-.heroes-page .pd-pos-boots { grid-column: 1; grid-row: 4; }
-.heroes-page .pd-pos-weapon { grid-column: 3; grid-row: 1; }
-.heroes-page .pd-pos-wrist { grid-column: 3; grid-row: 2; }
-.heroes-page .pd-pos-token { grid-column: 3; grid-row: 3; }
-.heroes-page .pd-extra { grid-column: 3; grid-row: 4; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 8px; background: rgb(12 14 11 / 22%); }
-.heroes-page .pe-row { display: flex; align-items: center; justify-content: space-between; color: var(--paper-mute); font-size: 10px; letter-spacing: .18em; }
-.heroes-page .pe-row b { color: var(--heroes-paper); font-variant-numeric: tabular-nums; }
-.heroes-page .pe-hint { margin: 2px 0 0; color: rgb(125 127 114 / 75%); font-size: 9px; letter-spacing: .12em; line-height: 1.8; }
+.heroes-page .pd-pos-weapon { grid-column: 1; grid-row: 1; }
+.heroes-page .pd-pos-head { grid-column: 1; grid-row: 2; }
+.heroes-page .pd-pos-wrist { grid-column: 1; grid-row: 3; }
+.heroes-page .pd-pos-necklace { grid-column: 1; grid-row: 4; }
+.heroes-page .pd-pos-offhand { grid-column: 3; grid-row: 1; }
+.heroes-page .pd-pos-armor { grid-column: 3; grid-row: 2; }
+.heroes-page .pd-pos-boots { grid-column: 3; grid-row: 3; }
+.heroes-page .pd-pos-ring { grid-column: 3; grid-row: 4; }
+.heroes-page .pd-sets {
+  grid-column: 1 / 4;
+  grid-row: 5;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border: 1px dashed rgb(201 163 92 / 22%);
+  border-radius: 8px;
+  background: rgb(12 14 11 / 22%);
+}
+.heroes-page .pd-ilvl {
+  color: var(--paper-mute);
+  font-size: 11px;
+  letter-spacing: .22em;
+}
+.heroes-page .pd-ilvl b {
+  color: var(--gold-bright);
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  letter-spacing: .08em;
+}
+.heroes-page .pd-set-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 420px);
+}
+.heroes-page .pd-set-btn {
+  padding: 9px 12px;
+  border: 1px solid rgb(127 168 141 / 42%);
+  border-radius: 6px;
+  color: #cfe3d6;
+  background: rgb(12 14 11 / 45%);
+  font-size: 12px;
+  letter-spacing: .28em;
+  text-indent: .28em;
+  transition: border-color .2s, background .2s, color .2s, transform .2s cubic-bezier(.22,1,.36,1);
+}
+.heroes-page .pd-set-btn:hover { border-color: rgb(201 163 92 / 55%); transform: translateY(-1px); }
+.heroes-page .pd-set-btn.active {
+  color: #2e2208;
+  border-color: transparent;
+  background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep));
+  box-shadow: 0 6px 16px rgb(201 163 92 / 32%);
+  font-weight: 700;
+}
+.heroes-page .pd-set-hint {
+  margin: 0;
+  color: rgb(125 127 114 / 75%);
+  font-size: 9px;
+  letter-spacing: .16em;
+}
 
 /* 职业、武功、心法 */
 .heroes-page .career-path { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-bottom: 18px; }
@@ -3585,9 +3635,10 @@ body {
   .heroes-page .dh-name { font-size: 42px; }
   .heroes-page .dh-vertical { display: none; }
   .heroes-page .stat-cluster .chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .heroes-page .pd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .heroes-page .pd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; }
   .heroes-page .pd-sil { display: none; }
-  .heroes-page .pd-pos-head, .heroes-page .pd-pos-armor, .heroes-page .pd-pos-waist, .heroes-page .pd-pos-boots, .heroes-page .pd-pos-weapon, .heroes-page .pd-pos-wrist, .heroes-page .pd-pos-token, .heroes-page .pd-pos-extra { grid-column: auto; grid-row: auto; }
+  .heroes-page .pd-pos-head, .heroes-page .pd-pos-armor, .heroes-page .pd-pos-wrist, .heroes-page .pd-pos-boots, .heroes-page .pd-pos-weapon, .heroes-page .pd-pos-offhand, .heroes-page .pd-pos-necklace, .heroes-page .pd-pos-ring, .heroes-page .pd-sets { grid-column: auto; grid-row: auto; }
+  .heroes-page .pd-sets { grid-column: 1 / -1; width: 100%; }
   .heroes-page .career-path { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 0; }
   .heroes-page .career-path::before { display: none; }
   .heroes-page .career-cards { grid-template-columns: 1fr; }

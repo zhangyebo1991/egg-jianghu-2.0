@@ -138,4 +138,27 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
 
     expect(buildCombatStats(definition, progress, [wrist]).accuracy).toBeCloseTo(baseline.accuracy + 0.09)
   })
+
+  it('战斗面板只计入当前装备套，其他套不生效', () => {
+    const definition: HeroDefinitionV10 = {
+      id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'sword', worldId: 'world_01',
+      source: 'tavern', cost: 0, factionId: null,
+      aptitudes: { strength: 10, insight: 8, constitution: 8, agility: 8, resolve: 8 },
+    }
+    const progress = createHeroProgress('sword')
+    const baseline = buildCombatStats(definition, progress)
+    const equipment: EquipmentInstance[] = [{
+      uid: 'weapon_uid', definitionId: 'world_01_weapon', level: 1, quality: '上品',
+      affixes: [{ id: 'externalAttack', value: 12 }], locked: true,
+    }]
+    progress.equipmentSets[1].weapon = 'weapon_uid'
+    progress.activeEquipmentSetIndex = 0
+    progress.equipmentBySlot = progress.equipmentSets[0]
+
+    expect(buildCombatStats(definition, progress, equipment).externalAttack).toBe(baseline.externalAttack)
+
+    progress.activeEquipmentSetIndex = 1
+    progress.equipmentBySlot = progress.equipmentSets[1]
+    expect(buildCombatStats(definition, progress, equipment).externalAttack).toBeGreaterThan(baseline.externalAttack)
+  })
 })

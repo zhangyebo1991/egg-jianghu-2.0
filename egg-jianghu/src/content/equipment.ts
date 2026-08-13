@@ -2,11 +2,13 @@ import type { EquipmentInstance, EquipmentQuality } from '../domain/types'
 import type { Rng } from '../combat/rng'
 import { equipmentName } from './equipment-names'
 
-export const EQUIPMENT_SLOTS = ['weapon', 'head', 'armor', 'wrist', 'waist', 'boots', 'token'] as const
+export const EQUIPMENT_SET_COUNT = 3
+export const EQUIPMENT_SLOTS = ['weapon', 'offhand', 'head', 'armor', 'wrist', 'boots', 'necklace', 'ring'] as const
 export const EQUIPMENT_QUALITIES = ['凡品', '良品', '上品', '珍品', '绝品'] as const
 const EQUIPMENT_QUALITY_MULTIPLIERS = [1, 1.18, 1.42, 1.72, 2.08] as const
 
 export type EquipmentSlot = typeof EQUIPMENT_SLOTS[number]
+export type EquipmentSetIndex = 0 | 1 | 2
 
 export interface EquipmentDefinitionV10 {
   id: string
@@ -24,24 +26,31 @@ export interface EquipmentAffixDefinitionV10 {
   max: number
 }
 
-const slotNames: Record<EquipmentSlot, string> = {
-  weapon: '兵刃',
-  head: '冠巾',
-  armor: '衣甲',
+export const EQUIPMENT_SLOT_NAMES: Record<EquipmentSlot, string> = {
+  weapon: '武器',
+  offhand: '副手',
+  head: '头部',
+  armor: '身体',
   wrist: '护腕',
-  waist: '腰佩',
-  boots: '履靴',
-  token: '信物',
+  boots: '足部',
+  necklace: '项链',
+  ring: '戒指',
+}
+
+const LEGACY_EQUIPMENT_SLOT_MAP: Record<string, EquipmentSlot> = {
+  waist: 'necklace',
+  token: 'ring',
 }
 
 const baseStatBySlot: Record<EquipmentSlot, string> = {
   weapon: 'attack',
+  offhand: 'externalDefense',
   head: 'internalDefense',
   armor: 'externalDefense',
   wrist: 'accuracy',
-  waist: 'maxHp',
   boots: 'agility',
-  token: 'energyRecovery',
+  necklace: 'maxHp',
+  ring: 'energyRecovery',
 }
 
 export const EQUIPMENT_DEFINITIONS: EquipmentDefinitionV10[] = Array.from({ length: 10 }, (_, worldOffset) => {
@@ -49,7 +58,7 @@ export const EQUIPMENT_DEFINITIONS: EquipmentDefinitionV10[] = Array.from({ leng
   const worldId = `world_${String(worldIndex).padStart(2, '0')}`
   return EQUIPMENT_SLOTS.map((slot) => ({
     id: `${worldId}_${slot}`,
-    name: equipmentName(worldId, slot) ?? `第${worldIndex}卷${slotNames[slot]}`,
+    name: equipmentName(worldId, slot) ?? `第${worldIndex}卷${EQUIPMENT_SLOT_NAMES[slot]}`,
     worldId,
     slot,
     baseStatId: baseStatBySlot[slot],
@@ -84,6 +93,17 @@ export const EQUIPMENT_AFFIXES: EquipmentAffixDefinitionV10[] = [
 
 export const equipmentDefinitionById = (id: string): EquipmentDefinitionV10 | undefined =>
   EQUIPMENT_DEFINITIONS.find((definition) => definition.id === id)
+
+export const canonicalEquipmentSlot = (slot: string): EquipmentSlot | undefined => {
+  const mapped = LEGACY_EQUIPMENT_SLOT_MAP[slot] ?? slot
+  return EQUIPMENT_SLOTS.includes(mapped as EquipmentSlot) ? mapped as EquipmentSlot : undefined
+}
+
+export const canonicalEquipmentDefinitionId = (definitionId: string): string =>
+  definitionId.replace(/_waist$/, '_necklace').replace(/_token$/, '_ring')
+
+export const isEquipmentSetIndex = (value: unknown): value is EquipmentSetIndex =>
+  value === 0 || value === 1 || value === 2
 
 export const equipmentBaseStatValue = (
   definition: EquipmentDefinitionV10,

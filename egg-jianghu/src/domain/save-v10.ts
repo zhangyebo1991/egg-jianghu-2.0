@@ -1,6 +1,7 @@
 import { createInitialStateV10 } from './state'
 import { HEROES_V10 } from '../content/heroes'
-import type { GameStateV10 } from './types'
+import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
+import type { GameStateV10, HeroProgressV10 } from './types'
 
 export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v10'
 
@@ -41,8 +42,17 @@ const isLearnedMartial = (value: unknown): boolean =>
   && isNumberRecord(value.invested.worldCurrency)
   && isNumberRecord(value.invested.contribution)
 
+const isUidMap = (value: unknown): value is Record<string, string | null> =>
+  isRecord(value) && Object.values(value).every((id) => id === null || typeof id === 'string')
+
 const isHeroProgress = (value: unknown): boolean => {
   if (!isRecord(value)) return false
+  const hasLoadoutField = 'equipmentBySlot' in value
+  const hasSetsField = 'equipmentSets' in value
+  if (hasLoadoutField && !isUidMap(value.equipmentBySlot)) return false
+  if (hasSetsField && !(Array.isArray(value.equipmentSets) && value.equipmentSets.every(isUidMap))) return false
+  if (!hasLoadoutField && !hasSetsField) return false
+  const setIndex = value.activeEquipmentSetIndex
   return typeof value.recruited === 'boolean'
     && isFiniteNumber(value.level)
     && isFiniteNumber(value.experience)
@@ -55,9 +65,15 @@ const isHeroProgress = (value: unknown): boolean => {
     && value.equippedMartialIds.length === 4
     && value.equippedMartialIds.every((id) => id === null || typeof id === 'string')
     && (value.heartMethodId === null || typeof value.heartMethodId === 'string')
-    && isRecord(value.equipmentBySlot)
-    && Object.values(value.equipmentBySlot).every((id) => id === null || typeof id === 'string')
+    && (setIndex === undefined || setIndex === 0 || setIndex === 1 || setIndex === 2)
     && (value.customName === undefined || typeof value.customName === 'string')
+}
+
+const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameStateV10['inventory']): void => {
+  normalizeInventoryDefinitionIds(inventory)
+  for (const hero of Object.values(heroes) as HeroProgressV10[]) {
+    normalizeHeroEquipment(hero)
+  }
 }
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
@@ -97,7 +113,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
   }
 
   const state = createInitialStateV10(now)
-  return pruneUnknownHeroes(persistentState({
+  const loaded = pruneUnknownHeroes(persistentState({
     ...state,
     worldCurrency: isRecord(raw.worldCurrency) ? structuredClone(raw.worldCurrency) as GameStateV10['worldCurrency'] : state.worldCurrency,
     contribution: isRecord(raw.contribution) ? structuredClone(raw.contribution) as GameStateV10['contribution'] : state.contribution,
@@ -111,6 +127,8 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     inventory: structuredClone(raw.inventory) as GameStateV10['inventory'],
     statistics: isRecord(raw.statistics) ? structuredClone(raw.statistics) as GameStateV10['statistics'] : state.statistics,
   }, Math.min(now, Number(raw.lastSavedAt) || now)))
+  normalizeLoadedHeroes(loaded.heroes, loaded.inventory)
+  return loaded
 }
 
 export const loadExistingGameV10 = (storage: StorageLike, now = Date.now()): LoadResultV10 | null => {

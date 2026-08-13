@@ -6,14 +6,14 @@ import { renderInventoryPage, type InventoryPageViewModel } from './inventory-pa
 import { renderFormationPage, type FormationPageViewModel } from './formation-page'
 
 const equippedWeapon: HeroesEquipmentView = {
-  uid: 'weapon_old', definitionId: 'world_01_weapon', name: '旧试剑', slot: 'weapon', slotName: '兵刃', level: 2, quality: '良品', locked: false,
+  uid: 'weapon_old', definitionId: 'world_01_weapon', name: '旧试剑', slot: 'weapon', slotName: '武器', level: 2, quality: '良品', locked: false,
   equippedByHeroId: 'hero_test', equippedByHeroName: '试剑人',
   baseStat: { name: '外功 / 内功', value: 11, percent: false },
   affixes: [{ name: '外功', value: 4, percent: false }],
 }
 
 const inventoryWeapon: HeroesEquipmentView = {
-  uid: 'weapon_new', definitionId: 'world_02_weapon', name: '新试剑', slot: 'weapon', slotName: '兵刃', level: 5, quality: '上品', locked: true,
+  uid: 'weapon_new', definitionId: 'world_02_weapon', name: '新试剑', slot: 'weapon', slotName: '武器', level: 5, quality: '上品', locked: true,
   equippedByHeroId: null, equippedByHeroName: null,
   baseStat: { name: '外功 / 内功', value: 18, percent: false },
   affixes: [{ name: '暴击', value: 5, percent: true }],
@@ -33,14 +33,17 @@ const heroesFixture = (): HeroesPageViewModel => ({
       criticalChance: 0.092, criticalMultiplier: 1.5, cooldownRate: 0.02, lifeSteal: 0,
       gaugeRate: 0.02, momentumBonus: 0.03, survivalBonus: 0.03, perfectedBonusPool: 0.05,
     },
+    activeEquipmentSetIndex: 0,
+    averageItemLevel: 0,
     equipmentSlots: [
-      { id: 'weapon', name: '兵刃', equipment: equippedWeapon },
-      { id: 'head', name: '冠巾', equipment: null },
-      { id: 'armor', name: '衣甲', equipment: null },
+      { id: 'weapon', name: '武器', equipment: equippedWeapon },
+      { id: 'offhand', name: '副手', equipment: null },
+      { id: 'head', name: '头部', equipment: null },
+      { id: 'armor', name: '身体', equipment: null },
       { id: 'wrist', name: '护腕', equipment: null },
-      { id: 'waist', name: '腰佩', equipment: null },
-      { id: 'boots', name: '履靴', equipment: null },
-      { id: 'token', name: '信物', equipment: null },
+      { id: 'boots', name: '足部', equipment: null },
+      { id: 'necklace', name: '项链', equipment: null },
+      { id: 'ring', name: '戒指', equipment: null },
     ],
     learnedMartials: [], equippedMartialIds: [null, null, null, null],
     heartMethodId: null,
@@ -136,13 +139,13 @@ const inventoryFixture = (): InventoryPageViewModel => ({
   selectedUid: 'equipment_1',
   detailOpen: false,
   items: [{
-    uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '兵刃',
+    uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '武器',
     level: 1, quality: '良品', locked: false,
     baseStat: { name: '攻击', value: 10 },
     affixes: [{ name: '外功', value: 4, min: 3, max: 18, ratio: 7 }],
   }],
   selectedItem: {
-    uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '兵刃',
+    uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '武器',
     level: 1, quality: '良品', locked: false,
     baseStat: { name: '攻击', value: 10 },
     affixes: [{ name: '外功', value: 4, min: 3, max: 18, ratio: 7 }],
@@ -217,6 +220,13 @@ describe('version 10 长期循环页面', () => {
     const html = renderHeroesPage(heroesFixture())
     expect(html).toContain('data-testid="hero-equipment-slots"')
     expect(html).toContain('data-testid="hero-equipment-slot-weapon"')
+    expect(html).toContain('data-testid="hero-equipment-slot-offhand"')
+    expect(html).toContain('data-testid="hero-equipment-set-0"')
+    expect(html).toContain('八部位')
+    expect(html).toContain('平均装等')
+    expect(html).toContain('第1套')
+    expect(html).toContain('第2套')
+    expect(html).toContain('第3套')
     expect(html).toContain('class="hero-medallion"')
     expect(html).toContain('data-slot-art="weapon" data-icon-source="slot"')
     expect(html).toContain('src="/src/assets/equipment/slots/weapon.png"')

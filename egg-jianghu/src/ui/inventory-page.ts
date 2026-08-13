@@ -44,12 +44,13 @@ export interface InventoryPageViewModel {
 
 const SLOT_ICON_MARKUP: Record<EquipmentSlot, string> = {
   weapon: '<path d="M4.5 19.5 L15.5 8.5"/><path d="M15.5 8.5 l4 -4"/><path d="M13 6.5 l4.5 4.5"/><path d="M7.5 16.5 l-2.5 4.5 4.5 -2.5"/>',
+  offhand: '<path d="M12 3.2 L19.2 6.2 v6.4 c0 4.3-3.2 7.6-7.2 9-4-1.4-7.2-4.7-7.2-9 V6.2 Z"/><path d="M12 7.2 v9.2"/>',
   head: '<path d="M5 12 a7 5.5 0 0 1 14 0"/><path d="M4.5 12 h15"/><path d="M9 12.5 l-2.5 5 M15 12.5 l2.5 5"/>',
   armor: '<path d="M9 4.5 l-4.5 3 2 4.5 2 -1.2 V20 h7 v-9.2 l2 1.2 2 -4.5 -4.5 -3"/><path d="M9 4.5 a3 3 0 0 0 6 0"/><path d="M12.5 11 v9"/>',
   wrist: '<rect x="7" y="5.5" width="10" height="13" rx="2.5"/><path d="M7 10 h10 M7 14.5 h10"/>',
-  waist: '<path d="M12 3.5 v2.5"/><circle cx="12" cy="11.5" r="4.5"/><circle cx="12" cy="11.5" r="1.6"/><path d="M12 16 v4 M10.4 16.5 L9 20.5 M13.6 16.5 L15 20.5"/>',
   boots: '<path d="M7 4 h6 v6.5 c3 0 5.5 1.8 5.5 5 V17 H7 Z"/><path d="M7 14.5 h11.5"/>',
-  token: '<rect x="7" y="3.5" width="10" height="17" rx="2"/><path d="M12 7.5 v4.5"/><path d="M10.2 12 h3.6"/><path d="M9.8 16.5 h4.4"/>',
+  necklace: '<path d="M8 5.2 C8 5.2 10 8.2 12 8.2 s4-3 4-3"/><circle cx="12" cy="14.2" r="4.4"/><circle cx="12" cy="14.2" r="1.5"/>',
+  ring: '<circle cx="12" cy="13" r="6.2"/><circle cx="12" cy="13" r="3.1"/><circle cx="15.6" cy="8.2" r="1.7"/>',
 }
 
 const renderSlotIcon = (slot: EquipmentSlot): string => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SLOT_ICON_MARKUP[slot]}</svg>`

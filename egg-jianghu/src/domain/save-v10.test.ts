@@ -171,4 +171,39 @@ describe('version 10 存档', () => {
 
     expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
   })
+
+  it('读取旧七部位存档时迁到八部位三套，并改写腰佩/信物 id', () => {
+    const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>
+    const heroes = raw.heroes as Record<string, Record<string, unknown>>
+    delete heroes.hero_player.equipmentSets
+    delete heroes.hero_player.activeEquipmentSetIndex
+    heroes.hero_player.equipmentBySlot = {
+      weapon: 'uid-weapon',
+      waist: 'uid-waist',
+      token: 'uid-token',
+    }
+    raw.inventory = [
+      { uid: 'uid-weapon', definitionId: 'world_01_weapon', level: 4, quality: '凡品', affixes: [], locked: false },
+      { uid: 'uid-waist', definitionId: 'world_01_waist', level: 3, quality: '良品', affixes: [], locked: false },
+      { uid: 'uid-token', definitionId: 'world_01_token', level: 2, quality: '上品', affixes: [], locked: false },
+    ]
+
+    const loaded = hydrateStateV10(raw, 2000)
+    const hero = loaded.heroes.hero_player
+
+    expect(hero.activeEquipmentSetIndex).toBe(0)
+    expect(hero.equipmentBySlot).toEqual({
+      weapon: 'uid-weapon',
+      necklace: 'uid-waist',
+      ring: 'uid-token',
+    })
+    expect(hero.equipmentBySlot).toBe(hero.equipmentSets[0])
+    expect(hero.equipmentSets[1]).toEqual({})
+    expect(hero.equipmentSets[2]).toEqual({})
+    expect(loaded.inventory.map((item) => item.definitionId)).toEqual([
+      'world_01_weapon',
+      'world_01_necklace',
+      'world_01_ring',
+    ])
+  })
 })

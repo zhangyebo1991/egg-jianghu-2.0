@@ -45,6 +45,8 @@ export interface HeroProgressV10 {
   learnedMartials: Record<string, LearnedMartial>
   equippedMartialIds: [string | null, string | null, string | null, string | null]
   heartMethodId: string | null
+  equipmentSets: [Record<string, string | null>, Record<string, string | null>, Record<string, string | null>]
+  activeEquipmentSetIndex: 0 | 1 | 2
   equipmentBySlot: Record<string, string | null>
 }
 

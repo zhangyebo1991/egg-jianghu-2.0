@@ -32,6 +32,8 @@ describe('新建玩家角色', () => {
           learnedMartials: {},
           equippedMartialIds: [null, null, null, null],
           heartMethodId: null,
+          equipmentSets: [{}, {}, {}],
+          activeEquipmentSetIndex: 0,
           equipmentBySlot: {},
           customName: '江湖少侠',
         },

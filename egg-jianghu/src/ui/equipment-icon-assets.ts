@@ -1,20 +1,22 @@
 import armorIcon from '../assets/equipment/slots/armor.png'
 import bootsIcon from '../assets/equipment/slots/boots.png'
 import headIcon from '../assets/equipment/slots/head.png'
-import tokenIcon from '../assets/equipment/slots/token.png'
-import waistIcon from '../assets/equipment/slots/waist.png'
+import necklaceIcon from '../assets/equipment/slots/waist.png'
+import offhandIcon from '../assets/equipment/slots/offhand.png'
+import ringIcon from '../assets/equipment/slots/token.png'
 import weaponIcon from '../assets/equipment/slots/weapon.png'
 import wristIcon from '../assets/equipment/slots/wrist.png'
 import type { EquipmentSlot } from '../content/equipment'
 
 const slotIcons: Record<EquipmentSlot, string> = {
   weapon: weaponIcon,
+  offhand: offhandIcon,
   head: headIcon,
   armor: armorIcon,
   wrist: wristIcon,
-  waist: waistIcon,
   boots: bootsIcon,
-  token: tokenIcon,
+  necklace: necklaceIcon,
+  ring: ringIcon,
 }
 
 // 后续新增装备专属图标时，在此导入资源并以 definitionId 注册；未注册装备自动回退到部位通用图标。

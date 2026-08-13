@@ -7,9 +7,10 @@ import {
   equipEquipment,
   INVENTORY_CAPACITY,
   organizeInventory,
+  switchEquipmentSet,
   unequipEquipment,
 } from './inventory'
-import { createInitialStateV10, createNewGameStateV10 } from './state'
+import { createHeroProgress, createInitialStateV10, createNewGameStateV10 } from './state'
 import type { EquipmentInstance, EquipmentQuality } from './types'
 
 const equipment = (uid: string, quality: EquipmentQuality = '凡品'): EquipmentInstance => ({
@@ -192,6 +193,53 @@ describe('装备背包', () => {
 
       expect(result.ok).toBe(true)
       expect(state.inventory).toHaveLength(0)
+    })
+  })
+
+  describe('三套装备预设', () => {
+    it('每位侠客可独立保存三套并切换当前生效套', () => {
+      const state = createNewGameStateV10('测试')
+      state.inventory = [
+        equipment('weapon-a'),
+        { ...equipment('weapon-b'), uid: 'weapon-b', definitionId: 'world_02_weapon' },
+        { ...equipment('head-a'), uid: 'head-a', definitionId: 'world_01_head' },
+      ]
+
+      expect(equipEquipment(state, 'hero_player', 'weapon-a')).toEqual({ ok: true, message: '装备成功' })
+      expect(switchEquipmentSet(state, 'hero_player', 1)).toEqual({ ok: true, message: '已切换至第2套装备' })
+      expect(equipEquipment(state, 'hero_player', 'weapon-b')).toEqual({ ok: true, message: '装备成功' })
+      expect(equipEquipment(state, 'hero_player', 'head-a')).toEqual({ ok: true, message: '装备成功' })
+
+      expect(state.heroes.hero_player.equipmentBySlot.weapon).toBe('weapon-b')
+      expect(backpackEquipment(state)).toEqual([])
+
+      expect(switchEquipmentSet(state, 'hero_player', 0)).toEqual({ ok: true, message: '已切换至第1套装备' })
+      expect(state.heroes.hero_player.equipmentBySlot.weapon).toBe('weapon-a')
+      expect(state.heroes.hero_player.equipmentBySlot.head).toBeUndefined()
+      expect(state.heroes.hero_player.equipmentSets[1].weapon).toBe('weapon-b')
+      expect(state.heroes.hero_player.equipmentSets[1].head).toBe('head-a')
+    })
+
+    it('非当前套占用的装备仍视为已穿戴，不可丢弃也不可给其他侠客', () => {
+      const state = createNewGameStateV10('测试')
+      state.heroes.hero_other = createHeroProgress('blade')
+      state.inventory = [equipment('weapon-a')]
+      expect(equipEquipment(state, 'hero_player', 'weapon-a').ok).toBe(true)
+      expect(switchEquipmentSet(state, 'hero_player', 1).ok).toBe(true)
+
+      expect(backpackEquipment(state)).toEqual([])
+      expect(discardEquipment(state, 'weapon-a')).toEqual({ ok: false, message: '已穿戴装备请先到侠客页卸下' })
+      expect(equipEquipment(state, 'hero_other', 'weapon-a')).toEqual({ ok: false, message: '装备已被其他侠客穿戴' })
+    })
+
+    it('同一侠客可把其他套中的装备改穿到当前套', () => {
+      const state = createNewGameStateV10('测试')
+      state.inventory = [equipment('weapon-a')]
+      expect(equipEquipment(state, 'hero_player', 'weapon-a').ok).toBe(true)
+      expect(switchEquipmentSet(state, 'hero_player', 2).ok).toBe(true)
+      expect(equipEquipment(state, 'hero_player', 'weapon-a')).toEqual({ ok: true, message: '装备成功' })
+      expect(state.heroes.hero_player.equipmentSets[0].weapon).toBeNull()
+      expect(state.heroes.hero_player.equipmentBySlot.weapon).toBe('weapon-a')
     })
   })
 })

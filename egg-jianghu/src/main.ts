@@ -10,6 +10,7 @@ import { CAREERS, careerById } from './content/careers'
 import {
   EQUIPMENT_AFFIXES,
   EQUIPMENT_QUALITIES,
+  EQUIPMENT_SLOT_NAMES,
   EQUIPMENT_SLOTS,
   equipmentAffixRange,
   equipmentBaseStatValue,
@@ -24,7 +25,7 @@ import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { changeCareer, perfectCareer } from './domain/careers'
 import { buyCareerToken, learnCityMartial } from './domain/city'
-import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
+import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, averageItemLevel } from './domain/inventory'
 import { MAX_MARTIAL_LEVEL, equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
@@ -639,16 +640,6 @@ const normalizeSelectedHero = (): string | null => {
   return selectedHeroId
 }
 
-const equipmentSlotNames: Record<EquipmentSlot, string> = {
-  weapon: '兵刃',
-  head: '冠巾',
-  armor: '衣甲',
-  wrist: '护腕',
-  waist: '腰佩',
-  boots: '履靴',
-  token: '信物',
-}
-
 const equipmentStatNames: Record<string, string> = {
   attack: '外功 / 内功',
   externalAttack: '外功',
@@ -679,7 +670,7 @@ const heroEquipmentView = (item: EquipmentInstance): HeroesEquipmentView => {
     definitionId: item.definitionId,
     name: definition?.name ?? item.definitionId,
     slot,
-    slotName: equipmentSlotNames[slot],
+    slotName: EQUIPMENT_SLOT_NAMES[slot],
     level: item.level,
     quality: item.quality,
     locked: item.locked,
@@ -761,9 +752,11 @@ const heroesViewModel = (): HeroesPageViewModel => {
       availableCareerIds: heroCompatibleCareers.map((item) => item.id),
       aptitudes: definition.aptitudes,
       combatStats: buildCombatStats(definition, progress, session.state.inventory),
+      activeEquipmentSetIndex: progress.activeEquipmentSetIndex ?? 0,
+      averageItemLevel: averageItemLevel(progress, session.state.inventory),
       equipmentSlots: EQUIPMENT_SLOTS.map((slot) => ({
         id: slot,
-        name: equipmentSlotNames[slot],
+        name: EQUIPMENT_SLOT_NAMES[slot],
         equipment: allEquipmentItems.find((item) => item.uid === progress.equipmentBySlot[slot]) ?? null,
       })),
       learnedMartials: Object.entries(progress.learnedMartials).map(([id, learnedRecord]) => {
@@ -1116,15 +1109,7 @@ const cityViewModel = (): CityPageViewModel => {
   }
 }
 
-const inventorySlotNames: Record<EquipmentSlot, string> = {
-  weapon: '兵刃',
-  head: '冠巾',
-  armor: '衣甲',
-  wrist: '护腕',
-  waist: '腰佩',
-  boots: '履靴',
-  token: '信物',
-}
+const inventorySlotNames = EQUIPMENT_SLOT_NAMES
 
 const inventoryBaseStatNames: Record<string, string> = {
   attack: '攻击',
@@ -1692,6 +1677,7 @@ const performAction = (button: HTMLButtonElement): void => {
   }
   else if (action === 'equipment-equip') commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
   else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
+  else if (action === 'equipment-set-switch') commitAction(switchEquipmentSet(session.state, heroId, dataNumber(button, 'setIndex')))
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
   else if (action === 'hero-inventory-filter') {
     const kind = button.dataset.filterKind

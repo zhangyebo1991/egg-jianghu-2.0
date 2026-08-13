@@ -4,7 +4,7 @@ import { EQUIPMENT_NAMES_BY_WORLD, equipmentName } from './equipment-names'
 import { WORLDS } from './worlds'
 
 describe('装备命名表', () => {
-  it('已开放 10 卷各有 7 个槽位装备名且非空', () => {
+  it('已开放 10 卷各有 8 个槽位装备名且非空', () => {
     for (const world of WORLDS) {
       if (!world.released) continue
       const names = EQUIPMENT_NAMES_BY_WORLD[world.id]
@@ -15,7 +15,7 @@ describe('装备命名表', () => {
     }
   })
 
-  it('跨大关、跨槽位 70 个装备名全局不重名', () => {
+  it('跨大关、跨槽位 80 个装备名全局不重名', () => {
     const seen = new Set<string>()
     for (const world of WORLDS) {
       if (!world.released) continue
@@ -25,12 +25,12 @@ describe('装备命名表', () => {
         seen.add(name)
       }
     }
-    expect(seen.size).toBe(70)
+    expect(seen.size).toBe(80)
   })
 
   it('装备名按 (worldId, slot) 取值', () => {
     expect(equipmentName('world_01', 'weapon')).toBe('柴刀')
-    expect(equipmentName('world_10', 'token')).toBe('珍珑棋谱')
+    expect(equipmentName('world_10', 'ring')).toBe('棋局玉戒')
   })
 
   it('缺表世界返回 undefined 由调用方兜底', () => {

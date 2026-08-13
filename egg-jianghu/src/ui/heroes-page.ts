@@ -42,6 +42,8 @@ export interface HeroesHeroView {
   availableCareerIds: string[]
   aptitudes: HeroAptitudes
   combatStats: CombatStats
+  activeEquipmentSetIndex: 0 | 1 | 2
+  averageItemLevel: number
   equipmentSlots: HeroesEquipmentSlotView[]
   learnedMartials: Array<{ id: string; name: string; rarity: string; level: number }>
   equippedMartialIds: [string | null, string | null, string | null, string | null]
@@ -92,13 +94,14 @@ const CATEGORY_LABELS: Record<string, string> = {
   内家: '内家之脉',
 }
 const SLOT_MARKS: Record<EquipmentSlot, string> = {
-  weapon: '兵',
-  head: '冠',
-  armor: '甲',
+  weapon: '武',
+  offhand: '副',
+  head: '头',
+  armor: '身',
   wrist: '腕',
-  waist: '佩',
-  boots: '履',
-  token: '信',
+  boots: '足',
+  necklace: '链',
+  ring: '戒',
 }
 
 const paginationWindow = (page: number, pageCount: number): number[] => {
@@ -334,7 +337,8 @@ const renderInventoryPanel = (view: HeroesPageViewModel, selected: HeroesHeroVie
 const renderPrototypeEquipmentSlots = (hero: HeroesHeroView): string => {
   const worn = hero.equipmentSlots.filter((slot) => slot.equipment).length
   const fine = hero.equipmentSlots.filter((slot) => slot.equipment && EQUIPMENT_QUALITIES.indexOf(slot.equipment.quality) >= 2).length
-  const excellent = hero.equipmentSlots.filter((slot) => slot.equipment && EQUIPMENT_QUALITIES.indexOf(slot.equipment.quality) >= 3).length
+  const slotCount = hero.equipmentSlots.length
+  const activeSet = hero.activeEquipmentSetIndex ?? 0
   const slotHtml = (slot: HeroesEquipmentSlotView): string => {
     const item = slot.equipment
     const rarity = item ? ' data-rarity="' + escapeHtml(item.quality) + '"' : ''
@@ -347,12 +351,17 @@ const renderPrototypeEquipmentSlots = (hero: HeroesHeroView): string => {
       <span class="pd-icon" aria-hidden="true">${SLOT_MARKS[slot.id]}</span><span class="pd-slot-name">${escapeHtml(slot.name)}</span>${renderEquipmentArt(slot.id, item?.definitionId)}<strong class="pd-item-name">${itemName}</strong><span class="pd-item-meta">${itemMeta}</span>${action}
     </article>`
   }
+  const setButtons = [0, 1, 2].map((index) => `<button type="button" class="pd-set-btn${activeSet === index ? ' active' : ''}" data-action="equipment-set-switch" data-hero-id="${escapeHtml(hero.id)}" data-set-index="${index}" data-testid="hero-equipment-set-${index}" aria-pressed="${activeSet === index}">第${index + 1}套</button>`).join('')
   return `<section class="dossier-sec equipment-dossier" data-testid="hero-equipment-slots">
-    <header><div class="sec-title"><h2>随身装备</h2><span class="sub">其贰 · 七部位 · <i>悬停查看属性</i></span></div></header>
+    <header><div class="sec-title"><h2>随身装备</h2><span class="sub">其贰 · 八部位 · <i>三套预设可随时切换</i></span></div></header>
     <div class="sec-body pd-grid">
-      <div class="pd-sil" aria-hidden="true"><span class="sil-char">${escapeHtml(hero.category ?? '侠')}</span><span class="sil-dantian"></span><div class="sil-sum"><span>穿戴 <b>${worn} / 7</b></span><span>精良 <b>${fine}</b></span></div><span class="sil-cap">立身中正 · 气沉丹田</span></div>
+      <div class="pd-sil" aria-hidden="true"><span class="sil-char">${escapeHtml(hero.category ?? '侠')}</span><span class="sil-dantian"></span><div class="sil-sum"><span>穿戴 <b>${worn} / ${slotCount}</b></span><span>精良 <b>${fine}</b></span></div><span class="sil-cap">立身中正 · 气沉丹田</span></div>
       ${hero.equipmentSlots.map(slotHtml).join('')}
-      <div class="pd-extra"><div class="pe-row"><span>已穿戴</span><b>${worn} 件</b></div><div class="pe-row"><span>珍品以上</span><b>${excellent} 件</b></div><p class="pe-hint">悬停装备格查看属性笺<br>行囊物品双击即可穿戴</p></div>
+      <div class="pd-sets" data-testid="hero-equipment-sets">
+        <div class="pd-ilvl">平均装等 <b>${hero.averageItemLevel ?? 0}</b></div>
+        <div class="pd-set-row" role="group" aria-label="装备预设">${setButtons}</div>
+        <p class="pd-set-hint">点击快捷切换预设装备</p>
+      </div>
     </div>
   </section>`
 }

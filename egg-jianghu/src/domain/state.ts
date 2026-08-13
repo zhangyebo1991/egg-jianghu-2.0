@@ -1,23 +1,30 @@
 import { PLAYER_HERO_ID } from '../content/heroes'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
-export const createHeroProgress = (careerId: string): HeroProgressV10 => ({
-  recruited: true,
-  level: 1,
-  experience: 0,
-  careers: {
-    [careerId]: {
-      level: 1,
-      experience: 0,
-      perfected: false,
+export const createHeroEquipmentSets = (): HeroProgressV10['equipmentSets'] => [{}, {}, {}]
+
+export const createHeroProgress = (careerId: string): HeroProgressV10 => {
+  const equipmentSets = createHeroEquipmentSets()
+  return {
+    recruited: true,
+    level: 1,
+    experience: 0,
+    careers: {
+      [careerId]: {
+        level: 1,
+        experience: 0,
+        perfected: false,
+      },
     },
-  },
-  currentCareerId: careerId,
-  learnedMartials: {},
-  equippedMartialIds: [null, null, null, null],
-  heartMethodId: null,
-  equipmentBySlot: {},
-})
+    currentCareerId: careerId,
+    learnedMartials: {},
+    equippedMartialIds: [null, null, null, null],
+    heartMethodId: null,
+    equipmentSets,
+    activeEquipmentSetIndex: 0,
+    equipmentBySlot: equipmentSets[0],
+  }
+}
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
   version: 10,
