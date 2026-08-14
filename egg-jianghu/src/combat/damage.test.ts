@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { equipmentIdBySlot } from '../content/equipment'
 import type { HeroDefinitionV10 } from '../content/heroes'
 import { createHeroProgress } from '../domain/state'
 import type { EquipmentInstance } from '../domain/types'
@@ -114,7 +115,7 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
     const baseline = buildCombatStats(definition, progress)
     progress.equipmentBySlot.weapon = 'weapon_uid'
     const equipment: EquipmentInstance[] = [{
-      uid: 'weapon_uid', definitionId: 'world_01_weapon', level: 1, quality: '上品',
+      uid: 'weapon_uid', definitionId: equipmentIdBySlot('weapon'), level: 1, quality: '上品',
       affixes: [{ id: 'externalAttack', value: 12 }], locked: true,
     }]
 
@@ -131,7 +132,7 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
     const baseline = buildCombatStats(definition, progress)
     progress.equipmentBySlot.wrist = 'wrist_uid'
     const wrist: EquipmentInstance = {
-      uid: 'wrist_uid', definitionId: 'world_01_wrist', level: 1, quality: '凡品', affixes: [], locked: false,
+      uid: 'wrist_uid', definitionId: equipmentIdBySlot('wrist'), level: 1, quality: '凡品', affixes: [], locked: false,
     }
 
     expect(buildCombatStats(definition, progress, [wrist]).accuracy).toBeCloseTo(baseline.accuracy + 0.09)
@@ -146,7 +147,7 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
     const progress = createHeroProgress('job_1')
     const baseline = buildCombatStats(definition, progress)
     const equipment: EquipmentInstance[] = [{
-      uid: 'weapon_uid', definitionId: 'world_01_weapon', level: 1, quality: '上品',
+      uid: 'weapon_uid', definitionId: equipmentIdBySlot('weapon'), level: 1, quality: '上品',
       affixes: [{ id: 'externalAttack', value: 12 }], locked: true,
     }]
     progress.equipmentSets[1].weapon = 'weapon_uid'

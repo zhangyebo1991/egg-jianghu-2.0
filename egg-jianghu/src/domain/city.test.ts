@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { equipmentIdBySlot } from '../content/equipment'
 import { learnCityMartial, spend } from './city'
 import { equipEquipment, toggleEquipmentLock } from './inventory'
 import { upgradeMartial } from './martial-training'
@@ -66,7 +67,7 @@ describe('城市、势力与装备操作', () => {
   it('装备校验部位和占用关系，锁定不禁止穿戴', () => {
     const state = stateWithHero()
     state.heroes.hero_yang_tiexin = createHeroProgress('blade')
-    state.inventory.push(equipment('weapon_uid', 'world_01_weapon', true))
+    state.inventory.push(equipment('weapon_uid', equipmentIdBySlot('weapon'), true))
 
     expect(equipEquipment(state, 'hero_mu_nianci', 'weapon_uid').ok).toBe(true)
     expect(state.heroes.hero_mu_nianci.equipmentBySlot.weapon).toBe('weapon_uid')

@@ -3,8 +3,8 @@ import { HEROES_V10 } from '../content/heroes'
 import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
-// v14：怪物替换为诸天原版（enemy id 改身份制）。旧档不迁移，读不到新 key 即当新开。
-export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v14'
+// v15：装备 id 改为诸天 wp_*。旧档不迁移，读不到新 key 即当新开。
+export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v15'
 
 export interface StorageLike {
   getItem(key: string): string | null
@@ -83,7 +83,7 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 }
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
-  version: 14,
+  version: 15,
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
   heroes: structuredClone(state.heroes),
@@ -110,7 +110,7 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
-    || raw.version !== 14
+    || raw.version !== 15
     || !Array.isArray(raw.inventory)
     || !Array.isArray(raw.formation)
     || !raw.formation.every(isFormationSlot)

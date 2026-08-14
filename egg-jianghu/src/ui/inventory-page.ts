@@ -18,6 +18,7 @@ export interface InventoryItemView {
   level: number
   quality: EquipmentQuality
   locked: boolean
+  weaponTypeName?: string
   baseStat: { name: string; value: number }
   affixes: InventoryAffixView[]
 }
@@ -26,6 +27,24 @@ export interface InventorySlotTabView {
   id: 'all' | EquipmentSlot
   name: string
   count: number
+}
+
+export interface InventoryShopItemView {
+  careerId: string
+  bookName: string
+  careerName: string
+  price: number
+  owned: number
+  affordable: boolean
+}
+
+export interface InventoryShopView {
+  worldName: string
+  currencyName: string
+  currency: number
+  rank: 2 | 3 | 4 | 5 | 6
+  ranks: Array<{ id: 2 | 3 | 4 | 5 | 6; name: string }>
+  items: InventoryShopItemView[]
 }
 
 export interface InventoryPageViewModel {
@@ -40,6 +59,7 @@ export interface InventoryPageViewModel {
   detailOpen: boolean
   items: InventoryItemView[]
   selectedItem: InventoryItemView | null
+  shop: InventoryShopView
 }
 
 const SLOT_ICON_MARKUP: Record<EquipmentSlot, string> = {
@@ -106,7 +126,7 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
     <span class="inventory-figure-ring" data-rarity="${escapeHtml(item.quality)}">${renderSlotIcon(item.slot)}</span>
     <div>
       <h2 class="inventory-appraise-name">${escapeHtml(item.name)}</h2>
-      <div class="inventory-appraise-latin">${escapeHtml(item.quality)} · ${escapeHtml(item.slotName)} · Level ${item.level}</div>
+      <div class="inventory-appraise-latin">${escapeHtml(item.quality)} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Level ${item.level}</div>
     </div>
   </div>
   <div class="inventory-base-stat">
@@ -125,9 +145,43 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
     </div>
     <div class="inventory-appraise-note">
       ${item.locked ? '<b>已锁定</b> · 不参与批量丢弃，亦不误手。' : '锁定后可免于「批量丢弃」误伤。'}
+      <span>人物等级低于物品等级时无法穿戴。</span>
     </div>
   </div>`
 }
+
+const renderShop = (shop: InventoryShopView): string => `
+  <aside class="inventory-shop" data-testid="job-book-shop" aria-label="坊市">
+    <header class="inventory-shop-head">
+      <div>
+        <h2>坊市</h2>
+        <span>转职书 · ${escapeHtml(shop.worldName)}</span>
+      </div>
+      <div class="inventory-shop-purse">
+        <b data-testid="shop-currency">${shop.currency}</b>
+        <small>${escapeHtml(shop.currencyName)}</small>
+      </div>
+    </header>
+    <nav class="inventory-shop-ranks" aria-label="转职书阶位">
+      ${shop.ranks.map((rank) => `
+        <button type="button" class="inventory-shop-rank${shop.rank === rank.id ? ' active' : ''}"
+          data-action="shop-rank" data-rank="${rank.id}" data-testid="shop-rank-${rank.id}"
+          aria-pressed="${shop.rank === rank.id}">${escapeHtml(rank.name)}</button>`).join('')}
+    </nav>
+    <ul class="inventory-shop-list">
+      ${shop.items.map((item) => `
+        <li class="inventory-shop-item" data-testid="shop-book-${escapeHtml(item.careerId)}">
+          <div>
+            <strong>${escapeHtml(item.bookName)}</strong>
+            <span>持有 ${item.owned} · ${item.price} 铜钱</span>
+          </div>
+          <button type="button" class="inventory-shop-buy" data-action="shop-buy"
+            data-career-id="${escapeHtml(item.careerId)}" data-testid="shop-buy-${escapeHtml(item.careerId)}"
+            ${item.affordable ? '' : 'disabled'}>购入</button>
+        </li>`).join('')}
+    </ul>
+    <p class="inventory-shop-note">战斗不掉转职书。可先囤书，转职仍需前置职业等级。</p>
+  </aside>`
 
 export const renderInventoryPage = (view: InventoryPageViewModel): string => `<section class="inventory-page" data-testid="inventory-page">
   <span class="inventory-ghost-char" aria-hidden="true">囊</span>
@@ -142,12 +196,13 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
       <span class="inventory-head-note-seal" aria-hidden="true">囊</span>
       <div class="inventory-head-note-copy">
         <span>纯行囊之地 · <b>已装备不入此囊</b></span>
-        <small>穿戴与卸下 · 请往侠客页操办</small>
+        <small>穿戴与卸下 · 请往侠客页操办 · 坊市只卖转职书</small>
       </div>
     </div>
   </header>
 
   <div class="inventory-layout">
+    ${renderShop(view.shop)}
     <section class="inventory-board" aria-label="百宝囊">
       <div class="inventory-board-inner">
         <header class="inventory-board-head">

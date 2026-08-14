@@ -86,7 +86,7 @@ export interface EquipmentInstance {
 }
 
 export interface GameStateV10 {
-  version: 14
+  version: 15
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
   heroes: Record<string, HeroProgressV10>

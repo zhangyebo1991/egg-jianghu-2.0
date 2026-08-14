@@ -72,6 +72,7 @@ const emitDefeat = (
   rank: enemy.rank,
   worldId: state.worldId,
   stage: state.stage,
+  difficulty: state.difficulty,
   seed: rng.nextInt(1, 2_147_483_647),
 })
 

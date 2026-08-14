@@ -1,9 +1,13 @@
 import { escapeHtml } from './html'
 import { panelToAttributeMap, type CombatStats } from '../combat/stats'
 import { ATTRIBUTES, type AttributeMap } from '../content/attributes'
+import { EQUIPMENT_QUALITIES, EQUIPMENT_SLOTS, EQUIPMENT_SLOT_MARKS, EQUIPMENT_SLOT_NAMES, type EquipmentSlot } from '../content/equipment'
+import type { EquipmentQuality } from '../domain/types'
 import type { HeroAptitudes } from '../content/heroes'
 import { careerIconAsset } from './career-icon-assets'
+import { equipmentIconAsset } from './equipment-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
+import type { InventoryItemView } from './inventory-page'
 
 export interface CareerGrowthView {
   id: string
@@ -75,6 +79,38 @@ export interface HeroesHeroView {
   inFormation?: boolean
 }
 
+export interface HeroEquipmentSlotView {
+  slot: EquipmentSlot
+  item: InventoryItemView | null
+}
+
+export interface HeroesEquipmentView {
+  heroId: string
+  setIndex: 0 | 1 | 2
+  averageItemLevel: number
+  wornCount: number
+  slots: HeroEquipmentSlotView[]
+}
+
+export interface HeroesPackItemView extends InventoryItemView {
+  ownerName: string | null
+  current: boolean
+  occupied: boolean
+}
+
+export interface HeroesPackView {
+  capacity: number
+  itemCount: number
+  slotFilter: 'all' | EquipmentSlot
+  qualityFilter: 'all' | EquipmentQuality
+  page: number
+  pageCount: number
+  items: HeroesPackItemView[]
+  batchOpen: boolean
+  batchQuality: EquipmentQuality | 'all'
+  batchCount: number
+}
+
 export interface HeroesPageViewModel {
   selectedHeroId: string | null
   heroes: HeroesHeroView[]
@@ -86,6 +122,8 @@ export interface HeroesPageViewModel {
   treeNodes: CareerTreeNodeView[]
   treeLinks: CareerTreeLinkView[]
   treeDetail: CareerTreeDetailView | null
+  equipment: HeroesEquipmentView | null
+  pack: HeroesPackView | null
 }
 
 const ROSTER_GRADES = ['all', '丙', '乙', '甲', '地', '天'] as const
@@ -341,21 +379,146 @@ const renderPrototypeRoster = (view: HeroesPageViewModel): string => {
   return rows || '<div class="roster-none">查无此侠</div>'
 }
 
+const renderEquipmentTooltip = (item: InventoryItemView, footer: string): string => `
+  <div class="equipment-tooltip" popover="manual">
+    <header>
+      <span>${escapeHtml(item.slotName)}</span>
+      <strong>${escapeHtml(item.name)}</strong>
+      <em>${escapeHtml(item.quality)} · Lv.${item.level}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</em>
+    </header>
+    <div class="equipment-tooltip-columns">
+      <section>
+        <small>基础</small>
+        <dl class="equipment-properties"><div><dt>${escapeHtml(item.baseStat.name)}</dt><dd>+${item.baseStat.value}</dd></div></dl>
+      </section>
+      ${item.affixes.length ? `<section>
+        <small>词条</small>
+        <dl class="equipment-properties">${item.affixes.map((affix) => `<div><dt>${escapeHtml(affix.name)}</dt><dd>+${affix.value}</dd></div>`).join('')}</dl>
+      </section>` : ''}
+    </div>
+    <footer>${escapeHtml(footer)}</footer>
+  </div>`
+
+const renderEquipmentSection = (hero: HeroesHeroView, equipment: HeroesEquipmentView): string => {
+  const slots = equipment.slots.map((entry) => {
+    const item = entry.item
+    const empty = !item
+    const icon = equipmentIconAsset(entry.slot)
+    return `<article class="pd-slot pd-pos-${entry.slot}${empty ? ' empty' : ' equipped hero-equipment-slot'}"
+      ${item ? `data-rarity="${escapeHtml(item.quality)}" data-equipment-uid="${escapeHtml(item.uid)}"` : ''} data-slot="${entry.slot}">
+      <span class="pd-icon">${EQUIPMENT_SLOT_MARKS[entry.slot]}</span>
+      ${item ? `<img class="equipment-art" src="${escapeHtml(icon.url)}" alt="" aria-hidden="true">` : ''}
+      <span class="pd-slot-name">${EQUIPMENT_SLOT_NAMES[entry.slot]}</span>
+      <strong class="pd-item-name">${item ? escapeHtml(item.name) : '虚位以待'}</strong>
+      <span class="pd-item-meta">${item ? `${escapeHtml(item.quality)} · Lv.${item.level}` : '未装备'}</span>
+      ${item ? `<button type="button" class="pd-unequip" data-action="equipment-unequip" data-hero-id="${escapeHtml(hero.id)}" data-slot="${entry.slot}">卸下</button>` : ''}
+      ${item ? renderEquipmentTooltip(item, hero.level < item.level ? `需人物 Lv.${item.level} 方可穿戴` : '双击行囊中物品，可替换此位') : ''}
+    </article>`
+  }).join('')
+  return `<section class="dossier-sec" data-testid="hero-equipment-slots">
+    <header><div class="sec-title"><h2>随身装备</h2><span class="sub">其贰 · 八部位 · <i>三套方案</i></span></div></header>
+    <div class="sec-body pd-grid">
+      <div class="pd-sil">
+        <span class="sil-char">${escapeHtml(hero.category ?? '侠')}</span>
+        <span class="sil-dantian" aria-hidden="true"></span>
+        <div class="sil-sum"><span>穿戴 <b>${equipment.wornCount} / 8</b></span><span>均装等 <b>${equipment.averageItemLevel}</b></span></div>
+        <span class="sil-cap">立身中正 · 气沉丹田</span>
+      </div>
+      ${slots}
+      <div class="pd-sets">
+        <div class="pd-ilvl">当前方案均装等 <b>${equipment.averageItemLevel}</b></div>
+        <div class="pd-set-row">
+          ${[0, 1, 2].map((index) => `<button type="button" class="pd-set-btn${equipment.setIndex === index ? ' active' : ''}"
+            data-action="equipment-set-switch" data-hero-id="${escapeHtml(hero.id)}" data-set-index="${index}"
+            data-testid="equipment-set-${index}">第${index + 1}套</button>`).join('')}
+        </div>
+        <p class="pd-set-hint">人物等级低于物品等级时不能穿戴</p>
+      </div>
+    </div>
+  </section>`
+}
+
+const renderPackRail = (view: HeroesPageViewModel): string => {
+  const pack = view.pack
+  if (!pack) return ''
+  const slotIds: Array<'all' | EquipmentSlot> = ['all', ...EQUIPMENT_SLOTS]
+  const slotChips = slotIds.map((id) => id === 'all'
+    ? `<button type="button" class="fchip${pack.slotFilter === 'all' ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="all">全</button>`
+    : `<button type="button" class="fchip seal${pack.slotFilter === id ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="${id}" title="${EQUIPMENT_SLOT_NAMES[id]}">${EQUIPMENT_SLOT_MARKS[id]}</button>`).join('')
+  const qualityChips = (['all', ...EQUIPMENT_QUALITIES] as const).map((quality) => quality === 'all'
+    ? `<button type="button" class="fchip${pack.qualityFilter === 'all' ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="all">全</button>`
+    : `<button type="button" class="fchip qc${pack.qualityFilter === quality ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${quality[0]}</button>`).join('')
+  const batchPanel = pack.batchOpen ? `<div class="batch-panel">
+      <p class="bp-tip">择一品质为界，<b>含该品质以下</b>尽数丢弃；已装备与已锁定者不受影响。</p>
+      <div class="chip-row">${EQUIPMENT_QUALITIES.map((quality) => `<button type="button" class="fchip danger qc${pack.batchQuality === quality ? ' active' : ''}" data-action="hero-batch-discard-filter" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${quality[0]}</button>`).join('')}</div>
+      <p class="bp-count">${pack.batchQuality === 'all' ? '尚未择定品质' : `将丢弃 <b>${pack.batchCount}</b> 件装备`}</p>
+      <div class="bp-btns">
+        <button type="button" class="pc-yes" data-action="confirm-batch-discard" ${pack.batchQuality === 'all' || pack.batchCount === 0 ? 'disabled' : ''}>确认丢弃</button>
+        <button type="button" class="pc-no" data-action="cancel-batch-discard">收手</button>
+      </div>
+    </div>` : ''
+  const rows = pack.items.map((item, index) => `
+    <button type="button" class="pack-row${item.current ? ' current' : item.occupied ? ' occupied' : ''}" data-quality="${escapeHtml(item.quality)}"
+      data-equipment-uid="${escapeHtml(item.uid)}" data-testid="hero-pack-${escapeHtml(item.uid)}" style="--row-delay:${index * 35}ms"
+      aria-label="${escapeHtml(item.name)}">
+      <span class="pr-icon">${EQUIPMENT_SLOT_MARKS[item.slot]}</span>
+      <span class="pr-body">
+        <span class="pr-name">${escapeHtml(item.name)}${item.locked ? ' <span class="pack-lock">锁</span>' : ''}</span>
+        <span class="pr-meta"><span class="pr-q">${escapeHtml(item.quality)}</span> · Lv.${item.level}${item.current ? ' · <span class="pr-owner">已装备</span>' : item.ownerName ? ` · <span class="pr-owner">${escapeHtml(item.ownerName)}</span>` : ''}</span>
+      </span>
+      <span class="pr-slot-tag">${escapeHtml(item.slotName)}</span>
+      ${renderEquipmentTooltip(item, item.current ? '正穿于当前侠客' : item.ownerName ? `由 ${item.ownerName} 穿戴 · 双击仍可换装` : '双击左键，为当前侠客装备')}
+    </button>`).join('')
+  const pages = Array.from({ length: pack.pageCount }, (_, index) => index + 1)
+  return `<aside class="pack-rail hero-inventory-panel" data-testid="hero-inventory-panel">
+    <div class="pack-inner">
+      <header class="pack-head">
+        <div class="sec-title"><h2>行囊</h2></div>
+        <div class="pack-cap">
+          <div><b>${pack.itemCount}</b> <span>/ ${pack.capacity}</span></div>
+          <div class="cap-bar"><i style="width:${Math.max(2, Math.min(100, pack.itemCount / pack.capacity * 100))}%"></i></div>
+        </div>
+      </header>
+      <div class="pack-chips">
+        <div class="chip-row"><span class="chip-label">部位</span>${slotChips}</div>
+        <div class="chip-row"><span class="chip-label">品质</span>${qualityChips}</div>
+      </div>
+      <div class="pack-tool-btns">
+        <button type="button" class="pk-btn" data-action="organize-hero-inventory">整理</button>
+        <button type="button" class="pk-btn danger" data-action="request-batch-discard">${pack.batchOpen ? '收起丢弃' : '批量丢弃'}</button>
+      </div>
+      ${batchPanel}
+      <div class="pack-list">${rows || '<div class="pack-empty"><strong>行囊空空</strong><span>调整筛选，或往江湖战斗获取</span></div>'}</div>
+      <nav class="pack-page" aria-label="行囊分页">
+        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page - 1}" ${pack.page <= 1 ? 'disabled' : ''}>上一页</button>
+        <div class="pg-nums">${pages.map((page) => `<button type="button" class="pg-num${page === pack.page ? ' active' : ''}" data-action="hero-pack-page" data-page="${page}">${page}</button>`).join('')}</div>
+        <span class="pack-page-status">${pack.page}/${pack.pageCount} · ${pack.items.length}件</span>
+        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page + 1}" ${pack.page >= pack.pageCount ? 'disabled' : ''}>下一页</button>
+      </nav>
+      <footer class="pack-foot">悬停查看属性笺 · 双击为当前侠客装备</footer>
+    </div>
+  </aside>`
+}
+
 export const renderHeroesPage = (view: HeroesPageViewModel): string => {
   const selected = view.heroes.find((hero) => hero.id === view.selectedHeroId) ?? view.heroes[0]
   const rosterCount = (view.rosterHeroes ?? view.heroes).length
   const total = view.heroes.length
   return `<section class="heroes-page" data-testid="heroes-page">
     <span class="ghost-char ghost-roster" aria-hidden="true">侠</span>
+    <span class="ghost-char ghost-pack" aria-hidden="true">囊</span>
     <header class="page-head heroes-page-head"><div><p class="crumb">侠客 · <b>点将谱</b> · 群侠列传</p><h1>侠客</h1><p class="latin">Heroes · The Roster &amp; Records</p></div></header>
     <div class="heroes-stage">
       <aside class="roster-rail hero-roster" data-testid="hero-roster-panel"><div class="roster-inner"><header class="roster-head"><div class="sec-title"><h2>点将谱</h2></div><div class="roster-head-right"><button type="button" class="btn-locate" data-action="locate-hero">定位</button><div class="roster-count"><b>${total}</b><span>${rosterCount === total ? '在队' : '筛中 / ' + total}</span></div></div></header>
         <div class="roster-search-row"><input type="search" class="roster-search" data-action="hero-roster-search" value="${escapeHtml(view.rosterQuery ?? '')}" placeholder="以名相寻…" autocomplete="off" aria-label="搜索侠客">${renderPrototypeRosterFilters(view)}</div>
         <div class="roster-list" data-testid="hero-roster-list">${renderPrototypeRoster(view)}</div><footer class="roster-foot">品级印 <b>丙乙甲地天</b> · 点将即阅其列传</footer>
       </div></aside>
-      <section class="dossier hero-workbench" data-testid="selected-hero">${selected ? renderPrototypeHeroHead(selected) + renderHeroStats(selected) + renderCurrentCareer(selected) : '<section class="dossier-sec hero-empty"><strong>尚无侠客</strong><span>前往城市酒馆直接邀请。</span></section>'}</section>
+      <section class="dossier hero-workbench" data-testid="selected-hero">${selected
+        ? renderPrototypeHeroHead(selected) + renderHeroStats(selected) + (view.equipment ? renderEquipmentSection(selected, view.equipment) : '') + renderCurrentCareer(selected)
+        : '<section class="dossier-sec hero-empty"><strong>尚无侠客</strong><span>前往城市酒馆直接邀请。</span></section>'}</section>
+      ${renderPackRail(view)}
     </div>
     ${selected ? renderCareerTreeOverlay(selected, view) : ''}
-    <footer class="page-foot heroes-page-foot"><span><b>侠客页</b> · 蛋蛋江湖 2.0 · 当前职业与转职树</span><span>获取侠客请前往城市或势力</span></footer>
+    <footer class="page-foot heroes-page-foot"><span><b>侠客页</b> · 蛋蛋江湖 2.0 · 装备、职业与转职树</span><span>获取侠客请前往城市或势力</span></footer>
   </section>`
 }

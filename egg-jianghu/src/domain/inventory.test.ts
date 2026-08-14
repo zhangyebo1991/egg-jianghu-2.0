@@ -10,12 +10,13 @@ import {
   switchEquipmentSet,
   unequipEquipment,
 } from './inventory'
+import { equipmentIdBySlot } from '../content/equipment'
 import { createHeroProgress, createInitialStateV10, createNewGameStateV10 } from './state'
 import type { EquipmentInstance, EquipmentQuality } from './types'
 
 const equipment = (uid: string, quality: EquipmentQuality = '凡品'): EquipmentInstance => ({
   uid,
-  definitionId: 'world_01_weapon',
+  definitionId: equipmentIdBySlot('weapon'),
   level: 1,
   quality,
   affixes: [],
@@ -50,6 +51,17 @@ describe('装备背包', () => {
 
     expect(unequipEquipment(state, 'hero_player', 'weapon')).toEqual({ ok: true, message: '已卸下装备' })
     expect(backpackEquipment(state).map((item) => item.uid)).toEqual(['weapon'])
+  })
+
+  it('人物等级低于物品等级时不能穿戴', () => {
+    const state = createNewGameStateV10('测试')
+    state.inventory = [{ ...equipment('high'), level: 10 }]
+
+    expect(equipEquipment(state, 'hero_player', 'high')).toEqual({
+      ok: false,
+      message: '人物等级不足，需达到 Lv.10',
+    })
+    expect(state.heroes.hero_player.equipmentBySlot.weapon).toBeUndefined()
   })
 
   it('已穿戴装备不占用物品栏容量', () => {
@@ -98,7 +110,7 @@ describe('装备背包', () => {
   it('整理物品时按部位、品质和等级稳定排序', () => {
     const state = createInitialStateV10()
     state.inventory = [
-      { ...equipment('head'), definitionId: 'world_01_head', quality: '绝品', level: 20 },
+      { ...equipment('head'), definitionId: equipmentIdBySlot('head'), quality: '绝品', level: 20 },
       { ...equipment('weapon_low'), quality: '良品', level: 8 },
       { ...equipment('weapon_high'), quality: '上品', level: 3 },
     ]
@@ -112,7 +124,7 @@ describe('装备背包', () => {
       const state = createInitialStateV10()
       state.inventory = [equipment('keep'), equipment('drop')]
 
-      expect(discardEquipment(state, 'drop')).toEqual({ ok: true, message: '已丢弃 柴刀' })
+      expect(discardEquipment(state, 'drop')).toEqual({ ok: true, message: '已丢弃 勇士的长戟' })
       expect(state.inventory.map((item) => item.uid)).toEqual(['keep'])
     })
 
@@ -201,8 +213,8 @@ describe('装备背包', () => {
       const state = createNewGameStateV10('测试')
       state.inventory = [
         equipment('weapon-a'),
-        { ...equipment('weapon-b'), uid: 'weapon-b', definitionId: 'world_02_weapon' },
-        { ...equipment('head-a'), uid: 'head-a', definitionId: 'world_01_head' },
+        { ...equipment('weapon-b'), uid: 'weapon-b', definitionId: equipmentIdBySlot('weapon', '江湖') },
+        { ...equipment('head-a'), uid: 'head-a', definitionId: equipmentIdBySlot('head') },
       ]
 
       expect(equipEquipment(state, 'hero_player', 'weapon-a')).toEqual({ ok: true, message: '装备成功' })

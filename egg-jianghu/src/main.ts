@@ -15,6 +15,8 @@ import {
   equipmentAffixRange,
   equipmentBaseStatValue,
   equipmentDefinitionById,
+  equipmentDisplayName,
+  equipmentPoolForWorld,
   type EquipmentSlot,
 } from './content/equipment'
 import { FACTIONS } from './content/factions'
@@ -26,7 +28,8 @@ import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
-import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, INVENTORY_CAPACITY, organizeInventory, switchEquipmentSet, toggleEquipmentLock, unequipEquipment } from './domain/inventory'
+import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, averageItemLevel, bindActiveEquipmentLoadout } from './domain/inventory'
+import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { MAX_MARTIAL_LEVEL, equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
@@ -87,6 +90,10 @@ let inventorySlotFilter: EquipmentSlot | 'all' = 'all'
 let selectedInventoryUid: string | null = null
 let inventoryDetailOpen = false
 let pendingInventoryDropUids: string[] = []
+let shopRank: 2 | 3 | 4 | 5 | 6 = 2
+let heroPackSlotFilter: EquipmentSlot | 'all' = 'all'
+let heroPackQualityFilter: EquipmentQuality | 'all' = 'all'
+let heroPackPage = 1
 let heroBatchDiscardQuality: EquipmentQuality | 'all' = 'all'
 let showBatchDiscardConfirm = false
 let heroRosterQuery = ''
@@ -138,7 +145,7 @@ let factionSwitchAnimationPending = false
 let factionContributionAnimation: FactionContributionAnimation | null = null
 let factionMotionTimer: number | null = null
 
-const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item, .pack-row'
+const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item, .pack-row, .pd-slot'
 const EQUIPMENT_TOOLTIP_GAP = 10
 const EQUIPMENT_TOOLTIP_VIEWPORT_PADDING = 12
 
@@ -448,6 +455,10 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedInventoryUid = null
   inventoryDetailOpen = false
   pendingInventoryDropUids = []
+  shopRank = 2
+  heroPackSlotFilter = 'all'
+  heroPackQualityFilter = 'all'
+  heroPackPage = 1
   heroBatchDiscardQuality = 'all'
   showBatchDiscardConfirm = false
   heroRosterQuery = ''
@@ -781,6 +792,63 @@ const heroesViewModel = (): HeroesPageViewModel => {
     }
     : null
 
+  const selectedHero = selectedId ? session.state.heroes[selectedId] : undefined
+  const loadout = selectedHero ? bindActiveEquipmentLoadout(selectedHero) : {}
+  const equipment = selectedHero && selectedId
+    ? {
+      heroId: selectedId,
+      setIndex: selectedHero.activeEquipmentSetIndex,
+      averageItemLevel: averageItemLevel(selectedHero, session.state.inventory),
+      wornCount: EQUIPMENT_SLOTS.filter((slot) => Boolean(loadout[slot])).length,
+      slots: EQUIPMENT_SLOTS.map((slot) => {
+        const uid = loadout[slot]
+        const instance = uid ? session.state.inventory.find((item) => item.uid === uid) : undefined
+        return { slot, item: instance ? inventoryItemView(instance) : null }
+      }),
+    }
+    : null
+
+  const packSource = session.state.inventory.filter((item) => {
+    const view = inventoryItemView(item)
+    if (heroPackSlotFilter !== 'all' && view.slot !== heroPackSlotFilter) return false
+    if (heroPackQualityFilter !== 'all' && item.quality !== heroPackQualityFilter) return false
+    return true
+  })
+  const packPageSize = 8
+  const packPageCount = Math.max(1, Math.ceil(packSource.length / packPageSize))
+  heroPackPage = Math.min(packPageCount, Math.max(1, heroPackPage))
+  const packPageItems = packSource.slice((heroPackPage - 1) * packPageSize, heroPackPage * packPageSize)
+  const pack = {
+    capacity: INVENTORY_CAPACITY,
+    itemCount: backpackEquipment(session.state).length,
+    slotFilter: heroPackSlotFilter,
+    qualityFilter: heroPackQualityFilter,
+    page: heroPackPage,
+    pageCount: packPageCount,
+    items: packPageItems.map((item) => {
+      const view = inventoryItemView(item)
+      const ownerId = equipmentOwnerId(session.state, item.uid)
+      const ownerDefinition = ownerId ? heroByIdV10(ownerId) : undefined
+      const ownerProgress = ownerId ? session.state.heroes[ownerId] : undefined
+      return {
+        ...view,
+        ownerName: ownerDefinition && ownerProgress ? heroDisplayNameV10(ownerDefinition, ownerProgress) : null,
+        current: ownerId === selectedId,
+        occupied: Boolean(ownerId),
+      }
+    }),
+    batchOpen: showBatchDiscardConfirm,
+    batchQuality: heroBatchDiscardQuality,
+    batchCount: (() => {
+      if (heroBatchDiscardQuality === 'all') return 0
+      const maxIndex = EQUIPMENT_QUALITIES.indexOf(heroBatchDiscardQuality)
+      return session.state.inventory.filter((item) =>
+        EQUIPMENT_QUALITIES.indexOf(item.quality) <= maxIndex
+        && !item.locked
+        && !equipmentOwnerId(session.state, item.uid)).length
+    })(),
+  }
+
   return {
     selectedHeroId: selectedId,
     heroes,
@@ -795,6 +863,8 @@ const heroesViewModel = (): HeroesPageViewModel => {
       toId: career.id,
     }))),
     treeDetail,
+    equipment,
+    pack,
   }
 }
 
@@ -1040,13 +1110,13 @@ const cityViewModel = (): CityPageViewModel => {
 const inventorySlotNames = EQUIPMENT_SLOT_NAMES
 
 const inventoryBaseStatNames: Record<string, string> = {
-  attack: '攻击',
-  internalDefense: '内防',
-  externalDefense: '外防',
-  accuracy: '命中',
-  maxHp: '气血',
-  agility: '身法',
-  energyRecovery: '行气',
+  attack: '物攻',
+  internalDefense: '法防',
+  externalDefense: '物防',
+  accuracy: '命中修正',
+  maxHp: '生命',
+  agility: '速度',
+  energyRecovery: '能量回复',
 }
 
 const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
@@ -1054,12 +1124,13 @@ const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
   const slot = definition?.slot ?? 'weapon'
   return {
     uid: item.uid,
-    name: definition?.name ?? '无名装备',
+    name: definition ? equipmentDisplayName(definition, item.affixes) : '无名装备',
     slot,
     slotName: inventorySlotNames[slot],
     level: item.level,
     quality: item.quality,
     locked: item.locked,
+    weaponTypeName: definition?.weaponTypeName,
     baseStat: {
       name: inventoryBaseStatNames[definition?.baseStatId ?? ''] ?? '基础属性',
       value: definition ? equipmentBaseStatValue(definition, item) : item.level,
@@ -1100,6 +1171,7 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     return counts
   }, {} as Record<EquipmentQuality, number>)
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
+  const currency = session.state.worldCurrency[world.id] ?? 0
   return {
     worldName: world.name,
     capacity: INVENTORY_CAPACITY,
@@ -1112,6 +1184,18 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     detailOpen: inventoryDetailOpen,
     items: visibleItems,
     selectedItem,
+    shop: {
+      worldName: world.name,
+      currencyName: world.currencyName,
+      currency,
+      rank: shopRank,
+      ranks: JOB_BOOK_SHOP_RANKS.map((rank) => ({ id: rank, name: JOB_BOOK_SHOP_TIER_LABELS[rank] })),
+      items: shopJobBooksForRank(shopRank).map((item) => ({
+        ...item,
+        owned: session.state.jobBooks[item.careerId] ?? 0,
+        affordable: currency >= item.price,
+      })),
+    },
   }
 }
 
@@ -1621,6 +1705,26 @@ const performAction = (button: HTMLButtonElement): void => {
     }
     commitAction(result)
   }
+  else if (action === 'shop-rank') {
+    const rank = Number(button.dataset.rank)
+    if (rank === 2 || rank === 3 || rank === 4 || rank === 5 || rank === 6) shopRank = rank
+  } else if (action === 'shop-buy') {
+    commitAction(buyJobBook(session.state, button.dataset.careerId ?? '', selectedWorldId || selectedPlaneId))
+  } else if (action === 'hero-pack-slot') {
+    const nextFilter = button.dataset.inventorySlot ?? 'all'
+    heroPackSlotFilter = nextFilter === 'all' || EQUIPMENT_SLOTS.includes(nextFilter as EquipmentSlot)
+      ? nextFilter as EquipmentSlot | 'all'
+      : 'all'
+    heroPackPage = 1
+  } else if (action === 'hero-pack-quality') {
+    const value = button.dataset.filterValue ?? 'all'
+    heroPackQualityFilter = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality)
+      ? value as EquipmentQuality | 'all'
+      : 'all'
+    heroPackPage = 1
+  } else if (action === 'hero-pack-page') {
+    heroPackPage = Math.max(1, dataNumber(button, 'page'))
+  }
   else if (action === 'equipment-equip') commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
   else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
   else if (action === 'equipment-set-switch') commitAction(switchEquipmentSet(session.state, heroId, dataNumber(button, 'setIndex')))
@@ -2092,11 +2196,12 @@ const debugRecruit = (heroId: string): void => {
 
 const debugFillInventory = (count: number): void => {
   ensurePlaying()
+  const pool = equipmentPoolForWorld('world_01')
   session.state.inventory = Array.from({ length: Math.max(0, Math.min(INVENTORY_CAPACITY, Math.floor(count))) }, (_, index): EquipmentInstance => ({
     uid: `debug-equipment-${index}`,
-    definitionId: 'world_01_weapon',
-    level: 1,
-    quality: '凡品',
+    definitionId: pool[index % pool.length]?.id ?? equipmentPoolForWorld('world_01')[0].id,
+    level: 1 + (index % 5),
+    quality: EQUIPMENT_QUALITIES[index % EQUIPMENT_QUALITIES.length],
     affixes: [],
     locked: false,
   }))
@@ -2112,6 +2217,7 @@ const debugSettleEnemy = (seed: number, rank: CombatRank = 'normal'): string[] =
     enemyId: `world_01_stage_01_${rank === 'boss' ? 'boss' : 'mob_1'}`,
     rank,
     worldId: 'world_01',
+    difficulty: selectedDifficulty,
     stage: 1,
     seed,
   })

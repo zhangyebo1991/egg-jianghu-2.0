@@ -95,7 +95,58 @@ export const buildCombatStats = (
     perfectedBonusPool: 0,
   }
 
+  const applySxBonus = (sxId: number, value: number): boolean => {
+    switch (sxId) {
+      case 6:
+        stats.maxHp += value
+        return true
+      case 7:
+        stats.effectiveAgility += value
+        return true
+      case 8:
+        stats.externalAttack += value
+        return true
+      case 9:
+        stats.externalDefense += value
+        return true
+      case 10:
+        stats.internalAttack += value
+        return true
+      case 11:
+        stats.internalDefense += value
+        return true
+      case 12:
+        stats.criticalChance = Math.min(1, stats.criticalChance + value / 100)
+        return true
+      case 13:
+        stats.criticalMultiplier += value / 100
+        return true
+      case 14:
+        stats.lifeSteal += value
+        return true
+      case 18:
+        stats.accuracy = Math.min(0.2, stats.accuracy + value / 100)
+        return true
+      case 19:
+        stats.evade = Math.min(1, stats.evade + value / 100)
+        return true
+      case 28:
+        stats.initialEnergy += value
+        return true
+      case 29:
+        stats.energyRecovery += value
+        return true
+      case 37:
+        stats.cooldownRate = Math.min(0.6, stats.cooldownRate + value / 100)
+        return true
+      default:
+        return false
+    }
+  }
+
   const applyBonus = (id: string, value: number): void => {
+    const sxId = Number(id)
+    if (Number.isInteger(sxId) && sxId > 0 && applySxBonus(sxId, value)) return
     if (id === 'attack') {
       stats.externalAttack += value
       stats.internalAttack += value

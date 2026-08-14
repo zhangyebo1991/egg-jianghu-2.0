@@ -1,5 +1,6 @@
 import type { CombatEvent } from '../combat/types'
 import { addCareerExperience } from './careers'
+import { grantKillLoot } from './loot'
 import { applyKillToQuests } from './quests'
 import type { GameStateV10 } from './types'
 
@@ -45,5 +46,13 @@ export const settleCombatEvent = (
     rank: event.rank,
     bossId: event.rank === 'boss' ? event.enemyId : null,
   })
-  return { needsSave: true, addedEquipmentUids: [] }
+  const addedEquipmentUids = grantKillLoot(state, {
+    worldId: event.worldId,
+    difficulty: event.difficulty ?? 1,
+    stage: event.stage,
+    rank: event.rank,
+    seed: event.seed,
+    enemyId: event.enemyId,
+  })
+  return { needsSave: true, addedEquipmentUids }
 }

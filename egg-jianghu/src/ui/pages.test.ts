@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { EQUIPMENT_SLOTS } from '../content/equipment'
 import { renderCityPage, type CityPageViewModel } from './city-page'
 import { renderFactionsPage, type FactionsPageViewModel } from './factions-page'
 import { renderHeroesPage, type HeroesPageViewModel } from './heroes-page'
@@ -46,6 +47,25 @@ const heroesFixture = (): HeroesPageViewModel => ({
     growth: [{ id: 'physicalAttack', label: '物攻', grade: 'D', coeff: '0.9' }],
     requirements: [], bookName: '白丁转职书', bookOwned: false, learned: true, current: true,
     actionLabel: '当前职业', actionDisabled: true,
+  },
+  equipment: {
+    heroId: 'hero_test',
+    setIndex: 0,
+    averageItemLevel: 0,
+    wornCount: 0,
+    slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: null })),
+  },
+  pack: {
+    capacity: 300,
+    itemCount: 0,
+    slotFilter: 'all',
+    qualityFilter: 'all',
+    page: 1,
+    pageCount: 1,
+    items: [],
+    batchOpen: false,
+    batchQuality: 'all',
+    batchCount: 0,
   },
 })
 
@@ -122,16 +142,33 @@ const inventoryFixture = (): InventoryPageViewModel => ({
   selectedUid: 'equipment_1',
   detailOpen: false,
   items: [{
-    uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '武器',
+    uid: 'equipment_1', name: '长戟', slot: 'weapon', slotName: '武器',
     level: 1, quality: '良品', locked: false,
-    baseStat: { name: '攻击', value: 10 },
-    affixes: [{ name: '外功', value: 4, min: 3, max: 18, ratio: 7 }],
+    baseStat: { name: '物攻', value: 10 },
+    affixes: [{ name: '土系增伤', value: 4, min: 2, max: 12, ratio: 20 }],
   }],
   selectedItem: {
-    uid: 'equipment_1', name: '青石剑', slot: 'weapon', slotName: '武器',
+    uid: 'equipment_1', name: '长戟', slot: 'weapon', slotName: '武器',
     level: 1, quality: '良品', locked: false,
-    baseStat: { name: '攻击', value: 10 },
-    affixes: [{ name: '外功', value: 4, min: 3, max: 18, ratio: 7 }],
+    baseStat: { name: '物攻', value: 10 },
+    affixes: [{ name: '土系增伤', value: 4, min: 2, max: 12, ratio: 20 }],
+  },
+  shop: {
+    worldName: '牛家村',
+    currencyName: '铜钱',
+    currency: 1000,
+    rank: 2,
+    ranks: [
+      { id: 2, name: '一阶' },
+      { id: 3, name: '二阶' },
+      { id: 4, name: '三阶' },
+      { id: 5, name: '四阶' },
+      { id: 6, name: '五阶' },
+    ],
+    items: [{
+      careerId: 'job_5', bookName: '弓手转职书', careerName: '弓手',
+      price: 200, owned: 0, affordable: true,
+    }],
   },
 })
 
@@ -194,8 +231,9 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('已修职业')
     expect(html).toContain('class="hero-medallion"')
     expect(html).toContain('class="roster-search"')
-    expect(html).not.toContain('data-testid="hero-equipment-slots"')
-    expect(html).not.toContain('data-testid="hero-inventory-panel"')
+    expect(html).toContain('data-testid="hero-equipment-slots"')
+    expect(html).toContain('data-testid="hero-inventory-panel"')
+    expect(html).toContain('随身装备')
     expect(html).not.toContain('四槽武功')
     const open = renderHeroesPage({ ...heroesFixture(), careerTreeOpen: true })
     expect(open).toContain('data-testid="career-tree"')
@@ -237,6 +275,9 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="inventory-figure-ring"')
     expect(html).toContain('良品<b>1</b>')
     expect(html).toContain('共 1 件 · 囊容 300')
+    expect(html).toContain('data-testid="job-book-shop"')
+    expect(html).toContain('弓手转职书')
+    expect(html).toContain('data-testid="shop-buy-job_5"')
   })
 
   it('当前大关没有势力或城市内容时显示本卷空状态', () => {

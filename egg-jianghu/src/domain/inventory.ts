@@ -6,6 +6,7 @@ import {
   canonicalEquipmentDefinitionId,
   canonicalEquipmentSlot,
   equipmentDefinitionById,
+  equipmentDisplayName,
   isEquipmentSetIndex,
   type EquipmentSetIndex,
 } from '../content/equipment'
@@ -96,6 +97,7 @@ export const equipEquipment = (
   if (!equipment) return { ok: false, message: '装备不存在' }
   const definition = equipmentDefinitionById(canonicalEquipmentDefinitionId(equipment.definitionId))
   if (!definition) return { ok: false, message: '装备部位定义不存在' }
+  if (hero.level < equipment.level) return { ok: false, message: `人物等级不足，需达到 Lv.${equipment.level}` }
   const ownerId = equipmentOwnerId(state, equipmentUid)
   if (ownerId && ownerId !== heroId) return { ok: false, message: '装备已被其他侠客穿戴' }
   const loadout = bindActiveEquipmentLoadout(hero)
@@ -151,7 +153,9 @@ export const discardEquipment = (state: GameStateV10, equipmentUid: string): Act
   if (isEquipmentEquipped(state, equipmentUid)) return { ok: false, message: '已穿戴装备请先到侠客页卸下' }
 
   state.inventory = state.inventory.filter((item) => item.uid !== equipmentUid)
-  return { ok: true, message: `已丢弃 ${equipmentDefinitionById(canonicalEquipmentDefinitionId(equipment.definitionId))?.name ?? '装备'}` }
+  const definition = equipmentDefinitionById(canonicalEquipmentDefinitionId(equipment.definitionId))
+  const name = definition ? equipmentDisplayName(definition, equipment.affixes) : '装备'
+  return { ok: true, message: `已丢弃 ${name}` }
 }
 
 export const organizeInventory = (state: GameStateV10): ActionResult => {

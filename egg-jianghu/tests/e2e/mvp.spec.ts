@@ -129,10 +129,10 @@ test('桌面与移动端均使用统一左侧栏', async ({ page }) => {
   expect(mobile.scrollWidth).toBeLessThanOrEqual(mobile.viewportWidth)
 })
 
-test('三个全局入口共享同一套侧栏外观', async ({ page }) => {
+test('四个全局入口共享同一套侧栏外观', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   const metrics = []
-  for (const tab of ['idle', 'heroes', 'formation'] as const) {
+  for (const tab of ['idle', 'heroes', 'formation', 'inventory'] as const) {
     await page.getByTestId(`tab-${tab}`).click()
     metrics.push(await page.evaluate(() => {
       const sidebar = document.querySelector<HTMLElement>('.game-sidebar')!
@@ -292,7 +292,7 @@ test('侠客页展示当前职业与诸天属性', async ({ page }) => {
   await expect(career).toContainText('职业')
   await expect(career).toContainText('Lv.1')
   await expect(career).toContainText('可用技能类型')
-  await expect(page.getByTestId('hero-equipment-slots')).toHaveCount(0)
+  await expect(page.getByTestId('hero-equipment-slots')).toBeVisible()
   await expect(page.locator('.heroes-page .martial-slots')).toHaveCount(0)
 
   const stats = page.getByTestId('hero-stats')
@@ -306,13 +306,14 @@ test('侠客页展示当前职业与诸天属性', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('侠客页不再展示装备栏与行囊', async ({ page }) => {
+test('侠客页展示八槽装备栏与行囊', async ({ page }) => {
   await page.setViewportSize({ width: 1676, height: 941 })
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(2))
   await page.getByTestId('tab-heroes').click()
 
-  await expect(page.getByTestId('hero-inventory-panel')).toHaveCount(0)
-  await expect(page.getByTestId('hero-equipment-slots')).toHaveCount(0)
+  await expect(page.getByTestId('hero-inventory-panel')).toBeVisible()
+  await expect(page.getByTestId('hero-equipment-slots')).toBeVisible()
+  await expect(page.getByTestId('hero-equipment-slots').locator('.pd-slot')).toHaveCount(8)
   await expect(page.getByTestId('hero-career-panel')).toBeVisible()
   await expect(page.getByTestId('open-career-tree')).toBeVisible()
 
@@ -415,13 +416,25 @@ test('闯荡失败回退上一小关并切换驻守', async ({ page }) => {
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.wave)).toBe(1)
 })
 
-test('敌人死亡时货币立即入账且本阶段不掉装备', async ({ page }) => {
+test('敌人死亡时货币立即入账并掉落诸天装备，且不掉转职书', async ({ page }) => {
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().worldCurrency.world_01 ?? 0)
   const added = await page.evaluate(() => window.__EGG_JIANGHU__.settleEnemy(101, 'boss'))
   const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
-  expect(added).toEqual([])
-  expect(after.inventory).toHaveLength(0)
+  expect(added.length).toBeGreaterThan(0)
+  expect(after.inventory).toHaveLength(added.length)
+  expect(after.inventory.every((item) => item.definitionId.startsWith('wp_'))).toBe(true)
+  expect(Object.keys(after.jobBooks)).toEqual([])
   expect(after.worldCurrency.world_01).toBeGreaterThan(before)
+})
+
+test('背包坊市可用当前位面铜钱购买转职书', async ({ page }) => {
+  await page.getByTestId('tab-inventory').click()
+  await expect(page.getByTestId('job-book-shop')).toBeVisible()
+  const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().worldCurrency.world_01 ?? 0)
+  await page.getByTestId('shop-buy-job_5').click()
+  const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
+  expect(after.jobBooks.job_5).toBe(1)
+  expect(after.worldCurrency.world_01).toBe(before - 200)
 })
 
 test('击杀不因背包容量中断战斗', async ({ page }) => {

@@ -2237,11 +2237,12 @@ body {
   min-width: 0;
   min-height: 0;
   flex: 1;
-  grid-template-columns: minmax(0, 1fr) 348px;
+  grid-template-columns: 260px minmax(0, 1fr) 348px;
   gap: 18px;
 }
 .inventory-board,
-.inventory-appraise {
+.inventory-appraise,
+.inventory-shop {
   min-width: 0;
   min-height: 0;
   border-radius: 10px;
@@ -2256,6 +2257,32 @@ body {
     radial-gradient(640px 300px at 88% -8%, rgb(201 163 92 / 6%), transparent 60%),
     linear-gradient(170deg, rgb(31 36 28 / 55%), rgb(17 20 15 / 82%));
 }
+.inventory-shop {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px 16px 14px;
+  border: 1px solid #31382e;
+  background:
+    radial-gradient(420px 220px at 10% -20%, rgb(201 163 92 / 8%), transparent 62%),
+    linear-gradient(170deg, rgb(31 36 28 / 55%), rgb(17 20 15 / 82%));
+}
+.inventory-shop-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.inventory-shop-head h2 { margin: 0; color: #eee0bb; font-size: 20px; letter-spacing: .18em; }
+.inventory-shop-head span { display: block; margin-top: 4px; color: #7d7f72; font-size: 10px; letter-spacing: .16em; }
+.inventory-shop-purse { text-align: right; }
+.inventory-shop-purse b { display: block; color: #e6c67f; font-size: 18px; font-variant-numeric: tabular-nums; }
+.inventory-shop-purse small { color: #7d7f72; font-size: 10px; letter-spacing: .14em; }
+.inventory-shop-ranks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.inventory-shop-rank { padding: 5px 10px; border: 1px solid #3a4138; border-radius: 4px; color: #9aa08f; font-size: 11px; letter-spacing: .16em; background: transparent; }
+.inventory-shop-rank.active { border-color: #c9a35c; color: #2e2208; background: linear-gradient(160deg, #e6c67f, #a37e3f); font-weight: 700; }
+.inventory-shop-list { display: grid; gap: 8px; margin: 0; padding: 0; overflow: auto; list-style: none; }
+.inventory-shop-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid #31382e; border-radius: 6px; background: rgb(12 14 11 / 35%); }
+.inventory-shop-item strong { display: block; color: #e8e1d3; font-size: 13px; letter-spacing: .08em; }
+.inventory-shop-item span { color: #7d7f72; font-size: 10px; letter-spacing: .1em; }
+.inventory-shop-buy { flex: none; padding: 6px 12px; border: 1px solid #8d7444; border-radius: 4px; color: #2e2208; background: linear-gradient(160deg, #e6c67f, #a37e3f); font-size: 11px; letter-spacing: .18em; }
+.inventory-shop-buy:disabled { opacity: .4; cursor: not-allowed; }
+.inventory-shop-note { margin: 12px 0 0; color: #7d7f72; font-size: 10px; letter-spacing: .12em; line-height: 1.7; }
 .inventory-board-inner {
   display: flex;
   min-height: 0;
@@ -2545,7 +2572,7 @@ body {
 @keyframes inventory-toast-in { from { opacity: 0; transform: translate(-50%, 14px) scale(.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 
 @media (max-width: 1240px) {
-  .inventory-layout { grid-template-columns: minmax(0, 1fr) 316px; }
+  .inventory-layout { grid-template-columns: 240px minmax(0, 1fr) 316px; }
   .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
 }
 
@@ -3166,7 +3193,7 @@ body {
 .heroes-page .page-head .crumb b { color: var(--gold); font-weight: 500; }
 .heroes-page .page-head h1 { margin: 0; color: #f2e7d0; font-family: var(--font-brush); font-size: 58px; font-weight: 400; line-height: 1; letter-spacing: .06em; text-shadow: 0 6px 30px rgb(0 0 0 / 45%); }
 .heroes-page .page-head .latin { margin: 10px 0 0; color: var(--paper-mute); font-size: 10px; letter-spacing: .42em; text-transform: uppercase; }
-.heroes-stage { position: relative; z-index: 1; display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 20px; align-items: start; }
+.heroes-stage { position: relative; z-index: 1; display: grid; grid-template-columns: 236px minmax(0, 1fr) 280px; gap: 20px; align-items: start; }
 .heroes-page .sec-title { display: flex; align-items: baseline; gap: 14px; }
 .heroes-page .sec-title h2 { margin: 0; color: #e6d7b4; font-family: var(--font-brush); font-size: 30px; font-weight: 400; letter-spacing: .12em; }
 .heroes-page .sec-title .sub { color: var(--paper-mute); font-size: 10px; letter-spacing: .32em; }
@@ -3692,7 +3719,7 @@ body {
 }
 
 @media (max-width: 1440px) {
-  .heroes-stage { grid-template-columns: 216px minmax(0, 1fr); }
+  .heroes-stage { grid-template-columns: 200px minmax(0, 1fr) 250px; }
   .heroes-page .stat-cluster .chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 1180px) {

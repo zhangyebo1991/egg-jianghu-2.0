@@ -10,18 +10,21 @@ const enemyDefeatedEvent = (overrides: Partial<Extract<CombatEvent, { type: 'ene
   rank: 'elite',
   worldId: 'world_01',
   stage: 3,
+  difficulty: 1,
   seed: 7,
   ...overrides,
 })
 
 describe('击杀即时结算', () => {
-  it('敌人死亡事件立即结算货币与职业经验，本阶段不掉装备', () => {
+  it('敌人死亡事件立即结算货币、职业经验与装备掉落，且不掉转职书', () => {
     const state = createInitialStateV10()
 
     const result = settleCombatEvent(state, enemyDefeatedEvent())
 
-    expect(result.addedEquipmentUids).toEqual([])
-    expect(state.inventory).toHaveLength(0)
+    expect(result.addedEquipmentUids.length).toBeGreaterThan(0)
+    expect(state.inventory.map((item) => item.uid)).toEqual(result.addedEquipmentUids)
+    expect(state.inventory.every((item) => item.definitionId.startsWith('wp_'))).toBe(true)
+    expect(state.jobBooks).toEqual({})
     expect(result.needsSave).toBe(true)
   })
 

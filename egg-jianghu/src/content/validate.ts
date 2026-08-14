@@ -1,7 +1,6 @@
 import { CAREERS } from './careers'
 import { STAGE_ENEMIES, type StageEnemyGroup } from './enemies'
-import { EQUIPMENT_SLOTS } from './equipment'
-import { EQUIPMENT_NAMES_BY_WORLD } from './equipment-names'
+import { EQUIPMENT_SLOTS, equipmentPoolForStage, equipmentPoolForWorld, equipmentSetPoolForStage } from './equipment'
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
 import { FACTION_MARTIALS } from './martials'
 import { HEROES_V10 } from './heroes'
@@ -53,12 +52,16 @@ export const validateContent = (): string[] => {
       }
       if (group.mobs.some((mob) => !mob.name.trim())) errors.push(`${world.id} 第 ${stage} 关小怪名为空`)
       if (!group.boss.name.trim()) errors.push(`${world.id} 第 ${stage} 关首领名为空`)
-    }
-    const equipmentNames = EQUIPMENT_NAMES_BY_WORLD[world.id]
-    if (equipmentNames) {
-      for (const slot of EQUIPMENT_SLOTS) {
-        if (!equipmentNames[slot]?.trim()) errors.push(`${world.id} 缺少${slot}装备名`)
+      const stagePool = equipmentPoolForStage(world.id, stage)
+      if (stagePool.length === 0) errors.push(`${world.id} 第 ${stage} 关装备普通池为空`)
+      if (equipmentSetPoolForStage(world.id, stage).length !== 2) {
+        errors.push(`${world.id} 第 ${stage} 关地点套装不是两件`)
       }
+    }
+    const pool = equipmentPoolForWorld(world.id)
+    if (pool.length === 0) errors.push(`${world.id} 装备掉落池为空`)
+    for (const slot of EQUIPMENT_SLOTS) {
+      if (!pool.some((item) => item.slot === slot)) errors.push(`${world.id} 缺少${slot}掉落装备`)
     }
     const budget = RARITY_BUDGET_BY_WORLD[world.id]
     if (budget && budget.length !== 8) {
@@ -79,13 +82,15 @@ export const validateContent = (): string[] => {
     }
   }
 
-  const seenEquipmentNames = new Set<string>()
+  const seenEquipmentIds = new Set<string>()
   for (const world of WORLDS) {
-    for (const slot of EQUIPMENT_SLOTS) {
-      const name = EQUIPMENT_NAMES_BY_WORLD[world.id]?.[slot]
-      if (!name) continue
-      if (seenEquipmentNames.has(name)) errors.push(`装备名重复：${name}`)
-      seenEquipmentNames.add(name)
+    for (const item of equipmentPoolForWorld(world.id)) {
+      if (seenEquipmentIds.has(item.id)) continue
+      seenEquipmentIds.add(item.id)
+      if (!item.name.trim()) errors.push(`${item.id} 装备名为空`)
+      if (item.name.startsWith('圣阶') || ['柴刀', '屠龙宝刀', '祝融灵珠', '小李飞刀', '天公法杖'].includes(item.name)) {
+        errors.push(`${item.id} 使用了停用装备名`)
+      }
     }
   }
 
