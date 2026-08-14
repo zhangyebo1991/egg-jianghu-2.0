@@ -105,3 +105,4 @@ TestResults/
 .worktrees/
 .playwright-mcp/
 .claude/settings.local.json
+docs/brainstorms/.visual/

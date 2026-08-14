@@ -1117,6 +1117,7 @@ const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
   const slot = definition?.slot ?? 'weapon'
   return {
     uid: item.uid,
+    definitionId: item.definitionId,
     name: definition ? equipmentDisplayName(definition, item.affixes) : '无名装备',
     slot,
     slotName: inventorySlotNames[slot],

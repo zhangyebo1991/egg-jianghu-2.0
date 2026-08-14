@@ -142,7 +142,7 @@ const inventoryFixture = (): InventoryPageViewModel => ({
   selectedUid: 'equipment_1',
   detailOpen: false,
   items: [{
-    uid: 'equipment_1', name: '长戟', slot: 'weapon', slotName: '武器',
+    uid: 'equipment_1', definitionId: 'wp_101', name: '长戟', slot: 'weapon', slotName: '武器',
     level: 1, quality: 1, locked: false,
     coreStats: [
       { attributeId: 8, name: '物攻', value: 12, formattedValue: '12', rollPercent: 94 },
@@ -151,7 +151,7 @@ const inventoryFixture = (): InventoryPageViewModel => ({
     affixes: [{ attributeId: 40, name: '土系增伤', value: 0.04, formattedValue: '4%', grade: 'C' }],
   }],
   selectedItem: {
-    uid: 'equipment_1', name: '长戟', slot: 'weapon', slotName: '武器',
+    uid: 'equipment_1', definitionId: 'wp_101', name: '长戟', slot: 'weapon', slotName: '武器',
     level: 1, quality: 1, locked: false,
     coreStats: [
       { attributeId: 8, name: '物攻', value: 12, formattedValue: '12', rollPercent: 94 },
@@ -247,6 +247,28 @@ describe('version 10 长期循环页面', () => {
     expect(open).toContain('当前职业')
   })
 
+  it('侠客已装备槽和行囊都使用原版装备图标', () => {
+    const view = heroesFixture()
+    const item = inventoryFixture().items[0]
+    view.equipment = {
+      heroId: 'hero_test',
+      setIndex: 0,
+      averageItemLevel: item.level,
+      wornCount: 1,
+      slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: slot === item.slot ? item : null })),
+    }
+    view.pack = {
+      ...view.pack!,
+      itemCount: 1,
+      items: [{ ...item, ownerName: null, current: false, occupied: false }],
+    }
+
+    const html = renderHeroesPage(view)
+    expect(html.match(/data-equipment-icon-source="unique"/g)).toHaveLength(2)
+    expect(html).toContain('class="equipment-art"')
+    expect(html).toContain('class="pr-icon"><img')
+  })
+
   it('势力页显示六格悬榜和门人拜帖', () => {
     const html = renderFactionsPage(factionsFixture())
     expect(html.match(/data-quest-slot=/g)).toHaveLength(6)
@@ -273,12 +295,13 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="hn-line">憨厚少年，根骨清奇。')
   })
 
-  it('背包页按原型输出部位线稿、详情器影和品质件数', () => {
+  it('背包页按原型输出原版装备图标、详情器影和品质件数', () => {
     const html = renderInventoryPage({ ...inventoryFixture(), detailOpen: true })
     expect(html).toContain('class="inventory-cell-icon"')
     expect(html).toContain('class="inventory-cell-slot"')
     expect(html).toContain('class="inventory-appraise-figure"')
     expect(html).toContain('class="inventory-figure-ring"')
+    expect(html.match(/data-equipment-icon-source="unique"/g)).toHaveLength(2)
     expect(html).toContain('品质 1<b>1</b>')
     expect(html).toContain('物攻</span>')
     expect(html).toContain('(94%)')

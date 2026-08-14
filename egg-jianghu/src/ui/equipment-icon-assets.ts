@@ -6,7 +6,7 @@ import offhandIcon from '../assets/equipment/slots/offhand.png'
 import ringIcon from '../assets/equipment/slots/token.png'
 import weaponIcon from '../assets/equipment/slots/weapon.png'
 import wristIcon from '../assets/equipment/slots/wrist.png'
-import type { EquipmentSlot } from '../content/equipment'
+import { equipmentDefinitionById, type EquipmentSlot } from '../content/equipment'
 
 const slotIcons: Record<EquipmentSlot, string> = {
   weapon: weaponIcon,
@@ -19,8 +19,16 @@ const slotIcons: Record<EquipmentSlot, string> = {
   ring: ringIcon,
 }
 
-// 后续新增装备专属图标时，在此导入资源并以 definitionId 注册；未注册装备自动回退到部位通用图标。
-const uniqueEquipmentIcons: Partial<Record<string, string>> = {}
+const equipmentIconModules = import.meta.glob<string>('../assets/equipment/zt/zt_eq_*.webp', {
+  eager: true,
+  import: 'default',
+})
+
+const uniqueEquipmentIcons = Object.fromEntries(Object.entries(equipmentIconModules).map(([path, url]) => {
+  const iconKey = path.match(/\/([^/]+)\.webp$/)?.[1]
+  if (!iconKey) throw new Error(`无法解析装备图标资源名：${path}`)
+  return [iconKey, url]
+})) as Record<string, string>
 
 export interface EquipmentIconAsset {
   url: string
@@ -28,7 +36,8 @@ export interface EquipmentIconAsset {
 }
 
 export const equipmentIconAsset = (slot: EquipmentSlot, definitionId?: string): EquipmentIconAsset => {
-  const uniqueIcon = definitionId ? uniqueEquipmentIcons[definitionId] : undefined
+  const iconKey = definitionId ? equipmentDefinitionById(definitionId)?.iconKey : undefined
+  const uniqueIcon = iconKey ? uniqueEquipmentIcons[iconKey] : undefined
   return uniqueIcon
     ? { url: uniqueIcon, source: 'unique' }
     : { url: slotIcons[slot], source: 'slot' }

@@ -25,6 +25,7 @@ export const isEquipmentQuality = (value: unknown): value is EquipmentQuality =>
 
 export interface EquipmentDefinitionV10 {
   id: string
+  iconKey: string
   name: string
   slot: EquipmentSlot
   weaponType: number
@@ -94,6 +95,7 @@ export const EQUIPMENT_DEFINITIONS: EquipmentDefinitionV10[] = [
   ...GENERATED_SET_EQUIPMENT,
 ].map((item) => ({
   id: item.id,
+  iconKey: item.iconKey,
   name: item.name,
   slot: item.slot,
   weaponType: item.weaponType,

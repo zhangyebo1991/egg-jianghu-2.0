@@ -1,5 +1,6 @@
 import { EQUIPMENT_QUALITIES, type EquipmentSlot } from '../content/equipment'
 import type { EquipmentQuality } from '../domain/types'
+import { equipmentIconAsset } from './equipment-icon-assets'
 import { escapeHtml } from './html'
 
 export interface InventoryAttributeView {
@@ -19,6 +20,7 @@ export interface InventoryAffixView extends InventoryAttributeView {
 
 export interface InventoryItemView {
   uid: string
+  definitionId: string
   name: string
   slot: EquipmentSlot
   slotName: string
@@ -69,18 +71,10 @@ export interface InventoryPageViewModel {
   shop: InventoryShopView
 }
 
-const SLOT_ICON_MARKUP: Record<EquipmentSlot, string> = {
-  weapon: '<path d="M4.5 19.5 L15.5 8.5"/><path d="M15.5 8.5 l4 -4"/><path d="M13 6.5 l4.5 4.5"/><path d="M7.5 16.5 l-2.5 4.5 4.5 -2.5"/>',
-  offhand: '<path d="M12 3.2 L19.2 6.2 v6.4 c0 4.3-3.2 7.6-7.2 9-4-1.4-7.2-4.7-7.2-9 V6.2 Z"/><path d="M12 7.2 v9.2"/>',
-  head: '<path d="M5 12 a7 5.5 0 0 1 14 0"/><path d="M4.5 12 h15"/><path d="M9 12.5 l-2.5 5 M15 12.5 l2.5 5"/>',
-  armor: '<path d="M9 4.5 l-4.5 3 2 4.5 2 -1.2 V20 h7 v-9.2 l2 1.2 2 -4.5 -4.5 -3"/><path d="M9 4.5 a3 3 0 0 0 6 0"/><path d="M12.5 11 v9"/>',
-  wrist: '<rect x="7" y="5.5" width="10" height="13" rx="2.5"/><path d="M7 10 h10 M7 14.5 h10"/>',
-  boots: '<path d="M7 4 h6 v6.5 c3 0 5.5 1.8 5.5 5 V17 H7 Z"/><path d="M7 14.5 h11.5"/>',
-  necklace: '<path d="M8 5.2 C8 5.2 10 8.2 12 8.2 s4-3 4-3"/><circle cx="12" cy="14.2" r="4.4"/><circle cx="12" cy="14.2" r="1.5"/>',
-  ring: '<circle cx="12" cy="13" r="6.2"/><circle cx="12" cy="13" r="3.1"/><circle cx="15.6" cy="8.2" r="1.7"/>',
+const renderEquipmentIcon = (item: InventoryItemView): string => {
+  const icon = equipmentIconAsset(item.slot, item.definitionId)
+  return `<img src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}">`
 }
-
-const renderSlotIcon = (slot: EquipmentSlot): string => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SLOT_ICON_MARKUP[slot]}</svg>`
 
 const renderSlotTabs = (view: InventoryPageViewModel): string => view.slotTabs.map((tab) => `
   <button type="button" class="inventory-slot-tab${view.slotFilter === tab.id ? ' active' : ''}"
@@ -96,7 +90,7 @@ const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null
     aria-label="${escapeHtml(`${item.name}，品质 ${item.quality}，等级 ${item.level}`)}">
     ${item.locked ? '<span class="inventory-lock-mark" aria-label="已锁定">锁</span>' : ''}
     <span class="inventory-cell-level">Lv.${item.level}</span>
-    <span class="inventory-cell-icon" aria-hidden="true">${renderSlotIcon(item.slot)}</span>
+    <span class="inventory-cell-icon" aria-hidden="true">${renderEquipmentIcon(item)}</span>
     <span class="inventory-cell-name">${escapeHtml(item.name)}</span>
     <span class="inventory-cell-slot">${escapeHtml(item.slotName)}</span>
   </button>`
@@ -137,7 +131,7 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
     <span class="inventory-slot-tag">Lv.${item.level}</span>
   </div>
   <div class="inventory-appraise-figure">
-    <span class="inventory-figure-ring" data-rarity="${item.quality}">${renderSlotIcon(item.slot)}</span>
+    <span class="inventory-figure-ring" data-rarity="${item.quality}">${renderEquipmentIcon(item)}</span>
     <div>
       <h2 class="inventory-appraise-name">${escapeHtml(item.name)}</h2>
       <div class="inventory-appraise-latin">品质 ${item.quality} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Level ${item.level}</div>
