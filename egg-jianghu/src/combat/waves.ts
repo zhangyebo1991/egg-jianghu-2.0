@@ -1,4 +1,5 @@
 import { createRng, type Rng } from './rng'
+import { applyPassiveAttributes } from './skill-ai'
 import { panelToAttributeMap } from './stats'
 import { stageEnemyGroup, type EnemyDefinition } from '../content/enemies'
 import type { FormationColumn, FormationRow } from '../domain/types'
@@ -84,7 +85,7 @@ const createEnemy = (
   const criticalChance = Math.min(0.35, 0.04 + worldIndex * 0.01)
   const criticalMultiplier = 1.5
   const controlResistance = rank === 'boss' ? 0.55 : rank === 'elite' ? 0.3 : 0.1
-  return {
+  const enemy: CombatUnit = {
     id: enemyId(worldId, stage, identity),
     name: identity.definition.name,
     side: 'enemy',
@@ -95,8 +96,9 @@ const createEnemy = (
     alive: true,
     hp: maxHp,
     maxHp,
+    shield: 0,
     energy: 0,
-    maxEnergy: 100,
+    maxEnergy: 5,
     gauge: 0,
     effectiveAgility,
     externalAttack,
@@ -108,12 +110,10 @@ const createEnemy = (
     criticalChance,
     criticalMultiplier,
     controlResistance,
-    controlDiminishing: {},
     cooldowns: {},
     statuses: [],
-    momentum: {},
-    skillIds: [null, null, null, null],
-    baseSkillId: 'enemy_base',
+    skillIds: identity.definition.skillIds,
+    baseAttackId: identity.definition.attackSkillId,
     attributes: panelToAttributeMap({
       maxHp,
       effectiveAgility,
@@ -132,6 +132,8 @@ const createEnemy = (
       lifeSteal: 0,
     }),
   }
+  applyPassiveAttributes(enemy)
+  return enemy
 }
 
 const ranksForWave = (wave: number): CombatRank[] => {

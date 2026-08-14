@@ -30,7 +30,7 @@ describe('江湖战斗页', () => {
     expect(html).not.toContain('首次通关')
   })
 
-  it('战斗页显示波次、三路五列、气机、真气、回气与满仓警告', () => {
+  it('战斗页显示波次、三路五列、气机、能量、回气与满仓警告', () => {
     const html = renderIdlePage(fixtureViewModel({
       inventoryCount: 300,
       combat: {
@@ -38,7 +38,7 @@ describe('江湖战斗页', () => {
         wave: 10,
         party: [],
         enemies: [
-          { id: 'boss', name: '首领', rank: 'boss', row: 1, col: 1, hp: 100, maxHp: 100, energy: 20, maxEnergy: 100, gauge: 500, cooldownMs: 2300, alive: true, skillName: '首领绝技' },
+          { id: 'boss', name: '首领', rank: 'boss', row: 1, col: 1, hp: 100, maxHp: 100, energy: 2, maxEnergy: 5, gauge: 500, cooldownMs: 2300, alive: true, skillName: '首领绝技' },
         ],
       },
     }))
@@ -47,7 +47,7 @@ describe('江湖战斗页', () => {
     expect(html.match(/data-formation-slot=/g)).toHaveLength(15)
     expect(html.match(/data-enemy-slot=/g)).toHaveLength(15)
     expect(html).toContain('气机')
-    expect(html).toContain('真气')
+    expect(html).toContain('能量')
     expect(html).toContain('回气')
     expect(html).toContain('class="stat-chip warn"')
     expect(html).toContain('class="pack-meter full"')
@@ -56,7 +56,7 @@ describe('江湖战斗页', () => {
   it('按我左敌右展示战场，双方最前列贴中线镜像对峙', () => {
     const unit = (id: string, row: 0 | 1 | 2, col: 0 | 1 | 2 | 3 | 4) => ({
       id, name: id, rank: 'normal' as const, row, col, hp: 100, maxHp: 100,
-      energy: 20, maxEnergy: 100, gauge: 0, cooldownMs: 0, alive: true, skillName: '蓄势待发',
+      energy: 2, maxEnergy: 5, gauge: 0, cooldownMs: 0, alive: true, skillName: '蓄势待发',
     })
     const html = renderIdlePage(fixtureViewModel({
       combat: {
@@ -95,7 +95,7 @@ describe('江湖战斗页', () => {
         wave: 7,
         party: [{
           id: 'hero', name: '少侠', rank: 'normal', row: 1, col: 0,
-          hp: 25, maxHp: 100, energy: 100, maxEnergy: 100, gauge: 1000,
+          hp: 25, maxHp: 100, energy: 5, maxEnergy: 5, gauge: 1000,
           cooldownMs: 1200, alive: true, skillName: '落英神剑',
         }],
         enemies: [],

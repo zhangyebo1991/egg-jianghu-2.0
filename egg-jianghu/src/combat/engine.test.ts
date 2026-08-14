@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { createCombatEngine } from './engine'
 import { advanceToNextWave, createWave, isWaveCleared } from './waves'
-import type { CombatStartInput, CombatUnit } from './types'
+import type { CombatStartInput, CombatSummon, CombatUnit } from './types'
 import { panelToAttributeMap } from './stats'
 
 const partyUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => {
   const merged: CombatUnit = {
     id: 'hero_strong',
     name: '强力侠客',
-    careerId: 'sword',
+    careerId: 'job_1',
     side: 'party',
     row: 1,
     col: 0,
@@ -17,8 +17,9 @@ const partyUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => {
     alive: true,
     hp: 5000,
     maxHp: 5000,
-    energy: 20,
-    maxEnergy: 100,
+    shield: 0,
+    energy: 0,
+    maxEnergy: 5,
     gauge: 0,
     effectiveAgility: 2500,
     externalAttack: 5000,
@@ -30,16 +31,13 @@ const partyUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => {
     criticalChance: 0,
     criticalMultiplier: 1.5,
     controlResistance: 0.5,
-    controlDiminishing: {},
     cooldowns: {},
     statuses: [],
-    momentum: {},
-    skillIds: [null, null, null, null],
-    baseSkillId: 'base_sword',
+    skillIds: [],
+    baseAttackId: 1,
     attributes: {},
     ...overrides,
   }
-  // 诸天引擎读 attributes，从散落字段镜像（与 production buildCombatParty 一致）
   merged.attributes = panelToAttributeMap({
     maxHp: merged.maxHp,
     effectiveAgility: merged.effectiveAgility,
@@ -53,7 +51,7 @@ const partyUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => {
     criticalMultiplier: merged.criticalMultiplier,
     controlResistance: merged.controlResistance,
     initialEnergy: merged.energy,
-    energyRecovery: 5,
+    energyRecovery: 1,
     cooldownRate: 0,
     lifeSteal: 0,
   })
@@ -70,15 +68,16 @@ describe('十波战斗', () => {
     }
   })
 
-  it('换波继承气血、阵亡、真气、气机、回气、状态和武学势', () => {
+  it('换波继承气血、阵亡、能量、气机、回气和状态', () => {
     const party = [partyUnit({
       hp: 71,
-      energy: 42,
+      energy: 2,
       gauge: 600,
-      cooldowns: { skill: 2800 },
-      statuses: [{ id: 'guard', remainingMs: 4300, mode: 'refresh', stacks: 1, value: 0.2 }],
-      momentum: { sword: 3 },
+      cooldowns: { 1: 2800 },
+      statuses: [{ buffId: 11, stacks: 1, remainingMs: 4300 }],
     })]
+    const summon = partyUnit({ id: 'summon_1_0', side: 'party' }) as CombatSummon
+    summon.remainingMs = 5000
     const state = {
       seed: 7,
       worldId: 'world_01',
@@ -90,9 +89,8 @@ describe('十波战斗', () => {
       result: 'fighting' as const,
       party,
       enemies: createWave('world_01', 1, 3, 7).enemies.map((enemy) => ({ ...enemy, alive: false, hp: 0 })),
-      summons: [partyUnit({ id: 'summon', side: 'party' }) as CombatUnit & { remainingMs: number }],
+      summons: [summon],
     }
-    state.summons[0].remainingMs = 5000
 
     advanceToNextWave(state)
 
@@ -100,10 +98,9 @@ describe('十波战斗', () => {
     expect(state.party[0]).toMatchObject({
       hp: 71,
       alive: true,
-      energy: 42,
+      energy: 2,
       gauge: 600,
-      cooldowns: { skill: 2800 },
-      momentum: { sword: 3 },
+      cooldowns: { 1: 2800 },
     })
     expect(state.party[0].statuses[0].remainingMs).toBe(4300)
     expect(state.summons[0].remainingMs).toBe(5000)
@@ -152,16 +149,61 @@ describe('十波战斗', () => {
       seed: 3,
       party: [partyUnit({ id: 'vamp', hp: 100, maxHp: 10_000, externalAttack: 5000, criticalChance: 0 })],
     })
-    engine.state.party[0].attributes[14] = 100 // 100% 吸血
+    engine.state.party[0].attributes[14] = 100
     const actor = engine.state.party[0]
     const damage = engine.tick(50).find((event) => event.type === 'damage' && event.sourceId === 'vamp') as
       | { amount: number }
       | undefined
     expect(damage).toBeDefined()
     if (damage) {
-      // 吸血回复 = ceil(伤害 × sx14/100)，actor 从 100 回复且不超 maxHp（高敏捷可能多次行动回满）
       expect(actor.hp).toBeGreaterThan(100)
       expect(actor.hp).toBeLessThanOrEqual(actor.maxHp)
     }
+  })
+
+  it('张角攒满 5 能量后释放战场庇护', () => {
+    const engine = createCombatEngine({
+      worldId: 'world_01',
+      stage: 1,
+      mode: 'guard',
+      seed: 11,
+      party: [partyUnit()],
+    })
+    const bossWave = createWave('world_01', 1, 10, 11)
+    engine.state.wave = 10
+    engine.state.enemies = bossWave.enemies
+    const boss = engine.state.enemies.find((enemy) => enemy.rank === 'boss')!
+    boss.energy = 4
+    boss.gauge = 1000
+    boss.effectiveAgility = 1
+    engine.state.party[0].gauge = 0
+    engine.state.party[0].effectiveAgility = 1
+
+    const used = engine.tick(5).filter((event) => event.type === 'skill-used' && event.sourceId === boss.id)
+    expect(used.some((event) => event.type === 'skill-used' && event.skillId === 47)).toBe(true)
+  })
+
+  it('护盾先于气血吸收伤害', () => {
+    const engine = createCombatEngine({
+      worldId: 'world_01',
+      stage: 1,
+      mode: 'guard',
+      seed: 5,
+      party: [partyUnit({
+        hp: 500,
+        maxHp: 500,
+        shield: 10_000,
+        evade: 0,
+        effectiveAgility: 1,
+        externalAttack: 1,
+        internalAttack: 1,
+      })],
+    })
+    engine.state.party[0].gauge = 0
+    engine.state.enemies[0].gauge = 1000
+    const beforeHp = engine.state.party[0].hp
+    engine.tick(5)
+    expect(engine.state.party[0].hp).toBe(beforeHp)
+    expect(engine.state.party[0].shield).toBeLessThan(10_000)
   })
 })

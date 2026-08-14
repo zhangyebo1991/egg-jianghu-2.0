@@ -63,7 +63,7 @@ export const buildCombatStats = (
   const stats: CombatStats = {
     // 生命：防御模板 ×5（体）—— 白板 580
     maxHp: Math.floor(5 * defenseBase(aptitude.constitution) * sharedScale),
-    maxEnergy: 100,
+    maxEnergy: 5,
     // 初始能量：原版 sx28 白板 0（用户实测）；战斗开始能量 = 0
     initialEnergy: 0,
     // 能量回复：原版 sx29 白板 1（用户实测）；egg 战斗循环另有行动回能机制（未确证粒度前保持）

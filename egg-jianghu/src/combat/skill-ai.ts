@@ -1,89 +1,116 @@
-import { selectTargets, type TargetRule } from './targeting'
+import { skillById, type CombatSkillContent } from '../content/skills'
+import { SX } from './attribute-ids'
+import type { Rng } from './rng'
+import { unitAttr } from './statuses'
+import { firstEmptySlot, selectTargets, type TargetRule } from './targeting'
 import type { CombatUnit } from './types'
 
-export type SkillSemantic = 'damage' | 'heal' | 'revive' | 'cleanse' | 'guard' | 'dispel'
-
-export interface CombatSkillDefinition {
-  id: string
-  energyCost: number
-  cooldownMs: number
-  semantic: SkillSemantic
-  target: TargetRule
-  careerIds?: string[]
-  requiredMomentum?: Record<string, number>
-}
-
-export interface SkippedSkill {
-  skillId: string
-  reason: string
-}
-
 export interface SkillSelection {
-  skillId: string
-  skipped: SkippedSkill[]
+  skill: CombatSkillContent
 }
 
-const semanticTargets = (
-  skill: CombatSkillDefinition,
+const shapeOf = (skill: CombatSkillContent): TargetRule['shape'] => {
+  if (skill.rangeKind === 'all') return 'all'
+  if (skill.rangeKind === 'spread') return 'spread'
+  return 'single'
+}
+
+export const skillTargetRule = (actor: CombatUnit, skill: CombatSkillContent): TargetRule => ({
+  shape: shapeOf(skill),
+  reach: skill.reach,
+  sourceRow: actor.row,
+  count: skill.rangeCount,
+})
+
+const livingSummons = (allies: CombatUnit[]): CombatUnit[] =>
+  allies.filter((unit) => unit.alive && unit.id.startsWith('summon_'))
+
+const candidatePool = (skill: CombatSkillContent, allies: CombatUnit[], enemies: CombatUnit[]): CombatUnit[] => {
+  const pool = skill.targetSide === 'ally' ? allies : enemies
+  if (skill.behavior === 'heal') return pool.filter((unit) => unit.alive && unit.hp < unit.maxHp)
+  if (skill.behavior === 'revive') return pool.filter((unit) => !unit.alive)
+  if (skill.rangeKind === 'self') return pool.filter((unit) => unit.alive)
+  return pool.filter((unit) => unit.alive)
+}
+
+export const selectSkillTargets = (
+  actor: CombatUnit,
+  skill: CombatSkillContent,
   allies: CombatUnit[],
   enemies: CombatUnit[],
 ): CombatUnit[] => {
-  if (skill.semantic === 'heal') {
-    return selectTargets(allies.filter((unit) => unit.alive && unit.hp < unit.maxHp), skill.target)
+  if (skill.rangeKind === 'self' || skill.behavior === 'summon') return [actor]
+  const pool = candidatePool(skill, allies, enemies)
+  if (skill.behavior === 'revive') {
+    return pool.sort((left, right) => left.formationOrder - right.formationOrder).slice(0, skill.rangeCount)
   }
-  if (skill.semantic === 'revive') {
-    return allies.filter((unit) => !unit.alive).sort((left, right) => left.formationOrder - right.formationOrder).slice(0, 1)
+  if (skill.behavior === 'heal' && skill.rangeKind === 'single') {
+    return [...pool].sort((left, right) =>
+      (left.hp / left.maxHp - right.hp / right.maxHp)
+      || (left.formationOrder - right.formationOrder),
+    ).slice(0, 1)
   }
-  if (skill.semantic === 'cleanse') {
-    return selectTargets(allies.filter((unit) => unit.statuses.some((status) => status.category && status.category !== 'buff')), skill.target)
-  }
-  if (skill.semantic === 'dispel') {
-    return selectTargets(enemies.filter((unit) => unit.statuses.some((status) => status.category === 'buff')), skill.target)
-  }
-  if (skill.semantic === 'guard') return allies.filter((unit) => unit.alive).slice(0, 1)
-  return selectTargets(enemies, skill.target)
+  return selectTargets(pool, skillTargetRule(actor, skill))
 }
 
 const unavailableReason = (
   actor: CombatUnit,
-  skill: CombatSkillDefinition,
+  skill: CombatSkillContent,
   allies: CombatUnit[],
   enemies: CombatUnit[],
 ): string | null => {
-  if (skill.careerIds && (!actor.careerId || !skill.careerIds.includes(actor.careerId))) return '当前职业不符'
-  if (actor.energy < skill.energyCost) return '真气不足'
-  if ((actor.cooldowns[skill.id] ?? 0) > 0) return '武功尚在回气'
-  for (const [id, required] of Object.entries(skill.requiredMomentum ?? {})) {
-    if ((actor.momentum[id] ?? 0) < required) return `缺少${id}`
+  if (skill.behavior === 'passive') return '被动技能不可主动释放'
+  if (actor.energy < skill.energyCost) return '能量不足'
+  if ((actor.cooldowns[skill.id] ?? 0) > 0) return '技能冷却中'
+  if (skill.behavior === 'summon') {
+    if (!firstEmptySlot(allies)) return '没有空余站位'
+    const cap = 1 + unitAttr(actor, SX.召唤数量)
+    if (livingSummons(allies).length >= cap) return '召唤已满'
+    return null
   }
-  if (semanticTargets(skill, allies, enemies).length > 0) return null
-  if (skill.semantic === 'heal') return '没有受伤目标'
-  if (skill.semantic === 'revive') return '没有阵亡目标'
-  if (skill.semantic === 'cleanse') return '没有可驱散的负面状态'
-  if (skill.semantic === 'dispel') return '敌人没有可驱散的增益'
+  if (selectSkillTargets(actor, skill, allies, enemies).length > 0) return null
+  if (skill.behavior === 'heal') return '没有受伤目标'
+  if (skill.behavior === 'revive') return '没有阵亡目标'
   return '没有合法目标'
 }
 
+const isPrioritySkill = (skill: CombatSkillContent): boolean =>
+  skill.energyCost > 0 || skill.behavior !== 'attack'
+
+/** 四槽：有耗能或非攻击技能时从左到右释放；否则在 0 耗普攻间抽取；再回退职业普攻 */
 export const selectSkill = (
   actor: CombatUnit,
   allies: CombatUnit[],
   enemies: CombatUnit[],
-  definitions: Record<string, CombatSkillDefinition>,
+  rng?: Rng,
 ): SkillSelection => {
-  const skipped: SkippedSkill[] = []
+  const available: CombatSkillContent[] = []
   for (const skillId of actor.skillIds) {
-    if (!skillId) continue
-    const skill = definitions[skillId]
-    if (!skill) {
-      skipped.push({ skillId, reason: '武功定义不存在' })
-      continue
-    }
-    const reason = unavailableReason(actor, skill, allies, enemies)
-    if (reason) {
-      skipped.push({ skillId, reason })
-      continue
-    }
-    return { skillId, skipped }
+    const skill = skillById(skillId)
+    if (!skill) continue
+    if (unavailableReason(actor, skill, allies, enemies)) continue
+    available.push(skill)
   }
-  return { skillId: actor.baseSkillId, skipped }
+  const prioritized = available.filter(isPrioritySkill)
+  if (prioritized.length > 0) return { skill: prioritized[0] }
+  const freeAttacks = available.filter((skill) => skill.behavior === 'attack')
+  if (freeAttacks.length > 0) {
+    const index = rng ? rng.nextInt(0, freeAttacks.length) : 0
+    return { skill: freeAttacks[index] }
+  }
+  const fallback = skillById(actor.baseAttackId)
+  if (fallback && !unavailableReason(actor, fallback, allies, enemies)) return { skill: fallback }
+  const punch = skillById(1)
+  if (!punch) throw new Error('缺少普攻技能 1')
+  return { skill: punch }
+}
+
+export const applyPassiveAttributes = (unit: CombatUnit): void => {
+  for (const skillId of unit.skillIds) {
+    const skill = skillById(skillId)
+    if (skill?.behavior !== 'passive') continue
+    for (const modifier of skill.passiveAttributes ?? []) {
+      unit.attributes[modifier.sxId] = (unit.attributes[modifier.sxId] ?? 0) + modifier.value
+    }
+  }
 }

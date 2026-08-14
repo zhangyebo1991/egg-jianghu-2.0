@@ -20,6 +20,8 @@ import {
 import { FACTIONS } from './content/factions'
 import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
 import { FACTION_MARTIALS, martialByIdV10 } from './content/martials'
+import { buffById } from './content/buffs'
+import { skillById } from './content/skills'
 import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
@@ -212,15 +214,15 @@ const combatUnitName = (unitId: string): string => combatUnitCache.get(unitId)?.
 const presentCombatEvents = (events: CombatEvent[], now: number): void => {
   for (const event of events) {
     if (event.type === 'skill-used') {
-      const martial = martialByIdV10(event.skillId)
+      const skill = skillById(event.skillId)
       const actor = combatUnitCache.get(event.sourceId)
-      if (actor && martial?.damageRoute !== 'healing') {
+      if (actor && skill?.behavior === 'attack') {
         addCombatEffect(actor.side === 'party' ? 'lunge-party' : 'lunge-enemy', now, event.sourceId)
       }
-      if (martial) {
-        addCombatEffect('skill-aura', now, event.sourceId)
-        addCombatEffect('skill-name', now, event.sourceId, martial.name)
-        addCombatLog('skill', '绝', `${combatUnitName(event.sourceId)} 使出「${martial.name}」！`)
+      if (skill) {
+        addCombatEffect(skill.behavior === 'heal' ? 'heal-aura' : 'skill-aura', now, event.sourceId)
+        addCombatEffect('skill-name', now, event.sourceId, skill.name)
+        addCombatLog('skill', '绝', `${combatUnitName(event.sourceId)} 使出「${skill.name}」！`)
       }
     } else if (event.type === 'damage') {
       addCombatEffect('hit-shake', now, event.targetId)
@@ -230,6 +232,15 @@ const presentCombatEvents = (events: CombatEvent[], now: number): void => {
       addCombatEffect('heal-aura', now, event.targetId)
       addCombatEffect('healing', now, event.targetId, String(event.amount))
       addCombatLog('heal', '愈', `${combatUnitName(event.sourceId)} 为 ${combatUnitName(event.targetId)} 恢复 ${event.amount} 气血。`)
+    } else if (event.type === 'shield-applied') {
+      addCombatLog('heal', '盾', `${combatUnitName(event.sourceId)} 为 ${combatUnitName(event.targetId)} 加上 ${event.amount} 护盾。`)
+    } else if (event.type === 'unit-revived') {
+      addCombatLog('heal', '起', `${combatUnitName(event.sourceId)} 令 ${combatUnitName(event.targetId)} 重返战场。`)
+    } else if (event.type === 'summoned') {
+      addCombatLog('skill', '召', `${combatUnitName(event.sourceId)} 召来「${event.summonName}」。`)
+    } else if (event.type === 'status-applied') {
+      const buffName = buffById(event.buffId)?.name
+      if (buffName) addCombatLog('system', '状', `${combatUnitName(event.targetId)} 获得「${buffName}」。`)
     } else if (event.type === 'enemy-defeated') {
       if (combatRunPresentation) combatRunPresentation.kills += 1
       const rank = event.rank === 'boss' ? '首领' : event.rank === 'elite' ? '精英' : '敌人'
@@ -241,9 +252,6 @@ const presentCombatEvents = (events: CombatEvent[], now: number): void => {
       addCombatLog('wave', '破', '本关十波尽破。')
     } else if (event.type === 'party-defeated') {
       addCombatLog('defeat', '退', '队伍败退，按当前模式重整旗鼓。')
-    } else if (event.type === 'skill-skipped') {
-      const martialName = martialByIdV10(event.skillId)?.name ?? '当前招式'
-      addCombatLog('system', '止', `${combatUnitName(event.sourceId)} 的「${martialName}」未能施展：${event.reason}。`)
     }
   }
 }
@@ -508,9 +516,10 @@ const commitAction = (result: ActionResult, successMessage?: string): void => {
 }
 
 const unitView = (unit: CombatUnit): IdleCombatUnitView => {
-  const martial = unit.skillIds
-    .map((skillId) => skillId ? martialByIdV10(skillId) : undefined)
-    .find((candidate) => candidate !== undefined)
+  const equipped = unit.skillIds
+    .map((skillId) => skillById(skillId))
+    .find((candidate) => candidate && candidate.behavior !== 'passive')
+  const base = skillById(unit.baseAttackId)
   return {
     id: unit.id,
     name: unit.name,
@@ -525,7 +534,12 @@ const unitView = (unit: CombatUnit): IdleCombatUnitView => {
     gauge: unit.gauge,
     cooldownMs: Math.max(0, ...Object.values(unit.cooldowns), 0),
     alive: unit.alive,
-    skillName: martial?.name ?? (unit.side === 'party' ? '蓄势待发' : '伺机出手'),
+    skillName: equipped?.name ?? base?.name ?? (unit.side === 'party' ? '蓄势待发' : '伺机出手'),
+    shield: unit.shield,
+    statuses: unit.statuses.flatMap((status) => {
+      const definition = buffById(status.buffId)
+      return definition ? [{ name: definition.name, stacks: status.stacks, polarity: definition.polarity }] : []
+    }),
   }
 }
 
@@ -546,8 +560,8 @@ const idleViewModel = (): IdlePageViewModel => {
     combat: {
       mode: combat.mode,
       wave: combat.wave,
-      party: combat.party.map(unitView),
-      enemies: combat.enemies.map(unitView),
+      party: [...combat.party, ...combat.summons.filter((summon) => summon.side === 'party')].map(unitView),
+      enemies: [...combat.enemies, ...combat.summons.filter((summon) => summon.side === 'enemy')].map(unitView),
     },
     stats: {
       copper: Math.max(0, totalWorldCurrency() - stats.currencyStart),
@@ -2221,7 +2235,8 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     ensurePlaying()
     const hero = session.combat?.state.party.find((unit) => unit.id === heroId)
     if (!hero) throw new Error('出战侠客不存在')
-    hero.cooldowns[martialId] = Math.max(0, remainingMs)
+    const skillId = Number(martialId)
+    if (Number.isFinite(skillId)) hero.cooldowns[skillId] = Math.max(0, remainingMs)
     render()
   },
   fillInventory: debugFillInventory,

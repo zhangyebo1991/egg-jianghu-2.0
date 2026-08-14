@@ -4061,6 +4061,10 @@ body:has(.idle-page) { overflow: hidden; }
 .idle-page .energy-meter .meter-track { height: 3px; }
 .idle-page .energy-meter .meter-fill { background: linear-gradient(90deg, #40607a, var(--idle-azure)); }
 .idle-page .energy-meter.full .meter-fill { box-shadow: 0 0 8px rgb(111 159 184 / 80%); }
+.idle-page .shield-meter .meter-fill { background: linear-gradient(90deg, #8aa4c4, #d7e6f5); }
+.idle-page .unit-statuses { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+.idle-page .status-chip { padding: 0 3px; border: 1px solid var(--idle-line); border-radius: 3px; color: var(--idle-gold-bright); font-size: 8px; }
+.idle-page .status-chip.debuff { color: #e8a090; border-color: #8a4a3c; }
 .idle-page .unit-foot { display: flex; align-items: center; justify-content: center; gap: 4px; color: var(--idle-paper-mute); font-size: 8px; }
 .idle-page .foot-label { display: none; }
 .idle-page .cool-num { color: var(--idle-paper-dim); font-variant-numeric: tabular-nums; }

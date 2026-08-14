@@ -386,7 +386,7 @@ test('战斗使用当前职业普攻', async ({ page }) => {
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 73)
   })
   const events = await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(100))
-  expect(events).toContainEqual(expect.objectContaining({ type: 'skill-used', skillId: 'base_job_1' }))
+  expect(events).toContainEqual(expect.objectContaining({ type: 'skill-used', skillId: 1 }))
 })
 
 test('每个小关第十波显示 Boss 精英和小怪', async ({ page }) => {

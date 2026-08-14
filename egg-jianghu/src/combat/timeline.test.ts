@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { createRng } from './rng'
-import { applyStatus, resolveControlDuration, tickStatuses } from './statuses'
+import { applyBuff, isControlled, tickStatuses } from './statuses'
 import {
   actionIntervalMs,
   advanceCombatTime,
-  advanceUnitTime,
+  advanceGaugeAndCooldowns,
+  effectiveSpeed,
 } from './timeline'
-import type { CombatStatus, CombatUnit } from './types'
+import type { CombatUnit } from './types'
 
 const fixtureUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
   id: 'hero_fixture',
@@ -19,8 +19,9 @@ const fixtureUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
   alive: true,
   hp: 100,
   maxHp: 100,
-  energy: 20,
-  maxEnergy: 100,
+  shield: 0,
+  energy: 0,
+  maxEnergy: 5,
   gauge: 0,
   effectiveAgility: 100,
   externalAttack: 50,
@@ -32,12 +33,10 @@ const fixtureUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
   criticalChance: 0,
   criticalMultiplier: 1.5,
   controlResistance: 0,
-  controlDiminishing: {},
   cooldowns: {},
   statuses: [],
-  momentum: {},
   skillIds: [],
-  baseSkillId: 'base_fixture',
+  baseAttackId: 1,
   attributes: {},
   ...overrides,
 })
@@ -49,9 +48,9 @@ describe('战斗时间轴', () => {
 
   it('1×、2×、4×执行相同模拟毫秒会得到相同状态', () => {
     const simulate = (frames: number, speed: 1 | 2 | 4) => {
-      const unit = fixtureUnit({ cooldowns: { skill_a: 10_000 } })
+      const unit = fixtureUnit({ cooldowns: { 1: 10_000 } })
       for (let frame = 0; frame < frames; frame += 1) advanceCombatTime([unit], speed)
-      return { gauge: unit.gauge, cooldown: unit.cooldowns.skill_a }
+      return { gauge: unit.gauge, cooldown: unit.cooldowns[1] }
     }
 
     expect(simulate(50, 2)).toEqual(simulate(100, 1))
@@ -59,15 +58,15 @@ describe('战斗时间轴', () => {
   })
 
   it('回气与状态按战斗毫秒减少，不依赖行动次数', () => {
-    const unit = fixtureUnit({
-      cooldowns: { skill_a: 3000 },
-      statuses: [{ id: 'slow', remainingMs: 2500, mode: 'refresh', stacks: 1, value: 0.2 }],
-    })
+    const unit = fixtureUnit({ cooldowns: { 1: 3000 } })
+    applyBuff(unit, 11, 1, 'self')
+    const remaining = unit.statuses[0].remainingMs
 
-    advanceUnitTime(unit, 1000)
+    advanceGaugeAndCooldowns(unit, 1000)
+    tickStatuses(unit, 1000)
 
-    expect(unit.cooldowns.skill_a).toBe(2000)
-    expect(unit.statuses[0].remainingMs).toBe(1500)
+    expect(unit.cooldowns[1]).toBe(2000)
+    expect(unit.statuses[0].remainingMs).toBe(remaining - 1000)
   })
 
   it('同帧满气机按溢出、身法和固定站位顺序裁定', () => {
@@ -82,44 +81,29 @@ describe('战斗时间轴', () => {
 })
 
 describe('实时状态', () => {
-  const status = (overrides: Partial<CombatStatus> = {}): CombatStatus => ({
-    id: 'bleed',
-    remainingMs: 3000,
-    mode: 'refresh',
-    stacks: 1,
-    value: 5,
-    ...overrides,
-  })
-
-  it('刷新、取强、叠层与独立结算使用各自规则', () => {
+  it('同 id buff 叠层并刷新较长持续', () => {
     const unit = fixtureUnit()
-    applyStatus(unit, status({ id: 'refresh', remainingMs: 1000, value: 1 }))
-    applyStatus(unit, status({ id: 'refresh', remainingMs: 3000, value: 2 }))
-    applyStatus(unit, status({ id: 'strongest', mode: 'strongest', value: 5 }))
-    applyStatus(unit, status({ id: 'strongest', mode: 'strongest', value: 3, remainingMs: 5000 }))
-    applyStatus(unit, status({ id: 'stack', mode: 'stack', stacks: 1 }))
-    applyStatus(unit, status({ id: 'stack', mode: 'stack', stacks: 2 }))
-    applyStatus(unit, status({ id: 'independent', mode: 'independent' }))
-    applyStatus(unit, status({ id: 'independent', mode: 'independent' }))
+    applyBuff(unit, 3, 1, 'enemy', { tickValue: 5 })
+    applyBuff(unit, 3, 2, 'enemy', { tickValue: 8 })
 
-    expect(unit.statuses.find((item) => item.id === 'refresh')).toMatchObject({ remainingMs: 3000, value: 2 })
-    expect(unit.statuses.find((item) => item.id === 'strongest')).toMatchObject({ remainingMs: 5000, value: 5 })
-    expect(unit.statuses.find((item) => item.id === 'stack')).toMatchObject({ stacks: 3 })
-    expect(unit.statuses.filter((item) => item.id === 'independent')).toHaveLength(2)
+    expect(unit.statuses).toHaveLength(1)
+    expect(unit.statuses[0]).toMatchObject({ buffId: 3, stacks: 3, tickValue: 8 })
   })
 
-  it('持续伤害每 1000 战斗毫秒结算且 PRNG 可复现', () => {
-    const first = fixtureUnit()
-    const second = fixtureUnit()
-    applyStatus(first, status({ sourceId: 'enemy', tickIntervalMs: 1000, nextTickMs: 1000 }))
-    applyStatus(second, status({ sourceId: 'enemy', tickIntervalMs: 1000, nextTickMs: 1000 }))
+  it('持续伤害每 1000 战斗毫秒结算', () => {
+    const unit = fixtureUnit()
+    applyBuff(unit, 3, 1, 'enemy', { tickValue: 5 })
 
-    expect(tickStatuses(first, 2500, createRng(42))).toEqual(tickStatuses(second, 2500, createRng(42)))
-    expect(first.hp).toBe(90)
+    expect(tickStatuses(unit, 2500).map((tick) => tick.amount)).toEqual([5, 5])
+    expect(unit.hp).toBe(90)
   })
 
-  it('Boss 控制递减降低持续时间但不会完全免疫', () => {
-    expect(resolveControlDuration(4000, 0.5, 3)).toBeGreaterThan(0)
-    expect(resolveControlDuration(4000, 0.5, 3)).toBeLessThan(2000)
+  it('控制类 buff 使有效速度为 0', () => {
+    const unit = fixtureUnit({ gauge: 0 })
+    applyBuff(unit, 2, 1, 'enemy')
+    expect(isControlled(unit)).toBe(true)
+    expect(effectiveSpeed(unit)).toBe(0)
+    advanceGaugeAndCooldowns(unit, 1000)
+    expect(unit.gauge).toBe(0)
   })
 })

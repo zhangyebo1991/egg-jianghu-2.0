@@ -1,3 +1,5 @@
+import { SX } from './attribute-ids'
+import { buffAttributeBonus, isControlled } from './statuses'
 import type { CombatUnit } from './types'
 
 export const COMBAT_TICK_MS = 100
@@ -5,26 +7,26 @@ export const COMBAT_TICK_MS = 100
 export const actionIntervalMs = (agility: number): number =>
   Math.round(50_000 / Math.sqrt(Math.max(1, agility)))
 
-export const advanceGaugeAndCooldowns = (unit: CombatUnit, elapsedMs = COMBAT_TICK_MS): void => {
-  const safeElapsed = Math.max(0, elapsedMs)
-  unit.gauge += safeElapsed / actionIntervalMs(unit.effectiveAgility) * 1000
-  for (const id of Object.keys(unit.cooldowns)) {
-    unit.cooldowns[id] = Math.max(0, unit.cooldowns[id] - safeElapsed)
-  }
+/** 有效速度 = 面板速度 × (1 + 速度修正%/100)；控制类 buff 把速度修正压到 −100 即停条 */
+export const effectiveSpeed = (unit: CombatUnit): number => {
+  const modifier = buffAttributeBonus(unit, SX.速度修正)
+  return unit.effectiveAgility * Math.max(0, 1 + modifier / 100)
 }
 
-export const advanceUnitTime = (unit: CombatUnit, elapsedMs = COMBAT_TICK_MS): void => {
+export const advanceGaugeAndCooldowns = (unit: CombatUnit, elapsedMs = COMBAT_TICK_MS): void => {
   const safeElapsed = Math.max(0, elapsedMs)
-  advanceGaugeAndCooldowns(unit, safeElapsed)
-  for (const status of unit.statuses) {
-    status.remainingMs = Math.max(0, status.remainingMs - safeElapsed)
-    if (status.nextTickMs !== undefined) status.nextTickMs = Math.max(0, status.nextTickMs - safeElapsed)
+  const speed = effectiveSpeed(unit)
+  if (speed > 0) {
+    unit.gauge += safeElapsed / actionIntervalMs(speed) * 1000
   }
-  unit.statuses = unit.statuses.filter((status) => status.remainingMs > 0)
+  for (const id of Object.keys(unit.cooldowns)) {
+    const key = Number(id)
+    unit.cooldowns[key] = Math.max(0, unit.cooldowns[key] - safeElapsed)
+  }
 }
 
 export const readyOrder = (units: CombatUnit[]): CombatUnit[] => units
-  .filter((unit) => unit.alive && unit.gauge >= 1000)
+  .filter((unit) => unit.alive && unit.gauge >= 1000 && !isControlled(unit))
   .sort((left, right) =>
     (right.gauge - left.gauge)
     || (right.effectiveAgility - left.effectiveAgility)
@@ -35,7 +37,7 @@ export const advanceCombatTime = (units: CombatUnit[], tickCount = 1): CombatUni
   const count = Math.max(0, Math.floor(tickCount))
   for (let tick = 0; tick < count; tick += 1) {
     for (const unit of units) {
-      if (unit.alive) advanceUnitTime(unit, COMBAT_TICK_MS)
+      if (unit.alive) advanceGaugeAndCooldowns(unit, COMBAT_TICK_MS)
     }
   }
   return readyOrder(units)

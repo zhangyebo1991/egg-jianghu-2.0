@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { selectSkill, type CombatSkillDefinition } from './skill-ai'
+import { selectSkill } from './skill-ai'
 import { selectTargets } from './targeting'
 import type { CombatUnit } from './types'
 
@@ -14,8 +14,9 @@ const unit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
   alive: true,
   hp: 100,
   maxHp: 100,
-  energy: 20,
-  maxEnergy: 100,
+  shield: 0,
+  energy: 5,
+  maxEnergy: 5,
   gauge: 1000,
   effectiveAgility: 100,
   externalAttack: 50,
@@ -27,12 +28,10 @@ const unit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
   criticalChance: 0,
   criticalMultiplier: 1.5,
   controlResistance: 0,
-  controlDiminishing: {},
   cooldowns: {},
   statuses: [],
-  momentum: {},
   skillIds: [],
-  baseSkillId: 'base',
+  baseAttackId: 1,
   attributes: {},
   ...overrides,
 })
@@ -86,43 +85,30 @@ describe('三路五列目标选择', () => {
 })
 
 describe('四槽行招', () => {
-  const skills: Record<string, CombatSkillDefinition> = {
-    heal: {
-      id: 'heal', energyCost: 10, cooldownMs: 1000, semantic: 'heal', target: { shape: 'single', reach: 'ranged' },
-    },
-    expensive: {
-      id: 'expensive', energyCost: 50, cooldownMs: 1000, semantic: 'damage', target: { shape: 'single', reach: 'melee' },
-    },
-    strike: {
-      id: 'strike', energyCost: 20, cooldownMs: 1000, semantic: 'damage', target: { shape: 'single', reach: 'melee' },
-    },
-    base: {
-      id: 'base', energyCost: 0, cooldownMs: 0, semantic: 'damage', target: { shape: 'single', reach: 'melee' },
-    },
-  }
-
-  it('四槽每次行动从第一式检查并跳过非法条件', () => {
-    const actor = unit({ energy: 30, skillIds: ['heal', 'expensive', 'strike', null] })
-    const allies = [unit({ id: 'ally', hp: 100, maxHp: 100 })]
-    const enemies = [unit({ id: 'enemy', side: 'enemy' })]
-
-    const result = selectSkill(actor, allies, enemies, skills)
-
-    expect(result).toEqual({
-      skillId: 'strike',
-      skipped: [
-        { skillId: 'heal', reason: '没有受伤目标' },
-        { skillId: 'expensive', reason: '真气不足' },
-      ],
-    })
+  it('能量足够时优先释放耗能技能而不是 0 耗普攻', () => {
+    const actor = unit({ energy: 5, skillIds: [32, 74, 10, 47], baseAttackId: 4 })
+    const result = selectSkill(actor, [actor], [unit({ id: 'enemy', side: 'enemy' })])
+    expect(result.skill.id).toBe(47)
+    expect(result.skill.name).toBe('战场庇护')
   })
 
-  it('四槽都不可用时回退零耗职业基础招式', () => {
-    const actor = unit({ energy: 0, skillIds: ['expensive', null, null, null] })
+  it('治疗没有受伤目标时跳过并改用攻击技能', () => {
+    const actor = unit({ energy: 3, skillIds: [60, 32], baseAttackId: 1 })
+    const result = selectSkill(actor, [unit({ id: 'ally', hp: 100, maxHp: 100 })], [unit({ id: 'enemy', side: 'enemy' })])
+    expect(result.skill.id).toBe(32)
+  })
 
-    expect(selectSkill(actor, [actor], [unit({ side: 'enemy' })], skills)).toEqual({
-      skillId: 'base',
-      skipped: [{ skillId: 'expensive', reason: '真气不足' }],
-    })
+  it('四槽都不可用时回退职业普攻', () => {
+    const actor = unit({ energy: 0, skillIds: [47], baseAttackId: 1 })
+    const result = selectSkill(actor, [actor], [unit({ side: 'enemy' })])
+    expect(result.skill.id).toBe(1)
+  })
+
+  it('方士普攻在有伤员时选择包扎', () => {
+    const actor = unit({ energy: 1, skillIds: [], baseAttackId: 6 })
+    const wounded = unit({ id: 'wounded', hp: 20, maxHp: 100 })
+    const result = selectSkill(actor, [actor, wounded], [unit({ side: 'enemy' })])
+    expect(result.skill.id).toBe(6)
+    expect(result.skill.behavior).toBe('heal')
   })
 })

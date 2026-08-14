@@ -1,11 +1,11 @@
 import { FACTIONS, RARITY_BUDGET_BY_WORLD } from './factions'
 import { CITY_MARTIAL_NAMES, FACTION_MARTIAL_NAMES, HEART_METHOD_NAMES } from './martial-names'
 import type { CareerCategory } from './careers'
-import type { StatusMode } from '../combat/types'
 import type { Rarity } from '../domain/types'
 
 export type DamageRoute = 'external' | 'internal' | 'healing'
 export type MartialForce = 'hard' | 'soft' | 'swift' | 'support'
+export type StatusMode = 'refresh' | 'strongest' | 'stack' | 'independent'
 
 export interface MartialCost {
   kind: 'worldCurrency' | 'contribution'

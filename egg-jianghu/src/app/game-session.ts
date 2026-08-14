@@ -2,6 +2,7 @@ import { createCombatEngine, type CombatEngine } from '../combat/engine'
 import { createRng, type Rng } from '../combat/rng'
 import { buildCombatStats, buildAttributeMap } from '../combat/stats'
 import type { CombatEvent, CombatStartInput, CombatUnit, StageSelectionInput } from '../combat/types'
+import { careerById } from '../content/careers'
 import { FACTIONS } from '../content/factions'
 import { heroByIdV10, heroDisplayNameV10 } from '../content/heroes'
 import { WORLDS } from '../content/worlds'
@@ -42,8 +43,9 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       alive: true,
       hp: stats.maxHp,
       maxHp: stats.maxHp,
-      energy: stats.initialEnergy,
-      maxEnergy: stats.maxEnergy,
+      shield: 0,
+      energy: Math.min(5, stats.initialEnergy),
+      maxEnergy: 5,
       gauge: 0,
       effectiveAgility: stats.effectiveAgility,
       externalAttack: stats.externalAttack,
@@ -55,12 +57,10 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       criticalChance: stats.criticalChance,
       criticalMultiplier: stats.criticalMultiplier,
       controlResistance: stats.controlResistance,
-      controlDiminishing: {},
       cooldowns: {},
       statuses: [],
-      momentum: {},
-      skillIds: [...progress.equippedMartialIds],
-      baseSkillId: `base_${progress.currentCareerId}`,
+      skillIds: [],
+      baseAttackId: careerById(progress.currentCareerId)?.basicAttackSkillId ?? 1,
       attributes: buildAttributeMap(definition, progress, state.inventory),
     }]
   })

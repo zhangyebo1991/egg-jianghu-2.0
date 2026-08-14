@@ -111,6 +111,11 @@ const enemyPortraits: Record<CombatRank, readonly string[]> = {
 const zhutianPortraits = import.meta.glob<string>('../assets/enemies/zt/zt_*.webp', { eager: true, import: 'default' })
 
 export const enemyPortraitAsset = (rank: CombatRank, unitKey: string): PortraitAsset => {
+  const summonMatch = unitKey.match(/^summon_(\d+)_/)
+  if (summonMatch) {
+    const unique = zhutianPortraits[`../assets/enemies/zt/zt_s${summonMatch[1]}.webp`]
+    if (unique) return { url: unique, source: 'unique' }
+  }
   const definition = enemyDefinitionById(unitKey)
   const unique = definition ? zhutianPortraits[`../assets/enemies/zt/zt_${definition.drId}.webp`] : undefined
   if (unique) return { url: unique, source: 'unique' }

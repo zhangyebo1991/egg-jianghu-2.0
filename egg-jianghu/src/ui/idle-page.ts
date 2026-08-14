@@ -20,6 +20,14 @@ export interface IdleCombatUnitView {
   cooldownMs: number
   alive: boolean
   skillName: string
+  shield?: number
+  statuses?: IdleCombatStatusView[]
+}
+
+export interface IdleCombatStatusView {
+  name: string
+  stacks: number
+  polarity: 'buff' | 'debuff'
 }
 
 export interface IdleCombatView {
@@ -144,6 +152,8 @@ const renderUnit = (
     .join(' ')
   const hpPercent = unit.maxHp > 0 ? unit.hp / unit.maxHp * 100 : 0
   const rank = rankLabel[unit.rank]
+  const statuses = (unit.statuses ?? []).slice(0, 3)
+  const shield = unit.shield ?? 0
   return `<article class="combat-unit ${side}${unit.alive ? '' : ' fallen'}${motionClasses ? ` ${motionClasses}` : ''}"
       data-unit-id="${escapeHtml(unit.id)}" data-rank="${unit.rank}" data-testid="combat-unit-${escapeHtml(unit.id)}">
     ${renderUnitPortrait(unit, side)}
@@ -154,8 +164,12 @@ const renderUnit = (
         <span class="unit-tag row-tag">${laneNames[unit.row]}</span>
       </span>
       ${renderGauge('气血', unit.hp, unit.maxHp, 'hp-meter', unit.alive && hpPercent <= 30 ? 'low' : '')}
+      ${shield > 0 ? renderGauge('护盾', shield, Math.max(shield, unit.maxHp), 'shield-meter') : ''}
       ${renderGauge('气机', unit.gauge, 1000, 'gauge-meter', unit.gauge >= 1000 ? 'full' : '')}
-      ${side === 'party' ? renderGauge('真气', unit.energy, unit.maxEnergy, 'energy-meter', unit.energy >= unit.maxEnergy ? 'full' : '') : ''}
+      ${renderGauge('能量', unit.energy, unit.maxEnergy, 'energy-meter', unit.energy >= unit.maxEnergy ? 'full' : '')}
+      ${statuses.length ? `<span class="unit-statuses">${statuses.map((status) =>
+        `<span class="status-chip ${status.polarity}">${escapeHtml(status.name)}${status.stacks > 1 ? `×${status.stacks}` : ''}</span>`
+      ).join('')}</span>` : ''}
       <span class="unit-foot"><span class="foot-label">回气</span><span class="cool-num">${(unit.cooldownMs / 1000).toFixed(1)}s</span><span class="skill-name">${escapeHtml(unit.skillName)}</span></span>
     </span>
     ${unitEffects.filter((effect) => !motionKinds.has(effect.kind)).map(renderEffect).join('')}
@@ -271,7 +285,7 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
           </section>
           <footer class="rail-section mechanic-legend">
             <span class="legend-item"><i class="legend-dot d-gauge"></i>气机 · 蓄满出手</span>
-            <span class="legend-item"><i class="legend-dot d-energy"></i>真气 · 满则绝技</span>
+            <span class="legend-item"><i class="legend-dot d-energy"></i>能量 · 满则绝技</span>
             <span class="legend-item"><i class="legend-dot d-cool"></i>回气 · 冷却</span>
           </footer>
         </aside>

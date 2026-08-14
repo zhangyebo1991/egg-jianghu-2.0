@@ -2,7 +2,7 @@ import type { Rng } from './rng'
 import type { FormationColumn, FormationRow } from '../domain/types'
 import type { CombatUnit } from './types'
 
-export type TargetShape = 'single' | 'front-row' | 'back-row' | 'row' | 'column' | 'random-multiple' | 'all'
+export type TargetShape = 'single' | 'spread' | 'front-row' | 'back-row' | 'row' | 'column' | 'random-multiple' | 'all'
 /** 近战/远程只影响演出，不再限制可选目标（与诸天原版一致） */
 export type TargetReach = 'melee' | 'ranged'
 
@@ -64,6 +64,16 @@ export const selectTargets = (
     return eligible.filter((unit) => unit.col === column)
   }
   if (rule.shape === 'all') return eligible
+  // 十字/九宫等范围近似：主目标 + 按站位曼哈顿距离向外扩散至 count 个
+  if (rule.shape === 'spread') {
+    const primary = primaryTarget(eligible, rule.sourceRow)
+    if (!primary) return []
+    const count = Math.max(1, Math.floor(rule.count ?? 1))
+    const distance = (unit: CombatUnit): number => Math.abs(unit.row - primary.row) + Math.abs(unit.col - primary.col)
+    return [...eligible]
+      .sort((left, right) => (distance(left) - distance(right)) || stableOrder(left, right))
+      .slice(0, count)
+  }
   if (rule.shape === 'random-multiple') {
     const pool = [...eligible]
     const selected: CombatUnit[] = []
@@ -76,4 +86,20 @@ export const selectTargets = (
   }
   const primary = primaryTarget(eligible, rule.sourceRow)
   return primary ? [primary] : []
+}
+
+const FORMATION_ROWS: FormationRow[] = [0, 1, 2]
+const FORMATION_COLS: FormationColumn[] = [0, 1, 2, 3, 4]
+
+/** 3×5 阵上第一个空格（上路起、前列起）；满员返回 null */
+export const firstEmptySlot = (units: CombatUnit[]): { row: FormationRow; col: FormationColumn } | null => {
+  const occupied = new Set(
+    units.filter((unit) => unit.alive).map((unit) => `${unit.row}-${unit.col}`),
+  )
+  for (const row of FORMATION_ROWS) {
+    for (const col of FORMATION_COLS) {
+      if (!occupied.has(`${row}-${col}`)) return { row, col }
+    }
+  }
+  return null
 }
