@@ -6,7 +6,7 @@ export type FormationRow = 0 | 1 | 2
 export type FormationColumn = 0 | 1 | 2 | 3 | 4
 export type CampaignMode = 'guard' | 'roam'
 export type QuestGrade = HeroGrade
-export type EquipmentQuality = '凡品' | '良品' | '上品' | '珍品' | '绝品'
+export type EquipmentQuality = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 export interface ActionResult {
   ok: boolean
@@ -81,12 +81,13 @@ export interface EquipmentInstance {
   definitionId: string
   level: number
   quality: EquipmentQuality
-  affixes: Array<{ id: string; value: number }>
+  coreStats: Array<{ attributeId: number; coefficient: number }>
+  affixes: Array<{ attributeId: number; coefficient: number }>
   locked: boolean
 }
 
 export interface GameStateV10 {
-  version: 15
+  version: 16
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
   heroes: Record<string, HeroProgressV10>

@@ -1,4 +1,4 @@
-// 生成脚本：从诸天 wp.json / sq.json / dl.json / tz.json 导出战斗可掉落装备。
+// 生成脚本：从诸天 wp.json / sq.json / dl.json / tz.json / zbct.json / shili.json 导出战斗可掉落装备。
 // 普通底模：档位(col4)=1、部位 1–8、六风格族。档位 7 探索具名装不进击杀池。
 // 地点普通池：sq.col3–7 → dl 列、行 1–3（黄巾=铁爪/长戟等，不含联军讨董列的铁盾）。
 // 地点套装：sq.col8 → dl 列两件套（黄巾=鬼谋），只掉部件、不算套装效果。
@@ -15,7 +15,7 @@ const CANDIDATES = [
 const WP_FILE = CANDIDATES.find((path) => existsSync(path))
 if (!WP_FILE) throw new Error('找不到 wp.json，请先解包诸天数据或保留 _analysis/wp.json')
 const sibling = (name) => WP_FILE.replace(/wp\.json$/i, name)
-for (const name of ['tz.json', 'sq.json', 'dl.json']) {
+for (const name of ['tz.json', 'sq.json', 'dl.json', 'zbct.json', 'shili.json']) {
   if (!existsSync(sibling(name))) throw new Error(`找不到 ${name}：${sibling(name)}`)
 }
 
@@ -30,28 +30,6 @@ const SLOT_BY_ID = {
   6: 'boots',
   7: 'necklace',
   8: 'ring',
-}
-
-const BASE_STAT_BY_SLOT = {
-  weapon: 'attack',
-  offhand: 'externalDefense',
-  head: 'internalDefense',
-  armor: 'externalDefense',
-  wrist: 'accuracy',
-  boots: 'agility',
-  necklace: 'maxHp',
-  ring: 'energyRecovery',
-}
-
-const BASE_VALUE_BY_SLOT = {
-  weapon: 8,
-  offhand: 8,
-  head: 8,
-  armor: 8,
-  wrist: 8,
-  boots: 8,
-  necklace: 8,
-  ring: 8,
 }
 
 const WEAPON_TYPE_NAMES = {
@@ -79,6 +57,59 @@ const WEAPON_TYPE_NAMES = {
 
 const STYLE_FAMILIES = ['中式古代', '江湖', '西方', '日式', '近代', '未来']
 
+// 原版 `装备基础核心属性function`，格式为 [属性 id, 模板系数]。
+const WEAPON_CORE_STATS = {
+  1: [[8, 180], [6, 80]],
+  2: [[8, 220], [20, 100]],
+  3: [[8, 200], [12, 100]],
+  4: [[8, 210], [37, 100]],
+  5: [[10, 220], [22, 100]],
+  6: [[10, 200], [13, 100]],
+  7: [[8, 230], [7, 100]],
+  8: [[8, 240], [10, 240]],
+  9: [[10, 180], [34, 100]],
+  10: [[10, 190], [16, 100]],
+  11: [[6, 80], [21, 100]],
+  12: [[8, 40], [13, 100]],
+  13: [[10, 40], [12, 100]],
+  14: [[8, 40], [18, 100]],
+  15: [[10, 40], [23, 100]],
+}
+
+const ARMOR_CORE_STATS = {
+  head: {
+    16: [[9, 120], [11, 80]],
+    17: [[9, 100], [11, 100]],
+    18: [[9, 80], [11, 120]],
+  },
+  armor: {
+    16: [[6, 120], [9, 120]],
+    17: [[6, 100], [9, 100]],
+    18: [[6, 80], [9, 80]],
+  },
+  wrist: {
+    16: [[6, 120], [11, 80]],
+    17: [[6, 100], [11, 100]],
+    18: [[6, 80], [11, 120]],
+  },
+  boots: {
+    16: [[7, 80], [6, 120]],
+    17: [[7, 120], [6, 100]],
+    18: [[7, 100], [6, 80]],
+  },
+}
+
+const ACCESSORY_CORE_STATS = {
+  necklace: {
+    20: [[8, 40], [19, 200]],
+    21: [[10, 40], [19, 200]],
+  },
+  ring: {
+    20: [[8, 40], [18, 200]],
+    21: [[10, 40], [18, 200]],
+  },
+}
+
 const loadTable = (path) => JSON.parse(readFileSync(path, 'utf8')).data.map((col) => col.map((cell) => cell[0]))
 
 const familyOf = (style) => STYLE_FAMILIES.find((family) => String(style).startsWith(family)) ?? null
@@ -88,9 +119,32 @@ const quote = (value) => JSON.stringify(value)
 const wp = loadTable(WP_FILE)
 const tz = loadTable(sibling('tz.json'))
 const sq = loadTable(sibling('sq.json'))
+const zbct = loadTable(sibling('zbct.json'))
+const shili = loadTable(sibling('shili.json'))
 const dlRaw = JSON.parse(readFileSync(sibling('dl.json'), 'utf8'))
 
 const dlAt = (row, col) => Number(dlRaw.data[row]?.[col]?.[0] ?? 0)
+
+const coreStatsFor = (slot, weaponType) => {
+  const source = WEAPON_CORE_STATS[weaponType]
+    ?? ARMOR_CORE_STATS[slot]?.[weaponType]
+    ?? ACCESSORY_CORE_STATS[slot]?.[weaponType]
+  if (!source) throw new Error(`缺少 ${slot}/${weaponType} 的核心属性映射`)
+  return source.map(([attributeId, baseCoefficient]) => ({ attributeId, baseCoefficient }))
+}
+
+const affixPoolFor = (weaponType) => {
+  const pool = zbct
+    .map((row) => Number(row[weaponType]))
+    .filter((attributeId) => attributeId >= 6 && attributeId <= 59)
+  if (pool.length === 0) throw new Error(`zbct.json 装备类型 ${weaponType} 的附词条池为空`)
+  return pool
+}
+
+const equipmentStats = (slot, weaponType) => ({
+  coreStats: coreStatsFor(slot, weaponType),
+  affixPool: affixPoolFor(weaponType),
+})
 
 const items = []
 for (let index = 1; index < wp.length; index += 1) {
@@ -117,8 +171,8 @@ for (let index = 1; index < wp.length; index += 1) {
     weaponTypeName: WEAPON_TYPE_NAMES[weaponType] ?? '未知',
     styleFamily,
     rarity,
-    baseStatId: BASE_STAT_BY_SLOT[slot],
-    baseValue: BASE_VALUE_BY_SLOT[slot],
+    ...equipmentStats(slot, weaponType),
+    ...(rarity === '特殊' ? { fixedQuality: grade } : {}),
   })
 }
 
@@ -131,6 +185,9 @@ const toItem = (row, extra = {}) => {
   const slot = SLOT_BY_ID[slotId]
   const styleFamily = familyOf(style)
   if (!id || !name || !slot || !styleFamily) return null
+  const fixedQuality = Number(row[4])
+  const setFactionId = Number(row[29]) || 0
+  const setElement = Number(shili[setFactionId]?.[22]) || 0
   return {
     id: `wp_${id}`,
     name,
@@ -139,8 +196,10 @@ const toItem = (row, extra = {}) => {
     weaponTypeName: WEAPON_TYPE_NAMES[weaponType] ?? '未知',
     styleFamily,
     rarity: String(row[9] ?? '套装'),
-    baseStatId: BASE_STAT_BY_SLOT[slot],
-    baseValue: BASE_VALUE_BY_SLOT[slot],
+    ...equipmentStats(slot, weaponType),
+    fixedQuality,
+    setFactionId,
+    setElement,
     ...extra,
   }
 }
@@ -221,7 +280,7 @@ for (const family of STYLE_FAMILIES) {
 }
 
 const lines = [
-  '// 由 scripts/generate-zhutian-equipment.mjs 从诸天 wp/sq/dl/tz 生成，请勿手改。',
+  '// 由 scripts/generate-zhutian-equipment.mjs 从诸天 wp/sq/dl/tz/zbct/shili 生成，请勿手改。',
   '// 地点普通池 = sq.col3–7 → dl 行1–3；地点套装 = sq.col8 → dl 两件套。',
   '',
   'export const GENERATED_EQUIPMENT = [',

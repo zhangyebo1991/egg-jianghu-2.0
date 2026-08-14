@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  EQUIPMENT_AFFIXES,
   EQUIPMENT_DEFINITIONS,
   EQUIPMENT_SLOTS,
   EQUIPMENT_STYLE_FAMILIES,
@@ -14,6 +13,7 @@ import {
   planeBaseItemLevel,
   rollEquipmentLevel,
 } from './equipment'
+import { ATTRIBUTE_BY_ID } from './attributes'
 import { WORLDS } from './worlds'
 
 const EXPECTED_SET_NAMES = [
@@ -75,6 +75,9 @@ describe('诸天装备表', () => {
   })
 
   it('130 关地点套装与 sq.col8→dl 两件套一致', () => {
+    const setItems = EQUIPMENT_DEFINITIONS.filter((item) => item.setName)
+    expect(setItems).toHaveLength(260)
+    expect(setItems.every((item) => item.fixedQuality === 5)).toBe(true)
     for (const world of WORLDS) {
       const worldIndex = Number(world.id.replace(/\D/g, ''))
       for (let stage = 1; stage <= 10; stage += 1) {
@@ -94,15 +97,29 @@ describe('诸天装备表', () => {
   })
 
   it('词条用诸天 sx 名，不含旧蛋蛋江湖词', () => {
-    const names = EQUIPMENT_AFFIXES.map((affix) => affix.name)
+    const attributeIds = [...new Set(EQUIPMENT_DEFINITIONS.flatMap((item) => item.affixPool))]
+    const names = attributeIds.map((id) => ATTRIBUTE_BY_ID[id]?.name)
     expect(names).not.toContain('行气')
     expect(names).not.toContain('外功')
     expect(names).not.toContain('会心')
     expect(names).not.toContain('气血')
-    expect(names).toContain('能量回复')
+    expect(names).toContain('技能冷却')
     expect(names).toContain('土系增伤')
     expect(names).toContain('物攻')
-    expect(EQUIPMENT_AFFIXES.every((affix) => /^\d+$/.test(affix.id))).toBe(true)
+    expect(attributeIds.every((id) => id >= 6 && id <= 59)).toBe(true)
+  })
+
+  it('所有可掉落装备都有两条核心和对应类型的加权词条池', () => {
+    expect(EQUIPMENT_DEFINITIONS.every((item) => item.coreStats.length === 2)).toBe(true)
+    expect(EQUIPMENT_DEFINITIONS.every((item) => item.affixPool.length > 0)).toBe(true)
+    expect(EQUIPMENT_DEFINITIONS.find((item) => item.id === 'wp_257')?.coreStats).toEqual([
+      { attributeId: 8, baseCoefficient: 220 },
+      { attributeId: 20, baseCoefficient: 100 },
+    ])
+    expect(EQUIPMENT_DEFINITIONS.find((item) => item.id === 'wp_123')?.coreStats).toEqual([
+      { attributeId: 8, baseCoefficient: 40 },
+      { attributeId: 19, baseCoefficient: 200 },
+    ])
   })
 
   it('中式古代武器样本为长戟', () => {
@@ -115,19 +132,21 @@ describe('诸天装备表', () => {
     expect(planeBaseItemLevel(2)).toBe(25)
     expect(combatDifficultyCoefficient(1, 1)).toBe(1)
     expect(combatDifficultyCoefficient(1, 10)).toBe(91)
-    expect(rollEquipmentLevel('world_01', 1, 1)).toBe(6)
-    expect(rollEquipmentLevel('world_01', 1, 10)).toBe(15)
-    expect(rollEquipmentLevel('world_02', 1, 1)).toBe(26)
-    expect(rollEquipmentLevel('world_01', 2, 1)).toBe(16)
-    expect(rollEquipmentLevel('world_13', 10, 10)).toBe(400)
+    expect(rollEquipmentLevel('world_01', 1, 1, 0)).toBe(4)
+    expect(rollEquipmentLevel('world_01', 1, 1, 1)).toBe(6)
+    expect(rollEquipmentLevel('world_01', 1, 10, 1)).toBe(15)
+    expect(rollEquipmentLevel('world_02', 1, 1, 1)).toBe(26)
+    expect(rollEquipmentLevel('world_01', 2, 1, 1)).toBe(16)
+    expect(rollEquipmentLevel('world_13', 10, 10, 1)).toBe(400)
+    expect(rollEquipmentLevel('world_01', 1, 1, 5)).toBe(14)
   })
 
   it('展示名按诸天规则拼接词条前缀与底名', () => {
     const claw = EQUIPMENT_DEFINITIONS.find((item) => item.id === 'wp_102')
     const halberd = EQUIPMENT_DEFINITIONS.find((item) => item.id === 'wp_101')
     expect(claw?.name).toBe('铁爪')
-    expect(equipmentDisplayName(claw!, [{ id: '52' }])).toBe('大地的铁爪')
+    expect(equipmentDisplayName(claw!, [{ attributeId: 52 }])).toBe('大地的铁爪')
     expect(equipmentDisplayName(halberd!)).toBe('勇士的长戟')
-    expect(equipmentDisplayName(halberd!, [{ id: '48' }, { id: '20' }])).toBe('火山的长戟')
+    expect(equipmentDisplayName(halberd!, [{ attributeId: 48 }, { attributeId: 20 }])).toBe('火山的长戟')
   })
 })

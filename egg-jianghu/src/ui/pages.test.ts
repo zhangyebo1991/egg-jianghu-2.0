@@ -136,22 +136,28 @@ const inventoryFixture = (): InventoryPageViewModel => ({
   capacity: 300,
   itemCount: 1,
   capacityRatio: 1,
-  qualityCounts: { 凡品: 0, 良品: 1, 上品: 0, 珍品: 0, 绝品: 0 },
+  qualityCounts: { 0: 0, 1: 1, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 },
   slotFilter: 'all',
   slotTabs: [{ id: 'all', name: '全部', count: 1 }],
   selectedUid: 'equipment_1',
   detailOpen: false,
   items: [{
     uid: 'equipment_1', name: '长戟', slot: 'weapon', slotName: '武器',
-    level: 1, quality: '良品', locked: false,
-    baseStat: { name: '物攻', value: 10 },
-    affixes: [{ name: '土系增伤', value: 4, min: 2, max: 12, ratio: 20 }],
+    level: 1, quality: 1, locked: false,
+    coreStats: [
+      { attributeId: 8, name: '物攻', value: 12, formattedValue: '12', rollPercent: 94 },
+      { attributeId: 20, name: '物理增伤', value: 0.1, formattedValue: '10%', rollPercent: 103 },
+    ],
+    affixes: [{ attributeId: 40, name: '土系增伤', value: 0.04, formattedValue: '4%', grade: 'C' }],
   }],
   selectedItem: {
     uid: 'equipment_1', name: '长戟', slot: 'weapon', slotName: '武器',
-    level: 1, quality: '良品', locked: false,
-    baseStat: { name: '物攻', value: 10 },
-    affixes: [{ name: '土系增伤', value: 4, min: 2, max: 12, ratio: 20 }],
+    level: 1, quality: 1, locked: false,
+    coreStats: [
+      { attributeId: 8, name: '物攻', value: 12, formattedValue: '12', rollPercent: 94 },
+      { attributeId: 20, name: '物理增伤', value: 0.1, formattedValue: '10%', rollPercent: 103 },
+    ],
+    affixes: [{ attributeId: 40, name: '土系增伤', value: 0.04, formattedValue: '4%', grade: 'C' }],
   },
   shop: {
     worldName: '牛家村',
@@ -273,7 +279,10 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="inventory-cell-slot"')
     expect(html).toContain('class="inventory-appraise-figure"')
     expect(html).toContain('class="inventory-figure-ring"')
-    expect(html).toContain('良品<b>1</b>')
+    expect(html).toContain('品质 1<b>1</b>')
+    expect(html).toContain('物攻</span>')
+    expect(html).toContain('(94%)')
+    expect(html).toContain('[C]')
     expect(html).toContain('共 1 件 · 囊容 300')
     expect(html).toContain('data-testid="job-book-shop"')
     expect(html).toContain('弓手转职书')

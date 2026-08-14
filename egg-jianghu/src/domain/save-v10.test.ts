@@ -12,8 +12,8 @@ const memoryStorage = () => {
   }
 }
 
-describe('version 10 存档', () => {
-  it('通过 version 10 专用 key 检测存档是否存在', () => {
+describe('version 16 存档', () => {
+  it('通过 version 16 专用 key 检测存档是否存在', () => {
     const storage = memoryStorage()
 
     expect(hasSaveV10(storage)).toBe(false)
@@ -23,7 +23,7 @@ describe('version 10 存档', () => {
     expect(hasSaveV10(storage)).toBe(true)
   })
 
-  it('清除时只移除 version 10 存档', () => {
+  it('清除时只移除 version 16 存档', () => {
     const storage = memoryStorage()
     storage.setItem(SAVE_KEY_V10, '{}')
     storage.setItem('other-key', '保留')
@@ -60,7 +60,7 @@ describe('version 10 存档', () => {
     saveGameV10(storage, state, 2000)
 
     const raw = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
-    expect(raw.version).toBe(15)
+    expect(raw.version).toBe(16)
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })
@@ -169,8 +169,9 @@ describe('version 10 存档', () => {
     expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
   })
 
-  it('读取旧七部位存档时迁到八部位三套，并改写腰佩/信物 id', () => {
+  it('拒绝 version 15 的旧七部位装备存档', () => {
     const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>
+    raw.version = 15
     const heroes = raw.heroes as Record<string, Record<string, unknown>>
     delete heroes.hero_player.equipmentSets
     delete heroes.hero_player.activeEquipmentSetIndex
@@ -185,22 +186,6 @@ describe('version 10 存档', () => {
       { uid: 'uid-token', definitionId: 'world_01_token', level: 2, quality: '上品', affixes: [], locked: false },
     ]
 
-    const loaded = hydrateStateV10(raw, 2000)
-    const hero = loaded.heroes.hero_player
-
-    expect(hero.activeEquipmentSetIndex).toBe(0)
-    expect(hero.equipmentBySlot).toEqual({
-      weapon: 'uid-weapon',
-      necklace: 'uid-waist',
-      ring: 'uid-token',
-    })
-    expect(hero.equipmentBySlot).toBe(hero.equipmentSets[0])
-    expect(hero.equipmentSets[1]).toEqual({})
-    expect(hero.equipmentSets[2]).toEqual({})
-    expect(loaded.inventory.map((item) => item.definitionId)).toEqual([
-      'world_01_weapon',
-      'world_01_necklace',
-      'world_01_ring',
-    ])
+    expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
   })
 })

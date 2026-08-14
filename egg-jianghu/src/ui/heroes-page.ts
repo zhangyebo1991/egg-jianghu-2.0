@@ -384,16 +384,16 @@ const renderEquipmentTooltip = (item: InventoryItemView, footer: string): string
     <header>
       <span>${escapeHtml(item.slotName)}</span>
       <strong>${escapeHtml(item.name)}</strong>
-      <em>${escapeHtml(item.quality)} · Lv.${item.level}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</em>
+      <em>品质 ${item.quality} · Lv.${item.level}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</em>
     </header>
     <div class="equipment-tooltip-columns">
       <section>
-        <small>基础</small>
-        <dl class="equipment-properties"><div><dt>${escapeHtml(item.baseStat.name)}</dt><dd>+${item.baseStat.value}</dd></div></dl>
+        <small>核心词条</small>
+        <dl class="equipment-properties">${item.coreStats.map((core) => `<div><dt>${escapeHtml(core.name)} <i>(${core.rollPercent}%)</i></dt><dd>+${escapeHtml(core.formattedValue)}</dd></div>`).join('')}</dl>
       </section>
       ${item.affixes.length ? `<section>
-        <small>词条</small>
-        <dl class="equipment-properties">${item.affixes.map((affix) => `<div><dt>${escapeHtml(affix.name)}</dt><dd>+${affix.value}</dd></div>`).join('')}</dl>
+        <small>附加词条</small>
+        <dl class="equipment-properties">${item.affixes.map((affix) => `<div data-affix-grade="${affix.grade}"><dt>${escapeHtml(affix.name)} <i>[${affix.grade}]</i></dt><dd>+${escapeHtml(affix.formattedValue)}</dd></div>`).join('')}</dl>
       </section>` : ''}
     </div>
     <footer>${escapeHtml(footer)}</footer>
@@ -405,12 +405,12 @@ const renderEquipmentSection = (hero: HeroesHeroView, equipment: HeroesEquipment
     const empty = !item
     const icon = equipmentIconAsset(entry.slot)
     return `<article class="pd-slot pd-pos-${entry.slot}${empty ? ' empty' : ' equipped hero-equipment-slot'}"
-      ${item ? `data-rarity="${escapeHtml(item.quality)}" data-equipment-uid="${escapeHtml(item.uid)}"` : ''} data-slot="${entry.slot}">
+      ${item ? `data-rarity="${item.quality}" data-equipment-uid="${escapeHtml(item.uid)}"` : ''} data-slot="${entry.slot}">
       <span class="pd-icon">${EQUIPMENT_SLOT_MARKS[entry.slot]}</span>
       ${item ? `<img class="equipment-art" src="${escapeHtml(icon.url)}" alt="" aria-hidden="true">` : ''}
       <span class="pd-slot-name">${EQUIPMENT_SLOT_NAMES[entry.slot]}</span>
       <strong class="pd-item-name">${item ? escapeHtml(item.name) : '虚位以待'}</strong>
-      <span class="pd-item-meta">${item ? `${escapeHtml(item.quality)} · Lv.${item.level}` : '未装备'}</span>
+      <span class="pd-item-meta">${item ? `品质 ${item.quality} · Lv.${item.level}` : '未装备'}</span>
       ${item ? `<button type="button" class="pd-unequip" data-action="equipment-unequip" data-hero-id="${escapeHtml(hero.id)}" data-slot="${entry.slot}">卸下</button>` : ''}
       ${item ? renderEquipmentTooltip(item, hero.level < item.level ? `需人物 Lv.${item.level} 方可穿戴` : '双击行囊中物品，可替换此位') : ''}
     </article>`
@@ -447,10 +447,10 @@ const renderPackRail = (view: HeroesPageViewModel): string => {
     : `<button type="button" class="fchip seal${pack.slotFilter === id ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="${id}" title="${EQUIPMENT_SLOT_NAMES[id]}">${EQUIPMENT_SLOT_MARKS[id]}</button>`).join('')
   const qualityChips = (['all', ...EQUIPMENT_QUALITIES] as const).map((quality) => quality === 'all'
     ? `<button type="button" class="fchip${pack.qualityFilter === 'all' ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="all">全</button>`
-    : `<button type="button" class="fchip qc${pack.qualityFilter === quality ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${quality[0]}</button>`).join('')
+    : `<button type="button" class="fchip qc${pack.qualityFilter === quality ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${quality}</button>`).join('')
   const batchPanel = pack.batchOpen ? `<div class="batch-panel">
       <p class="bp-tip">择一品质为界，<b>含该品质以下</b>尽数丢弃；已装备与已锁定者不受影响。</p>
-      <div class="chip-row">${EQUIPMENT_QUALITIES.map((quality) => `<button type="button" class="fchip danger qc${pack.batchQuality === quality ? ' active' : ''}" data-action="hero-batch-discard-filter" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${quality[0]}</button>`).join('')}</div>
+      <div class="chip-row">${EQUIPMENT_QUALITIES.map((quality) => `<button type="button" class="fchip danger qc${pack.batchQuality === quality ? ' active' : ''}" data-action="hero-batch-discard-filter" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${quality}</button>`).join('')}</div>
       <p class="bp-count">${pack.batchQuality === 'all' ? '尚未择定品质' : `将丢弃 <b>${pack.batchCount}</b> 件装备`}</p>
       <div class="bp-btns">
         <button type="button" class="pc-yes" data-action="confirm-batch-discard" ${pack.batchQuality === 'all' || pack.batchCount === 0 ? 'disabled' : ''}>确认丢弃</button>
@@ -458,13 +458,13 @@ const renderPackRail = (view: HeroesPageViewModel): string => {
       </div>
     </div>` : ''
   const rows = pack.items.map((item, index) => `
-    <button type="button" class="pack-row${item.current ? ' current' : item.occupied ? ' occupied' : ''}" data-quality="${escapeHtml(item.quality)}"
+    <button type="button" class="pack-row${item.current ? ' current' : item.occupied ? ' occupied' : ''}" data-quality="${item.quality}"
       data-equipment-uid="${escapeHtml(item.uid)}" data-testid="hero-pack-${escapeHtml(item.uid)}" style="--row-delay:${index * 35}ms"
       aria-label="${escapeHtml(item.name)}">
       <span class="pr-icon">${EQUIPMENT_SLOT_MARKS[item.slot]}</span>
       <span class="pr-body">
         <span class="pr-name">${escapeHtml(item.name)}${item.locked ? ' <span class="pack-lock">锁</span>' : ''}</span>
-        <span class="pr-meta"><span class="pr-q">${escapeHtml(item.quality)}</span> · Lv.${item.level}${item.current ? ' · <span class="pr-owner">已装备</span>' : item.ownerName ? ` · <span class="pr-owner">${escapeHtml(item.ownerName)}</span>` : ''}</span>
+        <span class="pr-meta"><span class="pr-q">品质 ${item.quality}</span> · Lv.${item.level}${item.current ? ' · <span class="pr-owner">已装备</span>' : item.ownerName ? ` · <span class="pr-owner">${escapeHtml(item.ownerName)}</span>` : ''}</span>
       </span>
       <span class="pr-slot-tag">${escapeHtml(item.slotName)}</span>
       ${renderEquipmentTooltip(item, item.current ? '正穿于当前侠客' : item.ownerName ? `由 ${item.ownerName} 穿戴 · 双击仍可换装` : '双击左键，为当前侠客装备')}

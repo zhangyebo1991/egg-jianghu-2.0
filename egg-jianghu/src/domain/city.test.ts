@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { equipmentIdBySlot } from '../content/equipment'
+import { equipmentDefinitionById, equipmentIdBySlot } from '../content/equipment'
 import { learnCityMartial, spend } from './city'
 import { equipEquipment, toggleEquipmentLock } from './inventory'
 import { upgradeMartial } from './martial-training'
@@ -20,14 +20,21 @@ const unlockedThrough = (worldIndex: number): GameStateV10 => {
   return state
 }
 
-const equipment = (uid: string, definitionId: string, locked = false): EquipmentInstance => ({
-  uid,
-  definitionId,
-  level: 1,
-  quality: '凡品',
-  affixes: [],
-  locked,
-})
+const equipment = (uid: string, definitionId: string, locked = false): EquipmentInstance => {
+  const definition = equipmentDefinitionById(definitionId)!
+  return {
+    uid,
+    definitionId,
+    level: 1,
+    quality: 0,
+    coreStats: definition.coreStats.map((core) => ({
+      attributeId: core.attributeId,
+      coefficient: core.baseCoefficient,
+    })),
+    affixes: [],
+    locked,
+  }
+}
 
 describe('城市、势力与装备操作', () => {
   it('城市武馆消耗当前卷货币学习当地通用武功', () => {

@@ -1,12 +1,10 @@
 import { createRng } from '../combat/rng'
 import type { CombatRank } from '../combat/types'
 import {
-  EQUIPMENT_QUALITIES,
-  EQUIPMENT_QUALITY_LEVEL_GAP,
   equipmentPoolForStage,
   equipmentSetPoolForStage,
-  rollAffixes,
   rollEquipmentLevel,
+  rollEquipmentStats,
   type EquipmentSlot,
 } from '../content/equipment'
 import type { EquipmentInstance, EquipmentQuality, GameStateV10 } from './types'
@@ -21,11 +19,11 @@ export interface LootDropInput {
   enemyId: string
 }
 
-const SET_DROP_CHANCE: Record<CombatRank, number> = {
-  normal: 0.12,
-  elite: 0.28,
-  boss: 0.45,
-}
+/** 诸天 `wp.col32`：地点套装的两件装备各自以 1500/10000 判定，且只挂在首领掉落表。 */
+export const SET_PIECE_DROP_CHANCE = 0.15
+
+export const shouldDropSetPiece = (rank: CombatRank, roll: number): boolean =>
+  rank === 'boss' && roll < SET_PIECE_DROP_CHANCE
 
 const DROP_COUNT: Record<CombatRank, number> = {
   normal: 1,
@@ -33,22 +31,32 @@ const DROP_COUNT: Record<CombatRank, number> = {
   boss: 2,
 }
 
-const QUALITY_WEIGHTS: Record<CombatRank, readonly number[]> = {
-  normal: [70, 22, 7, 1, 0],
-  elite: [40, 35, 18, 6, 1],
-  boss: [15, 30, 32, 18, 5],
+export const ENEMY_GRADE_BY_RANK: Record<CombatRank, 1 | 2 | 4> = {
+  normal: 1,
+  elite: 2,
+  boss: 4,
 }
 
-const pickWeightedQuality = (rank: CombatRank, roll: number): EquipmentQuality => {
-  const weights = QUALITY_WEIGHTS[rank]
+export const BASE_QUALITY_WEIGHTS: Record<1 | 2 | 3 | 4, readonly [number, number, number, number]> = {
+  1: [70, 25, 5, 0],
+  2: [20, 50, 25, 5],
+  3: [10, 30, 45, 15],
+  4: [0, 10, 60, 30],
+}
+
+/** 当前 13 个普通位面的 wm.col20 均为 1。 */
+export const WORLD_EQUIPMENT_QUALITY_BONUS = 1
+
+export const pickWeightedQuality = (rank: CombatRank, roll: number): EquipmentQuality => {
+  const weights = BASE_QUALITY_WEIGHTS[ENEMY_GRADE_BY_RANK[rank]]
   let cursor = 0
   const total = weights.reduce((sum, weight) => sum + weight, 0)
   const target = roll * total
   for (let index = 0; index < weights.length; index += 1) {
     cursor += weights[index]
-    if (target < cursor) return EQUIPMENT_QUALITIES[index]
+    if (target < cursor) return (index + WORLD_EQUIPMENT_QUALITY_BONUS) as EquipmentQuality
   }
-  return EQUIPMENT_QUALITIES[EQUIPMENT_QUALITIES.length - 1]
+  return (weights.length - 1 + WORLD_EQUIPMENT_QUALITY_BONUS) as EquipmentQuality
 }
 
 export const dropCountForRank = (rank: CombatRank): number => DROP_COUNT[rank]
@@ -60,20 +68,18 @@ export const grantKillLoot = (state: GameStateV10, input: LootDropInput): string
   const rng = createRng(input.seed)
   const added: string[] = []
   const count = input.rank === 'elite' ? rng.nextInt(1, 3) : DROP_COUNT[input.rank]
-  const baseLevel = rollEquipmentLevel(input.worldId, input.difficulty, input.stage)
-
   for (let index = 0; index < count; index += 1) {
-    const fromSet = setPool.length > 0 && rng.nextFloat() < SET_DROP_CHANCE[input.rank]
-    const definition = fromSet ? rng.pick(setPool) : rng.pick(pool)
-    let quality = pickWeightedQuality(input.rank, rng.nextFloat())
-    if (definition.setName && EQUIPMENT_QUALITIES.indexOf(quality) < 2) quality = '上品'
-    const level = baseLevel + (definition.setName ? EQUIPMENT_QUALITY_LEVEL_GAP : 0)
+    const setDefinition = setPool[index]
+    const fromSet = setDefinition !== undefined && shouldDropSetPiece(input.rank, rng.nextFloat())
+    const definition = fromSet ? setDefinition : rng.pick(pool)
+    const quality = definition.fixedQuality ?? pickWeightedQuality(input.rank, rng.nextFloat())
+    const level = rollEquipmentLevel(input.worldId, input.difficulty, input.stage, quality)
     const equipment: EquipmentInstance = {
       uid: `eq_${input.seed}_${input.enemyId}_${index}`,
       definitionId: definition.id,
       level,
       quality,
-      affixes: rollAffixes(quality, level, rng),
+      ...rollEquipmentStats(definition, quality, rng),
       locked: false,
     }
     const result = addEquipment(state, equipment)

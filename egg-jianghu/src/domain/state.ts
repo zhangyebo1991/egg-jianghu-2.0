@@ -27,7 +27,7 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
 }
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
-  version: 15,
+  version: 16,
   worldCurrency: { world_01: 1000 },
   contribution: {},
   heroes: {},

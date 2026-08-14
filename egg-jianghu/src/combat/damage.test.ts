@@ -115,14 +115,15 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
     const baseline = buildCombatStats(definition, progress)
     progress.equipmentBySlot.weapon = 'weapon_uid'
     const equipment: EquipmentInstance[] = [{
-      uid: 'weapon_uid', definitionId: equipmentIdBySlot('weapon'), level: 1, quality: '上品',
-      affixes: [{ id: 'externalAttack', value: 12 }], locked: true,
+      uid: 'weapon_uid', definitionId: equipmentIdBySlot('weapon'), level: 1, quality: 2,
+      coreStats: [{ attributeId: 8, coefficient: 180 }, { attributeId: 6, coefficient: 80 }],
+      affixes: [{ attributeId: 8, coefficient: 100 }], locked: true,
     }]
 
     expect(buildCombatStats(definition, progress, equipment).externalAttack).toBeGreaterThan(baseline.externalAttack)
   })
 
-  it('护腕基础命中正确换算为百分比加成', () => {
+  it('护腕双核心按原版映射进入生命与法防', () => {
     const definition: HeroDefinitionV10 = {
       id: 'fixture', name: '测试侠客', grade: '乙', baseCareerId: 'job_1', worldId: 'world_01',
       source: 'tavern', cost: 0, factionId: null,
@@ -132,10 +133,14 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
     const baseline = buildCombatStats(definition, progress)
     progress.equipmentBySlot.wrist = 'wrist_uid'
     const wrist: EquipmentInstance = {
-      uid: 'wrist_uid', definitionId: equipmentIdBySlot('wrist'), level: 1, quality: '凡品', affixes: [], locked: false,
+      uid: 'wrist_uid', definitionId: equipmentIdBySlot('wrist'), level: 1, quality: 1,
+      coreStats: [{ attributeId: 6, coefficient: 120 }, { attributeId: 11, coefficient: 80 }],
+      affixes: [], locked: false,
     }
 
-    expect(buildCombatStats(definition, progress, [wrist]).accuracy).toBeCloseTo(baseline.accuracy + 0.09)
+    const equipped = buildCombatStats(definition, progress, [wrist])
+    expect(equipped.maxHp).toBeGreaterThan(baseline.maxHp)
+    expect(equipped.internalDefense).toBeGreaterThan(baseline.internalDefense)
   })
 
   it('战斗面板只计入当前装备套，其他套不生效', () => {
@@ -147,8 +152,8 @@ describe('战斗面板派生（egg 现有模型，Phase 3 起切换诸天派生�
     const progress = createHeroProgress('job_1')
     const baseline = buildCombatStats(definition, progress)
     const equipment: EquipmentInstance[] = [{
-      uid: 'weapon_uid', definitionId: equipmentIdBySlot('weapon'), level: 1, quality: '上品',
-      affixes: [{ id: 'externalAttack', value: 12 }], locked: true,
+      uid: 'weapon_uid', definitionId: equipmentIdBySlot('weapon'), level: 1, quality: 2,
+      coreStats: [], affixes: [{ attributeId: 8, coefficient: 100 }], locked: true,
     }]
     progress.equipmentSets[1].weapon = 'weapon_uid'
     progress.activeEquipmentSetIndex = 0

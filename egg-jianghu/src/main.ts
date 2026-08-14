@@ -8,17 +8,20 @@ import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
 import { createWave, enemyDisplayName } from './combat/waves'
 import { CAREERS, CAREER_GROWTH_FIELDS, STARTER_CAREER_ID, careerById, careerJobBookName, careerSkillTypeNames, careersInRank, formatGrowthCoeff, growthGrade } from './content/careers'
 import {
-  EQUIPMENT_AFFIXES,
   EQUIPMENT_QUALITIES,
   EQUIPMENT_SLOT_NAMES,
   EQUIPMENT_SLOTS,
-  equipmentAffixRange,
-  equipmentBaseStatValue,
+  equipmentAffixGrade,
+  equipmentAttributeValue,
+  equipmentCoreRollPercent,
   equipmentDefinitionById,
   equipmentDisplayName,
   equipmentPoolForWorld,
+  formatEquipmentAttributeValue,
+  isEquipmentQuality,
   type EquipmentSlot,
 } from './content/equipment'
+import { ATTRIBUTE_BY_ID } from './content/attributes'
 import { FACTIONS } from './content/factions'
 import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
 import { FACTION_MARTIALS, martialByIdV10 } from './content/martials'
@@ -841,9 +844,9 @@ const heroesViewModel = (): HeroesPageViewModel => {
     batchQuality: heroBatchDiscardQuality,
     batchCount: (() => {
       if (heroBatchDiscardQuality === 'all') return 0
-      const maxIndex = EQUIPMENT_QUALITIES.indexOf(heroBatchDiscardQuality)
+      const maxQuality = heroBatchDiscardQuality
       return session.state.inventory.filter((item) =>
-        EQUIPMENT_QUALITIES.indexOf(item.quality) <= maxIndex
+        item.quality <= maxQuality
         && !item.locked
         && !equipmentOwnerId(session.state, item.uid)).length
     })(),
@@ -1109,16 +1112,6 @@ const cityViewModel = (): CityPageViewModel => {
 
 const inventorySlotNames = EQUIPMENT_SLOT_NAMES
 
-const inventoryBaseStatNames: Record<string, string> = {
-  attack: '物攻',
-  internalDefense: '法防',
-  externalDefense: '物防',
-  accuracy: '命中修正',
-  maxHp: '生命',
-  agility: '速度',
-  energyRecovery: '能量回复',
-}
-
 const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
   const definition = equipmentDefinitionById(item.definitionId)
   const slot = definition?.slot ?? 'weapon'
@@ -1131,24 +1124,25 @@ const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
     quality: item.quality,
     locked: item.locked,
     weaponTypeName: definition?.weaponTypeName,
-    baseStat: {
-      name: inventoryBaseStatNames[definition?.baseStatId ?? ''] ?? '基础属性',
-      value: definition ? equipmentBaseStatValue(definition, item) : item.level,
-    },
-    affixes: item.affixes.map((affix) => {
-      const definitionAffix = EQUIPMENT_AFFIXES.find((candidate) => candidate.id === affix.id)
-      const range = definitionAffix
-        ? equipmentAffixRange(definitionAffix, item.level)
-        : { min: affix.value, max: affix.value + 1 }
-      const ratio = range.max > range.min
-        ? Math.min(100, Math.max(0, Math.round((affix.value - range.min) / (range.max - range.min) * 100)))
-        : 100
+    coreStats: item.coreStats.map((core, index) => {
+      const template = definition?.coreStats[index]
+      const value = equipmentAttributeValue(core.attributeId, item.level, core.coefficient, 100)
       return {
-        name: definitionAffix?.name ?? '词缀',
-        value: affix.value,
-        min: range.min,
-        max: range.max,
-        ratio,
+        attributeId: core.attributeId,
+        name: ATTRIBUTE_BY_ID[core.attributeId]?.name ?? `属性 ${core.attributeId}`,
+        value,
+        formattedValue: formatEquipmentAttributeValue(core.attributeId, value),
+        rollPercent: template ? equipmentCoreRollPercent(core.coefficient, template.baseCoefficient) : 100,
+      }
+    }),
+    affixes: item.affixes.map((affix) => {
+      const value = equipmentAttributeValue(affix.attributeId, item.level, affix.coefficient, 50)
+      return {
+        attributeId: affix.attributeId,
+        name: ATTRIBUTE_BY_ID[affix.attributeId]?.name ?? `属性 ${affix.attributeId}`,
+        value,
+        formattedValue: formatEquipmentAttributeValue(affix.attributeId, value),
+        grade: equipmentAffixGrade(affix.coefficient),
       }
     }),
   }
@@ -1690,7 +1684,7 @@ const performAction = (button: HTMLButtonElement): void => {
     if (!visibleItems.some((item) => item.uid === selectedInventoryUid)) selectedInventoryUid = visibleItems[0]?.uid ?? null
   } else if (action === 'inventory-organize') commitAction(organizeInventory(session.state))
   else if (action === 'inventory-discard-common') {
-    const result = discardEquipmentByQuality(session.state, '凡品')
+    const result = discardEquipmentByQuality(session.state, 0)
     if (selectedInventoryUid && !session.state.inventory.some((item) => item.uid === selectedInventoryUid)) {
       selectedInventoryUid = null
       inventoryDetailOpen = false
@@ -1718,9 +1712,8 @@ const performAction = (button: HTMLButtonElement): void => {
     heroPackPage = 1
   } else if (action === 'hero-pack-quality') {
     const value = button.dataset.filterValue ?? 'all'
-    heroPackQualityFilter = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality)
-      ? value as EquipmentQuality | 'all'
-      : 'all'
+    const quality = Number(value)
+    heroPackQualityFilter = value === 'all' ? 'all' : isEquipmentQuality(quality) ? quality : 'all'
     heroPackPage = 1
   } else if (action === 'hero-pack-page') {
     heroPackPage = Math.max(1, dataNumber(button, 'page'))
@@ -1731,8 +1724,8 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
   else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
   else if (action === 'hero-batch-discard-filter') {
-    const value = button.dataset.filterValue as EquipmentQuality | undefined
-    heroBatchDiscardQuality = value && EQUIPMENT_QUALITIES.includes(value) ? value : 'all'
+    const value = Number(button.dataset.filterValue)
+    heroBatchDiscardQuality = isEquipmentQuality(value) ? value : 'all'
     showBatchDiscardConfirm = heroBatchDiscardQuality !== 'all'
   }
   else if (action === 'request-batch-discard') {
@@ -1794,8 +1787,9 @@ app.addEventListener('change', (event) => {
   if (select) selectedHeroId = select.value || null
   const batchDiscardSelect = target.closest<HTMLSelectElement>('[data-batch-discard-quality]')
   if (batchDiscardSelect) {
-    const value = batchDiscardSelect.value as EquipmentQuality | 'all'
-    heroBatchDiscardQuality = value === 'all' || EQUIPMENT_QUALITIES.includes(value as EquipmentQuality) ? value : 'all'
+    const value = batchDiscardSelect.value
+    const quality = Number(value)
+    heroBatchDiscardQuality = value === 'all' ? 'all' : isEquipmentQuality(quality) ? quality : 'all'
     showBatchDiscardConfirm = false
   }
   if (!select && !batchDiscardSelect) return
@@ -2197,14 +2191,21 @@ const debugRecruit = (heroId: string): void => {
 const debugFillInventory = (count: number): void => {
   ensurePlaying()
   const pool = equipmentPoolForWorld('world_01')
-  session.state.inventory = Array.from({ length: Math.max(0, Math.min(INVENTORY_CAPACITY, Math.floor(count))) }, (_, index): EquipmentInstance => ({
-    uid: `debug-equipment-${index}`,
-    definitionId: pool[index % pool.length]?.id ?? equipmentPoolForWorld('world_01')[0].id,
-    level: 1 + (index % 5),
-    quality: EQUIPMENT_QUALITIES[index % EQUIPMENT_QUALITIES.length],
-    affixes: [],
-    locked: false,
-  }))
+  session.state.inventory = Array.from({ length: Math.max(0, Math.min(INVENTORY_CAPACITY, Math.floor(count))) }, (_, index): EquipmentInstance => {
+    const definition = pool[index % pool.length] ?? pool[0]
+    return {
+      uid: `debug-equipment-${index}`,
+      definitionId: definition.id,
+      level: 1 + (index % 5),
+      quality: EQUIPMENT_QUALITIES[index % EQUIPMENT_QUALITIES.length],
+      coreStats: definition.coreStats.map((core) => ({
+        attributeId: core.attributeId,
+        coefficient: core.baseCoefficient,
+      })),
+      affixes: [],
+      locked: false,
+    }
+  })
   saveSession()
   render()
 }

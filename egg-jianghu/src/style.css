@@ -578,11 +578,29 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .toast { position: fixed; z-index: 100; right: 22px; bottom: 22px; max-width: min(420px, calc(100vw - 44px)); padding: 12px 16px; border: 1px solid #62755f; border-radius: var(--radius); color: #e9f1e7; background: #26352b; box-shadow: var(--shadow); font-size: 13px; }
 .toast.warning { border-color: #97594a; color: #ffe6dd; background: #4b2922; }
 
-[data-rarity="粗浅"], [data-rarity="凡品"] { --rarity: #8e887d; }
-[data-rarity="寻常"], [data-rarity="良品"] { --rarity: #4f9168; }
-[data-rarity="精妙"], [data-rarity="上品"] { --rarity: #4e7fb8; }
-[data-rarity="上乘"], [data-rarity="珍品"] { --rarity: #8b63a8; }
-[data-rarity="绝学"], [data-rarity="绝品"] { --rarity: #c9953d; }
+[data-rarity="粗浅"] { --rarity: #8e887d; }
+[data-rarity="寻常"] { --rarity: #4f9168; }
+[data-rarity="精妙"] { --rarity: #4e7fb8; }
+[data-rarity="上乘"] { --rarity: #8b63a8; }
+[data-rarity="绝学"] { --rarity: #c9953d; }
+[data-rarity="0"] { --rarity: lightgray; }
+[data-rarity="1"] { --rarity: white; }
+[data-rarity="2"] { --rarity: lightgreen; }
+[data-rarity="3"] { --rarity: lightblue; }
+[data-rarity="4"] { --rarity: yellow; }
+[data-rarity="5"] { --rarity: aqua; }
+[data-rarity="6"] { --rarity: fuchsia; }
+[data-rarity="7"] { --rarity: orange; }
+[data-rarity="8"] { --rarity: red; }
+[data-rarity="9"] { --rarity: deeppink; }
+[data-affix-grade="E"] { --affix-grade: white; }
+[data-affix-grade="D"] { --affix-grade: lightgreen; }
+[data-affix-grade="C"] { --affix-grade: lightblue; }
+[data-affix-grade="B"] { --affix-grade: yellow; }
+[data-affix-grade="A"] { --affix-grade: fuchsia; }
+[data-affix-grade="S"] { --affix-grade: orange; }
+[data-affix-grade="SS"] { --affix-grade: red; }
+[data-affix-grade="SSS"] { --affix-grade: deeppink; }
 [data-rarity] { border-color: var(--rarity, var(--line)) !important; }
 [data-rarity] > span:first-child, [data-rarity] > header em, span[data-rarity], strong[data-rarity] { color: var(--rarity, var(--paper)); }
 
@@ -2438,8 +2456,8 @@ body {
   box-shadow: 0 0 0 1px var(--rarity, #c9a35c), 0 12px 26px rgb(0 0 0 / 42%);
 }
 .inventory-cell[aria-pressed="true"]::before { opacity: .34; }
-.inventory-cell[data-rarity="绝品"] { border-color: rgb(201 149 61 / 40%); }
-.inventory-cell[data-rarity="绝品"] .inventory-cell-icon { filter: drop-shadow(0 0 10px rgb(201 149 61 / 45%)); }
+.inventory-cell[data-rarity="9"] { border-color: color-mix(in srgb, deeppink 40%, transparent); }
+.inventory-cell[data-rarity="9"] .inventory-cell-icon { filter: drop-shadow(0 0 10px color-mix(in srgb, deeppink 45%, transparent)); }
 .inventory-cell-icon { display: block; width: 34px; height: 34px; color: var(--rarity, #b3ad9e); filter: drop-shadow(0 3px 8px rgb(0 0 0 / 45%)); }
 .inventory-cell-icon svg { display: block; width: 100%; height: 100%; }
 .inventory-cell-name { max-width: 92%; overflow: hidden; color: #e8e1d3; font-size: 10px; letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
@@ -2474,11 +2492,16 @@ body {
 .inventory-legend { display: flex; flex: none; align-items: center; gap: 14px; padding: 10px 22px 12px; border-top: 1px dashed #31382e; color: #7d7f72; font-size: 10px; letter-spacing: .16em; }
 .inventory-legend span { display: flex; align-items: center; gap: 5px; }
 .inventory-legend span::before { width: 8px; height: 8px; content: ""; border-radius: 2px; background: var(--rarity); box-shadow: 0 0 6px var(--rarity); }
-.inventory-legend .凡品 { --rarity: #8e887d; }
-.inventory-legend .良品 { --rarity: #4f9168; }
-.inventory-legend .上品 { --rarity: #4e7fb8; }
-.inventory-legend .珍品 { --rarity: #8b63a8; }
-.inventory-legend .绝品 { --rarity: #c9953d; }
+.inventory-legend [data-quality="0"] { --rarity: lightgray; }
+.inventory-legend [data-quality="1"] { --rarity: white; }
+.inventory-legend [data-quality="2"] { --rarity: lightgreen; }
+.inventory-legend [data-quality="3"] { --rarity: lightblue; }
+.inventory-legend [data-quality="4"] { --rarity: yellow; }
+.inventory-legend [data-quality="5"] { --rarity: aqua; }
+.inventory-legend [data-quality="6"] { --rarity: fuchsia; }
+.inventory-legend [data-quality="7"] { --rarity: orange; }
+.inventory-legend [data-quality="8"] { --rarity: red; }
+.inventory-legend [data-quality="9"] { --rarity: deeppink; }
 .inventory-legend b { color: #b3ad9e; font-weight: 600; font-variant-numeric: tabular-nums; }
 .inventory-legend-total { margin-left: auto; }
 
@@ -2527,15 +2550,16 @@ body {
 .inventory-figure-ring svg { width: 36px; height: 36px; }
 .inventory-appraise-name { margin: 0; color: #241f13; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 32px; font-weight: 400; letter-spacing: .04em; line-height: 1.15; }
 .inventory-appraise-latin { margin-top: 6px; color: rgb(43 37 25 / 45%); font-size: 9px; letter-spacing: .34em; text-transform: uppercase; }
-.inventory-base-stat { display: flex; align-items: baseline; justify-content: space-between; margin-top: 12px; padding: 12px 14px; border-top: 1px solid rgb(43 37 25 / 18%); border-bottom: 1px solid rgb(43 37 25 / 18%); }
+.inventory-base-stat { display: grid; gap: 8px; margin-top: 12px; padding: 12px 14px; border-top: 1px solid rgb(43 37 25 / 18%); border-bottom: 1px solid rgb(43 37 25 / 18%); }
+.inventory-core-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; gap: 10px; }
 .inventory-base-label { color: rgb(43 37 25 / 60%); font-size: 11px; letter-spacing: .3em; }
-.inventory-base-value { color: #3a2f1c; font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.inventory-core-roll { color: rgb(43 37 25 / 48%); font-size: 10px; font-variant-numeric: tabular-nums; }
+.inventory-base-value { color: #3a2f1c; font-size: 18px; font-weight: 900; font-variant-numeric: tabular-nums; }
 .inventory-base-value small { margin-left: 4px; color: rgb(43 37 25 / 55%); font-size: 11px; font-weight: 500; letter-spacing: .1em; }
 .inventory-affix-list { display: grid; gap: 8px; margin-top: 12px; }
 .inventory-affix-row { display: flex; align-items: center; gap: 10px; }
-.inventory-affix-name { width: 34px; flex: none; color: rgb(43 37 25 / 70%); font-size: 11px; letter-spacing: .14em; }
-.inventory-affix-bar { height: 3px; flex: 1; overflow: hidden; border-radius: 2px; background: rgb(43 37 25 / 10%); }
-.inventory-affix-bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #8f6f3a, #c9a35c); }
+.inventory-affix-name { min-width: 0; flex: 1; color: rgb(43 37 25 / 70%); font-size: 11px; letter-spacing: .14em; }
+.inventory-affix-grade { color: var(--affix-grade, #3a2f1c); font-size: 10px; font-weight: 800; text-shadow: 0 1px 1px rgb(0 0 0 / 25%); }
 .inventory-affix-value { flex: none; color: #3a2f1c; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .inventory-affix-empty { padding: 4px 0; color: rgb(43 37 25 / 40%); font-size: 11px; letter-spacing: .2em; }
 .inventory-appraise-actions { display: grid; gap: 8px; margin-top: auto; padding-top: 18px; }
@@ -3159,11 +3183,16 @@ body {
   --gold-deep: #8f6f3a;
   --jade-dim: #57705f;
   --line-soft: #252a22;
-  --q-凡品: #8e887d;
-  --q-良品: #4f9168;
-  --q-上品: #4e7fb8;
-  --q-珍品: #8b63a8;
-  --q-绝品: #c9953d;
+  --q-0: lightgray;
+  --q-1: white;
+  --q-2: lightgreen;
+  --q-3: lightblue;
+  --q-4: yellow;
+  --q-5: aqua;
+  --q-6: fuchsia;
+  --q-7: orange;
+  --q-8: red;
+  --q-9: deeppink;
   --r-粗浅: #8e887d;
   --r-寻常: #4f9168;
   --r-精妙: #4e7fb8;
@@ -3379,11 +3408,16 @@ body {
 .heroes-page .pd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)) auto; gap: 12px; }
 .heroes-page .pd-slot { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto; column-gap: 12px; align-items: center; min-width: 0; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 8px; background: linear-gradient(165deg, rgb(233 222 195 / 4%), rgb(12 14 11 / 28%)); transition: border-color .25s, box-shadow .25s, transform .25s cubic-bezier(.22,1,.36,1); }
 .heroes-page .pd-slot:hover { z-index: 5; border-color: var(--qc, var(--gold)); box-shadow: 0 10px 24px rgb(0 0 0 / 35%); transform: translateY(-2px); }
-.heroes-page .pd-slot[data-rarity="凡品"] { --qc: var(--q-凡品); }
-.heroes-page .pd-slot[data-rarity="良品"] { --qc: var(--q-良品); }
-.heroes-page .pd-slot[data-rarity="上品"] { --qc: var(--q-上品); }
-.heroes-page .pd-slot[data-rarity="珍品"] { --qc: var(--q-珍品); }
-.heroes-page .pd-slot[data-rarity="绝品"] { --qc: var(--q-绝品); }
+.heroes-page .pd-slot[data-rarity="0"] { --qc: var(--q-0); }
+.heroes-page .pd-slot[data-rarity="1"] { --qc: var(--q-1); }
+.heroes-page .pd-slot[data-rarity="2"] { --qc: var(--q-2); }
+.heroes-page .pd-slot[data-rarity="3"] { --qc: var(--q-3); }
+.heroes-page .pd-slot[data-rarity="4"] { --qc: var(--q-4); }
+.heroes-page .pd-slot[data-rarity="5"] { --qc: var(--q-5); }
+.heroes-page .pd-slot[data-rarity="6"] { --qc: var(--q-6); }
+.heroes-page .pd-slot[data-rarity="7"] { --qc: var(--q-7); }
+.heroes-page .pd-slot[data-rarity="8"] { --qc: var(--q-8); }
+.heroes-page .pd-slot[data-rarity="9"] { --qc: var(--q-9); }
 .heroes-page .pd-icon { grid-row: 1 / 4; width: 46px; height: 46px; display: grid; place-items: center; border: 1.6px solid color-mix(in srgb, var(--qc, #55584e) 75%, #fff 8%); border-radius: 8px; color: var(--qc, var(--paper-mute)); background: radial-gradient(circle at 38% 30%, var(--heroes-ink-700), var(--heroes-ink-900) 78%); box-shadow: inset 0 2px 8px rgb(0 0 0 / 55%), 0 0 12px color-mix(in srgb, var(--qc, transparent) 25%, transparent); font-family: var(--font-brush); font-size: 24px; }
 .heroes-page .pd-slot.empty .pd-icon { border-style: dashed; opacity: .6; }
 .heroes-page .pd-slot .pd-slot-name { color: var(--paper-mute); font-size: 9px; letter-spacing: .3em; }
@@ -3653,11 +3687,16 @@ body {
 .heroes-page .hero-inventory-list { display: grid; grid-template-columns: 1fr; gap: 6px; overflow: visible; }
 .heroes-page .pack-row { position: relative; width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 11px; align-items: center; padding: 8px 10px; border: 1px solid transparent; border-radius: 7px; color: inherit; text-align: left; animation: heroes-row-in .4s cubic-bezier(.77,0,.175,1) both; animation-delay: var(--row-delay, 0ms); transition: background .22s cubic-bezier(.22,1,.36,1), border-color .22s, transform .22s cubic-bezier(.22,1,.36,1); }
 .heroes-page .pack-row:hover { z-index: 6; border-color: color-mix(in srgb, var(--qc, var(--line)) 45%, transparent); background: rgb(233 222 195 / 5%); transform: translateX(-2px); }
-.heroes-page .pack-row[data-quality="凡品"] { --qc: var(--q-凡品); }
-.heroes-page .pack-row[data-quality="良品"] { --qc: var(--q-良品); }
-.heroes-page .pack-row[data-quality="上品"] { --qc: var(--q-上品); }
-.heroes-page .pack-row[data-quality="珍品"] { --qc: var(--q-珍品); }
-.heroes-page .pack-row[data-quality="绝品"] { --qc: var(--q-绝品); }
+.heroes-page .pack-row[data-quality="0"] { --qc: var(--q-0); }
+.heroes-page .pack-row[data-quality="1"] { --qc: var(--q-1); }
+.heroes-page .pack-row[data-quality="2"] { --qc: var(--q-2); }
+.heroes-page .pack-row[data-quality="3"] { --qc: var(--q-3); }
+.heroes-page .pack-row[data-quality="4"] { --qc: var(--q-4); }
+.heroes-page .pack-row[data-quality="5"] { --qc: var(--q-5); }
+.heroes-page .pack-row[data-quality="6"] { --qc: var(--q-6); }
+.heroes-page .pack-row[data-quality="7"] { --qc: var(--q-7); }
+.heroes-page .pack-row[data-quality="8"] { --qc: var(--q-8); }
+.heroes-page .pack-row[data-quality="9"] { --qc: var(--q-9); }
 .heroes-page .pack-row.current { border-color: rgb(201 163 92 / 30%); background: rgb(201 163 92 / 7%); }
 .heroes-page .pack-row.occupied { opacity: .62; }
 .heroes-page .pr-icon { width: 34px; height: 34px; display: grid; place-items: center; border: 1.4px solid color-mix(in srgb, var(--qc) 70%, #fff 8%); border-radius: 6px; color: var(--qc); background: radial-gradient(circle at 38% 30%, var(--heroes-ink-700), var(--heroes-ink-900) 78%); font-family: var(--font-brush); font-size: 17px; }
@@ -3698,6 +3737,8 @@ body {
 .heroes-page .equipment-properties > div { display: flex; justify-content: space-between; gap: 10px; color: #4d4023; font-size: 11.5px; line-height: 1.95; }
 .heroes-page .equipment-properties dt { color: #4d4023; }
 .heroes-page .equipment-properties dd { margin: 0; color: #8a6420; font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; }
+.heroes-page .equipment-properties i { color: var(--affix-grade, #8a7a55); font-style: normal; font-weight: 800; }
+.heroes-page .equipment-properties [data-affix-grade] dd { color: var(--affix-grade); text-shadow: 0 1px 1px rgb(0 0 0 / 22%); }
 .heroes-page .equipment-tooltip > footer { padding: 9px 16px; border-top: 1px dashed rgb(120 95 55 / 40%); color: #75643f; font-size: 10px; letter-spacing: .14em; }
 .game-main[data-page="heroes"] .heroes-page .batch-panel,
 .game-main[data-page="heroes"] .heroes-page .batch-discard-confirm { display: grid; gap: 10px; margin: 0 18px 12px; padding: 12px 14px; border: 1px solid rgb(181 80 60 / 45%); border-radius: 7px; background: linear-gradient(160deg, rgb(181 80 60 / 14%), rgb(181 80 60 / 5%)); }

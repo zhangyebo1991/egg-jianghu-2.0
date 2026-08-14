@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { equipmentDefinitionById, equipmentIdBySlot } from './content/equipment'
 import { createInitialStateV10 } from './domain/state'
 import type { QuestProgress } from './domain/types'
 import { clearSave, exportSave, importSave, loadGame, SAVE_KEY, saveGame, type StorageLike } from './save'
@@ -27,12 +28,25 @@ const quest = (): QuestProgress => ({
   progress: 3,
 })
 
-describe('version 10 公开存档入口', () => {
+describe('version 16 公开存档入口', () => {
   it('保存并恢复全部长期状态', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(100)
     state.worldCurrency.world_01 = 4321
-    state.inventory.push({ uid: 'equipment_1', definitionId: 'world_01_weapon', level: 1, quality: '凡品', affixes: [], locked: true })
+    const definitionId = equipmentIdBySlot('weapon')
+    const definition = equipmentDefinitionById(definitionId)!
+    state.inventory.push({
+      uid: 'equipment_1',
+      definitionId,
+      level: 1,
+      quality: 0,
+      coreStats: definition.coreStats.map((core) => ({
+        attributeId: core.attributeId,
+        coefficient: core.baseCoefficient,
+      })),
+      affixes: [],
+      locked: true,
+    })
     saveGame(storage, state, 200)
 
     const loaded = loadGame(storage, 300)
@@ -52,13 +66,13 @@ describe('version 10 公开存档入口', () => {
     expect(loaded.state).toEqual(createInitialStateV10(500))
   })
 
-  it('导出与导入只接受 version 15', () => {
+  it('导出与导入只接受 version 16', () => {
     const state = createInitialStateV10(100)
     state.worldCurrency.world_01 = 987
     const serialized = exportSave(state, 200)
-    expect(JSON.parse(serialized).version).toBe(15)
+    expect(JSON.parse(serialized).version).toBe(16)
     expect(importSave(serialized, 300).state.worldCurrency.world_01).toBe(987)
-    expect(() => importSave(JSON.stringify({ version: 13 }), 300)).toThrow('存档版本不受支持')
+    expect(() => importSave(JSON.stringify({ version: 15 }), 300)).toThrow('存档版本不受支持')
   })
 
   it('忽略 version 1 至 9 的旧 key', () => {

@@ -2,12 +2,19 @@ import { EQUIPMENT_QUALITIES, type EquipmentSlot } from '../content/equipment'
 import type { EquipmentQuality } from '../domain/types'
 import { escapeHtml } from './html'
 
-export interface InventoryAffixView {
+export interface InventoryAttributeView {
+  attributeId: number
   name: string
   value: number
-  min: number
-  max: number
-  ratio: number
+  formattedValue: string
+}
+
+export interface InventoryCoreStatView extends InventoryAttributeView {
+  rollPercent: number
+}
+
+export interface InventoryAffixView extends InventoryAttributeView {
+  grade: string
 }
 
 export interface InventoryItemView {
@@ -19,7 +26,7 @@ export interface InventoryItemView {
   quality: EquipmentQuality
   locked: boolean
   weaponTypeName?: string
-  baseStat: { name: string; value: number }
+  coreStats: InventoryCoreStatView[]
   affixes: InventoryAffixView[]
 }
 
@@ -83,10 +90,10 @@ const renderSlotTabs = (view: InventoryPageViewModel): string => view.slotTabs.m
   </button>`).join('')
 
 const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null): string => `
-  <button type="button" class="inventory-cell${item.uid === selectedUid ? ' selected' : ''}" data-rarity="${escapeHtml(item.quality)}"
+  <button type="button" class="inventory-cell${item.uid === selectedUid ? ' selected' : ''}" data-rarity="${item.quality}"
     data-equipment-uid="${escapeHtml(item.uid)}" data-testid="equipment-${escapeHtml(item.uid)}"
     data-action="inventory-select" aria-pressed="${item.uid === selectedUid}"
-    aria-label="${escapeHtml(`${item.name}，${item.quality}，等级 ${item.level}`)}">
+    aria-label="${escapeHtml(`${item.name}，品质 ${item.quality}，等级 ${item.level}`)}">
     ${item.locked ? '<span class="inventory-lock-mark" aria-label="已锁定">锁</span>' : ''}
     <span class="inventory-cell-level">Lv.${item.level}</span>
     <span class="inventory-cell-icon" aria-hidden="true">${renderSlotIcon(item.slot)}</span>
@@ -104,12 +111,19 @@ const renderInventoryGrid = (view: InventoryPageViewModel): string => view.items
 
 const renderAffixes = (item: InventoryItemView): string => item.affixes.length
   ? item.affixes.map((affix) => `
-    <div class="inventory-affix-row" title="真实范围：${affix.min} - ${affix.max}">
+    <div class="inventory-affix-row" data-affix-grade="${affix.grade}">
       <span class="inventory-affix-name">${escapeHtml(affix.name)}</span>
-      <span class="inventory-affix-bar" aria-hidden="true"><i style="width:${affix.ratio}%"></i></span>
-      <span class="inventory-affix-value">+${affix.value}</span>
+      <span class="inventory-affix-grade">[${affix.grade}]</span>
+      <span class="inventory-affix-value">+${escapeHtml(affix.formattedValue)}</span>
     </div>`).join('')
-  : '<div class="inventory-affix-empty">凡品无词缀 · 聊胜于无</div>'
+  : '<div class="inventory-affix-empty">无附加词条</div>'
+
+const renderCoreStats = (item: InventoryItemView): string => item.coreStats.map((core) => `
+  <div class="inventory-core-row">
+    <span class="inventory-base-label">${escapeHtml(core.name)}</span>
+    <span class="inventory-core-roll">(${core.rollPercent}%)</span>
+    <span class="inventory-base-value">+${escapeHtml(core.formattedValue)}</span>
+  </div>`).join('')
 
 const renderSelectedDetail = (item: InventoryItemView | null): string => {
   if (!item) return `<div class="inventory-appraise-blank">
@@ -119,20 +133,17 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
 
   return `<div class="inventory-appraise-head">
     <span class="inventory-slot-tag">${escapeHtml(item.slotName)}</span>
-    <span class="inventory-quality-tag" data-rarity="${escapeHtml(item.quality)}">${escapeHtml(item.quality)}</span>
+    <span class="inventory-quality-tag" data-rarity="${item.quality}">品质 ${item.quality}</span>
     <span class="inventory-slot-tag">Lv.${item.level}</span>
   </div>
   <div class="inventory-appraise-figure">
-    <span class="inventory-figure-ring" data-rarity="${escapeHtml(item.quality)}">${renderSlotIcon(item.slot)}</span>
+    <span class="inventory-figure-ring" data-rarity="${item.quality}">${renderSlotIcon(item.slot)}</span>
     <div>
       <h2 class="inventory-appraise-name">${escapeHtml(item.name)}</h2>
-      <div class="inventory-appraise-latin">${escapeHtml(item.quality)} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Level ${item.level}</div>
+      <div class="inventory-appraise-latin">品质 ${item.quality} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Level ${item.level}</div>
     </div>
   </div>
-  <div class="inventory-base-stat">
-    <span class="inventory-base-label">${escapeHtml(item.baseStat.name)}</span>
-    <span class="inventory-base-value">${item.baseStat.value}<small>基础</small></span>
-  </div>
+  <div class="inventory-base-stat">${renderCoreStats(item)}</div>
   <div class="inventory-affix-list">${renderAffixes(item)}</div>
   <div class="inventory-appraise-actions">
     <div class="inventory-action-row">
@@ -217,14 +228,14 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
             </div>
             <div class="inventory-actions">
               <button type="button" class="inventory-ink-button" data-action="inventory-organize">整理囊袋</button>
-              <button type="button" class="inventory-ink-button danger" data-action="inventory-discard-common">丢弃凡品</button>
+              <button type="button" class="inventory-ink-button danger" data-action="inventory-discard-common">丢弃品质 0</button>
             </div>
           </div>
         </header>
         <nav class="inventory-slot-tabs" aria-label="部位筛选">${renderSlotTabs(view)}</nav>
         <div class="inventory-grid-wrap"><div class="inventory-grid">${renderInventoryGrid(view)}</div></div>
         <footer class="inventory-legend">
-          ${EQUIPMENT_QUALITIES.map((quality) => `<span class="${quality}">${quality}<b>${view.qualityCounts[quality]}</b></span>`).join('')}
+          ${EQUIPMENT_QUALITIES.map((quality) => `<span data-quality="${quality}">品质 ${quality}<b>${view.qualityCounts[quality]}</b></span>`).join('')}
           <span class="inventory-legend-total">共 ${view.itemCount} 件 · 囊容 ${view.capacity}</span>
         </footer>
       </div>

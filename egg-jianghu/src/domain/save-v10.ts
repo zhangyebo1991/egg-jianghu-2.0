@@ -3,8 +3,8 @@ import { HEROES_V10 } from '../content/heroes'
 import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
-// v15：装备 id 改为诸天 wp_*。旧档不迁移，读不到新 key 即当新开。
-export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v15'
+// v16：装备改为原版十档品质、双核心与系数词条。旧档不迁移，读不到新 key 即当新开。
+export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v16'
 
 export interface StorageLike {
   getItem(key: string): string | null
@@ -51,6 +51,32 @@ const isFormationSlot = (value: unknown): boolean =>
   && (value.row === 0 || value.row === 1 || value.row === 2)
   && (value.col === 0 || value.col === 1 || value.col === 2 || value.col === 3 || value.col === 4)
 
+const isEquipmentRoll = (value: unknown): boolean =>
+  isRecord(value)
+  && typeof value.attributeId === 'number'
+  && Number.isInteger(Number(value.attributeId))
+  && Number(value.attributeId) >= 6
+  && Number(value.attributeId) <= 59
+  && isFiniteNumber(value.coefficient)
+
+const isEquipmentInstance = (value: unknown): boolean =>
+  isRecord(value)
+  && typeof value.uid === 'string'
+  && typeof value.definitionId === 'string'
+  && typeof value.level === 'number'
+  && Number.isInteger(Number(value.level))
+  && Number(value.level) > 0
+  && typeof value.quality === 'number'
+  && Number.isInteger(Number(value.quality))
+  && Number(value.quality) >= 0
+  && Number(value.quality) <= 9
+  && Array.isArray(value.coreStats)
+  && value.coreStats.length === 2
+  && value.coreStats.every(isEquipmentRoll)
+  && Array.isArray(value.affixes)
+  && value.affixes.every(isEquipmentRoll)
+  && typeof value.locked === 'boolean'
+
 const isHeroProgress = (value: unknown): boolean => {
   if (!isRecord(value)) return false
   const hasLoadoutField = 'equipmentBySlot' in value
@@ -83,7 +109,7 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 }
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
-  version: 15,
+  version: 16,
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
   heroes: structuredClone(state.heroes),
@@ -110,8 +136,9 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
-    || raw.version !== 15
+    || raw.version !== 16
     || !Array.isArray(raw.inventory)
+    || !raw.inventory.every(isEquipmentInstance)
     || !Array.isArray(raw.formation)
     || !raw.formation.every(isFormationSlot)
     || !isRecord(raw.heroes)

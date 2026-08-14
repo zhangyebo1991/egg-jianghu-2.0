@@ -1,6 +1,5 @@
 import type { ActionResult, EquipmentInstance, EquipmentQuality, GameStateV10, HeroProgressV10 } from './types'
 import {
-  EQUIPMENT_QUALITIES,
   EQUIPMENT_SET_COUNT,
   EQUIPMENT_SLOTS,
   canonicalEquipmentDefinitionId,
@@ -165,7 +164,7 @@ export const organizeInventory = (state: GameStateV10): ActionResult => {
     const slotDifference = EQUIPMENT_SLOTS.indexOf(leftDefinition?.slot ?? 'ring')
       - EQUIPMENT_SLOTS.indexOf(rightDefinition?.slot ?? 'ring')
     if (slotDifference !== 0) return slotDifference
-    const qualityDifference = EQUIPMENT_QUALITIES.indexOf(right.quality) - EQUIPMENT_QUALITIES.indexOf(left.quality)
+    const qualityDifference = right.quality - left.quality
     if (qualityDifference !== 0) return qualityDifference
     if (left.level !== right.level) return right.level - left.level
     const definitionDifference = left.definitionId.localeCompare(right.definitionId)
@@ -192,15 +191,14 @@ export const discardEquipmentByQuality = (
   state: GameStateV10,
   maxQuality: EquipmentQuality,
 ): ActionResult => {
-  const maxIndex = EQUIPMENT_QUALITIES.indexOf(maxQuality)
   const discarded = state.inventory.filter((item) =>
-    EQUIPMENT_QUALITIES.indexOf(item.quality) <= maxIndex
+    item.quality <= maxQuality
     && !item.locked
     && !isEquipmentEquipped(state, item.uid))
   if (discarded.length === 0) return { ok: false, message: '没有可丢弃的装备' }
   const removed = new Set(discarded.map((item) => item.uid))
   state.inventory = state.inventory.filter((item) => !removed.has(item.uid))
-  return { ok: true, message: `已丢弃 ${discarded.length} 件${maxQuality}及以下装备` }
+  return { ok: true, message: `已丢弃 ${discarded.length} 件品质 ${maxQuality} 及以下装备` }
 }
 
 export const averageItemLevel = (hero: HeroProgressV10, inventory: EquipmentInstance[]): number => {

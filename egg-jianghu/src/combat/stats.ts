@@ -1,6 +1,6 @@
 import { careerById } from '../content/careers'
 import { heartMethodByIdV10 } from '../content/martials'
-import { equipmentBaseStatValue, equipmentDefinitionById } from '../content/equipment'
+import { equipmentAttributeValue, equipmentDefinitionById } from '../content/equipment'
 import type { HeroDefinitionV10 } from '../content/heroes'
 import type { EquipmentInstance, HeroProgressV10 } from '../domain/types'
 import type { AttributeMap } from '../content/attributes'
@@ -29,6 +29,7 @@ export interface CombatStats {
 }
 
 const gradeMultiplier = { 丙: 0.9, 乙: 1, 甲: 1.08, 地: 1.16, 天: 1.25 } as const
+const COMBAT_STAT_ATTRIBUTE_IDS = new Set([6, 7, 8, 9, 10, 11, 12, 13, 14, 18, 19, 28, 29, 37])
 
 export const buildCombatStats = (
   definition: HeroDefinitionV10,
@@ -173,9 +174,12 @@ export const buildCombatStats = (
     const instance = equipment.find((item) => item.uid === equipmentUid)
     const equipmentDefinition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
     if (!instance || !equipmentDefinition) continue
-    const baseValue = equipmentBaseStatValue(equipmentDefinition, instance)
-    applyBonus(equipmentDefinition.baseStatId, baseValue)
-    for (const affix of instance.affixes) applyBonus(affix.id, affix.value)
+    for (const core of instance.coreStats) {
+      applyBonus(String(core.attributeId), equipmentAttributeValue(core.attributeId, instance.level, core.coefficient, 100))
+    }
+    for (const affix of instance.affixes) {
+      applyBonus(String(affix.attributeId), equipmentAttributeValue(affix.attributeId, instance.level, affix.coefficient, 50))
+    }
   }
 
   return stats
@@ -242,7 +246,7 @@ export const panelToAttributeMap = (
   return map
 }
 
-/** 构建侠客的诸天 AttributeMap：核心从 CombatStats 镜像 + 装备的 sx 附加词条直接累加。 */
+/** 构建侠客的诸天 AttributeMap：CombatStats 已生效的属性从面板镜像，其余装备属性在此补入。 */
 export const buildAttributeMap = (
   definition: HeroDefinitionV10,
   progress: HeroProgressV10,
@@ -250,16 +254,19 @@ export const buildAttributeMap = (
 ): AttributeMap => {
   const stats = buildCombatStats(definition, progress, equipment)
   const map = panelToAttributeMap(stats, definition.aptitudes)
-  // 装备的诸天附加词条（id 为 sx 属性编号）累加进 AttributeMap
+  // 已进入 CombatStats 的属性不再重复累加；其余核心/附词条在 AttributeMap 中直接生效。
   for (const uid of Object.values(progress.equipmentBySlot)) {
     if (!uid) continue
     const instance = equipment.find((item) => item.uid === uid)
     if (!instance) continue
-    for (const affix of instance.affixes) {
-      const sxId = Number(affix.id)
-      if (Number.isInteger(sxId) && sxId > 0) {
-        map[sxId] = (map[sxId] ?? 0) + affix.value
-      }
+    const bonuses = [
+      ...instance.coreStats.map((core) => ({ ...core, weight: 100 as const })),
+      ...instance.affixes.map((affix) => ({ ...affix, weight: 50 as const })),
+    ]
+    for (const bonus of bonuses) {
+      if (COMBAT_STAT_ATTRIBUTE_IDS.has(bonus.attributeId)) continue
+      const value = equipmentAttributeValue(bonus.attributeId, instance.level, bonus.coefficient, bonus.weight)
+      map[bonus.attributeId] = (map[bonus.attributeId] ?? 0) + value
     }
   }
   return map
