@@ -82,7 +82,7 @@ export type CombatEvent =
   | { type: 'unit-revived'; atMs: number; sourceId: string; targetId: string }
   | { type: 'summoned'; atMs: number; sourceId: string; summonId: string; summonName: string }
   | { type: 'skill-used'; atMs: number; sourceId: string; skillId: number; targetIds: string[] }
-  | { type: 'enemy-defeated'; atMs: number; enemyId: string; rank: CombatRank; worldId: string; stage: number; difficulty: number; seed: number }
+  | { type: 'enemy-defeated'; atMs: number; enemyId: string; enemyLevel: number; rank: CombatRank; worldId: string; stage: number; difficulty: number; seed: number }
   | { type: 'wave-started'; atMs: number; wave: number }
   | { type: 'stage-cleared' | 'party-defeated' | 'combat-stopped'; atMs: number }
 

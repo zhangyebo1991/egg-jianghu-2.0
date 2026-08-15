@@ -2057,6 +2057,8 @@ body {
 .faction-detail-stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 8px; color: var(--faction-paper-mute); font-size: 11px; letter-spacing: .08em; }
 .faction-detail-stats b { color: var(--faction-paper); font-weight: 600; font-variant-numeric: tabular-nums; }
 .faction-detail-stats [data-rarity] { color: var(--rarity); }
+.faction-detail-effects { display: grid; gap: 5px; margin-top: 10px; color: var(--faction-paper-mute); font-size: 11px; letter-spacing: .06em; }
+.faction-detail-effects b { color: var(--faction-gold-bright); }
 .faction-detail-action { display: grid; justify-items: end; gap: 8px; }
 .faction-detail-action > span { color: var(--faction-jade); font-size: 10px; letter-spacing: .12em; white-space: nowrap; }
 .faction-detail-origin { float: right; color: var(--faction-paper-mute); font-size: 11px; letter-spacing: .04em; }
@@ -2065,6 +2067,8 @@ body {
 .faction-detail-tags i { padding: 1px 8px; border: 1px solid rgb(201 163 92 / 30%); border-radius: 999px; color: var(--faction-jade); font-style: normal; font-size: 10px; letter-spacing: .08em; }
 .faction-learn-button { padding: 11px 26px; border: 0; border-radius: 6px; color: #f6e9d6; font-size: 13px; font-weight: 600; letter-spacing: .2em; background: linear-gradient(160deg, var(--faction-cinnabar-bright), var(--faction-cinnabar-deep)); box-shadow: 0 6px 18px rgb(138 58 43 / 40%); }
 .faction-learn-button.upgrade { color: #2e2208; background: linear-gradient(160deg, var(--faction-gold-bright), var(--faction-gold-deep)); box-shadow: 0 6px 18px rgb(201 163 92 / 35%); }
+.faction-forget-button { padding: 7px 14px; border: 1px solid rgb(233 222 195 / 18%); border-radius: 5px; color: var(--faction-paper-mute); background: transparent; font-size: 10px; letter-spacing: .12em; }
+.faction-forget-button:hover { border-color: var(--faction-cinnabar-bright); color: #e6b5a8; }
 
 .faction-disciples { position: relative; z-index: 1; margin-bottom: 30px; }
 .faction-disciples-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; }
@@ -2550,6 +2554,7 @@ body {
 .inventory-figure-ring img { width: 58px; height: 58px; object-fit: contain; pointer-events: none; user-select: none; }
 .inventory-appraise-name { margin: 0; color: #241f13; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 32px; font-weight: 400; letter-spacing: .04em; line-height: 1.15; }
 .inventory-appraise-latin { margin-top: 6px; color: rgb(43 37 25 / 45%); font-size: 9px; letter-spacing: .34em; text-transform: uppercase; }
+.inventory-kind-label { margin-top: 7px; color: #8a3a2b; font-size: 10px; font-weight: 700; letter-spacing: .24em; }
 .inventory-base-stat { display: grid; gap: 8px; margin-top: 12px; padding: 12px 14px; border-top: 1px solid rgb(43 37 25 / 18%); border-bottom: 1px solid rgb(43 37 25 / 18%); }
 .inventory-core-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; gap: 10px; }
 .inventory-base-label { color: rgb(43 37 25 / 60%); font-size: 11px; letter-spacing: .3em; }
@@ -2562,6 +2567,23 @@ body {
 .inventory-affix-grade { color: var(--affix-grade, #3a2f1c); font-size: 10px; font-weight: 800; text-shadow: 0 1px 1px rgb(0 0 0 / 25%); }
 .inventory-affix-value { flex: none; color: #3a2f1c; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .inventory-affix-empty { padding: 4px 0; color: rgb(43 37 25 / 40%); font-size: 11px; letter-spacing: .2em; }
+.inventory-original-description { margin: 14px 0 0; padding: 10px 12px; border-left: 2px solid rgb(138 58 43 / 55%); color: rgb(43 37 25 / 72%); font-size: 11px; line-height: 1.8; }
+.inventory-fixed-effects,
+.inventory-manual-skill,
+.inventory-artifact-soul { margin-top: 12px; padding: 11px 12px; border: 1px solid rgb(122 90 24 / 28%); border-radius: 5px; background: rgb(255 250 235 / 26%); }
+.inventory-fixed-effects h3,
+.inventory-manual-skill h3,
+.inventory-artifact-soul h3 { margin: 0; color: #6d511b; font-size: 11px; letter-spacing: .16em; }
+.inventory-fixed-effects div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 7px; color: rgb(43 37 25 / 68%); font-size: 11px; }
+.inventory-fixed-effects b { flex: none; color: #3a2f1c; font-variant-numeric: tabular-nums; }
+.inventory-manual-skill { position: relative; padding-right: 70px; }
+.inventory-manual-skill > b { position: absolute; top: 10px; right: 12px; color: #8a3a2b; font-size: 10px; letter-spacing: .12em; }
+.inventory-manual-skill[data-learned="true"] > b { color: #456737; }
+.inventory-manual-skill p,
+.inventory-artifact-soul p { margin: 8px 0 0; color: rgb(43 37 25 / 62%); font-size: 10px; line-height: 1.7; }
+.inventory-artifact-soul header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.inventory-artifact-soul header b { flex: none; color: #8a3a2b; font-size: 10px; letter-spacing: .14em; }
+.inventory-artifact-soul strong { display: block; margin-top: 8px; color: #3a2f1c; font-size: 11px; letter-spacing: .08em; }
 .inventory-appraise-actions { display: grid; gap: 8px; margin-top: auto; padding-top: 18px; }
 .inventory-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .inventory-action-ghost { padding: 11px 12px; border: 1px solid rgb(43 37 25 / 30%); border-radius: 7px; color: rgb(43 37 25 / 75%); font-size: 13px; letter-spacing: .24em; background: rgb(255 250 235 / 30%); transition: all .22s cubic-bezier(.22, 1, .36, 1); }
@@ -4805,5 +4827,143 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
 
 @media (prefers-reduced-motion: reduce) {
   .idle-page *, .idle-page *::before, .idle-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* 原版高阶获取链 */
+.game-main[data-page="progression"] { overflow: auto; background: #0c110e; }
+@media (min-width: 761px) {
+  .app-shell:has(.progression-page) { height: 100vh; min-height: 0; }
+  .game-main[data-page="progression"] { height: 100vh; min-height: 0; }
+}
+.progression-page {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  padding: clamp(24px, 3vw, 46px);
+  color: #ded6c3;
+  background:
+    linear-gradient(90deg, rgb(198 160 84 / 5%) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(rgb(198 160 84 / 4%) 1px, transparent 1px) 0 0 / 48px 48px,
+    radial-gradient(circle at 78% 5%, rgb(111 50 41 / 24%), transparent 34%),
+    radial-gradient(circle at 8% 70%, rgb(56 91 70 / 20%), transparent 32%),
+    #0c110e;
+}
+.progression-ghost { position: fixed; right: 3vw; bottom: -9vh; color: rgb(211 181 118 / 3%); font-family: "Faction Brush", serif; font-size: min(38vw, 520px); line-height: 1; pointer-events: none; }
+.progression-page-head { position: relative; z-index: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; padding-bottom: 24px; border-bottom: 1px solid rgb(201 163 92 / 20%); }
+.progression-page-head p { margin: 0 0 8px; color: #a44335; font-size: 11px; font-weight: 700; letter-spacing: .28em; }
+.progression-page-head h1 { margin: 0; color: #f0e5ce; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: clamp(40px, 5vw, 68px); font-weight: 400; letter-spacing: .08em; line-height: 1; }
+.progression-page-head > div > span { display: block; margin-top: 10px; color: rgb(222 214 195 / 38%); font-size: 9px; letter-spacing: .42em; }
+.progression-resources { display: grid; grid-template-columns: repeat(4, minmax(92px, 1fr)); gap: 1px; border: 1px solid rgb(201 163 92 / 22%); background: rgb(201 163 92 / 15%); }
+.progression-resources span { display: grid; min-height: 64px; padding: 10px 14px; align-content: center; background: rgb(13 18 15 / 92%); }
+.progression-resources small { color: rgb(222 214 195 / 46%); font-size: 9px; letter-spacing: .16em; }
+.progression-resources b { margin-top: 4px; color: #d7b66d; font-size: 18px; font-variant-numeric: tabular-nums; }
+.progression-tabs { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 860px; margin: 24px auto 28px; border: 1px solid rgb(201 163 92 / 22%); background: rgb(5 9 7 / 55%); }
+.progression-tabs button { display: flex; min-height: 56px; align-items: center; justify-content: center; gap: 10px; border-right: 1px solid rgb(201 163 92 / 14%); color: rgb(222 214 195 / 52%); background: transparent; }
+.progression-tabs button:last-child { border-right: 0; }
+.progression-tabs button span { display: grid; width: 26px; height: 26px; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-family: "Faction Brush", serif; font-size: 16px; }
+.progression-tabs button b { font-size: 12px; font-weight: 500; letter-spacing: .12em; }
+.progression-tabs button:hover { color: #e1c986; background: rgb(201 163 92 / 7%); }
+.progression-tabs button.active { color: #f0d58b; background: linear-gradient(180deg, rgb(165 66 51 / 18%), rgb(201 163 92 / 7%)); box-shadow: inset 0 -2px #a44335; }
+.progression-panel { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; }
+.progression-panel > header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+.progression-panel > header h2 { margin: 2px 0 0; color: #eee2c8; font-family: "Faction Brush", serif; font-size: 34px; font-weight: 400; letter-spacing: .1em; }
+.progression-panel > header p { max-width: 580px; margin: 0; color: rgb(222 214 195 / 50%); font-size: 11px; line-height: 1.8; text-align: right; }
+.progression-kicker { color: #a44335; font-size: 9px; font-weight: 700; letter-spacing: .32em; }
+.progression-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 14px; }
+.progression-card { min-width: 0; padding: 17px; border: 1px solid rgb(201 163 92 / 18%); background: linear-gradient(145deg, rgb(31 37 30 / 78%), rgb(12 17 14 / 90%)); box-shadow: 0 12px 35px rgb(0 0 0 / 16%); }
+.progression-card-head { display: flex; align-items: center; gap: 12px; }
+.progression-card-head > div { min-width: 0; flex: 1; }
+.progression-card-head h3 { overflow: hidden; margin: 0; color: #e9ddc5; font-size: 16px; font-weight: 600; letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
+.progression-card-head p { overflow: hidden; margin: 5px 0 0; color: rgb(222 214 195 / 42%); font-size: 9px; letter-spacing: .1em; text-overflow: ellipsis; white-space: nowrap; }
+.progression-card-head > b { flex: none; color: #bda56d; font-size: 10px; font-weight: 500; }
+.progression-card-seal { display: grid; width: 36px; height: 36px; flex: none; place-items: center; border: 1px solid rgb(164 67 53 / 55%); border-radius: 4px; color: #c66b59; font-family: "Faction Brush", serif; font-size: 20px; transform: rotate(-2deg); }
+.progression-primary,
+.progression-action-row button,
+.progression-subpanel button,
+.divine-overview button { min-height: 36px; padding: 8px 12px; border: 1px solid rgb(201 163 92 / 35%); border-radius: 4px; color: #e1c986; font-size: 10px; letter-spacing: .12em; background: rgb(201 163 92 / 8%); }
+.progression-primary:hover:not(:disabled),
+.progression-action-row button:hover:not(:disabled),
+.progression-subpanel button:hover:not(:disabled),
+.divine-overview button:hover:not(:disabled) { border-color: #c9a35c; color: #fff0bb; background: rgb(201 163 92 / 16%); }
+.progression-page button:disabled { cursor: not-allowed; opacity: .34; }
+.dungeon-grid { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+.dungeon-reward-list { display: grid; max-height: 248px; overflow: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 14px 0; padding-right: 5px; scrollbar-color: #66563a transparent; scrollbar-width: thin; }
+.dungeon-reward-list span { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 9px; border-left: 2px solid rgb(201 163 92 / 28%); background: rgb(255 255 255 / 2%); }
+.dungeon-reward-list b { overflow: hidden; color: rgb(238 226 200 / 74%); font-size: 10px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.dungeon-reward-list small { flex: none; color: rgb(222 214 195 / 36%); font-size: 8px; }
+.dungeon-card > .progression-primary,
+.interworld-card > .progression-primary { width: 100%; }
+.beast-next-stage { display: grid; gap: 5px; margin: 15px 0; padding: 11px 12px; border-left: 2px solid #476f56; background: rgb(71 111 86 / 8%); }
+.beast-next-stage strong { color: #d8ddc8; font-size: 12px; }
+.beast-next-stage span,
+.beast-next-stage small { color: rgb(222 214 195 / 48%); font-size: 9px; }
+.progression-action-row { display: flex; gap: 8px; }
+.progression-action-row button { flex: 1; }
+.progression-complete-note,
+.progression-lock-note { display: grid; min-height: 90px; place-content: center; gap: 6px; margin-top: 14px; color: #7d9c75; text-align: center; }
+.progression-subpanel { margin-top: 20px; padding: 16px; border: 1px solid rgb(201 163 92 / 16%); background: rgb(5 9 7 / 48%); }
+.progression-subpanel > h3 { margin: 0 0 12px; color: #c8b889; font-size: 13px; letter-spacing: .18em; }
+.recipe-list,
+.forge-equipment-list,
+.imperial-target-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 7px; }
+.recipe-list article,
+.imperial-target-list article { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border: 1px solid rgb(201 163 92 / 12%); background: rgb(255 255 255 / 2%); }
+.recipe-list article > div,
+.imperial-target-list article > div { display: grid; min-width: 0; gap: 4px; }
+.recipe-list strong,
+.imperial-target-list strong { overflow: hidden; color: #ddd1b9; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.recipe-list span,
+.imperial-target-list span { color: rgb(222 214 195 / 40%); font-size: 8px; }
+.progression-empty { margin: 10px; color: rgb(222 214 195 / 38%); font-size: 10px; }
+.divine-overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.divine-overview article { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 14px; padding: 15px 17px; border: 1px solid rgb(201 163 92 / 20%); background: rgb(21 28 23 / 78%); }
+.divine-overview small { color: rgb(222 214 195 / 46%); font-size: 9px; letter-spacing: .18em; }
+.divine-overview strong { color: #e1c986; font-size: 18px; }
+.divine-overview button { grid-row: 1 / 3; grid-column: 2; }
+.divine-overview article.locked { filter: grayscale(.8); }
+.shrine-grid { grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+.shrine-card.subdued { border-color: rgb(129 153 95 / 36%); }
+.shrine-progress { display: flex; align-items: center; gap: 9px; margin: 14px 0 10px; }
+.shrine-progress > span { height: 4px; flex: 1; overflow: hidden; background: rgb(255 255 255 / 7%); }
+.shrine-progress i { display: block; height: 100%; background: linear-gradient(90deg, #7c3e34, #cf9f52); }
+.shrine-progress small { flex: none; color: rgb(222 214 195 / 46%); font-size: 8px; font-variant-numeric: tabular-nums; }
+.shrine-reward { margin: 0 0 12px; color: rgb(222 214 195 / 50%); font-size: 9px; line-height: 1.7; }
+.forge-layout { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(420px, 1.2fr); gap: 14px; }
+.forge-layout .progression-subpanel { margin-top: 0; }
+.forge-equipment-list { grid-template-columns: 1fr; }
+.forge-equipment-list article { display: grid; grid-template-columns: 1fr auto; gap: 7px; padding: 6px; border: 1px solid rgb(201 163 92 / 12%); }
+.forge-equipment-list article.selected { border-color: #a44335; background: rgb(164 67 53 / 9%); }
+.forge-equipment-list article > button:first-child { display: grid; min-width: 0; gap: 3px; border: 0; color: inherit; text-align: left; background: transparent; }
+.forge-equipment-list strong { overflow: hidden; color: #e2d7c0; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.forge-equipment-list span { color: rgb(222 214 195 / 42%); font-size: 8px; }
+.forge-equipment-list .forge-advance { color: #dba56e; }
+.imperial-target-list { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.imperial-target-list article.locked { opacity: .48; }
+.interworld-grid { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+.interworld-drops { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 13px 0; }
+.interworld-drops span { display: flex; justify-content: space-between; gap: 8px; padding: 6px 8px; background: rgb(255 255 255 / 3%); }
+.interworld-drops b { overflow: hidden; color: rgb(222 214 195 / 64%); font-size: 9px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.interworld-drops small { flex: none; color: #a98d54; font-size: 8px; }
+.progression-page-foot { position: relative; z-index: 1; margin-top: 30px; padding-top: 16px; border-top: 1px solid rgb(201 163 92 / 14%); color: rgb(222 214 195 / 24%); font-size: 8px; letter-spacing: .28em; text-align: center; }
+
+@media (max-width: 1100px) {
+  .progression-page-head { align-items: flex-start; flex-direction: column; }
+  .progression-resources { width: 100%; }
+  .forge-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .progression-page { padding: 22px 14px 32px; }
+  .progression-resources { grid-template-columns: repeat(2, 1fr); }
+  .progression-tabs { overflow-x: auto; grid-template-columns: repeat(5, minmax(112px, 1fr)); justify-content: flex-start; }
+  .progression-panel > header { align-items: flex-start; flex-direction: column; }
+  .progression-panel > header p { text-align: left; }
+  .progression-card-grid,
+  .dungeon-grid,
+  .shrine-grid,
+  .interworld-grid { grid-template-columns: 1fr; }
+  .dungeon-reward-list { grid-template-columns: 1fr; }
+  .divine-overview { grid-template-columns: 1fr; }
+  .progression-action-row { flex-direction: column; }
 }
 

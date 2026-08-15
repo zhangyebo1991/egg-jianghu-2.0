@@ -28,6 +28,8 @@ export interface InvestmentLedger {
 
 export interface LearnedMartial {
   level: number
+  /** 该技能历次学习和升级实际消耗的 SP；遗忘时 100% 返还。 */
+  investedSp: number
   invested: InvestmentLedger
 }
 
@@ -41,6 +43,9 @@ export interface HeroProgressV10 {
   customName?: string
   level: number
   experience: number
+  skillPoints: number
+  /** 秘籍、神位等永久来源授予的技能资格；遗忘后仍可重新学习。 */
+  permanentMartialIds: string[]
   careers: Record<string, CareerRecord>
   currentCareerId: string
   learnedMartials: Record<string, LearnedMartial>
@@ -86,10 +91,28 @@ export interface EquipmentInstance {
   locked: boolean
 }
 
+export type ShrinePhase = 'raid' | 'siege' | 'occupation' | 'subdued'
+
+export interface ShrineProgressState {
+  phase: ShrinePhase
+  /** 0～5000；-1 是 Boss 死亡后等待刷新结算的内部握手状态。 */
+  progress: number
+}
+
+export interface DeityProgressState {
+  level: number
+}
+
+export interface SacredBeastProgressState {
+  highestClearedStage: number
+  claimedStages: number[]
+}
+
 export interface GameStateV10 {
-  version: 16
+  version: 17
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
+  unlockedFactionIds: string[]
   heroes: Record<string, HeroProgressV10>
   jobBooks: Record<string, number>
   formation: FormationSlot[]
@@ -98,6 +121,18 @@ export interface GameStateV10 {
   encounteredEnemyIds: string[]
   factionBoards: Record<string, FactionBoardState>
   inventory: EquipmentInstance[]
+  materials: Record<string, number>
+  starSoul: number
+  blueprints: Record<string, number>
+  unlockedRecipeIds: number[]
+  treasureManualGrants: Record<string, string>
+  infiniteTowerFloor: number
+  divineLadderFloor: number
+  divineRankLevel: number
+  shrines: Record<string, ShrineProgressState>
+  deities: Record<string, DeityProgressState>
+  sacredBeasts: Record<string, SacredBeastProgressState>
+  largeDungeonClears: Record<string, number>
   statistics: {
     kills: number
     bossKills: number

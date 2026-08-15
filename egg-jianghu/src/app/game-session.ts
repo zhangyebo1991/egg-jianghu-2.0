@@ -201,9 +201,9 @@ export class GameSession {
   }
 
   private ensureFactionBoards(refillEmpty = false): void {
-    const unlocked = new Set(this.state.unlockedWorldIds)
+    const unlocked = new Set(this.state.unlockedFactionIds)
     for (const faction of FACTIONS) {
-      if (!unlocked.has(faction.worldId)) continue
+      if (!unlocked.has(faction.id)) continue
       const board = this.state.factionBoards[faction.id]
       if (!board || (refillEmpty && board.slots.every((slot) => slot === null))) {
         initializeQuestBoard(this.state, faction.id, this.runtimeRng, 0)
@@ -236,6 +236,10 @@ export class GameSession {
         const nextWorld = WORLDS[currentIndex + 1]
         if (nextWorld?.released && !this.state.unlockedWorldIds.includes(nextWorld.id)) {
           this.state.unlockedWorldIds.push(nextWorld.id)
+          this.state.unlockedFactionIds.push(...FACTIONS
+            .filter((faction) => faction.worldId === nextWorld.id)
+            .map((faction) => faction.id)
+            .filter((factionId) => !this.state.unlockedFactionIds.includes(factionId)))
           this.state.worldCurrency[nextWorld.id] ??= 0
           this.state.clearedStageByWorldDifficulty[progressKey(nextWorld.id, 1)] ??= 0
           this.ensureFactionBoards()

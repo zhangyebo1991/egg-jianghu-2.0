@@ -17,6 +17,7 @@ const slotIcons: Record<EquipmentSlot, string> = {
   boots: bootsIcon,
   necklace: necklaceIcon,
   ring: ringIcon,
+  treasure: ringIcon,
 }
 
 const equipmentIconModules = import.meta.glob<string>('../assets/equipment/zt/zt_eq_*.webp', {

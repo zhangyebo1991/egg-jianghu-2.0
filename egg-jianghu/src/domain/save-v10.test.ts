@@ -12,8 +12,8 @@ const memoryStorage = () => {
   }
 }
 
-describe('version 16 存档', () => {
-  it('通过 version 16 专用 key 检测存档是否存在', () => {
+describe('version 17 存档', () => {
+  it('通过 version 17 专用 key 检测存档是否存在', () => {
     const storage = memoryStorage()
 
     expect(hasSaveV10(storage)).toBe(false)
@@ -23,7 +23,7 @@ describe('version 16 存档', () => {
     expect(hasSaveV10(storage)).toBe(true)
   })
 
-  it('清除时只移除 version 16 存档', () => {
+  it('清除时只移除 version 17 存档', () => {
     const storage = memoryStorage()
     storage.setItem(SAVE_KEY_V10, '{}')
     storage.setItem('other-key', '保留')
@@ -60,7 +60,7 @@ describe('version 16 存档', () => {
     saveGameV10(storage, state, 2000)
 
     const raw = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
-    expect(raw.version).toBe(16)
+    expect(raw.version).toBe(17)
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })

@@ -69,6 +69,7 @@ const emitDefeat = (
   type: 'enemy-defeated',
   atMs: state.elapsedMs,
   enemyId: enemy.id,
+  enemyLevel: (state.difficulty - 1) * 20 + state.stage,
   rank: enemy.rank,
   worldId: state.worldId,
   stage: state.stage,

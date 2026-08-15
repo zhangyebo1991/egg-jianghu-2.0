@@ -1,4 +1,4 @@
-import { martialByIdV10 } from '../content/martials'
+import { CITY_MARTIALS } from '../content/martials'
 import { canLearnMartial } from './martial-training'
 import type { ActionResult, GameStateV10, InvestmentLedger } from './types'
 
@@ -15,9 +15,9 @@ export const learnCityMartial = (
   martialId: string,
 ): ActionResult => {
   const hero = state.heroes[heroId]
-  const martial = martialByIdV10(martialId)
+  const martial = CITY_MARTIALS.find((item) => item.id === martialId)
   if (!hero?.recruited) return { ok: false, message: '侠客尚未加入' }
-  if (!martial || martial.source !== 'city') return { ok: false, message: '城市武功不存在' }
+  if (!martial) return { ok: false, message: '城市武功不存在' }
   if (!state.unlockedWorldIds.includes(martial.worldId)) return { ok: false, message: '尚未解锁所在江湖卷' }
   const allowed = canLearnMartial(hero, martial)
   if (!allowed.ok) return allowed
@@ -26,6 +26,6 @@ export const learnCityMartial = (
 
   state.worldCurrency[martial.worldId] -= cost
   const invested: InvestmentLedger = { worldCurrency: { [martial.worldId]: cost }, contribution: {} }
-  hero.learnedMartials[martialId] = { level: 1, invested }
+  hero.learnedMartials[martialId] = { level: 1, investedSp: 0, invested }
   return { ok: true, message: '学会城市武功' }
 }

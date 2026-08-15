@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderShell } from './shell'
 
 describe('应用 Shell', () => {
-  it('显示江湖、侠客、阵容、背包四个全局入口且不显示顶部资源和自动存档', () => {
+  it('显示江湖、侠客、阵容、背包、秘境五个全局入口且不显示顶部资源和自动存档', () => {
     const html = renderShell({
       activeTab: 'idle',
       worldContext: null,
@@ -16,6 +16,7 @@ describe('应用 Shell', () => {
     expect(html).toContain('data-testid="tab-heroes"')
     expect(html).toContain('data-testid="tab-formation"')
     expect(html).toContain('data-testid="tab-inventory"')
+    expect(html).toContain('data-testid="tab-progression"')
     expect(html).toContain('class="nav-mark"')
     expect(html).toContain('class="sidebar-landscape"')
     expect(html).toContain('十万里一剑 · 不负侠者行')

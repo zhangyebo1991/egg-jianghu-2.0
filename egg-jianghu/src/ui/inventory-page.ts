@@ -30,6 +30,19 @@ export interface InventoryItemView {
   weaponTypeName?: string
   coreStats: InventoryCoreStatView[]
   affixes: InventoryAffixView[]
+  equipmentKindLabel?: string
+  description?: string
+  fixedEffects?: InventoryAttributeView[]
+  artifactSoul?: {
+    name: string
+    tier: number
+    description: string
+    formattedValue: string
+  }
+  manualSkill?: {
+    name: string
+    learned: boolean
+  }
 }
 
 export interface InventorySlotTabView {
@@ -119,6 +132,12 @@ const renderCoreStats = (item: InventoryItemView): string => item.coreStats.map(
     <span class="inventory-base-value">+${escapeHtml(core.formattedValue)}</span>
   </div>`).join('')
 
+const renderOriginalFixedDetails = (item: InventoryItemView): string => `
+  ${item.description ? `<p class="inventory-original-description">${escapeHtml(item.description)}</p>` : ''}
+  ${item.fixedEffects?.length ? `<section class="inventory-fixed-effects"><h3>至宝固定属性</h3>${item.fixedEffects.map((effect) => `<div><span>${escapeHtml(effect.name)}</span><b>+${escapeHtml(effect.formattedValue)}</b></div>`).join('')}</section>` : ''}
+  ${item.manualSkill ? `<section class="inventory-manual-skill" data-learned="${item.manualSkill.learned}"><h3>秘籍传承 · ${escapeHtml(item.manualSkill.name)}</h3><b>${item.manualSkill.learned ? '已领悟' : '未领悟'}</b><p>首次装备后永久领悟；卸下不会失去，重复装备不会重复授予。</p></section>` : ''}
+  ${item.artifactSoul ? `<section class="inventory-artifact-soul" data-tier="${item.artifactSoul.tier}"><header><h3>器魂 · ${escapeHtml(item.artifactSoul.name)}</h3><b>${item.artifactSoul.tier} 阶</b></header><p>${escapeHtml(item.artifactSoul.description)}</p><strong>当前生效 +${escapeHtml(item.artifactSoul.formattedValue)}</strong></section>` : ''}`
+
 const renderSelectedDetail = (item: InventoryItemView | null): string => {
   if (!item) return `<div class="inventory-appraise-blank">
     <span class="inventory-blank-char">鉴</span>
@@ -135,10 +154,12 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
     <div>
       <h2 class="inventory-appraise-name">${escapeHtml(item.name)}</h2>
       <div class="inventory-appraise-latin">品质 ${item.quality} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Level ${item.level}</div>
+      ${item.equipmentKindLabel ? `<div class="inventory-kind-label">${escapeHtml(item.equipmentKindLabel)}</div>` : ''}
     </div>
   </div>
   <div class="inventory-base-stat">${renderCoreStats(item)}</div>
   <div class="inventory-affix-list">${renderAffixes(item)}</div>
+  ${renderOriginalFixedDetails(item)}
   <div class="inventory-appraise-actions">
     <div class="inventory-action-row">
       <button type="button" class="inventory-action-ghost${item.locked ? ' on' : ''}"

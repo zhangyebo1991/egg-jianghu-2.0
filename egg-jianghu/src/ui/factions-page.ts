@@ -12,13 +12,25 @@ export interface FactionMartialView {
   rarity: string
   cost: number
   upgradeCost: number
+  spCost: number
+  availableSp: number
+  resourceKind: 'worldCurrency' | 'contribution'
+  resourceName: string
   learned: boolean
   level: number
+  maxLevel: number
+  currentEffect: number | null
+  nextEffect: number | null
+  currentBuffChance: number | null
+  nextBuffChance: number | null
+  sourceName: string
+  refundableSp: number
   state: FactionMartialState
   energyCost: number
   cooldownMs: number
   power: number
   previousName: string | null
+  previousMaxLevel: number | null
   careerNames: string[]
   careerCompatible: boolean
   affordable: boolean
@@ -97,11 +109,18 @@ export interface FactionsPageViewModel {
   selectedMartial: FactionMartialView | null
 }
 
+const stageNames = ['初传', '进境', '真传', '秘传'] as const
+const stageLetters = ['初', '进', '真', '秘'] as const
+const nodePositions = [16, 50, 84, 96] as const
 const questRotations = [-1.6, 0.9, -0.7, 1.4, -1.1, 0.6] as const
 
 const romanNumerals = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'] as const
 
 const formatMinutes = (remainingMs: number): number => Math.max(0, Math.ceil(remainingMs / 60_000))
+
+const formatCooldown = (cooldownMs: number): string => `${(cooldownMs / 1000).toFixed(1)}s`
+
+const formatEffect = (value: number): string => Number.isInteger(value) ? formatNumber(value) : value.toFixed(2)
 
 const renderTally = (progress: number, targetCount: number): string => {
   const filled = targetCount > 0 ? Math.min(5, Math.round((progress / targetCount) * 5)) : 0
@@ -155,6 +174,88 @@ const renderFactionPlaques = (view: FactionsPageViewModel): string => view.facti
     <span class="faction-plaque-contrib"><b>${formatNumber(faction.contribution)}</b><small>贡献</small></span>
   </button>`).join('')
 
+const renderRoster = (view: FactionsPageViewModel): string => {
+  const rosterRows = view.roster.length > 0
+    ? view.roster.map((hero) => `<button type="button" class="faction-roster-row ${hero.selected ? 'active' : ''} ${hero.compatible ? '' : 'dim'}" data-action="select-faction-hero" data-hero-id="${escapeHtml(hero.id)}" data-testid="faction-roster-${escapeHtml(hero.id)}">
+        <span class="faction-roster-seal" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span>
+        <span class="faction-roster-copy"><strong>${escapeHtml(hero.name)}</strong><small>${escapeHtml(hero.factionName)} · ${escapeHtml(hero.category)}脉</small></span>
+        <span class="faction-roster-fit ${hero.compatible ? 'ok' : 'no'}">${hero.compatible ? '可传' : '职不符'}</span>
+      </button>`).join('')
+    : '<p class="faction-roster-empty">江湖无此人</p>'
+  return `<div class="faction-roster-pop" data-testid="faction-roster"${view.rosterOpen ? '' : ' hidden'}>
+    <header><strong>点将谱</strong><input type="search" data-action="faction-roster-search" value="${escapeHtml(view.rosterQuery)}" placeholder="以名相寻…" autocomplete="off" aria-label="搜索研习对象"></header>
+    <div class="faction-roster-list">${rosterRows}</div>
+    <footer>已招募侠客 · 共 <b>${view.rosterCount}</b> 人</footer>
+  </div>`
+}
+
+const renderMartialNode = (martial: FactionMartialView, selected: boolean): string => {
+  const resourceCost = martial.learned ? martial.upgradeCost : martial.cost
+  const levelLabel = martial.learned ? `Lv.${martial.level}/${martial.maxLevel}` : `Lv.0/${martial.maxLevel}`
+  return `<article class="faction-node faction-node-${martial.state} ${selected ? 'selected' : ''}" data-rarity="${escapeHtml(martial.rarity)}" data-stage-name="${stageNames[martial.stage - 1]}" style="--faction-node-left:${nodePositions[martial.stage - 1]}%" data-testid="faction-martial-${escapeHtml(martial.id)}">
+    <button type="button" class="faction-node-button" data-action="select-martial" data-martial-id="${escapeHtml(martial.id)}" aria-label="查看${escapeHtml(martial.name)}">
+      <span>${stageLetters[martial.stage - 1]}</span><small>${levelLabel}</small>
+    </button>
+    <strong class="faction-node-name">${escapeHtml(martial.name)}</strong>
+    <span class="faction-node-sub"><b>${escapeHtml(martial.rarity)}</b> · <i>${escapeHtml(martial.resourceName)} ${formatNumber(resourceCost)} · ${formatNumber(martial.spCost)} SP</i></span>
+  </article>`
+}
+
+const renderBranch = (view: FactionsPageViewModel, branch: FactionsPageViewModel['branches'][number]): string => {
+  const learned = branch.martials.filter((martial) => martial.learned)
+  const furthestStage = learned.reduce((max, martial) => Math.max(max, martial.stage), 0)
+  const litPercent = furthestStage > 0 ? nodePositions[furthestStage - 1] : 0
+  return `<section class="faction-branch" data-branch="${escapeHtml(branch.name)}">
+    <div class="faction-branch-label"><strong>${escapeHtml(branch.name)}</strong><span>${learned.length} / ${branch.martials.length} 已通</span></div>
+    <div class="faction-branch-track">
+      <svg class="faction-vein-svg" viewBox="0 0 1000 118" preserveAspectRatio="none" aria-hidden="true">
+        <path class="faction-vein-base" d="M 16 49 Q 180 29 340 49 Q 500 69 660 49 Q 820 29 984 49"></path>
+        <path class="faction-vein-lit" d="M 16 49 Q 180 29 340 49 Q 500 69 660 49 Q 820 29 984 49" style="--faction-lit:${litPercent}%;visibility:${furthestStage > 0 ? 'visible' : 'hidden'}"></path>
+      </svg>
+      ${branch.martials.map((martial) => renderMartialNode(martial, martial.id === view.selectedMartialId)).join('')}
+    </div>
+  </section>`
+}
+
+const renderEffectLine = (label: string, level: number, effect: number, buffChance: number | null): string =>
+  `<span><b>${label} Lv.${level}</b> · 效果值 ${formatEffect(effect)}${buffChance === null ? '' : ` · Buff ${formatEffect(buffChance)}%`}</span>`
+
+const renderMartialDetail = (view: FactionsPageViewModel): string => {
+  const martial = view.selectedMartial
+  if (!martial) return '<div class="faction-martial-detail empty" data-testid="faction-martial-detail"><span>选择一处经脉节点，查看武功详情</span></div>'
+  const action = martial.learned ? 'martial-upgrade' : 'martial-learn'
+  const actionCost = martial.learned ? martial.upgradeCost : martial.cost
+  const actionLabel = martial.actionDisabled
+    ? martial.actionReason ?? (martial.learned ? '暂不可升级' : '暂不可研习')
+    : `${martial.learned ? '升级' : '研习'} · ${formatNumber(martial.spCost)} SP + ${martial.resourceName} ${formatNumber(actionCost)}`
+  const targetLevel = martial.learned ? martial.level + 1 : 1
+  return `<div class="faction-martial-detail ${martial.state}" data-testid="faction-martial-detail">
+    <div class="faction-detail-copy">
+      <div class="faction-detail-name">${escapeHtml(martial.name)} <small>Lv.${martial.level}/${martial.maxLevel}</small>${martial.origin ? `<span class="faction-detail-origin">${escapeHtml(martial.origin)}</span>` : ''}</div>
+      ${martial.description ? `<p class="faction-detail-desc">${escapeHtml(martial.description)}</p>` : ''}
+      <div class="faction-detail-stats">
+        <span>品阶 <b data-rarity="${escapeHtml(martial.rarity)}">${escapeHtml(martial.rarity)}</b></span>
+        <span>来源 <b>${escapeHtml(martial.sourceName)}</b></span>
+        <span>耗气 <b>${martial.energyCost}</b></span>
+        <span>调息 <b>${formatCooldown(martial.cooldownMs)}</b></span>
+        <span>威力 <b>${martial.powerNote ? escapeHtml(martial.powerNote) : martial.power.toFixed(2)}</b></span>
+        ${martial.previousName ? `<span>前置 <b>${escapeHtml(martial.previousName)} Lv.${martial.previousMaxLevel ?? 1}</b></span>` : '<span>前置 <b>无</b></span>'}
+        <span>职业 <b>${escapeHtml(martial.careerNames.join(' / '))}</b></span>
+      </div>
+      <div class="faction-detail-effects">
+        ${martial.currentEffect === null ? '<span><b>当前</b> · 尚未习得</span>' : renderEffectLine('当前', martial.level, martial.currentEffect, martial.currentBuffChance)}
+        ${martial.nextEffect === null ? '<span><b>下一级</b> · 已臻化境</span>' : renderEffectLine('下一级', targetLevel, martial.nextEffect, martial.nextBuffChance)}
+      </div>
+      ${martial.tags?.length ? `<div class="faction-detail-tags">${martial.tags.map((tag) => `<i>${escapeHtml(tag)}</i>`).join('')}</div>` : ''}
+    </div>
+    <div class="faction-detail-action">
+      <span>${view.selectedHero ? `研习对象 · ${escapeHtml(view.selectedHero.name)} · 可用 ${formatNumber(martial.availableSp)} SP` : '请先选择研习对象'}</span>
+      <button type="button" class="faction-learn-button ${martial.learned ? 'upgrade' : ''}" data-action="${action}" data-hero-id="${escapeHtml(view.selectedHeroId ?? '')}" data-martial-id="${escapeHtml(martial.id)}"${martial.actionDisabled ? ' disabled' : ''}>${escapeHtml(actionLabel)}</button>
+      ${martial.learned ? `<button type="button" class="faction-forget-button" data-action="martial-forget" data-hero-id="${escapeHtml(view.selectedHeroId ?? '')}" data-martial-id="${escapeHtml(martial.id)}">遗忘 · 返还 ${formatNumber(martial.refundableSp)} SP</button>` : ''}
+    </div>
+  </div>`
+}
+
 const renderCallingCards = (view: FactionsPageViewModel, selected: FactionSelectorView): string => view.factionHeroes.map((hero, index) => `
   <article class="faction-calling-card ${hero.recruited ? 'recruited' : ''}" style="--faction-card-rotation:${[-1.2, 0.8, -0.6][index] ?? 0}deg;--faction-delay:${index * 90}ms" data-testid="faction-hero-${escapeHtml(hero.id)}">
     ${hero.recruited ? '<span class="faction-calling-stamp">已入麾下</span>' : ''}
@@ -178,6 +279,7 @@ export const renderFactionsPage = (view: FactionsPageViewModel): string => {
   const worldRoman = romanNumerals[view.worldIndex] ?? String(view.worldIndex)
   return `<section class="factions-layout faction-page" data-testid="factions-page">
     <span class="faction-ghost faction-ghost-board" aria-hidden="true">榜</span>
+    <span class="faction-ghost faction-ghost-meridian" aria-hidden="true">脉</span>
     <span class="faction-ghost faction-ghost-heroes" aria-hidden="true">侠</span>
 
     <header class="faction-page-head">
@@ -202,6 +304,15 @@ export const renderFactionsPage = (view: FactionsPageViewModel): string => {
         </header>
         <div class="faction-quest-grid">${view.quests.map(({ slot, quest }) => renderQuest(view.selectedFactionId, slot, quest)).join('')}</div>
       </div>
+    </section>
+
+    <section class="faction-meridian" data-testid="faction-meridian">
+      <header class="faction-section-head faction-meridian-head">
+        <div class="faction-section-title"><h2>传承</h2><span>双线行功 · 每线三门 · <i>逐穴打通</i></span></div>
+        <div class="faction-disciple"><span class="faction-disciple-label">研习对象</span><button type="button" class="faction-disciple-plate" data-action="toggle-faction-roster" aria-haspopup="dialog" aria-expanded="${view.rosterOpen}">${view.selectedHero ? `<span class="faction-disciple-seal" data-grade="${escapeHtml(view.selectedHero.grade)}">${escapeHtml(view.selectedHero.grade)}</span><strong>${escapeHtml(view.selectedHero.name)}</strong><small>${escapeHtml(view.selectedHero.category)}脉</small><i>⌄</i>` : '<strong>选择侠客</strong><i>⌄</i>'}</button>${renderRoster(view)}</div>
+      </header>
+      <div class="faction-branch-zone">${view.branches.map((branch) => renderBranch(view, branch)).join('')}</div>
+      ${renderMartialDetail(view)}
     </section>
 
     <section class="faction-disciples" data-testid="faction-invite-panel">

@@ -85,17 +85,23 @@ const factionsFixture = (): FactionsPageViewModel => ({
     } : null,
   })),
   branches: [
-    { name: '快剑', martials: [1, 2, 3, 4].map((stage) => ({
-      id: `qingfeng_hall_${stage}`, name: `快剑第${stage}式`, stage: stage as 1 | 2 | 3 | 4,
+    { name: '快剑', martials: [1, 2, 3].map((stage) => ({
+      id: `qingfeng_hall_${stage}`, name: `快剑第${stage}式`, stage: stage as 1 | 2 | 3,
       rarity: '粗浅', cost: 80, upgradeCost: 96, learned: false, level: 0, state: stage === 1 ? 'next' : 'locked',
-      energyCost: 12, cooldownMs: 2200, power: 1.15, previousName: stage === 1 ? null : `快剑第${stage - 1}式`,
+      spCost: 451, availableSp: 1000, resourceKind: 'contribution' as const, resourceName: '势力贡献',
+      maxLevel: 30, currentEffect: null, nextEffect: 100, currentBuffChance: null, nextBuffChance: null,
+      sourceName: '全真教', refundableSp: 0,
+      energyCost: 12, cooldownMs: 2200, power: 1.15, previousName: stage === 1 ? null : `快剑第${stage - 1}式`, previousMaxLevel: stage === 1 ? null : 30,
       careerNames: ['剑客', '游剑客'], careerCompatible: true, affordable: true, actionDisabled: false, actionReason: null,
       selected: stage === 1,
     })) },
-    { name: '重剑', martials: [1, 2, 3, 4].map((stage) => ({
-      id: `qingfeng_hall_b${stage}`, name: `重剑第${stage}式`, stage: stage as 1 | 2 | 3 | 4,
+    { name: '重剑', martials: [1, 2, 3].map((stage) => ({
+      id: `qingfeng_hall_b${stage}`, name: `重剑第${stage}式`, stage: stage as 1 | 2 | 3,
       rarity: '寻常', cost: 100, upgradeCost: 120, learned: false, level: 0, state: stage === 1 ? 'next' : 'locked',
-      energyCost: 12, cooldownMs: 2200, power: 1.15, previousName: stage === 1 ? null : `重剑第${stage - 1}式`,
+      spCost: 451, availableSp: 1000, resourceKind: 'contribution' as const, resourceName: '势力贡献',
+      maxLevel: 30, currentEffect: null, nextEffect: 100, currentBuffChance: null, nextBuffChance: null,
+      sourceName: '全真教', refundableSp: 0,
+      energyCost: 12, cooldownMs: 2200, power: 1.15, previousName: stage === 1 ? null : `重剑第${stage - 1}式`, previousMaxLevel: stage === 1 ? null : 30,
       careerNames: ['剑客', '重剑客'], careerCompatible: true, affordable: true, actionDisabled: false, actionReason: null,
       selected: false,
     })) },
@@ -118,8 +124,11 @@ const factionsFixture = (): FactionsPageViewModel => ({
   selectedMartialId: 'qingfeng_hall_1',
   selectedMartial: {
     id: 'qingfeng_hall_1', name: '快剑第一式', stage: 1, rarity: '粗浅', cost: 80, upgradeCost: 96,
+    spCost: 451, availableSp: 1000, resourceKind: 'contribution', resourceName: '势力贡献',
     learned: false, level: 0, state: 'next', energyCost: 12, cooldownMs: 2200, power: 1.15,
-    previousName: null, careerNames: ['剑客', '游剑客'], careerCompatible: true, affordable: true,
+    maxLevel: 30, currentEffect: null, nextEffect: 100, currentBuffChance: null, nextBuffChance: null,
+    sourceName: '全真教', refundableSp: 0,
+    previousName: null, previousMaxLevel: null, careerNames: ['剑客', '游剑客'], careerCompatible: true, affordable: true,
     actionDisabled: false, actionReason: null, selected: true,
     description: '两段连击，剑势平正', origin: '《射雕英雄传》', stageName: '初传',
     powerNote: '1.15 ×2段(总1.27)', tags: ['单体', '连击'],
@@ -269,13 +278,18 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="pr-icon"><img')
   })
 
-  it('势力页显示六格悬榜和门人拜帖', () => {
+  it('势力页显示六格悬榜、两线三门传承和门人拜帖', () => {
     const html = renderFactionsPage(factionsFixture())
     expect(html.match(/data-quest-slot=/g)).toHaveLength(6)
     expect(html).toContain('村中泼皮')
     expect(html).toContain('门人拜帖')
     expect(html).not.toContain('world_01_stage_01_mob_1')
-    expect(html).not.toContain('data-testid="faction-meridian"')
+    expect(html).toContain('data-testid="faction-meridian"')
+    expect(html.match(/class="faction-node /g)).toHaveLength(6)
+    expect(html).toContain('Lv.0/30')
+    expect(html).toContain('451 SP + 势力贡献 80')
+    expect(html).toContain('效果值 100')
+    expect(html).toContain('来源 <b>全真教</b>')
   })
 
   it('城市和背包页没有抽卡、残页与铁匠铺', () => {

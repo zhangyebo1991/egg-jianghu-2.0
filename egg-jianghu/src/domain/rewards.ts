@@ -9,6 +9,10 @@ export interface CombatSettlementResult {
   addedEquipmentUids: string[]
 }
 
+/** 原版 c3runtime.js「敌人技能经验量function」。 */
+export const skillPointsForEnemyLevel = (enemyLevel: number): number =>
+  Math.round(10 + 10 * ((100 + Math.max(0, enemyLevel)) / 1000))
+
 const grantKillProgress = (
   state: GameStateV10,
   event: Extract<CombatEvent, { type: 'enemy-defeated' }>,
@@ -21,6 +25,7 @@ const grantKillProgress = (
   if (!state.encounteredEnemyIds.includes(event.enemyId)) state.encounteredEnemyIds.push(event.enemyId)
 
   const participatingHeroIds = new Set(state.formation.map((slot) => slot.heroId))
+  const skillPoints = skillPointsForEnemyLevel(event.enemyLevel)
   for (const heroId of participatingHeroIds) {
     const hero = state.heroes[heroId]
     if (!hero?.recruited) continue
@@ -31,6 +36,7 @@ const grantKillProgress = (
       hero.level += 1
     }
     addCareerExperience(hero, experience)
+    hero.skillPoints += skillPoints
   }
 }
 

@@ -1,82 +1,90 @@
 import type { CareerCategory } from './careers'
 import type { Rarity } from '../domain/types'
+import { ORIGINAL_FACTIONS, ORIGINAL_PLAYER_SKILLS } from './original-progression.generated'
 
 export interface FactionDefinition {
   id: string
+  originalId: number
   name: string
+  description: string
   category: CareerCategory
   worldId: string
+  currencyKind: 'worldCurrency' | 'contribution'
   branchLabels: readonly [string, string]
-  /** 诸天技能组威力属性 id（sx153-194 段），决定该势力武功的技能组威力乘区 */
+  skillIds: readonly number[]
+  /** 诸天技能组威力属性 id（sx153-194 段）。 */
   factionPowerSxId: number
 }
 
-const branchLabelsFor = (category: CareerCategory): readonly [string, string] => {
-  if (category === '剑') return ['快剑', '重剑']
-  if (category === '刀') return ['快刀', '狂刀']
-  if (category === '拳') return ['刚拳', '绵掌']
-  if (category === '暗') return ['影刺', '毒术']
-  if (category === '医') return ['疗伤', '药理']
-  return ['运气', '护体']
+// 复用既有 30 个内部键，保证侠客、悬榜和贡献引用仍落在原来的位面；
+// 原版前三个位面各多出的第 4 个势力，以及第 11～13 位面，使用新增稳定键。
+const LEGACY_FACTION_IDS_BY_WORLD: Readonly<Record<string, readonly string[]>> = {
+  world_01: ['qingfeng_hall', 'tieyi_school', 'renxin_hall'],
+  world_02: ['duanlang_blade', 'yexing_tower', 'guiyuan_manor'],
+  world_03: ['tingyu_sword', 'feixing_dock', 'tiaoxi_court'],
+  world_04: ['zhenyue_blade', 'mianshan_school', 'baicao_hall'],
+  world_05: ['cangfeng_manor', 'hengjiang_blade', 'xinglin_valley'],
+  world_06: ['zhenshan_gate', 'wuteng_stockade', 'baoyuan_temple'],
+  world_07: ['wanren_court', 'juezong_gate', 'jingmai_court'],
+  world_08: ['shuofeng_blade', 'huajin_hall', 'jingang_court'],
+  world_09: ['tianxia_sword', 'tongbi_society', 'zhoutian_sect'],
+  world_10: ['baizhan_blade', 'zhuiming_office', 'qihuang_society'],
 }
 
-// id 保持稳定（武功 id、贡献、悬榜均以势力 id 为键），仅调整金庸门派名与类别。
-export const FACTION_ROWS = [
-  ['qingfeng_hall', '全真教', '剑', 'world_01'],
-  ['tieyi_school', '丐帮', '拳', 'world_01'],
-  ['renxin_hall', '桃花岛', '医', 'world_01'],
-  ['duanlang_blade', '陆家庄', '刀', 'world_02'],
-  ['yexing_tower', '白驼山', '暗', 'world_02'],
-  ['guiyuan_manor', '古墓派', '内家', 'world_02'],
-  ['tingyu_sword', '绝情谷', '刀', 'world_03'],
-  ['feixing_dock', '万兽山庄', '暗', 'world_03'],
-  ['tiaoxi_court', '全真教', '内家', 'world_03'],
-  ['zhenyue_blade', '大理段氏', '内家', 'world_04'],
-  ['mianshan_school', '天龙寺', '医', 'world_04'],
-  ['baicao_hall', '四大恶人', '暗', 'world_04'],
-  ['cangfeng_manor', '逍遥派', '内家', 'world_05'],
-  ['hengjiang_blade', '灵鹫宫', '剑', 'world_05'],
-  ['xinglin_valley', '万劫谷', '暗', 'world_05'],
-  ['zhenshan_gate', '蒙古大营', '刀', 'world_06'],
-  ['wuteng_stockade', '丐帮', '拳', 'world_06'],
-  ['baoyuan_temple', '渔樵耕读', '医', 'world_06'],
-  ['wanren_court', '明教', '拳', 'world_07'],
-  ['juezong_gate', '武当', '内家', 'world_07'],
-  ['jingmai_court', '峨眉', '剑', 'world_07'],
-  ['shuofeng_blade', '少林', '拳', 'world_08'],
-  ['huajin_hall', '逍遥派', '剑', 'world_08'],
-  ['jingang_court', '大理段氏', '医', 'world_08'],
-  ['tianxia_sword', '丐帮', '拳', 'world_09'],
-  ['tongbi_society', '聪辩门下', '医', 'world_09'],
-  ['zhoutian_sect', '渔樵耕读', '刀', 'world_09'],
-  ['baizhan_blade', '灵鹫宫', '剑', 'world_10'],
-  ['zhuiming_office', '星宿派', '暗', 'world_10'],
-  ['qihuang_society', '姑苏慕容', '刀', 'world_10'],
-] as const satisfies ReadonlyArray<readonly [string, string, CareerCategory, string]>
+const categoryByOriginalSkillCategory: Record<number, CareerCategory> = {
+  1: '内家',
+  2: '拳',
+  3: '剑',
+  4: '内家',
+  5: '暗',
+  6: '医',
+  7: '刀',
+  8: '内家',
+  9: '刀',
+  10: '剑',
+  11: '内家',
+  12: '内家',
+  13: '暗',
+  14: '暗',
+  15: '内家',
+  16: '医',
+}
 
-export const FACTIONS: FactionDefinition[] = FACTION_ROWS.map(
-  ([id, name, category, worldId], index) => ({
-    id,
-    name,
-    category,
+const factionIdFor = (originalId: number, worldId: string, positionInWorld: number): string =>
+  LEGACY_FACTION_IDS_BY_WORLD[worldId]?.[positionInWorld]
+  ?? `original_faction_${String(originalId).padStart(2, '0')}`
+
+const worldOffsets = new Map<string, number>()
+
+export const FACTIONS: FactionDefinition[] = ORIGINAL_FACTIONS.map((original) => {
+  const worldId = `world_${String(original.worldIndex).padStart(2, '0')}`
+  const positionInWorld = worldOffsets.get(worldId) ?? 0
+  worldOffsets.set(worldId, positionInWorld + 1)
+  const firstSkill = ORIGINAL_PLAYER_SKILLS.find((skill) => skill.id === original.skillIds[0])
+  return {
+    id: factionIdFor(original.id, worldId, positionInWorld),
+    originalId: original.id,
+    name: original.name,
+    description: original.description,
+    category: categoryByOriginalSkillCategory[firstSkill?.skillCategory ?? 1] ?? '内家',
     worldId,
-    branchLabels: branchLabelsFor(category),
-    factionPowerSxId: 153 + index,
+    currencyKind: original.currencyKind,
+    branchLabels: ['一脉', '二脉'],
+    skillIds: original.skillIds,
+    factionPowerSxId: 152 + original.id,
+  }
+})
+
+// 仅供仍使用“每卷稀有度预算”的旧内容读取；原版 269 技能直接使用 jn 难度阶级。
+export const RARITY_BUDGET_BY_WORLD: Record<string, readonly Rarity[]> = Object.fromEntries(
+  Array.from({ length: 13 }, (_, offset) => {
+    const worldId = `world_${String(offset + 1).padStart(2, '0')}`
+    return [worldId, ['粗浅', '粗浅', '寻常', '寻常', '精妙', '精妙', '上乘', '绝学'] as const]
   }),
 )
 
-export const RARITY_BUDGET_BY_WORLD: Record<string, readonly Rarity[]> = {
-  world_01: ['粗浅', '粗浅', '粗浅', '粗浅', '粗浅', '寻常', '寻常', '寻常'],
-  world_02: ['粗浅', '粗浅', '粗浅', '粗浅', '粗浅', '寻常', '寻常', '寻常'],
-  world_03: ['粗浅', '粗浅', '寻常', '寻常', '寻常', '寻常', '精妙', '精妙'],
-  world_04: ['粗浅', '粗浅', '寻常', '寻常', '寻常', '寻常', '精妙', '精妙'],
-  world_05: ['寻常', '寻常', '精妙', '精妙', '精妙', '精妙', '上乘', '上乘'],
-  world_06: ['寻常', '寻常', '精妙', '精妙', '精妙', '精妙', '上乘', '上乘'],
-  world_07: ['精妙', '精妙', '上乘', '上乘', '上乘', '上乘', '绝学', '绝学'],
-  world_08: ['精妙', '精妙', '上乘', '上乘', '上乘', '上乘', '绝学', '绝学'],
-  world_09: ['上乘', '上乘', '绝学', '绝学', '绝学', '绝学', '绝学', '绝学'],
-  world_10: ['上乘', '上乘', '绝学', '绝学', '绝学', '绝学', '绝学', '绝学'],
-}
-
 export const factionById = (id: string): FactionDefinition | undefined =>
   FACTIONS.find((faction) => faction.id === id)
+
+export const factionByOriginalId = (id: number): FactionDefinition | undefined =>
+  FACTIONS.find((faction) => faction.originalId === id)

@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "generate:original": "node scripts/generate-original-progression.mjs && node scripts/generate-zhutian-skills.mjs",
     "desktop": "npm run build && electron .",
     "desktop:dir": "npm run build && electron-builder --win --x64 --dir",
     "desktop:dist": "pwsh -NoProfile -File scripts/package-windows.ps1",

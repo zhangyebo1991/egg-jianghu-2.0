@@ -1,6 +1,6 @@
 import { careerById } from '../content/careers'
 import { heartMethodByIdV10 } from '../content/martials'
-import { equipmentAttributeValue, equipmentDefinitionById } from '../content/equipment'
+import { artifactSoulById, equipmentAttributeValue, equipmentDefinitionById } from '../content/equipment'
 import type { HeroDefinitionV10 } from '../content/heroes'
 import type { EquipmentInstance, HeroProgressV10 } from '../domain/types'
 import type { AttributeMap } from '../content/attributes'
@@ -180,6 +180,11 @@ export const buildCombatStats = (
     for (const affix of instance.affixes) {
       applyBonus(String(affix.attributeId), equipmentAttributeValue(affix.attributeId, instance.level, affix.coefficient, 50))
     }
+    for (const effect of equipmentDefinition.fixedEffects ?? []) {
+      applyBonus(String(effect.attributeId), effect.value)
+    }
+    const artifactSoul = artifactSoulById(equipmentDefinition.artifactSoulId)
+    if (artifactSoul) applyBonus(String(artifactSoul.attributeId), artifactSoul.value)
   }
 
   return stats
@@ -259,6 +264,7 @@ export const buildAttributeMap = (
     if (!uid) continue
     const instance = equipment.find((item) => item.uid === uid)
     if (!instance) continue
+    const definition = equipmentDefinitionById(instance.definitionId)
     const bonuses = [
       ...instance.coreStats.map((core) => ({ ...core, weight: 100 as const })),
       ...instance.affixes.map((affix) => ({ ...affix, weight: 50 as const })),
@@ -267,6 +273,15 @@ export const buildAttributeMap = (
       if (COMBAT_STAT_ATTRIBUTE_IDS.has(bonus.attributeId)) continue
       const value = equipmentAttributeValue(bonus.attributeId, instance.level, bonus.coefficient, bonus.weight)
       map[bonus.attributeId] = (map[bonus.attributeId] ?? 0) + value
+    }
+    const artifactSoul = artifactSoulById(definition?.artifactSoulId)
+    const fixedBonuses = [
+      ...(definition?.fixedEffects ?? []),
+      ...(artifactSoul ? [{ attributeId: artifactSoul.attributeId, value: artifactSoul.value }] : []),
+    ]
+    for (const bonus of fixedBonuses) {
+      if (COMBAT_STAT_ATTRIBUTE_IDS.has(bonus.attributeId)) continue
+      map[bonus.attributeId] = (map[bonus.attributeId] ?? 0) + bonus.value
     }
   }
   return map

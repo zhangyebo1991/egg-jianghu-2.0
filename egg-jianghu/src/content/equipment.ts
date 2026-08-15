@@ -9,9 +9,18 @@ import {
   GENERATED_SET_IDS_BY_STAGE,
   GENERATED_SET_NAME_BY_STAGE,
 } from './equipment-generated'
+import {
+  ORIGINAL_ARTIFACT_SOULS,
+  ORIGINAL_DEITIES,
+  ORIGINAL_LARGE_DUNGEONS,
+  ORIGINAL_SACRED_BEASTS,
+  ORIGINAL_SACRED_UPGRADES,
+  ORIGINAL_TREASURES,
+} from './original-progression.generated'
 
 export const EQUIPMENT_SET_COUNT = 3
-export const EQUIPMENT_SLOTS = ['weapon', 'offhand', 'head', 'armor', 'wrist', 'boots', 'necklace', 'ring'] as const
+export const COMBAT_EQUIPMENT_SLOTS = ['weapon', 'offhand', 'head', 'armor', 'wrist', 'boots', 'necklace', 'ring'] as const
+export const EQUIPMENT_SLOTS = [...COMBAT_EQUIPMENT_SLOTS, 'treasure'] as const
 export const EQUIPMENT_QUALITIES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 export const EQUIPMENT_STYLE_FAMILIES = ['中式古代', '江湖', '西方', '日式', '近代', '未来'] as const
 export const EQUIPMENT_AFFIX_COUNTS = [0, 1, 2, 2, 3, 3, 4, 4, 5, 5] as const
@@ -38,6 +47,15 @@ export interface EquipmentDefinitionV10 {
   setFactionId?: number
   setElement?: number
   setName?: string
+  sourceItemId?: number
+  equipmentKind?: 'standard' | 'artifact-soul' | 'treasure' | 'treasure-manual'
+  description?: string
+  grantSkillId?: number
+  fixedEffects?: readonly { attributeId: number; value: number }[]
+  fixedAffixes?: readonly { attributeId: number; coefficient: number }[]
+  artifactSoulId?: number
+  recipeId?: number
+  passiveSkillId?: number
 }
 
 export interface EquipmentCoreStatDefinition {
@@ -56,6 +74,7 @@ export const EQUIPMENT_SLOT_NAMES: Record<EquipmentSlot, string> = {
   boots: '足部',
   necklace: '项链',
   ring: '戒指',
+  treasure: '至宝',
 }
 
 export const EQUIPMENT_SLOT_MARKS: Record<EquipmentSlot, string> = {
@@ -67,6 +86,7 @@ export const EQUIPMENT_SLOT_MARKS: Record<EquipmentSlot, string> = {
   boots: '履',
   necklace: '佩',
   ring: '戒',
+  treasure: '宝',
 }
 
 export const EQUIPMENT_STYLE_BY_WORLD: Record<string, EquipmentStyleFamily> = {
@@ -90,7 +110,7 @@ const LEGACY_EQUIPMENT_SLOT_MAP: Record<string, EquipmentSlot> = {
   token: 'ring',
 }
 
-export const EQUIPMENT_DEFINITIONS: EquipmentDefinitionV10[] = [
+const GENERATED_DEFINITIONS: EquipmentDefinitionV10[] = [
   ...GENERATED_EQUIPMENT,
   ...GENERATED_SET_EQUIPMENT,
 ].map((item) => ({
@@ -108,7 +128,101 @@ export const EQUIPMENT_DEFINITIONS: EquipmentDefinitionV10[] = [
   setFactionId: 'setFactionId' in item ? item.setFactionId : undefined,
   setElement: 'setElement' in item ? item.setElement : undefined,
   setName: 'setName' in item ? item.setName : undefined,
+  sourceItemId: Number(item.id.replace(/\D/g, '')) || undefined,
+  equipmentKind: 'standard',
 }))
+
+const ORIGINAL_SLOT_BY_ID: Record<number, EquipmentSlot> = {
+  1: 'weapon',
+  2: 'offhand',
+  3: 'head',
+  4: 'armor',
+  5: 'wrist',
+  6: 'boots',
+  7: 'necklace',
+  8: 'ring',
+}
+
+interface OriginalEquipmentSnapshot {
+  readonly itemId: number
+  readonly name: string
+  readonly quality: number
+  readonly slotId: number
+  readonly weaponType: number
+  readonly rarity: string
+  readonly recipeId: number | null
+  readonly fixedAffixes: readonly { readonly attributeId: number; readonly coefficient: number }[]
+  readonly artifactSoulId: number | null
+  readonly setFactionId: number | null
+  readonly passiveSkillId: number | null
+}
+
+const originalEquipmentSnapshots: OriginalEquipmentSnapshot[] = [
+  ...ORIGINAL_LARGE_DUNGEONS.flatMap((dungeon) => dungeon.rewards.flatMap((reward) =>
+    reward.kind === 'equipment' ? [reward.item] : [])),
+  ...ORIGINAL_SACRED_BEASTS.flatMap((beast) => beast.stages.map((stage) => stage.equipment)),
+  ...ORIGINAL_DEITIES.map((deity) => deity.imperialWeapon),
+  ...ORIGINAL_SACRED_UPGRADES.flatMap((upgrade) => [upgrade.source, upgrade.target]),
+]
+
+const originalSnapshotByItemId = new Map<number, OriginalEquipmentSnapshot>()
+for (const snapshot of originalEquipmentSnapshots) originalSnapshotByItemId.set(snapshot.itemId, snapshot)
+
+const templateForOriginalEquipment = (slot: EquipmentSlot, weaponType: number): EquipmentDefinitionV10 | undefined =>
+  GENERATED_DEFINITIONS.find((definition) => definition.slot === slot && definition.weaponType === weaponType)
+  ?? GENERATED_DEFINITIONS.find((definition) => definition.slot === slot)
+
+const ORIGINAL_FIXED_EQUIPMENT: EquipmentDefinitionV10[] = [...originalSnapshotByItemId.values()].map((snapshot) => {
+  const slot = ORIGINAL_SLOT_BY_ID[snapshot.slotId]
+  if (!slot) throw new Error(`原版装备 wp#${snapshot.itemId} 的部位无效: ${snapshot.slotId}`)
+  const template = templateForOriginalEquipment(slot, snapshot.weaponType)
+  if (!template) throw new Error(`原版装备 wp#${snapshot.itemId} 缺少 ${slot} 属性模板`)
+  return {
+    id: `wp_${snapshot.itemId}`,
+    iconKey: `zt_eq_${snapshot.itemId}`,
+    name: snapshot.name,
+    slot,
+    weaponType: snapshot.weaponType,
+    weaponTypeName: template.weaponTypeName,
+    styleFamily: template.styleFamily,
+    rarity: snapshot.rarity,
+    coreStats: template.coreStats,
+    affixPool: template.affixPool,
+    fixedQuality: snapshot.quality as EquipmentQuality,
+    setFactionId: snapshot.setFactionId ?? undefined,
+    sourceItemId: snapshot.itemId,
+    equipmentKind: snapshot.artifactSoulId ? 'artifact-soul' : 'standard',
+    fixedAffixes: snapshot.fixedAffixes,
+    artifactSoulId: snapshot.artifactSoulId ?? undefined,
+    recipeId: snapshot.recipeId ?? undefined,
+    passiveSkillId: snapshot.passiveSkillId ?? undefined,
+  }
+})
+
+const ORIGINAL_TREASURE_EQUIPMENT: EquipmentDefinitionV10[] = ORIGINAL_TREASURES.map((treasure) => ({
+  id: `wp_${treasure.itemId}`,
+  iconKey: `zt_eq_${treasure.itemId}`,
+  name: treasure.name,
+  slot: 'treasure',
+  weaponType: 0,
+  weaponTypeName: treasure.kind === 'manual' ? '秘籍' : '至宝',
+  styleFamily: '中式古代',
+  rarity: '至宝',
+  coreStats: [],
+  affixPool: [],
+  fixedQuality: treasure.quality as EquipmentQuality,
+  sourceItemId: treasure.itemId,
+  equipmentKind: treasure.kind === 'manual' ? 'treasure-manual' : 'treasure',
+  description: treasure.description,
+  grantSkillId: treasure.grantSkillId ?? undefined,
+  fixedEffects: treasure.effectIds.map((attributeId) => ({ attributeId, value: treasure.effectValue })),
+}))
+
+export const EQUIPMENT_DEFINITIONS: EquipmentDefinitionV10[] = [
+  ...GENERATED_DEFINITIONS,
+  ...ORIGINAL_FIXED_EQUIPMENT,
+  ...ORIGINAL_TREASURE_EQUIPMENT,
+]
 
 const EQUIPMENT_BY_ID = new Map(EQUIPMENT_DEFINITIONS.map((item) => [item.id, item]))
 
@@ -122,6 +236,7 @@ export const equipmentDisplayName = (
   definition: EquipmentDefinitionV10,
   affixes: Array<{ attributeId: number }> = [],
 ): string => {
+  if (definition.equipmentKind && definition.equipmentKind !== 'standard') return definition.name
   if (definition.setName) return `${definition.setName}·${definition.name}`
   const prefix = affixes.map((affix) => affixPrefix(affix.attributeId)).find(Boolean)
     ?? affixPrefix(definition.coreStats[0]?.attributeId ?? 0)
@@ -130,6 +245,9 @@ export const equipmentDisplayName = (
 
 export const equipmentDefinitionById = (id: string): EquipmentDefinitionV10 | undefined =>
   EQUIPMENT_BY_ID.get(id)
+
+export const artifactSoulById = (id: number | undefined) =>
+  id === undefined ? undefined : ORIGINAL_ARTIFACT_SOULS.find((soul) => soul.id === id)
 
 export const equipmentStyleForWorld = (worldId: string): EquipmentStyleFamily =>
   EQUIPMENT_STYLE_BY_WORLD[worldId] ?? '中式古代'

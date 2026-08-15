@@ -1,5 +1,7 @@
 import { STARTER_CAREER_ID } from '../content/careers'
+import { FACTIONS } from '../content/factions'
 import { PLAYER_HERO_ID } from '../content/heroes'
+import { ORIGINAL_DEITIES, ORIGINAL_SACRED_BEASTS } from '../content/original-progression.generated'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
 export const createHeroEquipmentSets = (): HeroProgressV10['equipmentSets'] => [{}, {}, {}]
@@ -10,6 +12,8 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
     recruited: true,
     level: 1,
     experience: 0,
+    skillPoints: 0,
+    permanentMartialIds: [],
     careers: {
       [careerId]: {
         level: 1,
@@ -27,9 +31,10 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
 }
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
-  version: 16,
+  version: 17,
   worldCurrency: { world_01: 1000 },
   contribution: {},
+  unlockedFactionIds: FACTIONS.filter((faction) => faction.worldId === 'world_01').map((faction) => faction.id),
   heroes: {},
   jobBooks: {},
   formation: [],
@@ -38,6 +43,21 @@ export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
   encounteredEnemyIds: [],
   factionBoards: {},
   inventory: [],
+  materials: {},
+  starSoul: 0,
+  blueprints: {},
+  unlockedRecipeIds: [],
+  treasureManualGrants: {},
+  infiniteTowerFloor: 0,
+  divineLadderFloor: 0,
+  divineRankLevel: 1,
+  shrines: Object.fromEntries(ORIGINAL_DEITIES.map((deity) => [String(deity.shrineId), { phase: 'raid', progress: 0 }])),
+  deities: {},
+  sacredBeasts: Object.fromEntries(ORIGINAL_SACRED_BEASTS.map((beast) => [String(beast.id), {
+    highestClearedStage: 0,
+    claimedStages: [],
+  }])),
+  largeDungeonClears: {},
   statistics: {
     kills: 0,
     bossKills: 0,

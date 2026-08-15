@@ -11,6 +11,7 @@ import {
   EQUIPMENT_QUALITIES,
   EQUIPMENT_SLOT_NAMES,
   EQUIPMENT_SLOTS,
+  artifactSoulById,
   equipmentAffixGrade,
   equipmentAttributeValue,
   equipmentCoreRollPercent,
@@ -23,22 +24,57 @@ import {
 } from './content/equipment'
 import { ATTRIBUTE_BY_ID } from './content/attributes'
 import { FACTIONS } from './content/factions'
-import { FACTION_HEROES, HEROES_V10, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
-import { FACTION_MARTIALS, martialByIdV10 } from './content/martials'
+import { FACTION_HEROES, HEROES_V10, PLAYER_HERO_ID, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
+import { FACTION_MARTIALS, martialBuffChanceAtLevel, martialByIdV10, martialByOriginalId, martialEffectAtLevel, martialResourceCost, martialSpCost } from './content/martials'
 import { buffById } from './content/buffs'
 import { skillById } from './content/skills'
+import {
+  ORIGINAL_DEITIES,
+  ORIGINAL_INTERWORLD_DROP_ITEMS,
+  ORIGINAL_INTERWORLD_ENEMIES,
+  ORIGINAL_LARGE_DUNGEONS,
+  ORIGINAL_SACRED_BEASTS,
+  ORIGINAL_SACRED_UPGRADES,
+} from './content/original-progression.generated'
 import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
 import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, averageItemLevel, bindActiveEquipmentLoadout } from './domain/inventory'
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
-import { MAX_MARTIAL_LEVEL, equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
+import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
 import { settleCombatEvent } from './domain/rewards'
-import { clearSaveV10, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
+import {
+  advanceSacredEquipment,
+  BROKEN_DIVINITY_ITEM_ID,
+  claimDeity,
+  claimSacredBeastStageReward,
+  clearSacredBeastStage,
+  completeDivineLadderFloor,
+  completeInfiniteTowerFloor,
+  completeLargeDungeon,
+  CREATION_ORIGIN_ITEM_ID,
+  craftSacredEquipment,
+  deityUpgradeCost,
+  forgeImperialWeapon,
+  interworldDropProbability,
+  isDivineRealmUnlocked,
+  isSacredBeastUnlocked,
+  largeDungeonBattleDifficulty,
+  largeDungeonDropProbability,
+  learnSacredRecipe,
+  recordShrineBossKill,
+  recordShrineEnemyKill,
+  rollInterworldDrops,
+  sacredBeastBattleDifficulty,
+  settleShrineSpawn,
+  upgradeDeity,
+  WORLD_TREE_LEAF_ITEM_ID,
+} from './domain/original-progression'
+import { clearSaveV10, hasLegacySaveV16, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
 import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationColumn, FormationRow, GameStateV10 } from './domain/types'
@@ -57,6 +93,7 @@ import {
   type IdlePageViewModel,
 } from './ui/idle-page'
 import { renderInventoryPage, type InventoryItemView, type InventoryPageViewModel } from './ui/inventory-page'
+import { renderProgressionPage, type ProgressionPageViewModel, type ProgressionSection } from './ui/progression-page'
 import { renderStageList, renderWorldOverview, type PlaneSelectViewModel, type StageListViewModel } from './ui/jianghu-page'
 import { createDomPatcher } from './ui/dom-patch'
 import { renderShell, type JianghuSection, type TabId } from './ui/shell'
@@ -94,6 +131,9 @@ let selectedInventoryUid: string | null = null
 let inventoryDetailOpen = false
 let pendingInventoryDropUids: string[] = []
 let shopRank: 2 | 3 | 4 | 5 | 6 = 2
+let progressionSection: ProgressionSection = 'dungeons'
+let progressionDungeonDifficulty = 1
+let selectedProgressionEquipmentUid: string | null = null
 let heroPackSlotFilter: EquipmentSlot | 'all' = 'all'
 let heroPackQualityFilter: EquipmentQuality | 'all' = 'all'
 let heroPackPage = 1
@@ -428,6 +468,9 @@ let toastTimer = 0
 
 try {
   hasSave = hasSaveV10(window.localStorage)
+  if (!hasSave && hasLegacySaveV16(window.localStorage)) {
+    startError = '检测到旧版存档；完整新系统需要新建存档，旧档不会迁移或覆写'
+  }
 } catch {
   startError = '无法访问本地存储，请检查浏览器设置'
 }
@@ -451,6 +494,9 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedPlaneId = selectedWorldId
   selectedDifficulty = 1
   selectedStage = Math.min(10, Math.max(1, clearedStageOf(session.state.clearedStageByWorldDifficulty, selectedWorldId, selectedDifficulty) + 1))
+  progressionSection = 'dungeons'
+  progressionDungeonDifficulty = 1
+  selectedProgressionEquipmentUid = null
   selectedHeroId = Object.keys(session.state.heroes)[0] ?? null
   careerTreeOpen = false
   selectedTreeCareerId = null
@@ -468,7 +514,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   heroRosterGradeFilter = 'all'
   heroRosterCategoryFilter = 'all'
   heroRosterLocatePending = false
-  selectedFactionId = FACTIONS.find((faction) => session.state.unlockedWorldIds.includes(faction.worldId))?.id ?? ''
+  selectedFactionId = FACTIONS.find((faction) => session.state.unlockedFactionIds.includes(faction.id))?.id ?? ''
   selectedFactionMartialId = null
   factionRosterOpen = false
   factionRosterQuery = ''
@@ -968,7 +1014,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const availableFactions = FACTIONS.filter((faction) =>
     faction.worldId === selectedWorldId
-    && session.state.unlockedWorldIds.includes(faction.worldId))
+    && session.state.unlockedFactionIds.includes(faction.id))
   if (!availableFactions.some((faction) => faction.id === selectedFactionId)) selectedFactionId = availableFactions[0]?.id ?? ''
   const faction = availableFactions.find((item) => item.id === selectedFactionId) ?? availableFactions[0]
   const board = session.state.factionBoards[selectedFactionId]
@@ -980,44 +1026,59 @@ const factionsViewModel = (): FactionsPageViewModel => {
     selectedFactionMartialId = factionMartials[0]?.id ?? null
   }
 
-  const contribution = session.state.contribution[selectedFactionId] ?? 0
   const martialViews = factionMartials.map((martial) => {
     const learnedRecord = heroProgress?.learnedMartials[martial.id]
     const learned = Boolean(learnedRecord)
     const level = learnedRecord?.level ?? 0
     const previous = martial.previousId ? martialByIdV10(martial.previousId) : undefined
     const previousReady = !martial.previousId
-      || heroProgress?.learnedMartials[martial.previousId]?.level === MAX_MARTIAL_LEVEL
+      || Boolean(previous && heroProgress?.learnedMartials[martial.previousId]?.level === previous.maxLevel)
     const state: FactionMartialState = learned ? 'learned' : previousReady ? 'next' : 'locked'
-    const actionCost = learned
-      ? Math.ceil(martial.currencySource.amount * (1 + level * 0.2))
-      : martial.currencySource.amount
+    const targetLevel = learned ? Math.min(martial.maxLevel, level + 1) : 1
+    const resourceCost = martialResourceCost(martial.currencySource.kind, martial.difficulty, targetLevel)
+    const spCost = martialSpCost(martial.difficulty, targetLevel)
+    const resourceWallet = martial.currencySource.kind === 'contribution' ? session.state.contribution : session.state.worldCurrency
+    const availableResource = resourceWallet[martial.currencySource.id] ?? 0
+    const availableSp = heroProgress?.skillPoints ?? 0
     const careerCompatible = Boolean(heroProgress && martial.careerIds.includes(heroProgress.currentCareerId))
     let actionReason: string | null = null
     if (!normalizedHeroId) actionReason = '请先选择研习对象'
-    else if (learned && level >= MAX_MARTIAL_LEVEL) actionReason = '已臻化境'
-    else if (!learned && !previousReady) actionReason = '前穴未满 · Lv.20'
+    else if (learned && level >= martial.maxLevel) actionReason = '已臻化境'
+    else if (!learned && !previousReady) actionReason = `前置未满 · Lv.${previous?.maxLevel ?? 1}`
     else if (!careerCompatible) actionReason = '职不符 · 不可传'
-    else if (Object.keys(heroProgress?.learnedMartials ?? {}).length >= 20 && !learned) actionReason = '已满 20 门'
-    else if (contribution < actionCost) actionReason = '贡献不足'
+    else if (Object.keys(heroProgress?.learnedMartials ?? {}).length >= 12 && !learned) actionReason = '已满 12 门'
+    else if (availableSp < spCost) actionReason = `技能点不足 · 需 ${spCost} SP`
+    else if (availableResource < resourceCost) actionReason = martial.currencySource.kind === 'contribution' ? '贡献不足' : '位面货币不足'
 
     return withLore({
       id: martial.id,
       name: martial.name,
       stage: martial.stage,
       rarity: martial.rarity,
-      cost: martial.currencySource.amount,
-      upgradeCost: actionCost,
+      cost: resourceCost,
+      upgradeCost: resourceCost,
+      spCost,
+      availableSp,
+      resourceKind: martial.currencySource.kind,
+      resourceName: martial.currencySource.kind === 'contribution' ? '势力贡献' : '位面货币',
       learned,
       level,
+      maxLevel: martial.maxLevel,
+      currentEffect: learned ? martialEffectAtLevel(martial, level) : null,
+      nextEffect: level < martial.maxLevel ? martialEffectAtLevel(martial, targetLevel) : null,
+      currentBuffChance: learned && martial.buffId ? martialBuffChanceAtLevel(martial, level) : null,
+      nextBuffChance: level < martial.maxLevel && martial.buffId ? martialBuffChanceAtLevel(martial, targetLevel) : null,
+      sourceName: faction?.name ?? '特殊来源',
+      refundableSp: learnedRecord?.investedSp ?? 0,
       state,
       energyCost: martial.energyCost,
       cooldownMs: martial.cooldownMs,
       power: martial.power,
       previousName: previous?.name ?? null,
+      previousMaxLevel: previous?.maxLevel ?? null,
       careerNames: [...new Set(martial.careerIds.map((careerId) => careerById(careerId)?.name ?? careerId))],
       careerCompatible,
-      affordable: contribution >= actionCost,
+      affordable: availableSp >= spCost && availableResource >= resourceCost,
       actionDisabled: actionReason !== null,
       actionReason,
       selected: martial.id === selectedFactionMartialId,
@@ -1115,6 +1176,12 @@ const inventorySlotNames = EQUIPMENT_SLOT_NAMES
 const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
   const definition = equipmentDefinitionById(item.definitionId)
   const slot = definition?.slot ?? 'weapon'
+  const artifactSoul = artifactSoulById(definition?.artifactSoulId)
+  const manualSkill = definition?.grantSkillId ? martialByOriginalId(definition.grantSkillId) : undefined
+  const sourceItemKey = String(definition?.sourceItemId ?? definition?.id ?? '')
+  const plainOriginalText = (value: string): string => value
+    .replace(/\[color=[^\]]+\]/gi, '')
+    .replace(/\[\/color\]/gi, '')
   return {
     uid: item.uid,
     definitionId: item.definitionId,
@@ -1125,6 +1192,30 @@ const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
     quality: item.quality,
     locked: item.locked,
     weaponTypeName: definition?.weaponTypeName,
+    equipmentKindLabel: definition?.equipmentKind === 'artifact-soul'
+      ? `固定器魂装备 · ${artifactSoul?.tier ?? item.quality - 6} 阶`
+      : definition?.equipmentKind === 'treasure-manual'
+        ? '至宝秘籍'
+        : definition?.equipmentKind === 'treasure'
+          ? '诸天至宝'
+          : undefined,
+    description: definition?.description,
+    fixedEffects: definition?.fixedEffects?.map((effect) => ({
+      attributeId: effect.attributeId,
+      name: ATTRIBUTE_BY_ID[effect.attributeId]?.name ?? `属性 ${effect.attributeId}`,
+      value: effect.value,
+      formattedValue: formatEquipmentAttributeValue(effect.attributeId, effect.value),
+    })),
+    artifactSoul: artifactSoul ? {
+      name: artifactSoul.name,
+      tier: artifactSoul.tier,
+      description: plainOriginalText(artifactSoul.description).replace('词条名', artifactSoul.name).replace('数值', String(artifactSoul.value)),
+      formattedValue: formatEquipmentAttributeValue(artifactSoul.attributeId, artifactSoul.value),
+    } : undefined,
+    manualSkill: manualSkill ? {
+      name: manualSkill.name,
+      learned: Boolean(session.state.treasureManualGrants[sourceItemKey]),
+    } : undefined,
     coreStats: item.coreStats.map((core, index) => {
       const template = definition?.coreStats[index]
       const value = equipmentAttributeValue(core.attributeId, item.level, core.coefficient, 100)
@@ -1194,6 +1285,161 @@ const inventoryViewModel = (): InventoryPageViewModel => {
   }
 }
 
+const originalMaterialCount = (itemId: number): number => session.state.materials[String(itemId)] ?? 0
+
+const originalWorldName = (worldIndex: number): string =>
+  WORLDS.find((world) => world.index === worldIndex)?.name ?? `第${worldIndex}位面`
+
+const progressionItemLevel = (): number => Math.max(
+  1,
+  ...Object.values(session.state.heroes).filter((hero) => hero.recruited).map((hero) => hero.level),
+)
+
+const percentText = (probability: number): string => `${(probability * 100).toFixed(2)}%`
+
+const shrinePhaseLabel: Record<string, string> = {
+  raid: '突袭',
+  siege: '包围',
+  occupation: '占领',
+  subdued: '完全臣服',
+}
+
+const progressionViewModel = (): ProgressionPageViewModel => {
+  const dungeonDifficulty = Math.max(1, progressionDungeonDifficulty)
+  const dungeons = ORIGINAL_LARGE_DUNGEONS.map((dungeon) => {
+    const battleDifficulty = largeDungeonBattleDifficulty(dungeonDifficulty, dungeon.id, 4)
+    return {
+      id: dungeon.id,
+      name: dungeon.name,
+      worldName: originalWorldName(dungeon.worldIndex),
+      clears: session.state.largeDungeonClears[String(dungeon.id)] ?? 0,
+      difficulty: dungeonDifficulty,
+      stageNames: dungeon.stageNames,
+      rewards: dungeon.rewards.map((reward) => ({
+        name: reward.item.name,
+        kind: reward.kind === 'equipment' ? '装备' : '物品',
+        quality: reward.item.quality,
+        probability: percentText(largeDungeonDropProbability(reward.baseRoll, battleDifficulty)),
+      })),
+    }
+  })
+
+  const beasts = ORIGINAL_SACRED_BEASTS.map((beast) => {
+    const progress = session.state.sacredBeasts[String(beast.id)]
+      ?? { highestClearedStage: 0, claimedStages: [] }
+    const unclaimed = beast.stages.find((stage) =>
+      stage.stage <= progress.highestClearedStage && !progress.claimedStages.includes(stage.stage))
+    const focus = unclaimed ?? beast.stages.find((stage) => stage.stage === progress.highestClearedStage + 1)
+    return {
+      id: beast.id,
+      name: beast.name,
+      worldName: originalWorldName(beast.worldIndex),
+      highestClearedStage: progress.highestClearedStage,
+      nextStage: focus ? {
+        stage: focus.stage,
+        equipmentName: focus.equipment.name,
+        battleDifficulty: sacredBeastBattleDifficulty(beast.id, focus.stage),
+        reincarnationCleared: isSacredBeastUnlocked(session.state, beast.id),
+        cleared: focus.stage <= progress.highestClearedStage,
+        claimed: progress.claimedStages.includes(focus.stage),
+      } : null,
+    }
+  })
+
+  const sacredStages: Array<{ equipment: { recipeId: number | null; name: string } }> = []
+  for (const beast of ORIGINAL_SACRED_BEASTS) sacredStages.push(...beast.stages)
+  const recipes = sacredStages
+    .filter((stage) => {
+      const recipeId = stage.equipment.recipeId
+      return recipeId && ((session.state.blueprints[String(recipeId)] ?? 0) > 0 || session.state.unlockedRecipeIds.includes(recipeId))
+    })
+    .map((stage) => ({
+      recipeId: stage.equipment.recipeId!,
+      equipmentName: stage.equipment.name,
+      blueprintCount: session.state.blueprints[String(stage.equipment.recipeId)] ?? 0,
+      unlocked: session.state.unlockedRecipeIds.includes(stage.equipment.recipeId!),
+    }))
+
+  const divineUnlocked = isDivineRealmUnlocked(session.state.infiniteTowerFloor)
+  const shrines = ORIGINAL_DEITIES.map((deity) => {
+    const shrine = session.state.shrines[String(deity.shrineId)] ?? { phase: 'raid' as const, progress: 0 }
+    const progress = session.state.deities[String(deity.id)]
+    return {
+      shrineId: deity.shrineId,
+      deityId: deity.id,
+      shrineName: deity.shrineName,
+      bossName: deity.bossName,
+      skillName: martialByOriginalId(deity.skillId)?.name ?? '未知神技',
+      imperialWeaponName: deity.imperialWeapon.name,
+      unlockDivineLevel: deity.unlockDivineLevel,
+      phaseLabel: shrinePhaseLabel[shrine.phase] ?? shrine.phase,
+      progress: shrine.progress,
+      subdued: shrine.phase === 'subdued',
+      deityLevel: progress?.level ?? null,
+      upgradeCost: progress ? deityUpgradeCost(progress.level) : null,
+    }
+  })
+
+  const forgeEquipment = session.state.inventory.flatMap((equipment) => {
+    if (equipment.quality !== 8) return []
+    const definition = equipmentDefinitionById(equipment.definitionId)
+    if (!definition) return []
+    const sourceItemId = Number(equipment.definitionId.replace(/\D/g, ''))
+    const upgrade = ORIGINAL_SACRED_UPGRADES.find((candidate) => candidate.source.itemId === sourceItemId)
+    return [{
+      uid: equipment.uid,
+      name: equipmentDisplayName(definition, equipment.affixes),
+      slotName: EQUIPMENT_SLOT_NAMES[definition.slot],
+      selected: equipment.uid === selectedProgressionEquipmentUid,
+      sacredTargetName: upgrade?.target.name ?? null,
+    }]
+  })
+  if (!forgeEquipment.some((equipment) => equipment.uid === selectedProgressionEquipmentUid)) {
+    selectedProgressionEquipmentUid = forgeEquipment[0]?.uid ?? null
+    if (forgeEquipment[0]) forgeEquipment[0].selected = true
+  }
+
+  return {
+    section: progressionSection,
+    resources: {
+      worldTreeLeaves: originalMaterialCount(WORLD_TREE_LEAF_ITEM_ID),
+      creationOrigin: originalMaterialCount(CREATION_ORIGIN_ITEM_ID),
+      brokenDivinity: originalMaterialCount(BROKEN_DIVINITY_ITEM_ID),
+      starSoul: session.state.starSoul,
+    },
+    dungeons,
+    beasts,
+    recipes,
+    divine: {
+      unlocked: divineUnlocked,
+      infiniteTowerFloor: session.state.infiniteTowerFloor,
+      divineLadderFloor: session.state.divineLadderFloor,
+      divineRankLevel: session.state.divineRankLevel,
+      shrines,
+    },
+    forge: {
+      selectedUid: selectedProgressionEquipmentUid,
+      equipment: forgeEquipment,
+      imperialTargets: ORIGINAL_DEITIES.map((deity) => ({
+        shrineId: deity.shrineId,
+        shrineName: deity.shrineName,
+        weaponName: deity.imperialWeapon.name,
+        unlocked: session.state.shrines[String(deity.shrineId)]?.phase === 'subdued',
+      })),
+    },
+    interworld: ORIGINAL_INTERWORLD_ENEMIES.map((enemy) => ({
+      enemyId: enemy.enemyId,
+      name: enemy.name,
+      rank: enemy.rank,
+      enabled: divineUnlocked,
+      drops: enemy.itemIds.flatMap((itemId) => {
+        const item = ORIGINAL_INTERWORLD_DROP_ITEMS.find((candidate) => candidate.itemId === itemId)
+        return item ? [{ name: item.name, probability: percentText(interworldDropProbability(item.baseRoll, 0)) }] : []
+      }),
+    })),
+  }
+}
+
 const normalizeSelectedWorld = (): void => {
   if (!WORLDS.some((world) => world.id === selectedPlaneId)) selectedPlaneId = WORLDS[0].id
   if (session.state.unlockedWorldIds.includes(selectedWorldId)) return
@@ -1254,9 +1500,11 @@ const render = (): void => {
     ? renderJianghuContent()
     : activeTab === 'heroes'
       ? renderHeroesPage(heroesViewModel())
-      : activeTab === 'formation'
-        ? renderFormationPage(formationViewModel())
-        : renderInventoryPage(inventoryViewModel())
+    : activeTab === 'formation'
+      ? renderFormationPage(formationViewModel())
+      : activeTab === 'inventory'
+        ? renderInventoryPage(inventoryViewModel())
+        : renderProgressionPage(progressionViewModel())
   patchApp(renderShell({
     activeTab,
     worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
@@ -1741,6 +1989,73 @@ const performAction = (button: HTMLButtonElement): void => {
       showBatchDiscardConfirm = false
       heroBatchDiscardQuality = 'all'
     }
+  } else if (action === 'progression-section') {
+    const section = button.dataset.section as ProgressionSection
+    if (['dungeons', 'beasts', 'divine', 'forge', 'interworld'].includes(section)) progressionSection = section
+  } else if (action === 'progression-complete-dungeon') {
+    const dungeonId = dataNumber(button, 'dungeonId')
+    const clearCount = session.state.largeDungeonClears[String(dungeonId)] ?? 0
+    const result = completeLargeDungeon(
+      session.state,
+      dungeonId,
+      progressionDungeonDifficulty,
+      progressionItemLevel(),
+      `large-dungeon-${dungeonId}-${clearCount + 1}-${Date.now()}`,
+      createRng(Date.now() + dungeonId * 97 + clearCount),
+    )
+    queueInventoryDropAnimations(result.addedEquipmentUids)
+    commitAction(result)
+  } else if (action === 'progression-clear-beast') {
+    const beastId = dataNumber(button, 'beastId')
+    const stage = dataNumber(button, 'stage')
+    commitAction(clearSacredBeastStage(session.state, beastId, stage))
+  } else if (action === 'progression-claim-beast') {
+    commitAction(claimSacredBeastStageReward(session.state, dataNumber(button, 'beastId'), dataNumber(button, 'stage')))
+  } else if (action === 'progression-learn-recipe') {
+    commitAction(learnSacredRecipe(session.state, dataNumber(button, 'recipeId')))
+  } else if (action === 'progression-craft-sacred') {
+    const recipeId = dataNumber(button, 'recipeId')
+    const uid = `sacred-craft-${recipeId}-${Date.now()}`
+    const result = craftSacredEquipment(session.state, recipeId, progressionItemLevel(), uid, createRng(Date.now() + recipeId))
+    if (result.ok) queueInventoryDropAnimations([uid])
+    commitAction(result)
+  } else if (action === 'progression-complete-tower') {
+    commitAction(completeInfiniteTowerFloor(session.state))
+  } else if (action === 'progression-complete-ladder') {
+    commitAction(completeDivineLadderFloor(session.state))
+  } else if (action === 'progression-shrine-kill') {
+    commitAction(recordShrineEnemyKill(session.state, dataNumber(button, 'shrineId')))
+  } else if (action === 'progression-shrine-boss') {
+    commitAction(recordShrineBossKill(session.state, dataNumber(button, 'shrineId')))
+  } else if (action === 'progression-settle-shrine') {
+    commitAction(settleShrineSpawn(session.state, dataNumber(button, 'shrineId')))
+  } else if (action === 'progression-claim-deity') {
+    commitAction(claimDeity(session.state, dataNumber(button, 'deityId'), PLAYER_HERO_ID))
+  } else if (action === 'progression-upgrade-deity') {
+    commitAction(upgradeDeity(session.state, dataNumber(button, 'deityId')))
+  } else if (action === 'progression-select-forge') {
+    selectedProgressionEquipmentUid = button.dataset.equipmentUid ?? null
+  } else if (action === 'progression-advance-sacred') {
+    const uid = button.dataset.equipmentUid ?? ''
+    const result = advanceSacredEquipment(session.state, uid)
+    if (result.ok && selectedProgressionEquipmentUid === uid) selectedProgressionEquipmentUid = null
+    commitAction(result)
+  } else if (action === 'progression-forge-imperial') {
+    const uid = selectedProgressionEquipmentUid ?? ''
+    const result = forgeImperialWeapon(session.state, dataNumber(button, 'shrineId'), uid)
+    if (result.ok) selectedProgressionEquipmentUid = null
+    commitAction(result)
+  } else if (action === 'progression-roll-interworld') {
+    const enemyId = dataNumber(button, 'enemyId')
+    const droppedIds = rollInterworldDrops(session.state, enemyId, 0, createRng(Date.now() + enemyId))
+    const names = droppedIds.flatMap((itemId) => {
+      const item = ORIGINAL_INTERWORLD_DROP_ITEMS.find((candidate) => candidate.itemId === itemId)
+      return item ? [item.name] : []
+    })
+    commitAction({
+      ok: true,
+      message: names.length ? `异界挑战完成，获得 ${names.join('、')}` : '异界挑战完成，本次没有掉落',
+    })
   }
 }
 
@@ -2217,6 +2532,7 @@ const debugSettleEnemy = (seed: number, rank: CombatRank = 'normal'): string[] =
     type: 'enemy-defeated',
     atMs: 0,
     enemyId: `world_01_stage_01_${rank === 'boss' ? 'boss' : 'mob_1'}`,
+    enemyLevel: (selectedDifficulty - 1) * 20 + 1,
     rank,
     worldId: 'world_01',
     difficulty: selectedDifficulty,
@@ -2334,7 +2650,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     const hero = session.state.heroes[heroId]
     const martial = martialByIdV10(martialId)
     if (!hero || !martial) throw new Error('侠客或武功不存在')
-    hero.learnedMartials[martialId] = { level, invested: { worldCurrency: {}, contribution: {} } }
+    hero.learnedMartials[martialId] = { level, investedSp: 0, invested: { worldCurrency: {}, contribution: {} } }
     if (slot !== undefined && slot >= 0 && slot < 4) hero.equippedMartialIds[slot] = martialId
     saveSession()
     render()

@@ -11,8 +11,8 @@ import { WORLDS } from './worlds'
 describe('首发内容目录', () => {
   it('最终内容满足首发规模且不含明确排除资源', () => {
     expect(WORLDS).toHaveLength(13)
-    expect(FACTIONS).toHaveLength(30)
-    expect(FACTION_MARTIALS).toHaveLength(240)
+    expect(FACTIONS).toHaveLength(42)
+    expect(FACTION_MARTIALS).toHaveLength(252)
     expect(CAREERS).toHaveLength(41)
     expect(JSON.stringify(createInitialStateV10())).not.toMatch(/pages|秘籍残页|offline|combat/)
   })
@@ -30,17 +30,14 @@ describe('首发内容目录', () => {
     expect(CAREERS.filter((career) => career.tier === '五阶')).toHaveLength(5)
   })
 
-  it('13 个位面全部作为内容开放，势力仍挂在前十个 id 上', () => {
+  it('13 个位面全部开放并挂载原版 42 个势力', () => {
     expect(WORLDS).toHaveLength(13)
     expect(WORLDS.every((world) => world.released && world.stageIds.length === 10)).toBe(true)
     expect(WORLDS[0]).toMatchObject({ id: 'world_01', name: '东汉三国' })
     expect(WORLDS[1]).toMatchObject({ id: 'world_02', name: '武侠江湖' })
     expect(WORLDS[12]).toMatchObject({ id: 'world_13', name: '西行之路' })
-    expect(WORLDS.slice(0, 10).every((world) => world.factionIds.length === 3)).toBe(true)
-    expect(WORLDS.slice(10).every((world) => world.factionIds.length === 0)).toBe(true)
-    for (const category of ['剑', '刀', '拳', '暗', '医', '内家']) {
-      expect(FACTIONS.filter((faction) => faction.category === category)).toHaveLength(5)
-    }
+    expect(WORLDS.slice(0, 3).every((world) => world.factionIds.length === 4)).toBe(true)
+    expect(WORLDS.slice(3).every((world) => world.factionIds.length === 3)).toBe(true)
     expect(validateContent()).toEqual([])
   })
 
@@ -64,18 +61,22 @@ describe('首发内容目录', () => {
     }
     for (const world of WORLDS.slice(0, 10)) expect(tavernByWorld.get(world.id)).toBe(3)
     for (const world of WORLDS.slice(10)) expect(tavernByWorld.get(world.id) ?? 0).toBe(0)
-    for (const faction of FACTIONS) expect(factionHeroCounts.get(faction.id)).toBe(3)
+    expect([...factionHeroCounts.values()].every((count) => count === 3)).toBe(true)
+    expect(factionHeroCounts.size).toBe(30)
+    expect(FACTIONS.filter((faction) => !factionHeroCounts.has(faction.id))).toHaveLength(12)
     expect(validateContent()).toEqual([])
   })
 
-  it('每个势力恰好提供两线各四门主动武功', () => {
-    expect(FACTION_MARTIALS).toHaveLength(240)
+  it('每个势力恰好提供两线各三门原版技能', () => {
+    expect(FACTION_MARTIALS).toHaveLength(252)
     for (const faction of FACTIONS) {
-      const ids = FACTION_MARTIALS.filter((martial) => martial.factionId === faction.id).map((martial) => martial.id)
-      expect(ids).toEqual([
-        `${faction.id}_a1`, `${faction.id}_b1`, `${faction.id}_c1`, `${faction.id}_d1`,
-        `${faction.id}_a2`, `${faction.id}_b2`, `${faction.id}_c2`, `${faction.id}_d2`,
-      ])
+      const martials = FACTION_MARTIALS.filter((martial) => martial.factionId === faction.id)
+      const ordered = [...martials].sort(
+        (a, b) => a.stage - b.stage || a.branchIndex - b.branchIndex,
+      )
+      expect(ordered.map((martial) => martial.originalSkillId)).toEqual(faction.skillIds)
+      expect(martials.filter((martial) => martial.branchIndex === 1).map((martial) => martial.stage).sort()).toEqual([1, 2, 3])
+      expect(martials.filter((martial) => martial.branchIndex === 2).map((martial) => martial.stage).sort()).toEqual([1, 2, 3])
     }
   })
 

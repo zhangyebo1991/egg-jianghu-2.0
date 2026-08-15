@@ -28,7 +28,7 @@ const quest = (): QuestProgress => ({
   progress: 3,
 })
 
-describe('version 16 公开存档入口', () => {
+describe('version 17 公开存档入口', () => {
   it('保存并恢复全部长期状态', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(100)
@@ -66,11 +66,11 @@ describe('version 16 公开存档入口', () => {
     expect(loaded.state).toEqual(createInitialStateV10(500))
   })
 
-  it('导出与导入只接受 version 16', () => {
+  it('导出与导入只接受 version 17', () => {
     const state = createInitialStateV10(100)
     state.worldCurrency.world_01 = 987
     const serialized = exportSave(state, 200)
-    expect(JSON.parse(serialized).version).toBe(16)
+    expect(JSON.parse(serialized).version).toBe(17)
     expect(importSave(serialized, 300).state.worldCurrency.world_01).toBe(987)
     expect(() => importSave(JSON.stringify({ version: 15 }), 300)).toThrow('存档版本不受支持')
   })

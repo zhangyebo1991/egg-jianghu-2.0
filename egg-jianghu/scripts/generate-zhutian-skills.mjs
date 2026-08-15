@@ -23,6 +23,8 @@ const zy = load('zy')
 const sq = load('sq')
 const dr = load('dr')
 const zh = load('zh')
+const shili = load('shili')
+const wp = load('wp')
 
 // ---------- 收集被引用技能 ----------
 const usedSkillIds = new Set()
@@ -49,6 +51,19 @@ for (let x = 1; x < zy.length; x += 1) {
   const id = zy[x]?.[6]
   if (typeof id === 'number' && id > 0) usedSkillIds.add(id)
 }
+// 玩家可学习技能：42 势力各 6 门、10 本至宝秘籍、7 门特殊/普攻替换技能。
+for (let x = 1; x < shili.length; x += 1) {
+  for (const col of [5, 6, 7, 8, 9, 10]) {
+    const id = shili[x]?.[col]
+    if (typeof id === 'number' && id > 0) usedSkillIds.add(id)
+  }
+}
+for (let x = 185; x <= 256; x += 1) {
+  if (String(wp[x]?.[5]) !== '秘籍') continue
+  const id = wp[x]?.[6]
+  if (typeof id === 'number' && id > 0) usedSkillIds.add(id)
+}
+for (const id of [71, 72, 74, 75, 81, 82, 83]) usedSkillIds.add(id)
 
 // ---------- 技能翻译 ----------
 const BEHAVIORS = {
@@ -311,6 +326,8 @@ for (const summon of summons) {
   skillLines.push(`  ${summon.id}: { id: ${summon.id}, name: ${quote(summon.name)}, coeffs: [${summon.coeffs.join(', ')}], durationMs: ${summon.durationMs}, route: ${quote(summon.route)} },`)
 }
 skillLines.push('}')
+skillLines.push('')
+skillLines.push('export const summonById = (id: number): SummonUnitContent | undefined => SUMMON_UNITS[id]')
 skillLines.push('')
 skillLines.push('// 职业（zy 行号）→ 普攻技能 id')
 skillLines.push('export const BASE_SKILL_BY_ZY: Readonly<Record<number, number>> = {')

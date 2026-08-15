@@ -37,15 +37,15 @@ const equipment = (uid: string, definitionId: string, locked = false): Equipment
 }
 
 describe('城市、势力与装备操作', () => {
-  it('城市武馆消耗当前卷货币学习当地通用武功', () => {
+  it('不再混入虚构城市通用武功', () => {
     const state = unlockedThrough(3)
     state.worldCurrency.world_03 = 600
+    const before = structuredClone(state)
 
     const result = learnCityMartial(state, 'hero_mu_nianci', 'world_03_common_sword_01')
 
-    expect(result.ok).toBe(true)
-    expect(state.worldCurrency.world_03).toBe(300)
-    expect(state.heroes.hero_mu_nianci.learnedMartials.world_03_common_sword_01.level).toBe(1)
+    expect(result.ok).toBe(false)
+    expect(state).toEqual(before)
   })
 
   it('势力侠客消耗贡献直接邀请', () => {
@@ -59,14 +59,16 @@ describe('城市、势力与装备操作', () => {
 
   it('失败交易不会留下部分扣款或升级', () => {
     const state = stateWithHero()
-    state.heroes.hero_mu_nianci.learnedMartials.qingfeng_hall_a1 = {
+    state.heroes.hero_mu_nianci.skillPoints = 1_000_000
+    state.worldCurrency.world_01 = 0
+    state.heroes.hero_mu_nianci.learnedMartials.original_skill_42 = {
       level: 1,
-      invested: { worldCurrency: {}, contribution: { qingfeng_hall: 80 } },
+      investedSp: 451,
+      invested: { worldCurrency: { world_01: 1_069 }, contribution: {} },
     }
-    state.contribution.qingfeng_hall = 0
     const before = structuredClone(state)
 
-    expect(upgradeMartial(state, 'hero_mu_nianci', 'qingfeng_hall_a1').ok).toBe(false)
+    expect(upgradeMartial(state, 'hero_mu_nianci', 'original_skill_42').ok).toBe(false)
     expect(state).toEqual(before)
     expect(spend(state.worldCurrency, 'world_01', 1_000_000).ok).toBe(false)
   })

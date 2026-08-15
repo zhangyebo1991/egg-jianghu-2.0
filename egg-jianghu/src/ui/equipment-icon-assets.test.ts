@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { EQUIPMENT_DEFINITIONS, EQUIPMENT_SLOTS } from '../content/equipment'
+import {
+  EQUIPMENT_DEFINITIONS,
+  EQUIPMENT_SLOTS,
+} from '../content/equipment'
 import { equipmentIconAsset } from './equipment-icon-assets'
 
 describe('装备图标资源', () => {
@@ -16,17 +19,20 @@ describe('装备图标资源', () => {
   })
 
   it('446 件装备全部映射到 186 个原版图标', () => {
-    const icons = EQUIPMENT_DEFINITIONS.map((definition) => equipmentIconAsset(definition.slot, definition.id))
+    const definitions = EQUIPMENT_DEFINITIONS.filter((definition) =>
+      definition.setName || (definition.equipmentKind === 'standard' && definition.rarity === '普通'))
+    const icons = definitions.map((definition) => equipmentIconAsset(definition.slot, definition.id))
 
-    expect(EQUIPMENT_DEFINITIONS).toHaveLength(446)
-    expect(new Set(EQUIPMENT_DEFINITIONS.map((definition) => definition.iconKey)).size).toBe(186)
+    expect(definitions).toHaveLength(446)
+    expect(new Set(definitions.map((definition) => definition.iconKey)).size).toBe(186)
     expect(icons.every((icon) => icon.source === 'unique')).toBe(true)
   })
 
-  it('八个部位各有独立通用图标，未知专属图标时按部位回退', () => {
+  it('八个战斗部位有独立通用图标，至宝暂复用戒指回退图标', () => {
     const icons = EQUIPMENT_SLOTS.map((slot) => equipmentIconAsset(slot, `unknown_${slot}`))
 
-    expect(new Set(icons.map((icon) => icon.url)).size).toBe(EQUIPMENT_SLOTS.length)
+    expect(new Set(icons.map((icon) => icon.url)).size).toBe(EQUIPMENT_SLOTS.length - 1)
+    expect(equipmentIconAsset('treasure').url).toBe(equipmentIconAsset('ring').url)
     expect(icons.every((icon) => icon.source === 'slot')).toBe(true)
     expect(icons.every((icon) => icon.url.endsWith('.png'))).toBe(true)
   })

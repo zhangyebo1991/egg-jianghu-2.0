@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   EQUIPMENT_DEFINITIONS,
-  EQUIPMENT_SLOTS,
+  COMBAT_EQUIPMENT_SLOTS,
   EQUIPMENT_STYLE_FAMILIES,
   combatDifficultyCoefficient,
   equipmentIdBySlot,
@@ -41,7 +41,7 @@ describe('诸天装备表', () => {
     for (const world of WORLDS) {
       const pool = equipmentPoolForWorld(world.id)
       expect(pool.length, `${world.id} 掉落池为空`).toBeGreaterThan(0)
-      for (const slot of EQUIPMENT_SLOTS) {
+      for (const slot of COMBAT_EQUIPMENT_SLOTS) {
         expect(pool.some((item) => item.slot === slot), `${world.id} 缺 ${slot}`).toBe(true)
       }
       for (const name of BANNED_DROP_NAMES) {
@@ -58,7 +58,7 @@ describe('诸天装备表', () => {
   })
 
   it('战斗池只用普通底模，且六风格族都有货', () => {
-    const basics = EQUIPMENT_DEFINITIONS.filter((item) => !item.setName)
+    const basics = [...new Map(WORLDS.flatMap((world) => equipmentPoolForWorld(world.id)).map((item) => [item.id, item])).values()]
     expect(basics).toHaveLength(186)
     expect(basics.every((item) => item.rarity === '普通')).toBe(true)
     expect(basics.some((item) => item.name === '铁爪')).toBe(true)
@@ -110,8 +110,12 @@ describe('诸天装备表', () => {
   })
 
   it('所有可掉落装备都有两条核心和对应类型的加权词条池', () => {
-    expect(EQUIPMENT_DEFINITIONS.every((item) => item.coreStats.length === 2)).toBe(true)
-    expect(EQUIPMENT_DEFINITIONS.every((item) => item.affixPool.length > 0)).toBe(true)
+    const droppable = [...new Map(WORLDS.flatMap((world) => [
+      ...equipmentPoolForWorld(world.id),
+      ...world.stageIds.flatMap((_, index) => equipmentSetPoolForStage(world.id, index + 1)),
+    ]).map((item) => [item.id, item])).values()]
+    expect(droppable.every((item) => item.coreStats.length === 2)).toBe(true)
+    expect(droppable.every((item) => item.affixPool.length > 0)).toBe(true)
     expect(EQUIPMENT_DEFINITIONS.find((item) => item.id === 'wp_257')?.coreStats).toEqual([
       { attributeId: 8, baseCoefficient: 220 },
       { attributeId: 20, baseCoefficient: 100 },

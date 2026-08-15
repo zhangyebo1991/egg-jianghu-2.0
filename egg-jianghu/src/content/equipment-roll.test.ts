@@ -70,9 +70,10 @@ const scriptedRng = (
 
 describe('原版装备随机属性', () => {
   it('所有装备类型都使用已逆向确认的双核心模板', () => {
-    const actualTypes = new Set(EQUIPMENT_DEFINITIONS.map((item) => `${item.slot}:${item.weaponType}`))
+    const randomStatDefinitions = EQUIPMENT_DEFINITIONS.filter((item) => item.slot !== 'treasure')
+    const actualTypes = new Set(randomStatDefinitions.map((item) => `${item.slot}:${item.weaponType}`))
     expect([...actualTypes].sort()).toEqual(Object.keys(expectedCoreStats).sort())
-    for (const definition of EQUIPMENT_DEFINITIONS) {
+    for (const definition of randomStatDefinitions) {
       const key = `${definition.slot}:${definition.weaponType}`
       const expected = expectedCoreStats[key]
       expect(expected, key).toBeDefined()

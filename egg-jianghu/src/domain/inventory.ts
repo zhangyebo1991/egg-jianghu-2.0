@@ -9,6 +9,8 @@ import {
   isEquipmentSetIndex,
   type EquipmentSetIndex,
 } from '../content/equipment'
+import { martialIdFromOriginal } from '../content/martials'
+import { grantPermanentMartial } from './martial-training'
 
 export const INVENTORY_CAPACITY = 300
 
@@ -101,6 +103,15 @@ export const equipEquipment = (
   if (ownerId && ownerId !== heroId) return { ok: false, message: '装备已被其他侠客穿戴' }
   const loadout = bindActiveEquipmentLoadout(hero)
   if (loadout[definition.slot] === equipmentUid) return { ok: false, message: '装备已经穿戴' }
+
+  if (definition.equipmentKind === 'treasure-manual' && definition.grantSkillId) {
+    const sourceItemId = String(definition.sourceItemId ?? definition.id)
+    if (!state.treasureManualGrants[sourceItemId]) {
+      const grant = grantPermanentMartial(state, heroId, martialIdFromOriginal(definition.grantSkillId))
+      if (!grant.ok) return grant
+      state.treasureManualGrants[sourceItemId] = heroId
+    }
+  }
 
   releaseEquipmentFromHero(hero, equipmentUid)
   loadout[definition.slot] = equipmentUid
