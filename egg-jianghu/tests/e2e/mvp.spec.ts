@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { originalFactionExchangeByFaction } from '../../src/content/original-faction-exchange.generated'
+import { originalFactionRecruitmentByFaction } from '../../src/content/original-faction-recruitment.generated'
 
 let pageErrors: string[]
 
@@ -600,7 +601,7 @@ test('势力五格悬榜锁定已接任务并刷新未接任务', async ({ page 
   expect(after.slice(1)).not.toEqual(before.slice(1))
 })
 
-test('势力页支持切换匾额和门人拜帖', async ({ page }) => {
+test('势力页支持切换匾额和原版招募名录', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
     window.__EGG_JIANGHU__.grantContribution('qingfeng_hall', 1000)
@@ -612,12 +613,12 @@ test('势力页支持切换匾额和门人拜帖', async ({ page }) => {
   await expect(page.getByTestId('faction-page-title')).toBeVisible()
   await page.getByTestId('faction-plaque-qingfeng_hall').click()
   await expect(page.getByTestId('faction-plaque-qingfeng_hall')).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByTestId('faction-invite-panel')).toBeVisible()
-  await expect(page.getByTestId('faction-hero-hero_qingfeng_hall_01')).toContainText('孙不二')
+  await expect(page.getByTestId('faction-recruitment')).toBeVisible()
+  await expect(page.getByTestId('faction-recruitment-hero-2')).toContainText('邢道荣')
   await expect(page.getByTestId('faction-meridian')).toBeVisible()
 })
 
-test('势力声望与贡献兑换在势力页和城镇页共享同一状态', async ({ page }, testInfo) => {
+test('势力声望、贡献兑换与招募在势力页和城镇页共享同一状态', async ({ page }, testInfo) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
     window.__EGG_JIANGHU__.grantContribution('tieyi_school', 100_000)
@@ -649,13 +650,62 @@ test('势力声望与贡献兑换在势力页和城镇页共享同一状态', as
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school)).toBe(73_828)
   await page.getByTestId('faction-exchange').scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('town-exchange.png'), fullPage: true })
+
+  await town.getByRole('button', { name: '势力招募' }).click()
+  const recruitment = page.getByTestId('faction-recruitment')
+  await expect(recruitment).toHaveAttribute('data-faction-id', 'tieyi_school')
+  await expect(recruitment.locator('[data-testid^="faction-recruitment-hero-"]'))
+    .toHaveCount(originalFactionRecruitmentByFaction(2).length)
+  await expect(page.getByTestId('faction-recruitment-hero-6')).toContainText('甄宓')
+  await expect(page.getByTestId('faction-recruitment-hero-6').getByRole('button')).toBeDisabled()
+  await recruitment.scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath('town-recruitment.png'), fullPage: true })
 })
 
-test('势力页主区可滚动查看悬榜与门人拜帖', async ({ page }) => {
+test('城镇代理人支持任命、替换、卸任和启停且不虚构能力加成', async ({ page }, testInfo) => {
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.recruitHero('hero_guo_jing')
+    window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
+  })
+  await openWorldSection(page, 'towns')
+  await page.getByRole('button', { name: '管理代理人' }).click()
+
+  const agent = page.getByTestId('faction-agent')
+  await expect(agent).toHaveAttribute('data-world-id', 'world_01')
+  await expect(agent).toContainText('当前角色数据未接入该能力')
+  await expect(agent).toContainText('条件矩阵尚未接入，保持关闭')
+
+  await page.getByTestId('faction-agent-candidate-hero_guo_jing').getByRole('button', { name: '任命' }).click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
+    .toEqual({ heroId: 'hero_guo_jing', enabled: true })
+  await expect(agent).toContainText('当前代理人郭靖')
+
+  await agent.getByRole('button', { name: '开启中' }).click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01.enabled)).toBe(false)
+
+  await page.getByTestId('faction-agent-candidate-hero_mu_nianci').getByRole('button', { name: '替换' }).click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
+    .toEqual({ heroId: 'hero_mu_nianci', enabled: true })
+  await expect(agent).toContainText('当前代理人穆念慈')
+  await agent.scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath('town-agent.png') })
+
+  await agent.getByRole('button', { name: '卸任' }).click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
+    .toEqual({ heroId: null, enabled: true })
+  await expect(agent).toContainText('无代理人')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await agent.scrollIntoViewIfNeeded()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('town-agent-mobile.png') })
+})
+
+test('势力页主区可滚动查看悬榜与原版招募名录', async ({ page }) => {
   await openWorldSection(page, 'factions')
   const main = page.locator('.game-main')
   await expect(page.getByTestId('faction-quest-board')).toBeAttached()
-  await expect(page.getByTestId('faction-invite-panel')).toBeAttached()
+  await expect(page.getByTestId('faction-recruitment')).toBeAttached()
 
   const metrics = await main.evaluate((element) => ({
     overflowY: getComputedStyle(element).overflowY,
@@ -666,8 +716,21 @@ test('势力页主区可滚动查看悬榜与门人拜帖', async ({ page }) => 
   expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight)
 
   await main.evaluate((element) => { element.scrollTop = element.scrollHeight })
-  const panelBottom = await page.getByTestId('faction-invite-panel').evaluate((element) => element.getBoundingClientRect().bottom)
+  const panelBottom = await page.getByTestId('faction-recruitment').evaluate((element) => element.getBoundingClientRect().bottom)
   expect(panelBottom).toBeLessThanOrEqual((page.viewportSize()?.height ?? 0) + 1)
+})
+
+test('势力招募名录在移动端保持单列且不横向溢出', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openWorldSection(page, 'factions')
+  const recruitment = page.getByTestId('faction-recruitment')
+  await recruitment.scrollIntoViewIfNeeded()
+
+  const columns = await recruitment.locator('.faction-recruitment-grid')
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/))
+  expect(columns).toHaveLength(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('faction-recruitment-mobile.png') })
 })
 
 test('重载页面后长期收益保留但必须重新选择关卡', async ({ page }) => {

@@ -1,8 +1,8 @@
 import { escapeHtml, formatNumber } from './html'
 import { careerCategoryIconAsset } from './career-icon-assets'
-import { heroPortraitAsset } from './portrait-assets'
 import type { MartialLore } from '../content/martial-lore'
 import { renderFactionExchange, type FactionExchangeViewModel } from './faction-exchange'
+import { renderFactionRecruitment, type FactionRecruitmentViewModel } from './faction-recruitment'
 
 export type FactionMartialState = 'learned' | 'next' | 'locked'
 
@@ -105,7 +105,7 @@ export interface FactionsPageViewModel {
     }
   }>
   branches: Array<{ name: string; martials: FactionMartialView[] }>
-  factionHeroes: Array<{ id: string; name: string; grade: string; cost: number; recruited: boolean }>
+  recruitment: FactionRecruitmentViewModel | null
   selectedHeroId: string | null
   selectedHero: FactionRosterHeroView | null
   roster: FactionRosterHeroView[]
@@ -265,17 +265,6 @@ const renderMartialDetail = (view: FactionsPageViewModel): string => {
   </div>`
 }
 
-const renderCallingCards = (view: FactionsPageViewModel, selected: FactionSelectorView): string => view.factionHeroes.map((hero, index) => `
-  <article class="faction-calling-card ${hero.recruited ? 'recruited' : ''}" style="--faction-card-rotation:${[-1.2, 0.8, -0.6][index] ?? 0}deg;--faction-delay:${index * 90}ms" data-testid="faction-hero-${escapeHtml(hero.id)}">
-    ${hero.recruited ? '<span class="faction-calling-stamp">已入麾下</span>' : ''}
-    <div class="faction-calling-rail"><img class="faction-calling-portrait" src="${escapeHtml(heroPortraitAsset(hero.id, selected.category).url)}" alt="" aria-hidden="true" draggable="false"><span class="faction-calling-grade" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span><strong>${escapeHtml(hero.name)}</strong></div>
-    <div class="faction-calling-body">
-      <p class="faction-calling-title">${escapeHtml(selected.name)} · 拜帖</p>
-      <p class="faction-calling-line">${escapeHtml(selected.category)}脉门人，可以贡献为聘邀入麾下。</p>
-      <div class="faction-calling-foot"><span>聘 <b>${formatNumber(hero.cost)}</b> 贡献</span><button type="button" class="faction-invite-button" data-action="faction-recruit" data-faction-id="${escapeHtml(view.selectedFactionId)}" data-hero-id="${escapeHtml(hero.id)}"${hero.recruited ? ' disabled' : ''} aria-label="邀请${escapeHtml(hero.name)}">${hero.recruited ? '✓' : '邀'}</button></div>
-    </div>
-  </article>`).join('')
-
 export const renderFactionsPage = (view: FactionsPageViewModel): string => {
   if (view.factions.length === 0) {
     return `<section class="factions-layout faction-empty-page" data-testid="factions-page">
@@ -326,10 +315,7 @@ export const renderFactionsPage = (view: FactionsPageViewModel): string => {
       ${renderMartialDetail(view)}
     </section>
 
-    <section class="faction-disciples" data-testid="faction-invite-panel">
-      <header class="faction-disciples-head"><div><h2>门人拜帖</h2><span>三席可邀 · 以贡献为聘</span></div></header>
-      <div class="faction-calling-cards">${renderCallingCards(view, selected)}</div>
-    </section>
+    ${view.recruitment ? renderFactionRecruitment(view.recruitment) : ''}
 
     <footer class="faction-page-foot">蛋蛋江湖 2.0 · 势力页 · 数据与规则取自游戏真实配置</footer>
   </section>`

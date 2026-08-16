@@ -1,5 +1,7 @@
 import { escapeHtml, formatNumber } from './html'
+import { renderFactionAgent, type FactionAgentViewModel } from './faction-agent'
 import { renderFactionExchange, type FactionExchangeViewModel } from './faction-exchange'
+import { renderFactionRecruitment, type FactionRecruitmentViewModel } from './faction-recruitment'
 
 export interface TownTavernHeroView {
   id: string
@@ -17,6 +19,7 @@ export interface TownLocationView {
   npcTitle: string | null
   functions: readonly string[]
   tavern: boolean
+  agent: boolean
 }
 
 export interface FactionTownView {
@@ -35,7 +38,9 @@ export interface TownsPageViewModel {
   worldCurrency: number
   publicLocations: readonly TownLocationView[]
   factionTowns: readonly FactionTownView[]
+  factionAgent: FactionAgentViewModel | null
   factionExchange: FactionExchangeViewModel | null
+  factionRecruitment: FactionRecruitmentViewModel | null
   tavernHeroes: readonly TownTavernHeroView[]
 }
 
@@ -56,20 +61,27 @@ const renderPageHead = (view: TownsPageViewModel): string => `<header class="cit
 const renderFunctionTags = (functions: readonly string[]): string =>
   functions.map((name) => `<span>${escapeHtml(name)}</span>`).join('')
 
+const locationNote = (location: TownLocationView): string => {
+  if (location.tavern) return '侠客名录已开放，可在下方直接邀请。'
+  if (location.agent) return '位面代理人已开放，可在下方任命、替换与启停。'
+  return '场所资料已录入；操作将在原版规则复算后开放。'
+}
+
 const renderPublicLocations = (view: TownsPageViewModel): string => `<section class="towns-section" aria-labelledby="towns-public-title">
   <header class="towns-section-head">
     <div><span class="towns-kicker">MAIN CITY</span><h2 id="towns-public-title">${escapeHtml(view.mainCityName)} · 公共场所</h2></div>
     <p>原版主城固定连接五处公共场所；已确认入口完整保留。</p>
   </header>
   <div class="town-place-grid" data-testid="town-public-locations">
-    ${view.publicLocations.map((location, index) => `<article class="town-place-card${location.tavern ? ' active' : ''}" data-testid="town-location-${index}">
+    ${view.publicLocations.map((location, index) => `<article class="town-place-card${location.tavern || location.agent ? ' active' : ''}" data-testid="town-location-${index}">
       <span class="town-place-mark" aria-hidden="true">${escapeHtml(location.name.slice(0, 1))}</span>
       <div class="town-place-copy">
         <header><h3>${escapeHtml(location.name)}</h3>${location.npcTitle ? `<small>${escapeHtml(location.npcTitle)}坐馆</small>` : ''}</header>
         <div class="town-function-tags">${renderFunctionTags(location.functions)}</div>
-        <p>${location.tavern ? '侠客名录已开放，可在下方直接邀请。' : '场所资料已录入；操作将在原版规则复算后开放。'}</p>
+        <p>${locationNote(location)}</p>
+        ${location.agent ? '<button type="button" class="town-place-action" data-action="select-town-agent">管理代理人</button>' : ''}
       </div>
-      <span class="town-place-state${location.tavern ? ' ready' : ''}">${location.tavern ? '已开放' : '暂不可用'}</span>
+      <span class="town-place-state${location.tavern || location.agent ? ' ready' : ''}">${location.tavern || location.agent ? '已开放' : '暂不可用'}</span>
     </article>`).join('')}
   </div>
 </section>`
@@ -84,7 +96,7 @@ const renderFactionTowns = (view: TownsPageViewModel): string => `<section class
       <header><span class="faction-town-seal" aria-hidden="true">镇</span><div><h3>${escapeHtml(town.name)}</h3><p>${escapeHtml(town.factionName)}</p></div></header>
       <div class="town-function-tags">${renderFunctionTags(town.functions)}</div>
       ${town.unlocked
-        ? `<div class="faction-town-actions"><button type="button" data-action="select-town-exchange" data-faction-id="${escapeHtml(town.factionId)}">贡献兑换</button><button type="button" data-action="open-faction-town" data-faction-id="${escapeHtml(town.factionId)}">查看势力总览</button></div>`
+        ? `<div class="faction-town-actions"><button type="button" data-action="select-town-exchange" data-faction-id="${escapeHtml(town.factionId)}">贡献兑换</button><button type="button" data-action="select-town-recruitment" data-faction-id="${escapeHtml(town.factionId)}">势力招募</button><button type="button" data-action="open-faction-town" data-faction-id="${escapeHtml(town.factionId)}">查看势力总览</button></div>`
         : '<p class="faction-town-lock">本存档尚未解锁此势力</p>'}
     </article>`).join('')}
   </div>
@@ -125,8 +137,10 @@ export const renderTownsPage = (view: TownsPageViewModel): string => `<section c
   ${renderPageHead(view)}
   <div class="towns-scroll">
     ${renderPublicLocations(view)}
+    ${view.factionAgent ? renderFactionAgent(view.factionAgent) : ''}
     ${renderFactionTowns(view)}
     ${view.factionExchange ? renderFactionExchange(view.factionExchange) : ''}
+    ${view.factionRecruitment ? renderFactionRecruitment(view.factionRecruitment) : ''}
     ${renderTavern(view)}
   </div>
   <footer class="city-page-foot">原版城镇 · ${view.publicLocations.length} 处公共场所 · ${view.factionTowns.length} 座势力城镇</footer>

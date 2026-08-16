@@ -25,7 +25,7 @@ import {
 } from './content/equipment'
 import { ATTRIBUTE_BY_ID } from './content/attributes'
 import { FACTIONS, factionByOriginalId } from './content/factions'
-import { FACTION_HEROES, HEROES_V10, PLAYER_HERO_ID, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
+import { HEROES_V10, PLAYER_HERO_ID, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
 import { FACTION_MARTIALS, martialBuffChanceAtLevel, martialByIdV10, martialByOriginalId, martialEffectAtLevel, martialResourceCost, martialSpCost } from './content/martials'
 import { buffById } from './content/buffs'
 import { skillById } from './content/skills'
@@ -47,6 +47,7 @@ import {
   originalWorldReputationThreshold,
 } from './content/original-faction-rules.generated'
 import { originalFactionExchangeByFaction } from './content/original-faction-exchange.generated'
+import { originalFactionRecruitmentByFaction } from './content/original-faction-recruitment.generated'
 import { ORIGINAL_CITY_FOUNDATION, originalWorldTownByIndex } from './content/original-towns.generated'
 import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
@@ -56,6 +57,7 @@ import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEq
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
+import { appointFactionAgent, dismissFactionAgent, factionAgentCandidateIds, toggleFactionAgent } from './domain/faction-agent'
 import { exchangeFactionItem, factionExchangeItemOwned, factionExchangeItemQuantity } from './domain/faction-exchange'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
@@ -95,6 +97,7 @@ import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { MARTIAL_LORE } from './content/martial-lore'
 import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
 import type { FactionExchangeViewModel } from './ui/faction-exchange'
+import type { FactionRecruitmentViewModel } from './ui/faction-recruitment'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
 import { renderHeroesPage, type HeroesHeroView, type HeroesPageViewModel } from './ui/heroes-page'
 import {
@@ -165,6 +168,7 @@ let dragHeroId: string | null = null
 let dragCandidateHeroId: string | null = null
 let selectedFactionId = ''
 let selectedFactionMartialId: string | null = null
+let townFactionFunction: 'exchange' | 'recruitment' | 'agent' = 'exchange'
 let careerTreeOpen = false
 let selectedTreeCareerId: string | null = null
 let factionRosterOpen = false
@@ -201,6 +205,8 @@ type FactionContributionAnimation = {
 
 let factionSwitchAnimationPending = false
 let factionExchangeFocusPending = false
+let factionRecruitmentFocusPending = false
+let factionAgentFocusPending = false
 let factionContributionAnimation: FactionContributionAnimation | null = null
 let factionMotionTimer: number | null = null
 
@@ -540,6 +546,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   heroRosterLocatePending = false
   selectedFactionId = FACTIONS.find((faction) => session.state.unlockedFactionIds.includes(faction.id))?.id ?? ''
   selectedFactionMartialId = null
+  townFactionFunction = 'exchange'
   factionRosterOpen = false
   factionRosterQuery = ''
   combatSpeed = 1
@@ -1100,6 +1107,43 @@ const factionExchangeViewModel = (factionId: string): FactionExchangeViewModel |
   }
 }
 
+const factionRecruitmentViewModel = (factionId: string): FactionRecruitmentViewModel | null => {
+  const faction = FACTIONS.find((candidate) => candidate.id === factionId)
+  if (!faction || !session.state.unlockedFactionIds.includes(factionId)) return null
+
+  const worldIndex = Number(faction.worldId.slice(-2))
+  const reputation = session.state.worldReputation[faction.worldId] ?? 0
+  const reputationLevel = originalWorldReputationLevel(reputation, worldIndex)
+  const resourceName = faction.currencyKind === 'contribution' ? '势力贡献' : '位面货币'
+  const balance = faction.currencyKind === 'contribution'
+    ? session.state.contribution[faction.id] ?? 0
+    : session.state.worldCurrency[faction.worldId] ?? 0
+  return {
+    factionId,
+    factionName: faction.name,
+    resourceName,
+    balance,
+    reputationLevel,
+    reputationLevelName: originalWorldReputationLevelName(reputationLevel),
+    heroes: originalFactionRecruitmentByFaction(faction.originalId).map((hero) => {
+      let actionReason = '角色资料待开放'
+      if (reputationLevel < hero.requiredReputationLevel) {
+        actionReason = `需${hero.requiredReputationName}声望`
+      } else if (balance < hero.price) {
+        actionReason = `${resourceName}不足`
+      }
+      return {
+        heroSourceId: hero.heroSourceId,
+        name: hero.name,
+        requiredReputationLevel: hero.requiredReputationLevel,
+        requiredReputationName: hero.requiredReputationName,
+        price: hero.price,
+        actionReason,
+      }
+    }),
+  }
+}
+
 const factionsViewModel = (): FactionsPageViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const availableFactions = FACTIONS.filter((faction) =>
@@ -1111,7 +1155,6 @@ const factionsViewModel = (): FactionsPageViewModel => {
   const normalizedHeroId = normalizeSelectedHero()
   const heroProgress = normalizedHeroId ? session.state.heroes[normalizedHeroId] : undefined
   const factionMartials = FACTION_MARTIALS.filter((martial) => martial.factionId === selectedFactionId)
-  const factionHeroes = FACTION_HEROES.filter((hero) => hero.factionId === selectedFactionId)
   if (!factionMartials.some((martial) => martial.id === selectedFactionMartialId)) {
     selectedFactionMartialId = factionMartials[0]?.id ?? null
   }
@@ -1203,6 +1246,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
     worldName: world.name,
     selectedFactionId,
     exchange: faction ? factionExchangeViewModel(faction.id) : null,
+    recruitment: faction ? factionRecruitmentViewModel(faction.id) : null,
     factions: availableFactions.map((item) => ({
       id: item.id,
       name: item.name,
@@ -1248,13 +1292,6 @@ const factionsViewModel = (): FactionsPageViewModel => {
       name: branch,
       martials: martialViews.filter((martial) => factionMartials.find((definition) => definition.id === martial.id)?.branch === branch),
     })),
-    factionHeroes: factionHeroes.map((factionHero) => ({
-      id: factionHero.id,
-      name: factionHero.name,
-      grade: factionHero.grade,
-      cost: factionHero.cost,
-      recruited: Boolean(session.state.heroes[factionHero.id]?.recruited),
-    })),
     selectedHeroId: normalizedHeroId,
     selectedHero,
     roster,
@@ -1281,6 +1318,41 @@ const tavernHeroesForWorld = (worldId: string): TownsPageViewModel['tavernHeroes
     }
   })
 
+const activeCombatHeroIds = (): Set<string> => session.combat?.state.result === 'fighting'
+  ? new Set(session.combat.state.party.map((hero) => hero.id))
+  : new Set()
+
+const factionAgentViewModel = (worldId: string, worldName: string): NonNullable<TownsPageViewModel['factionAgent']> => {
+  const agent = session.state.factionAgents[worldId] ?? { heroId: null, enabled: false }
+  const fightingHeroIds = activeCombatHeroIds()
+  const heroView = (heroId: string) => {
+    const definition = heroByIdV10(heroId)
+    const progress = session.state.heroes[heroId]
+    if (!definition || !progress?.recruited) return null
+    return {
+      id: heroId,
+      name: heroDisplayNameV10(definition, progress),
+      grade: definition.grade,
+      category: heroMeridianCategory(definition),
+      level: progress.level,
+      fighting: fightingHeroIds.has(heroId),
+      selected: agent.heroId === heroId,
+    }
+  }
+  return {
+    worldId,
+    worldName,
+    enabled: agent.enabled,
+    currentAgent: agent.heroId ? heroView(agent.heroId) : null,
+    candidates: factionAgentCandidateIds(session.state).flatMap((heroId) => {
+      const candidate = heroView(heroId)
+      return candidate ? [candidate] : []
+    }),
+    abilityBonusAvailable: false,
+    taskAutomationAvailable: false,
+  }
+}
+
 const townsViewModel = (): TownsPageViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const town = originalWorldTownByIndex(world.index)
@@ -1295,7 +1367,7 @@ const townsViewModel = (): TownsPageViewModel => {
       functions: factionTown.functions.map((fn) => fn.name),
     }
   }) ?? []
-  const exchangeFactionId = factionTowns.find((candidate) =>
+  const selectedTownFactionId = factionTowns.find((candidate) =>
     candidate.unlocked && candidate.factionId === selectedFactionId)?.factionId
     ?? factionTowns.find((candidate) => candidate.unlocked)?.factionId
     ?? null
@@ -1309,12 +1381,21 @@ const townsViewModel = (): TownsPageViewModel => {
       npcTitle: location.npcTitle && location.npcTitle !== '无' ? location.npcTitle : null,
       functions: location.functions.map((fn) => fn.name),
       tavern: location.functions.some((fn) => fn.sourceId === 5),
+      agent: location.functions.some((fn) => fn.sourceId === 35),
     })) ?? [],
     factionTowns: factionTowns.map((candidate) => ({
       ...candidate,
-      selected: candidate.factionId === exchangeFactionId,
+      selected: candidate.factionId === selectedTownFactionId,
     })),
-    factionExchange: exchangeFactionId ? factionExchangeViewModel(exchangeFactionId) : null,
+    factionAgent: townFactionFunction === 'agent'
+      ? factionAgentViewModel(world.id, world.name)
+      : null,
+    factionExchange: townFactionFunction === 'exchange' && selectedTownFactionId
+      ? factionExchangeViewModel(selectedTownFactionId)
+      : null,
+    factionRecruitment: townFactionFunction === 'recruitment' && selectedTownFactionId
+      ? factionRecruitmentViewModel(selectedTownFactionId)
+      : null,
     tavernHeroes: tavernHeroesForWorld(world.id),
   }
 }
@@ -1693,6 +1774,24 @@ const render = (): void => {
     factionExchangeFocusPending = false
     window.requestAnimationFrame(() => {
       app.querySelector<HTMLElement>('[data-testid="faction-exchange"]')?.scrollIntoView({
+        block: 'start',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      })
+    })
+  }
+  if (factionRecruitmentFocusPending) {
+    factionRecruitmentFocusPending = false
+    window.requestAnimationFrame(() => {
+      app.querySelector<HTMLElement>('[data-testid="faction-recruitment"]')?.scrollIntoView({
+        block: 'start',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      })
+    })
+  }
+  if (factionAgentFocusPending) {
+    factionAgentFocusPending = false
+    window.requestAnimationFrame(() => {
+      app.querySelector<HTMLElement>('[data-testid="faction-agent"]')?.scrollIntoView({
         block: 'start',
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
       })
@@ -2548,8 +2647,37 @@ app.addEventListener('click', (event) => {
       notify('此势力尚未解锁', true)
     } else {
       selectedFactionId = nextFactionId
+      townFactionFunction = 'exchange'
       factionExchangeFocusPending = true
     }
+  }
+  else if (action === 'select-town-recruitment') {
+    const nextFactionId = button.dataset.factionId ?? ''
+    if (!session.state.unlockedFactionIds.includes(nextFactionId)) {
+      notify('此势力尚未解锁', true)
+    } else {
+      selectedFactionId = nextFactionId
+      townFactionFunction = 'recruitment'
+      factionRecruitmentFocusPending = true
+    }
+  }
+  else if (action === 'select-town-agent') {
+    townFactionFunction = 'agent'
+    factionAgentFocusPending = true
+  }
+  else if (action === 'appoint-faction-agent') {
+    commitAction(appointFactionAgent(
+      session.state,
+      button.dataset.worldId ?? selectedWorldId,
+      button.dataset.heroId ?? '',
+      activeCombatHeroIds(),
+    ))
+  }
+  else if (action === 'dismiss-faction-agent') {
+    commitAction(dismissFactionAgent(session.state, button.dataset.worldId ?? selectedWorldId))
+  }
+  else if (action === 'toggle-faction-agent') {
+    commitAction(toggleFactionAgent(session.state, button.dataset.worldId ?? selectedWorldId))
   }
   else if (action === 'open-faction-town') {
     const nextFactionId = button.dataset.factionId ?? ''

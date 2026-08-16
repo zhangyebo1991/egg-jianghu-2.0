@@ -91,6 +91,45 @@ const exchangeFixture = (factionId = 'qingfeng_hall', factionName = '全真教')
   }],
 })
 
+const recruitmentFixture = (
+  factionId = 'qingfeng_hall',
+  factionName = '武馆',
+): NonNullable<FactionsPageViewModel['recruitment']> => ({
+  factionId,
+  factionName,
+  resourceName: '位面货币',
+  balance: 600,
+  reputationLevel: 1,
+  reputationLevelName: '冷淡',
+  heroes: [{
+    heroSourceId: 2,
+    name: '邢道荣',
+    requiredReputationLevel: 1,
+    requiredReputationName: '冷淡',
+    price: 100,
+    actionReason: '角色资料待开放',
+  }],
+})
+
+const factionAgentFixture = (): NonNullable<TownsPageViewModel['factionAgent']> => ({
+  worldId: 'world_01',
+  worldName: '东汉三国',
+  enabled: true,
+  currentAgent: {
+    id: 'hero_guo_jing', name: '郭靖', grade: '乙', category: '拳', level: 12,
+    fighting: false, selected: true,
+  },
+  candidates: [{
+    id: 'hero_guo_jing', name: '郭靖', grade: '乙', category: '拳', level: 12,
+    fighting: false, selected: true,
+  }, {
+    id: 'hero_mu_nianci', name: '穆念慈', grade: '乙', category: '剑', level: 10,
+    fighting: true, selected: false,
+  }],
+  abilityBonusAvailable: false,
+  taskAutomationAvailable: false,
+})
+
 const factionsFixture = (): FactionsPageViewModel => ({
   worldIndex: 1,
   worldName: '牛家村',
@@ -130,11 +169,7 @@ const factionsFixture = (): FactionsPageViewModel => ({
       selected: false,
     })) },
   ],
-  factionHeroes: [
-    { id: 'hero_qingfeng_hall_01', name: '孙不二', grade: '乙', cost: 800, recruited: false },
-    { id: 'hero_qingfeng_hall_02', name: '刘处玄', grade: '乙', cost: 800, recruited: false },
-    { id: 'hero_qingfeng_hall_03', name: '谭处端', grade: '乙', cost: 800, recruited: false },
-  ],
+  recruitment: recruitmentFixture(),
   selectedHeroId: 'hero_test',
   selectedHero: {
     id: 'hero_test', name: '试剑人', grade: '主', category: '剑', factionName: '江湖散人', compatible: true, selected: true, isPlayer: true,
@@ -166,18 +201,20 @@ const cityFixture = (): CityPageViewModel => ({
 const townsFixture = (): TownsPageViewModel => ({
   worldIndex: 1, worldName: '东汉三国', mainCityName: '洛阳', worldCurrency: 1000,
   publicLocations: [
-    { name: '府衙', npcTitle: '府尹', functions: ['位面总览', '代理人'], tavern: false },
-    { name: '商会', npcTitle: '商会老板', functions: ['购买装备', '购买道具', '出售物品'], tavern: false },
-    { name: '酒馆', npcTitle: '老板娘', functions: ['招募角色'], tavern: true },
-    { name: '武馆', npcTitle: '馆主', functions: ['学习技能'], tavern: false },
-    { name: '铁匠铺', npcTitle: '铁匠', functions: ['合成锻造'], tavern: false },
+    { name: '府衙', npcTitle: '府尹', functions: ['位面总览', '代理人'], tavern: false, agent: true },
+    { name: '商会', npcTitle: '商会老板', functions: ['购买装备', '购买道具', '出售物品'], tavern: false, agent: false },
+    { name: '酒馆', npcTitle: '老板娘', functions: ['招募角色'], tavern: true, agent: false },
+    { name: '武馆', npcTitle: '馆主', functions: ['学习技能'], tavern: false, agent: false },
+    { name: '铁匠铺', npcTitle: '铁匠', functions: ['合成锻造'], tavern: false, agent: false },
   ],
   factionTowns: [
     { name: '许昌', factionId: 'tieyi_school', factionName: '魏国', unlocked: true, selected: true, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
     { name: '成都', factionId: 'renxin_hall', factionName: '蜀国', unlocked: false, selected: false, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
     { name: '建业', factionId: 'original_faction_04', factionName: '吴国', unlocked: true, selected: false, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
   ],
+  factionAgent: null,
   factionExchange: exchangeFixture('tieyi_school', '魏国'),
+  factionRecruitment: null,
   tavernHeroes: [{ id: 'hero_guo_jing', name: '郭靖', grade: '乙', category: '拳', careerName: '白丁', cost: 240, recruited: false, line: '憨厚少年，根骨清奇。' }],
 })
 
@@ -319,11 +356,13 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="pr-icon"><img')
   })
 
-  it('势力页显示五格悬榜、两线三门传承和门人拜帖', () => {
+  it('势力页显示五格悬榜、两线三门传承和原版招募名录', () => {
     const html = renderFactionsPage(factionsFixture())
     expect(html.match(/data-quest-slot=/g)).toHaveLength(5)
     expect(html).toContain('村中泼皮')
-    expect(html).toContain('门人拜帖')
+    expect(html).toContain('势力招募')
+    expect(html).toContain('邢道荣')
+    expect(html).toContain('角色资料待开放')
     expect(html).not.toContain('world_01_stage_01_mob_1')
     expect(html).toContain('data-testid="faction-meridian"')
     expect(html.match(/class="faction-node /g)).toHaveLength(6)
@@ -352,7 +391,9 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('阵营任务')
     expect(html).toContain('贡献兑换')
     expect(html).toContain('data-action="open-faction-town"')
+    expect(html).toContain('data-action="select-town-agent"')
     expect(html).toContain('data-action="select-town-exchange"')
+    expect(html).toContain('data-action="select-town-recruitment"')
     expect(html).toContain('data-testid="faction-exchange"')
     expect(html).toContain('data-faction-id="tieyi_school"')
     expect(html).toContain('本存档尚未解锁此势力')
@@ -360,6 +401,23 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-action="tavern-recruit"')
     expect(html).toContain('aria-label="直接邀请"')
     expect(html).toContain('class="hn-line">憨厚少年，根骨清奇。')
+  })
+
+  it('城镇代理人展示任命、替换、卸任、启停与未接入边界', () => {
+    const html = renderTownsPage({
+      ...townsFixture(),
+      factionAgent: factionAgentFixture(),
+      factionExchange: null,
+    })
+    expect(html).toContain('data-testid="faction-agent"')
+    expect(html).toContain('位面代理人')
+    expect(html).toContain('data-action="toggle-faction-agent"')
+    expect(html).toContain('data-action="dismiss-faction-agent"')
+    expect(html).toContain('data-action="appoint-faction-agent"')
+    expect(html).toContain('当前角色数据未接入该能力')
+    expect(html).toContain('条件矩阵尚未接入，保持关闭')
+    expect(html).toContain('>已任命</button>')
+    expect(html).toContain('>战斗中</button>')
   })
 
   it('城市页与当前位面解耦并只展示已确认的经营边界', () => {
@@ -391,7 +449,7 @@ describe('version 10 长期循环页面', () => {
   })
 
   it('当前大关没有势力内容时显示本卷空状态', () => {
-    expect(renderFactionsPage({ ...factionsFixture(), factions: [], branches: [], factionHeroes: [] }))
+    expect(renderFactionsPage({ ...factionsFixture(), factions: [], branches: [], recruitment: null }))
       .toContain('本卷暂无可用势力')
   })
 

@@ -121,7 +121,20 @@ export const ORIGINAL_FACTION_RULES = {
     "abilityId": 9,
     "contributionPercentPerAbilityLevel": 5,
     "reputationPercentPerAbilityLevel": 2,
-    "multiplierWithoutAgent": 1
+    "multiplierWithoutAgent": 1,
+    "candidateSelector": {
+      "requiresRecruited": true,
+      "excludedHeroSourceIds": [
+        1
+      ],
+      "rejectsFightingHeroes": true,
+      "sourceEvents": [
+        11064,
+        11106,
+        11655,
+        11658
+      ]
+    }
   },
   "factionUnlock": {
     "organizationKind": "势力",
@@ -3622,6 +3635,8 @@ export const ORIGINAL_FACTION_RULES = {
   },
   "recruitment": {
     "pageSize": 5,
+    "catalogSize": 131,
+    "factionCount": 42,
     "heroColumns": {
       "worldIndex": 5,
       "reputationLevel": 22,

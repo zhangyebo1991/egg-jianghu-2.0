@@ -38,6 +38,7 @@
     "publicLocations": 65,
     "factionTowns": 29,
     "factionExchangeItems": 396,
+    "factionRecruitmentHeroes": 131,
     "factionTasks": 6,
     "buildings": 25,
     "technologies": 75
@@ -7503,6 +7504,19 @@
       "blueprints": 290,
       "secretRealmTickets": 29,
       "skins": 48
+    }
+  },
+  "factionRecruitment": {
+    "counts": {
+      "total": 131,
+      "factions": 42,
+      "byReputationLevel": {
+        "1": 27,
+        "2": 26,
+        "3": 26,
+        "4": 26,
+        "5": 26
+      }
     }
   },
   "factionRules": {

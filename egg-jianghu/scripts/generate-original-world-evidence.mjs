@@ -10,6 +10,7 @@ const SOURCE_ROOT = resolve(HERE, '../../../诸天刷宝录/_analysis')
 const OUT_DIR = resolve(HERE, '../../docs/evidence/original-world')
 const RUNTIME_TOWNS_FILE = resolve(HERE, '../src/content/original-towns.generated.ts')
 const RUNTIME_FACTION_EXCHANGE_FILE = resolve(HERE, '../src/content/original-faction-exchange.generated.ts')
+const RUNTIME_FACTION_RECRUITMENT_FILE = resolve(HERE, '../src/content/original-faction-recruitment.generated.ts')
 const RUNTIME_FACTION_RULES_FILE = resolve(HERE, '../src/content/original-faction-rules.generated.ts')
 
 const sourceNames = [
@@ -1351,6 +1352,101 @@ assert(
   JSON.stringify(factionReputationLevelNames) === JSON.stringify(['冷淡', '友好', '尊敬', '崇拜', '信仰']),
   'mc[1..5][13] 的位面声望等级名称与预期不符',
 )
+
+const factionRecruitmentEntries = arrays.js.slice(1)
+  .map((row) => {
+    const factionSourceId = asNumber(row[25])
+    const faction = factionBySourceId.get(factionSourceId)
+    if (!faction) return null
+    const requiredReputationLevel = asNumber(row[22])
+    const worldIndex = asNumber(row[5])
+    const basePrice = asNumber(row[26])
+    const worldPriceMultiplier = 1 + 0.8 * (worldIndex - 1)
+    const price = faction.currencyKind === '贡献'
+      ? Math.round(basePrice * (worldPriceMultiplier / 20) / 10_000) * 10_000
+      : basePrice >= 10_000
+        ? Math.round(basePrice * worldPriceMultiplier / 10_000) * 10_000
+        : Math.round(basePrice * worldPriceMultiplier)
+    return {
+      heroSourceId: asNumber(row[0]),
+      name: String(row[1]),
+      worldIndex,
+      factionSourceId,
+      factionName: faction.name,
+      resourceKind: faction.currencyKind,
+      requiredReputationLevel,
+      requiredReputationName: factionReputationLevelNames[requiredReputationLevel - 1] ?? null,
+      basePrice,
+      price,
+      specialRequirement: asNumber(row[35]),
+    }
+  })
+  .filter(Boolean)
+
+const factionRecruitmentCounts = {
+  total: factionRecruitmentEntries.length,
+  factions: new Set(factionRecruitmentEntries.map((entry) => entry.factionSourceId)).size,
+  byReputationLevel: Object.fromEntries(Array.from({ length: 5 }, (_, offset) => [
+    String(offset + 1),
+    factionRecruitmentEntries.filter((entry) => entry.requiredReputationLevel === offset + 1).length,
+  ])),
+}
+
+assert(factionRecruitmentCounts.total === 131, `原版势力招募角色应为 131 人，实际 ${factionRecruitmentCounts.total}`)
+assert(factionRecruitmentCounts.factions === 42, `原版势力招募应覆盖 42 个势力，实际 ${factionRecruitmentCounts.factions}`)
+assert(
+  factionRecruitmentEntries.every((entry) => entry.worldIndex === factionBySourceId.get(entry.factionSourceId)?.worldIndex),
+  '原版势力招募角色的位面与势力位面不一致',
+)
+assert(
+  factionRecruitmentEntries.every((entry) => entry.requiredReputationLevel >= 1 && entry.requiredReputationLevel <= 5),
+  '原版势力招募存在 1～5 之外的声望门槛',
+)
+assert(factionRecruitmentEntries.every((entry) => entry.basePrice > 0), '原版势力招募存在非正基础价格')
+assert(factionRecruitmentEntries.every((entry) => entry.price > 0), '原版势力招募存在非正最终价格')
+assert(factionRecruitmentEntries.every((entry) => entry.specialRequirement === 0), '原版势力招募存在尚未解码的特殊条件')
+assertJsonEqual(factionRecruitmentCounts.byReputationLevel, {
+  1: 27,
+  2: 26,
+  3: 26,
+  4: 26,
+  5: 26,
+}, '原版势力招募声望门槛分布')
+
+const selectorNodes = namedEventNodes.get('刷新角色选择列表') ?? []
+assert(selectorNodes.length === 1, `刷新角色选择列表节点数量异常：${selectorNodes.length}`)
+const selectorOperations = runtimeOperationsIn(selectorNodes[0])
+assert(
+  selectorOperations.some((operation) => (
+    operation.objectName === 'save'
+    && operation.reference.endsWith('.CompareXYZ')
+    && JSON.stringify(operationParameterExpressions(operation)) === JSON.stringify([
+      'save.CurX()', '1', '1', '[8,0]', '1',
+    ])
+  )),
+  '角色选择列表没有按 save[heroId,1,1] = 1 筛选已招募角色',
+)
+const agentSelectorMode = selectorOperations.find((operation) => (
+  operation.objectName === 'System'
+  && operation.reference.endsWith('.Compare')
+  && JSON.stringify(operationParameterExpressions(operation)) === JSON.stringify([
+    '用途', '[8,0]', '"代理人"',
+  ])
+))
+assert(agentSelectorMode, '角色选择列表缺少代理人用途分支')
+const agentSelectorPath = agentSelectorMode.path.slice(0, 4)
+assert(
+  selectorOperations.some((operation) => (
+    operation.objectName === 'System'
+    && operation.reference.endsWith('.Compare')
+    && JSON.stringify(operation.path.slice(0, 4)) === JSON.stringify(agentSelectorPath)
+    && JSON.stringify(operationParameterExpressions(operation)) === JSON.stringify([
+      '领袖临时.At(领袖临时.CurX(), 1)', '[8,4]', '1',
+    ])
+  )),
+  '代理人角色选择列表没有排除原版主角 sourceId 1',
+)
+
 assertExpressions('代理人贡献加成', [
   '((100 + (最终能力等级(save.At(位面编号, 54, 0), 9) * 5)) / 100)',
 ])
@@ -1506,6 +1602,12 @@ const factionRules = {
     contributionPercentPerAbilityLevel: 5,
     reputationPercentPerAbilityLevel: 2,
     multiplierWithoutAgent: 1,
+    candidateSelector: {
+      requiresRecruited: true,
+      excludedHeroSourceIds: [1],
+      rejectsFightingHeroes: true,
+      sourceEvents: [11064, 11106, 11655, 11658],
+    },
   },
   factionUnlock: {
     organizationKind: '势力',
@@ -1556,6 +1658,8 @@ const factionRules = {
   },
   recruitment: {
     pageSize: 5,
+    catalogSize: factionRecruitmentCounts.total,
+    factionCount: factionRecruitmentCounts.factions,
     heroColumns: {
       worldIndex: 5,
       reputationLevel: 22,
@@ -1711,6 +1815,24 @@ const factionExchangeCatalog = {
   counts: factionExchangeCounts,
   items: factionExchangeItems,
 }
+const factionRecruitmentCatalog = {
+  schemaVersion: 1,
+  source: {
+    heroes: 'js.json',
+    factions: 'shili.json',
+    reputationNames: 'mc.json',
+    runtimeEvidence: [
+      '角色招募价格function',
+      '打开角色选择列表function',
+      '刷新角色选择列表',
+      '代理人任命function',
+      '代理人任命人物列表点击',
+    ],
+  },
+  columns: factionRules.recruitment.heroColumns,
+  counts: factionRecruitmentCounts,
+  entries: factionRecruitmentEntries,
+}
 const runtimeFactionExchangeSource = `/**
  * 原版势力贡献兑换目录——由《诸天刷宝录》gxdh.json 及关联表生成。
  * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
@@ -1769,6 +1891,34 @@ export const ORIGINAL_FACTION_EXCHANGE: readonly OriginalFactionExchangeItem[] =
 
 export const originalFactionExchangeByFaction = (factionSourceId: number): readonly OriginalFactionExchangeItem[] =>
   ORIGINAL_FACTION_EXCHANGE.filter((item) => item.factionSourceId === factionSourceId)
+`
+const runtimeFactionRecruitmentSource = `/**
+ * 原版势力招募目录——由《诸天刷宝录》js/shili 表与角色选择事件生成。
+ * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
+ */
+
+export type OriginalFactionRecruitmentResourceKind = '货币' | '贡献'
+
+export interface OriginalFactionRecruitmentEntry {
+  heroSourceId: number
+  name: string
+  worldIndex: number
+  factionSourceId: number
+  factionName: string
+  resourceKind: OriginalFactionRecruitmentResourceKind
+  requiredReputationLevel: number
+  requiredReputationName: string
+  basePrice: number
+  price: number
+  specialRequirement: number
+}
+
+export const ORIGINAL_FACTION_RECRUITMENT_COUNTS = ${JSON.stringify(factionRecruitmentCounts, null, 2)} as const
+
+export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEntry[] = ${JSON.stringify(factionRecruitmentEntries, null, 2)}
+
+export const originalFactionRecruitmentByFaction = (factionSourceId: number): readonly OriginalFactionRecruitmentEntry[] =>
+  ORIGINAL_FACTION_RECRUITMENT.filter((entry) => entry.factionSourceId === factionSourceId)
 `
 const runtimeFactionRulesSource = `/**
  * 原版势力规则契约——由《诸天刷宝录》rw/shili 表与 Construct 运行时事件生成。
@@ -1959,6 +2109,7 @@ const manifest = {
     publicLocations: publicLocations.length,
     factionTowns: factionTowns.length,
     factionExchangeItems: factionExchangeCounts.total,
+    factionRecruitmentHeroes: factionRecruitmentCounts.total,
     factionTasks: factionTaskDefinitions.length,
     buildings: buildings.length,
     technologies: technologies.length,
@@ -1971,6 +2122,9 @@ const manifest = {
   factionExchange: {
     constants: factionExchangePriceConstants,
     counts: factionExchangeCounts,
+  },
+  factionRecruitment: {
+    counts: factionRecruitmentCounts,
   },
   factionRules: {
     schemaVersion: factionRules.schemaVersion,
@@ -2102,6 +2256,29 @@ const factionExchangeMarkdown = `# 原版势力贡献兑换目录
 |---:|---|---:|---|---|---:|---:|---|
 ${factionExchangeItems.map((item) => `| ${item.worldIndex} | ${markdownCell(item.factionName)} | ${item.slot} | ${factionExchangeKindLabels[item.kind]} | ${markdownCell(item.originalName)} | ${item.price} | ${item.requiredReputationLevel ?? '—'} | ${markdownCell(factionExchangeTargetLabel(item))} |`).join('\n')}
 `
+const factionRecruitmentMarkdown = `# 原版势力招募目录
+
+本目录由 \`js.json\` 与 \`shili.json\` 生成，覆盖 42 个势力、${factionRecruitmentCounts.total} 名可招募角色。角色战斗定义未接入前，运行时只能展示原版名录、声望门槛和价格，不能把自定义角色数据冒充原版招募。
+
+## 规则
+
+- \`js[5]\` 为位面，\`js[22]\` 为声望等级，\`js[25]\` 为所属势力，\`js[26]\` 为基础价格，\`js[35]\` 为特殊条件。
+- 当前快照 131 人的特殊条件均为 \`0\`。
+- 原版每页显示 5 人；正式势力消耗贡献，民团消耗位面货币。
+- 代理人候选从已招募角色中产生，并排除 sourceId 1 的原版主角；任命点击会拒绝正在战斗中的角色。
+
+## 声望分布
+
+| 等级 | 名称 | 人数 |
+|---:|---|---:|
+${factionReputationLevelNames.map((name, index) => `| ${index + 1} | ${name} | ${factionRecruitmentCounts.byReputationLevel[String(index + 1)]} |`).join('\n')}
+
+## 名录
+
+| 位面 | 势力 | 角色 | 声望门槛 | 基础价格 | 最终价格 | 资源 |
+|---:|---|---|---|---:|---:|---|
+${factionRecruitmentEntries.map((entry) => `| ${entry.worldIndex} | ${markdownCell(entry.factionName)} | ${markdownCell(entry.name)} | ${entry.requiredReputationLevel} ${entry.requiredReputationName} | ${entry.basePrice} | ${entry.price} | ${entry.resourceKind} |`).join('\n')}
+`
 const factionRulesMarkdown = `# 原版势力规则与状态契约
 
 本契约由 \`rw.json\`、\`shili.json\` 与 Construct 事件树逐项断言后生成；运行时 TypeScript 使用同一份数据，不手工复制第二套结论。
@@ -2127,6 +2304,7 @@ const factionRulesMarkdown = `# 原版势力规则与状态契约
 - 等级名称：${factionReputationLevelNames.map((name, index) => `${index + 1} ${name}`).join('、')}（\`mc[1..5][13]\`）。
 - 等级阈值：\`round(base * clamp(level - 1, 0, 4)^2)\`。
 - 代理人使用能力 9；贡献倍率为 \`(100 + abilityLevel * 5) / 100\`，声望倍率为 \`(100 + abilityLevel * 2) / 100\`；无代理人时均为 1。
+- 代理人候选来自 \`save[heroId,1,1] = 1\` 的已招募角色，并排除 sourceId 1 的原版主角；Event 11658 会拒绝正在战斗中的角色。
 
 ## 悬榜生成
 
@@ -2169,7 +2347,7 @@ ${factionTaskDefinitions.map((task) => `| ${task.id} ${task.name} | ${factionRul
 
 - 刷新消耗普通物品 6“介绍信”1 个；只覆盖未接受格；刷新时间为 \`clamp(baseSeconds - techBonus67 * 100, 100, baseSeconds)\`。
 - 正式势力要求同位面进度 \`save[worldIndex,2,0] >= shili[factionId,20]\`，满足后写入 \`save[factionId,40,0] = 1\`。
-- 招募每页 5 人；货币价格在基础价达到 10000 时按万取整，否则按整数取整；贡献价格使用贡献比 20 并按万取整。
+- 招募目录共 ${factionRecruitmentCounts.total} 人、覆盖 ${factionRecruitmentCounts.factions} 个势力，每页 5 人；货币价格在基础价达到 10000 时按万取整，否则按整数取整；贡献价格使用贡献比 20 并按万取整。
 - 势力六技能来自 \`shili[5..10]\`，前置来自 \`shili[12..17]\`；技能的声望等级和位面要求来自 \`jn[46..47]\`。
 
 ## 状态变化顺序
@@ -2258,6 +2436,7 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - 主城公共场所：${publicLocations.length}
 - 正式势力城镇：${factionTowns.length}
 - 势力贡献兑换：${factionExchangeCounts.total}（转职书 ${factionExchangeCounts.jobBooks}、图纸 ${factionExchangeCounts.blueprints}、秘境门票 ${factionExchangeCounts.secretRealmTickets}、幻型 ${factionExchangeCounts.skins}）
+- 势力招募：${factionRecruitmentCounts.total} 人（覆盖 ${factionRecruitmentCounts.factions} 个势力）
 - 非空建筑：${buildings.length}
 - 科技：${technologies.length}
 
@@ -2273,12 +2452,15 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - \`faction-runtime-evidence.md\`：上述函数的人工审阅版索引。
 - \`faction-exchange-catalog.json\`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
 - \`faction-exchange-catalog.md\`：上述 396 条兑换商品的人工审阅表。
+- \`faction-recruitment-catalog.json\`：完整势力招募角色、声望门槛、基础价格和最终价格。
+- \`faction-recruitment-catalog.md\`：上述 ${factionRecruitmentCounts.total} 人招募目录的人工审阅表。
 - \`faction-rules.json\`：势力声望、代理人、悬榜、刷新、解锁、招募、技能与状态布局的共享契约。
 - \`faction-rules.md\`：上述原版规则与状态变化的人工审阅版。
 - \`save-contract.md\`：新存档共享状态边界。
 - \`verification-checklist.md\`：开发前仍需完成的运行时与实机核验。
 - \`egg-jianghu/src/content/original-towns.generated.ts\`：运行时使用的主城、公共场所与势力城镇快照。
 - \`egg-jianghu/src/content/original-faction-exchange.generated.ts\`：运行时使用的完整势力贡献兑换目录。
+- \`egg-jianghu/src/content/original-faction-recruitment.generated.ts\`：运行时使用的完整势力招募目录。
 - \`egg-jianghu/src/content/original-faction-rules.generated.ts\`：运行时使用的势力规则常量与纯函数。
 
 ## 证据规则
@@ -2301,6 +2483,8 @@ const outputs = {
   'faction-runtime-evidence.md': `# 原版势力运行时公式证据\n\n${factionRuntimeMarkdown}`,
   'faction-exchange-catalog.json': `${JSON.stringify(factionExchangeCatalog, null, 2)}\n`,
   'faction-exchange-catalog.md': factionExchangeMarkdown,
+  'faction-recruitment-catalog.json': `${JSON.stringify(factionRecruitmentCatalog, null, 2)}\n`,
+  'faction-recruitment-catalog.md': factionRecruitmentMarkdown,
   'faction-rules.json': `${JSON.stringify(factionRules, null, 2)}\n`,
   'faction-rules.md': factionRulesMarkdown,
 }
@@ -2329,6 +2513,13 @@ if (process.argv.includes('--check')) {
     throw new Error('运行时势力贡献兑换目录缺失，请先运行 npm run evidence:world')
   }
   assert(currentRuntimeFactionExchange === runtimeFactionExchangeSource, '运行时势力贡献兑换目录已过期，请运行 npm run evidence:world 并审阅差异')
+  let currentRuntimeFactionRecruitment = null
+  try {
+    currentRuntimeFactionRecruitment = readFileSync(RUNTIME_FACTION_RECRUITMENT_FILE, 'utf8')
+  } catch {
+    throw new Error('运行时势力招募目录缺失，请先运行 npm run evidence:world')
+  }
+  assert(currentRuntimeFactionRecruitment === runtimeFactionRecruitmentSource, '运行时势力招募目录已过期，请运行 npm run evidence:world 并审阅差异')
   let currentRuntimeFactionRules = null
   try {
     currentRuntimeFactionRules = readFileSync(RUNTIME_FACTION_RULES_FILE, 'utf8')
@@ -2346,9 +2537,12 @@ if (process.argv.includes('--check')) {
   writeFileSync(RUNTIME_TOWNS_FILE, runtimeTownsSource, 'utf8')
   mkdirSync(dirname(RUNTIME_FACTION_EXCHANGE_FILE), { recursive: true })
   writeFileSync(RUNTIME_FACTION_EXCHANGE_FILE, runtimeFactionExchangeSource, 'utf8')
+  mkdirSync(dirname(RUNTIME_FACTION_RECRUITMENT_FILE), { recursive: true })
+  writeFileSync(RUNTIME_FACTION_RECRUITMENT_FILE, runtimeFactionRecruitmentSource, 'utf8')
   mkdirSync(dirname(RUNTIME_FACTION_RULES_FILE), { recursive: true })
   writeFileSync(RUNTIME_FACTION_RULES_FILE, runtimeFactionRulesSource, 'utf8')
   console.log(`已生成真值包：势力 ${factions.length}、主城 ${worldHubs.length}、公共场所 ${publicLocations.length}、势力城镇 ${factionTowns.length}`)
   console.log(`贡献兑换：商品 ${factionExchangeCounts.total}、正式势力 ${factionExchangeCounts.factions}`)
+  console.log(`势力招募：角色 ${factionRecruitmentCounts.total}、势力 ${factionRecruitmentCounts.factions}`)
   console.log(`城市数据：建筑 ${buildings.length}、科技 ${technologies.length}；运行时索引 ${parsedFunctions.length} 条中筛选相关入口`)
 }
