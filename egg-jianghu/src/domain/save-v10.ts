@@ -1,5 +1,9 @@
 import { createInitialStateV10 } from './state'
 import { HEROES_V10 } from '../content/heroes'
+import {
+  ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS,
+  ORIGINAL_CITY_TECHNOLOGIES,
+} from '../content/original-city.generated'
 import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
@@ -223,11 +227,28 @@ const isSacredBeastProgress = (value: unknown): boolean =>
   && value.claimedStages.every((stage) => Number.isInteger(stage) && stage >= 1 && stage <= 9)
 
 const cityFinanceCategories = ['销售收入', '租金收入', '门票收入', '其他收入', '科研支出', '建造支出', '其他支出'] as const
+const cityTechnologyById = new Map(ORIGINAL_CITY_TECHNOLOGIES.map((technology) => [technology.sourceId, technology]))
 
 const isCityFinanceLedger = (value: unknown): boolean =>
   isRecord(value)
   && Object.keys(value).length === cityFinanceCategories.length
   && cityFinanceCategories.every((category) => isFiniteNumber(value[category]) && Number(value[category]) >= 0)
+
+const isCityTechnologyLevels = (value: unknown): boolean => {
+  if (!isRecord(value)) return false
+  for (const [sourceId, level] of Object.entries(value)) {
+    const technologyId = Number(sourceId)
+    const technology = cityTechnologyById.get(technologyId)
+    if (String(technologyId) !== sourceId
+      || !technology
+      || !Number.isInteger(Number(level))
+      || Number(level) < 0
+      || Number(level) > technology.maxLevel) return false
+  }
+  return Object.entries(ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS).every(([sourceId, level]) => (
+    Number(value[sourceId]) >= level
+  ))
+}
 
 const isCityTile = (value: unknown): boolean =>
   isRecord(value)
@@ -264,6 +285,7 @@ const isCityState = (value: unknown): boolean => {
     || !Array.isArray(value.tiles)
     || value.tiles.length !== 324
     || !value.tiles.every(isCityTile)
+    || !isCityTechnologyLevels(value.technologyLevels)
     || !isRecord(value.company)) return false
   const tileIds = new Set(value.tiles.map((tile) => Number((tile as Record<string, unknown>).tileId)))
   const coordinates = new Set(value.tiles.map((tile) => {

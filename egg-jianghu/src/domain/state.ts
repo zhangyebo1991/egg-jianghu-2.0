@@ -1,7 +1,11 @@
 import { STARTER_CAREER_ID } from '../content/careers'
 import { FACTIONS } from '../content/factions'
 import { PLAYER_HERO_ID } from '../content/heroes'
-import { ORIGINAL_CITY_CONSTANTS, ORIGINAL_CITY_INITIAL_TILES } from '../content/original-city.generated'
+import {
+  ORIGINAL_CITY_CONSTANTS,
+  ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS,
+  ORIGINAL_CITY_INITIAL_TILES,
+} from '../content/original-city.generated'
 import { ORIGINAL_DEITIES, ORIGINAL_SACRED_BEASTS } from '../content/original-progression.generated'
 import type { CityFinanceLedger, CityState, GameStateV10, HeroProgressV10 } from './types'
 
@@ -44,6 +48,7 @@ export const createEmptyCityFinanceLedger = (): CityFinanceLedger => ({
 export const createInitialCityState = (): CityState => ({
   level: 0,
   tiles: ORIGINAL_CITY_INITIAL_TILES.map((tile) => ({ ...tile })),
+  technologyLevels: { ...ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS },
   company: {
     name: null,
     cash: ORIGINAL_CITY_CONSTANTS.initialCash,

@@ -38,7 +38,7 @@
 - `egg-jianghu/src/content/original-faction-exchange.generated.ts`：运行时使用的完整势力贡献兑换目录。
 - `egg-jianghu/src/content/original-faction-recruitment.generated.ts`：运行时使用的完整势力招募目录。
 - `egg-jianghu/src/content/original-faction-rules.generated.ts`：运行时使用的势力规则常量与纯函数。
-- `egg-jianghu/src/content/original-city.generated.ts`：运行时使用的 25 类建筑、324 块初始地块、城市与土地公式。
+- `egg-jianghu/src/content/original-city.generated.ts`：运行时使用的 25 类建筑、75 项科技、324 块初始地块及城市、土地与科技公式。
 
 ## 证据规则
 

@@ -122,6 +122,7 @@ describe('version 18 存档', () => {
     state.city.company.name = '试剑商会'
     state.city.company.currentFinance.其他支出 = 100_000
     state.city.company.appointments['1'] = 'hero_player'
+    state.city.technologyLevels['4'] = 3
     state.city.tiles[171].owned = true
     saveGameV10(storage, state, 1000)
 
@@ -129,6 +130,7 @@ describe('version 18 存档', () => {
 
     expect(loaded.recoveredFromError).toBe(false)
     expect(loaded.state.city.company).toEqual(state.city.company)
+    expect(loaded.state.city.technologyLevels).toEqual(state.city.technologyLevels)
     expect(loaded.state.city.tiles).toHaveLength(324)
     expect(loaded.state.city.tiles[171]).toEqual(state.city.tiles[171])
   })
@@ -162,6 +164,14 @@ describe('version 18 存档', () => {
     ['公司现金损坏', (raw: Record<string, unknown>) => {
       const city = raw.city as { company: Record<string, unknown> }
       city.company.cash = -1
+    }],
+    ['科技等级超过原版上限', (raw: Record<string, unknown>) => {
+      const city = raw.city as { technologyLevels: Record<string, unknown> }
+      city.technologyLevels['1'] = 2
+    }],
+    ['缺少原版初始科技', (raw: Record<string, unknown>) => {
+      const city = raw.city as { technologyLevels: Record<string, unknown> }
+      delete city.technologyLevels['2']
     }],
   ])('拒绝 v18 关键状态损坏：%s', (_name, mutate) => {
     const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>

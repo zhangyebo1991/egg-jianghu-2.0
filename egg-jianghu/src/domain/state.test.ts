@@ -44,6 +44,10 @@ describe('新建玩家角色', () => {
     })
   })
 
+  it('按原版初始化店铺、研究所和建造局科技', () => {
+    expect(createInitialStateV10(12_345).city.technologyLevels).toEqual({ 1: 1, 2: 1, 3: 1 })
+  })
+
   it('定义丙品剑客作为基础玩家角色', () => {
     expect(PLAYER_HERO_V10).toEqual({
       id: 'hero_player',

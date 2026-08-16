@@ -162,6 +162,8 @@ export interface CityCompanyState {
 export interface CityState {
   level: number
   tiles: CityTileState[]
+  /** 原版 kj 科技编号 -> 已完成等级；未出现的科技视为 0 级。 */
+  technologyLevels: Record<string, number>
   company: CityCompanyState
 }
 

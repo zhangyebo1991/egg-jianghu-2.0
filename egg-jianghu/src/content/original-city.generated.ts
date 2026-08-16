@@ -1,5 +1,5 @@
 /**
- * 原版现世城市核心快照——由《诸天刷宝录》jz.json、cscz.json 与运行时事件生成。
+ * 原版现世城市核心快照——由《诸天刷宝录》jz.json、kj.json、cscz.json 与运行时事件生成。
  * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
  */
 
@@ -36,6 +36,25 @@ export interface OriginalCityInitialTile {
   population: number
   commerce: number
   industry: number
+}
+
+export type OriginalCityTechnologyCategory = '基础' | '位面'
+
+export interface OriginalCityTechnologyDefinition {
+  sourceId: number
+  name: string
+  category: OriginalCityTechnologyCategory
+  treeColumn: number
+  treeRow: number
+  maxLevel: number
+  levelRequirementBase: number
+  levelRequirementGrowth: number
+  description: string
+  prerequisiteTechnologyIds: readonly number[]
+  effectParameter: number
+  hiddenFromTechnologyTree: boolean
+  effectId: number
+  descriptionEnglish: string
 }
 
 export const ORIGINAL_CITY_BUILDINGS: readonly OriginalCityBuildingDefinition[] = [
@@ -5156,6 +5175,1363 @@ export const ORIGINAL_CITY_INITIAL_TILES: readonly OriginalCityInitialTile[] = [
   }
 ]
 
+export const ORIGINAL_CITY_TECHNOLOGIES: readonly OriginalCityTechnologyDefinition[] = [
+  {
+    "sourceId": 1,
+    "name": "店铺",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 1,
+    "maxLevel": 1,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]店铺[/color]",
+    "prerequisiteTechnologyIds": [],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 1,
+    "descriptionEnglish": "Unlock[color=lightgreen]Antique shop[/color]"
+  },
+  {
+    "sourceId": 2,
+    "name": "研究所",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 1,
+    "maxLevel": 1,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]研究所[/color]",
+    "prerequisiteTechnologyIds": [],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 2,
+    "descriptionEnglish": "Unlock[color=lightgreen]Research institute[/color]"
+  },
+  {
+    "sourceId": 3,
+    "name": "建造局",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 1,
+    "maxLevel": 1,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]建造局[/color]",
+    "prerequisiteTechnologyIds": [],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 3,
+    "descriptionEnglish": "Unlock[color=lightgreen]Builder[/color]"
+  },
+  {
+    "sourceId": 4,
+    "name": "销售能力",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 2,
+    "maxLevel": 50,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 2,
+    "description": "店铺销售能力[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      1
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 4,
+    "descriptionEnglish": "sell ability[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 5,
+    "name": "销售价格",
+    "category": "基础",
+    "treeColumn": 2,
+    "treeRow": 2,
+    "maxLevel": 50,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 2,
+    "description": "店铺销售价格[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      1
+    ],
+    "effectParameter": 20,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 5,
+    "descriptionEnglish": "Sell price[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 6,
+    "name": "科研速度",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 2,
+    "maxLevel": 50,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 2,
+    "description": "研究所科研速度[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      2
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 6,
+    "descriptionEnglish": "Research speed[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 7,
+    "name": "研究队列",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 2,
+    "maxLevel": 5,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 10,
+    "description": "研究所科研队列[color=lightgreen]+参数[/color]",
+    "prerequisiteTechnologyIds": [
+      2
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 7,
+    "descriptionEnglish": "Research queue[color=lightgreen]+参数[/color]"
+  },
+  {
+    "sourceId": 8,
+    "name": "建造速度",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 2,
+    "maxLevel": 50,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 2,
+    "description": "建造局建造速度[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      3
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 8,
+    "descriptionEnglish": "Build speed[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 9,
+    "name": "建造队列",
+    "category": "基础",
+    "treeColumn": 6,
+    "treeRow": 2,
+    "maxLevel": 5,
+    "levelRequirementBase": 1,
+    "levelRequirementGrowth": 10,
+    "description": "建造局建造队列[color=lightgreen]+参数[/color]",
+    "prerequisiteTechnologyIds": [
+      3
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 9,
+    "descriptionEnglish": "Build queue[color=lightgreen]+参数[/color]"
+  },
+  {
+    "sourceId": 10,
+    "name": "顾客进店",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 3,
+    "maxLevel": 50,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 2,
+    "description": "店铺顾客进店[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      4
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 10,
+    "descriptionEnglish": "Customer speed[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 11,
+    "name": "店铺经验",
+    "category": "基础",
+    "treeColumn": 2,
+    "treeRow": 3,
+    "maxLevel": 50,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 2,
+    "description": "店铺经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      5
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 11,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 12,
+    "name": "科研费用",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 3,
+    "maxLevel": 50,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 2,
+    "description": "研究所科研费用减少[color=lightgreen]参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      6
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 12,
+    "descriptionEnglish": "Research costs-[color=lightgreen]参数%[/color]"
+  },
+  {
+    "sourceId": 13,
+    "name": "强化科技树",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 4,
+    "maxLevel": 1,
+    "levelRequirementBase": 9,
+    "levelRequirementGrowth": 1,
+    "description": "解锁[color=lightgreen]强化科技树[/color]",
+    "prerequisiteTechnologyIds": [
+      57
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 13,
+    "descriptionEnglish": "Unlock[color=lightgreen]Advanced technology[/color]"
+  },
+  {
+    "sourceId": 14,
+    "name": "建造费用",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 3,
+    "maxLevel": 50,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 2,
+    "description": "建造局建造费用减少[color=lightgreen]参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      8
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 14,
+    "descriptionEnglish": "Build cost-[color=lightgreen]参数%[/color]"
+  },
+  {
+    "sourceId": 15,
+    "name": "建造局经验",
+    "category": "基础",
+    "treeColumn": 6,
+    "treeRow": 3,
+    "maxLevel": 50,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 2,
+    "description": "建造局经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      9
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 15,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 16,
+    "name": "商业区",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 4,
+    "maxLevel": 1,
+    "levelRequirementBase": 9,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]商业区[/color]",
+    "prerequisiteTechnologyIds": [
+      10
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 16,
+    "descriptionEnglish": "Unlock[color=lightgreen]Commerce[/color]"
+  },
+  {
+    "sourceId": 17,
+    "name": "工业区",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 4,
+    "maxLevel": 1,
+    "levelRequirementBase": 9,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]工业区[/color]",
+    "prerequisiteTechnologyIds": [
+      12
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 17,
+    "descriptionEnglish": "Unlock[color=lightgreen]Industry[/color]"
+  },
+  {
+    "sourceId": 18,
+    "name": "住宅区",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 4,
+    "maxLevel": 1,
+    "levelRequirementBase": 9,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]住宅区[/color]",
+    "prerequisiteTechnologyIds": [
+      14
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 18,
+    "descriptionEnglish": "Unlock[color=lightgreen]Residence[/color]"
+  },
+  {
+    "sourceId": 19,
+    "name": "公司总部",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 5,
+    "maxLevel": 1,
+    "levelRequirementBase": 13,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]总部[/color]",
+    "prerequisiteTechnologyIds": [
+      16,
+      17,
+      18
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 19,
+    "descriptionEnglish": "Unlock[color=lightgreen]Head office[/color]"
+  },
+  {
+    "sourceId": 20,
+    "name": "合成所",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 6,
+    "maxLevel": 1,
+    "levelRequirementBase": 17,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]合成所[/color]",
+    "prerequisiteTechnologyIds": [
+      19
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 20,
+    "descriptionEnglish": "Unlock[color=lightgreen]Synthesis[/color]"
+  },
+  {
+    "sourceId": 21,
+    "name": "锻造中心",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 6,
+    "maxLevel": 1,
+    "levelRequirementBase": 17,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]锻造中心[/color]",
+    "prerequisiteTechnologyIds": [
+      19
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 21,
+    "descriptionEnglish": "Unlock[color=lightgreen]forging[/color]"
+  },
+  {
+    "sourceId": 22,
+    "name": "博物馆",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 6,
+    "maxLevel": 1,
+    "levelRequirementBase": 17,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]博物馆[/color]",
+    "prerequisiteTechnologyIds": [
+      19
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 22,
+    "descriptionEnglish": "Unlock[color=lightgreen]Museums[/color]"
+  },
+  {
+    "sourceId": 23,
+    "name": "合成能力",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 7,
+    "maxLevel": 50,
+    "levelRequirementBase": 21,
+    "levelRequirementGrowth": 2,
+    "description": "合成所合成能力[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      20
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 23,
+    "descriptionEnglish": "Synth Ability[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 24,
+    "name": "合成消耗",
+    "category": "基础",
+    "treeColumn": 2,
+    "treeRow": 7,
+    "maxLevel": 50,
+    "levelRequirementBase": 21,
+    "levelRequirementGrowth": 2,
+    "description": "合成消耗减少[color=lightgreen]参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      20
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 24,
+    "descriptionEnglish": "Synth Consump[color=lightgreen]-参数[/color]"
+  },
+  {
+    "sourceId": 25,
+    "name": "锻造能力",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 7,
+    "maxLevel": 50,
+    "levelRequirementBase": 21,
+    "levelRequirementGrowth": 2,
+    "description": "锻造中心锻造能力[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      21
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 25,
+    "descriptionEnglish": "Forging Ability[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 26,
+    "name": "锻造消耗",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 7,
+    "maxLevel": 50,
+    "levelRequirementBase": 21,
+    "levelRequirementGrowth": 2,
+    "description": "锻造消耗减少[color=lightgreen]-参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      21
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 26,
+    "descriptionEnglish": "Forging Consump[color=lightgreen]-参数[/color]"
+  },
+  {
+    "sourceId": 27,
+    "name": "游客吸引",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 7,
+    "maxLevel": 50,
+    "levelRequirementBase": 21,
+    "levelRequirementGrowth": 2,
+    "description": "博物馆游客吸引[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      22
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 27,
+    "descriptionEnglish": "Tourist attractiont[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 28,
+    "name": "收藏能力",
+    "category": "基础",
+    "treeColumn": 6,
+    "treeRow": 7,
+    "maxLevel": 50,
+    "levelRequirementBase": 21,
+    "levelRequirementGrowth": 2,
+    "description": "博物馆收藏能力[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      22
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 28,
+    "descriptionEnglish": "Collect Ability[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 29,
+    "name": "合成产出",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 8,
+    "maxLevel": 50,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "合成点产出[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      23
+    ],
+    "effectParameter": 30,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 29,
+    "descriptionEnglish": "Synth Output[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 30,
+    "name": "合成所经验",
+    "category": "基础",
+    "treeColumn": 2,
+    "treeRow": 8,
+    "maxLevel": 50,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "合成所经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      24
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 30,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 31,
+    "name": "锻造产出",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 8,
+    "maxLevel": 50,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "锻造点产出[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      25
+    ],
+    "effectParameter": 30,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 31,
+    "descriptionEnglish": "Forging Output[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 32,
+    "name": "锻造中心经验",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 8,
+    "maxLevel": 50,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "锻造中心经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      26
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 32,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 33,
+    "name": "门票费用",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 8,
+    "maxLevel": 50,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "博物馆门票费用[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      27
+    ],
+    "effectParameter": 20,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 33,
+    "descriptionEnglish": "Ticket price[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 34,
+    "name": "博物馆经验",
+    "category": "基础",
+    "treeColumn": 6,
+    "treeRow": 8,
+    "maxLevel": 50,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "博物馆经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      28
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 34,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 35,
+    "name": "悟道场",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 9,
+    "maxLevel": 1,
+    "levelRequirementBase": 29,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]悟道场[/color]",
+    "prerequisiteTechnologyIds": [
+      29
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 35,
+    "descriptionEnglish": "Unlock [color=lightgreen]Training hall[/color]"
+  },
+  {
+    "sourceId": 36,
+    "name": "学院",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 9,
+    "maxLevel": 1,
+    "levelRequirementBase": 29,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]学院[/color]",
+    "prerequisiteTechnologyIds": [
+      31
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 36,
+    "descriptionEnglish": "Unlock [color=lightgreen]College[/color]"
+  },
+  {
+    "sourceId": 37,
+    "name": "动物园",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 9,
+    "maxLevel": 1,
+    "levelRequirementBase": 29,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]动物园[/color]",
+    "prerequisiteTechnologyIds": [
+      33
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 37,
+    "descriptionEnglish": "Unlock [color=lightgreen]Zoo[/color]"
+  },
+  {
+    "sourceId": 38,
+    "name": "修习速度",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 10,
+    "maxLevel": 50,
+    "levelRequirementBase": 33,
+    "levelRequirementGrowth": 2,
+    "description": "修习速度[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      35
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 38,
+    "descriptionEnglish": "study speed[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 39,
+    "name": "修习队列",
+    "category": "基础",
+    "treeColumn": 2,
+    "treeRow": 10,
+    "maxLevel": 5,
+    "levelRequirementBase": 33,
+    "levelRequirementGrowth": 10,
+    "description": "修习队列[color=lightgreen]+参数[/color]",
+    "prerequisiteTechnologyIds": [
+      35
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 39,
+    "descriptionEnglish": "study queue[color=lightgreen]+参数[/color]"
+  },
+  {
+    "sourceId": 40,
+    "name": "教育能力",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 10,
+    "maxLevel": 50,
+    "levelRequirementBase": 33,
+    "levelRequirementGrowth": 2,
+    "description": "教育能力[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      36
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 40,
+    "descriptionEnglish": "Education Ability[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 41,
+    "name": "教育消耗",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 10,
+    "maxLevel": 50,
+    "levelRequirementBase": 33,
+    "levelRequirementGrowth": 2,
+    "description": "教育消耗减少[color=lightgreen]-参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      36
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 26,
+    "descriptionEnglish": "Education Consump[color=lightgreen]-参数[/color]"
+  },
+  {
+    "sourceId": 42,
+    "name": "驯养能力",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 10,
+    "maxLevel": 50,
+    "levelRequirementBase": 33,
+    "levelRequirementGrowth": 2,
+    "description": "驯养能力[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      37
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 43,
+    "descriptionEnglish": "Taming Ability[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 43,
+    "name": "驯养消耗",
+    "category": "基础",
+    "treeColumn": 6,
+    "treeRow": 10,
+    "maxLevel": 50,
+    "levelRequirementBase": 33,
+    "levelRequirementGrowth": 2,
+    "description": "驯养消耗减少[color=lightgreen]-参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      37
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 26,
+    "descriptionEnglish": "Taming Consump[color=lightgreen]-参数[/color]"
+  },
+  {
+    "sourceId": 44,
+    "name": "修习费用",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 11,
+    "maxLevel": 50,
+    "levelRequirementBase": 37,
+    "levelRequirementGrowth": 2,
+    "description": "修习费用减少[color=lightgreen]参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      38
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 44,
+    "descriptionEnglish": "study costs-[color=lightgreen]参数%[/color]"
+  },
+  {
+    "sourceId": 45,
+    "name": "悟道场经验",
+    "category": "基础",
+    "treeColumn": 2,
+    "treeRow": 11,
+    "maxLevel": 50,
+    "levelRequirementBase": 37,
+    "levelRequirementGrowth": 2,
+    "description": "悟道场经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      39
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 45,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 46,
+    "name": "教育产出",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 11,
+    "maxLevel": 50,
+    "levelRequirementBase": 37,
+    "levelRequirementGrowth": 2,
+    "description": "教育点产出[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      40
+    ],
+    "effectParameter": 30,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 40,
+    "descriptionEnglish": "Education Output[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 47,
+    "name": "学院经验",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 11,
+    "maxLevel": 50,
+    "levelRequirementBase": 37,
+    "levelRequirementGrowth": 2,
+    "description": "学院经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      41
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 47,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 48,
+    "name": "驯养产出",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 11,
+    "maxLevel": 50,
+    "levelRequirementBase": 37,
+    "levelRequirementGrowth": 2,
+    "description": "驯养点产出[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      42
+    ],
+    "effectParameter": 30,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 43,
+    "descriptionEnglish": "Taming Output[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 49,
+    "name": "动物园经验",
+    "category": "基础",
+    "treeColumn": 6,
+    "treeRow": 11,
+    "maxLevel": 50,
+    "levelRequirementBase": 37,
+    "levelRequirementGrowth": 2,
+    "description": "动物园经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      43
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 49,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 50,
+    "name": "作战部",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 12,
+    "maxLevel": 1,
+    "levelRequirementBase": 41,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]作战部[/color]",
+    "prerequisiteTechnologyIds": [
+      44,
+      46,
+      48
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 50,
+    "descriptionEnglish": "Unlock [color=lightgreen]Combat[/color]"
+  },
+  {
+    "sourceId": 51,
+    "name": "派遣队伍数",
+    "category": "基础",
+    "treeColumn": 1,
+    "treeRow": 13,
+    "maxLevel": 4,
+    "levelRequirementBase": 45,
+    "levelRequirementGrowth": 15,
+    "description": "派遣探索队伍数量[color=lightgreen]+参数[/color]",
+    "prerequisiteTechnologyIds": [
+      50
+    ],
+    "effectParameter": 10,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 42,
+    "descriptionEnglish": "Exploration Teams [color=lightgreen]+参数[/color]"
+  },
+  {
+    "sourceId": 52,
+    "name": "派遣探索速度",
+    "category": "基础",
+    "treeColumn": 2,
+    "treeRow": 13,
+    "maxLevel": 50,
+    "levelRequirementBase": 45,
+    "levelRequirementGrowth": 2,
+    "description": "派遣探索速度[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      50
+    ],
+    "effectParameter": 25,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 9,
+    "descriptionEnglish": "Exploration Speed [color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 53,
+    "name": "派遣经验点",
+    "category": "基础",
+    "treeColumn": 3,
+    "treeRow": 13,
+    "maxLevel": 60,
+    "levelRequirementBase": 45,
+    "levelRequirementGrowth": 2,
+    "description": "派遣经验点[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      50
+    ],
+    "effectParameter": 25,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 62,
+    "descriptionEnglish": "Dispatch EXP [color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 54,
+    "name": "派遣技能点",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 13,
+    "maxLevel": 60,
+    "levelRequirementBase": 45,
+    "levelRequirementGrowth": 2,
+    "description": "派遣技能点[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      50
+    ],
+    "effectParameter": 25,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 63,
+    "descriptionEnglish": "Dispatch SP [color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 55,
+    "name": "派遣职业点",
+    "category": "基础",
+    "treeColumn": 5,
+    "treeRow": 13,
+    "maxLevel": 60,
+    "levelRequirementBase": 45,
+    "levelRequirementGrowth": 2,
+    "description": "派遣职业点[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      50
+    ],
+    "effectParameter": 25,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 64,
+    "descriptionEnglish": "Dispatch XP [color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 56,
+    "name": "派遣自动重复",
+    "category": "基础",
+    "treeColumn": 6,
+    "treeRow": 13,
+    "maxLevel": 1,
+    "levelRequirementBase": 45,
+    "levelRequirementGrowth": 1,
+    "description": "解锁功能[color=lightgreen]探索结束自动重复[/color]",
+    "prerequisiteTechnologyIds": [
+      50
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": true,
+    "effectId": 9,
+    "descriptionEnglish": "解锁功能[color=lightgreen]探索结束自动重复[/color]"
+  },
+  {
+    "sourceId": 57,
+    "name": "研究所经验",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 3,
+    "maxLevel": 50,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 2,
+    "description": "研究所经验[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      7
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 11,
+    "descriptionEnglish": "Building Exp[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 58,
+    "name": "物品自动处置",
+    "category": "基础",
+    "treeColumn": 2,
+    "treeRow": 4,
+    "maxLevel": 1,
+    "levelRequirementBase": 9,
+    "levelRequirementGrowth": 1,
+    "description": "掉落物品[color=lightgreen]自动销毁、卖出、上架[/color]",
+    "prerequisiteTechnologyIds": [
+      11
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 61,
+    "descriptionEnglish": "Unlock[color=lightgreen]Automatic sale, shelf[/color]"
+  },
+  {
+    "sourceId": 59,
+    "name": "解锁迁移建筑",
+    "category": "基础",
+    "treeColumn": 6,
+    "treeRow": 4,
+    "maxLevel": 1,
+    "levelRequirementBase": 9,
+    "levelRequirementGrowth": 1,
+    "description": "解锁[color=lightgreen]建筑迁移功能[/color]",
+    "prerequisiteTechnologyIds": [
+      15
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 59,
+    "descriptionEnglish": "Unlock[color=lightgreen]Building migration[/color]"
+  },
+  {
+    "sourceId": 60,
+    "name": "训练场",
+    "category": "基础",
+    "treeColumn": 4,
+    "treeRow": 6,
+    "maxLevel": 1,
+    "levelRequirementBase": 17,
+    "levelRequirementGrowth": 1,
+    "description": "解锁建筑[color=lightgreen]训练场[/color]",
+    "prerequisiteTechnologyIds": [
+      19
+    ],
+    "effectParameter": 0,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 60,
+    "descriptionEnglish": "Unlock[color=lightgreen]Training Ground[/color]"
+  },
+  {
+    "sourceId": 61,
+    "name": "背包容量上限",
+    "category": "位面",
+    "treeColumn": 2,
+    "treeRow": 1,
+    "maxLevel": 50,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "背包容量上限[color=lightgreen]+参数[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 80,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 61,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 62,
+    "name": "全体经验加成",
+    "category": "位面",
+    "treeColumn": 1,
+    "treeRow": 1,
+    "maxLevel": 60,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "全体经验加成[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 62,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 63,
+    "name": "全体技能学习",
+    "category": "位面",
+    "treeColumn": 1,
+    "treeRow": 2,
+    "maxLevel": 60,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "全体技点获得[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 63,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 64,
+    "name": "全体职业成长",
+    "category": "位面",
+    "treeColumn": 1,
+    "treeRow": 3,
+    "maxLevel": 60,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "全体职业成长[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 64,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 65,
+    "name": "通用物品掉落",
+    "category": "位面",
+    "treeColumn": 2,
+    "treeRow": 2,
+    "maxLevel": 60,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "通用物品掉落[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 15,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 65,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 66,
+    "name": "通用货币掉落",
+    "category": "位面",
+    "treeColumn": 2,
+    "treeRow": 3,
+    "maxLevel": 60,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "通用货币掉落[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 25,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 66,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 67,
+    "name": "势力任务刷新",
+    "category": "位面",
+    "treeColumn": 3,
+    "treeRow": 1,
+    "maxLevel": 50,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "势力任务刷新时间减少[color=lightgreen]参数[/color]秒",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 67,
+    "descriptionEnglish": "reduce[color=lightgreen]参数[/color]s"
+  },
+  {
+    "sourceId": 68,
+    "name": "势力贡献获得",
+    "category": "位面",
+    "treeColumn": 3,
+    "treeRow": 2,
+    "maxLevel": 60,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "势力贡献获得[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 25,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 68,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 69,
+    "name": "位面声望获得",
+    "category": "位面",
+    "treeColumn": 3,
+    "treeRow": 3,
+    "maxLevel": 60,
+    "levelRequirementBase": 5,
+    "levelRequirementGrowth": 3,
+    "description": "位面声望获得[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 25,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 69,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 70,
+    "name": "住宅区租金",
+    "category": "位面",
+    "treeColumn": 4,
+    "treeRow": 1,
+    "maxLevel": 60,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "住宅区租金[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 20,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 18,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 71,
+    "name": "商业区租金",
+    "category": "位面",
+    "treeColumn": 4,
+    "treeRow": 2,
+    "maxLevel": 60,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "商业区租金[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 20,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 16,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 72,
+    "name": "工业区租金",
+    "category": "位面",
+    "treeColumn": 4,
+    "treeRow": 3,
+    "maxLevel": 60,
+    "levelRequirementBase": 25,
+    "levelRequirementGrowth": 2,
+    "description": "工业区租金[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 20,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 17,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 73,
+    "name": "狩猎功勋",
+    "category": "位面",
+    "treeColumn": 5,
+    "treeRow": 1,
+    "maxLevel": 60,
+    "levelRequirementBase": 50,
+    "levelRequirementGrowth": 2,
+    "description": "狩猎功勋加成[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 25,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 73,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 74,
+    "name": "狩猎荣誉",
+    "category": "位面",
+    "treeColumn": 5,
+    "treeRow": 2,
+    "maxLevel": 60,
+    "levelRequirementBase": 50,
+    "levelRequirementGrowth": 2,
+    "description": "狩猎荣誉加成[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 50,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 74,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  },
+  {
+    "sourceId": 75,
+    "name": "灵兽经验",
+    "category": "位面",
+    "treeColumn": 5,
+    "treeRow": 3,
+    "maxLevel": 60,
+    "levelRequirementBase": 50,
+    "levelRequirementGrowth": 2,
+    "description": "灵兽经验获得[color=lightgreen]+参数%[/color]",
+    "prerequisiteTechnologyIds": [
+      13
+    ],
+    "effectParameter": 40,
+    "hiddenFromTechnologyTree": false,
+    "effectId": 43,
+    "descriptionEnglish": "[color=lightgreen]+参数%[/color]"
+  }
+]
+
+export const ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS: Readonly<Record<number, number>> = {
+  "1": 1,
+  "2": 1,
+  "3": 1
+}
+
 export const ORIGINAL_CITY_CONSTANTS = {
   gridColumns: 18,
   gridRows: 18,
@@ -5174,9 +6550,52 @@ export const ORIGINAL_CITY_PENDING_RULES = {
 } as const
 
 const buildingById = new Map(ORIGINAL_CITY_BUILDINGS.map((building) => [building.sourceId, building]))
+const technologyById = new Map(ORIGINAL_CITY_TECHNOLOGIES.map((technology) => [technology.sourceId, technology]))
 
 export const originalCityBuildingById = (buildingId: number): OriginalCityBuildingDefinition | undefined =>
   buildingById.get(buildingId)
+
+export const originalCityTechnologyById = (technologyId: number): OriginalCityTechnologyDefinition | undefined =>
+  technologyById.get(technologyId)
+
+export const originalCityTechnologyCalculatedLevel = (
+  technologyId: number,
+  currentLevel: number,
+  additionalLevel = 0,
+): number => {
+  const technology = originalCityTechnologyById(technologyId)
+  if (!technology) return 0
+  return technology.levelRequirementBase
+    + (Math.max(0, Math.floor(currentLevel)) + Math.max(0, Math.floor(additionalLevel)))
+      * technology.levelRequirementGrowth
+}
+
+export const originalCityTechnologyResearchPoints = (
+  technologyId: number,
+  currentLevel: number,
+  additionalLevel = 0,
+): number => {
+  const calculatedLevel = originalCityTechnologyCalculatedLevel(technologyId, currentLevel, additionalLevel)
+  return calculatedLevel <= 0 ? 0 : Math.round(2000 * 1.11 ** (calculatedLevel - 1))
+}
+
+export const originalCityTechnologyCashCost = (
+  technologyId: number,
+  currentLevel: number,
+  additionalLevel = 0,
+  researchInstituteCostMultiplier = 1,
+): number => {
+  const calculatedLevel = originalCityTechnologyCalculatedLevel(technologyId, currentLevel, additionalLevel)
+  return calculatedLevel <= 0
+    ? 0
+    : Math.round(50000 * 1.1 ** (calculatedLevel - 1) * Math.max(0, researchInstituteCostMultiplier))
+}
+
+export const originalCityTechnologyEffectBonus = (technologyId: number, currentLevel: number): number => {
+  const technology = originalCityTechnologyById(technologyId)
+  if (!technology) return 0
+  return Math.max(0, Math.floor(currentLevel)) * technology.effectParameter / 10 / 100
+}
 
 export const originalCityDevelopment = (population: number, commerce: number, industry: number): number =>
   Math.round((population + commerce + industry) / 60)

@@ -120,7 +120,17 @@ const technologies = arrays.kj.slice(1).map((row) => ({
   sourceId: asNumber(row[0]),
   name: String(row[1]),
   category: String(row[2]),
+  treeColumn: asNumber(row[3]),
+  treeRow: asNumber(row[4]),
+  maxLevel: asNumber(row[5]),
+  levelRequirementBase: asNumber(row[6]),
+  levelRequirementGrowth: asNumber(row[7]),
   description: String(row[8]),
+  prerequisiteTechnologyIds: row.slice(9, 12).map(asNumber).filter(Boolean),
+  effectParameter: asNumber(row[13]),
+  hiddenFromTechnologyTree: asNumber(row[14]) === 1,
+  effectId: asNumber(row[15]),
+  descriptionEnglish: String(row[16]),
   raw: row,
 }))
 
@@ -306,6 +316,13 @@ assert(arrays.cscz.length === 52 && arrays.cscz.every((row) => row.length === 20
 assert(arrays.cscz.every((row) => String(row[18] ?? '') === '' && String(row[19] ?? '') === ''), '城市初始地块矩阵保留列出现数据')
 assert(technologies.filter((technology) => technology.category === '基础').length === 60, '基础科技不是 60 项')
 assert(technologies.filter((technology) => technology.category === '位面').length === 15, '位面科技不是 15 项')
+assert(technologies.every((technology) => technology.treeColumn >= 1 && technology.treeColumn <= 6), '科技树列不是 1～6')
+assert(technologies.every((technology) => technology.treeRow >= 1), '科技树行存在非正数')
+assert(technologies.every((technology) => technology.maxLevel >= 1), '科技最大等级存在非正数')
+assert(technologies.every((technology) => technology.prerequisiteTechnologyIds.every((id) => (
+  technologies.some((candidate) => candidate.sourceId === id)
+))), '科技存在未知前置')
+assert(technologies.filter((technology) => technology.hiddenFromTechnologyTree).map((technology) => technology.name).join(',') === '派遣自动重复', '隐藏科技树项目与原版不一致')
 assert(arrays.gxdh.length === 17 && arrays.gxdh.every((row) => row.length === 85), '贡献兑换矩阵不是 17×85')
 assert(factionExchangeCounts.total === 396, `贡献兑换商品数量异常：${factionExchangeCounts.total}`)
 assert(factionExchangeCounts.factions === 29, `贡献兑换势力数量异常：${factionExchangeCounts.factions}`)
@@ -1188,6 +1205,9 @@ const cityRuntimeFunctionNames = [
   '指定建筑数量function',
   '在建建筑数量function',
   '指定建筑地块编号function',
+  '建筑状态判定function',
+  '建筑升级经验function',
+  '建筑执行function',
   '财务结算function',
   '记录收支function',
   '有效地块function',
@@ -1204,6 +1224,25 @@ const cityRuntimeFunctionNames = [
   '公司更名点击',
   '公司注册function',
   '公司更名function',
+  '在研科技等级function',
+  '科研总速度function',
+  '科研时间function',
+  '科技研究function',
+  '科技计算等级function',
+  '科技研发点function',
+  '科技现金点function',
+  '科技队列数function',
+  '建造队列数function',
+  '建筑建造点function',
+  '建造现金点function',
+  '取消建造function',
+  '建造局职员速度function',
+  '建造局建速加成function',
+  '建造局建费加成function',
+  '建造局评价加成function',
+  '建造总速度function',
+  '建造时间function',
+  '建筑主管加速function',
   '项目计划function',
   '项目建成function',
   '城市总属性function',
@@ -1260,13 +1299,29 @@ for (const name of ['刷新发展度', 'CEO管理加成', '店铺总价值', '�
 
 const factionRuntimeFunctionByName = new Map(factionRuntimeFunctions.map((fn) => [fn.name, fn]))
 const cityRuntimeFunctionByName = new Map(cityRuntimeFunctions.map((fn) => [fn.name, fn]))
+const assertJsonEqual = (actual, expected, label) => {
+  assert(JSON.stringify(actual) === JSON.stringify(expected), `${label}与原版运行时证据不一致`)
+}
+const initialTechnologyOperations = cityRuntimeFunctionByName.get('初始化').operations
+  .filter((operation) => (
+    operation.objectName === 'save'
+    && operation.reference.endsWith('.SetXYZ')
+    && operation.parameters[1]?.expression === '24'
+    && operation.parameters[2]?.expression === '0'
+  ))
+const initialTechnologyLevels = Object.fromEntries(initialTechnologyOperations.map((operation) => {
+  const technologyId = Number(operation.parameters[0]?.expression)
+  const level = Number(operation.parameters[3]?.expression)
+  assert(Number.isInteger(technologyId) && technologyId > 0, '初始科技存在无效 ID')
+  assert(Number.isInteger(level) && level > 0, `初始科技 ${technologyId} 存在无效等级`)
+  assert(technologies.some((technology) => technology.sourceId === technologyId), `初始科技 ${technologyId} 不在 kj 表中`)
+  return [technologyId, level]
+}))
+assertJsonEqual(initialTechnologyLevels, { 1: 1, 2: 1, 3: 1 }, '新档初始科技')
 const requiredFactionRuntimeFunction = (name) => {
   const fn = factionRuntimeFunctionByName.get(name)
   assert(fn, `势力规则契约缺少原版函数 ${name}`)
   return fn
-}
-const assertJsonEqual = (actual, expected, label) => {
-  assert(JSON.stringify(actual) === JSON.stringify(expected), `${label}与原版运行时证据不一致`)
 }
 const assertExpressions = (functionName, expectedExpressions) => {
   const expressions = new Set(requiredFactionRuntimeFunction(functionName).expressions.map((item) => item.expression))
@@ -1815,6 +1870,7 @@ const cityConfirmedRules = {
     companyRegistrationCost: 100000,
     companyRenameCost: 100000,
     buildingRelocationCost: 200000,
+    initialTechnologyLevels,
     specialLandPrice: {
       tileId: 48,
       amount: 450000,
@@ -1833,6 +1889,10 @@ const cityConfirmedRules = {
     landSalePrice: 'round(0.6 * 0.01 * (development + 5000) * (10000 + population + commerce + industry) * landPriceTier^3 + accumulatedBuildingValue)',
     buildingAccumulatedValue: 'sum(round(cashCost * 8^level) * 0.5), level = 0..buildingLevel-1',
     basicMonthlyRent: 'round((1 + technologyBonus) * purchasePrice * 0.03 / 12)',
+    technologyCalculatedLevel: 'levelRequirementBase + (currentLevel + additionalLevel) * levelRequirementGrowth',
+    technologyResearchPoints: 'round(2000 * 1.11^(technologyCalculatedLevel - 1))',
+    technologyCashCost: 'round(50000 * 1.1^(technologyCalculatedLevel - 1) * researchInstituteCostMultiplier)',
+    technologyEffectBonus: 'currentLevel * effectParameter / 10 / 100',
   },
   pending: {
     companyNameValidation: '创建宗门判断的字符与长度规则尚未解码',
@@ -1846,7 +1906,7 @@ const cityFunctionExpressions = (name) => {
   assert(fn, `城市运行时证据缺少 ${name}`)
   return fn.expressions.map((item) => item.expression).join('\n')
 }
-assert(cityRuntimeFunctions.length === 46, `城市运行时核心函数数量异常：${cityRuntimeFunctions.length}`)
+assert(cityRuntimeFunctions.length === 68, `城市运行时核心函数数量异常：${cityRuntimeFunctions.length}`)
 assert(cityFunctionExpressions('刷新发展度').includes('/ 60'), '城市发展度公式证据缺少除以 60')
 assert(cityFunctionExpressions('建筑属性function').includes('Math.ceil'), '建筑范围公式证据缺少 Math.ceil')
 assert(cityFunctionExpressions('土地价格function').includes('pow(save.At(地块编号, 45, 10), 3)'), '土地价格公式证据缺少地价档三次方')
@@ -1854,6 +1914,11 @@ assert(cityFunctionExpressions('土地租金价格function').includes('(0.03 / 1
 assert(cityFunctionExpressions('建造现金点').includes('Math.pow(8, 建筑等级)'), '建筑现金公式证据缺少 8 次方成长')
 assert(cityFunctionExpressions('城市升级属性function').includes('150000'), '城市升级属性公式证据缺少 150000')
 assert(cityFunctionExpressions('迁移费用function').includes('200000'), '建筑迁移费用证据缺少 200000')
+assert(cityFunctionExpressions('科技计算等级function').includes('kj.At(科技编号, 6)'), '科技计算等级证据缺少基础等级')
+assert(cityFunctionExpressions('科技计算等级function').includes('kj.At(科技编号, 7)'), '科技计算等级证据缺少成长等级')
+assert(cityFunctionExpressions('科技研发点function').includes('Math.pow(1.11'), '科技研发点证据缺少 1.11 成长')
+assert(cityFunctionExpressions('科技现金点function').includes('Math.pow(1.1'), '科技现金证据缺少 1.1 成长')
+assert(cityFunctionExpressions('科技效果加成').includes('kj.At(科技编号, 13)'), '科技效果证据缺少参数列')
 
 const cityRuntimeEvidence = {
   schemaVersion: 1,
@@ -1968,8 +2033,9 @@ const runtimeBuildings = buildings.map((building) => ({
   buildPointCost: asNumber(building.raw[28]),
   industryIndex: asNumber(building.raw[29]),
 }))
+const runtimeTechnologies = technologies.map(({ raw: _raw, ...technology }) => technology)
 const runtimeCitySource = `/**
- * 原版现世城市核心快照——由《诸天刷宝录》jz.json、cscz.json 与运行时事件生成。
+ * 原版现世城市核心快照——由《诸天刷宝录》jz.json、kj.json、cscz.json 与运行时事件生成。
  * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
  */
 
@@ -2008,9 +2074,32 @@ export interface OriginalCityInitialTile {
   industry: number
 }
 
+export type OriginalCityTechnologyCategory = '基础' | '位面'
+
+export interface OriginalCityTechnologyDefinition {
+  sourceId: number
+  name: string
+  category: OriginalCityTechnologyCategory
+  treeColumn: number
+  treeRow: number
+  maxLevel: number
+  levelRequirementBase: number
+  levelRequirementGrowth: number
+  description: string
+  prerequisiteTechnologyIds: readonly number[]
+  effectParameter: number
+  hiddenFromTechnologyTree: boolean
+  effectId: number
+  descriptionEnglish: string
+}
+
 export const ORIGINAL_CITY_BUILDINGS: readonly OriginalCityBuildingDefinition[] = ${JSON.stringify(runtimeBuildings, null, 2)}
 
 export const ORIGINAL_CITY_INITIAL_TILES: readonly OriginalCityInitialTile[] = ${JSON.stringify(initialCityTiles, null, 2)}
+
+export const ORIGINAL_CITY_TECHNOLOGIES: readonly OriginalCityTechnologyDefinition[] = ${JSON.stringify(runtimeTechnologies, null, 2)}
+
+export const ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS: Readonly<Record<number, number>> = ${JSON.stringify(initialTechnologyLevels, null, 2)}
 
 export const ORIGINAL_CITY_CONSTANTS = {
   gridColumns: 18,
@@ -2030,9 +2119,52 @@ export const ORIGINAL_CITY_PENDING_RULES = {
 } as const
 
 const buildingById = new Map(ORIGINAL_CITY_BUILDINGS.map((building) => [building.sourceId, building]))
+const technologyById = new Map(ORIGINAL_CITY_TECHNOLOGIES.map((technology) => [technology.sourceId, technology]))
 
 export const originalCityBuildingById = (buildingId: number): OriginalCityBuildingDefinition | undefined =>
   buildingById.get(buildingId)
+
+export const originalCityTechnologyById = (technologyId: number): OriginalCityTechnologyDefinition | undefined =>
+  technologyById.get(technologyId)
+
+export const originalCityTechnologyCalculatedLevel = (
+  technologyId: number,
+  currentLevel: number,
+  additionalLevel = 0,
+): number => {
+  const technology = originalCityTechnologyById(technologyId)
+  if (!technology) return 0
+  return technology.levelRequirementBase
+    + (Math.max(0, Math.floor(currentLevel)) + Math.max(0, Math.floor(additionalLevel)))
+      * technology.levelRequirementGrowth
+}
+
+export const originalCityTechnologyResearchPoints = (
+  technologyId: number,
+  currentLevel: number,
+  additionalLevel = 0,
+): number => {
+  const calculatedLevel = originalCityTechnologyCalculatedLevel(technologyId, currentLevel, additionalLevel)
+  return calculatedLevel <= 0 ? 0 : Math.round(2000 * 1.11 ** (calculatedLevel - 1))
+}
+
+export const originalCityTechnologyCashCost = (
+  technologyId: number,
+  currentLevel: number,
+  additionalLevel = 0,
+  researchInstituteCostMultiplier = 1,
+): number => {
+  const calculatedLevel = originalCityTechnologyCalculatedLevel(technologyId, currentLevel, additionalLevel)
+  return calculatedLevel <= 0
+    ? 0
+    : Math.round(50000 * 1.1 ** (calculatedLevel - 1) * Math.max(0, researchInstituteCostMultiplier))
+}
+
+export const originalCityTechnologyEffectBonus = (technologyId: number, currentLevel: number): number => {
+  const technology = originalCityTechnologyById(technologyId)
+  if (!technology) return 0
+  return Math.max(0, Math.floor(currentLevel)) * technology.effectParameter / 10 / 100
+}
 
 export const originalCityDevelopment = (population: number, commerce: number, industry: number): number =>
   Math.round((population + commerce + industry) / 60)
@@ -2859,7 +2991,7 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - \`egg-jianghu/src/content/original-faction-exchange.generated.ts\`：运行时使用的完整势力贡献兑换目录。
 - \`egg-jianghu/src/content/original-faction-recruitment.generated.ts\`：运行时使用的完整势力招募目录。
 - \`egg-jianghu/src/content/original-faction-rules.generated.ts\`：运行时使用的势力规则常量与纯函数。
-- \`egg-jianghu/src/content/original-city.generated.ts\`：运行时使用的 25 类建筑、324 块初始地块、城市与土地公式。
+- \`egg-jianghu/src/content/original-city.generated.ts\`：运行时使用的 25 类建筑、75 项科技、324 块初始地块及城市、土地与科技公式。
 
 ## 证据规则
 

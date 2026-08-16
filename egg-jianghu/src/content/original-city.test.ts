@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   ORIGINAL_CITY_BUILDINGS,
   ORIGINAL_CITY_CONSTANTS,
+  ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS,
   ORIGINAL_CITY_INITIAL_TILES,
   ORIGINAL_CITY_PENDING_RULES,
+  ORIGINAL_CITY_TECHNOLOGIES,
   originalCityAccumulatedBuildingValue,
   originalCityBuildingAttribute,
   originalCityBuildingCashCost,
@@ -13,6 +15,11 @@ import {
   originalCityLandPrice,
   originalCityMonthlyRent,
   originalCityRecalculateTileAttributes,
+  originalCityTechnologyById,
+  originalCityTechnologyCalculatedLevel,
+  originalCityTechnologyCashCost,
+  originalCityTechnologyEffectBonus,
+  originalCityTechnologyResearchPoints,
   originalCityTotals,
   originalCityUpgradeAttribute,
 } from './original-city.generated'
@@ -39,6 +46,26 @@ describe('原版现世城市核心快照', () => {
     expect(ORIGINAL_CITY_INITIAL_TILES.every((tile) => !tile.buildable || tile.buildingLevel === 0)).toBe(true)
     expect(ORIGINAL_CITY_CONSTANTS.initialCash).toBe(0)
     expect(ORIGINAL_CITY_CONSTANTS.headquartersBuildingId).toBe(16)
+  })
+
+  it('完整保留 75 项科技及原版新档的三项初始科技', () => {
+    expect(ORIGINAL_CITY_TECHNOLOGIES).toHaveLength(75)
+    expect(ORIGINAL_CITY_TECHNOLOGIES.filter((technology) => technology.category === '基础')).toHaveLength(60)
+    expect(ORIGINAL_CITY_TECHNOLOGIES.filter((technology) => technology.category === '位面')).toHaveLength(15)
+    expect(ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS).toEqual({ 1: 1, 2: 1, 3: 1 })
+    expect(originalCityTechnologyById(13)).toEqual(expect.objectContaining({
+      name: '强化科技树',
+      prerequisiteTechnologyIds: [57],
+    }))
+  })
+
+  it('按原版公式复算科技研发点、现金和效果参数', () => {
+    expect(originalCityTechnologyCalculatedLevel(1, 1)).toBe(2)
+    expect(originalCityTechnologyResearchPoints(1, 1)).toBe(2_220)
+    expect(originalCityTechnologyCashCost(1, 1)).toBe(55_000)
+    expect(originalCityTechnologyCashCost(1, 1, 0, 0.8)).toBe(44_000)
+    expect(originalCityTechnologyEffectBonus(4, 10)).toBe(0.5)
+    expect(originalCityTechnologyResearchPoints(999, 1)).toBe(0)
   })
 
   it('复算发展度、建筑属性、建造成本和城市有效尺寸', () => {
