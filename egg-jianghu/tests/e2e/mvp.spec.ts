@@ -288,6 +288,7 @@ test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) 
 })
 
 test('江湖位面侧栏显示四个分离入口并可切换城镇与城市', async ({ page }) => {
+  await page.evaluate(() => window.__EGG_JIANGHU__.unlockFaction('tieyi_school'))
   await enterWorld(page)
   await expect(page.getByTestId('stage-overview')).toBeVisible()
   await expect(page.locator('[data-jianghu-section]')).toHaveCount(4)
@@ -554,16 +555,18 @@ test('击杀不因背包容量中断战斗', async ({ page }) => {
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.result)).toBe('fighting')
 })
 
-test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page }) => {
+test('势力五格悬榜锁定已接任务并刷新未接任务', async ({ page }) => {
   await page.evaluate(() => {
+    window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
     window.__EGG_JIANGHU__.grantContribution('qingfeng_hall', 1_000)
     window.__EGG_JIANGHU__.grantContribution('tieyi_school', 400)
-    window.__EGG_JIANGHU__.prepareQuestBoard('qingfeng_hall', 211)
+    window.__EGG_JIANGHU__.prepareQuestBoard('tieyi_school', 211)
   })
   await openWorldSection(page, 'factions')
-  await expect(page.locator('[data-quest-slot]')).toHaveCount(6)
+  await page.getByTestId('faction-plaque-tieyi_school').click()
+  await expect(page.locator('[data-quest-slot]')).toHaveCount(5)
   await expect(page.locator('.faction-quest-grid')).not.toContainText('world_01_stage_01')
-  await expect(page.locator('.faction-notice h3').first()).toContainText(/^(?:黄巾战士|张角)$/)
+  await expect(page.locator('.faction-notice h3').first()).toHaveText(/\S+/)
   await page.getByTestId('faction-page-title').hover()
   await page.waitForTimeout(750)
   const questCard = page.getByTestId('quest-slot-0')
@@ -574,6 +577,7 @@ test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page 
   await expect.poll(() => questCard.evaluate((element) => getComputedStyle(element).transform)).toBe(restingTransform)
 
   const purse = page.getByTestId('faction-purse').locator('strong')
+  await page.getByTestId('faction-plaque-qingfeng_hall').click()
   await page.getByTestId('faction-plaque-tieyi_school').click()
   const cardMotionPlaying = await page.getByTestId('quest-slot-0').evaluate((element) =>
     element.getAnimations().some((animation) => animation.playState === 'running'))
@@ -585,20 +589,19 @@ test('势力六格悬榜锁定已接任务并刷新未接任务', async ({ page 
   const tieyiContribution = await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school ?? 0)
   expect(await purse.textContent()).not.toBe(tieyiContribution.toLocaleString('zh-CN'))
   await expect(purse).toHaveText(tieyiContribution.toLocaleString('zh-CN'), { timeout: 1_000 })
-  await page.getByTestId('faction-plaque-qingfeng_hall').click()
-  await expect(page.getByTestId('faction-plaque-qingfeng_hall')).toHaveAttribute('aria-pressed', 'true')
   await page.waitForTimeout(750)
 
-  const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.qingfeng_hall.slots.map((slot) => slot?.id ?? null))
+  const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.tieyi_school.slots.map((slot) => slot?.id ?? null))
   await page.getByTestId('quest-slot-0').getByRole('button', { name: '揭榜' }).click()
   await page.evaluate(() => window.__EGG_JIANGHU__.advanceRuntime(3_600_000))
-  const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.qingfeng_hall.slots.map((slot) => slot?.id ?? null))
+  const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.tieyi_school.slots.map((slot) => slot?.id ?? null))
   expect(after[0]).toBe(before[0])
   expect(after.slice(1)).not.toEqual(before.slice(1))
 })
 
 test('势力页支持切换匾额和门人拜帖', async ({ page }) => {
   await page.evaluate(() => {
+    window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
     window.__EGG_JIANGHU__.grantContribution('qingfeng_hall', 1000)
   })
   await openWorldSection(page, 'factions')
@@ -610,7 +613,7 @@ test('势力页支持切换匾额和门人拜帖', async ({ page }) => {
   await expect(page.getByTestId('faction-plaque-qingfeng_hall')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('faction-invite-panel')).toBeVisible()
   await expect(page.getByTestId('faction-hero-hero_qingfeng_hall_01')).toContainText('孙不二')
-  await expect(page.getByTestId('faction-meridian')).toHaveCount(0)
+  await expect(page.getByTestId('faction-meridian')).toBeVisible()
 })
 
 test('势力页主区可滚动查看悬榜与门人拜帖', async ({ page }) => {

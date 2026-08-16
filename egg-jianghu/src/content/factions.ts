@@ -12,6 +12,7 @@ export interface FactionDefinition {
   currencyKind: 'worldCurrency' | 'contribution'
   branchLabels: readonly [string, string]
   skillIds: readonly number[]
+  requiredProgress: number
   /** 诸天技能组威力属性 id（sx153-194 段）。 */
   factionPowerSxId: number
 }
@@ -71,6 +72,7 @@ export const FACTIONS: FactionDefinition[] = ORIGINAL_FACTIONS.map((original) =>
     currencyKind: original.currencyKind,
     branchLabels: ['一脉', '二脉'],
     skillIds: original.skillIds,
+    requiredProgress: original.requiredProgress,
     factionPowerSxId: 152 + original.id,
   }
 })

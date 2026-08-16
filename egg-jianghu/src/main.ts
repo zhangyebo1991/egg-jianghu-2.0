@@ -6,7 +6,7 @@ import { isCombatSpeed, type CombatSpeed } from './combat/scheduler'
 import { buildCombatStats } from './combat/stats'
 import { COMBAT_TICK_MS } from './combat/timeline'
 import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
-import { createWave, enemyDisplayName } from './combat/waves'
+import { createWave } from './combat/waves'
 import { CAREERS, CAREER_GROWTH_FIELDS, STARTER_CAREER_ID, careerById, careerJobBookName, careerSkillTypeNames, careersInRank, formatGrowthCoeff, growthGrade } from './content/careers'
 import {
   EQUIPMENT_QUALITIES,
@@ -37,6 +37,12 @@ import {
   ORIGINAL_SACRED_BEASTS,
   ORIGINAL_SACRED_UPGRADES,
 } from './content/original-progression.generated'
+import {
+  originalFactionTaskDefinitionById,
+  originalFactionTaskRequiredAmount,
+  originalFactionTaskReward,
+  originalFactionTaskTargetName,
+} from './content/original-faction-rules.generated'
 import { ORIGINAL_CITY_FOUNDATION, originalWorldTownByIndex } from './content/original-towns.generated'
 import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
@@ -45,7 +51,7 @@ import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCa
 import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, averageItemLevel, bindActiveEquipmentLoadout } from './domain/inventory'
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
-import { acceptQuest, cancelQuest, claimQuest, initializeQuestBoard } from './domain/quests'
+import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
 import { settleCombatEvent } from './domain/rewards'
@@ -76,7 +82,7 @@ import {
   upgradeDeity,
   WORLD_TREE_LEAF_ITEM_ID,
 } from './domain/original-progression'
-import { clearSaveV10, hasLegacySaveV16, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
+import { clearSaveV10, hasLegacySaveV17, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
 import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationColumn, FormationRow, GameStateV10 } from './domain/types'
@@ -479,8 +485,8 @@ let toastTimer = 0
 
 try {
   hasSave = hasSaveV10(window.localStorage)
-  if (!hasSave && hasLegacySaveV16(window.localStorage)) {
-    startError = '检测到旧版存档；完整新系统需要新建存档，旧档不会迁移或覆写'
+  if (!hasSave && hasLegacySaveV17(window.localStorage)) {
+    startError = '检测到 version 17 旧版存档；完整新系统需要新建存档，旧档不会迁移或覆写'
   }
 } catch {
   startError = '无法访问本地存储，请检查浏览器设置'
@@ -1150,9 +1156,37 @@ const factionsViewModel = (): FactionsPageViewModel => {
       selected: item.id === selectedFactionId,
     })),
     refreshRemainingMs: board?.refreshRemainingMs ?? 0,
-    quests: Array.from({ length: 6 }, (_, slot) => {
+    quests: Array.from({ length: 5 }, (_, slot) => {
       const quest = board?.slots[slot]
-      return { slot, quest: quest ? { ...quest, targetName: enemyDisplayName(quest.targetId) } : null }
+      if (!quest || !faction) return { slot, quest: null }
+      const accepted = quest.acceptedRecordId > 0
+        ? session.state.acceptedFactionQuests[String(quest.acceptedRecordId)]
+        : undefined
+      const targetCount = accepted?.requiredAmount
+        ?? originalFactionTaskRequiredAmount(quest.taskId, quest.quality, world.index)
+        ?? 0
+      const progress = accepted ? factionQuestCurrentProgress(session.state, accepted) : 0
+      const task = originalFactionTaskDefinitionById(quest.taskId)
+      const reward = originalFactionTaskReward(quest.taskId, quest.quality, world.index)
+      return {
+        slot,
+        quest: {
+          id: quest.id,
+          taskId: quest.taskId,
+          taskName: task?.name ?? '未知任务',
+          actionName: task?.actionName ?? '任务',
+          targetKind: task?.targetKind ?? '目标',
+          quality: quest.quality,
+          targetName: originalFactionTaskTargetName(world.index, quest.taskId, quest.targetId),
+          progress,
+          targetCount,
+          rewardContribution: reward.contribution,
+          rewardReputation: reward.reputation,
+          accepted: Boolean(accepted),
+          completed: Boolean(accepted && progress >= targetCount),
+          settled: quest.acceptedRecordId < 0,
+        },
+      }
     }),
     branches: (faction?.branchLabels ?? []).map((branch) => ({
       name: branch,
@@ -2630,6 +2664,7 @@ declare global {
       advanceRuntime: (elapsedMs: number) => void
       grantWorldCurrency: (worldId: string, amount: number) => void
       grantContribution: (factionId: string, amount: number) => void
+      unlockFaction: (factionId: string) => void
       recruitHero: (heroId: string) => void
       placeHero: (heroId: string, row: FormationRow, col: FormationColumn) => void
       setHeroCareerLevel: (heroId: string, careerId: string, level: number) => void
@@ -2698,6 +2733,18 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   advanceRuntime: (elapsedMs) => { ensurePlaying(); session.advanceRuntime(elapsedMs); render() },
   grantWorldCurrency: (worldId, amount) => { ensurePlaying(); session.state.worldCurrency[worldId] = amount; saveSession(); render() },
   grantContribution: (factionId, amount) => { ensurePlaying(); session.state.contribution[factionId] = amount; saveSession(); render() },
+  unlockFaction: (factionId) => {
+    ensurePlaying()
+    const faction = FACTIONS.find((item) => item.id === factionId)
+    if (!faction) throw new Error('势力不存在')
+    if (!session.state.unlockedFactionIds.includes(factionId)) session.state.unlockedFactionIds.push(factionId)
+    session.state.contribution[factionId] ??= 0
+    if (faction.currencyKind === 'contribution' && !session.state.factionBoards[factionId]) {
+      initializeQuestBoard(session.state, factionId, createRng(session.state.lastSavedAt), 0)
+    }
+    saveSession()
+    render()
+  },
   recruitHero: debugRecruit,
   placeHero: (heroId, row, col) => { ensurePlaying(); commitAction(placeFormation(session.state, heroId, row, col)); render() },
   setHeroCareerLevel: (heroId, careerId, level) => {

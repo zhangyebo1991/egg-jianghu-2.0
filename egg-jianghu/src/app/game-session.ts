@@ -12,6 +12,7 @@ import {
   progressKey,
   resolveDefeat,
   resolveVictory,
+  syncFactionUnlocks,
   type CampaignSelection,
 } from '../domain/progression'
 import { advanceQuestBoards, initializeQuestBoard } from '../domain/quests'
@@ -242,7 +243,7 @@ export class GameSession {
   private ensureFactionBoards(refillEmpty = false): void {
     const unlocked = new Set(this.state.unlockedFactionIds)
     for (const faction of FACTIONS) {
-      if (!unlocked.has(faction.id)) continue
+      if (!unlocked.has(faction.id) || faction.currencyKind !== 'contribution') continue
       const board = this.state.factionBoards[faction.id]
       if (!board || (refillEmpty && board.slots.every((slot) => slot === null))) {
         initializeQuestBoard(this.state, faction.id, this.runtimeRng, 0)
@@ -270,17 +271,17 @@ export class GameSession {
         this.state.clearedStageByWorldDifficulty[key] ?? 0,
         completed.stage,
       )
+      syncFactionUnlocks(this.state, completed.worldId)
       if (completed.stage === 10 && completed.difficulty === 1) {
         const currentIndex = WORLDS.findIndex((world) => world.id === completed.worldId)
         const nextWorld = WORLDS[currentIndex + 1]
         if (nextWorld?.released && !this.state.unlockedWorldIds.includes(nextWorld.id)) {
           this.state.unlockedWorldIds.push(nextWorld.id)
-          this.state.unlockedFactionIds.push(...FACTIONS
-            .filter((faction) => faction.worldId === nextWorld.id)
-            .map((faction) => faction.id)
-            .filter((factionId) => !this.state.unlockedFactionIds.includes(factionId)))
           this.state.worldCurrency[nextWorld.id] ??= 0
+          this.state.worldReputation[nextWorld.id] ??= 0
+          this.state.factionAgents[nextWorld.id] ??= { heroId: null, enabled: false }
           this.state.clearedStageByWorldDifficulty[progressKey(nextWorld.id, 1)] ??= 0
+          syncFactionUnlocks(this.state, nextWorld.id)
           this.ensureFactionBoards()
         }
       }

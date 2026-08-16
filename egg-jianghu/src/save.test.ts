@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { equipmentDefinitionById, equipmentIdBySlot } from './content/equipment'
 import { createInitialStateV10 } from './domain/state'
-import type { QuestProgress } from './domain/types'
+import type { FactionQuestBoardEntry } from './domain/types'
 import { clearSave, exportSave, importSave, loadGame, SAVE_KEY, saveGame, type StorageLike } from './save'
 
 const memoryStorage = (): StorageLike & { values: Map<string, string> } => {
@@ -14,21 +14,16 @@ const memoryStorage = (): StorageLike & { values: Map<string, string> } => {
   }
 }
 
-const quest = (): QuestProgress => ({
+const quest = (): FactionQuestBoardEntry => ({
   id: 'quest_qingfeng_0',
-  type: 'normal',
-  grade: '乙',
-  targetId: 'world_01_stage_01_mob_1',
-  targetCount: 20,
-  rewardContribution: 50,
+  taskId: 1,
+  quality: 2,
+  targetId: 1,
   generatedAt: 100,
-  accepted: true,
-  completed: false,
-  claimed: false,
-  progress: 3,
+  acceptedRecordId: 1,
 })
 
-describe('version 17 公开存档入口', () => {
+describe('version 18 公开存档入口', () => {
   it('保存并恢复全部长期状态', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(100)
@@ -66,11 +61,11 @@ describe('version 17 公开存档入口', () => {
     expect(loaded.state).toEqual(createInitialStateV10(500))
   })
 
-  it('导出与导入只接受 version 17', () => {
+  it('导出与导入只接受 version 18', () => {
     const state = createInitialStateV10(100)
     state.worldCurrency.world_01 = 987
     const serialized = exportSave(state, 200)
-    expect(JSON.parse(serialized).version).toBe(17)
+    expect(JSON.parse(serialized).version).toBe(18)
     expect(importSave(serialized, 300).state.worldCurrency.world_01).toBe(987)
     expect(() => importSave(JSON.stringify({ version: 15 }), 300)).toThrow('存档版本不受支持')
   })
@@ -95,10 +90,23 @@ describe('version 17 公开存档入口', () => {
   it('关闭期间不按 lastSavedAt 推进势力悬榜', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(100)
-    state.factionBoards.qingfeng_hall = { refreshRemainingMs: 123_456, slots: [quest(), null, null, null, null, null] }
+    state.factionBoards.tieyi_school = { refreshRemainingMs: 123_456, slots: [quest(), null, null, null, null] }
+    state.acceptedFactionQuests['1'] = {
+      recordId: 1,
+      factionId: 'tieyi_school',
+      factionSourceId: 2,
+      worldIndex: 1,
+      taskId: 1,
+      quality: 2,
+      targetId: 1,
+      requiredAmount: 10,
+      progress: 3,
+      boardSlot: 0,
+      status: 1,
+    }
     saveGame(storage, state, 100)
     const loaded = loadGame(storage, 10_000_000)
-    expect(loaded.state.factionBoards.qingfeng_hall.refreshRemainingMs).toBe(123_456)
-    expect(loaded.state.factionBoards.qingfeng_hall.slots[0]?.progress).toBe(3)
+    expect(loaded.state.factionBoards.tieyi_school.refreshRemainingMs).toBe(123_456)
+    expect(loaded.state.acceptedFactionQuests['1']?.progress).toBe(3)
   })
 })

@@ -3,9 +3,9 @@ import { HEROES_V10 } from '../content/heroes'
 import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
-// v17：完整原版技能、至宝与高阶系统。旧档不迁移，保留原 key 且仅提示新建存档。
-export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v17'
-export const LEGACY_SAVE_KEY_V16 = 'egg-jianghu-2-save-v16'
+// v18：原版势力、城镇与城市经营共享状态。v17 不迁移、不覆盖。
+export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v18'
+export const LEGACY_SAVE_KEY_V17 = 'egg-jianghu-2-save-v17'
 
 export interface StorageLike {
   getItem(key: string): string | null
@@ -22,8 +22,8 @@ export interface LoadResultV10 {
 export const hasSaveV10 = (storage: StorageLike): boolean =>
   storage.getItem(SAVE_KEY_V10) !== null
 
-export const hasLegacySaveV16 = (storage: StorageLike): boolean =>
-  storage.getItem(LEGACY_SAVE_KEY_V16) !== null
+export const hasLegacySaveV17 = (storage: StorageLike): boolean =>
+  storage.getItem(LEGACY_SAVE_KEY_V17) !== null
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -118,6 +118,90 @@ const isStringArray = (value: unknown): value is string[] =>
 const isNumberArray = (value: unknown): value is number[] =>
   Array.isArray(value) && value.every((item) => isFiniteNumber(item))
 
+const isFactionQuestBoardEntry = (value: unknown): boolean =>
+  isRecord(value)
+  && typeof value.id === 'string'
+  && Number.isInteger(Number(value.taskId))
+  && Number(value.taskId) >= 1
+  && Number(value.taskId) <= 5
+  && Number.isInteger(Number(value.quality))
+  && Number(value.quality) >= 1
+  && Number(value.quality) <= 6
+  && Number.isInteger(Number(value.targetId))
+  && Number(value.targetId) > 0
+  && isFiniteNumber(value.generatedAt)
+  && Number.isInteger(Number(value.acceptedRecordId))
+  && Number(value.acceptedRecordId) >= -1
+
+const isFactionBoardState = (value: unknown): boolean =>
+  isRecord(value)
+  && isFiniteNumber(value.refreshRemainingMs)
+  && Number(value.refreshRemainingMs) >= 0
+  && Array.isArray(value.slots)
+  && value.slots.length === 5
+  && value.slots.every((slot) => slot === null || isFactionQuestBoardEntry(slot))
+
+const isAcceptedFactionQuest = (value: unknown): boolean =>
+  isRecord(value)
+  && Number.isInteger(Number(value.recordId))
+  && Number(value.recordId) > 0
+  && typeof value.factionId === 'string'
+  && Number.isInteger(Number(value.factionSourceId))
+  && Number(value.factionSourceId) > 0
+  && Number.isInteger(Number(value.worldIndex))
+  && Number(value.worldIndex) >= 1
+  && Number(value.worldIndex) <= 13
+  && Number.isInteger(Number(value.taskId))
+  && Number(value.taskId) >= 1
+  && Number(value.taskId) <= 5
+  && Number.isInteger(Number(value.quality))
+  && Number(value.quality) >= 1
+  && Number(value.quality) <= 6
+  && Number.isInteger(Number(value.targetId))
+  && Number(value.targetId) > 0
+  && isFiniteNumber(value.requiredAmount)
+  && Number(value.requiredAmount) >= 0
+  && isFiniteNumber(value.progress)
+  && Number(value.progress) >= 0
+  && Number.isInteger(Number(value.boardSlot))
+  && Number(value.boardSlot) >= 0
+  && Number(value.boardSlot) < 5
+  && value.status === 1
+
+const isFactionAgentState = (value: unknown): boolean =>
+  isRecord(value)
+  && (value.heroId === null || typeof value.heroId === 'string')
+  && typeof value.enabled === 'boolean'
+
+const hasConsistentFactionQuestLinks = (boards: unknown, acceptedQuests: unknown): boolean => {
+  if (!isRecord(boards) || !isRecord(acceptedQuests)) return false
+  for (const [factionId, boardValue] of Object.entries(boards)) {
+    if (!isFactionBoardState(boardValue)) return false
+    const board = boardValue as Record<string, unknown>
+    const slots = board.slots as unknown[]
+    for (const [slotIndex, slotValue] of slots.entries()) {
+      if (slotValue === null) continue
+      const slot = slotValue as Record<string, unknown>
+      const recordId = Number(slot.acceptedRecordId)
+      if (recordId <= 0) continue
+      const accepted = acceptedQuests[String(recordId)]
+      if (!isAcceptedFactionQuest(accepted)) return false
+      const record = accepted as Record<string, unknown>
+      if (record.factionId !== factionId || Number(record.boardSlot) !== slotIndex) return false
+    }
+  }
+  for (const accepted of Object.values(acceptedQuests)) {
+    if (!isAcceptedFactionQuest(accepted)) return false
+    const record = accepted as Record<string, unknown>
+    const boardValue = boards[String(record.factionId)]
+    if (!isFactionBoardState(boardValue)) return false
+    const slot = (boardValue as Record<string, unknown>).slots as unknown[]
+    const boardQuest = slot[Number(record.boardSlot)]
+    if (!isRecord(boardQuest) || Number(boardQuest.acceptedRecordId) !== Number(record.recordId)) return false
+  }
+  return true
+}
+
 const isShrineProgress = (value: unknown): boolean =>
   isRecord(value)
   && ['raid', 'siege', 'occupation', 'subdued'].includes(String(value.phase))
@@ -146,9 +230,11 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 }
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
-  version: 17,
+  version: 18,
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
+  worldReputation: structuredClone(state.worldReputation),
+  factionAgents: structuredClone(state.factionAgents),
   unlockedFactionIds: structuredClone(state.unlockedFactionIds),
   heroes: structuredClone(state.heroes),
   jobBooks: structuredClone(state.jobBooks),
@@ -157,6 +243,8 @@ const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10
   clearedStageByWorldDifficulty: structuredClone(state.clearedStageByWorldDifficulty),
   encounteredEnemyIds: structuredClone(state.encounteredEnemyIds),
   factionBoards: structuredClone(state.factionBoards),
+  acceptedFactionQuests: structuredClone(state.acceptedFactionQuests),
+  unlockedSkinIds: structuredClone(state.unlockedSkinIds),
   inventory: structuredClone(state.inventory),
   materials: structuredClone(state.materials),
   starSoul: state.starSoul,
@@ -186,14 +274,26 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
-    || raw.version !== 17
+    || raw.version !== 18
     || !Array.isArray(raw.inventory)
     || !raw.inventory.every(isEquipmentInstance)
     || !Array.isArray(raw.formation)
     || !raw.formation.every(isFormationSlot)
     || !isRecord(raw.heroes)
     || !Object.values(raw.heroes).every(isHeroProgress)
+    || !isNumberRecord(raw.worldReputation)
+    || !isRecord(raw.factionAgents)
+    || !Object.values(raw.factionAgents).every(isFactionAgentState)
     || !isStringArray(raw.unlockedFactionIds)
+    || !isRecord(raw.factionBoards)
+    || !Object.values(raw.factionBoards).every(isFactionBoardState)
+    || !isRecord(raw.acceptedFactionQuests)
+    || !Object.entries(raw.acceptedFactionQuests).every(([recordId, quest]) =>
+      isAcceptedFactionQuest(quest) && String((quest as Record<string, unknown>).recordId) === recordId)
+    || !hasConsistentFactionQuestLinks(raw.factionBoards, raw.acceptedFactionQuests)
+    || !isNumberArray(raw.unlockedSkinIds)
+    || !raw.unlockedSkinIds.every((skinId) => Number.isInteger(skinId) && skinId > 0)
+    || new Set(raw.unlockedSkinIds).size !== raw.unlockedSkinIds.length
     || !isNumberRecord(raw.materials)
     || !isFiniteNumber(raw.starSoul)
     || !isNumberRecord(raw.blueprints)
@@ -217,6 +317,8 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     ...state,
     worldCurrency: isRecord(raw.worldCurrency) ? structuredClone(raw.worldCurrency) as GameStateV10['worldCurrency'] : state.worldCurrency,
     contribution: isRecord(raw.contribution) ? structuredClone(raw.contribution) as GameStateV10['contribution'] : state.contribution,
+    worldReputation: structuredClone(raw.worldReputation) as GameStateV10['worldReputation'],
+    factionAgents: structuredClone(raw.factionAgents) as GameStateV10['factionAgents'],
     unlockedFactionIds: structuredClone(raw.unlockedFactionIds) as string[],
     heroes: structuredClone(raw.heroes) as GameStateV10['heroes'],
     jobBooks: isNumberRecord(raw.jobBooks) ? structuredClone(raw.jobBooks) as GameStateV10['jobBooks'] : state.jobBooks,
@@ -226,7 +328,9 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
       ? structuredClone(raw.clearedStageByWorldDifficulty) as GameStateV10['clearedStageByWorldDifficulty']
       : state.clearedStageByWorldDifficulty,
     encounteredEnemyIds: Array.isArray(raw.encounteredEnemyIds) ? structuredClone(raw.encounteredEnemyIds) as string[] : state.encounteredEnemyIds,
-    factionBoards: isRecord(raw.factionBoards) ? structuredClone(raw.factionBoards) as GameStateV10['factionBoards'] : state.factionBoards,
+    factionBoards: structuredClone(raw.factionBoards) as GameStateV10['factionBoards'],
+    acceptedFactionQuests: structuredClone(raw.acceptedFactionQuests) as GameStateV10['acceptedFactionQuests'],
+    unlockedSkinIds: structuredClone(raw.unlockedSkinIds) as number[],
     inventory: structuredClone(raw.inventory) as GameStateV10['inventory'],
     materials: structuredClone(raw.materials) as Record<string, number>,
     starSoul: Number(raw.starSoul),

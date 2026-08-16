@@ -40,6 +40,7 @@ const factions = shili.slice(1).map((row) => {
     currencyKind: String(row[4]) === '贡献' ? 'contribution' : 'worldCurrency',
     skillIds,
     organizationKind: String(row[11]),
+    requiredProgress: Number(row[20]) || 0,
     element: Number(row[22]) || 0,
   }
 })

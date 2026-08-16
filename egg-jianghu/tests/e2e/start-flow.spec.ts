@@ -35,6 +35,23 @@ test('首次进入可新建角色并以玩家姓名直接开始第一关战斗',
   await expect(page.locator('.combat-unit.party[data-unit-id="hero_player"]')).toContainText('燕七')
 })
 
+test('version 17 旧档不可继续且新建和删除 version 18 存档都不覆盖旧档', async ({ page }) => {
+  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v17', 'version-17-save'))
+  await page.reload()
+
+  await expect(page.getByRole('button', { name: '继续游戏' })).toBeDisabled()
+  await expect(page.getByRole('alert')).toHaveText('检测到 version 17 旧版存档；完整新系统需要新建存档，旧档不会迁移或覆写')
+
+  await createGame(page, '燕七')
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v17'))).toBe('version-17-save')
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v18'))).not.toBeNull()
+
+  await page.locator('[data-action="request-reset-save"]').click()
+  await page.locator('[data-action="confirm-reset-save"]').click()
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v18'))).toBeNull()
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v17'))).toBe('version-17-save')
+})
+
 test('空白姓名保留在新建页并显示精确错误', async ({ page }) => {
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').press('Enter')
@@ -104,24 +121,24 @@ test('未请求删档时忽略伪造的确认操作并保留当前进度', async
   })
 
   await expect(page.getByTestId('world-overview')).toBeVisible()
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v16'))).not.toBeNull()
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v18'))).not.toBeNull()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_player.customName)).toBe('燕七')
 })
 
 test('覆盖前重新检查存档并在存档变化后要求再次确认', async ({ page }) => {
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').fill('燕七')
-  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v16', 'marker-1'))
+  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v18', 'marker-1'))
   await page.getByLabel('玩家姓名').press('Enter')
 
   await expect(page.getByTestId('overwrite-confirmation')).toBeVisible()
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v16'))).toBe('marker-1')
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v18'))).toBe('marker-1')
 
-  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v16', 'marker-2'))
+  await page.evaluate(() => window.localStorage.setItem('egg-jianghu-2-save-v18', 'marker-2'))
   await page.getByRole('button', { name: '确认覆盖并开始' }).click()
   await expect(page.getByTestId('overwrite-confirmation')).toBeVisible()
   await expect(page.getByRole('status')).toHaveText('存档已发生变化，请重新确认覆盖')
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v16'))).toBe('marker-2')
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v18'))).toBe('marker-2')
 
   await page.getByRole('button', { name: '确认覆盖并开始' }).click()
   await expect(page.getByTestId('world-overview')).toBeVisible()
@@ -169,14 +186,14 @@ test('多标签页同步存档状态且旧会话不能覆盖外部删档或新�
   await expect(secondPage.getByRole('status')).toHaveText('存档已在其他窗口发生变化，请重新选择继续或新建游戏')
   await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeDisabled()
   await secondPage.waitForTimeout(600)
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v16'))).toBeNull()
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v18'))).toBeNull()
 
   await page.getByLabel('玩家姓名').fill('新少侠')
   await page.getByLabel('玩家姓名').press('Enter')
   await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeEnabled()
   await secondPage.waitForTimeout(600)
   expect(await page.evaluate(() => {
-    const raw = window.localStorage.getItem('egg-jianghu-2-save-v16')
+    const raw = window.localStorage.getItem('egg-jianghu-2-save-v18')
     return raw ? JSON.parse(raw).heroes.hero_player.customName : null
   })).toBe('新少侠')
   expect(secondPageErrors).toEqual([])
@@ -186,7 +203,7 @@ test('多标签页同步存档状态且旧会话不能覆盖外部删档或新�
 test('损坏的玩家姓名存档拒绝继续且不会被当前会话覆盖', async ({ page }) => {
   await createGame(page, '燕七')
   const corruptedSave = await page.evaluate(() => {
-    const key = 'egg-jianghu-2-save-v16'
+    const key = 'egg-jianghu-2-save-v18'
     const raw = JSON.parse(window.localStorage.getItem(key)!)
     raw.heroes.hero_player.customName = 42
     const serialized = JSON.stringify(raw)
@@ -198,6 +215,6 @@ test('损坏的玩家姓名存档拒绝继续且不会被当前会话覆盖', as
   await page.getByRole('button', { name: '继续游戏' }).click()
   await expect(page.getByTestId('title-page')).toBeVisible()
   await expect(page.getByRole('status')).toHaveText('存档无法读取')
-  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v16'))).toBe(corruptedSave)
+  expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v18'))).toBe(corruptedSave)
   await page.waitForTimeout(350)
 })

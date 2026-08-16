@@ -87,14 +87,19 @@ export interface FactionsPageViewModel {
     slot: number
     quest: null | {
       id: string
-      type: 'normal' | 'boss'
-      grade: string
+      taskId: number
+      taskName: string
+      actionName: string
+      targetKind: string
+      quality: number
       targetName: string
       progress: number
       targetCount: number
       rewardContribution: number
+      rewardReputation: number
       accepted: boolean
       completed: boolean
+      settled: boolean
     }
   }>
   branches: Array<{ name: string; martials: FactionMartialView[] }>
@@ -143,23 +148,25 @@ const renderQuest = (
   const completed = quest.completed
   const accepted = quest.accepted
   const action = completed ? 'quest-claim' : accepted ? 'quest-cancel' : 'quest-accept'
-  const actionLabel = completed ? '领赏' : accepted ? '收榜' : '揭榜'
-  const stateLabel = completed ? '功成' : accepted ? '已揭' : ''
-  return `<article class="faction-notice ${quest.type === 'boss' ? 'boss' : ''} ${accepted ? 'accepted' : ''} ${completed ? 'done' : ''}" style="${style}" data-quest-slot="${slot}" data-testid="quest-slot-${slot}">
-    ${stateLabel ? `<span class="faction-stamp ${completed ? 'done' : ''}">${stateLabel}</span>` : ''}
+  const actionLabel = quest.settled ? '已结' : completed ? '领赏' : accepted ? '放弃' : '揭榜'
+  const stateLabel = quest.settled ? '已结' : completed ? '功成' : accepted ? '已揭' : ''
+  const isBoss = quest.taskId === 4
+  const unit = quest.taskId === 5 ? '件' : quest.taskId === 3 ? '个' : quest.taskId === 2 ? '' : '次'
+  return `<article class="faction-notice ${isBoss ? 'boss' : ''} ${accepted ? 'accepted' : ''} ${completed || quest.settled ? 'done' : ''}" style="${style}" data-quest-slot="${slot}" data-testid="quest-slot-${slot}">
+    ${stateLabel ? `<span class="faction-stamp ${completed || quest.settled ? 'done' : ''}">${stateLabel}</span>` : ''}
     <div class="faction-notice-top">
-      <span class="faction-notice-type">${quest.type === 'boss' ? '首领悬赏' : '江湖悬赏'}</span>
-      <span class="faction-grade-seal" data-grade="${escapeHtml(quest.grade)}">${escapeHtml(quest.grade)}</span>
+      <span class="faction-notice-type">${escapeHtml(quest.taskName)}</span>
+      <span class="faction-grade-seal" data-grade="${quest.quality}">${quest.quality}品</span>
     </div>
     <h3>${escapeHtml(quest.targetName)}</h3>
-    <p class="faction-notice-scene">出没于 ${escapeHtml(quest.type === 'boss' ? '关底 · 当前江湖卷' : '沿途 · 当前江湖卷')}</p>
+    <p class="faction-notice-scene">${escapeHtml(quest.actionName)} · ${escapeHtml(quest.targetKind)}</p>
     <div class="faction-tally-row">
       <span class="faction-tally" aria-hidden="true">${renderTally(quest.progress, quest.targetCount)}</span>
-      <span><b>${quest.progress}</b> / ${quest.targetCount} 杀</span>
+      <span><b>${formatNumber(quest.progress)}</b> / ${formatNumber(quest.targetCount)} ${unit}</span>
     </div>
     <div class="faction-notice-foot">
-      <span class="faction-reward">赏 <b>${formatNumber(quest.rewardContribution)}</b> 贡献</span>
-      <button type="button" class="faction-action-button faction-action-${action}" data-action="${action}" data-faction-id="${escapeHtml(factionId)}" data-slot="${slot}">${actionLabel}</button>
+      <span class="faction-reward">赏 <b>${formatNumber(quest.rewardContribution)}</b> 贡献 · ${formatNumber(quest.rewardReputation)} 声望</span>
+      <button type="button" class="faction-action-button faction-action-${action}" data-action="${action}" data-faction-id="${escapeHtml(factionId)}" data-slot="${slot}"${quest.settled ? ' disabled' : ''}>${actionLabel}</button>
     </div>
   </article>`
 }
@@ -299,7 +306,7 @@ export const renderFactionsPage = (view: FactionsPageViewModel): string => {
     <section class="faction-board" data-testid="faction-quest-board">
       <div class="faction-board-inner">
         <header class="faction-section-head">
-          <div class="faction-section-title"><h2>悬榜</h2><span>六格悬榜 · <i>揭榜追杀</i> · 以功易赏</span></div>
+          <div class="faction-section-title"><h2>悬榜</h2><span>五格悬榜 · <i>揭榜办差</i> · 以功易赏</span></div>
           <div class="faction-incense" title="一炷香尽，未揭之榜尽数更换"><span>一炷香后换榜 · <b>${minutes}</b> 分钟</span><span class="faction-incense-track"><i style="width:${Math.max(0, Math.min(100, (view.refreshRemainingMs / 3_600_000) * 100))}%"></i><em></em></span></div>
         </header>
         <div class="faction-quest-grid">${view.quests.map(({ slot, quest }) => renderQuest(view.selectedFactionId, slot, quest)).join('')}</div>

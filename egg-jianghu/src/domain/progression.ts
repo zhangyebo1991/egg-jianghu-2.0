@@ -1,5 +1,6 @@
 import { DIFFICULTY_COUNT, STAGE_COUNT } from '../content/worlds'
-import type { CampaignMode } from './types'
+import { FACTIONS } from '../content/factions'
+import type { CampaignMode, GameStateV10 } from './types'
 
 export interface CampaignSelection {
   worldId: string
@@ -43,6 +44,30 @@ export const highestUnlockedDifficulty = (
     highest = difficulty
   }
   return highest
+}
+
+export const worldBattleProgress = (
+  progress: Record<string, number>,
+  worldId: string,
+): number => {
+  let total = 0
+  for (let difficulty = 1; difficulty <= DIFFICULTY_COUNT; difficulty += 1) {
+    const cleared = clearedStageOf(progress, worldId, difficulty)
+    total = (difficulty - 1) * STAGE_COUNT + cleared
+    if (cleared < STAGE_COUNT) break
+  }
+  return total
+}
+
+export const syncFactionUnlocks = (state: GameStateV10, worldId: string): string[] => {
+  if (!state.unlockedWorldIds.includes(worldId)) return []
+  const progress = worldBattleProgress(state.clearedStageByWorldDifficulty, worldId)
+  const unlocked = FACTIONS
+    .filter((faction) => faction.worldId === worldId && progress >= faction.requiredProgress)
+    .map((faction) => faction.id)
+    .filter((factionId) => !state.unlockedFactionIds.includes(factionId))
+  state.unlockedFactionIds.push(...unlocked)
+  return unlocked
 }
 
 export const resolveDefeat = (selection: CampaignSelection): CampaignSelection => {

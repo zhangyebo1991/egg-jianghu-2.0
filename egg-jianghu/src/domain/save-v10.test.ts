@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialStateV10, createNewGameStateV10 } from './state'
-import { clearSaveV10, hasSaveV10, hydrateStateV10, loadGameV10, SAVE_KEY_V10, saveGameV10 } from './save-v10'
+import { clearSaveV10, hasLegacySaveV17, hasSaveV10, hydrateStateV10, LEGACY_SAVE_KEY_V17, loadGameV10, SAVE_KEY_V10, saveGameV10 } from './save-v10'
 
 const memoryStorage = () => {
   const values = new Map<string, string>()
@@ -12,8 +12,8 @@ const memoryStorage = () => {
   }
 }
 
-describe('version 17 存档', () => {
-  it('通过 version 17 专用 key 检测存档是否存在', () => {
+describe('version 18 存档', () => {
+  it('通过 version 18 专用 key 检测存档是否存在', () => {
     const storage = memoryStorage()
 
     expect(hasSaveV10(storage)).toBe(false)
@@ -21,16 +21,20 @@ describe('version 17 存档', () => {
     storage.setItem(SAVE_KEY_V10, '{}')
 
     expect(hasSaveV10(storage)).toBe(true)
+    expect(SAVE_KEY_V10).toBe('egg-jianghu-2-save-v18')
   })
 
-  it('清除时只移除 version 17 存档', () => {
+  it('清除时只移除 version 18 存档并保留 version 17 旧档', () => {
     const storage = memoryStorage()
     storage.setItem(SAVE_KEY_V10, '{}')
+    storage.setItem(LEGACY_SAVE_KEY_V17, '旧档')
     storage.setItem('other-key', '保留')
 
     clearSaveV10(storage)
 
     expect(storage.getItem(SAVE_KEY_V10)).toBeNull()
+    expect(storage.getItem(LEGACY_SAVE_KEY_V17)).toBe('旧档')
+    expect(hasLegacySaveV17(storage)).toBe(true)
     expect(storage.getItem('other-key')).toBe('保留')
   })
 
@@ -60,7 +64,7 @@ describe('version 17 存档', () => {
     saveGameV10(storage, state, 2000)
 
     const raw = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
-    expect(raw.version).toBe(17)
+    expect(raw.version).toBe(18)
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })
@@ -68,12 +72,70 @@ describe('version 17 存档', () => {
   it('关闭期间不根据 lastSavedAt 推进悬榜倒计时', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(1000)
-    state.factionBoards.qingfeng_hall = { refreshRemainingMs: 1234, slots: [null, null, null, null, null, null] }
+    state.factionBoards.tieyi_school = { refreshRemainingMs: 1234, slots: [null, null, null, null, null] }
     saveGameV10(storage, state, 1000)
 
     const loaded = loadGameV10(storage, 99_999)
 
-    expect(loaded.state.factionBoards.qingfeng_hall.refreshRemainingMs).toBe(1234)
+    expect(loaded.state.factionBoards.tieyi_school.refreshRemainingMs).toBe(1234)
+  })
+
+  it('保存并恢复独立的声望、代理人、幻型、五格悬榜与接受记录', () => {
+    const storage = memoryStorage()
+    const state = createInitialStateV10(1000)
+    state.worldReputation.world_01 = 321
+    state.factionAgents.world_01 = { heroId: 'hero_player', enabled: true }
+    state.unlockedSkinIds = [7, 11]
+    state.factionBoards.tieyi_school = {
+      refreshRemainingMs: 1234,
+      slots: [{ id: 'q1', taskId: 1, quality: 2, targetId: 1, generatedAt: 1000, acceptedRecordId: 1 }, null, null, null, null],
+    }
+    state.acceptedFactionQuests['1'] = {
+      recordId: 1,
+      factionId: 'tieyi_school',
+      factionSourceId: 2,
+      worldIndex: 1,
+      taskId: 1,
+      quality: 2,
+      targetId: 1,
+      requiredAmount: 10,
+      progress: 3,
+      boardSlot: 0,
+      status: 1,
+    }
+    saveGameV10(storage, state, 1000)
+
+    const loaded = loadGameV10(storage, 2000)
+
+    expect(loaded.recoveredFromError).toBe(false)
+    expect(loaded.state.worldReputation.world_01).toBe(321)
+    expect(loaded.state.factionAgents.world_01).toEqual({ heroId: 'hero_player', enabled: true })
+    expect(loaded.state.unlockedSkinIds).toEqual([7, 11])
+    expect(loaded.state.factionBoards.tieyi_school.slots).toHaveLength(5)
+    expect(loaded.state.acceptedFactionQuests['1'].progress).toBe(3)
+  })
+
+  it.each([
+    ['缺少位面声望', (raw: Record<string, unknown>) => { delete raw.worldReputation }],
+    ['代理人字段损坏', (raw: Record<string, unknown>) => { raw.factionAgents = { world_01: { heroId: 7, enabled: true } } }],
+    ['悬榜不是五格', (raw: Record<string, unknown>) => {
+      raw.factionBoards = { tieyi_school: { refreshRemainingMs: 1, slots: [null, null, null, null, null, null] } }
+    }],
+    ['接受记录键不匹配', (raw: Record<string, unknown>) => {
+      raw.acceptedFactionQuests = {
+        2: { recordId: 1, factionId: 'tieyi_school', factionSourceId: 2, worldIndex: 1, taskId: 1, quality: 1, targetId: 1, requiredAmount: 1, progress: 0, boardSlot: 0, status: 1 },
+      }
+    }],
+    ['接受记录没有对应悬榜关联', (raw: Record<string, unknown>) => {
+      raw.acceptedFactionQuests = {
+        1: { recordId: 1, factionId: 'tieyi_school', factionSourceId: 2, worldIndex: 1, taskId: 1, quality: 1, targetId: 1, requiredAmount: 1, progress: 0, boardSlot: 0, status: 1 },
+      }
+    }],
+    ['幻型 ID 非整数', (raw: Record<string, unknown>) => { raw.unlockedSkinIds = [1.5] }],
+  ])('拒绝 v18 势力状态损坏：%s', (_name, mutate) => {
+    const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>
+    mutate(raw)
+    expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
   })
 
   it('内容目录改版后剪枝已删除侠客的进度并清理阵型', () => {

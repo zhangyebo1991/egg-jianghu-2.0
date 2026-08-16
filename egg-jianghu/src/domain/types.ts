@@ -5,8 +5,9 @@ export type FormationRow = 0 | 1 | 2
 /** 列（纵深）：0 为最前列（贴中线），4 为最后列 */
 export type FormationColumn = 0 | 1 | 2 | 3 | 4
 export type CampaignMode = 'guard' | 'roam'
-export type QuestGrade = HeroGrade
 export type EquipmentQuality = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+export type FactionQuestTaskId = 1 | 2 | 3 | 4 | 5
+export type FactionQuestQuality = 1 | 2 | 3 | 4 | 5 | 6
 
 export interface ActionResult {
   ok: boolean
@@ -62,23 +63,38 @@ export interface FormationSlot {
   col: FormationColumn
 }
 
-export interface QuestProgress {
+export interface FactionQuestBoardEntry {
   id: string
-  type: 'normal' | 'boss'
-  grade: QuestGrade
-  targetId: string
-  targetCount: number
-  rewardContribution: number
+  taskId: FactionQuestTaskId
+  quality: FactionQuestQuality
+  targetId: number
   generatedAt: number
-  accepted: boolean
-  completed: boolean
-  claimed: boolean
+  /** 0 可接受、正数为接受记录 ID、-1 已完成。 */
+  acceptedRecordId: number
+}
+
+export interface AcceptedFactionQuest {
+  recordId: number
+  factionId: string
+  factionSourceId: number
+  worldIndex: number
+  taskId: FactionQuestTaskId
+  quality: FactionQuestQuality
+  targetId: number
+  requiredAmount: number
   progress: number
+  boardSlot: number
+  status: 1
 }
 
 export interface FactionBoardState {
   refreshRemainingMs: number
-  slots: Array<QuestProgress | null>
+  slots: Array<FactionQuestBoardEntry | null>
+}
+
+export interface FactionAgentState {
+  heroId: string | null
+  enabled: boolean
 }
 
 export interface EquipmentInstance {
@@ -109,9 +125,11 @@ export interface SacredBeastProgressState {
 }
 
 export interface GameStateV10 {
-  version: 17
+  version: 18
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
+  worldReputation: Record<string, number>
+  factionAgents: Record<string, FactionAgentState>
   unlockedFactionIds: string[]
   heroes: Record<string, HeroProgressV10>
   jobBooks: Record<string, number>
@@ -120,6 +138,8 @@ export interface GameStateV10 {
   clearedStageByWorldDifficulty: Record<string, number>
   encounteredEnemyIds: string[]
   factionBoards: Record<string, FactionBoardState>
+  acceptedFactionQuests: Record<string, AcceptedFactionQuest>
+  unlockedSkinIds: number[]
   inventory: EquipmentInstance[]
   materials: Record<string, number>
   starSoul: number

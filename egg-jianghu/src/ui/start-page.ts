@@ -21,6 +21,7 @@ const renderTitlePage = (view: StartPageViewModel): string => `
       </div>
       <span class="start-tagline">十三位面 · 择面穿越</span>
       <div class="start-divider" aria-hidden="true"></div>
+      ${view.error ? `<p class="start-error" role="alert">${escapeHtml(view.error)}</p>` : ''}
       <div class="start-actions">
         <button type="button" class="primary" data-action="new-game"${disabled(view.busy)}>新建游戏</button>
         <button type="button" data-action="continue-game"${disabled(!view.hasSave || view.busy)}>继续游戏</button>

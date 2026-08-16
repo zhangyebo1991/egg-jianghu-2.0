@@ -26,6 +26,16 @@ describe('标题与新建游戏页面', () => {
     expect(busy).toMatch(/data-action="continue-game"[^>]*disabled/)
   })
 
+  it('标题页安全展示旧档提示', () => {
+    const html = renderStartPage({
+      screen: 'title', hasSave: false, playerName: '', error: '<version 17 旧档>', confirmOverwrite: false, busy: false,
+    })
+
+    expect(html).toContain('role="alert"')
+    expect(html).toContain('&lt;version 17 旧档&gt;')
+    expect(html).not.toContain('<version 17 旧档>')
+  })
+
   it('新建游戏表单安全展示输入和错误', () => {
     const html = renderStartPage({
       screen: 'new-game', hasSave: false, playerName: '<燕七>"', error: '<姓名无效>', confirmOverwrite: false, busy: false,

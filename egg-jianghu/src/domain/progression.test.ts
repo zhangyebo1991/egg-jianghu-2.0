@@ -6,7 +6,10 @@ import {
   progressKey,
   resolveDefeat,
   resolveVictory,
+  syncFactionUnlocks,
+  worldBattleProgress,
 } from './progression'
+import { createInitialStateV10 } from './state'
 
 describe('驻守与闯荡推进', () => {
   it('闯荡失败切驻守并按规则回退', () => {
@@ -48,5 +51,26 @@ describe('位面难度解锁', () => {
     expect(clearedStageOf(progress, 'world_01', 1)).toBe(10)
     expect(difficultyLabel(1)).toBe('基础')
     expect(difficultyLabel(2)).toBe('难度2')
+  })
+
+  it('按连续战斗进度 31、51、71 解锁第一位面的三个正式势力', () => {
+    const state = createInitialStateV10(0)
+    expect(state.unlockedFactionIds).toEqual(['qingfeng_hall'])
+    for (let difficulty = 1; difficulty <= 3; difficulty += 1) {
+      state.clearedStageByWorldDifficulty[progressKey('world_01', difficulty)] = 10
+    }
+    expect(worldBattleProgress(state.clearedStageByWorldDifficulty, 'world_01')).toBe(30)
+    expect(syncFactionUnlocks(state, 'world_01')).toEqual([])
+
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 4)] = 1
+    expect(syncFactionUnlocks(state, 'world_01')).toEqual(['tieyi_school'])
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 4)] = 10
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 5)] = 10
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 6)] = 1
+    expect(syncFactionUnlocks(state, 'world_01')).toEqual(['renxin_hall'])
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 6)] = 10
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 7)] = 10
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 8)] = 1
+    expect(syncFactionUnlocks(state, 'world_01')).toEqual(['original_faction_04'])
   })
 })

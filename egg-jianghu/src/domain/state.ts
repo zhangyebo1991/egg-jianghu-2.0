@@ -31,10 +31,14 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
 }
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
-  version: 17,
+  version: 18,
   worldCurrency: { world_01: 1000 },
   contribution: {},
-  unlockedFactionIds: FACTIONS.filter((faction) => faction.worldId === 'world_01').map((faction) => faction.id),
+  worldReputation: { world_01: 0 },
+  factionAgents: { world_01: { heroId: null, enabled: false } },
+  unlockedFactionIds: FACTIONS
+    .filter((faction) => faction.worldId === 'world_01' && faction.currencyKind === 'worldCurrency')
+    .map((faction) => faction.id),
   heroes: {},
   jobBooks: {},
   formation: [],
@@ -42,6 +46,8 @@ export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
   clearedStageByWorldDifficulty: { 'world_01:1': 0 },
   encounteredEnemyIds: [],
   factionBoards: {},
+  acceptedFactionQuests: {},
+  unlockedSkinIds: [],
   inventory: [],
   materials: {},
   starSoul: 0,
