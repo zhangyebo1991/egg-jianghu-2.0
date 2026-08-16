@@ -57,6 +57,37 @@ describe('江湖战斗页', () => {
     expect(html).toContain('class="pack-meter full"')
   })
 
+  it('仅为我方存活角色显示五格墨玉能量并标记满能量', () => {
+    const unit = (id: string, energy: number, alive = true) => ({
+      id, name: id, rank: 'normal' as const, row: 1 as const, col: 0 as const,
+      hp: alive ? 100 : 0, maxHp: 100, energy, maxEnergy: 5, gauge: 0,
+      cooldownMs: 0, alive, skillName: '蓄势待发',
+    })
+    const html = renderIdlePage(fixtureViewModel({
+      combat: {
+        mode: 'guard',
+        wave: 1,
+        party: [unit('party-partial', 3), { ...unit('party-full', 5), col: 1 }, { ...unit('party-fallen', 4, false), col: 2 }],
+        enemies: [unit('enemy', 4)],
+        timeline: { phase: 'accumulating', activeActorId: null, readyQueue: [] },
+      },
+    }))
+    const energyMarkup = (id: string): string => html.match(
+      new RegExp(`<span class="unit-energy-orbs[^"]*"[^>]*data-testid="unit-energy-${id}"[\\s\\S]*?</span>`),
+    )?.[0] ?? ''
+    const partial = energyMarkup('party-partial')
+    const full = energyMarkup('party-full')
+
+    expect(partial.match(/class="energy-orb(?: charged)?"/g)).toHaveLength(5)
+    expect(partial.match(/energy-orb charged/g)).toHaveLength(3)
+    expect(partial).toContain('aria-valuenow="3"')
+    expect(full).toContain('class="unit-energy-orbs full"')
+    expect(full.match(/energy-orb charged/g)).toHaveLength(5)
+    expect(html).not.toContain('data-testid="unit-energy-enemy"')
+    expect(html).not.toContain('data-testid="unit-energy-party-fallen"')
+    expect(html).not.toContain('energy-meter')
+  })
+
   it('按我左敌右展示战场，双方最前列贴中线镜像对峙', () => {
     const unit = (id: string, row: 0 | 1 | 2, col: 0 | 1 | 2 | 3 | 4) => ({
       id, name: id, rank: 'normal' as const, row, col, hp: 100, maxHp: 100,

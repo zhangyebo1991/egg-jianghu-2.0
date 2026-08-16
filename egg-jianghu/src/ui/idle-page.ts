@@ -107,6 +107,7 @@ const rankLabel = { normal: '', elite: '精英', captain: '头目', boss: 'BOSS'
 const laneNames = ['上路', '中路', '下路'] as const
 const LANE_ROWS = [0, 1, 2] as const
 const LANE_COLS = [0, 1, 2, 3, 4] as const
+const DISPLAY_ENERGY_CAP = 5
 const motionKinds = new Set<IdleCombatEffectKind>(['lunge-party', 'lunge-enemy', 'hit-shake'])
 
 const formatDuration = (elapsedMs: number): string => {
@@ -138,6 +139,18 @@ const renderUnitPortrait = (unit: IdleCombatUnitView, side: 'party' | 'enemy'): 
     <span class="portrait-char" aria-hidden="true">${escapeHtml(fallback)}</span>
     <img src="${escapeHtml(portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">
     <span class="portrait-ring" aria-hidden="true"></span>
+  </span>`
+}
+
+const displayedEnergy = (unit: IdleCombatUnitView): number =>
+  Math.max(0, Math.min(DISPLAY_ENERGY_CAP, Math.floor(unit.energy)))
+
+const renderPartyEnergy = (unit: IdleCombatUnitView): string => {
+  const energy = displayedEnergy(unit)
+  const full = energy === DISPLAY_ENERGY_CAP
+  return `<span class="unit-energy-orbs${full ? ' full' : ''}" data-testid="unit-energy-${escapeHtml(unit.id)}"
+      role="meter" aria-label="${escapeHtml(unit.name)}能量" aria-valuemin="0" aria-valuemax="${DISPLAY_ENERGY_CAP}" aria-valuenow="${energy}">
+    ${Array.from({ length: DISPLAY_ENERGY_CAP }, (_, index) => `<i class="energy-orb${index < energy ? ' charged' : ''}" aria-hidden="true"></i>`).join('')}
   </span>`
 }
 
@@ -185,7 +198,8 @@ const renderUnit = (
       <img class="combat-death-image" src="${escapeHtml(partyDeathImageUrl)}" data-testid="party-death-image-${escapeHtml(unit.id)}" alt="" aria-hidden="true" draggable="false">
     </article>`
   }
-  return `<article class="combat-unit ${side}${unit.alive ? '' : ' fallen'}${motionClasses ? ` ${motionClasses}` : ''}"
+  const energyFull = side === 'party' && displayedEnergy(unit) === DISPLAY_ENERGY_CAP
+  return `<article class="combat-unit ${side}${unit.alive ? '' : ' fallen'}${energyFull ? ' energy-full' : ''}${motionClasses ? ` ${motionClasses}` : ''}"
       data-unit-id="${escapeHtml(unit.id)}" data-rank="${unit.rank}" data-testid="combat-unit-${escapeHtml(unit.id)}"${motionEffect ? renderEffectTimingStyle(motionEffect) : ''}>
     ${renderUnitPortrait(unit, side)}
     <span class="unit-body">
@@ -196,11 +210,11 @@ const renderUnit = (
       </span>
       ${renderGauge('气血', unit.hp, unit.maxHp, 'hp-meter', unit.alive && hpPercent <= 30 ? 'low' : '')}
       ${shield > 0 ? renderGauge('护盾', shield, Math.max(shield, unit.maxHp), 'shield-meter') : ''}
-      ${renderGauge('能量', unit.energy, unit.maxEnergy, 'energy-meter', unit.energy >= unit.maxEnergy ? 'full' : '')}
       ${statuses.length ? `<span class="unit-statuses">${statuses.map((status) =>
         `<span class="status-chip ${status.polarity}">${escapeHtml(status.name)}${status.stacks > 1 ? `×${status.stacks}` : ''}</span>`
       ).join('')}</span>` : ''}
       <span class="unit-foot"><span class="foot-label">回气</span><span class="cool-num">${(unit.cooldownMs / 1000).toFixed(1)}s</span><span class="skill-name">${escapeHtml(unit.skillName)}</span></span>
+      ${side === 'party' ? renderPartyEnergy(unit) : ''}
     </span>
     ${unitEffects.filter((effect) => !motionKinds.has(effect.kind)).map(renderEffect).join('')}
   </article>`
