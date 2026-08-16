@@ -29,7 +29,7 @@ const enterWorld = async (page: Page, worldId = 'world_01'): Promise<void> => {
   await page.getByTestId('start-crossing').click()
 }
 
-const openWorldSection = async (page: Page, section: 'stages' | 'factions' | 'city'): Promise<void> => {
+const openWorldSection = async (page: Page, section: 'stages' | 'factions' | 'towns' | 'city'): Promise<void> => {
   await page.evaluate((nextSection) => window.__EGG_JIANGHU__.setJianghuSection(nextSection), section)
 }
 
@@ -287,12 +287,29 @@ test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) 
   expect(after.inventory).toBeGreaterThanOrEqual(before.inventory)
 })
 
-test('江湖关卡页不显示势力和城市入口', async ({ page }) => {
+test('江湖位面侧栏显示四个分离入口并可切换城镇与城市', async ({ page }) => {
   await enterWorld(page)
   await expect(page.getByTestId('stage-overview')).toBeVisible()
-  await expect(page.locator('[data-jianghu-section]')).toHaveCount(0)
-  await expect(page.getByTestId('world-section-factions')).toHaveCount(0)
-  await expect(page.getByTestId('world-section-city')).toHaveCount(0)
+  await expect(page.locator('[data-jianghu-section]')).toHaveCount(4)
+  await expect(page.getByTestId('world-section-stages')).toHaveAttribute('aria-current', 'page')
+
+  await page.getByTestId('world-section-towns').click()
+  await expect(page.getByTestId('towns-page')).toBeVisible()
+  await expect(page.getByTestId('town-public-locations').locator('.town-place-card')).toHaveCount(5)
+  await expect(page.getByTestId('faction-towns').locator('.faction-town-card')).toHaveCount(3)
+  const factionTownButton = page.getByTestId('faction-town-tieyi_school').getByRole('button', { name: '查看势力总览' })
+  await factionTownButton.scrollIntoViewIfNeeded()
+  await factionTownButton.click()
+  await expect(page.getByTestId('faction-plaque-tieyi_school')).toHaveAttribute('aria-pressed', 'true')
+
+  await page.getByTestId('world-section-city').click()
+  await expect(page.getByTestId('city-page')).toContainText('跨位面经营')
+  await expect(page.getByTestId('city-page')).not.toContainText('本卷货币')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByTestId('world-section-towns').click()
+  await expect(page.getByTestId('towns-page')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
 test('离页后恢复同一战斗并在停止后返回小关列表', async ({ page }) => {
@@ -424,7 +441,7 @@ test('侠客页打开转职树可查看职业节点与转职书', async ({ page 
 })
 
 test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
-  await openWorldSection(page, 'city')
+  await openWorldSection(page, 'towns')
   await page.getByTestId('tavern-hero_mu_nianci').getByRole('button', { name: '直接邀请' }).click()
   await page.getByTestId('tavern-hero_yang_tiexin').getByRole('button', { name: '直接邀请' }).click()
 

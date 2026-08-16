@@ -24,7 +24,7 @@ import {
   type EquipmentSlot,
 } from './content/equipment'
 import { ATTRIBUTE_BY_ID } from './content/attributes'
-import { FACTIONS } from './content/factions'
+import { FACTIONS, factionByOriginalId } from './content/factions'
 import { FACTION_HEROES, HEROES_V10, PLAYER_HERO_ID, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
 import { FACTION_MARTIALS, martialBuffChanceAtLevel, martialByIdV10, martialByOriginalId, martialEffectAtLevel, martialResourceCost, martialSpCost } from './content/martials'
 import { buffById } from './content/buffs'
@@ -37,6 +37,7 @@ import {
   ORIGINAL_SACRED_BEASTS,
   ORIGINAL_SACRED_UPGRADES,
 } from './content/original-progression.generated'
+import { ORIGINAL_CITY_FOUNDATION, originalWorldTownByIndex } from './content/original-towns.generated'
 import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
@@ -99,6 +100,7 @@ import { renderStageList, renderWorldOverview, type PlaneSelectViewModel, type S
 import { createDomPatcher } from './ui/dom-patch'
 import { renderShell, type JianghuSection, type TabId } from './ui/shell'
 import { renderStartPage } from './ui/start-page'
+import { renderTownsPage, type TownsPageViewModel } from './ui/towns-page'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (!app) throw new Error('缺少 #app 根节点')
@@ -1174,29 +1176,55 @@ const factionsViewModel = (): FactionsPageViewModel => {
   }
 }
 
-const cityViewModel = (): CityPageViewModel => {
+const tavernHeroesForWorld = (worldId: string): TownsPageViewModel['tavernHeroes'] =>
+  TAVERN_HEROES.filter((hero) => hero.worldId === worldId).map((hero) => {
+    const career = careerById(hero.baseCareerId)
+    return {
+      id: hero.id,
+      name: hero.name,
+      grade: hero.grade,
+      category: heroMeridianCategory(hero),
+      careerName: career?.name ?? '白丁',
+      cost: hero.cost,
+      recruited: Boolean(session.state.heroes[hero.id]?.recruited),
+      line: hero.line ?? null,
+    }
+  })
+
+const townsViewModel = (): TownsPageViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
-  const worldIndex = Number(world.id.slice(-2)) || 1
+  const town = originalWorldTownByIndex(world.index)
   return {
-    worldId: world.id,
-    worldIndex,
+    worldIndex: world.index,
     worldName: world.name,
+    mainCityName: town?.mainCity.name ?? world.name,
     worldCurrency: session.state.worldCurrency[world.id] ?? 0,
-    tavernHeroes: TAVERN_HEROES.filter((hero) => hero.worldId === world.id).map((hero) => {
-      const career = careerById(hero.baseCareerId)
+    publicLocations: town?.publicLocations.map((location) => ({
+      name: location.name,
+      npcTitle: location.npcTitle && location.npcTitle !== '无' ? location.npcTitle : null,
+      functions: location.functions.map((fn) => fn.name),
+      tavern: location.functions.some((fn) => fn.sourceId === 5),
+    })) ?? [],
+    factionTowns: town?.factionTowns.map((factionTown) => {
+      const faction = factionByOriginalId(factionTown.factionSourceId)
       return {
-        id: hero.id,
-        name: hero.name,
-        grade: hero.grade,
-        category: heroMeridianCategory(hero),
-        careerName: career?.name ?? '白丁',
-        cost: hero.cost,
-        recruited: Boolean(session.state.heroes[hero.id]?.recruited),
-        line: hero.line ?? null,
+        name: factionTown.name,
+        factionId: faction?.id ?? '',
+        factionName: faction?.name ?? '未知势力',
+        unlocked: Boolean(faction && session.state.unlockedFactionIds.includes(faction.id)),
+        functions: factionTown.functions.map((fn) => fn.name),
       }
-    }),
+    }) ?? [],
+    tavernHeroes: tavernHeroesForWorld(world.id),
   }
 }
+
+const cityViewModel = (): CityPageViewModel => ({
+  gridColumns: ORIGINAL_CITY_FOUNDATION.gridColumns,
+  gridRows: ORIGINAL_CITY_FOUNDATION.gridRows,
+  buildingCount: ORIGINAL_CITY_FOUNDATION.buildings,
+  technologyCount: ORIGINAL_CITY_FOUNDATION.technologies,
+})
 
 const inventorySlotNames = EQUIPMENT_SLOT_NAMES
 
@@ -1484,6 +1512,7 @@ const renderJianghuContent = (): string => {
     jianghuSection = 'stages'
   }
   if (jianghuSection === 'factions') return renderFactionsPage(factionsViewModel())
+  if (jianghuSection === 'towns') return renderTownsPage(townsViewModel())
   if (jianghuSection === 'city') return renderCityPage(cityViewModel())
   return renderStageList(stageListViewModel())
 }
@@ -1535,7 +1564,7 @@ const render = (): void => {
   patchApp(renderShell({
     activeTab,
     worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
-      ? { worldName: world.name }
+      ? { worldName: world.name, activeSection: jianghuSection }
       : null,
     hasCombatReturn: Boolean(session.combat && !(activeTab === 'idle' && jianghuView === 'combat')),
     showResetConfirmation,
@@ -2311,8 +2340,8 @@ app.addEventListener('click', (event) => {
   if (worldSection) {
     activeTab = 'idle'
     jianghuView = 'world'
-    jianghuSection = 'stages'
-    jianghuMotionPending = 'stage'
+    jianghuSection = worldSection
+    jianghuMotionPending = worldSection === 'stages' ? 'stage' : null
     render()
     return
   }
@@ -2396,6 +2425,20 @@ app.addEventListener('click', (event) => {
     heroRosterGradeFilter = 'all'
     heroRosterCategoryFilter = 'all'
     heroRosterLocatePending = Boolean(selectedHeroId)
+  }
+  else if (action === 'open-faction-town') {
+    const nextFactionId = button.dataset.factionId ?? ''
+    if (!session.state.unlockedFactionIds.includes(nextFactionId)) {
+      notify('此势力尚未解锁', true)
+    } else {
+      selectedFactionId = nextFactionId
+      selectedFactionMartialId = null
+      factionRosterOpen = false
+      factionRosterQuery = ''
+      factionSwitchAnimationPending = true
+      jianghuSection = 'factions'
+      startFactionContributionAnimation(session.state.contribution[nextFactionId] ?? 0)
+    }
   }
   else if (action === 'select-faction') {
     const nextFactionId = button.dataset.factionId ?? selectedFactionId

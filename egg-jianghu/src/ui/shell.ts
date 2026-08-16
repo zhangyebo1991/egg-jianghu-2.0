@@ -1,11 +1,11 @@
 import { escapeHtml } from './html'
 
 export type TabId = 'idle' | 'heroes' | 'formation' | 'inventory' | 'progression'
-export type JianghuSection = 'stages' | 'factions' | 'city'
+export type JianghuSection = 'stages' | 'factions' | 'towns' | 'city'
 
 export interface ShellViewModel {
   activeTab: TabId
-  worldContext: { worldName: string } | null
+  worldContext: { worldName: string; activeSection: JianghuSection } | null
   hasCombatReturn: boolean
   showResetConfirmation: boolean
   jianghuChrome?: boolean
@@ -18,6 +18,13 @@ const tabs: Array<{ id: TabId; label: string; mark: string }> = [
   { id: 'formation', label: '阵容', mark: '阵' },
   { id: 'inventory', label: '背包', mark: '匣' },
   { id: 'progression', label: '秘境', mark: '界' },
+]
+
+const jianghuSections: ReadonlyArray<{ id: JianghuSection; label: string; mark: string }> = [
+  { id: 'stages', label: '关卡', mark: '关' },
+  { id: 'factions', label: '势力', mark: '势' },
+  { id: 'towns', label: '城镇', mark: '镇' },
+  { id: 'city', label: '城市', mark: '城' },
 ]
 
 export const renderShell = (view: ShellViewModel): string => {
@@ -41,6 +48,15 @@ export const renderShell = (view: ShellViewModel): string => {
         ${worldContext ? `
           <nav class="world-subnav" aria-label="${escapeHtml(worldContext.worldName)}">
             <button type="button" class="world-back" data-action="return-worlds">返回江湖</button>
+            <span class="world-subnav-title">${escapeHtml(worldContext.worldName)}</span>
+            <div class="world-subnav-sections">
+              ${jianghuSections.map((section) => `
+                <button type="button" class="world-section${worldContext.activeSection === section.id ? ' active' : ''}"
+                  data-jianghu-section="${section.id}" data-testid="world-section-${section.id}"
+                  aria-current="${worldContext.activeSection === section.id ? 'page' : 'false'}">
+                  <span aria-hidden="true">${section.mark}</span><strong>${section.label}</strong>
+                </button>`).join('')}
+            </div>
           </nav>` : ''}
         <div class="sidebar-danger-zone">
           ${view.showResetConfirmation

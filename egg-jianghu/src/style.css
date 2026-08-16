@@ -353,6 +353,11 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .game-sidebar .nav-item.active .nav-mark { border-color: #8a3a2b; color: #cf6b53; }
 
 .game-sidebar .world-subnav { display: grid; gap: 4px; padding-top: 18px; border-top: 1px dashed #31382e; }
+.game-sidebar .world-subnav-title { padding: 5px 12px 3px; overflow: hidden; color: #7d7f72; font-size: 9px; letter-spacing: .18em; text-overflow: ellipsis; white-space: nowrap; }
+.game-sidebar .world-subnav-sections { display: grid; gap: 3px; }
+.game-sidebar .world-subnav .world-section { display: flex; align-items: center; gap: 8px; }
+.game-sidebar .world-subnav .world-section > span { width: 20px; color: #8b887d; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 15px; text-align: center; }
+.game-sidebar .world-subnav .world-section > strong { font-weight: 500; }
 .game-sidebar .world-subnav button {
   padding: 8px 12px;
   border: 0;
@@ -367,6 +372,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .game-sidebar .world-subnav button::after { margin-left: 8px; color: #7d7f72; font-size: 9px; letter-spacing: .14em; }
 .game-sidebar .world-subnav button[data-jianghu-section="stages"]::after { content: "STAGES"; }
 .game-sidebar .world-subnav button[data-jianghu-section="factions"]::after { content: "FACTIONS"; }
+.game-sidebar .world-subnav button[data-jianghu-section="towns"]::after { content: "TOWNS"; }
 .game-sidebar .world-subnav button[data-jianghu-section="city"]::after { content: "CITY"; }
 .game-sidebar .world-subnav button:hover:not(:disabled) { color: #e8e1d3; background: rgb(233 222 195 / 4%); }
 .game-sidebar .world-subnav button.active { color: #e6c67f; background: rgb(201 163 92 / 8%); }
@@ -428,6 +434,9 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .game-sidebar .nav-item strong { display: none; }
   .game-sidebar .world-subnav { gap: 2px; padding-top: 10px; }
   .game-sidebar .world-subnav button { padding: 6px 2px; font-size: 9px; letter-spacing: normal; text-align: center; }
+  .game-sidebar .world-subnav-title, .game-sidebar .world-subnav .world-section > strong, .game-sidebar .world-subnav .world-section::after { display: none; }
+  .game-sidebar .world-subnav .world-section { display: grid; justify-content: center; }
+  .game-sidebar .world-subnav .world-section > span { width: 24px; font-size: 15px; }
   .game-sidebar .world-subnav .world-back::before { content: none; }
   .game-sidebar .sidebar-landscape, .game-sidebar .sidebar-motto { display: none; }
 }
@@ -1085,6 +1094,62 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 
 .city-page-foot { position: relative; z-index: 1; padding: 14px 0 0; color: rgb(233 222 195 / 26%); font-size: 10px; letter-spacing: .4em; text-align: center; }
 
+/* ============ 城镇页 · 原版主城与势力城镇 ============ */
+.towns-coin { width: 32px; height: 32px; display: grid; flex: none; place-items: center; border: 1px solid #8f6f3a; border-radius: 50%; color: #30250f; background: radial-gradient(circle at 35% 30%, #e6c67f, #a37e3f 72%); box-shadow: 0 3px 10px rgb(201 163 92 / 28%); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 17px; }
+.towns-scroll { position: relative; z-index: 1; display: grid; gap: 24px; min-height: 0; }
+.towns-section { display: grid; gap: 13px; }
+.towns-section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.towns-section-head h2 { margin: 2px 0 0; color: #eadcb8; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 25px; font-weight: 400; letter-spacing: .1em; }
+.towns-section-head > p { max-width: 480px; margin: 0; color: var(--city-paper-mute); font-size: 10px; line-height: 1.7; letter-spacing: .08em; text-align: right; }
+.towns-kicker { color: var(--city-cinnabar-bright); font-size: 8px; letter-spacing: .32em; }
+.town-place-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.town-place-card { position: relative; display: grid; min-height: 164px; grid-template-columns: 42px minmax(0, 1fr); gap: 11px; padding: 15px 13px 34px; overflow: hidden; border: 1px solid var(--city-line-soft); border-radius: 9px; background: linear-gradient(165deg, rgb(31 36 28 / 96%), rgb(17 20 15 / 98%)); box-shadow: 0 12px 28px rgb(0 0 0 / 25%); }
+.town-place-card::before { position: absolute; inset: 0 0 auto; height: 2px; content: ""; background: #3b3426; }
+.town-place-card.active { border-color: rgb(181 80 60 / 55%); background: radial-gradient(circle at 0 0, rgb(181 80 60 / 10%), transparent 46%), linear-gradient(165deg, rgb(31 36 28 / 96%), rgb(17 20 15 / 98%)); }
+.town-place-mark { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--city-line); border-radius: 50%; color: var(--city-paper-dim); background: #181c16; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 21px; }
+.town-place-card.active .town-place-mark { border-color: var(--city-cinnabar-deep); color: #f0d7ca; background: radial-gradient(circle, #b5503c, #713126); }
+.town-place-copy { min-width: 0; }
+.town-place-copy header { display: grid; gap: 3px; }
+.town-place-copy h3 { margin: 0; color: #e7dbc3; font-size: 16px; font-weight: 500; letter-spacing: .1em; }
+.town-place-copy header small { color: var(--city-paper-mute); font-size: 9px; letter-spacing: .12em; }
+.town-place-copy > p { margin: 9px 0 0; color: #85877b; font-size: 9.5px; line-height: 1.65; }
+.town-function-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.town-function-tags > span { padding: 2px 6px; border: 1px solid rgb(201 163 92 / 22%); border-radius: 3px; color: #bca77a; background: rgb(201 163 92 / 5%); font-size: 8.5px; letter-spacing: .06em; }
+.town-place-state { position: absolute; right: 12px; bottom: 10px; color: #777b70; font-size: 8.5px; letter-spacing: .16em; }
+.town-place-state.ready { color: var(--city-jade); }
+.faction-town-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+.faction-town-card { display: grid; gap: 11px; padding: 16px; border: 1px solid var(--city-line-soft); border-radius: 9px; background: linear-gradient(150deg, rgb(201 163 92 / 6%), rgb(17 20 15 / 88%) 56%); }
+.faction-town-card > header { display: flex; align-items: center; gap: 11px; }
+.faction-town-seal { width: 38px; height: 38px; display: grid; flex: none; place-items: center; border: 1px solid var(--city-cinnabar-deep); border-radius: 4px; color: #d88976; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 20px; transform: rotate(-2deg); }
+.faction-town-card h3 { margin: 0; color: #e6d8bc; font-size: 17px; font-weight: 500; letter-spacing: .12em; }
+.faction-town-card header p { margin: 3px 0 0; color: var(--city-gold); font-size: 9.5px; letter-spacing: .12em; }
+.faction-town-card > button { justify-self: end; padding: 6px 11px; border-color: rgb(201 163 92 / 30%); color: #d6c292; background: rgb(201 163 92 / 6%); font-size: 9px; letter-spacing: .12em; }
+.faction-town-card.locked { filter: saturate(.55); }
+.faction-town-lock { justify-self: end; margin: 0; color: #73776c; font-size: 9px; letter-spacing: .08em; }
+.towns-tavern { min-height: 260px; }
+.towns-tavern .shop-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.towns-tavern-empty { display: grid; place-content: center; gap: 7px; min-height: 150px; text-align: center; }
+.towns-tavern-empty strong { color: #d6c8ad; font-weight: 500; }
+.towns-tavern-empty span { color: var(--city-paper-mute); font-size: 10px; }
+
+/* ============ 现世城市 · 已确认边界 ============ */
+.city-foundation-counts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.city-foundation-counts > span { min-width: 100px; padding: 9px 12px; border: 1px solid rgb(201 163 92 / 22%); border-radius: 7px; color: var(--city-paper-mute); background: rgb(201 163 92 / 4%); font-size: 9px; letter-spacing: .08em; text-align: center; }
+.city-foundation-counts strong { display: block; margin-bottom: 3px; color: var(--city-gold-bright); font-size: 19px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.city-domain-intro { position: relative; z-index: 1; display: grid; align-items: center; grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 28px; padding: clamp(20px, 3vw, 38px); border: 1px solid var(--city-line); border-radius: 12px; background: radial-gradient(circle at 10% 10%, rgb(201 163 92 / 10%), transparent 42%), linear-gradient(155deg, #1d211a, #11140f); box-shadow: 0 20px 46px rgb(0 0 0 / 30%); }
+.city-domain-intro h2 { margin: 6px 0 12px; color: #eadfc9; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: clamp(24px, 3vw, 34px); font-weight: 400; letter-spacing: .08em; }
+.city-domain-intro p { max-width: 720px; margin: 7px 0 0; color: #9b9b8d; font-size: 11px; line-height: 1.9; letter-spacing: .04em; }
+.city-grid-preview { position: relative; display: grid; aspect-ratio: 1; width: min(260px, 100%); grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 10px; border: 1px solid rgb(201 163 92 / 28%); transform: rotate(-2deg); }
+.city-grid-preview i { border: 1px solid rgb(201 163 92 / 14%); background: rgb(201 163 92 / 5%); }
+.city-grid-preview i:nth-child(5n + 2), .city-grid-preview i:nth-child(7n + 1) { background: rgb(181 80 60 / 10%); }
+.city-grid-preview span { position: absolute; inset: 50% auto auto 50%; display: grid; width: 74px; height: 74px; place-items: center; border: 1px solid var(--city-cinnabar-deep); border-radius: 50%; color: #e5cfc3; background: rgb(138 58 43 / 76%); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 28px; transform: translate(-50%, -50%); }
+.city-domain-modules { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.city-domain-modules article { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; padding: 17px; border: 1px solid var(--city-line-soft); border-radius: 9px; background: linear-gradient(165deg, #1b2018, #12150f); }
+.city-domain-modules article > span { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--city-gold-deep); border-radius: 50%; color: var(--city-gold); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 20px; }
+.city-domain-modules h3 { margin: 0; color: #e3d6bb; font-size: 15px; font-weight: 500; letter-spacing: .1em; }
+.city-domain-modules p { margin: 7px 0 0; color: #85887b; font-size: 10px; line-height: 1.7; }
+.city-domain-modules small { grid-column: 2; color: var(--city-cinnabar-bright); font-size: 8.5px; letter-spacing: .16em; }
+
 /* 空状态 */
 .city-page-empty .city-empty-note { position: relative; z-index: 1; display: grid; place-content: center; gap: 10px; min-height: 280px; border: 1px solid var(--city-line); border-radius: 10px; background: linear-gradient(170deg, var(--city-ink-850), var(--city-ink-900) 75%); text-align: center; }
 .city-page-empty .city-empty-note strong { color: #d6c8ad; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 20px; font-weight: 400; letter-spacing: .12em; }
@@ -1093,22 +1158,35 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 /* 城市页响应式 */
 @media (max-width: 1279px) {
   .city-page .street { grid-template-columns: 1fr; }
+  .town-place-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 980px) {
   .city-ghost { display: none; }
+  .town-place-grid, .faction-town-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .city-domain-intro { grid-template-columns: 1fr; }
+  .city-grid-preview { width: min(220px, 70vw); }
 }
 @media (max-width: 640px) {
   .city-page-title { font-size: 40px; }
   .city-page-head { align-items: flex-start; flex-direction: column; gap: 16px; padding-bottom: 16px; margin-bottom: 18px; }
   .city-page .shop-head { flex-wrap: wrap; }
   .city-page .token-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .towns-section-head { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .towns-section-head > p { text-align: left; }
+  .town-place-grid, .faction-town-grid, .towns-tavern .shop-body, .city-domain-modules { grid-template-columns: 1fr; }
+  .town-place-card { min-height: 142px; }
+  .city-foundation-counts { justify-content: flex-start; }
+  .city-foundation-counts > span { min-width: 86px; }
+  .city-domain-intro { padding: 18px; }
 }
 /* 桌面一屏布局：主区定高，铺体内部滚动（与设计稿一致） */
 @media (min-width: 1280px) {
   .jianghu-shell .game-main:has(.city-layout) { height: 100vh; overflow: hidden; }
   .city-page { display: flex; height: 100%; min-height: 0; flex-direction: column; padding: 0; }
   .city-page .street { flex: 1; min-height: 0; }
+  .towns-scroll { flex: 1; overflow-y: auto; padding-right: 5px; scrollbar-width: thin; scrollbar-color: #3d4438 transparent; }
   .city-page .shop-body { overflow-y: auto; scrollbar-width: thin; scrollbar-color: #3d4438 transparent; }
+  .city-page .towns-tavern .shop-body { overflow-y: visible; }
   .city-page .shop-body::-webkit-scrollbar { width: 7px; }
   .city-page .shop-body::-webkit-scrollbar-thumb { border-radius: 4px; background: #333a30; }
   .city-page .page-foot, .city-page-foot { flex: none; }

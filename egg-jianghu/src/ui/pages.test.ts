@@ -5,6 +5,7 @@ import { renderFactionsPage, type FactionsPageViewModel } from './factions-page'
 import { renderHeroesPage, type HeroesPageViewModel } from './heroes-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './inventory-page'
 import { renderFormationPage, type FormationPageViewModel } from './formation-page'
+import { renderTownsPage, type TownsPageViewModel } from './towns-page'
 
 const heroesFixture = (): HeroesPageViewModel => ({
   selectedHeroId: 'hero_test',
@@ -136,7 +137,23 @@ const factionsFixture = (): FactionsPageViewModel => ({
 })
 
 const cityFixture = (): CityPageViewModel => ({
-  worldId: 'world_01', worldIndex: 1, worldName: '青石卷', worldCurrency: 1000,
+  gridColumns: 18, gridRows: 18, buildingCount: 25, technologyCount: 75,
+})
+
+const townsFixture = (): TownsPageViewModel => ({
+  worldIndex: 1, worldName: '东汉三国', mainCityName: '洛阳', worldCurrency: 1000,
+  publicLocations: [
+    { name: '府衙', npcTitle: '府尹', functions: ['位面总览', '代理人'], tavern: false },
+    { name: '商会', npcTitle: '商会老板', functions: ['购买装备', '购买道具', '出售物品'], tavern: false },
+    { name: '酒馆', npcTitle: '老板娘', functions: ['招募角色'], tavern: true },
+    { name: '武馆', npcTitle: '馆主', functions: ['学习技能'], tavern: false },
+    { name: '铁匠铺', npcTitle: '铁匠', functions: ['合成锻造'], tavern: false },
+  ],
+  factionTowns: [
+    { name: '许昌', factionId: 'tieyi_school', factionName: '魏国', unlocked: true, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
+    { name: '成都', factionId: 'renxin_hall', factionName: '蜀国', unlocked: false, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
+    { name: '建业', factionId: 'original_faction_04', factionName: '吴国', unlocked: true, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
+  ],
   tavernHeroes: [{ id: 'hero_guo_jing', name: '郭靖', grade: '乙', category: '拳', careerName: '白丁', cost: 240, recruited: false, line: '憨厚少年，根骨清奇。' }],
 })
 
@@ -292,21 +309,36 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('来源 <b>全真教</b>')
   })
 
-  it('城市和背包页没有抽卡、残页与铁匠铺', () => {
+  it('城市和背包页没有抽卡、残页与旧铁匠操作', () => {
     const html = renderCityPage(cityFixture()) + renderInventoryPage(inventoryFixture())
     expect(html).not.toMatch(/十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解/)
   })
 
-  it('城市页仅输出酒馆并保留邀请契约', () => {
-    const html = renderCityPage(cityFixture())
-    expect(html).toContain('data-testid="city-page"')
-    expect(html).toContain('无名酒馆')
-    expect(html).not.toContain('城南武馆')
-    expect(html).not.toContain('恒昌当铺')
+  it('城镇页输出五处公共场所、势力城镇并保留酒馆邀请契约', () => {
+    const html = renderTownsPage(townsFixture())
+    expect(html).toContain('data-testid="towns-page"')
+    expect(html.match(/data-testid="town-location-/g)).toHaveLength(5)
+    expect(html.match(/data-testid="faction-town-/g)).toHaveLength(3)
+    expect(html).toContain('洛阳 · 公共场所')
+    expect(html).toContain('阵营任务')
+    expect(html).toContain('贡献兑换')
+    expect(html).toContain('data-action="open-faction-town"')
+    expect(html).toContain('本存档尚未解锁此势力')
     expect(html).toContain('data-testid="tavern-hero_guo_jing"')
     expect(html).toContain('data-action="tavern-recruit"')
     expect(html).toContain('aria-label="直接邀请"')
     expect(html).toContain('class="hn-line">憨厚少年，根骨清奇。')
+  })
+
+  it('城市页与当前位面解耦并只展示已确认的经营边界', () => {
+    const html = renderCityPage(cityFixture())
+    expect(html).toContain('data-testid="city-page"')
+    expect(html).toContain('跨位面经营')
+    expect(html).toContain('<strong>18×18</strong>初始地块')
+    expect(html).toContain('<strong>25</strong>类建筑')
+    expect(html).toContain('<strong>75</strong>项科技')
+    expect(html).toContain('不会提供近似操作或虚构收益')
+    expect(html).not.toContain('本卷货币')
   })
 
   it('背包页按原型输出原版装备图标、详情器影和品质件数', () => {
@@ -326,11 +358,9 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-testid="shop-buy-job_5"')
   })
 
-  it('当前大关没有势力或城市内容时显示本卷空状态', () => {
+  it('当前大关没有势力内容时显示本卷空状态', () => {
     expect(renderFactionsPage({ ...factionsFixture(), factions: [], branches: [], factionHeroes: [] }))
       .toContain('本卷暂无可用势力')
-    expect(renderCityPage({ ...cityFixture(), tavernHeroes: [] }))
-      .toContain('本卷城市暂无可用内容')
   })
 
   it('阵容页输出三路五列十五格与待上阵名单', () => {
