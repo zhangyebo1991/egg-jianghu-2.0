@@ -1,0 +1,352 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "taskDefinitions": "rw.json",
+    "factionDefinitions": "shili.json",
+    "eventTree": "data.json",
+    "runtime": "scripts/c3runtime.js",
+    "evidenceFunctions": [
+      "位面声望等级",
+      "位面声望经验",
+      "代理人贡献加成",
+      "代理人声望加成",
+      "随机阵营任务品质function",
+      "随机阵营任务编号function",
+      "随机阵营任务数量function",
+      "随机阵营任务奖励function",
+      "刷新阵营任务数据function",
+      "阵营任务刷新点击",
+      "接受阵营任务function",
+      "完成势力任务function",
+      "位面地点解锁检测function",
+      "角色招募价格function",
+      "技能升级贡献function",
+      "代理人任命function"
+    ]
+  },
+  "stateLayout": {
+    "baseDepth": 0,
+    "contribution": {
+      "indexAxis": "factionSourceId",
+      "fieldColumn": 4
+    },
+    "worldReputation": {
+      "indexAxis": "worldIndex",
+      "fieldColumn": 5
+    },
+    "factionUnlocked": {
+      "indexAxis": "factionSourceId",
+      "fieldColumn": 40
+    },
+    "agentHero": {
+      "indexAxis": "worldIndex",
+      "fieldColumn": 54
+    },
+    "agentEnabled": {
+      "indexAxis": "worldIndex",
+      "fieldColumn": 55
+    },
+    "taskDepth": 9,
+    "taskBoard": {
+      "slotCount": 5,
+      "slotRowStart": 11,
+      "slotRowEnd": 15,
+      "fields": {
+        "taskId": "4 * factionSourceId - 3",
+        "quality": "4 * factionSourceId - 2",
+        "targetId": "4 * factionSourceId - 1",
+        "acceptedRecordId": "4 * factionSourceId"
+      },
+      "emptyRecordId": 0,
+      "completedRecordId": -1
+    },
+    "acceptedTaskRecord": {
+      "recordAxis": "recordId",
+      "fieldAxis": "field",
+      "fields": {
+        "recordId": 0,
+        "taskId": 1,
+        "worldIndex": 2,
+        "factionSourceId": 3,
+        "quality": 4,
+        "targetId": 5,
+        "requiredAmount": 6,
+        "progress": 7,
+        "boardSlot": 8,
+        "status": 9
+      },
+      "acceptedStatus": 1
+    },
+    "agentFilterDepth": 16,
+    "agentFilter": {
+      "row": "(worldIndex - 1) * 5 + taskId",
+      "taskEnabledColumn": 1,
+      "factionColumns": [
+        2,
+        4
+      ],
+      "qualityColumns": [
+        5,
+        10
+      ],
+      "targetSubtypeColumns": [
+        11,
+        20
+      ]
+    }
+  },
+  "reputation": {
+    "baseAtWorld1": 200,
+    "baseWorldStep": 20,
+    "minimumLevel": 1,
+    "maximumLevel": 5,
+    "thresholdExponent": 2
+  },
+  "agentBonus": {
+    "abilityId": 9,
+    "contributionPercentPerAbilityLevel": 5,
+    "reputationPercentPerAbilityLevel": 2,
+    "multiplierWithoutAgent": 1
+  },
+  "factionUnlock": {
+    "organizationKind": "势力",
+    "worldProgressColumn": 2,
+    "requiredProgressFactionColumn": 20,
+    "unlockedColumn": 40,
+    "comparison": "worldProgress >= requiredProgress"
+  },
+  "tasks": {
+    "definitions": [
+      {
+        "id": 1,
+        "name": "消灭目标敌人",
+        "category": "阵营",
+        "actionName": "杀敌",
+        "targetKind": "敌人",
+        "baseCurrencyReward": 0,
+        "baseContributionReward": 450,
+        "baseReputationReward": 4,
+        "enabledInRandomPool": true
+      },
+      {
+        "id": 2,
+        "name": "筹措目标货币",
+        "category": "阵营",
+        "actionName": "筹措",
+        "targetKind": "货币",
+        "baseCurrencyReward": 0,
+        "baseContributionReward": 400,
+        "baseReputationReward": 4,
+        "enabledInRandomPool": true
+      },
+      {
+        "id": 3,
+        "name": "收集目标材料",
+        "category": "阵营",
+        "actionName": "收集",
+        "targetKind": "物品",
+        "baseCurrencyReward": 0,
+        "baseContributionReward": 500,
+        "baseReputationReward": 5,
+        "enabledInRandomPool": true
+      },
+      {
+        "id": 4,
+        "name": "挑战目标敌人",
+        "category": "阵营",
+        "actionName": "挑战",
+        "targetKind": "敌人",
+        "baseCurrencyReward": 0,
+        "baseContributionReward": 550,
+        "baseReputationReward": 5,
+        "enabledInRandomPool": true
+      },
+      {
+        "id": 5,
+        "name": "寻找目标装备",
+        "category": "阵营",
+        "actionName": "寻宝",
+        "targetKind": "装备",
+        "baseCurrencyReward": 0,
+        "baseContributionReward": 600,
+        "baseReputationReward": 6,
+        "enabledInRandomPool": true
+      },
+      {
+        "id": 6,
+        "name": "捕捉目标灵兽",
+        "category": "阵营",
+        "actionName": "捕捉",
+        "targetKind": "灵兽",
+        "baseCurrencyReward": 0,
+        "baseContributionReward": 650,
+        "baseReputationReward": 6,
+        "enabledInRandomPool": false
+      }
+    ],
+    "qualityWeights": [
+      {
+        "value": 1,
+        "weight": 24
+      },
+      {
+        "value": 2,
+        "weight": 24
+      },
+      {
+        "value": 3,
+        "weight": 20
+      },
+      {
+        "value": 4,
+        "weight": 18
+      },
+      {
+        "value": 5,
+        "weight": 6
+      },
+      {
+        "value": 6,
+        "weight": 3
+      }
+    ],
+    "typeWeights": [
+      {
+        "qualityMin": 1,
+        "qualityMax": 1,
+        "weights": [
+          {
+            "value": 1,
+            "weight": 1
+          },
+          {
+            "value": 2,
+            "weight": 1
+          },
+          {
+            "value": 3,
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "qualityMin": 2,
+        "qualityMax": 3,
+        "weights": [
+          {
+            "value": 1,
+            "weight": 1
+          },
+          {
+            "value": 2,
+            "weight": 1
+          },
+          {
+            "value": 3,
+            "weight": 1
+          },
+          {
+            "value": 4,
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "qualityMin": 4,
+        "qualityMax": 6,
+        "weights": [
+          {
+            "value": 1,
+            "weight": 1
+          },
+          {
+            "value": 2,
+            "weight": 1
+          },
+          {
+            "value": 3,
+            "weight": 1
+          },
+          {
+            "value": 4,
+            "weight": 2
+          },
+          {
+            "value": 5,
+            "weight": 2
+          }
+        ]
+      }
+    ],
+    "reservedTaskIds": [
+      6
+    ],
+    "task6Status": "原版保留定义；未进入随机池且没有数量返回分支",
+    "quantityFormulas": {
+      "1": "round(2.5 * 2^quality)",
+      "2": "round(worldPriceMultiplier * 5000 * (2^quality / 10000)) * 10000",
+      "3": "quality 1/3/5 => 8; quality 2/4/6 => 16",
+      "4": "round(0.25 * 2^quality)",
+      "5": "1",
+      "6": null
+    },
+    "rewardFormulas": {
+      "currency": "ceil(worldPriceMultiplier * baseCurrency * ((1 + (quality - 1) * 0.1) * 0.5) * 2^quality)",
+      "contribution": "ceil(worldPriceMultiplier * (1 + technologyBonus68) * baseContribution * ((1 + (quality - 1) * 0.1) * 0.5) * 2^quality)",
+      "reputation": "ceil(baseReputation * quality * (1 + technologyBonus69))"
+    },
+    "refresh": {
+      "itemId": 6,
+      "itemAmount": 1,
+      "technologyEffectId": 67,
+      "secondsReducedPerTechnologyBonus": 100,
+      "minimumSeconds": 100,
+      "preservesAcceptedSlots": true
+    }
+  },
+  "recruitment": {
+    "pageSize": 5,
+    "heroColumns": {
+      "worldIndex": 5,
+      "reputationLevel": 22,
+      "factionSourceId": 25,
+      "basePrice": 26,
+      "specialRequirement": 35
+    },
+    "roundCurrencyFromBasePrice": 10000,
+    "contributionCurrencyRatio": 20
+  },
+  "skills": {
+    "factionSkillColumns": [
+      5,
+      10
+    ],
+    "prerequisiteSkillColumns": [
+      12,
+      17
+    ],
+    "requiredReputationSkillColumn": 46,
+    "requiredWorldSkillColumn": 47,
+    "contributionCurrencyRatio": 20,
+    "exponentialBase": 1.025
+  },
+  "technologyEffectIds": {
+    "taskRefreshTime": 67,
+    "taskContribution": 68,
+    "taskReputation": 69
+  },
+  "formulas": {
+    "worldPriceMultiplier": "1 + 0.8 * (worldIndex - 1)",
+    "reputationBase": "200 + (worldIndex - 1) * 20",
+    "reputationLevel": "clamp(floor(sqrt(reputation / reputationBase)) + 1, 1, 5)",
+    "reputationThreshold": "round(reputationBase * clamp(level - 1, 0, 4)^2)",
+    "agentContributionMultiplier": "(100 + abilityLevel * 5) / 100",
+    "agentReputationMultiplier": "(100 + abilityLevel * 2) / 100",
+    "refreshSeconds": "clamp(baseSeconds - technologyBonus67 * 100, 100, baseSeconds)",
+    "recruitmentCurrencyHigh": "round(basePrice * worldPriceMultiplier / 10000) * 10000",
+    "recruitmentCurrencyLow": "round(basePrice * worldPriceMultiplier)",
+    "recruitmentContribution": "round(basePrice * (worldPriceMultiplier / 20) / 10000) * 10000",
+    "skillContribution": "round(((5000 / 20) * 1.025^((((difficulty - 1) * 20) + skillLevel) * 3) - 200) * percentage)",
+    "skillCurrency": "round((10000 * 1.025^((((difficulty - 1) * 20) + skillLevel) * 3) - 9700) * percentage)"
+  }
+}

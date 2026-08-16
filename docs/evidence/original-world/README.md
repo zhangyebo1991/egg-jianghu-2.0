@@ -25,10 +25,13 @@
 - `faction-runtime-evidence.md`：上述函数的人工审阅版索引。
 - `faction-exchange-catalog.json`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
 - `faction-exchange-catalog.md`：上述 396 条兑换商品的人工审阅表。
+- `faction-rules.json`：势力声望、代理人、悬榜、刷新、解锁、招募、技能与状态布局的共享契约。
+- `faction-rules.md`：上述原版规则与状态变化的人工审阅版。
 - `save-contract.md`：新存档共享状态边界。
 - `verification-checklist.md`：开发前仍需完成的运行时与实机核验。
 - `egg-jianghu/src/content/original-towns.generated.ts`：运行时使用的主城、公共场所与势力城镇快照。
 - `egg-jianghu/src/content/original-faction-exchange.generated.ts`：运行时使用的完整势力贡献兑换目录。
+- `egg-jianghu/src/content/original-faction-rules.generated.ts`：运行时使用的势力规则常量与纯函数。
 
 ## 证据规则
 

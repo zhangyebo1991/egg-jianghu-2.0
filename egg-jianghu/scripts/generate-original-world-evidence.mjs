@@ -10,11 +10,13 @@ const SOURCE_ROOT = resolve(HERE, '../../../诸天刷宝录/_analysis')
 const OUT_DIR = resolve(HERE, '../../docs/evidence/original-world')
 const RUNTIME_TOWNS_FILE = resolve(HERE, '../src/content/original-towns.generated.ts')
 const RUNTIME_FACTION_EXCHANGE_FILE = resolve(HERE, '../src/content/original-faction-exchange.generated.ts')
+const RUNTIME_FACTION_RULES_FILE = resolve(HERE, '../src/content/original-faction-rules.generated.ts')
 
 const sourceNames = [
   'gg.json',
   'shili.json',
   'gxdh.json',
+  'rw.json',
   'wp.json',
   'pf.json',
   'zy.json',
@@ -39,7 +41,7 @@ const loadArray = (name) => JSON
   .data.map((row) => row.map((cell) => cell[0]))
 
 const arrays = Object.fromEntries(
-  ['gg', 'shili', 'gxdh', 'wp', 'pf', 'zy', 'hh', 'js', 'tz', 'cj', 'mc', 'jz', 'kj', 'cscz', 'csdj', 'cszb']
+  ['gg', 'shili', 'gxdh', 'rw', 'wp', 'pf', 'zy', 'hh', 'js', 'tz', 'cj', 'mc', 'jz', 'kj', 'cscz', 'csdj', 'cszb']
     .map((name) => [name, loadArray(name)]),
 )
 const runtimeData = JSON.parse(readSource('data.json'))
@@ -626,6 +628,8 @@ const trackedArrayNameById = new Map(
   Object.entries(runtimeArrays).map(([name, value]) => [value.objectId, name]),
 )
 const citySaveColumns = new Set([0, 1, 2, 11, 12, 45])
+const factionSaveColumns = new Set([4, 5, 40, 54, 55])
+const factionTaskSaveColumns = new Set(Array.from({ length: 13 }, (_, index) => index))
 
 const eventVariableNamesBySid = new Map()
 const collectEventVariableNames = (node) => {
@@ -758,11 +762,24 @@ const readableExpression = (value, expressionData) => {
       const objectName = objectClassById.get(descriptor[1])?.[0] ?? `object_${descriptor[1]}`
       const aceName = objectReferenceEntries[descriptor[2]]?.split('.').at(-1) ?? `ref_${descriptor[2]}`
       result = result.replaceAll(`n${nodeIndex}.ExpObject`, `${objectName}.${aceName}`)
+      result = result.replaceAll(`f${nodeIndex}(`, `${objectName}.${aceName}(`)
+      continue
+    }
+    if (descriptor[0] === 4) {
+      const aceName = objectReferenceEntries[descriptor[1]]?.split('.').at(-1) ?? `ref_${descriptor[1]}`
+      result = result.replaceAll(`f${nodeIndex}(`, `${aceName}(`)
     }
   }
   return result
 }
 const parameterExpression = (parameter) => {
+  if (Array.isArray(parameter) && parameter[0] === 11 && Number.isInteger(parameter[1])) {
+    const expression = eventVariableNamesBySid.get(parameter[1]) ?? `eventVar_${parameter[1]}`
+    return { expressionId: null, expression, runtimeExpression: JSON.stringify(parameter) }
+  }
+  if (Array.isArray(parameter) && [3, 16].includes(parameter[0]) && typeof parameter[1] === 'boolean') {
+    return { expressionId: null, expression: String(parameter[1]), runtimeExpression: JSON.stringify(parameter) }
+  }
   if (Array.isArray(parameter?.[1]) && Number.isInteger(parameter[1][0])) {
     const expressionData = parameter[1]
     const expressionId = expressionData[0]
@@ -781,6 +798,7 @@ const parameterExpression = (parameter) => {
 
 const fieldUsages = []
 const citySaveUsages = []
+const factionSaveUsages = []
 const unresolvedFieldUsages = []
 const usageContext = (context) => ({
   eventId: context.eventId,
@@ -795,6 +813,12 @@ const addFieldUsage = (usage) => {
   }
   if (constantNumber(usage.runtimeDepthExpression) === 10 && citySaveColumns.has(usage.column)) {
     citySaveUsages.push(usage)
+  }
+  const depth = constantNumber(usage.runtimeDepthExpression)
+  if ((depth === 0 && factionSaveColumns.has(usage.column))
+    || (depth === 9 && (usage.column === null || factionTaskSaveColumns.has(usage.column)))
+    || depth === 16) {
+    factionSaveUsages.push(usage)
   }
 }
 
@@ -974,6 +998,13 @@ citySaveUsages.sort((left, right) => (
   || (left.eventId ?? Number.MAX_SAFE_INTEGER) - (right.eventId ?? Number.MAX_SAFE_INTEGER)
   || (left.expressionId ?? Number.MAX_SAFE_INTEGER) - (right.expressionId ?? Number.MAX_SAFE_INTEGER)
 ))
+factionSaveUsages.sort((left, right) => (
+  constantNumber(left.runtimeDepthExpression) - constantNumber(right.runtimeDepthExpression)
+  || (left.column ?? Number.MAX_SAFE_INTEGER) - (right.column ?? Number.MAX_SAFE_INTEGER)
+  || left.direction.localeCompare(right.direction, 'en')
+  || (left.eventId ?? Number.MAX_SAFE_INTEGER) - (right.eventId ?? Number.MAX_SAFE_INTEGER)
+  || (left.expressionId ?? Number.MAX_SAFE_INTEGER) - (right.expressionId ?? Number.MAX_SAFE_INTEGER)
+))
 
 const fieldUsageSummary = Object.fromEntries(fieldUsageTableNames.map((table) => {
   const usages = fieldUsages.filter((usage) => usage.table === table)
@@ -989,7 +1020,7 @@ const fieldUsageSummary = Object.fromEntries(fieldUsageTableNames.map((table) =>
 }))
 
 const fieldUsageIndex = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   source: {
     eventTree: 'data.json',
     runtime: 'scripts/c3runtime.js',
@@ -999,11 +1030,12 @@ const fieldUsageIndex = {
   summary: fieldUsageSummary,
   usages: fieldUsages,
   targetedCitySaveUsages: citySaveUsages,
+  targetedFactionSaveUsages: factionSaveUsages,
   unresolved: unresolvedFieldUsages,
 }
 
 const formulaCategories = [
-  ['faction', /势力|阵营|贡献|声望|招募角色|学习技能|物品兑换|物品买卖价格|位面价格系数|普通物品等级|物品名function|获得物品function|图纸拥有检测|幻化拥有检测|幻化类型文本/],
+  ['faction', /势力|阵营|贡献|声望|代理人|招募角色|角色招募价格|学习技能|前置技能|技能升级贡献|位面地点解锁|主线任务检测|物品兑换|物品买卖价格|位面价格系数|普通物品等级|物品名function|获得物品function|图纸拥有检测|幻化拥有检测|幻化类型文本|提交任务function/],
   ['town', /场景|地点|城镇|酒馆|商会|市集|铁匠|武馆/],
   ['city-core', /城市|土地|地块|建筑|扩建|项目|迁移/],
   ['company', /公司|财务|租金|职位|资产|收支/],
@@ -1060,6 +1092,25 @@ const runtimeOperationsIn = (root) => {
   visit(root)
   return operations
 }
+const functionCallsIn = (root) => {
+  const calls = []
+  const visit = (node, path = []) => {
+    if (!Array.isArray(node)) return
+    if (node[0] === -2 && typeof node[1] === 'string') {
+      calls.push({
+        path,
+        name: node[1],
+        sid: String(node[3]),
+        parameters: Array.isArray(node[6]) ? node[6].map(parameterExpression) : [],
+      })
+    }
+    node.forEach((child, index) => {
+      if (Array.isArray(child)) visit(child, [...path, index])
+    })
+  }
+  visit(root)
+  return calls
+}
 const factionRuntimeFunctions = factionRuntimeFunctionNames.map((name) => {
   const definition = functionByName.get(name)
   const nodes = namedEventNodes.get(name) ?? []
@@ -1072,10 +1123,21 @@ const factionRuntimeFunctions = factionRuntimeFunctionNames.map((name) => {
     paths: [...(namedPaths.get(name) ?? [])].sort(),
     expressions: parameterExpressionsIn(nodes[0]),
     operations: runtimeOperationsIn(nodes[0]),
+    calls: functionCallsIn(nodes[0]),
     fieldUsages: fieldUsages.filter((usage) => usage.functionName === name),
   }
 })
-const inlineFactionFunctionNames = ['幻化类型文本']
+const inlineFactionFunctionNames = [
+  '幻化类型文本',
+  '代理人贡献加成',
+  '代理人声望加成',
+  '位面声望等级',
+  '位面声望经验',
+  '指定位面声望等级',
+  '学习技能',
+  '前置技能等级',
+  '位面首势力编号',
+]
 for (const name of inlineFactionFunctionNames) {
   const matches = []
   const visit = (node, path) => {
@@ -1097,16 +1159,362 @@ for (const name of inlineFactionFunctionNames) {
     paths: [path.join(' > ')],
     expressions: parameterExpressionsIn(node),
     operations: runtimeOperationsIn(node),
+    calls: functionCallsIn(node),
     fieldUsages: [],
   })
 }
-const factionRuntimeEvidence = {
+
+const factionRuntimeFunctionByName = new Map(factionRuntimeFunctions.map((fn) => [fn.name, fn]))
+const requiredFactionRuntimeFunction = (name) => {
+  const fn = factionRuntimeFunctionByName.get(name)
+  assert(fn, `势力规则契约缺少原版函数 ${name}`)
+  return fn
+}
+const assertJsonEqual = (actual, expected, label) => {
+  assert(JSON.stringify(actual) === JSON.stringify(expected), `${label}与原版运行时证据不一致`)
+}
+const assertExpressions = (functionName, expectedExpressions) => {
+  const expressions = new Set(requiredFactionRuntimeFunction(functionName).expressions.map((item) => item.expression))
+  for (const expression of expectedExpressions) {
+    assert(expressions.has(expression), `${functionName} 缺少表达式：${expression}`)
+  }
+}
+const operationParameterExpressions = (operation) => operation.parameters.map((parameter) => parameter.expression)
+const assertOperation = (functionName, referenceSuffix, expectedParameters) => {
+  const matched = requiredFactionRuntimeFunction(functionName).operations.some((operation) => (
+    operation.reference.endsWith(referenceSuffix)
+    && JSON.stringify(operationParameterExpressions(operation)) === JSON.stringify(expectedParameters)
+  ))
+  assert(matched, `${functionName} 缺少运行时操作 ${referenceSuffix}(${expectedParameters.join(', ')})`)
+}
+const assertOperationPrefix = (functionName, referenceSuffix, expectedParameterPrefix) => {
+  const matched = requiredFactionRuntimeFunction(functionName).operations.some((operation) => (
+    operation.reference.endsWith(referenceSuffix)
+    && expectedParameterPrefix.every((value, index) => operation.parameters[index]?.expression === value)
+  ))
+  assert(matched, `${functionName} 缺少运行时操作前缀 ${referenceSuffix}(${expectedParameterPrefix.join(', ')})`)
+}
+const assertCallSubsequence = (functionName, expectedNames) => {
+  const names = requiredFactionRuntimeFunction(functionName).calls.map((call) => call.name)
+  let cursor = 0
+  for (const name of names) {
+    if (name === expectedNames[cursor]) cursor += 1
+  }
+  assert(cursor === expectedNames.length, `${functionName} 调用顺序缺少 ${expectedNames.join(' -> ')}`)
+}
+const probabilityEntries = (functionName) => requiredFactionRuntimeFunction(functionName).operations
+  .filter((operation) => operation.reference.endsWith('.AddProbabilityEntry'))
+  .map((operation) => ({
+    value: Number(operation.parameters[0]?.expression),
+    weight: Number(operation.parameters[1]?.expression),
+  }))
+
+const factionTaskQualityWeights = probabilityEntries('随机阵营任务品质function')
+assertJsonEqual(factionTaskQualityWeights, [
+  { value: 1, weight: 24 },
+  { value: 2, weight: 24 },
+  { value: 3, weight: 20 },
+  { value: 4, weight: 18 },
+  { value: 5, weight: 6 },
+  { value: 6, weight: 3 },
+], '阵营任务品质权重')
+
+const factionTaskTypeEntrySequence = probabilityEntries('随机阵营任务编号function')
+assertJsonEqual(factionTaskTypeEntrySequence, [
+  { value: 1, weight: 1 },
+  { value: 2, weight: 1 },
+  { value: 3, weight: 1 },
+  { value: 1, weight: 1 },
+  { value: 2, weight: 1 },
+  { value: 3, weight: 1 },
+  { value: 4, weight: 1 },
+  { value: 1, weight: 1 },
+  { value: 2, weight: 1 },
+  { value: 3, weight: 1 },
+  { value: 4, weight: 2 },
+  { value: 5, weight: 2 },
+  { value: 1, weight: 1 },
+  { value: 2, weight: 1 },
+  { value: 3, weight: 1 },
+  { value: 4, weight: 2 },
+  { value: 5, weight: 2 },
+], '阵营任务类型权重分支')
+
+const factionTaskTypeWeights = [
+  {
+    qualityMin: 1,
+    qualityMax: 1,
+    weights: factionTaskTypeEntrySequence.slice(0, 3),
+  },
+  {
+    qualityMin: 2,
+    qualityMax: 3,
+    weights: factionTaskTypeEntrySequence.slice(3, 7),
+  },
+  {
+    qualityMin: 4,
+    qualityMax: 6,
+    weights: factionTaskTypeEntrySequence.slice(7, 12),
+  },
+]
+
+const factionTaskDefinitions = arrays.rw.slice(1, 7).map((row) => ({
+  id: asNumber(row[0]),
+  name: String(row[1]),
+  category: String(row[2]),
+  actionName: String(row[3]),
+  targetKind: String(row[4]),
+  baseCurrencyReward: asNumber(row[7]),
+  baseContributionReward: asNumber(row[8]),
+  baseReputationReward: asNumber(row[9]),
+}))
+assertJsonEqual(factionTaskDefinitions.map((task) => [
+  task.id,
+  task.name,
+  task.targetKind,
+  task.baseContributionReward,
+  task.baseReputationReward,
+]), [
+  [1, '消灭目标敌人', '敌人', 450, 4],
+  [2, '筹措目标货币', '货币', 400, 4],
+  [3, '收集目标材料', '物品', 500, 5],
+  [4, '挑战目标敌人', '敌人', 550, 5],
+  [5, '寻找目标装备', '装备', 600, 6],
+  [6, '捕捉目标灵兽', '灵兽', 650, 6],
+], '阵营任务定义')
+
+assertExpressions('位面声望等级', [
+  'C3.clamp(Math.floor((Math.sqrt((声望值 / (200 + ((位面编号 - 1) * 20)))) + 1)), 1, 5)',
+])
+assertExpressions('位面声望经验', [
+  'Math.round(((200 + ((位面编号 - 1) * 20)) * Math.pow(C3.clamp((等级 - 1), 0, 4), 2)))',
+])
+assertExpressions('代理人贡献加成', [
+  '((100 + (最终能力等级(save.At(位面编号, 54, 0), 9) * 5)) / 100)',
+])
+assertExpressions('代理人声望加成', [
+  '((100 + (最终能力等级(save.At(位面编号, 54, 0), 9) * 2)) / 100)',
+])
+assertExpressions('随机阵营任务数量function', [
+  'Math.round((2.5 * Math.pow(2, 任务品质)))',
+  '(Math.round(((位面价格系数(位面编号) * 5000) * (Math.pow(2, 任务品质) / 10000))) * 10000)',
+  'Math.round((0.25 * Math.pow(2, 任务品质)))',
+])
+assertExpressions('随机阵营任务奖励function', [
+  'Math.ceil(multiply(multiply(位面价格系数(位面编号), rw.At(任务编号, 7)), (((1 + ((任务品质 - 1) * 0.1)) * 0.5) * Math.pow(2, 任务品质))))',
+  'Math.ceil(multiply(multiply((位面价格系数(位面编号) * (1 + 科技效果加成(68))), rw.At(任务编号, 8)), (((1 + ((任务品质 - 1) * 0.1)) * 0.5) * Math.pow(2, 任务品质))))',
+  'Math.ceil(multiply(multiply(rw.At(任务编号, 9), 任务品质), (1 + 科技效果加成(69))))',
+])
+assertExpressions('刷新阵营任务数据function', [
+  'C3.clamp((阵营任务刷新时间 - (科技效果加成(67) * 100)), 100, 阵营任务刷新时间)',
+])
+assertExpressions('角色招募价格function', [
+  '(Math.round(divide(multiply(js.At(角色编号, 26), 位面价格系数(位面编号)), 10000)) * 10000)',
+  'Math.round(multiply(js.At(角色编号, 26), 位面价格系数(位面编号)))',
+  '(Math.round(divide(multiply(js.At(角色编号, 26), (位面价格系数(位面编号) / 货币贡献比)), 10000)) * 10000)',
+])
+assertExpressions('技能升级贡献function', [
+  'Math.round(((((5000 / 货币贡献比) * Math.pow(1.025, ((((难度系数 - 1) * 20) + 技能等级) * 3))) - 200) * 百分比))',
+  'Math.round((((10000 * Math.pow(1.025, ((((难度系数 - 1) * 20) + 技能等级) * 3))) - 9700) * 百分比))',
+])
+
+assertOperation('刷新阵营任务数据function', '.Repeat', ['5'])
+assertOperation('位面地点解锁检测function', '.SetXYZ', ['shili.CurX()', '40', '0', '1'])
+assertOperation('代理人任命function', '.SetXYZ', ['位面编号', '54', '0', '角色编号'])
+assertOperation('代理人任命function', '.SetXYZ', ['位面编号', '55', '0', '1'])
+for (let field = 0; field <= 9; field += 1) {
+  assertOperationPrefix('接受阵营任务function', '.SetXYZ', ['save.CurX()', String(field), '9'])
+  assertOperation('完成势力任务function', '.SetXYZ', ['任务序号', String(field), '9', '0'])
+}
+assertOperation('完成势力任务function', '.SetXYZ', [
+  'multiply(save.At(任务序号, 3, 9), 4)',
+  'save.At(任务序号, 8, 9)',
+  '9',
+  '-1',
+])
+assertCallSubsequence('阵营任务刷新点击', ['失去物品', '刷新任务数据', '音效播放'])
+assertCallSubsequence('完成势力任务function', [
+  '刷新成就数值',
+  '记录文字',
+  '获得货币',
+  '获得贡献',
+  '获得声望',
+  '主线任务检测',
+])
+
+const factionRules = {
   schemaVersion: 1,
+  source: {
+    taskDefinitions: 'rw.json',
+    factionDefinitions: 'shili.json',
+    eventTree: 'data.json',
+    runtime: 'scripts/c3runtime.js',
+    evidenceFunctions: [
+      '位面声望等级',
+      '位面声望经验',
+      '代理人贡献加成',
+      '代理人声望加成',
+      '随机阵营任务品质function',
+      '随机阵营任务编号function',
+      '随机阵营任务数量function',
+      '随机阵营任务奖励function',
+      '刷新阵营任务数据function',
+      '阵营任务刷新点击',
+      '接受阵营任务function',
+      '完成势力任务function',
+      '位面地点解锁检测function',
+      '角色招募价格function',
+      '技能升级贡献function',
+      '代理人任命function',
+    ],
+  },
+  stateLayout: {
+    baseDepth: 0,
+    contribution: { indexAxis: 'factionSourceId', fieldColumn: 4 },
+    worldReputation: { indexAxis: 'worldIndex', fieldColumn: 5 },
+    factionUnlocked: { indexAxis: 'factionSourceId', fieldColumn: 40 },
+    agentHero: { indexAxis: 'worldIndex', fieldColumn: 54 },
+    agentEnabled: { indexAxis: 'worldIndex', fieldColumn: 55 },
+    taskDepth: 9,
+    taskBoard: {
+      slotCount: 5,
+      slotRowStart: 11,
+      slotRowEnd: 15,
+      fields: {
+        taskId: '4 * factionSourceId - 3',
+        quality: '4 * factionSourceId - 2',
+        targetId: '4 * factionSourceId - 1',
+        acceptedRecordId: '4 * factionSourceId',
+      },
+      emptyRecordId: 0,
+      completedRecordId: -1,
+    },
+    acceptedTaskRecord: {
+      recordAxis: 'recordId',
+      fieldAxis: 'field',
+      fields: {
+        recordId: 0,
+        taskId: 1,
+        worldIndex: 2,
+        factionSourceId: 3,
+        quality: 4,
+        targetId: 5,
+        requiredAmount: 6,
+        progress: 7,
+        boardSlot: 8,
+        status: 9,
+      },
+      acceptedStatus: 1,
+    },
+    agentFilterDepth: 16,
+    agentFilter: {
+      row: '(worldIndex - 1) * 5 + taskId',
+      taskEnabledColumn: 1,
+      factionColumns: [2, 4],
+      qualityColumns: [5, 10],
+      targetSubtypeColumns: [11, 20],
+    },
+  },
+  reputation: {
+    baseAtWorld1: 200,
+    baseWorldStep: 20,
+    minimumLevel: 1,
+    maximumLevel: 5,
+    thresholdExponent: 2,
+  },
+  agentBonus: {
+    abilityId: 9,
+    contributionPercentPerAbilityLevel: 5,
+    reputationPercentPerAbilityLevel: 2,
+    multiplierWithoutAgent: 1,
+  },
+  factionUnlock: {
+    organizationKind: '势力',
+    worldProgressColumn: 2,
+    requiredProgressFactionColumn: 20,
+    unlockedColumn: 40,
+    comparison: 'worldProgress >= requiredProgress',
+  },
+  tasks: {
+    definitions: factionTaskDefinitions.map((task) => ({
+      ...task,
+      enabledInRandomPool: task.id <= 5,
+    })),
+    qualityWeights: factionTaskQualityWeights,
+    typeWeights: factionTaskTypeWeights,
+    reservedTaskIds: [6],
+    task6Status: '原版保留定义；未进入随机池且没有数量返回分支',
+    quantityFormulas: {
+      1: 'round(2.5 * 2^quality)',
+      2: 'round(worldPriceMultiplier * 5000 * (2^quality / 10000)) * 10000',
+      3: 'quality 1/3/5 => 8; quality 2/4/6 => 16',
+      4: 'round(0.25 * 2^quality)',
+      5: '1',
+      6: null,
+    },
+    rewardFormulas: {
+      currency: 'ceil(worldPriceMultiplier * baseCurrency * ((1 + (quality - 1) * 0.1) * 0.5) * 2^quality)',
+      contribution: 'ceil(worldPriceMultiplier * (1 + technologyBonus68) * baseContribution * ((1 + (quality - 1) * 0.1) * 0.5) * 2^quality)',
+      reputation: 'ceil(baseReputation * quality * (1 + technologyBonus69))',
+    },
+    refresh: {
+      itemId: 6,
+      itemAmount: 1,
+      technologyEffectId: 67,
+      secondsReducedPerTechnologyBonus: 100,
+      minimumSeconds: 100,
+      preservesAcceptedSlots: true,
+    },
+  },
+  recruitment: {
+    pageSize: 5,
+    heroColumns: {
+      worldIndex: 5,
+      reputationLevel: 22,
+      factionSourceId: 25,
+      basePrice: 26,
+      specialRequirement: 35,
+    },
+    roundCurrencyFromBasePrice: 10000,
+    contributionCurrencyRatio: 20,
+  },
+  skills: {
+    factionSkillColumns: [5, 10],
+    prerequisiteSkillColumns: [12, 17],
+    requiredReputationSkillColumn: 46,
+    requiredWorldSkillColumn: 47,
+    contributionCurrencyRatio: 20,
+    exponentialBase: 1.025,
+  },
+  technologyEffectIds: {
+    taskRefreshTime: 67,
+    taskContribution: 68,
+    taskReputation: 69,
+  },
+  formulas: {
+    worldPriceMultiplier: '1 + 0.8 * (worldIndex - 1)',
+    reputationBase: '200 + (worldIndex - 1) * 20',
+    reputationLevel: 'clamp(floor(sqrt(reputation / reputationBase)) + 1, 1, 5)',
+    reputationThreshold: 'round(reputationBase * clamp(level - 1, 0, 4)^2)',
+    agentContributionMultiplier: '(100 + abilityLevel * 5) / 100',
+    agentReputationMultiplier: '(100 + abilityLevel * 2) / 100',
+    refreshSeconds: 'clamp(baseSeconds - technologyBonus67 * 100, 100, baseSeconds)',
+    recruitmentCurrencyHigh: 'round(basePrice * worldPriceMultiplier / 10000) * 10000',
+    recruitmentCurrencyLow: 'round(basePrice * worldPriceMultiplier)',
+    recruitmentContribution: 'round(basePrice * (worldPriceMultiplier / 20) / 10000) * 10000',
+    skillContribution: 'round(((5000 / 20) * 1.025^((((difficulty - 1) * 20) + skillLevel) * 3) - 200) * percentage)',
+    skillCurrency: 'round((10000 * 1.025^((((difficulty - 1) * 20) + skillLevel) * 3) - 9700) * percentage)',
+  },
+}
+
+const factionRuntimeEvidence = {
+  schemaVersion: 3,
   source: {
     eventTree: 'data.json',
     runtime: 'scripts/c3runtime.js',
   },
   functions: factionRuntimeFunctions,
+  saveUsages: factionSaveUsages,
 }
 
 const versionText = String(arrays.gg[2]?.[0] ?? '')
@@ -1274,6 +1682,130 @@ export const ORIGINAL_FACTION_EXCHANGE: readonly OriginalFactionExchangeItem[] =
 export const originalFactionExchangeByFaction = (factionSourceId: number): readonly OriginalFactionExchangeItem[] =>
   ORIGINAL_FACTION_EXCHANGE.filter((item) => item.factionSourceId === factionSourceId)
 `
+const runtimeFactionRulesSource = `/**
+ * 原版势力规则契约——由《诸天刷宝录》rw/shili 表与 Construct 运行时事件生成。
+ * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
+ */
+
+export type OriginalFactionResourceKind = '货币' | '贡献'
+
+export const ORIGINAL_FACTION_RULES = ${JSON.stringify(factionRules, null, 2)} as const
+
+const clamp = (value: number, minimum: number, maximum: number): number =>
+  Math.min(maximum, Math.max(minimum, value))
+
+export const originalFactionWorldPriceMultiplier = (worldIndex: number): number =>
+  1 + 0.8 * (worldIndex - 1)
+
+export const originalWorldReputationBase = (worldIndex: number): number =>
+  ORIGINAL_FACTION_RULES.reputation.baseAtWorld1
+    + (worldIndex - 1) * ORIGINAL_FACTION_RULES.reputation.baseWorldStep
+
+export const originalWorldReputationLevel = (reputation: number, worldIndex: number): number =>
+  clamp(Math.floor(Math.sqrt(reputation / originalWorldReputationBase(worldIndex))) + 1, 1, 5)
+
+export const originalWorldReputationThreshold = (level: number, worldIndex: number): number =>
+  Math.round(originalWorldReputationBase(worldIndex) * clamp(level - 1, 0, 4) ** 2)
+
+export const originalFactionAgentContributionMultiplier = (abilityLevel: number): number =>
+  (100 + abilityLevel * ORIGINAL_FACTION_RULES.agentBonus.contributionPercentPerAbilityLevel) / 100
+
+export const originalFactionAgentReputationMultiplier = (abilityLevel: number): number =>
+  (100 + abilityLevel * ORIGINAL_FACTION_RULES.agentBonus.reputationPercentPerAbilityLevel) / 100
+
+export const originalFactionTaskDefinitionById = (taskId: number) =>
+  ORIGINAL_FACTION_RULES.tasks.definitions.find((task) => task.id === taskId)
+
+export const originalFactionTaskRequiredAmount = (
+  taskId: number,
+  quality: number,
+  worldIndex: number,
+): number | null => {
+  if (taskId === 1) return Math.round(2.5 * 2 ** quality)
+  if (taskId === 2) {
+    return Math.round(
+      originalFactionWorldPriceMultiplier(worldIndex) * 5000 * (2 ** quality / 10000),
+    ) * 10000
+  }
+  if (taskId === 3) return quality % 2 === 1 ? 8 : 16
+  if (taskId === 4) return Math.round(0.25 * 2 ** quality)
+  if (taskId === 5) return 1
+  return null
+}
+
+export interface OriginalFactionTaskReward {
+  currency: number
+  contribution: number
+  reputation: number
+}
+
+export const originalFactionTaskReward = (
+  taskId: number,
+  quality: number,
+  worldIndex: number,
+  technologyBonus68 = 0,
+  technologyBonus69 = 0,
+): OriginalFactionTaskReward => {
+  const task = originalFactionTaskDefinitionById(taskId)
+  if (!task) return { currency: 0, contribution: 0, reputation: 0 }
+  const qualityMultiplier = (1 + (quality - 1) * 0.1) * 0.5 * 2 ** quality
+  const worldMultiplier = originalFactionWorldPriceMultiplier(worldIndex)
+  return {
+    currency: Math.ceil(worldMultiplier * task.baseCurrencyReward * qualityMultiplier),
+    contribution: Math.ceil(
+      worldMultiplier * (1 + technologyBonus68) * task.baseContributionReward * qualityMultiplier,
+    ),
+    reputation: Math.ceil(task.baseReputationReward * quality * (1 + technologyBonus69)),
+  }
+}
+
+export const originalFactionTaskRefreshSeconds = (
+  baseSeconds: number,
+  technologyBonus67: number,
+): number => clamp(baseSeconds - technologyBonus67 * 100, 100, baseSeconds)
+
+export const originalFactionRecruitPrice = (
+  basePrice: number,
+  worldIndex: number,
+  resourceKind: OriginalFactionResourceKind,
+): number => {
+  const worldMultiplier = originalFactionWorldPriceMultiplier(worldIndex)
+  if (resourceKind === '贡献') {
+    return Math.round(
+      basePrice * (worldMultiplier / ORIGINAL_FACTION_RULES.recruitment.contributionCurrencyRatio) / 10000,
+    ) * 10000
+  }
+  if (basePrice >= ORIGINAL_FACTION_RULES.recruitment.roundCurrencyFromBasePrice) {
+    return Math.round(basePrice * worldMultiplier / 10000) * 10000
+  }
+  return Math.round(basePrice * worldMultiplier)
+}
+
+export const originalFactionSkillUpgradeCost = (
+  skillLevel: number,
+  difficulty: number,
+  resourceKind: OriginalFactionResourceKind,
+  percentage = 1,
+): number => {
+  const exponent = (((difficulty - 1) * 20) + skillLevel) * 3
+  if (resourceKind === '贡献') {
+    return Math.round(
+      ((5000 / ORIGINAL_FACTION_RULES.skills.contributionCurrencyRatio)
+        * ORIGINAL_FACTION_RULES.skills.exponentialBase ** exponent
+        - 200)
+      * percentage,
+    )
+  }
+  return Math.round(
+    (10000 * ORIGINAL_FACTION_RULES.skills.exponentialBase ** exponent - 9700) * percentage,
+  )
+}
+
+export const originalFactionUnlocksAtProgress = (
+  worldProgress: number,
+  requiredProgress: number,
+): boolean => worldProgress >= requiredProgress
+`
 const manifest = {
   schemaVersion: 2,
   source: {
@@ -1291,6 +1823,7 @@ const manifest = {
     publicLocations: publicLocations.length,
     factionTowns: factionTowns.length,
     factionExchangeItems: factionExchangeCounts.total,
+    factionTasks: factionTaskDefinitions.length,
     buildings: buildings.length,
     technologies: technologies.length,
   },
@@ -1302,6 +1835,11 @@ const manifest = {
   factionExchange: {
     constants: factionExchangePriceConstants,
     counts: factionExchangeCounts,
+  },
+  factionRules: {
+    schemaVersion: factionRules.schemaVersion,
+    taskCount: factionTaskDefinitions.length,
+    taskBoardSlots: factionRules.stateLayout.taskBoard.slotCount,
   },
   buildings,
   technologies,
@@ -1366,6 +1904,7 @@ const factionRuntimeMarkdown = factionRuntimeFunctions.flatMap((fn) => [
   `- Event ID：${fn.eventId}`,
   `- 事件路径：${fn.paths[0] ?? '路径待定位'}`,
   `- 运行时操作：${fn.operations.length} 条`,
+  `- 函数调用：${fn.calls.length} 条`,
   `- 表字段访问：${fn.fieldUsages.length} 条`,
   '',
   '### 运行时表达式',
@@ -1426,6 +1965,71 @@ const factionExchangeMarkdown = `# 原版势力贡献兑换目录
 | 位面 | 势力 | 槽位 | 分类 | 原版名称 | 贡献 | 声望 | 目标 |
 |---:|---|---:|---|---|---:|---:|---|
 ${factionExchangeItems.map((item) => `| ${item.worldIndex} | ${markdownCell(item.factionName)} | ${item.slot} | ${factionExchangeKindLabels[item.kind]} | ${markdownCell(item.originalName)} | ${item.price} | ${item.requiredReputationLevel ?? '—'} | ${markdownCell(factionExchangeTargetLabel(item))} |`).join('\n')}
+`
+const factionRulesMarkdown = `# 原版势力规则与状态契约
+
+本契约由 \`rw.json\`、\`shili.json\` 与 Construct 事件树逐项断言后生成；运行时 TypeScript 使用同一份数据，不手工复制第二套结论。
+
+## 权威状态
+
+| 状态 | save depth | 索引 | 字段 |
+|---|---:|---|---:|
+| 势力贡献 | 0 | 势力 ID | 4 |
+| 位面声望 | 0 | 位面编号 | 5 |
+| 势力解锁 | 0 | 势力 ID | 40 |
+| 位面代理人角色 | 0 | 位面编号 | 54 |
+| 位面代理人开关 | 0 | 位面编号 | 55 |
+
+- 悬榜位于 depth 9，共 5 格，行号 11～15；每个势力占用四列，依次保存任务 ID、品质、目标 ID 和接受记录 ID。
+- 接受记录位于 depth 9，以记录 ID 为 X 轴，Y 轴 0～9 依次保存记录 ID、任务 ID、位面、势力、品质、目标、需求量、进度、悬榜格和状态。
+- 代理人筛选矩阵位于 depth 16，行号为 \`(worldIndex - 1) * 5 + taskId\`。
+
+## 位面声望与代理人
+
+- 位面基础值：\`200 + (worldIndex - 1) * 20\`。
+- 声望等级：\`clamp(floor(sqrt(reputation / base)) + 1, 1, 5)\`。
+- 等级阈值：\`round(base * clamp(level - 1, 0, 4)^2)\`。
+- 代理人使用能力 9；贡献倍率为 \`(100 + abilityLevel * 5) / 100\`，声望倍率为 \`(100 + abilityLevel * 2) / 100\`；无代理人时均为 1。
+
+## 悬榜生成
+
+品质权重总计 ${factionTaskQualityWeights.reduce((sum, entry) => sum + entry.weight, 0)}：
+
+| 品质 | 权重 |
+|---:|---:|
+${factionTaskQualityWeights.map((entry) => `| ${entry.value} | ${entry.weight} |`).join('\n')}
+
+任务类型权重：
+
+| 品质 | 任务权重 |
+|---|---|
+${factionTaskTypeWeights.map((rule) => `| ${rule.qualityMin}${rule.qualityMax === rule.qualityMin ? '' : `～${rule.qualityMax}`} | ${rule.weights.map((entry) => `${entry.value}:${entry.weight}`).join('、')} |`).join('\n')}
+
+任务 1～5 进入随机池；任务 6“捕捉目标灵兽”只存在于原表，没有进入随机权重，也没有数量返回分支，当前不得启用。
+
+## 数量与奖励
+
+| 任务 | 数量公式 | 贡献基础 | 声望基础 |
+|---:|---|---:|---:|
+${factionTaskDefinitions.map((task) => `| ${task.id} ${task.name} | ${factionRules.tasks.quantityFormulas[task.id] ?? '未启用'} | ${task.baseContributionReward} | ${task.baseReputationReward} |`).join('\n')}
+
+- 货币：\`ceil(worldMultiplier * baseCurrency * qualityMultiplier)\`。
+- 贡献：\`ceil(worldMultiplier * (1 + techBonus68) * baseContribution * qualityMultiplier)\`。
+- 声望：\`ceil(baseReputation * quality * (1 + techBonus69))\`。
+- \`qualityMultiplier = ((1 + (quality - 1) * 0.1) * 0.5) * 2^quality\`。
+
+## 刷新、解锁、招募与技能
+
+- 刷新消耗普通物品 6“介绍信”1 个；只覆盖未接受格；刷新时间为 \`clamp(baseSeconds - techBonus67 * 100, 100, baseSeconds)\`。
+- 正式势力要求同位面进度 \`save[worldIndex,2,0] >= shili[factionId,20]\`，满足后写入 \`save[factionId,40,0] = 1\`。
+- 招募每页 5 人；货币价格在基础价达到 10000 时按万取整，否则按整数取整；贡献价格使用贡献比 20 并按万取整。
+- 势力六技能来自 \`shili[5..10]\`，前置来自 \`shili[12..17]\`；技能的声望等级和位面要求来自 \`jn[46..47]\`。
+
+## 状态变化顺序
+
+- 接受任务时建立 0～9 字段记录，并将记录 ID 关联回悬榜格。
+- 手动刷新先扣介绍信，再刷新未接受任务，最后播放成功音效。
+- 完成任务依次刷新成就、记录文本、发放货币/贡献/声望、把悬榜关联写为 -1、清空接受记录并触发主线检测。
 `
 const fieldUsageMarkdown = fieldUsageTableNames.flatMap((table) => {
   const summary = fieldUsageSummary[table]
@@ -1521,10 +2125,13 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - \`faction-runtime-evidence.md\`：上述函数的人工审阅版索引。
 - \`faction-exchange-catalog.json\`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
 - \`faction-exchange-catalog.md\`：上述 396 条兑换商品的人工审阅表。
+- \`faction-rules.json\`：势力声望、代理人、悬榜、刷新、解锁、招募、技能与状态布局的共享契约。
+- \`faction-rules.md\`：上述原版规则与状态变化的人工审阅版。
 - \`save-contract.md\`：新存档共享状态边界。
 - \`verification-checklist.md\`：开发前仍需完成的运行时与实机核验。
 - \`egg-jianghu/src/content/original-towns.generated.ts\`：运行时使用的主城、公共场所与势力城镇快照。
 - \`egg-jianghu/src/content/original-faction-exchange.generated.ts\`：运行时使用的完整势力贡献兑换目录。
+- \`egg-jianghu/src/content/original-faction-rules.generated.ts\`：运行时使用的势力规则常量与纯函数。
 
 ## 证据规则
 
@@ -1546,6 +2153,8 @@ const outputs = {
   'faction-runtime-evidence.md': `# 原版势力运行时公式证据\n\n${factionRuntimeMarkdown}`,
   'faction-exchange-catalog.json': `${JSON.stringify(factionExchangeCatalog, null, 2)}\n`,
   'faction-exchange-catalog.md': factionExchangeMarkdown,
+  'faction-rules.json': `${JSON.stringify(factionRules, null, 2)}\n`,
+  'faction-rules.md': factionRulesMarkdown,
 }
 
 if (process.argv.includes('--check')) {
@@ -1572,6 +2181,13 @@ if (process.argv.includes('--check')) {
     throw new Error('运行时势力贡献兑换目录缺失，请先运行 npm run evidence:world')
   }
   assert(currentRuntimeFactionExchange === runtimeFactionExchangeSource, '运行时势力贡献兑换目录已过期，请运行 npm run evidence:world 并审阅差异')
+  let currentRuntimeFactionRules = null
+  try {
+    currentRuntimeFactionRules = readFileSync(RUNTIME_FACTION_RULES_FILE, 'utf8')
+  } catch {
+    throw new Error('运行时势力规则契约缺失，请先运行 npm run evidence:world')
+  }
+  assert(currentRuntimeFactionRules === runtimeFactionRulesSource, '运行时势力规则契约已过期，请运行 npm run evidence:world 并审阅差异')
   console.log('原版势力、城镇与城市经营真值包已是最新')
 } else {
   mkdirSync(OUT_DIR, { recursive: true })
@@ -1582,6 +2198,8 @@ if (process.argv.includes('--check')) {
   writeFileSync(RUNTIME_TOWNS_FILE, runtimeTownsSource, 'utf8')
   mkdirSync(dirname(RUNTIME_FACTION_EXCHANGE_FILE), { recursive: true })
   writeFileSync(RUNTIME_FACTION_EXCHANGE_FILE, runtimeFactionExchangeSource, 'utf8')
+  mkdirSync(dirname(RUNTIME_FACTION_RULES_FILE), { recursive: true })
+  writeFileSync(RUNTIME_FACTION_RULES_FILE, runtimeFactionRulesSource, 'utf8')
   console.log(`已生成真值包：势力 ${factions.length}、主城 ${worldHubs.length}、公共场所 ${publicLocations.length}、势力城镇 ${factionTowns.length}`)
   console.log(`贡献兑换：商品 ${factionExchangeCounts.total}、正式势力 ${factionExchangeCounts.factions}`)
   console.log(`城市数据：建筑 ${buildings.length}、科技 ${technologies.length}；运行时索引 ${parsedFunctions.length} 条中筛选相关入口`)
