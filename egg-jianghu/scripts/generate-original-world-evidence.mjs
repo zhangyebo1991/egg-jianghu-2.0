@@ -17,6 +17,8 @@ const sourceNames = [
   'shili.json',
   'gxdh.json',
   'rw.json',
+  'wm.json',
+  'dr.json',
   'wp.json',
   'pf.json',
   'zy.json',
@@ -41,7 +43,7 @@ const loadArray = (name) => JSON
   .data.map((row) => row.map((cell) => cell[0]))
 
 const arrays = Object.fromEntries(
-  ['gg', 'shili', 'gxdh', 'rw', 'wp', 'pf', 'zy', 'hh', 'js', 'tz', 'cj', 'mc', 'jz', 'kj', 'cscz', 'csdj', 'cszb']
+  ['gg', 'shili', 'gxdh', 'rw', 'wm', 'dr', 'wp', 'pf', 'zy', 'hh', 'js', 'tz', 'cj', 'mc', 'jz', 'kj', 'cscz', 'csdj', 'cszb']
     .map((name) => [name, loadArray(name)]),
 )
 const runtimeData = JSON.parse(readSource('data.json'))
@@ -1035,7 +1037,7 @@ const fieldUsageIndex = {
 }
 
 const formulaCategories = [
-  ['faction', /势力|阵营|贡献|声望|代理人|招募角色|角色招募价格|学习技能|前置技能|技能升级贡献|位面地点解锁|主线任务检测|物品兑换|物品买卖价格|位面价格系数|普通物品等级|物品名function|获得物品function|图纸拥有检测|幻化拥有检测|幻化类型文本|提交任务function/],
+  ['faction', /势力|阵营|贡献|声望|代理人|招募角色|角色招募价格|学习技能|前置技能|技能升级贡献|位面地点解锁|主线任务检测|物品兑换|物品买卖价格|位面价格系数|普通物品等级|物品名function|获得物品function|图纸拥有检测|幻化拥有检测|幻化类型文本|提交任务function|放弃任务function/],
   ['town', /场景|地点|城镇|酒馆|商会|市集|铁匠|武馆/],
   ['city-core', /城市|土地|地块|建筑|扩建|项目|迁移/],
   ['company', /公司|财务|租金|职位|资产|收支/],
@@ -1283,6 +1285,56 @@ assertJsonEqual(factionTaskDefinitions.map((task) => [
   [6, '捕捉目标灵兽', '灵兽', 650, 6],
 ], '阵营任务定义')
 
+const factionTaskMaterialTargets = (worldIndex, quality) => {
+  const tierOffset = quality <= 2 ? 0 : quality <= 4 ? 1 : 2
+  const items = []
+  for (let family = 1; family <= 4; family += 1) {
+    const baseQualityColumn = 22 + family * 2
+    const familyGateColumn = baseQualityColumn + 1
+    const baseQuality = asNumber(arrays.wm[worldIndex]?.[baseQualityColumn])
+    const familyGate = asNumber(arrays.wm[worldIndex]?.[familyGateColumn])
+    if (familyGate <= 20) continue
+    for (const row of arrays.wp.slice(1)) {
+      if (String(row[5]) !== '材料'
+        || asNumber(row[7]) !== family
+        || asNumber(row[4]) !== baseQuality + tierOffset) continue
+      items.push({
+        itemId: asNumber(row[0]),
+        name: String(row[1]),
+        family,
+        itemQuality: asNumber(row[4]),
+      })
+    }
+  }
+  return items
+}
+const factionTaskWorldTargets = Array.from({ length: 13 }, (_, offset) => {
+  const worldIndex = offset + 1
+  const enemyRows = arrays.dr.slice(1).filter((row) => asNumber(row[12]) === worldIndex)
+  const currencySourceId = asNumber(arrays.wm[worldIndex]?.[23])
+  return {
+    worldIndex,
+    currency: {
+      sourceId: currencySourceId,
+      name: String(arrays.mc[currencySourceId]?.[11] ?? ''),
+    },
+    normalEnemies: enemyRows
+      .filter((row) => String(row[5]) === '小怪')
+      .map((row) => ({ drId: asNumber(row[0]), name: String(row[1]) })),
+    bossEnemies: enemyRows
+      .filter((row) => String(row[5]) === '首领')
+      .map((row) => ({ drId: asNumber(row[0]), name: String(row[1]) })),
+    materialItemsByQuality: Array.from({ length: 6 }, (_, qualityOffset) => ({
+      quality: qualityOffset + 1,
+      items: factionTaskMaterialTargets(worldIndex, qualityOffset + 1),
+    })),
+  }
+})
+assert(factionTaskWorldTargets.every((target) => target.normalEnemies.length === 10), '势力任务不是每个位面 10 个小怪目标')
+assert(factionTaskWorldTargets.every((target) => target.bossEnemies.length === 10), '势力任务不是每个位面 10 个首领目标')
+assert(factionTaskWorldTargets.every((target) => target.currency.sourceId > 0 && target.currency.name), '势力任务存在未知位面货币目标')
+assert(factionTaskWorldTargets.every((target) => target.materialItemsByQuality.every((group) => group.items.length >= 3)), '势力任务存在空材料目标池')
+
 assertExpressions('位面声望等级', [
   'C3.clamp(Math.floor((Math.sqrt((声望值 / (200 + ((位面编号 - 1) * 20)))) + 1)), 1, 5)',
 ])
@@ -1318,6 +1370,14 @@ assertExpressions('技能升级贡献function', [
   'Math.round((((10000 * Math.pow(1.025, ((((难度系数 - 1) * 20) + 技能等级) * 3))) - 9700) * 百分比))',
 ])
 
+assertOperation('随机阵营任务目标编号function', '.CompareXY', ['dr.CurX()', '5', '[8,0]', '"小怪"'])
+assertOperation('随机阵营任务目标编号function', '.CompareXY', ['dr.CurX()', '5', '[8,0]', '"首领"'])
+assertOperation('随机阵营任务目标编号function', '.CompareXY', ['dr.CurX()', '12', '[8,0]', '位面编号'])
+assertOperation('随机阵营任务目标编号function', '.AddProbabilityEntry', ['wm.At(位面编号, 23)', '1'])
+assertOperation('随机阵营任务目标编号function', '.CompareXY', ['wp.CurX()', '5', '[8,0]', '"材料"'])
+assertOperation('随机阵营任务目标编号function', '.CompareXYZ', ['dr.CurX()', '47', '0', '[8,0]', '1'])
+assertOperation('随机阵营任务目标编号function', '.AddProbabilityEntry', ['C3.clamp(任务品质, 1, 9)', '1'])
+
 assertOperation('刷新阵营任务数据function', '.Repeat', ['5'])
 assertOperation('位面地点解锁检测function', '.SetXYZ', ['shili.CurX()', '40', '0', '1'])
 assertOperation('代理人任命function', '.SetXYZ', ['位面编号', '54', '0', '角色编号'])
@@ -1325,12 +1385,19 @@ assertOperation('代理人任命function', '.SetXYZ', ['位面编号', '55', '0'
 for (let field = 0; field <= 9; field += 1) {
   assertOperationPrefix('接受阵营任务function', '.SetXYZ', ['save.CurX()', String(field), '9'])
   assertOperation('完成势力任务function', '.SetXYZ', ['任务序号', String(field), '9', '0'])
+  assertOperation('放弃任务function', '.SetXYZ', ['任务序号', String(field), '9', '0'])
 }
 assertOperation('完成势力任务function', '.SetXYZ', [
   'multiply(save.At(任务序号, 3, 9), 4)',
   'save.At(任务序号, 8, 9)',
   '9',
   '-1',
+])
+assertOperation('放弃任务function', '.SetXYZ', [
+  'multiply(save.At(任务序号, 3, 9), 4)',
+  'save.At(任务序号, 8, 9)',
+  '9',
+  '0',
 ])
 assertCallSubsequence('阵营任务刷新点击', ['失去物品', '刷新任务数据', '音效播放'])
 assertCallSubsequence('完成势力任务function', [
@@ -1362,6 +1429,7 @@ const factionRules = {
       '阵营任务刷新点击',
       '接受阵营任务function',
       '完成势力任务function',
+      '放弃任务function',
       '位面地点解锁检测function',
       '角色招募价格function',
       '技能升级贡献function',
@@ -1440,6 +1508,15 @@ const factionRules = {
       ...task,
       enabledInRandomPool: task.id <= 5,
     })),
+    targetPools: factionTaskWorldTargets,
+    targetRules: {
+      1: '同位面 dr 类型为“小怪”的 10 个图鉴 ID 等权随机',
+      2: 'wm[worldIndex][23] 位面货币 ID',
+      3: 'wp 类型“材料”；材料族为 wm 对应族可用时，品质 1～2/3～4/5～6 分别取基础/基础+1/基础+2',
+      4: '同位面 dr 类型为“首领”且已解锁的目标等权随机；无可选目标时返回本位面首个首领',
+      5: 'clamp(quality, 1, 9)，表示待上交装备品质',
+      6: null,
+    },
     qualityWeights: factionTaskQualityWeights,
     typeWeights: factionTaskTypeWeights,
     reservedTaskIds: [6],
@@ -1715,6 +1792,51 @@ export const originalFactionAgentReputationMultiplier = (abilityLevel: number): 
 
 export const originalFactionTaskDefinitionById = (taskId: number) =>
   ORIGINAL_FACTION_RULES.tasks.definitions.find((task) => task.id === taskId)
+
+export const originalFactionTaskTargetPool = (
+  worldIndex: number,
+  taskId: number,
+  quality: number,
+  unlockedBossDrIds: readonly number[] = [],
+): readonly number[] => {
+  const world = ORIGINAL_FACTION_RULES.tasks.targetPools.find((target) => target.worldIndex === worldIndex)
+  if (!world) return []
+  if (taskId === 1) return world.normalEnemies.map((enemy) => enemy.drId)
+  if (taskId === 2) return [world.currency.sourceId]
+  if (taskId === 3) {
+    return world.materialItemsByQuality
+      .find((group) => group.quality === quality)
+      ?.items.map((item) => item.itemId) ?? []
+  }
+  if (taskId === 4) {
+    const unlocked = new Set(unlockedBossDrIds)
+    const available = world.bossEnemies.filter((enemy) => unlocked.has(enemy.drId)).map((enemy) => enemy.drId)
+    return available.length ? available : world.bossEnemies.slice(0, 1).map((enemy) => enemy.drId)
+  }
+  if (taskId === 5) return [clamp(quality, 1, 9)]
+  return []
+}
+
+export const originalFactionTaskTargetName = (
+  worldIndex: number,
+  taskId: number,
+  targetId: number,
+): string => {
+  const world = ORIGINAL_FACTION_RULES.tasks.targetPools.find((target) => target.worldIndex === worldIndex)
+  if (!world) return '未知目标'
+  if (taskId === 1) return world.normalEnemies.find((enemy) => enemy.drId === targetId)?.name ?? '未知敌人'
+  if (taskId === 2) return world.currency.sourceId === targetId ? world.currency.name : '未知货币'
+  if (taskId === 3) {
+    for (const group of world.materialItemsByQuality) {
+      const item = group.items.find((candidate) => candidate.itemId === targetId)
+      if (item) return item.name
+    }
+    return '未知材料'
+  }
+  if (taskId === 4) return world.bossEnemies.find((enemy) => enemy.drId === targetId)?.name ?? '未知首领'
+  if (taskId === 5) return '品质 ' + targetId + ' 装备'
+  return '未启用任务'
+}
 
 export const originalFactionTaskRequiredAmount = (
   taskId: number,
@@ -2007,6 +2129,16 @@ ${factionTaskTypeWeights.map((rule) => `| ${rule.qualityMin}${rule.qualityMax ==
 
 任务 1～5 进入随机池；任务 6“捕捉目标灵兽”只存在于原表，没有进入随机权重，也没有数量返回分支，当前不得启用。
 
+## 任务目标池
+
+- 消灭：同位面 10 个 \`dr\` 小怪等权随机。
+- 筹措：固定为 \`wm[worldIndex][23]\` 对应的位面货币。
+- 收集：从 \`wp\` 四类材料中筛选本位面启用的材料族；品质 1～2、3～4、5～6 分别使用基础、基础 + 1、基础 + 2 阶。
+- 挑战：从同位面已解锁首领等权随机；没有已解锁目标时回退本位面首个首领。
+- 寻宝：目标值就是 \`clamp(quality, 1, 9)\` 后的装备品质。
+
+生成契约逐位面保留 10 个小怪、10 个首领、位面货币和六档材料池，可直接用原版 \`dr/wp\` ID 结算，不需要猜测名称或目标类别。
+
 ## 数量与奖励
 
 | 任务 | 数量公式 | 贡献基础 | 声望基础 |
@@ -2030,6 +2162,7 @@ ${factionTaskDefinitions.map((task) => `| ${task.id} ${task.name} | ${factionRul
 - 接受任务时建立 0～9 字段记录，并将记录 ID 关联回悬榜格。
 - 手动刷新先扣介绍信，再刷新未接受任务，最后播放成功音效。
 - 完成任务依次刷新成就、记录文本、发放货币/贡献/声望、把悬榜关联写为 -1、清空接受记录并触发主线检测。
+- 放弃任务把悬榜关联写回 0，并清空接受记录 0～9；悬榜原任务仍可重新接受。
 `
 const fieldUsageMarkdown = fieldUsageTableNames.flatMap((table) => {
   const summary = fieldUsageSummary[table]

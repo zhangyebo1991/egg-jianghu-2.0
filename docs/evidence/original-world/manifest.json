@@ -9,6 +9,8 @@
       "shili.json": "c99f483d6e9fda0cd789bbf3d07b8e5c2a3b1b2623e5edb3e28669881a8868b7",
       "gxdh.json": "f2dcdd6e82f52fdc8cd9c5e841b7b8378f855813db52e7deafa6f0395b8f22bd",
       "rw.json": "2ef989f52639b9667475522d15306558f7856f75d6dfb2a6f881fc8e5c7b4607",
+      "wm.json": "63eeadd247c4dc5922ec943d0a371bfd37c139bbacd61903fe27be3c144b968e",
+      "dr.json": "6cb4ba1591a9859e0daae2d426f58a2a4443218a38c4635265d866c48ef4e6dd",
       "wp.json": "d2d38edcb3548d03a667664b783fb4b5363ded0135582f4e8ebef88f89c8841c",
       "pf.json": "6be3f328b616888b872b61ac80f7a8c69b84bbc459bd56055f52d0485f1e3fec",
       "zy.json": "6876276814a961f32556296ee161ddbff62dac73f41c7e033f5625ee740f787f",
@@ -12333,6 +12335,14 @@
         "uid": "767378420975878",
         "paths": [
           "主事件 > 主系统 > 数据公式 > 技能升级贡献function"
+        ]
+      },
+      {
+        "eventId": 17903,
+        "name": "放弃任务function",
+        "uid": "915042290495488",
+        "paths": [
+          "主事件 > 主系统 > 任务系统 > 放弃任务function"
         ]
       },
       {

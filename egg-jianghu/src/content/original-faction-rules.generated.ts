@@ -25,6 +25,7 @@ export const ORIGINAL_FACTION_RULES = {
       "阵营任务刷新点击",
       "接受阵营任务function",
       "完成势力任务function",
+      "放弃任务function",
       "位面地点解锁检测function",
       "角色招募价格function",
       "技能升级贡献function",
@@ -191,6 +192,3307 @@ export const ORIGINAL_FACTION_RULES = {
         "enabledInRandomPool": false
       }
     ],
+    "targetPools": [
+      {
+        "worldIndex": 1,
+        "currency": {
+          "sourceId": 2,
+          "name": "铜钱"
+        },
+        "normalEnemies": [
+          {
+            "drId": 1,
+            "name": "黄巾战士"
+          },
+          {
+            "drId": 2,
+            "name": "随军参谋"
+          },
+          {
+            "drId": 3,
+            "name": "护卫甲兵"
+          },
+          {
+            "drId": 4,
+            "name": "长弓手"
+          },
+          {
+            "drId": 5,
+            "name": "汉末中医"
+          },
+          {
+            "drId": 6,
+            "name": "土匪豪强"
+          },
+          {
+            "drId": 7,
+            "name": "奸佞乡官"
+          },
+          {
+            "drId": 8,
+            "name": "随军校尉"
+          },
+          {
+            "drId": 9,
+            "name": "江洋大盗"
+          },
+          {
+            "drId": 10,
+            "name": "黄巾信徒"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 11,
+            "name": "张角"
+          },
+          {
+            "drId": 12,
+            "name": "貂蝉"
+          },
+          {
+            "drId": 13,
+            "name": "吕布"
+          },
+          {
+            "drId": 14,
+            "name": "甄宓"
+          },
+          {
+            "drId": 15,
+            "name": "小乔"
+          },
+          {
+            "drId": 16,
+            "name": "华佗"
+          },
+          {
+            "drId": 17,
+            "name": "关羽"
+          },
+          {
+            "drId": 18,
+            "name": "孙尚香"
+          },
+          {
+            "drId": 19,
+            "name": "王异"
+          },
+          {
+            "drId": 20,
+            "name": "诸葛亮"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 2,
+        "currency": {
+          "sourceId": 3,
+          "name": "银两"
+        },
+        "normalEnemies": [
+          {
+            "drId": 31,
+            "name": "青城弟子"
+          },
+          {
+            "drId": 32,
+            "name": "武当弟子"
+          },
+          {
+            "drId": 33,
+            "name": "崆峒弟子"
+          },
+          {
+            "drId": 34,
+            "name": "狂刀弟子"
+          },
+          {
+            "drId": 35,
+            "name": "泰山弟子"
+          },
+          {
+            "drId": 36,
+            "name": "苍山弟子"
+          },
+          {
+            "drId": 37,
+            "name": "嵩山弟子"
+          },
+          {
+            "drId": 38,
+            "name": "雪山弟子"
+          },
+          {
+            "drId": 39,
+            "name": "唐门弟子"
+          },
+          {
+            "drId": 40,
+            "name": "逍遥弟子"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 121,
+            "name": "马夫人"
+          },
+          {
+            "drId": 122,
+            "name": "蓉儿"
+          },
+          {
+            "drId": 123,
+            "name": "扫地僧"
+          },
+          {
+            "drId": 124,
+            "name": "空竹"
+          },
+          {
+            "drId": 125,
+            "name": "龙姑娘"
+          },
+          {
+            "drId": 126,
+            "name": "令狐少侠"
+          },
+          {
+            "drId": 127,
+            "name": "萧帮主"
+          },
+          {
+            "drId": 128,
+            "name": "小师妹"
+          },
+          {
+            "drId": 129,
+            "name": "张三丰"
+          },
+          {
+            "drId": 130,
+            "name": "无极"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 3,
+        "currency": {
+          "sourceId": 1,
+          "name": "美刀"
+        },
+        "normalEnemies": [
+          {
+            "drId": 41,
+            "name": "摸金劲敌"
+          },
+          {
+            "drId": 42,
+            "name": "护宝猛士"
+          },
+          {
+            "drId": 43,
+            "name": "防墓刚汉"
+          },
+          {
+            "drId": 44,
+            "name": "夺宝悍民"
+          },
+          {
+            "drId": 45,
+            "name": "守陵勇者"
+          },
+          {
+            "drId": 46,
+            "name": "阻盗强民"
+          },
+          {
+            "drId": 47,
+            "name": "护陵硬汉"
+          },
+          {
+            "drId": 48,
+            "name": "守墓勇夫"
+          },
+          {
+            "drId": 49,
+            "name": "拦盗猛者"
+          },
+          {
+            "drId": 50,
+            "name": "御贼刚民"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 131,
+            "name": "秦宇"
+          },
+          {
+            "drId": 132,
+            "name": "凌雪"
+          },
+          {
+            "drId": 133,
+            "name": "吴刚"
+          },
+          {
+            "drId": 134,
+            "name": "苏瑶瑶"
+          },
+          {
+            "drId": 135,
+            "name": "叶老"
+          },
+          {
+            "drId": 136,
+            "name": "林悦"
+          },
+          {
+            "drId": 137,
+            "name": "赵猛"
+          },
+          {
+            "drId": 138,
+            "name": "楚萱"
+          },
+          {
+            "drId": 139,
+            "name": "陈老九"
+          },
+          {
+            "drId": 140,
+            "name": "柳青青"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 4,
+        "currency": {
+          "sourceId": 8,
+          "name": "金币"
+        },
+        "normalEnemies": [
+          {
+            "drId": 51,
+            "name": "无畏骑士"
+          },
+          {
+            "drId": 52,
+            "name": "狂暴骑士"
+          },
+          {
+            "drId": 53,
+            "name": "忠诚卫兵"
+          },
+          {
+            "drId": 54,
+            "name": "铠甲刺客"
+          },
+          {
+            "drId": 55,
+            "name": "神秘教徒"
+          },
+          {
+            "drId": 56,
+            "name": "暗影骑士"
+          },
+          {
+            "drId": 57,
+            "name": "钢铁骑士"
+          },
+          {
+            "drId": 58,
+            "name": "坚毅卫兵"
+          },
+          {
+            "drId": 59,
+            "name": "重装刺客"
+          },
+          {
+            "drId": 60,
+            "name": "狂热教徒"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 141,
+            "name": "居伊"
+          },
+          {
+            "drId": 142,
+            "name": "艾莉丝"
+          },
+          {
+            "drId": 143,
+            "name": "阿丽克丝"
+          },
+          {
+            "drId": 144,
+            "name": "雷纳德"
+          },
+          {
+            "drId": 145,
+            "name": "戈弗雷"
+          },
+          {
+            "drId": 146,
+            "name": "克莱尔"
+          },
+          {
+            "drId": 147,
+            "name": "伊莎贝拉"
+          },
+          {
+            "drId": 148,
+            "name": "鲍德温四世"
+          },
+          {
+            "drId": 149,
+            "name": "萨拉丁"
+          },
+          {
+            "drId": 150,
+            "name": "狮心王理查"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 5,
+        "currency": {
+          "sourceId": 4,
+          "name": "妖晶"
+        },
+        "normalEnemies": [
+          {
+            "drId": 61,
+            "name": "噬魂鬼"
+          },
+          {
+            "drId": 62,
+            "name": "迷心鬼"
+          },
+          {
+            "drId": 63,
+            "name": "幻形鬼"
+          },
+          {
+            "drId": 64,
+            "name": "勾魂鬼"
+          },
+          {
+            "drId": 65,
+            "name": "摄魄鬼"
+          },
+          {
+            "drId": 66,
+            "name": "恶念鬼"
+          },
+          {
+            "drId": 67,
+            "name": "魅人鬼"
+          },
+          {
+            "drId": 68,
+            "name": "阴灵鬼"
+          },
+          {
+            "drId": 69,
+            "name": "怨煞鬼"
+          },
+          {
+            "drId": 70,
+            "name": "邪祟鬼"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 151,
+            "name": "聂小倩"
+          },
+          {
+            "drId": 152,
+            "name": "宁采臣"
+          },
+          {
+            "drId": 153,
+            "name": "燕赤霞"
+          },
+          {
+            "drId": 154,
+            "name": "辛十四娘"
+          },
+          {
+            "drId": 155,
+            "name": "冯生"
+          },
+          {
+            "drId": 156,
+            "name": "婴宁"
+          },
+          {
+            "drId": 157,
+            "name": "小翠"
+          },
+          {
+            "drId": 158,
+            "name": "王生"
+          },
+          {
+            "drId": 159,
+            "name": "画皮鬼"
+          },
+          {
+            "drId": 160,
+            "name": "孔雪笠"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 6,
+        "currency": {
+          "sourceId": 5,
+          "name": "贯珠"
+        },
+        "normalEnemies": [
+          {
+            "drId": 71,
+            "name": "萨摩武士"
+          },
+          {
+            "drId": 72,
+            "name": "长州武士"
+          },
+          {
+            "drId": 73,
+            "name": "足轻步兵"
+          },
+          {
+            "drId": 74,
+            "name": "铁炮步兵"
+          },
+          {
+            "drId": 75,
+            "name": "旗本步兵"
+          },
+          {
+            "drId": 76,
+            "name": "甲斐武士"
+          },
+          {
+            "drId": 77,
+            "name": "越后武士"
+          },
+          {
+            "drId": 78,
+            "name": "尾张武士"
+          },
+          {
+            "drId": 79,
+            "name": "弓取步兵"
+          },
+          {
+            "drId": 80,
+            "name": "薙刀步兵"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 161,
+            "name": "织田信长"
+          },
+          {
+            "drId": 162,
+            "name": "上杉谦信"
+          },
+          {
+            "drId": 163,
+            "name": "真田幸村"
+          },
+          {
+            "drId": 164,
+            "name": "服部半藏"
+          },
+          {
+            "drId": 165,
+            "name": "武田信玄"
+          },
+          {
+            "drId": 166,
+            "name": "丰臣秀吉"
+          },
+          {
+            "drId": 167,
+            "name": "明智光秀"
+          },
+          {
+            "drId": 168,
+            "name": "本多忠胜"
+          },
+          {
+            "drId": 169,
+            "name": "石田三成"
+          },
+          {
+            "drId": 170,
+            "name": "德川家康"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 7,
+        "currency": {
+          "sourceId": 1,
+          "name": "美刀"
+        },
+        "normalEnemies": [
+          {
+            "drId": 81,
+            "name": "突击兵"
+          },
+          {
+            "drId": 82,
+            "name": "机枪兵"
+          },
+          {
+            "drId": 83,
+            "name": "宪卫兵"
+          },
+          {
+            "drId": 84,
+            "name": "狙击兵"
+          },
+          {
+            "drId": 85,
+            "name": "山地兵"
+          },
+          {
+            "drId": 86,
+            "name": "冲锋兵"
+          },
+          {
+            "drId": 87,
+            "name": "步枪兵"
+          },
+          {
+            "drId": 88,
+            "name": "侦察兵"
+          },
+          {
+            "drId": 89,
+            "name": "雪地兵"
+          },
+          {
+            "drId": 90,
+            "name": "特种兵"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 171,
+            "name": "曼施坦因"
+          },
+          {
+            "drId": 172,
+            "name": "隆美尔"
+          },
+          {
+            "drId": 173,
+            "name": "古德里安"
+          },
+          {
+            "drId": 174,
+            "name": "邓尼茨"
+          },
+          {
+            "drId": 175,
+            "name": "朱可夫"
+          },
+          {
+            "drId": 176,
+            "name": "科涅夫"
+          },
+          {
+            "drId": 177,
+            "name": "艾森豪威尔"
+          },
+          {
+            "drId": 178,
+            "name": "巴顿"
+          },
+          {
+            "drId": 179,
+            "name": "麦克阿瑟"
+          },
+          {
+            "drId": 180,
+            "name": "蒙哥马利"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 8,
+        "currency": {
+          "sourceId": 6,
+          "name": "仙玉"
+        },
+        "normalEnemies": [
+          {
+            "drId": 91,
+            "name": "毒修士"
+          },
+          {
+            "drId": 92,
+            "name": "邪刀客"
+          },
+          {
+            "drId": 93,
+            "name": "暗刃手"
+          },
+          {
+            "drId": 94,
+            "name": "邪灵者"
+          },
+          {
+            "drId": 95,
+            "name": "魔火徒"
+          },
+          {
+            "drId": 96,
+            "name": "毒蛊人"
+          },
+          {
+            "drId": 97,
+            "name": "血刀卫"
+          },
+          {
+            "drId": 98,
+            "name": "血影卫"
+          },
+          {
+            "drId": 99,
+            "name": "暗魔者"
+          },
+          {
+            "drId": 100,
+            "name": "邪火使"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 181,
+            "name": "洛尘羽"
+          },
+          {
+            "drId": 182,
+            "name": "沐雪瑶"
+          },
+          {
+            "drId": 183,
+            "name": "轩辕逸"
+          },
+          {
+            "drId": 184,
+            "name": "苏灵月"
+          },
+          {
+            "drId": 185,
+            "name": "萧逸云"
+          },
+          {
+            "drId": 186,
+            "name": "云霓裳"
+          },
+          {
+            "drId": 187,
+            "name": "墨羽轩"
+          },
+          {
+            "drId": 188,
+            "name": "凌紫嫣"
+          },
+          {
+            "drId": 189,
+            "name": "叶清婉"
+          },
+          {
+            "drId": 190,
+            "name": "风无痕"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 9,
+        "currency": {
+          "sourceId": 9,
+          "name": "信用"
+        },
+        "normalEnemies": [
+          {
+            "drId": 101,
+            "name": "暗星卫卒"
+          },
+          {
+            "drId": 102,
+            "name": "镭影战兵"
+          },
+          {
+            "drId": 103,
+            "name": "幽光锐士"
+          },
+          {
+            "drId": 104,
+            "name": "炽炎猛士"
+          },
+          {
+            "drId": 105,
+            "name": "寒霜锐兵"
+          },
+          {
+            "drId": 106,
+            "name": "风暴劲卒"
+          },
+          {
+            "drId": 107,
+            "name": "磁能卫士"
+          },
+          {
+            "drId": 108,
+            "name": "电浆锐士"
+          },
+          {
+            "drId": 109,
+            "name": "量子战兵"
+          },
+          {
+            "drId": 110,
+            "name": "星陨猛士"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 191,
+            "name": "亚历克斯雷顿"
+          },
+          {
+            "drId": 192,
+            "name": "凯斯哈特曼"
+          },
+          {
+            "drId": 193,
+            "name": "艾丽娅斯通"
+          },
+          {
+            "drId": 194,
+            "name": "琳恩帕克"
+          },
+          {
+            "drId": 195,
+            "name": "卓格克里克斯"
+          },
+          {
+            "drId": 196,
+            "name": "托克斯维恩"
+          },
+          {
+            "drId": 197,
+            "name": "米娅拉克斯"
+          },
+          {
+            "drId": 198,
+            "name": "妮拉索尔"
+          },
+          {
+            "drId": 199,
+            "name": "星语者"
+          },
+          {
+            "drId": 200,
+            "name": "影刃"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 10,
+        "currency": {
+          "sourceId": 7,
+          "name": "灵石"
+        },
+        "normalEnemies": [
+          {
+            "drId": 111,
+            "name": "星陨门徒"
+          },
+          {
+            "drId": 112,
+            "name": "紫阳弟子"
+          },
+          {
+            "drId": 113,
+            "name": "灵云长老"
+          },
+          {
+            "drId": 114,
+            "name": "寒霜门徒"
+          },
+          {
+            "drId": 115,
+            "name": "清风弟子"
+          },
+          {
+            "drId": 116,
+            "name": "紫雷门徒"
+          },
+          {
+            "drId": 117,
+            "name": "焚天弟子"
+          },
+          {
+            "drId": 118,
+            "name": "皓月长老"
+          },
+          {
+            "drId": 119,
+            "name": "苍炎门徒"
+          },
+          {
+            "drId": 120,
+            "name": "燃月弟子"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 201,
+            "name": "萧尘"
+          },
+          {
+            "drId": 202,
+            "name": "言慕然"
+          },
+          {
+            "drId": 203,
+            "name": "雷震天"
+          },
+          {
+            "drId": 204,
+            "name": "岩峰"
+          },
+          {
+            "drId": 205,
+            "name": "林羽"
+          },
+          {
+            "drId": 206,
+            "name": "展灵儿"
+          },
+          {
+            "drId": 207,
+            "name": "苏雪"
+          },
+          {
+            "drId": 208,
+            "name": "语昕"
+          },
+          {
+            "drId": 209,
+            "name": "灵心月"
+          },
+          {
+            "drId": 210,
+            "name": "雷紫"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 11,
+        "currency": {
+          "sourceId": 8,
+          "name": "金币"
+        },
+        "normalEnemies": [
+          {
+            "drId": 291,
+            "name": "兽族战士"
+          },
+          {
+            "drId": 292,
+            "name": "人类法师"
+          },
+          {
+            "drId": 293,
+            "name": "牛头人护卫"
+          },
+          {
+            "drId": 294,
+            "name": "巨魔弓箭手"
+          },
+          {
+            "drId": 295,
+            "name": "人类牧师"
+          },
+          {
+            "drId": 296,
+            "name": "矮人战士"
+          },
+          {
+            "drId": 297,
+            "name": "德莱法师"
+          },
+          {
+            "drId": 298,
+            "name": "人类骑士"
+          },
+          {
+            "drId": 299,
+            "name": "精灵弓箭手"
+          },
+          {
+            "drId": 300,
+            "name": "萨满祭祀"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 321,
+            "name": "珍娜潮歌"
+          },
+          {
+            "drId": 322,
+            "name": "西尔维夜影"
+          },
+          {
+            "drId": 323,
+            "name": "乌瑟圣辉"
+          },
+          {
+            "drId": 324,
+            "name": "泰莉丝月瞳"
+          },
+          {
+            "drId": 325,
+            "name": "维里安预视"
+          },
+          {
+            "drId": 326,
+            "name": "萨恩裂地"
+          },
+          {
+            "drId": 327,
+            "name": "凯兰炽翼"
+          },
+          {
+            "drId": 328,
+            "name": "莫林铁须"
+          },
+          {
+            "drId": 329,
+            "name": "玛洛恩林语"
+          },
+          {
+            "drId": 330,
+            "name": "奥菲莉天翼"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 12,
+        "currency": {
+          "sourceId": 1,
+          "name": "美刀"
+        },
+        "normalEnemies": [
+          {
+            "drId": 301,
+            "name": "机械异种"
+          },
+          {
+            "drId": 302,
+            "name": "鳄鱼人"
+          },
+          {
+            "drId": 303,
+            "name": "黑暗毒液"
+          },
+          {
+            "drId": 304,
+            "name": "血色蜘蛛"
+          },
+          {
+            "drId": 305,
+            "name": "章鱼怪"
+          },
+          {
+            "drId": 306,
+            "name": "暗黑机甲"
+          },
+          {
+            "drId": 307,
+            "name": "变种狼人"
+          },
+          {
+            "drId": 308,
+            "name": "鲨鱼异形"
+          },
+          {
+            "drId": 309,
+            "name": "忍者猫侠"
+          },
+          {
+            "drId": 310,
+            "name": "通灵人"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 331,
+            "name": "猩红梦魇"
+          },
+          {
+            "drId": 332,
+            "name": "暗夜裁决"
+          },
+          {
+            "drId": 333,
+            "name": "雷霆王托尔"
+          },
+          {
+            "drId": 334,
+            "name": "白凤凰"
+          },
+          {
+            "drId": 335,
+            "name": "狂怒巨人"
+          },
+          {
+            "drId": 336,
+            "name": "神射天眼"
+          },
+          {
+            "drId": 337,
+            "name": "神裔之女"
+          },
+          {
+            "drId": 338,
+            "name": "小丑女王"
+          },
+          {
+            "drId": 339,
+            "name": "磁控领主"
+          },
+          {
+            "drId": 340,
+            "name": "不朽战狼"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "worldIndex": 13,
+        "currency": {
+          "sourceId": 11,
+          "name": "神魄"
+        },
+        "normalEnemies": [
+          {
+            "drId": 311,
+            "name": "金狮鬃圣"
+          },
+          {
+            "drId": 312,
+            "name": "复眼蜈蚣"
+          },
+          {
+            "drId": 313,
+            "name": "皈依黑熊"
+          },
+          {
+            "drId": 314,
+            "name": "大鹏金雕"
+          },
+          {
+            "drId": 315,
+            "name": "白骨鬼女"
+          },
+          {
+            "drId": 316,
+            "name": "土匪虎妖"
+          },
+          {
+            "drId": 317,
+            "name": "蜘蛛精后"
+          },
+          {
+            "drId": 318,
+            "name": "邪魄巨象"
+          },
+          {
+            "drId": 319,
+            "name": "恶毒蝎女"
+          },
+          {
+            "drId": 320,
+            "name": "月宫白兔"
+          }
+        ],
+        "bossEnemies": [
+          {
+            "drId": 341,
+            "name": "唐僧"
+          },
+          {
+            "drId": 342,
+            "name": "熬烈"
+          },
+          {
+            "drId": 343,
+            "name": "猪八戒"
+          },
+          {
+            "drId": 344,
+            "name": "沙和尚"
+          },
+          {
+            "drId": 345,
+            "name": "铁扇公主"
+          },
+          {
+            "drId": 346,
+            "name": "牛魔王"
+          },
+          {
+            "drId": 347,
+            "name": "嫦娥"
+          },
+          {
+            "drId": 348,
+            "name": "红孩儿"
+          },
+          {
+            "drId": 349,
+            "name": "紫霞"
+          },
+          {
+            "drId": 350,
+            "name": "太上老君"
+          }
+        ],
+        "materialItemsByQuality": [
+          {
+            "quality": 1,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 2,
+            "items": [
+              {
+                "itemId": 11,
+                "name": "初晶矿石",
+                "family": 1,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 20,
+                "name": "灵风松木",
+                "family": 2,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 29,
+                "name": "青叶草",
+                "family": 3,
+                "itemQuality": 1
+              },
+              {
+                "itemId": 38,
+                "name": "灵光髓",
+                "family": 4,
+                "itemQuality": 1
+              }
+            ]
+          },
+          {
+            "quality": 3,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 4,
+            "items": [
+              {
+                "itemId": 12,
+                "name": "灵耀矿砂",
+                "family": 1,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 21,
+                "name": "紫炎杨木",
+                "family": 2,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 30,
+                "name": "紫灵花",
+                "family": 3,
+                "itemQuality": 2
+              },
+              {
+                "itemId": 39,
+                "name": "紫炎晶",
+                "family": 4,
+                "itemQuality": 2
+              }
+            ]
+          },
+          {
+            "quality": 5,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          },
+          {
+            "quality": 6,
+            "items": [
+              {
+                "itemId": 13,
+                "name": "辉光石砾",
+                "family": 1,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 22,
+                "name": "幽影榆木",
+                "family": 2,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 31,
+                "name": "幽梦藤",
+                "family": 3,
+                "itemQuality": 3
+              },
+              {
+                "itemId": 40,
+                "name": "幽梦芯",
+                "family": 4,
+                "itemQuality": 3
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "targetRules": {
+      "1": "同位面 dr 类型为“小怪”的 10 个图鉴 ID 等权随机",
+      "2": "wm[worldIndex][23] 位面货币 ID",
+      "3": "wp 类型“材料”；材料族为 wm 对应族可用时，品质 1～2/3～4/5～6 分别取基础/基础+1/基础+2",
+      "4": "同位面 dr 类型为“首领”且已解锁的目标等权随机；无可选目标时返回本位面首个首领",
+      "5": "clamp(quality, 1, 9)，表示待上交装备品质",
+      "6": null
+    },
     "qualityWeights": [
       {
         "value": 1,
@@ -382,6 +3684,51 @@ export const originalFactionAgentReputationMultiplier = (abilityLevel: number): 
 
 export const originalFactionTaskDefinitionById = (taskId: number) =>
   ORIGINAL_FACTION_RULES.tasks.definitions.find((task) => task.id === taskId)
+
+export const originalFactionTaskTargetPool = (
+  worldIndex: number,
+  taskId: number,
+  quality: number,
+  unlockedBossDrIds: readonly number[] = [],
+): readonly number[] => {
+  const world = ORIGINAL_FACTION_RULES.tasks.targetPools.find((target) => target.worldIndex === worldIndex)
+  if (!world) return []
+  if (taskId === 1) return world.normalEnemies.map((enemy) => enemy.drId)
+  if (taskId === 2) return [world.currency.sourceId]
+  if (taskId === 3) {
+    return world.materialItemsByQuality
+      .find((group) => group.quality === quality)
+      ?.items.map((item) => item.itemId) ?? []
+  }
+  if (taskId === 4) {
+    const unlocked = new Set(unlockedBossDrIds)
+    const available = world.bossEnemies.filter((enemy) => unlocked.has(enemy.drId)).map((enemy) => enemy.drId)
+    return available.length ? available : world.bossEnemies.slice(0, 1).map((enemy) => enemy.drId)
+  }
+  if (taskId === 5) return [clamp(quality, 1, 9)]
+  return []
+}
+
+export const originalFactionTaskTargetName = (
+  worldIndex: number,
+  taskId: number,
+  targetId: number,
+): string => {
+  const world = ORIGINAL_FACTION_RULES.tasks.targetPools.find((target) => target.worldIndex === worldIndex)
+  if (!world) return '未知目标'
+  if (taskId === 1) return world.normalEnemies.find((enemy) => enemy.drId === targetId)?.name ?? '未知敌人'
+  if (taskId === 2) return world.currency.sourceId === targetId ? world.currency.name : '未知货币'
+  if (taskId === 3) {
+    for (const group of world.materialItemsByQuality) {
+      const item = group.items.find((candidate) => candidate.itemId === targetId)
+      if (item) return item.name
+    }
+    return '未知材料'
+  }
+  if (taskId === 4) return world.bossEnemies.find((enemy) => enemy.drId === targetId)?.name ?? '未知首领'
+  if (taskId === 5) return '品质 ' + targetId + ' 装备'
+  return '未启用任务'
+}
 
 export const originalFactionTaskRequiredAmount = (
   taskId: number,

@@ -8,6 +8,8 @@ import {
   originalFactionTaskRefreshSeconds,
   originalFactionTaskRequiredAmount,
   originalFactionTaskReward,
+  originalFactionTaskTargetName,
+  originalFactionTaskTargetPool,
   originalFactionUnlocksAtProgress,
   originalFactionWorldPriceMultiplier,
   originalWorldReputationBase,
@@ -110,6 +112,28 @@ describe('原版势力规则契约', () => {
       contribution: 64_800,
       reputation: 54,
     })
+  })
+
+  it('保留五类任务的原版目标池与首领回退规则', () => {
+    expect(ORIGINAL_FACTION_RULES.tasks.targetPools).toHaveLength(13)
+    expect(ORIGINAL_FACTION_RULES.tasks.targetPools.every((world) => world.normalEnemies.length === 10)).toBe(true)
+    expect(ORIGINAL_FACTION_RULES.tasks.targetPools.every((world) => world.bossEnemies.length === 10)).toBe(true)
+
+    expect(originalFactionTaskTargetPool(1, 1, 1)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    expect(originalFactionTaskTargetPool(1, 2, 1)).toEqual([2])
+    expect(originalFactionTaskTargetPool(1, 3, 1)).toEqual([11, 20, 29])
+    expect(originalFactionTaskTargetPool(1, 3, 6)).toEqual([13, 22, 31])
+    expect(originalFactionTaskTargetPool(1, 4, 1, [18, 13])).toEqual([13, 18])
+    expect(originalFactionTaskTargetPool(1, 4, 1)).toEqual([11])
+    expect(originalFactionTaskTargetPool(1, 5, 6)).toEqual([6])
+    expect(originalFactionTaskTargetPool(1, 5, 99)).toEqual([9])
+    expect(originalFactionTaskTargetPool(1, 6, 1)).toEqual([])
+
+    expect(originalFactionTaskTargetName(1, 1, 1)).toBe('黄巾战士')
+    expect(originalFactionTaskTargetName(1, 2, 2)).toBe('铜钱')
+    expect(originalFactionTaskTargetName(1, 3, 11)).toBe('初晶矿石')
+    expect(originalFactionTaskTargetName(1, 4, 11)).toBe('张角')
+    expect(originalFactionTaskTargetName(1, 5, 6)).toBe('品质 6 装备')
   })
 
   it('复算刷新、解锁、招募与技能价格边界', () => {
