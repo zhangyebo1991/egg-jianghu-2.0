@@ -9,10 +9,18 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const SOURCE_ROOT = resolve(HERE, '../../../诸天刷宝录/_analysis')
 const OUT_DIR = resolve(HERE, '../../docs/evidence/original-world')
 const RUNTIME_TOWNS_FILE = resolve(HERE, '../src/content/original-towns.generated.ts')
+const RUNTIME_FACTION_EXCHANGE_FILE = resolve(HERE, '../src/content/original-faction-exchange.generated.ts')
 
 const sourceNames = [
   'gg.json',
   'shili.json',
+  'gxdh.json',
+  'wp.json',
+  'pf.json',
+  'zy.json',
+  'hh.json',
+  'js.json',
+  'tz.json',
   'cj.json',
   'mc.json',
   'jz.json',
@@ -31,7 +39,7 @@ const loadArray = (name) => JSON
   .data.map((row) => row.map((cell) => cell[0]))
 
 const arrays = Object.fromEntries(
-  ['gg', 'shili', 'cj', 'mc', 'jz', 'kj', 'cscz', 'csdj', 'cszb']
+  ['gg', 'shili', 'gxdh', 'wp', 'pf', 'zy', 'hh', 'js', 'tz', 'cj', 'mc', 'jz', 'kj', 'cscz', 'csdj', 'cszb']
     .map((name) => [name, loadArray(name)]),
 )
 const runtimeData = JSON.parse(readSource('data.json'))
@@ -63,6 +71,7 @@ const factions = arrays.shili.slice(1).map((row) => ({
 }))
 const formalFactions = factions.filter((faction) => faction.organizationKind === '势力')
 const militiaFactions = factions.filter((faction) => faction.organizationKind === '民团')
+const factionBySourceId = new Map(factions.map((faction) => [faction.sourceId, faction]))
 
 const sceneSnapshot = (row) => ({
   sourceId: asNumber(row[0]),
@@ -115,6 +124,168 @@ const assertUnique = (values, label) => {
   assert(new Set(values).size === values.length, `${label}存在重复 ID`)
 }
 
+const factionExchangeKindByItemId = new Map([
+  [3, 'job-book'],
+  [4, 'blueprint'],
+  [5, 'secret-realm-ticket'],
+  [9, 'skin'],
+])
+const factionExchangeCategoryCorrection = {
+  'job-book': 10,
+  blueprint: 4,
+  'secret-realm-ticket': 2,
+  skin: 100000,
+}
+const skinTypeNames = new Map([
+  [1, '本体'],
+  [2, '特殊'],
+  [3, '稀有'],
+  [4, '典藏'],
+  [5, '限定'],
+  [6, '传说'],
+  [7, '神话'],
+  [8, '终极'],
+])
+const factionExchangePriceConstants = {
+  qualityPriceIndex: 2.5,
+  contributionCurrencyRatio: 20,
+  worldPriceStep: 0.8,
+}
+const normalItemLevel = (quality) => Math.max((quality - 1) * 25, 5)
+const worldPriceMultiplier = (worldIndex) => 1 + factionExchangePriceConstants.worldPriceStep * (worldIndex - 1)
+const contributionExchangePrice = ({ categoryCorrection, worldIndex, itemLevel, quality }) => {
+  const corrected = categoryCorrection
+    * worldPriceMultiplier(worldIndex)
+    / factionExchangePriceConstants.contributionCurrencyRatio
+  return Math.max(1, Math.round(
+    (corrected * 10)
+    * (10 + itemLevel)
+    * factionExchangePriceConstants.qualityPriceIndex ** quality,
+  ))
+}
+
+const factionExchangeItems = []
+for (let slot = 1; slot < arrays.gxdh.length; slot += 1) {
+  for (let factionSourceId = 1; factionSourceId <= factions.length; factionSourceId += 1) {
+    const itemId = asNumber(arrays.gxdh[slot][factionSourceId * 2 - 1])
+    const specificId = asNumber(arrays.gxdh[slot][factionSourceId * 2])
+    if (!itemId) continue
+
+    const faction = factionBySourceId.get(factionSourceId)
+    const item = arrays.wp[itemId]
+    const kind = factionExchangeKindByItemId.get(itemId)
+    assert(faction?.organizationKind === '势力', `贡献兑换引用了非正式势力 ${factionSourceId}`)
+    assert(item, `贡献兑换引用了不存在的物品 ${itemId}`)
+    assert(kind, `贡献兑换出现未知物品类型 ${itemId}`)
+
+    let originalName = String(item[1])
+    let priceQuality = 0
+    let priceItemLevel = 0
+    let requiredReputationLevel = null
+    let target = null
+
+    if (kind === 'job-book') {
+      const job = arrays.zy[specificId]
+      assert(job, `贡献兑换引用了不存在的职业 ${specificId}`)
+      priceQuality = asNumber(job[32])
+      priceItemLevel = normalItemLevel(priceQuality)
+      originalName = `${String(job[1])}${String(item[1])}`
+      target = {
+        kind: 'job',
+        sourceId: specificId,
+        name: String(job[1]),
+        stateKey: `job_${specificId}`,
+      }
+    } else if (kind === 'blueprint') {
+      const recipe = arrays.pf[specificId]
+      assert(recipe, `贡献兑换引用了不存在的图纸 ${specificId}`)
+      const targetItemId = asNumber(recipe[1])
+      const targetItem = arrays.wp[targetItemId]
+      assert(targetItem, `图纸 ${specificId} 引用了不存在的装备 ${targetItemId}`)
+      const setId = asNumber(targetItem[29])
+      const set = arrays.tz[setId]
+      assert(String(targetItem[9]) === '套装', `贡献兑换图纸 ${specificId} 的目标不是套装装备`)
+      assert(set, `图纸 ${specificId} 的目标装备缺少套装 ${setId}`)
+      priceQuality = asNumber(targetItem[4])
+      priceItemLevel = normalItemLevel(priceQuality)
+      requiredReputationLevel = asNumber(targetItem[36])
+      originalName = `${String(set[1])}之${String(targetItem[1])}${String(item[1])}`
+      target = {
+        kind: 'blueprint',
+        recipeId: specificId,
+        stateKey: String(specificId),
+        itemId: targetItemId,
+        itemName: String(targetItem[1]),
+        itemCategory: String(targetItem[9]),
+        itemQuality: priceQuality,
+        setId,
+        setName: String(set[1]),
+      }
+    } else if (kind === 'secret-realm-ticket') {
+      priceQuality = asNumber(item[4])
+      priceItemLevel = normalItemLevel(priceQuality)
+      requiredReputationLevel = asNumber(item[36])
+      target = {
+        kind: 'material',
+        stateKey: String(itemId),
+      }
+    } else {
+      const skin = arrays.hh[specificId]
+      assert(skin, `贡献兑换引用了不存在的幻型 ${specificId}`)
+      const heroSourceId = asNumber(skin[2])
+      const hero = arrays.js[heroSourceId]
+      const skinType = asNumber(skin[4])
+      const skinTypeName = skinTypeNames.get(skinType)
+      assert(hero, `幻型 ${specificId} 引用了不存在的角色 ${heroSourceId}`)
+      assert(skinTypeName, `幻型 ${specificId} 使用了未知类型 ${skinType}`)
+      requiredReputationLevel = asNumber(item[36])
+      originalName = `${String(hero[1])} · ${String(item[1])} - ${skinTypeName}`
+      target = {
+        kind: 'skin',
+        sourceId: specificId,
+        variantName: String(skin[1]),
+        heroSourceId,
+        heroName: String(hero[1]),
+        skinType,
+        skinTypeName,
+      }
+    }
+
+    const categoryCorrection = factionExchangeCategoryCorrection[kind]
+    factionExchangeItems.push({
+      factionSourceId,
+      factionName: faction.name,
+      worldIndex: faction.worldIndex,
+      slot,
+      itemId,
+      specificId,
+      kind,
+      originalName,
+      price: contributionExchangePrice({
+        categoryCorrection,
+        worldIndex: faction.worldIndex,
+        itemLevel: priceItemLevel,
+        quality: priceQuality,
+      }),
+      requiredReputationLevel,
+      baseItemQuality: asNumber(item[4]),
+      priceQuality,
+      priceItemLevel,
+      worldPriceMultiplier: worldPriceMultiplier(faction.worldIndex),
+      categoryCorrection,
+      target,
+    })
+  }
+}
+const factionExchangeCounts = {
+  total: factionExchangeItems.length,
+  factions: new Set(factionExchangeItems.map((item) => item.factionSourceId)).size,
+  jobBooks: factionExchangeItems.filter((item) => item.kind === 'job-book').length,
+  blueprints: factionExchangeItems.filter((item) => item.kind === 'blueprint').length,
+  secretRealmTickets: factionExchangeItems.filter((item) => item.kind === 'secret-realm-ticket').length,
+  skins: factionExchangeItems.filter((item) => item.kind === 'skin').length,
+}
+
 assert(factions.length === 42, `势力数量异常：${factions.length}`)
 assert(formalFactions.length === 29, `正式势力数量异常：${formalFactions.length}`)
 assert(militiaFactions.length === 13, `民团数量异常：${militiaFactions.length}`)
@@ -128,6 +299,17 @@ assert(arrays.cscz.length === 52 && arrays.cscz.every((row) => row.length === 20
 assert(arrays.cscz.every((row) => String(row[18] ?? '') === '' && String(row[19] ?? '') === ''), '城市初始地块矩阵保留列出现数据')
 assert(technologies.filter((technology) => technology.category === '基础').length === 60, '基础科技不是 60 项')
 assert(technologies.filter((technology) => technology.category === '位面').length === 15, '位面科技不是 15 项')
+assert(arrays.gxdh.length === 17 && arrays.gxdh.every((row) => row.length === 85), '贡献兑换矩阵不是 17×85')
+assert(factionExchangeCounts.total === 396, `贡献兑换商品数量异常：${factionExchangeCounts.total}`)
+assert(factionExchangeCounts.factions === 29, `贡献兑换势力数量异常：${factionExchangeCounts.factions}`)
+assert(factionExchangeCounts.jobBooks === 29, `转职书数量异常：${factionExchangeCounts.jobBooks}`)
+assert(factionExchangeCounts.blueprints === 290, `图纸数量异常：${factionExchangeCounts.blueprints}`)
+assert(factionExchangeCounts.secretRealmTickets === 29, `秘境门票数量异常：${factionExchangeCounts.secretRealmTickets}`)
+assert(factionExchangeCounts.skins === 48, `幻型数量异常：${factionExchangeCounts.skins}`)
+assert(factionExchangeItems.filter((item) => item.kind === 'job-book').every((item) => item.slot === 1), '转职书不在第 1 槽')
+assert(factionExchangeItems.filter((item) => item.kind === 'blueprint').every((item) => item.slot >= 2 && item.slot <= 11), '图纸不在第 2～11 槽')
+assert(factionExchangeItems.filter((item) => item.kind === 'secret-realm-ticket').every((item) => item.slot === 12), '秘境门票不在第 12 槽')
+assert(factionExchangeItems.filter((item) => item.kind === 'skin').every((item) => item.slot >= 13 && item.slot <= 16), '幻型不在第 13～16 槽')
 assert(factionTowns.every((town) => town.functionIds.join(',') === '10,3,7,25'), '势力城镇功能不是阵营任务、学习、贡献兑换、势力招募')
 assert(factionTowns.every((town) => functionNames.has(town.functionIds[0])), '势力城镇存在未知功能 ID')
 assert(formalFactions.every((faction) => factionTowns.some((town) => town.sourceId === faction.sceneId && town.factionId === faction.sourceId)), '正式势力与城镇不是一一关联')
@@ -821,7 +1003,7 @@ const fieldUsageIndex = {
 }
 
 const formulaCategories = [
-  ['faction', /势力|阵营|贡献|声望|招募角色|学习技能|物品兑换/],
+  ['faction', /势力|阵营|贡献|声望|招募角色|学习技能|物品兑换|物品买卖价格|位面价格系数|普通物品等级|物品名function|获得物品function|图纸拥有检测|幻化拥有检测|幻化类型文本/],
   ['town', /场景|地点|城镇|酒馆|商会|市集|铁匠|武馆/],
   ['city-core', /城市|土地|地块|建筑|扩建|项目|迁移/],
   ['company', /公司|财务|租金|职位|资产|收支/],
@@ -893,6 +1075,31 @@ const factionRuntimeFunctions = factionRuntimeFunctionNames.map((name) => {
     fieldUsages: fieldUsages.filter((usage) => usage.functionName === name),
   }
 })
+const inlineFactionFunctionNames = ['幻化类型文本']
+for (const name of inlineFactionFunctionNames) {
+  const matches = []
+  const visit = (node, path) => {
+    if (!Array.isArray(node)) return
+    if (node[0] === 4 && Array.isArray(node[1]) && node[1][0] === name) {
+      matches.push({ node, path })
+    }
+    node.forEach((child, index) => {
+      if (Array.isArray(child)) visit(child, [...path, index])
+    })
+  }
+  for (const sheet of runtimeData.project[6]) visit(sheet[1], [String(sheet[0])])
+  assert(matches.length === 1, `原版内联函数 ${name} 节点数量异常：${matches.length}`)
+  const [{ node, path }] = matches
+  factionRuntimeFunctions.push({
+    name,
+    eventId: node[5],
+    uid: String(node[4]),
+    paths: [path.join(' > ')],
+    expressions: parameterExpressionsIn(node),
+    operations: runtimeOperationsIn(node),
+    fieldUsages: [],
+  })
+}
 const factionRuntimeEvidence = {
   schemaVersion: 1,
   source: {
@@ -904,7 +1111,6 @@ const factionRuntimeEvidence = {
 
 const versionText = String(arrays.gg[2]?.[0] ?? '')
 const version = versionText.match(/版本号([^\[]+)/)?.[1]?.trim() ?? 'unknown'
-const factionBySourceId = new Map(factions.map((faction) => [faction.sourceId, faction]))
 const runtimeSceneSnapshot = (scene) => ({
   sourceId: scene.sourceId,
   name: scene.name,
@@ -980,6 +1186,94 @@ export const ORIGINAL_CITY_FOUNDATION = {
 export const originalWorldTownByIndex = (worldIndex: number): OriginalWorldTownDefinition | undefined =>
   ORIGINAL_WORLD_TOWNS.find((town) => town.worldIndex === worldIndex)
 `
+const factionExchangeCatalog = {
+  schemaVersion: 1,
+  source: {
+    catalog: 'gxdh.json',
+    itemDefinitions: 'wp.json',
+    recipes: 'pf.json',
+    jobs: 'zy.json',
+    skins: 'hh.json',
+    heroes: 'js.json',
+    equipmentSets: 'tz.json',
+    runtimeEvidence: [
+      '物品买卖价格function',
+      '位面价格系数function',
+      '普通物品等级function',
+      '物品名function',
+      '幻化类型文本',
+    ],
+  },
+  constants: factionExchangePriceConstants,
+  formulas: {
+    worldPriceMultiplier: '1 + 0.8 * (worldIndex - 1)',
+    normalItemLevel: 'max((quality - 1) * 25, 5)',
+    contributionCorrection: 'categoryCorrection * worldPriceMultiplier / 20',
+    finalPrice: 'max(round((contributionCorrection * 10) * (10 + itemLevel) * 2.5^quality), 1)',
+    skinPriceInputs: '原函数没有为幻型写入物品等级与品质，沿用默认值 0 与 0',
+  },
+  counts: factionExchangeCounts,
+  items: factionExchangeItems,
+}
+const runtimeFactionExchangeSource = `/**
+ * 原版势力贡献兑换目录——由《诸天刷宝录》gxdh.json 及关联表生成。
+ * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
+ */
+
+export type OriginalFactionExchangeKind = 'job-book' | 'blueprint' | 'secret-realm-ticket' | 'skin'
+
+export type OriginalFactionExchangeTarget =
+  | { kind: 'job'; sourceId: number; name: string; stateKey: string }
+  | {
+      kind: 'blueprint'
+      recipeId: number
+      stateKey: string
+      itemId: number
+      itemName: string
+      itemCategory: string
+      itemQuality: number
+      setId: number
+      setName: string
+    }
+  | { kind: 'material'; stateKey: string }
+  | {
+      kind: 'skin'
+      sourceId: number
+      variantName: string
+      heroSourceId: number
+      heroName: string
+      skinType: number
+      skinTypeName: string
+    }
+
+export interface OriginalFactionExchangeItem {
+  factionSourceId: number
+  factionName: string
+  worldIndex: number
+  slot: number
+  itemId: number
+  specificId: number
+  kind: OriginalFactionExchangeKind
+  originalName: string
+  price: number
+  requiredReputationLevel: number | null
+  baseItemQuality: number
+  priceQuality: number
+  priceItemLevel: number
+  worldPriceMultiplier: number
+  categoryCorrection: number
+  target: OriginalFactionExchangeTarget
+}
+
+export const ORIGINAL_FACTION_EXCHANGE_PRICE_CONSTANTS = ${JSON.stringify(factionExchangePriceConstants, null, 2)} as const
+
+export const ORIGINAL_FACTION_EXCHANGE_COUNTS = ${JSON.stringify(factionExchangeCounts, null, 2)} as const
+
+export const ORIGINAL_FACTION_EXCHANGE: readonly OriginalFactionExchangeItem[] = ${JSON.stringify(factionExchangeItems, null, 2)}
+
+export const originalFactionExchangeByFaction = (factionSourceId: number): readonly OriginalFactionExchangeItem[] =>
+  ORIGINAL_FACTION_EXCHANGE.filter((item) => item.factionSourceId === factionSourceId)
+`
 const manifest = {
   schemaVersion: 2,
   source: {
@@ -996,6 +1290,7 @@ const manifest = {
     worldHubs: worldHubs.length,
     publicLocations: publicLocations.length,
     factionTowns: factionTowns.length,
+    factionExchangeItems: factionExchangeCounts.total,
     buildings: buildings.length,
     technologies: technologies.length,
   },
@@ -1004,6 +1299,10 @@ const manifest = {
   worldHubs,
   publicLocations,
   factionTowns,
+  factionExchange: {
+    constants: factionExchangePriceConstants,
+    counts: factionExchangeCounts,
+  },
   buildings,
   technologies,
   csczLayout,
@@ -1078,6 +1377,56 @@ const factionRuntimeMarkdown = factionRuntimeFunctions.flatMap((fn) => [
 ]).join('\n')
 
 const markdownCell = (value) => String(value ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
+const factionExchangeKindLabels = {
+  'job-book': '转职书',
+  blueprint: '图纸',
+  'secret-realm-ticket': '秘境门票',
+  skin: '幻型',
+}
+const factionExchangeTargetLabel = (item) => {
+  if (item.target.kind === 'job') return `职业 ${item.target.sourceId} ${item.target.name}`
+  if (item.target.kind === 'blueprint') {
+    return `配方 ${item.target.recipeId} → ${item.target.setName}之${item.target.itemName}（装备 ${item.target.itemId}）`
+  }
+  if (item.target.kind === 'skin') {
+    return `${item.target.heroName}（角色 ${item.target.heroSourceId}，${item.target.skinTypeName}）`
+  }
+  return `材料 ${item.itemId}`
+}
+const factionExchangeMarkdown = `# 原版势力贡献兑换目录
+
+本目录由 \`gxdh.json\` 的 16 个商品槽和 42 组势力列生成；只有 29 个正式势力存在商品，共 ${factionExchangeCounts.total} 条。
+
+## 数量
+
+| 分类 | 数量 |
+|---|---:|
+| 转职书 | ${factionExchangeCounts.jobBooks} |
+| 图纸 | ${factionExchangeCounts.blueprints} |
+| 秘境门票 | ${factionExchangeCounts.secretRealmTickets} |
+| 幻型 | ${factionExchangeCounts.skins} |
+
+## 原版贡献价格
+
+- 位面系数：\`1 + 0.8 × (位面编号 - 1)\`。
+- 普通物品等级：\`max((品质 - 1) × 25, 5)\`。
+- 分类修正：转职书 \`10\`、图纸 \`4\`、秘境门票 \`2\`、幻型 \`100000\`，再乘位面系数并除以贡献比 \`20\`。
+- 最终价格：\`max(round((修正系数 × 10) × (10 + 物品等级) × 2.5^物品品质), 1)\`。
+- 原版价格函数没有为幻型写入物品等级和品质，因此幻型按默认值 \`0 / 0\` 计算，不套用 \`wp[9]\` 的基础品质。
+
+## 声望门槛
+
+- 图纸读取目标装备 \`wp[targetItemId][36]\`。
+- 秘境门票读取 \`wp[5][36] = 4\`。
+- 幻型读取 \`wp[9][36] = 5\`。
+- 转职书分支没有声望门槛，目录中记为 \`null\`。
+
+## 商品
+
+| 位面 | 势力 | 槽位 | 分类 | 原版名称 | 贡献 | 声望 | 目标 |
+|---:|---|---:|---|---|---:|---:|---|
+${factionExchangeItems.map((item) => `| ${item.worldIndex} | ${markdownCell(item.factionName)} | ${item.slot} | ${factionExchangeKindLabels[item.kind]} | ${markdownCell(item.originalName)} | ${item.price} | ${item.requiredReputationLevel ?? '—'} | ${markdownCell(factionExchangeTargetLabel(item))} |`).join('\n')}
+`
 const fieldUsageMarkdown = fieldUsageTableNames.flatMap((table) => {
   const summary = fieldUsageSummary[table]
   const staticRows = summary.staticColumns.map((column) => {
@@ -1156,6 +1505,7 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - 位面主城：${worldHubs.length}
 - 主城公共场所：${publicLocations.length}
 - 正式势力城镇：${factionTowns.length}
+- 势力贡献兑换：${factionExchangeCounts.total}（转职书 ${factionExchangeCounts.jobBooks}、图纸 ${factionExchangeCounts.blueprints}、秘境门票 ${factionExchangeCounts.secretRealmTickets}、幻型 ${factionExchangeCounts.skins}）
 - 非空建筑：${buildings.length}
 - 科技：${technologies.length}
 
@@ -1169,9 +1519,12 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - \`formula-index.md\`：从原版事件表和 \`_all_func_names.txt\` 定位的相关函数入口。
 - \`faction-runtime-evidence.json\`：势力资源、声望、兑换、任务与解锁函数的逐表达式证据。
 - \`faction-runtime-evidence.md\`：上述函数的人工审阅版索引。
+- \`faction-exchange-catalog.json\`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
+- \`faction-exchange-catalog.md\`：上述 396 条兑换商品的人工审阅表。
 - \`save-contract.md\`：新存档共享状态边界。
 - \`verification-checklist.md\`：开发前仍需完成的运行时与实机核验。
 - \`egg-jianghu/src/content/original-towns.generated.ts\`：运行时使用的主城、公共场所与势力城镇快照。
+- \`egg-jianghu/src/content/original-faction-exchange.generated.ts\`：运行时使用的完整势力贡献兑换目录。
 
 ## 证据规则
 
@@ -1191,6 +1544,8 @@ const outputs = {
   'formula-index.md': `# 原版运行时函数索引\n\n${formulaMarkdown}`,
   'faction-runtime-evidence.json': `${JSON.stringify(factionRuntimeEvidence, null, 2)}\n`,
   'faction-runtime-evidence.md': `# 原版势力运行时公式证据\n\n${factionRuntimeMarkdown}`,
+  'faction-exchange-catalog.json': `${JSON.stringify(factionExchangeCatalog, null, 2)}\n`,
+  'faction-exchange-catalog.md': factionExchangeMarkdown,
 }
 
 if (process.argv.includes('--check')) {
@@ -1210,6 +1565,13 @@ if (process.argv.includes('--check')) {
     throw new Error('运行时城镇快照缺失，请先运行 npm run evidence:world')
   }
   assert(currentRuntimeTowns === runtimeTownsSource, '运行时城镇快照已过期，请运行 npm run evidence:world 并审阅差异')
+  let currentRuntimeFactionExchange = null
+  try {
+    currentRuntimeFactionExchange = readFileSync(RUNTIME_FACTION_EXCHANGE_FILE, 'utf8')
+  } catch {
+    throw new Error('运行时势力贡献兑换目录缺失，请先运行 npm run evidence:world')
+  }
+  assert(currentRuntimeFactionExchange === runtimeFactionExchangeSource, '运行时势力贡献兑换目录已过期，请运行 npm run evidence:world 并审阅差异')
   console.log('原版势力、城镇与城市经营真值包已是最新')
 } else {
   mkdirSync(OUT_DIR, { recursive: true })
@@ -1218,6 +1580,9 @@ if (process.argv.includes('--check')) {
   }
   mkdirSync(dirname(RUNTIME_TOWNS_FILE), { recursive: true })
   writeFileSync(RUNTIME_TOWNS_FILE, runtimeTownsSource, 'utf8')
+  mkdirSync(dirname(RUNTIME_FACTION_EXCHANGE_FILE), { recursive: true })
+  writeFileSync(RUNTIME_FACTION_EXCHANGE_FILE, runtimeFactionExchangeSource, 'utf8')
   console.log(`已生成真值包：势力 ${factions.length}、主城 ${worldHubs.length}、公共场所 ${publicLocations.length}、势力城镇 ${factionTowns.length}`)
+  console.log(`贡献兑换：商品 ${factionExchangeCounts.total}、正式势力 ${factionExchangeCounts.factions}`)
   console.log(`城市数据：建筑 ${buildings.length}、科技 ${technologies.length}；运行时索引 ${parsedFunctions.length} 条中筛选相关入口`)
 }

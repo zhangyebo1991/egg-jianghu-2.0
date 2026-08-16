@@ -9,6 +9,7 @@
 - 位面主城：13
 - 主城公共场所：65
 - 正式势力城镇：29
+- 势力贡献兑换：396（转职书 29、图纸 290、秘境门票 29、幻型 48）
 - 非空建筑：25
 - 科技：75
 
@@ -22,9 +23,12 @@
 - `formula-index.md`：从原版事件表和 `_all_func_names.txt` 定位的相关函数入口。
 - `faction-runtime-evidence.json`：势力资源、声望、兑换、任务与解锁函数的逐表达式证据。
 - `faction-runtime-evidence.md`：上述函数的人工审阅版索引。
+- `faction-exchange-catalog.json`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
+- `faction-exchange-catalog.md`：上述 396 条兑换商品的人工审阅表。
 - `save-contract.md`：新存档共享状态边界。
 - `verification-checklist.md`：开发前仍需完成的运行时与实机核验。
 - `egg-jianghu/src/content/original-towns.generated.ts`：运行时使用的主城、公共场所与势力城镇快照。
+- `egg-jianghu/src/content/original-faction-exchange.generated.ts`：运行时使用的完整势力贡献兑换目录。
 
 ## 证据规则
 

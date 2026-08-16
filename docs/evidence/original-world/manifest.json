@@ -7,6 +7,13 @@
     "fingerprints": {
       "gg.json": "5f77d18149dc3df7feecd424ac6f767e28f94d6c807a83c9b7ae7b4c5d7421bb",
       "shili.json": "c99f483d6e9fda0cd789bbf3d07b8e5c2a3b1b2623e5edb3e28669881a8868b7",
+      "gxdh.json": "f2dcdd6e82f52fdc8cd9c5e841b7b8378f855813db52e7deafa6f0395b8f22bd",
+      "wp.json": "d2d38edcb3548d03a667664b783fb4b5363ded0135582f4e8ebef88f89c8841c",
+      "pf.json": "6be3f328b616888b872b61ac80f7a8c69b84bbc459bd56055f52d0485f1e3fec",
+      "zy.json": "6876276814a961f32556296ee161ddbff62dac73f41c7e033f5625ee740f787f",
+      "hh.json": "73213ffdfc001fbf2aaf4efc1e5e09973a40a2a5b00566099d9d8624e348d9a3",
+      "js.json": "4de8811212f0b644e16da2f8fea4887610006b1d4afb8bed54d168e4345bcfd4",
+      "tz.json": "a9e8bbc8c4d28753e810c8e8ba96f25c0b678c2415b05e937d98c54485319700",
       "cj.json": "49ad079514afbd480ea31e19f7fbf5fe9613d973b26389a09f1df7c99159a3ac",
       "mc.json": "81ee7d7c82dbed66624eb0f3a667a9f22133003ab1370b43d2e8e5c5e3416843",
       "jz.json": "b2ec23a5fbb053e106d0d8a304e1ae44ea55f9a1fa84795d4df0b0bd2732d45c",
@@ -27,6 +34,7 @@
     "worldHubs": 13,
     "publicLocations": 65,
     "factionTowns": 29,
+    "factionExchangeItems": 396,
     "buildings": 25,
     "technologies": 75
   },
@@ -7478,6 +7486,21 @@
       ]
     }
   ],
+  "factionExchange": {
+    "constants": {
+      "qualityPriceIndex": 2.5,
+      "contributionCurrencyRatio": 20,
+      "worldPriceStep": 0.8
+    },
+    "counts": {
+      "total": 396,
+      "factions": 29,
+      "jobBooks": 29,
+      "blueprints": 290,
+      "secretRealmTickets": 29,
+      "skins": 48
+    }
+  },
   "buildings": [
     {
       "sourceId": 1,
@@ -11730,11 +11753,27 @@
         ]
       },
       {
+        "eventId": 4410,
+        "name": "物品名function",
+        "uid": "428189784268467",
+        "paths": [
+          "主事件 > 主系统 > 物品系统 > 物品工具 > 物品名function"
+        ]
+      },
+      {
         "eventId": 4786,
         "name": "学习技能function",
         "uid": "557441321945834",
         "paths": [
           "主事件 > 主系统 > 物品系统 > 秘籍修炼功能 > 学习技能function"
+        ]
+      },
+      {
+        "eventId": 4857,
+        "name": "获得物品function",
+        "uid": "443316392388666",
+        "paths": [
+          "主事件 > 主系统 > 物品系统 > 获得物品function"
         ]
       },
       {
@@ -11783,6 +11822,22 @@
         "uid": "104231708594805",
         "paths": [
           "主事件 > 主系统 > 场景系统 > 场景功能 > 购买装备/购买道具/贡献兑换/精魄兑换/位面兑换 > 资源获得与失去 > 获得声望function"
+        ]
+      },
+      {
+        "eventId": 9031,
+        "name": "图纸拥有检测",
+        "uid": "934634881476523",
+        "paths": [
+          "主事件 > 主系统 > 场景系统 > 场景功能 > 购买装备/购买道具/贡献兑换/精魄兑换/位面兑换 > 图纸拥有检测"
+        ]
+      },
+      {
+        "eventId": 9040,
+        "name": "幻化拥有检测",
+        "uid": "229976705606441",
+        "paths": [
+          "主事件 > 主系统 > 场景系统 > 场景功能 > 购买装备/购买道具/贡献兑换/精魄兑换/位面兑换 > 幻化拥有检测"
         ]
       },
       {
@@ -12058,11 +12113,35 @@
         ]
       },
       {
+        "eventId": 17667,
+        "name": "普通物品等级function",
+        "uid": "547717304535052",
+        "paths": [
+          "主事件 > 主系统 > 数据公式 > 普通物品等级function"
+        ]
+      },
+      {
         "eventId": 17669,
         "name": "位面声望等级function",
         "uid": "598355301939727",
         "paths": [
           "主事件 > 主系统 > 数据公式 > 位面声望等级function"
+        ]
+      },
+      {
+        "eventId": 17693,
+        "name": "位面价格系数function",
+        "uid": "631715567515149",
+        "paths": [
+          "主事件 > 主系统 > 数据公式 > 位面价格系数function"
+        ]
+      },
+      {
+        "eventId": 17695,
+        "name": "物品买卖价格function",
+        "uid": "372893961919489",
+        "paths": [
+          "主事件 > 主系统 > 数据公式 > 物品买卖价格function"
         ]
       },
       {
