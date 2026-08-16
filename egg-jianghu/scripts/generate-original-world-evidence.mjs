@@ -561,6 +561,10 @@ const readableExpression = (value, expressionData) => {
       result = result.replaceAll(`v${nodeIndex}.GetValue()`, name)
       continue
     }
+    if (descriptor[0] === 5 && typeof descriptor[1] === 'string') {
+      result = result.replaceAll(`f${nodeIndex}(`, `${descriptor[1]}(`)
+      continue
+    }
     if (descriptor[0] === 2) {
       const objectClass = objectClassById.get(descriptor[1])
       const objectName = objectClass?.[0] ?? `object_${descriptor[1]}`
@@ -722,10 +726,16 @@ const inspectArrayCondition = (node, context) => {
 
 const normalizeEventName = (value) => String(value).replace(/^(?:True|False)\s+/, '').trim()
 const namedPaths = new Map()
+const namedEventNodes = new Map()
 const rememberPath = (name, path) => {
   const paths = namedPaths.get(name) ?? new Set()
   paths.add(path.join(' > '))
   namedPaths.set(name, paths)
+}
+const rememberEventNode = (name, node) => {
+  const nodes = namedEventNodes.get(name) ?? []
+  nodes.push(node)
+  namedEventNodes.set(name, nodes)
 }
 const eventNodeName = (node) => {
   if (!Array.isArray(node) || node[0] !== 3 || node.length < 2) return null
@@ -748,7 +758,10 @@ const walkEvents = (node, context, parent = null) => {
     trail: nextTrail,
     function: namedFunction ?? context.function,
   }
-  if (name) rememberPath(name, [context.sheet, ...nextTrail])
+  if (name) {
+    rememberPath(name, [context.sheet, ...nextTrail])
+    rememberEventNode(name, node)
+  }
   inspectAtExpression(node, parent, nextContext)
   inspectArrayAction(node, nextContext)
   inspectArrayCondition(node, nextContext)
@@ -818,6 +831,76 @@ const formulaIndex = Object.fromEntries(formulaCategories.map(([category, patter
   category,
   parsedFunctions.filter((item) => pattern.test(item.name)),
 ]))
+
+const factionRuntimeFunctionNames = formulaIndex.faction.map((item) => item.name)
+const parameterExpressionsIn = (root) => {
+  const expressions = new Map()
+  const visit = (node) => {
+    if (!Array.isArray(node)) return
+    if (node[0] === 7 && Array.isArray(node[1]) && Number.isInteger(node[1][0])) {
+      const evidence = parameterExpression(node)
+      const key = `${evidence.expressionId}:${evidence.expression}`
+      expressions.set(key, evidence)
+    }
+    for (const child of node) {
+      if (Array.isArray(child)) visit(child)
+    }
+  }
+  visit(root)
+  return [...expressions.values()].sort((left, right) => (
+    (left.expressionId ?? Number.MAX_SAFE_INTEGER) - (right.expressionId ?? Number.MAX_SAFE_INTEGER)
+    || left.expression.localeCompare(right.expression, 'zh-CN')
+  ))
+}
+const runtimeOperationsIn = (root) => {
+  const operations = []
+  const visit = (node, path = []) => {
+    if (!Array.isArray(node)) return
+    if (Number.isInteger(node[0]) && Number.isInteger(node[1]) && Number.isInteger(node[3])) {
+      const reference = objectReferenceEntries[node[1]]
+      if (reference) {
+        const parameterList = Array.isArray(node[9]) ? node[9] : Array.isArray(node[6]) ? node[6] : []
+        operations.push({
+          path,
+          objectId: node[0],
+          objectName: node[0] === -1 ? 'System' : (objectClassById.get(node[0])?.[0] ?? `object_${node[0]}`),
+          referenceIndex: node[1],
+          reference,
+          sid: String(node[3]),
+          parameters: parameterList.map(parameterExpression),
+        })
+      }
+    }
+    node.forEach((child, index) => {
+      if (Array.isArray(child)) visit(child, [...path, index])
+    })
+  }
+  visit(root)
+  return operations
+}
+const factionRuntimeFunctions = factionRuntimeFunctionNames.map((name) => {
+  const definition = functionByName.get(name)
+  const nodes = namedEventNodes.get(name) ?? []
+  assert(definition, `原版函数索引缺少 ${name}`)
+  assert(nodes.length === 1, `原版函数 ${name} 节点数量异常：${nodes.length}`)
+  return {
+    name,
+    eventId: definition.eventId,
+    uid: definition.uid,
+    paths: [...(namedPaths.get(name) ?? [])].sort(),
+    expressions: parameterExpressionsIn(nodes[0]),
+    operations: runtimeOperationsIn(nodes[0]),
+    fieldUsages: fieldUsages.filter((usage) => usage.functionName === name),
+  }
+})
+const factionRuntimeEvidence = {
+  schemaVersion: 1,
+  source: {
+    eventTree: 'data.json',
+    runtime: 'scripts/c3runtime.js',
+  },
+  functions: factionRuntimeFunctions,
+}
 
 const versionText = String(arrays.gg[2]?.[0] ?? '')
 const version = versionText.match(/版本号([^\[]+)/)?.[1]?.trim() ?? 'unknown'
@@ -977,6 +1060,23 @@ const formulaMarkdown = Object.entries(formulaIndex).flatMap(([category, items])
   '',
 ]).join('\n')
 
+const inlineCode = (value) => String(value).replace(/`/g, "'")
+const factionRuntimeMarkdown = factionRuntimeFunctions.flatMap((fn) => [
+  `## ${fn.name}`,
+  '',
+  `- Event ID：${fn.eventId}`,
+  `- 事件路径：${fn.paths[0] ?? '路径待定位'}`,
+  `- 运行时操作：${fn.operations.length} 条`,
+  `- 表字段访问：${fn.fieldUsages.length} 条`,
+  '',
+  '### 运行时表达式',
+  '',
+  ...(fn.expressions.length
+    ? fn.expressions.map((item) => `- \`#${item.expressionId}\` \`${inlineCode(item.expression)}\``)
+    : ['- 无表达式参数']),
+  '',
+]).join('\n')
+
 const markdownCell = (value) => String(value ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
 const fieldUsageMarkdown = fieldUsageTableNames.flatMap((table) => {
   const summary = fieldUsageSummary[table]
@@ -1067,6 +1167,8 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - \`field-usage-index.md\`：按表和固定列汇总的人工审阅索引。
 - \`city-layout.md\`：\`cscz\` 的 18×18 城市地块压缩布局与存档字段。
 - \`formula-index.md\`：从原版事件表和 \`_all_func_names.txt\` 定位的相关函数入口。
+- \`faction-runtime-evidence.json\`：势力资源、声望、兑换、任务与解锁函数的逐表达式证据。
+- \`faction-runtime-evidence.md\`：上述函数的人工审阅版索引。
 - \`save-contract.md\`：新存档共享状态边界。
 - \`verification-checklist.md\`：开发前仍需完成的运行时与实机核验。
 - \`egg-jianghu/src/content/original-towns.generated.ts\`：运行时使用的主城、公共场所与势力城镇快照。
@@ -1087,6 +1189,8 @@ const outputs = {
   'field-usage-index.md': `# 原版字段访问索引\n\n${fieldUsageMarkdown}`,
   'city-layout.md': cityLayoutMarkdown,
   'formula-index.md': `# 原版运行时函数索引\n\n${formulaMarkdown}`,
+  'faction-runtime-evidence.json': `${JSON.stringify(factionRuntimeEvidence, null, 2)}\n`,
+  'faction-runtime-evidence.md': `# 原版势力运行时公式证据\n\n${factionRuntimeMarkdown}`,
 }
 
 if (process.argv.includes('--check')) {

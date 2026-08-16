@@ -20,6 +20,8 @@
 - `field-usage-index.md`：按表和固定列汇总的人工审阅索引。
 - `city-layout.md`：`cscz` 的 18×18 城市地块压缩布局与存档字段。
 - `formula-index.md`：从原版事件表和 `_all_func_names.txt` 定位的相关函数入口。
+- `faction-runtime-evidence.json`：势力资源、声望、兑换、任务与解锁函数的逐表达式证据。
+- `faction-runtime-evidence.md`：上述函数的人工审阅版索引。
 - `save-contract.md`：新存档共享状态边界。
 - `verification-checklist.md`：开发前仍需完成的运行时与实机核验。
 - `egg-jianghu/src/content/original-towns.generated.ts`：运行时使用的主城、公共场所与势力城镇快照。
