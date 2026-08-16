@@ -3,8 +3,7 @@
  * 战斗公式按这些常量读取 AttributeMap，避免魔法数字。
  * id 来自《诸天刷宝录》sx.json，证据等级 A。
  *
- * Phase 2 先覆盖通用乘区所需；元素 / 技能类别 / 武器熟练 / 势力技能组的
- * 标签→属性 id 映射在 Phase 3 接入技能标签后补全（见 ELEMENT_IDS 等）。
+ * 元素、技能类别、武器熟练和技能组威力均按原版表字段映射（见下方 helpers）。
  */
 
 /** 战斗公式直接读取的属性 id（按 sx.json 编号）。 */
@@ -50,10 +49,17 @@ export const SX = {
   技能冷却: 37,
   受疗效果: 38,
   // 战斗隐藏 sx112-130（减伤 / 受伤害 / 速度修正，公式直接读取）
+  生命上限修正: 112,
   速度修正: 113,
+  物攻修正: 114,
+  法攻修正: 115,
+  物防修正: 116,
+  法防修正: 117,
   受物理伤害: 118,
   受法术伤害: 119,
   受所有伤害: 120,
+  受治疗效果: 121,
+  受护盾效果: 122,
 } as const
 
 /**
@@ -71,6 +77,12 @@ export const ELEMENT_IDS: Record<number, { damage: number; resist: number; recei
   7: { damage: 56, resist: 57, received: 129, groupPower: 201 }, // 神圣
   8: { damage: 58, resist: 59, received: 130, groupPower: 202 }, // 黑暗
 }
+
+/** 原版：主手 wp[7] 武器类型 1..10 → sx92..101 熟练增伤。 */
+export const weaponMasteryAttributeId = (weaponType: number): number => 91 + weaponType
+
+/** 原版：jn[49] 技能组 1..39 → sx153..191 技能组威力。 */
+export const skillGroupPowerAttributeId = (skillGroupId: number): number => 152 + skillGroupId
 
 /** 从 AttributeMap 安全取值（缺失回退默认 0）。 */
 export const attr = (map: Record<number, number>, id: number): number => map[id] ?? 0

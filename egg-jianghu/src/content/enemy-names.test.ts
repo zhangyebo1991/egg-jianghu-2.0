@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { WORLDS } from './worlds'
 import { STAGE_ENEMIES } from './enemies'
-import { enemyDefinitionById, enemyDisplayName, parseEnemyId } from './enemy-names'
+import { canonicalEnemyId, enemyDefinitionById, enemyDisplayName, parseEnemyId } from './enemy-names'
 
 describe('诸天原版怪物表', () => {
   it('13 个位面 × 10 关都有 5 小怪 + 1 首领', () => {
@@ -29,8 +29,11 @@ describe('诸天原版怪物表', () => {
 
   it('解析身份 id：mob 与 boss', () => {
     expect(parseEnemyId('world_01_stage_01_mob_3')).toEqual({ worldId: 'world_01', stage: 1, kind: 'mob', mobIndex: 2 })
+    expect(parseEnemyId('world_01_stage_01_mob_3_at_12')).toEqual({ worldId: 'world_01', stage: 1, kind: 'mob', mobIndex: 2 })
     expect(parseEnemyId('world_13_stage_10_boss')).toEqual({ worldId: 'world_13', stage: 10, kind: 'boss', mobIndex: -1 })
+    expect(canonicalEnemyId('world_13_stage_10_boss_at_07')).toBe('world_13_stage_10_boss')
     expect(parseEnemyId('world_01_stage_01_normal_1')).toBeNull()
+    expect(parseEnemyId('world_01_stage_01_mob_1_at_16')).toBeNull()
     expect(parseEnemyId('broken_enemy_id')).toBeNull()
   })
 

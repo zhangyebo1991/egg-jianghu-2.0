@@ -1,6 +1,6 @@
 import { createCombatEngine, type CombatEngine } from '../combat/engine'
 import { createRng, type Rng } from '../combat/rng'
-import { buildCombatStats, buildAttributeMap } from '../combat/stats'
+import { buildAttributeMap, buildCareerCombatCoefficients, buildCombatStats, equippedMainhandWeaponType } from '../combat/stats'
 import type { CombatEvent, CombatStartInput, CombatUnit, StageSelectionInput } from '../combat/types'
 import { careerById } from '../content/careers'
 import { FACTIONS } from '../content/factions'
@@ -35,6 +35,7 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       id: slot.heroId,
       name: heroDisplayNameV10(definition, progress),
       careerId: progress.currentCareerId,
+      careerCoefficients: buildCareerCombatCoefficients(progress),
       side: 'party' as const,
       row: slot.row,
       col: slot.col,
@@ -61,6 +62,7 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       statuses: [],
       skillIds: [],
       baseAttackId: careerById(progress.currentCareerId)?.basicAttackSkillId ?? 1,
+      mainhandWeaponType: equippedMainhandWeaponType(progress, state.inventory),
       attributes: buildAttributeMap(definition, progress, state.inventory),
     }]
   })
@@ -80,11 +82,24 @@ export class SaveConflictError extends Error {
   }
 }
 
+const ORIGINAL_AUTO_RESTART_COUNTDOWN_MS = 3000
+const ORIGINAL_RESTART_CLOSE_MS = 300
+
+export interface PendingCombatRestart {
+  outcome: 'victory' | 'defeat'
+  selection: CampaignSelection
+  elapsedMs: number
+  countdownMs: number
+  durationMs: number
+}
+
 export class GameSession {
   readonly state: GameStateV10
   combat: CombatEngine | null = null
   selection: CampaignSelection | null = null
+  pendingCombatRestart: PendingCombatRestart | null = null
   private readonly runtimeRng: Rng
+  private readonly combatRng: Rng
   private readonly storage: StorageLike
   private expectedSaveSnapshot: string | null
 
@@ -93,6 +108,7 @@ export class GameSession {
     this.storage = storage
     this.expectedSaveSnapshot = expectedSaveSnapshot
     this.runtimeRng = createRng(state.lastSavedAt)
+    this.combatRng = createRng(state.lastSavedAt)
     this.ensureFactionBoards()
   }
 
@@ -140,36 +156,55 @@ export class GameSession {
 
     this.selection = { worldId: input.worldId, difficulty, stage: input.stage, mode: input.mode }
     this.combat = createCombatEngine(combatInput)
+    this.pendingCombatRestart = null
     return { ok: true, message: '战斗开始' }
   }
 
   advanceTicks(count: number): CombatEvent[] {
-    if (!this.combat) return []
-    const events = this.combat.tick(count)
-    let changed = false
-    for (const event of events) {
-      changed = settleCombatEvent(this.state, event).needsSave || changed
-    }
-    if (changed) {
-      this.ensureFactionBoards(true)
-      this.save()
-    }
-    this.handleResult()
-    return events
+    return this.advanceCombatTime(Math.max(0, Math.floor(count)) * 100)
   }
 
   advanceRealtimeTicks(count: number): CombatEvent[] {
-    const events: CombatEvent[] = []
     const safeCount = Math.max(0, Math.floor(count))
+    return this.advanceCombatTime(safeCount * 100)
+  }
+
+  advanceCombatTime(elapsedMs: number): CombatEvent[] {
+    if (!this.combat) return []
+    const events: CombatEvent[] = []
+    let remainingMs = Math.max(0, elapsedMs)
     let changed = false
 
-    for (let index = 0; index < safeCount && this.combat; index += 1) {
-      const tickEvents = this.combat.tick(1)
-      events.push(...tickEvents)
-      for (const event of tickEvents) {
+    while (this.combat) {
+      const pending = this.pendingCombatRestart
+      if (pending) {
+        const pendingRemainingMs = Math.max(0, pending.durationMs - pending.elapsedMs)
+        if (pendingRemainingMs > 0) {
+          if (remainingMs <= 0) break
+          const stepMs = Math.min(remainingMs, pendingRemainingMs)
+          pending.elapsedMs += stepMs
+          remainingMs -= stepMs
+          if (pending.elapsedMs < pending.durationMs) break
+        }
+        const restartSelection = pending.selection
+        this.pendingCombatRestart = null
+        this.restartSelection(restartSelection)
+        if (remainingMs <= 0) break
+        continue
+      }
+
+      const beforeMs = this.combat.state.elapsedMs
+      const combatEvents = this.combat.advance(remainingMs)
+      const consumedMs = this.combat.state.elapsedMs - beforeMs
+      remainingMs = Math.max(0, remainingMs - consumedMs)
+      events.push(...combatEvents)
+      for (const event of combatEvents) {
         changed = settleCombatEvent(this.state, event).needsSave || changed
       }
-      changed = this.handleResult(false) || changed
+      changed = this.handleResult() || changed
+
+      if (this.pendingCombatRestart) continue
+      if (remainingMs <= 0 || consumedMs <= 0 || this.combat.state.result === 'fighting') break
     }
 
     if (changed) {
@@ -186,7 +221,10 @@ export class GameSession {
   }
 
   setCombatMode(mode: CampaignMode): ActionResult {
-    if (!this.combat || !this.selection || this.combat.state.result !== 'fighting') {
+    if (!this.combat
+      || !this.selection
+      || this.combat.state.result !== 'fighting'
+      || this.combat.state.timeline.phase === 'ending') {
       return { ok: false, message: '当前没有进行中的战斗' }
     }
     this.selection = { ...this.selection, mode }
@@ -198,6 +236,7 @@ export class GameSession {
     this.combat?.stop()
     this.combat = null
     this.selection = null
+    this.pendingCombatRestart = null
   }
 
   private ensureFactionBoards(refillEmpty = false): void {
@@ -218,12 +257,12 @@ export class GameSession {
       difficulty: selection.difficulty,
       stage: selection.stage,
       mode: selection.mode,
-      seed: this.runtimeRng.nextInt(1, 2_147_483_647),
+      seed: this.combatRng.nextInt(1, 2_147_483_647),
     }))
   }
 
-  private handleResult(saveImmediately = true): boolean {
-    if (!this.combat || !this.selection) return false
+  private handleResult(): boolean {
+    if (!this.combat || !this.selection || this.pendingCombatRestart) return false
     if (this.combat.state.result === 'victory') {
       const completed = this.selection
       const key = progressKey(completed.worldId, completed.difficulty)
@@ -245,12 +284,25 @@ export class GameSession {
           this.ensureFactionBoards()
         }
       }
-      this.restartSelection(resolveVictory(completed))
-      if (saveImmediately) this.save()
+      this.pendingCombatRestart = {
+        outcome: 'victory',
+        selection: resolveVictory(completed),
+        elapsedMs: 0,
+        countdownMs: ORIGINAL_AUTO_RESTART_COUNTDOWN_MS,
+        durationMs: completed.mode === 'roam'
+          ? 0
+          : ORIGINAL_AUTO_RESTART_COUNTDOWN_MS + ORIGINAL_RESTART_CLOSE_MS,
+      }
       return true
     }
     if (this.combat.state.result === 'defeat') {
-      this.restartSelection(resolveDefeat(this.selection))
+      this.pendingCombatRestart = {
+        outcome: 'defeat',
+        selection: resolveDefeat(this.selection),
+        elapsedMs: 0,
+        countdownMs: ORIGINAL_AUTO_RESTART_COUNTDOWN_MS,
+        durationMs: ORIGINAL_AUTO_RESTART_COUNTDOWN_MS + ORIGINAL_RESTART_CLOSE_MS,
+      }
     }
     return false
   }

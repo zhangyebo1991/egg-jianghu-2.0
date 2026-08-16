@@ -28,12 +28,14 @@ export const shouldDropSetPiece = (rank: CombatRank, roll: number): boolean =>
 const DROP_COUNT: Record<CombatRank, number> = {
   normal: 1,
   elite: 2,
+  captain: 2,
   boss: 2,
 }
 
-export const ENEMY_GRADE_BY_RANK: Record<CombatRank, 1 | 2 | 4> = {
+export const ENEMY_GRADE_BY_RANK: Record<CombatRank, 1 | 2 | 3 | 4> = {
   normal: 1,
   elite: 2,
+  captain: 3,
   boss: 4,
 }
 

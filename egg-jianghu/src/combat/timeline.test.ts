@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { applyBuff, isControlled, tickStatuses } from './statuses'
+import {
+  advanceStatusDurations,
+  applyBuff,
+  buffAttributeBonus,
+  isControlled,
+  pulseStatuses,
+} from './statuses'
 import {
   actionIntervalMs,
-  advanceCombatTime,
   advanceGaugeAndCooldowns,
   effectiveSpeed,
 } from './timeline'
+import { ORIGINAL_COMBAT_SPEEDS } from './scheduler'
 import type { CombatUnit } from './types'
 
 const fixtureUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
@@ -46,15 +52,21 @@ describe('战斗时间轴', () => {
     expect(actionIntervalMs(100)).toBe(5000)
   })
 
-  it('1×、2×、4×执行相同模拟毫秒会得到相同状态', () => {
-    const simulate = (frames: number, speed: 1 | 2 | 4) => {
+  it('四档原版倍率执行相同模拟毫秒会得到相同状态', () => {
+    const simulate = (speed: typeof ORIGINAL_COMBAT_SPEEDS[number]) => {
       const unit = fixtureUnit({ cooldowns: { 1: 10_000 } })
-      for (let frame = 0; frame < frames; frame += 1) advanceCombatTime([unit], speed)
+      const elapsedPerFrame = 100 * speed
+      const frameCount = Math.round(23_400 / elapsedPerFrame)
+      for (let frame = 0; frame < frameCount; frame += 1) advanceGaugeAndCooldowns(unit, elapsedPerFrame)
       return { gauge: unit.gauge, cooldown: unit.cooldowns[1] }
     }
 
-    expect(simulate(50, 2)).toEqual(simulate(100, 1))
-    expect(simulate(25, 4)).toEqual(simulate(100, 1))
+    const baseline = simulate(1)
+    for (const speed of ORIGINAL_COMBAT_SPEEDS.slice(1)) {
+      const actual = simulate(speed)
+      expect(actual.gauge).toBeCloseTo(baseline.gauge, 10)
+      expect(actual.cooldown).toBeCloseTo(baseline.cooldown, 10)
+    }
   })
 
   it('回气与状态按战斗毫秒减少，不依赖行动次数', () => {
@@ -63,39 +75,50 @@ describe('战斗时间轴', () => {
     const remaining = unit.statuses[0].remainingMs
 
     advanceGaugeAndCooldowns(unit, 1000)
-    tickStatuses(unit, 1000)
+    advanceStatusDurations(unit, 1000)
 
     expect(unit.cooldowns[1]).toBe(2000)
     expect(unit.statuses[0].remainingMs).toBe(remaining - 1000)
   })
 
-  it('同帧满气机按溢出、身法和固定站位顺序裁定', () => {
-    const units = [
-      fixtureUnit({ id: 'position', gauge: 1000, effectiveAgility: 90, formationOrder: 0 }),
-      fixtureUnit({ id: 'agility', gauge: 1000, effectiveAgility: 100, formationOrder: 2 }),
-      fixtureUnit({ id: 'overflow', gauge: 1100, effectiveAgility: 50, formationOrder: 5 }),
-    ]
-
-    expect(advanceCombatTime(units, 0).map((unit) => unit.id)).toEqual(['overflow', 'agility', 'position'])
-  })
 })
 
 describe('实时状态', () => {
-  it('同 id buff 叠层并刷新较长持续', () => {
+  it('同 id buff 叠层、刷新为本次持续，并保留较强 tick 值', () => {
     const unit = fixtureUnit()
-    applyBuff(unit, 3, 1, 'enemy', { tickValue: 5 })
-    applyBuff(unit, 3, 2, 'enemy', { tickValue: 8 })
+    applyBuff(unit, 3, 1, 'enemy_old', { durationScale: 2, tickValue: 8 })
+    advanceStatusDurations(unit, 5000)
+    applyBuff(unit, 3, 2, 'enemy_new', { tickValue: 5 })
 
     expect(unit.statuses).toHaveLength(1)
-    expect(unit.statuses[0]).toMatchObject({ buffId: 3, stacks: 3, tickValue: 8 })
+    expect(unit.statuses[0]).toMatchObject({
+      buffId: 3,
+      stacks: 3,
+      tickValue: 8,
+      remainingMs: 15_000,
+      sourceId: 'enemy_new',
+    })
   })
 
-  it('持续伤害每 1000 战斗毫秒结算', () => {
+  it('持续伤害由全局脉冲统一逐次结算', () => {
     const unit = fixtureUnit()
     applyBuff(unit, 3, 1, 'enemy', { tickValue: 5 })
 
-    expect(tickStatuses(unit, 2500).map((tick) => tick.amount)).toEqual([5, 5])
+    expect(pulseStatuses(unit).map((tick) => tick.amount)).toEqual([5])
+    expect(pulseStatuses(unit).map((tick) => tick.amount)).toEqual([5])
     expect(unit.hp).toBe(90)
+  })
+
+  it('time 型状态归零后先移除，不参与同帧状态脉冲', () => {
+    const unit = fixtureUnit()
+    applyBuff(unit, 3, 1, 'enemy', { tickValue: 5 })
+    unit.statuses[0].remainingMs = 1000
+
+    advanceStatusDurations(unit, 1000)
+
+    expect(unit.statuses).toEqual([])
+    expect(pulseStatuses(unit)).toEqual([])
+    expect(unit.hp).toBe(100)
   })
 
   it('控制类 buff 使有效速度为 0', () => {
@@ -105,5 +128,24 @@ describe('实时状态', () => {
     expect(effectiveSpeed(unit)).toBe(0)
     advanceGaugeAndCooldowns(unit, 1000)
     expect(unit.gauge).toBe(0)
+  })
+
+  it('射击、防守、远程、近战四种姿态互斥', () => {
+    const unit = fixtureUnit()
+    applyBuff(unit, 40, 1, 'self')
+    applyBuff(unit, 41, 1, 'self')
+    applyBuff(unit, 49, 1, 'self')
+    applyBuff(unit, 50, 1, 'self')
+
+    expect(unit.statuses.map((status) => status.buffId)).toEqual([50])
+  })
+
+  it('不屈同时提供物防修正和持续恢复', () => {
+    const unit = fixtureUnit({ hp: 50 })
+    applyBuff(unit, 47, 2, 'self', { tickValue: 3 })
+
+    expect(buffAttributeBonus(unit, 116)).toBe(4)
+    expect(pulseStatuses(unit).map((tick) => tick.amount)).toEqual([-6])
+    expect(unit.hp).toBe(56)
   })
 })

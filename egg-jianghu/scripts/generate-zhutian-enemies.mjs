@@ -7,19 +7,21 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-// 数据必须与 package.nw 同版本（_analysis 是旧版 dump，帧坐标已错位），统一用包内解出的副本
-const ZT_ROOT = join(HERE, 'tmp/zhutian-pkg').replaceAll('\\', '/')
+// 战斗规则只读取原版 _analysis 静态表；图片帧继续读取与 package.nw 同版本的包内 data.json。
+const ORIGINAL_ANALYSIS_ROOT = join(HERE, '../../../诸天刷宝录/_analysis').replaceAll('\\', '/')
+const PACKAGE_ROOT = join(HERE, 'tmp/zhutian-pkg').replaceAll('\\', '/')
 const SHEET_DIR = join(HERE, 'tmp/zhutian-sheets')
 const ASSET_DIR = join(HERE, '../src/assets/enemies/zt')
 const CONTENT_FILE = join(HERE, '../src/content/enemies.ts')
 
-const loadC2 = (name) => JSON.parse(readFileSync(`${ZT_ROOT}/${name}.json`, 'utf8')).data.map((col) => col.map((cell) => cell[0]))
+const loadC2 = (name) => JSON.parse(readFileSync(`${ORIGINAL_ANALYSIS_ROOT}/${name}.json`, 'utf8')).data.map((col) => col.map((cell) => cell[0]))
 
 const sq = loadC2('sq')
 const dr = loadC2('dr')
 const drsx = loadC2('drsx')
 const js = loadC2('js')
 const zy = loadC2('zy')
+const zx = loadC2('zx')
 
 const jsByName = new Map()
 for (let x = 1; x < js.length; x += 1) jsByName.set(String(js[x][1]), js[x])
@@ -32,7 +34,7 @@ const baseSkillOfZy = (zyId) => {
 }
 
 // ---------- 解析 data.json 角色形象动画帧 ----------
-const data = JSON.parse(readFileSync(`${ZT_ROOT}/data.json`, 'utf8'))
+const data = JSON.parse(readFileSync(`${PACKAGE_ROOT}/data.json`, 'utf8'))
 let objectNode = null
 const visit = (node) => {
   if (objectNode || node === null || typeof node !== 'object') return
@@ -80,7 +82,7 @@ for (const anim of animations) {
 // ---------- 收集 13 位面 × 10 地点的怪物 ----------
 // sq 列：0 id、1 地点名、2 位面、3-7 五小怪 dr id、8 首领 dr id、13 位面内序号
 // dr 列：0 id、1 名、2 形象（数字或名）、3 drsx 模板、5 类别、12 位面
-// drsx 六维推断映射：[生命, 物攻, 物防, 法防, 法攻, 速度]（甲兵血厚防高、弓手物攻高、参谋/中医法攻高速度快）
+// drsx 六维映射：[生命, 速度, 物攻, 物防, 法攻, 法防]，对应 sx6..11。
 const growthOf = (templateId) => {
   const row = drsx[templateId]
   if (!row) throw new Error(`drsx 模板 ${templateId} 不存在`)
@@ -129,6 +131,7 @@ for (let x = 1; x < sq.length; x++) {
   if (typeof stage !== 'number' || stage < 1 || stage > 10) continue
   groups.push({
     worldId: `world_${String(world).padStart(2, '0')}`,
+    locationId: x,
     stage,
     stageName: String(row[1]),
     mobs: [row[3], row[4], row[5], row[6], row[7]].map(enemyOf),
@@ -142,6 +145,28 @@ for (const group of groups) {
 }
 console.log('位面地点分布：', JSON.stringify([...byWorld.entries()]))
 if (groups.length !== 130) throw new Error(`预期 130 个位面地点，实际 ${groups.length}`)
+
+// zx 列 1..15 对应单边本地阵位 1..15；值 1..5 对应本关五种小怪，6 对应首领。
+const formations = []
+for (let formationId = 1; formationId <= 23; formationId += 1) {
+  const row = zx[formationId]
+  if (!row) throw new Error(`zx#${formationId} 不存在`)
+  const slots = []
+  for (let localPosition = 1; localPosition <= 15; localPosition += 1) {
+    const enemyIndex = row[localPosition]
+    if (enemyIndex === '') continue
+    if (!Number.isInteger(enemyIndex) || enemyIndex < 1 || enemyIndex > 6) {
+      throw new Error(`zx#${formationId} 阵位 ${localPosition} 的敌人编号无效：${enemyIndex}`)
+    }
+    slots.push({ localPosition, enemyIndex })
+  }
+  formations.push({ formationId, slots })
+}
+if (formations[0].slots.length !== 2 || formations[1].slots.length !== 3
+  || formations.slice(2, 18).some((formation) => formation.slots.length !== 5)
+  || formations.slice(18).some((formation) => formation.slots.length !== 6)) {
+  throw new Error('zx#1..23 的波次人数结构发生变化')
+}
 
 // ---------- 切图 ----------
 mkdirSync(ASSET_DIR, { recursive: true })
@@ -185,13 +210,13 @@ const enemyLiteral = (enemy) =>
 
 const lines = []
 lines.push('// 本文件由 scripts/generate-zhutian-enemies.mjs 从《诸天刷宝录》解包数据生成，请勿手改。')
-lines.push('// 数据源：sq.json（地点 → 5 小怪 + 1 首领）、dr.json（怪物图鉴）、drsx.json（六维成长模板）、js.json（首领四技能）、zy.json（职业普攻）。')
+lines.push('// 数据源：sq.json（地点 → 5 小怪 + 1 首领）、dr.json（怪物图鉴）、drsx.json（六维成长模板）、js.json（首领四技能）、zy.json（职业普攻）、zx.json（波次阵型）。')
 lines.push('')
 lines.push('export interface EnemyDefinition {')
 lines.push('  /** 原版 dr 图鉴 id，同时是立绘文件名 zt_{drId}.webp */')
 lines.push('  drId: number')
 lines.push('  name: string')
-lines.push('  /** 六维成长系数（生命/物攻/物防/法防/法攻/速度，基准 100），推断自诸天 drsx 模板 */')
+lines.push('  /** 六维成长系数（生命/速度/物攻/物防/法攻/法防，基准 100），对应 sx6..11 */')
 lines.push('  growth: readonly [number, number, number, number, number, number]')
 lines.push('  /** 普攻技能 id（jn 表）：小怪按 dr 模板职业、首领按 js 职业 */')
 lines.push('  attackSkillId: number')
@@ -200,16 +225,32 @@ lines.push('  skillIds: readonly number[]')
 lines.push('}')
 lines.push('')
 lines.push('export interface StageEnemyGroup {')
+lines.push('  /** sq 原始行号，参与普通战斗难度系数 */')
+lines.push('  locationId: number')
 lines.push('  /** 本关 5 种普通小怪 */')
 lines.push('  mobs: readonly [EnemyDefinition, EnemyDefinition, EnemyDefinition, EnemyDefinition, EnemyDefinition]')
 lines.push('  /** 本关首领 */')
 lines.push('  boss: EnemyDefinition')
 lines.push('}')
 lines.push('')
+lines.push('export interface EnemyFormationEntry {')
+lines.push('  /** 单边本地阵位 1..15 */')
+lines.push('  localPosition: number')
+lines.push('  /** 1..5 为本关小怪序号，6 为首领 */')
+lines.push('  enemyIndex: number')
+lines.push('}')
+lines.push('')
+lines.push('export const ENEMY_FORMATIONS: Readonly<Record<number, readonly EnemyFormationEntry[]>> = {')
+for (const formation of formations) {
+  lines.push(`  ${formation.formationId}: [${formation.slots.map((slot) => `{ localPosition: ${slot.localPosition}, enemyIndex: ${slot.enemyIndex} }`).join(', ')}],`)
+}
+lines.push('}')
+lines.push('')
 lines.push('export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {')
 for (const group of groups) {
   lines.push(`  // ${group.worldId} 第 ${group.stage} 关 · ${group.stageName}`)
   lines.push(`  '${group.worldId}:${group.stage}': {`)
+  lines.push(`    locationId: ${group.locationId},`)
   lines.push('    mobs: [')
   for (const mob of group.mobs) lines.push(`      ${enemyLiteral(mob)},`)
   lines.push('    ],')

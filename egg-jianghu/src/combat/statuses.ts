@@ -2,10 +2,10 @@ import { buffById } from '../content/buffs'
 import { SX, attr } from './attribute-ids'
 import type { CombatStatus, CombatUnit } from './types'
 
-const DOT_TICK_MS = 1000
+const EXCLUSIVE_STANCE_BUFF_IDS = new Set([40, 41, 49, 50])
 
 /**
- * 施加 buff（对齐诸天：同 id 叠层至上限、持续取较大值）。
+ * 施加 buff（对齐诸天：同 id 叠层至上限，并把持续时间刷新为本次施加值）。
  * durationScale 由施加方 sx34/35 增益/减益时间换算，1 为不变。
  */
 export const applyBuff = (
@@ -17,16 +17,22 @@ export const applyBuff = (
 ): CombatStatus | null => {
   const definition = buffById(buffId)
   if (!definition) return null
-  const durationMs = Math.max(500, Math.round(definition.durationMs * (options.durationScale ?? 1)))
+  if (EXCLUSIVE_STANCE_BUFF_IDS.has(buffId)) {
+    target.statuses = target.statuses.filter((status) => status.buffId === buffId || !EXCLUSIVE_STANCE_BUFF_IDS.has(status.buffId))
+  }
+  const durationMs = definition.unit === 'time'
+    ? Math.max(100, Math.round(definition.durationMs / 1000 * (options.durationScale ?? 1) * 10) / 10 * 1000)
+    : definition.durationMs
   const addedStacks = Math.max(1, Math.floor(stacks))
   const current = target.statuses.find((status) => status.buffId === buffId)
   if (current) {
     current.stacks = Math.min(definition.maxStacks, current.stacks + addedStacks)
-    current.remainingMs = Math.max(current.remainingMs, durationMs)
+    current.remainingMs = definition.unit === 'turn' ? Number.MAX_SAFE_INTEGER : durationMs
     if (definition.unit === 'turn') {
-      current.remainingTurns = Math.max(current.remainingTurns ?? 0, Math.max(1, Math.round(definition.durationMs / 1000)))
+      current.remainingTurns = Math.max(1, Math.round(definition.durationMs / 1000))
     }
     if (options.tickValue !== undefined) current.tickValue = Math.max(current.tickValue ?? 0, options.tickValue)
+    current.sourceId = sourceId
     return current
   }
   const status: CombatStatus = {
@@ -36,7 +42,6 @@ export const applyBuff = (
     remainingTurns: definition.unit === 'turn' ? Math.max(1, Math.round(definition.durationMs / 1000)) : undefined,
     sourceId,
     tickValue: options.tickValue,
-    nextTickMs: definition.kind === 'dot' || definition.kind === 'hot' ? DOT_TICK_MS : undefined,
   }
   target.statuses.push(status)
   return status
@@ -70,7 +75,6 @@ export const dealCombatDamage = (unit: CombatUnit, amount: number): { hpLost: nu
   unit.shield -= shieldLost
   const hpLost = Math.min(unit.hp, incoming - shieldLost)
   unit.hp -= hpLost
-  unit.alive = unit.hp > 0
   return { hpLost, shieldLost }
 }
 
@@ -82,46 +86,43 @@ export interface StatusTick {
   amount: number
 }
 
-export const tickStatuses = (unit: CombatUnit, elapsedMs: number): StatusTick[] => {
+/** 原版先在“冷却及状态时间计算”中扣除 time 型持续时间，并立即清除归零状态。 */
+export const advanceStatusDurations = (unit: CombatUnit, elapsedMs: number): void => {
   const safeElapsed = Math.max(0, elapsedMs)
-  const events: StatusTick[] = []
-
   for (const status of unit.statuses) {
     const definition = buffById(status.buffId)
-    if (!definition || (definition.kind !== 'dot' && definition.kind !== 'hot')) {
+    if (definition?.unit === 'time') {
       status.remainingMs = Math.max(0, status.remainingMs - safeElapsed)
-      continue
     }
-    const activeElapsed = Math.min(safeElapsed, status.remainingMs)
-    let nextTick = status.nextTickMs ?? DOT_TICK_MS
-    while (nextTick <= activeElapsed) {
-      const magnitude = Math.max(0, Math.floor((status.tickValue ?? 0) * status.stacks))
-      if (magnitude > 0) {
-        if (definition.kind === 'dot') {
-          const { hpLost, shieldLost } = dealCombatDamage(unit, magnitude)
-          if (hpLost + shieldLost > 0) {
-            events.push({ buffId: status.buffId, sourceId: status.sourceId ?? unit.id, targetId: unit.id, amount: hpLost + shieldLost })
-          }
-        } else {
-          const healed = Math.min(unit.maxHp - unit.hp, magnitude)
-          if (healed > 0) {
-            unit.hp += healed
-            events.push({ buffId: status.buffId, sourceId: status.sourceId ?? unit.id, targetId: unit.id, amount: -healed })
-          }
-        }
-      }
-      nextTick += DOT_TICK_MS
-    }
-    status.nextTickMs = nextTick - activeElapsed
-    status.remainingMs = Math.max(0, status.remainingMs - safeElapsed)
   }
-
-  unit.alive = unit.hp > 0
   unit.statuses = unit.statuses.filter((status) => status.remainingMs > 0 && (status.remainingTurns === undefined || status.remainingTurns > 0))
+}
+
+/** 原版 buff伤害计算由战斗级 Every(1) 统一调用；每次脉冲每个状态只结算一次。 */
+export const pulseStatuses = (unit: CombatUnit): StatusTick[] => {
+  const events: StatusTick[] = []
+  for (const status of unit.statuses) {
+    const definition = buffById(status.buffId)
+    if (!definition?.tickKind) continue
+    const magnitude = Math.max(0, Math.floor((status.tickValue ?? 0) * status.stacks))
+    if (magnitude <= 0) continue
+    if (definition.tickKind === 'dot') {
+      const { hpLost, shieldLost } = dealCombatDamage(unit, magnitude)
+      if (hpLost + shieldLost > 0) {
+        events.push({ buffId: status.buffId, sourceId: status.sourceId ?? unit.id, targetId: unit.id, amount: hpLost + shieldLost })
+      }
+    } else {
+      const healed = Math.min(unit.maxHp - unit.hp, magnitude)
+      if (healed > 0) {
+        unit.hp += healed
+        events.push({ buffId: status.buffId, sourceId: status.sourceId ?? unit.id, targetId: unit.id, amount: -healed })
+      }
+    }
+  }
   return events
 }
 
-/** 回合型 buff：单位行动结束后递减 */
+/** 回合型 buff：原版在单位取得行动权、开始本次行动前递减。 */
 export const expireTurnBuffs = (unit: CombatUnit): void => {
   for (const status of unit.statuses) {
     if (status.remainingTurns !== undefined) status.remainingTurns -= 1

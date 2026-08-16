@@ -26,11 +26,18 @@ const sessionWithParty = (storage = memoryStorage()): GameSession => {
 const makePartyOverwhelming = (session: GameSession): void => {
   const party = session.combat!.state.party
   for (const hero of party) {
-    hero.hp = hero.maxHp = 50_000
-    hero.externalAttack = hero.internalAttack = 50_000
-    hero.externalDefense = hero.internalDefense = 5000
+    hero.hp = hero.maxHp = 1_000_000_000_000
+    hero.externalAttack = hero.internalAttack = 1_000_000_000_000
+    hero.externalDefense = hero.internalDefense = 1_000_000_000_000
     hero.effectiveAgility = 10_000
     hero.accuracy = 1
+    hero.careerCoefficients = {
+      physicalAttack: 1,
+      physicalDefense: 1,
+      magicAttack: 1,
+      magicDefense: 1,
+      heal: 1,
+    }
     hero.attributes = panelToAttributeMap({
       ...hero,
       initialEnergy: hero.energy,
@@ -167,6 +174,23 @@ describe('GameSession', () => {
     expect(session.combat?.state.party[0]?.name).toBe('燕七')
   })
 
+  it('战斗快照携带当前主手的原版 wp[7] 武器类型', () => {
+    const session = GameSession.createNew(memoryStorage(), '燕七', 1000)
+    session.state.inventory.push({
+      uid: 'weapon_1',
+      definitionId: 'wp_101',
+      level: 1,
+      quality: 0,
+      coreStats: [],
+      affixes: [],
+      locked: false,
+    })
+    session.state.heroes.hero_player.equipmentBySlot.weapon = 'weapon_1'
+
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 1 }).ok).toBe(true)
+    expect(session.combat?.state.party[0]?.mainhandWeaponType).toBe(1)
+  })
+
   it('保存长期收益但不保存进行中的战斗', () => {
     const storage = memoryStorage()
     const session = sessionWithParty(storage)
@@ -195,6 +219,106 @@ describe('GameSession', () => {
     expect(session.combat?.state.elapsedMs).toBeGreaterThan(0)
   })
 
+  it('驻守胜利保留结算 3.3 秒后才重新挑战当前关卡', () => {
+    const session = sessionWithParty()
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 31 }).ok).toBe(true)
+    const completedCombat = session.combat
+    completedCombat!.state.result = 'victory'
+
+    session.advanceCombatTime(0)
+    expect(session.combat).toBe(completedCombat)
+    expect(session.pendingCombatRestart).toMatchObject({
+      outcome: 'victory',
+      selection: { worldId: 'world_01', difficulty: 1, stage: 1, mode: 'guard' },
+      elapsedMs: 0,
+      durationMs: 3300,
+    })
+    session.advanceCombatTime(3299)
+    expect(session.combat).toBe(completedCombat)
+
+    session.advanceCombatTime(1)
+    expect(session.pendingCombatRestart).toBeNull()
+    expect(session.combat).not.toBe(completedCombat)
+    expect(session.combat?.state).toMatchObject({ result: 'fighting', elapsedMs: 0 })
+  })
+
+  it('闯荡胜利在 Engine 的 0.8 秒结束过渡后立即创建下一关', () => {
+    const session = sessionWithParty()
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'roam', seed: 37 }).ok).toBe(true)
+    const completedCombat = session.combat
+    completedCombat!.state.result = 'victory'
+
+    session.advanceCombatTime(0)
+
+    expect(session.pendingCombatRestart).toBeNull()
+    expect(session.combat).not.toBe(completedCombat)
+    expect(session.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 2, mode: 'roam' })
+    expect(session.combat?.state.timeline).toMatchObject({
+      phase: 'wave-transition',
+      waveTransition: { kind: 'initial' },
+    })
+  })
+
+  it('失败结算保留 3.3 秒后按失败规则重开', () => {
+    const session = sessionWithParty()
+    session.state.clearedStageByWorldDifficulty['world_01:1'] = 3
+    expect(session.startStage({ worldId: 'world_01', stage: 4, mode: 'roam', seed: 41 }).ok).toBe(true)
+    const completedCombat = session.combat
+    completedCombat!.state.result = 'defeat'
+
+    session.advanceCombatTime(0)
+    expect(session.combat).toBe(completedCombat)
+    expect(session.pendingCombatRestart).toMatchObject({
+      outcome: 'defeat',
+      selection: { worldId: 'world_01', difficulty: 1, stage: 3, mode: 'guard' },
+      elapsedMs: 0,
+      durationMs: 3300,
+    })
+    session.advanceCombatTime(3300)
+    expect(session.pendingCombatRestart).toBeNull()
+    expect(session.combat).not.toBe(completedCombat)
+    expect(session.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 3, mode: 'guard' })
+  })
+
+  it('跨结算的大步长与 100ms 小步长推进得到同一战斗快照', () => {
+    const createCompletedSession = () => {
+      const session = sessionWithParty()
+      expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 43 }).ok).toBe(true)
+      session.combat!.state.result = 'victory'
+      return session
+    }
+    const largeStep = createCompletedSession()
+    const smallSteps = createCompletedSession()
+
+    largeStep.advanceCombatTime(5000)
+    for (let index = 0; index < 50; index += 1) smallSteps.advanceCombatTime(100)
+
+    expect(largeStep.selection).toEqual(smallSteps.selection)
+    expect(largeStep.pendingCombatRestart).toEqual(smallSteps.pendingCombatRestart)
+    expect(largeStep.combat?.state).toEqual(smallSteps.combat?.state)
+  })
+
+  it('两分钟挂机用单次补算或 100ms 逐步推进时收益与战斗现场一致', () => {
+    const createRunningSession = () => {
+      const session = sessionWithParty()
+      expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 47 }).ok).toBe(true)
+      makePartyOverwhelming(session)
+      return session
+    }
+    const largeStep = createRunningSession()
+    const smallSteps = createRunningSession()
+
+    largeStep.advanceCombatTime(120_000)
+    for (let index = 0; index < 1200; index += 1) smallSteps.advanceCombatTime(100)
+
+    expect(largeStep.state.worldCurrency).toEqual(smallSteps.state.worldCurrency)
+    expect(largeStep.state.clearedStageByWorldDifficulty).toEqual(smallSteps.state.clearedStageByWorldDifficulty)
+    expect(largeStep.selection).toEqual(smallSteps.selection)
+    expect(largeStep.pendingCombatRestart).toEqual(smallSteps.pendingCombatRestart)
+    expect(largeStep.combat?.state).toEqual(smallSteps.combat?.state)
+    expect(largeStep.state.inventory).toEqual(smallSteps.state.inventory)
+  })
+
   it('闯荡失败自动切驻守并重新创建回退关卡', () => {
     const session = sessionWithParty()
     session.state.clearedStageByWorldDifficulty['world_01:1'] = 3
@@ -209,7 +333,8 @@ describe('GameSession', () => {
       enemy.accuracy = 1
     }
 
-    session.advanceTicks(1)
+    // 原版调度下敌人依次完成行动链，不再在同一满条节点集体瞬时结算。
+    session.advanceTicks(100)
 
     expect(session.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 3, mode: 'guard' })
     expect(session.combat?.state.wave).toBe(1)

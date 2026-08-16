@@ -5,13 +5,14 @@
  *   基础伤害 = A² / (A + D)
  *   A = 攻击面板 × 攻击修正 × 职业攻击系数
  *   D = 防御面板 × 防御修正 × 职业防御系数
- *   技能层 = 技能系数 × (1+技能组威力) × (1+元素组威力)
- *   加法池 = 1 + (物法增伤 + 普攻增伤 + 元素增伤 + 专精增伤 + 熟练增伤)   ← 5 路求和
+ *   技能层 = 技能系数 × ((1+技能组威力) + (1+元素组威力) − 1)
+ *   加法池 = (1+物法增伤) + (1+普攻增伤) + (1+元素增伤) + (1+专精增伤) + (1+熟练增伤) − 4
  *   减伤   = (1−物法减伤) × (1−元素抗性)                                  ← 两独立乘区，cap 80
  *   受伤害 = (1+受物法) × (1+受元素) × (1+受所有)                         ← 三层独立，cap 95
  *   最终层 = 1 + 最终增伤 − 最终减伤                                       ← 同括号，终减 cap 80
  *   暴击   = 裸系数（1 或 暴伤/100；sx13 为总量百分比，白板 150 → 1.5）
- *   增效buff = 1 + 增效buff系数
+ *   增效buff = max(1, 1 + 增效buff系数)
+ *   工事建筑加成在本项目没有对应系统，固定为原版无加成值 1。
  *
  * 乘区形态除暴击外均 (1 + 词条/100)；cap 来自 sx.json 第 9 字段（Agent 1 源码确认）。
  */
@@ -50,23 +51,26 @@ export interface DamageMultipliers {
   buffMultiplier: number
 }
 
-const cap = (value: number, max: number): number => Math.min(max, Math.max(0, value))
+const cappedAttribute = (value: number, max: number): number => Math.min(max, value)
+const bonusFactor = (value: number, max = Infinity): number =>
+  Math.max(0, 1 + cappedAttribute(value, max) / 100)
+const reductionFactor = (value: number, max: number): number =>
+  Math.max(0, 1 - cappedAttribute(value, max) / 100)
 
 /** 诸天伤害结算（表达式 10718 + 10719）。最低保底 1。 */
 export const calculateDamage = (m: DamageMultipliers): number => {
-  const a = Math.max(1, m.attack)
-  const d = Math.max(0, m.defense)
-  const core = (a * a) / (a + d) // 10718：A²/(A+D)
+  const core = (m.attack * m.attack) / Math.max(1, m.attack + m.defense) // 10718：A²/clamp(A+D, 1, ∞)
 
-  const skillLayer = m.skillCoeff * (1 + m.factionPower / 100) * (1 + m.elementPower / 100)
-  const additivePool = 1 + (m.damageType + m.basicAttack + m.elementDamage + m.specialization + m.mastery) / 100
-  const typeRed = 1 - cap(m.typeReduction, 80) / 100
-  const elementResist = 1 - cap(m.elementResist, 80) / 100
-  const receivedType = 1 + cap(m.receivedType, 95) / 100
-  const receivedElement = 1 + cap(m.receivedElement, 95) / 100
-  const receivedAll = 1 + cap(m.receivedAll, 95) / 100
-  const finalLayer = 1 + m.finalDamage / 100 - cap(m.finalReduction, 80) / 100
-  const buff = 1 + m.buffMultiplier / 100
+  const skillLayer = m.skillCoeff * (bonusFactor(m.factionPower) + bonusFactor(m.elementPower) - 1)
+  const additivePool = [m.damageType, m.basicAttack, m.elementDamage, m.specialization, m.mastery]
+    .reduce((sum, value) => sum + bonusFactor(value), -4)
+  const typeRed = reductionFactor(m.typeReduction, 80)
+  const elementResist = reductionFactor(m.elementResist, 80)
+  const receivedType = bonusFactor(m.receivedType, 95)
+  const receivedElement = bonusFactor(m.receivedElement, 95)
+  const receivedAll = bonusFactor(m.receivedAll, 95)
+  const finalLayer = bonusFactor(m.finalDamage) + reductionFactor(m.finalReduction, 80) - 1
+  const buff = Math.max(1, 1 + m.buffMultiplier / 100)
 
   const damage =
     core *

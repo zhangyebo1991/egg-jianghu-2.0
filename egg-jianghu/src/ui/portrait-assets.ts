@@ -104,6 +104,7 @@ export const heroPortraitAsset = (heroId: string, category = '剑'): PortraitAss
 const enemyPortraits: Record<CombatRank, readonly string[]> = {
   normal: [normal1, normal2, normal3],
   elite: [elite1, elite2],
+  captain: [elite1, boss1, elite2],
   boss: [boss1, boss2],
 }
 

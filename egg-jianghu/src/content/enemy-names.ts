@@ -8,9 +8,9 @@ export interface ParsedEnemyId {
   mobIndex: number
 }
 
-// 敌人身份 id：world_XX_stage_YY_mob_1..5 或 world_XX_stage_YY_boss
+// 敌人身份 id：规范 id 后可带 _at_01..15 战斗实例阵位后缀。
 export const parseEnemyId = (enemyId: string): ParsedEnemyId | null => {
-  const match = enemyId.match(/^(world_\d{2})_stage_(\d{2})_(?:mob_([1-5])|boss)$/)
+  const match = enemyId.match(/^(world_\d{2})_stage_(\d{2})_(?:mob_([1-5])|boss)(?:_at_(0[1-9]|1[0-5]))?$/)
   if (!match) return null
   return {
     worldId: match[1],
@@ -18,6 +18,13 @@ export const parseEnemyId = (enemyId: string): ParsedEnemyId | null => {
     kind: match[3] ? 'mob' : 'boss',
     mobIndex: match[3] ? Number(match[3]) - 1 : -1,
   }
+}
+
+export const canonicalEnemyId = (enemyId: string): string => {
+  const parsed = parseEnemyId(enemyId)
+  if (!parsed) return enemyId
+  const prefix = `${parsed.worldId}_stage_${String(parsed.stage).padStart(2, '0')}`
+  return parsed.kind === 'boss' ? `${prefix}_boss` : `${prefix}_mob_${parsed.mobIndex + 1}`
 }
 
 export const enemyDefinitionById = (enemyId: string): EnemyDefinition | undefined => {

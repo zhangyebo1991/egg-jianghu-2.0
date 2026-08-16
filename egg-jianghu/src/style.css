@@ -553,7 +553,6 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .meter { display: grid; grid-template-columns: 28px 1fr 52px; align-items: center; gap: 5px; margin: 4px 0; color: #777b6f; font-size: 9px; }
 .meter i { height: 5px; overflow: hidden; background: #0d0f0d; }
 .meter b { display: block; height: 100%; background: #a75746; transition: width 100ms linear; }
-.gauge-meter b { background: #c09a56; }
 .energy-meter b { background: #628790; }
 .meter em { text-align: right; font-style: normal; font-variant-numeric: tabular-nums; }
 
@@ -4053,7 +4052,7 @@ body:has(.idle-page) { overflow: hidden; }
 .idle-page .battlefield {
   position: relative;
   display: grid;
-  grid-template-rows: none;
+  grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
@@ -4117,9 +4116,9 @@ body:has(.idle-page) { overflow: hidden; }
   transition: opacity .5s, filter .5s;
 }
 /* 我方朝右冲、敌方朝左冲（左右对峙） */
-.idle-page .combat-unit.lunge-enemy { z-index: 5; animation: idle-lunge-left .34s var(--idle-ease-snap); }
-.idle-page .combat-unit.lunge-party { z-index: 5; animation: idle-lunge-right .34s var(--idle-ease-snap); }
-.idle-page .combat-unit.hit-shake { animation: idle-hit-shake .3s var(--idle-ease-out); }
+.idle-page .combat-unit.lunge-enemy { z-index: 5; animation: idle-lunge-left var(--combat-effect-duration, .34s) var(--idle-ease-snap) var(--combat-effect-delay, 0ms) both; }
+.idle-page .combat-unit.lunge-party { z-index: 5; animation: idle-lunge-right var(--combat-effect-duration, .34s) var(--idle-ease-snap) var(--combat-effect-delay, 0ms) both; }
+.idle-page .combat-unit.hit-shake { animation: idle-hit-shake var(--combat-effect-duration, .3s) var(--idle-ease-out) var(--combat-effect-delay, 0ms) both; }
 @keyframes idle-lunge-left { 35% { filter: drop-shadow(-8px 4px 12px rgb(0 0 0 / 45%)); transform: translateX(-12px) scale(1.03); } }
 @keyframes idle-lunge-right { 35% { filter: drop-shadow(8px 4px 12px rgb(0 0 0 / 45%)); transform: translateX(12px) scale(1.03); } }
 @keyframes idle-hit-shake { 25% { transform: translateX(-4px); } 60% { transform: translateX(3px); } }
@@ -4147,8 +4146,6 @@ body:has(.idle-page) { overflow: hidden; }
 .idle-page .hp-meter .meter-fill { background: linear-gradient(90deg, var(--idle-cinnabar-deep), var(--idle-cinnabar-bright)); box-shadow: 0 0 6px rgb(207 107 83 / 40%); }
 .idle-page .hp-meter.low .meter-fill { animation: idle-hp-flicker .9s ease-in-out infinite; }
 @keyframes idle-hp-flicker { 50% { filter: brightness(1.55); } }
-.idle-page .gauge-meter .meter-fill { background: linear-gradient(90deg, var(--idle-gold-deep), var(--idle-gold-bright)); }
-.idle-page .gauge-meter.full .meter-fill { box-shadow: 0 0 8px rgb(230 198 127 / 80%); }
 .idle-page .energy-meter .meter-track { height: 3px; }
 .idle-page .energy-meter .meter-fill { background: linear-gradient(90deg, #40607a, var(--idle-azure)); }
 .idle-page .energy-meter.full .meter-fill { box-shadow: 0 0 8px rgb(111 159 184 / 80%); }
@@ -4160,9 +4157,10 @@ body:has(.idle-page) { overflow: hidden; }
 .idle-page .foot-label { display: none; }
 .idle-page .cool-num { color: var(--idle-paper-dim); font-variant-numeric: tabular-nums; }
 .idle-page .skill-name { margin-left: 0; overflow: hidden; color: rgb(201 163 92 / 62%); font-family: "Faction Brush", serif; font-size: 9px; letter-spacing: .04em; text-overflow: ellipsis; white-space: nowrap; }
-.idle-page .gauge-meter.full ~ .unit-foot .skill-name, .idle-page .energy-meter.full ~ .unit-foot .skill-name { color: var(--idle-gold-bright); text-shadow: 0 0 8px rgb(230 198 127 / 60%); }
-.idle-page .combat-unit.fallen { opacity: .38; filter: grayscale(.9); }
-.idle-page .combat-unit.fallen::after { position: absolute; top: 7px; right: 7px; content: "陨"; color: rgb(207 107 83 / 75%); font-family: "Faction Brush", serif; font-size: 21px; transform: rotate(12deg); }
+.idle-page .energy-meter.full ~ .unit-foot .skill-name { color: var(--idle-gold-bright); text-shadow: 0 0 8px rgb(230 198 127 / 60%); }
+.idle-page .combat-unit.party.fallen { justify-content: center; padding: 0; opacity: 1; filter: none; }
+.idle-page .combat-unit.party.fallen::after { content: none; }
+.idle-page .combat-death-image { width: clamp(48px, 7vh, 64px); height: auto; object-fit: contain; filter: drop-shadow(0 0 9px rgb(72 199 244 / 55%)); }
 .idle-page .battle-divider { position: relative; z-index: 2; display: flex; width: auto; height: auto; flex-direction: column; align-items: center; gap: 12px; padding: 16px 4px; }
 .idle-page .battle-divider::before { content: none; }
 .idle-page .divider-line { width: 1px; height: auto; flex: 1; background: linear-gradient(180deg, transparent, var(--idle-line), transparent); }
@@ -4171,23 +4169,85 @@ body:has(.idle-page) { overflow: hidden; }
 .idle-page .divider-status { color: var(--idle-paper-mute); font-size: 9px; letter-spacing: .25em; white-space: nowrap; }
 .idle-page .divider-status em { color: var(--idle-gold-bright); font-style: normal; }
 
+/* 原版式共用行动条：所有存活单位在同一轨道积攒，满条后按 readySeq 排队。 */
+.idle-page .combat-action-timeline {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-row: 2;
+  grid-column: 1 / -1;
+  grid-template-columns: 54px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px 12px 10px;
+  border-top: 1px solid rgb(233 222 195 / 13%);
+  background: linear-gradient(180deg, rgb(8 10 7 / 18%), rgb(8 10 7 / 72%));
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 16%);
+}
+.idle-page .action-timeline-label { display: flex; min-width: 0; flex-direction: column; line-height: 1.1; }
+.idle-page .action-timeline-label strong { color: var(--idle-gold-bright); font-family: "Faction Brush", serif; font-size: 14px; font-weight: 400; letter-spacing: .18em; }
+.idle-page .action-timeline-label small { margin-top: 3px; overflow: hidden; color: var(--idle-paper-mute); font-size: 8px; letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
+.idle-page .action-track { position: relative; display: block; height: 27px; min-width: 0; }
+.idle-page .action-track::before { position: absolute; top: 50%; right: 0; left: 0; height: 7px; content: ""; border: 1px solid rgb(233 222 195 / 20%); border-radius: 999px; background: rgb(6 8 6 / 82%); box-shadow: inset 0 1px 3px rgb(0 0 0 / 75%); transform: translateY(-50%); }
+.idle-page .action-track-fill { position: absolute; top: 50%; right: 1px; left: 1px; height: 3px; border-radius: 999px; background: linear-gradient(90deg, var(--idle-jade-dim), var(--idle-gold-deep) 62%, var(--idle-cinnabar)); box-shadow: 0 0 7px rgb(201 163 92 / 25%); transform: translateY(-50%); }
+.idle-page .action-marker {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--action-progress) * 1%);
+  z-index: 2;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid var(--idle-jade);
+  border-radius: 50%;
+  color: #e7f1e8;
+  background: #26372c;
+  box-shadow: 0 2px 7px rgb(0 0 0 / 65%);
+  transform: translate(-50%, -50%);
+  transition: left .18s linear;
+}
+.idle-page .action-marker.enemy { border-color: var(--idle-cinnabar-bright); color: #ffe3d9; background: #4a241d; }
+.idle-page .action-marker i { overflow: hidden; max-width: 1em; font-family: "Faction Brush", serif; font-size: 12px; font-style: normal; line-height: 1; white-space: nowrap; }
+.idle-page .action-marker.ready { left: calc(100% - (var(--queue-offset) * 26px)); border-color: var(--idle-gold-bright); box-shadow: 0 0 9px rgb(230 198 127 / 48%), 0 2px 7px rgb(0 0 0 / 70%); }
+.idle-page .action-marker.ready::after, .idle-page .action-marker.active::after { position: absolute; top: -7px; right: -6px; display: grid; min-width: 13px; height: 13px; padding: 0 2px; place-items: center; border: 1px solid var(--idle-gold-deep); border-radius: 7px; color: #20160d; background: var(--idle-gold-bright); font: 700 8px/1 sans-serif; content: attr(data-ready-seq); }
+.idle-page .action-marker.active { left: 100%; z-index: 5; border-color: #fff1ca; box-shadow: 0 0 0 3px rgb(201 163 92 / 22%), 0 0 14px rgb(230 198 127 / 70%); animation: idle-action-marker-pulse .8s ease-in-out infinite; }
+.idle-page .action-marker.active::after { content: "行"; }
+.idle-page .action-ready-label { color: var(--idle-paper-mute); font-size: 9px; letter-spacing: .12em; white-space: nowrap; }
+@keyframes idle-action-marker-pulse { 50% { filter: brightness(1.35); transform: translate(-50%, -50%) scale(1.1); } }
+
 /* 战斗特效 */
 .idle-page .unit-aura { position: absolute; inset: 1px; z-index: 6; border: 1px solid transparent; border-radius: 7px; pointer-events: none; }
-.idle-page .unit-aura.skill-aura { animation: idle-skill-aura .72s var(--idle-ease-out) forwards; }
-.idle-page .unit-aura.heal-aura { animation: idle-heal-aura .72s var(--idle-ease-out) forwards; }
+.idle-page .unit-aura.skill-aura { animation: idle-skill-aura var(--combat-effect-duration, .72s) var(--idle-ease-out) var(--combat-effect-delay, 0ms) forwards; }
+.idle-page .unit-aura.heal-aura { animation: idle-heal-aura var(--combat-effect-duration, .72s) var(--idle-ease-out) var(--combat-effect-delay, 0ms) forwards; }
 @keyframes idle-skill-aura { 30% { border-color: var(--idle-gold-bright); box-shadow: inset 0 0 18px rgb(230 198 127 / 26%), 0 0 0 2px rgb(230 198 127 / 55%), 0 0 24px rgb(230 198 127 / 45%); } 100% { opacity: 0; } }
 @keyframes idle-heal-aura { 30% { border-color: var(--idle-jade); box-shadow: inset 0 0 18px rgb(127 168 141 / 24%), 0 0 0 2px rgb(127 168 141 / 55%), 0 0 22px rgb(127 168 141 / 42%); } 100% { opacity: 0; } }
-.idle-page .dmg-float { position: absolute; top: 48%; left: 58%; z-index: 20; color: #f0d9c8; font-size: clamp(14px, 2.1vh, 19px); font-weight: 900; font-variant-numeric: tabular-nums; text-shadow: 0 2px 8px rgb(0 0 0 / 80%); white-space: nowrap; pointer-events: none; animation: idle-damage-rise .95s var(--idle-ease-out) forwards; }
+.idle-page .dmg-float { position: absolute; top: 48%; left: 58%; z-index: 20; color: #f0d9c8; font-size: clamp(14px, 2.1vh, 19px); font-weight: 900; font-variant-numeric: tabular-nums; text-shadow: 0 2px 8px rgb(0 0 0 / 80%); white-space: nowrap; pointer-events: none; animation: idle-damage-rise var(--combat-effect-duration, .95s) var(--idle-ease-out) var(--combat-effect-delay, 0ms) forwards; }
 .idle-page .dmg-float.crit { color: var(--idle-gold-bright); font-size: clamp(17px, 2.6vh, 23px); }
 .idle-page .dmg-float.crit::before { content: "会心 "; font-family: "Faction Brush", serif; font-size: .72em; font-weight: 400; }
 .idle-page .dmg-float.heal { color: var(--idle-jade); }
 .idle-page .dmg-float.heal::before { content: "+"; }
 .idle-page .dmg-float.skill-name-float { top: 35%; left: 50%; color: var(--idle-gold-bright); font-family: "Faction Brush", serif; font-size: clamp(14px, 2.2vh, 20px); font-weight: 400; letter-spacing: .12em; text-shadow: 0 0 14px rgb(230 198 127 / 55%), 0 2px 8px rgb(0 0 0 / 80%); }
 @keyframes idle-damage-rise { 0% { opacity: 0; transform: translate(-50%, -20%) scale(.6); } 18% { opacity: 1; transform: translate(-50%, -58%) scale(1.12); } 100% { opacity: 0; transform: translate(-50%, -145%) scale(1); } }
-.idle-page .slash-arc { position: absolute; top: 50%; left: 52%; z-index: 18; width: 48px; height: 48px; border: 2px solid transparent; border-top-color: rgb(240 217 200 / 85%); border-right-color: rgb(240 217 200 / 40%); border-radius: 50%; pointer-events: none; animation: idle-slash-spin .32s var(--idle-ease-out) forwards; }
+.idle-page .slash-arc { position: absolute; top: 50%; left: 52%; z-index: 18; width: 48px; height: 48px; border: 2px solid transparent; border-top-color: rgb(240 217 200 / 85%); border-right-color: rgb(240 217 200 / 40%); border-radius: 50%; pointer-events: none; animation: idle-slash-spin var(--combat-effect-duration, .32s) var(--idle-ease-out) var(--combat-effect-delay, 0ms) forwards; }
 @keyframes idle-slash-spin { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(-40deg) scale(.5); } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(140deg) scale(1.25); } }
-.idle-page .wave-banner { position: absolute; top: 50%; left: 50%; z-index: 30; color: #e9dec3; font-family: "Faction Brush", serif; font-size: clamp(28px, 5.4vh, 42px); letter-spacing: .26em; text-shadow: 0 0 30px rgb(201 163 92 / 40%), 0 4px 16px rgb(0 0 0 / 70%); white-space: nowrap; pointer-events: none; animation: idle-banner-in 1.7s var(--idle-ease-out) forwards; }
+.idle-page .wave-banner { position: absolute; top: 50%; left: 50%; z-index: 30; color: #e9dec3; font-family: "Faction Brush", serif; font-size: clamp(28px, 5.4vh, 42px); letter-spacing: .26em; text-shadow: 0 0 30px rgb(201 163 92 / 40%), 0 4px 16px rgb(0 0 0 / 70%); white-space: nowrap; pointer-events: none; animation: idle-banner-in var(--combat-effect-duration, 1.7s) var(--idle-ease-out) var(--combat-effect-delay, 0ms) forwards; }
 @keyframes idle-banner-in { 0% { opacity: 0; filter: blur(6px); transform: translate(-50%, -50%) scale(1.4); } 22% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.94); } }
+.idle-page .enemy-arrival { position: absolute; inset: 38px 10px 48px; z-index: 6; display: grid; place-content: center; justify-items: center; gap: 7px; color: var(--idle-paper-mute); pointer-events: none; }
+.idle-page .enemy-arrival span { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgb(181 80 60 / 42%); border-radius: 50%; color: var(--idle-cinnabar-bright); background: rgb(62 27 22 / 38%); box-shadow: 0 0 24px rgb(181 80 60 / 18%); font-family: "Faction Brush", serif; font-size: 24px; animation: idle-enemy-arrival 1s ease-in-out infinite; }
+.idle-page .enemy-arrival strong { font-family: "Faction Brush", serif; font-size: 13px; font-weight: 400; letter-spacing: .24em; }
+@keyframes idle-enemy-arrival { 50% { opacity: .55; filter: blur(.4px); transform: scale(.94); } }
+.idle-page .combat-settlement { position: absolute; inset: 0 0 53px; z-index: 40; display: flex; align-items: center; justify-content: center; gap: 18px; color: var(--idle-paper); background: radial-gradient(circle at 50% 48%, rgb(36 44 31 / 82%), rgb(8 10 7 / 82%) 58%, rgb(5 6 5 / 92%)); backdrop-filter: blur(2px); animation: idle-settlement-in .28s var(--idle-ease-out) both; }
+.idle-page .combat-settlement.defeat { background: radial-gradient(circle at 50% 48%, rgb(67 30 25 / 78%), rgb(12 8 7 / 85%) 58%, rgb(7 5 4 / 94%)); }
+.idle-page .settlement-seal { display: grid; width: 64px; height: 64px; place-items: center; border: 2px solid var(--idle-gold-deep); border-radius: 10px; color: #fff0c7; background: linear-gradient(145deg, #755928, #36260f); box-shadow: inset 0 0 0 3px rgb(17 12 5 / 72%), 0 0 26px rgb(201 163 92 / 28%); font-family: "Faction Brush", serif; font-size: 38px; transform: rotate(-4deg); }
+.idle-page .combat-settlement.defeat .settlement-seal { border-color: #a55342; color: #ffe0d5; background: linear-gradient(145deg, #7f372b, #391712); box-shadow: inset 0 0 0 3px rgb(25 8 6 / 72%), 0 0 26px rgb(181 80 60 / 28%); }
+.idle-page .settlement-copy { display: flex; flex-direction: column; gap: 3px; }
+.idle-page .settlement-copy small { color: var(--idle-paper-mute); font-size: 9px; letter-spacing: .3em; }
+.idle-page .settlement-copy strong { color: var(--idle-gold-bright); font-family: "Faction Brush", serif; font-size: clamp(27px, 5vh, 40px); font-weight: 400; letter-spacing: .2em; text-shadow: 0 0 20px rgb(201 163 92 / 28%); }
+.idle-page .combat-settlement.defeat .settlement-copy strong { color: #e7a08f; text-shadow: 0 0 20px rgb(181 80 60 / 25%); }
+.idle-page .settlement-copy em { margin-top: 4px; color: var(--idle-paper-dim); font-size: 11px; font-style: normal; letter-spacing: .12em; font-variant-numeric: tabular-nums; }
+@keyframes idle-settlement-in { from { opacity: 0; transform: scale(1.03); } }
 
 /* 收益与战报栏 */
 .idle-page .combat-rail { display: flex; min-height: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--idle-line-soft); border-radius: 10px; background: linear-gradient(170deg, rgb(23 27 20 / 88%), rgb(13 16 12 / 94%)); box-shadow: 0 14px 34px rgb(0 0 0 / 28%); }
@@ -4797,6 +4857,7 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
   .idle-page .wave-label:first-child { display: none; }
   .idle-page .ctl-btn { padding-inline: 9px; }
   .idle-page .battle-stage { grid-template-columns: minmax(0, 1fr) 268px; gap: 12px; }
+  .idle-page .combat-action-timeline { grid-template-columns: 46px minmax(0, 1fr) 26px; gap: 7px; padding-inline: 9px; }
 }
 
 @media (max-height: 800px) {
@@ -4818,11 +4879,98 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
   .idle-page .meter { gap: 4px; margin: 0; font-size: 7px; }
   .idle-page .meter-num { width: 44px; }
   .idle-page .skill-name { font-size: 9px; }
+  .idle-page .combat-action-timeline { padding-block: 5px 7px; }
+  .idle-page .action-track { height: 23px; }
+  .idle-page .action-marker { width: 19px; height: 19px; }
+  .idle-page .action-marker.ready { left: calc(100% - (var(--queue-offset) * 23px)); }
   .idle-page .rail-section { padding: 9px 11px; }
   .idle-page .loot-cell { padding-block: 5px; }
   .idle-page .combat-log { padding-inline: 11px; }
   .idle-page .combat-log li { padding-block: 3px; font-size: 9px; }
   .idle-page .mechanic-legend { padding-block: 7px; }
+}
+
+@media (max-width: 760px) {
+  .game-main:has(> .idle-page) {
+    padding: 7px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .idle-page {
+    height: auto;
+    min-height: calc(100vh - 14px);
+    grid-template-rows: auto auto;
+    gap: 10px;
+  }
+  .idle-page .battle-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px 8px;
+    padding: 8px;
+  }
+  .idle-page .stage-id { min-width: 0; gap: 8px; }
+  .idle-page .stage-seal { width: 38px; height: 38px; font-size: 22px; }
+  .idle-page .stage-text small { letter-spacing: .08em; }
+  .idle-page .stage-text h1 { font-size: 18px; }
+  .idle-page .wave-track { grid-column: 1 / -1; gap: 5px; }
+  .idle-page .wave-label { display: none; }
+  .idle-page .wave-beads { width: 100%; justify-content: space-between; gap: 0; padding-inline: 4px; }
+  .idle-page .topbar-stats { grid-column: 2; grid-row: 1; }
+  .idle-page .stat-chip { padding: 6px 7px; }
+  .idle-page .chip-mark { display: none; }
+  .idle-page .battle-controls {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .idle-page .battle-controls > .ctl-btn { width: 100%; padding-inline: 5px; }
+  .idle-page .ctl-sep { display: none; }
+  .idle-page .speed-group { grid-column: 1 / -1; width: 100%; }
+  .idle-page .speed-group .ctl-btn { min-width: 0; flex: 1; }
+
+  .idle-page .battle-stage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(460px, 62vh) 220px;
+    gap: 10px;
+  }
+  .idle-page .battlefield { min-height: 460px; }
+  .idle-page .battle-half { padding-inline: 6px 4px; }
+  .idle-page .battle-half.enemy { padding-inline: 4px 6px; }
+  .idle-page .half-heading { gap: 4px; letter-spacing: .12em; }
+  .idle-page .half-heading > span:not(.half-hint) { display: none; }
+  .idle-page .half-hint { font-size: 8px; letter-spacing: .06em; }
+  .idle-page .battle-grid { padding-inline: 2px; }
+  .idle-page .unit-lane { gap: 2px; transform: translateX(calc((1 - var(--lane, 1)) * 5px)); }
+  .idle-page .unit-portrait { width: 30px; height: 30px; }
+  .idle-page .combat-unit[data-rank="boss"] .unit-portrait { width: 34px; height: 34px; }
+  .idle-page .combat-unit { gap: 2px; padding-inline: 1px; }
+  .idle-page .unit-name { font-size: 9px; }
+  .idle-page .cool-num { display: none; }
+  .idle-page .skill-name { font-size: 8px; }
+  .idle-page .battle-divider { gap: 7px; padding-inline: 2px; }
+  .idle-page .divider-status { display: none; }
+  .idle-page .divider-seal { width: 26px; height: 26px; font-size: 14px; }
+  .idle-page .combat-action-timeline { grid-template-columns: 38px minmax(0, 1fr) 22px; gap: 4px; padding-inline: 6px; }
+  .idle-page .action-timeline-label strong { font-size: 11px; }
+  .idle-page .action-timeline-label small { display: none; }
+  .idle-page .combat-settlement {
+    bottom: 49px;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  .idle-page .settlement-seal { width: 56px; height: 56px; font-size: 33px; }
+  .idle-page .settlement-copy { align-items: center; }
+  .idle-page .settlement-copy strong { font-size: 28px; }
+
+  .idle-page .combat-rail { height: 220px; min-height: 220px; }
+  .idle-page .loot-section { padding-block: 9px; }
+  .idle-page .rail-title { margin-bottom: 6px; }
+  .idle-page .loot-cell { padding-block: 4px; }
+  .idle-page .pack-meter { margin-top: 6px; }
+  .idle-page .combat-log { min-height: 52px; }
+  .idle-page .mechanic-legend { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

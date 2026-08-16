@@ -1,105 +1,88 @@
-import type { Rng } from './rng'
+import type { SkillRangeContent } from '../content/skill-ranges'
 import type { FormationColumn, FormationRow } from '../domain/types'
 import type { CombatUnit } from './types'
 
-export type TargetShape = 'single' | 'spread' | 'front-row' | 'back-row' | 'row' | 'column' | 'random-multiple' | 'all'
-/** 近战/远程只影响演出，不再限制可选目标（与诸天原版一致） */
-export type TargetReach = 'melee' | 'ranged'
-
-export interface TargetRule {
-  shape: TargetShape
-  reach: TargetReach
-  /** 出手者所在路：single 索敌按「同路最前 → 它路最前」 */
-  sourceRow?: FormationRow
-  row?: FormationRow
-  column?: FormationColumn
-  count?: number
+const ATTACK_TARGET_PRIORITIES: Readonly<Record<FormationRow, readonly number[]>> = {
+  0: [11, 12, 13, 14, 15, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5],
+  1: [11, 12, 13, 14, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  2: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
 }
 
-// 稳定序：前列（col 小）优先，同列上路先，再按入阵次序
-const stableOrder = (left: CombatUnit, right: CombatUnit): number =>
-  (left.col - right.col)
-  || (left.row - right.row)
+/** 原版“召唤空地阵位号”的固定扫描顺序。 */
+export const SUMMON_EMPTY_SLOT_PRIORITY = [1, 11, 6, 2, 12, 7, 3, 13, 8, 4, 14, 9, 5, 15, 10] as const
+
+/** 战场单边 3×5 阵中的本地阵位号（1..15）。 */
+export const formationSlot = (unit: Pick<CombatUnit, 'row' | 'col'>): number => unit.row * 5 + unit.col + 1
+
+const slotCoordinates = (slot: number): { row: FormationRow; col: FormationColumn } => ({
+  row: Math.floor((slot - 1) / 5) as FormationRow,
+  col: ((slot - 1) % 5) as FormationColumn,
+})
+
+const byFormationSlot = (left: CombatUnit, right: CombatUnit): number =>
+  (formationSlot(left) - formationSlot(right))
   || (left.formationOrder - right.formationOrder)
+  || left.id.localeCompare(right.id)
 
-// 诸天索敌：优先同路最前排目标；同路没有目标后，攻击它路最前排目标（路距近者先）
-const primaryTarget = (eligible: CombatUnit[], sourceRow?: FormationRow): CombatUnit | undefined => {
-  if (sourceRow !== undefined) {
-    const sameLane = eligible.filter((unit) => unit.row === sourceRow)
-    if (sameLane.length) return [...sameLane].sort(stableOrder)[0]
-    return [...eligible].sort((left, right) =>
-      (left.col - right.col)
-      || (Math.abs(left.row - sourceRow) - Math.abs(right.row - sourceRow))
-      || (left.formationOrder - right.formationOrder))[0]
+export const attackTargetPriority = (sourceRow: FormationRow): readonly number[] => ATTACK_TARGET_PRIORITIES[sourceRow]
+
+/** 原版攻击主目标：按发起排的固定阵位序扫描；我方在小兵仍存活时不会以首领为核心目标。 */
+export const selectAttackPrimary = (actor: CombatUnit, candidates: CombatUnit[]): CombatUnit | undefined => {
+  const living = candidates.filter((unit) => unit.alive)
+  const eligible = actor.side === 'party' && living.some((unit) => unit.rank !== 'boss')
+    ? living.filter((unit) => unit.rank !== 'boss')
+    : living
+  for (const slot of attackTargetPriority(actor.row)) {
+    const target = eligible.filter((unit) => formationSlot(unit) === slot).sort(byFormationSlot)[0]
+    if (target) return target
   }
-  return [...eligible].sort(stableOrder)[0]
+  return undefined
 }
 
-// 各路最前（edge = front）或最后（edge = back）的存活单位，至多 3 个
-const laneEdges = (eligible: CombatUnit[], edge: 'front' | 'back'): CombatUnit[] => {
-  const byLane = new Map<FormationRow, CombatUnit>()
-  for (const unit of eligible) {
-    const held = byLane.get(unit.row)
-    if (!held || (edge === 'front' ? unit.col < held.col : unit.col > held.col)) byLane.set(unit.row, unit)
-  }
-  return [...byLane.values()].sort(stableOrder)
-}
+/** 原版治疗主目标：生命比例最低者优先，同值按阵位号稳定选择。 */
+export const selectLowestHealthPrimary = (candidates: CombatUnit[]): CombatUnit | undefined =>
+  candidates
+    .filter((unit) => unit.alive)
+    .sort((left, right) =>
+      (left.hp / left.maxHp - right.hp / right.maxHp)
+      || byFormationSlot(left, right))[0]
 
-export const selectTargets = (
+/** 原版加能量/推进度主目标：排除召唤物后按“攻击”降序，同值按阵位号稳定选择。 */
+export const selectHighestAttackPrimary = (
   candidates: CombatUnit[],
-  rule: TargetRule,
-  rng?: Rng,
-): CombatUnit[] => {
-  const eligible = candidates.filter((unit) => unit.alive).sort(stableOrder)
-  if (!eligible.length) return []
+  attackValue: (unit: CombatUnit) => number,
+): CombatUnit | undefined => candidates
+  .filter((unit) => unit.alive && !unit.id.startsWith('summon_'))
+  .sort((left, right) =>
+    (attackValue(right) - attackValue(left))
+    || byFormationSlot(left, right))[0]
 
-  if (rule.shape === 'front-row') return laneEdges(eligible, 'front')
-  if (rule.shape === 'back-row') return laneEdges(eligible, 'back')
-  if (rule.shape === 'row') {
-    const row = rule.row ?? primaryTarget(eligible, rule.sourceRow)?.row
-    return eligible.filter((unit) => unit.row === row)
-  }
-  if (rule.shape === 'column') {
-    const column = rule.column ?? primaryTarget(eligible, rule.sourceRow)?.col
-    return eligible.filter((unit) => unit.col === column)
-  }
-  if (rule.shape === 'all') return eligible
-  // 十字/九宫等范围近似：主目标 + 按站位曼哈顿距离向外扩散至 count 个
-  if (rule.shape === 'spread') {
-    const primary = primaryTarget(eligible, rule.sourceRow)
-    if (!primary) return []
-    const count = Math.max(1, Math.floor(rule.count ?? 1))
-    const distance = (unit: CombatUnit): number => Math.abs(unit.row - primary.row) + Math.abs(unit.col - primary.col)
-    return [...eligible]
-      .sort((left, right) => (distance(left) - distance(right)) || stableOrder(left, right))
-      .slice(0, count)
-  }
-  if (rule.shape === 'random-multiple') {
-    const pool = [...eligible]
-    const selected: CombatUnit[] = []
-    const count = Math.min(pool.length, Math.max(1, Math.floor(rule.count ?? 2)))
-    while (selected.length < count) {
-      const index = rng ? rng.nextInt(0, pool.length) : 0
-      selected.push(pool.splice(index, 1)[0])
-    }
-    return selected
-  }
-  const primary = primaryTarget(eligible, rule.sourceRow)
-  return primary ? [primary] : []
+/** 原版复活目标：阵位号最小的阵亡单位。 */
+export const selectFirstFallenPrimary = (candidates: CombatUnit[]): CombatUnit | undefined =>
+  candidates.filter((unit) => !unit.alive).sort(byFormationSlot)[0]
+
+/**
+ * 原版范围查询：fw[尝试阵位 + 15 × (范围类型 - 1), 核心阵位]。
+ * 生成数据已按范围类型切成 matrix[尝试阵位 - 1][核心阵位 - 1]。
+ */
+export const selectSkillRangeTargets = (
+  candidates: CombatUnit[],
+  range: SkillRangeContent,
+  coreSlot: number,
+): CombatUnit[] => {
+  if (coreSlot < 1 || coreSlot > 15) return []
+  return [...candidates]
+    .filter((unit) => {
+      const attemptSlot = formationSlot(unit)
+      return range.matrix[attemptSlot - 1]?.[coreSlot - 1] === 1
+        || (range.targetMode === '目标' && attemptSlot === coreSlot)
+    })
+    .sort(byFormationSlot)
 }
 
-const FORMATION_ROWS: FormationRow[] = [0, 1, 2]
-const FORMATION_COLS: FormationColumn[] = [0, 1, 2, 3, 4]
-
-/** 3×5 阵上第一个空格（上路起、前列起）；满员返回 null */
+/** 原版固定优先序中的第一个空阵位；满员返回 null。 */
 export const firstEmptySlot = (units: CombatUnit[]): { row: FormationRow; col: FormationColumn } | null => {
-  const occupied = new Set(
-    units.filter((unit) => unit.alive).map((unit) => `${unit.row}-${unit.col}`),
-  )
-  for (const row of FORMATION_ROWS) {
-    for (const col of FORMATION_COLS) {
-      if (!occupied.has(`${row}-${col}`)) return { row, col }
-    }
-  }
-  return null
+  const occupied = new Set(units.filter((unit) => unit.alive).map(formationSlot))
+  const slot = SUMMON_EMPTY_SLOT_PRIORITY.find((candidate) => !occupied.has(candidate))
+  return slot === undefined ? null : slotCoordinates(slot)
 }

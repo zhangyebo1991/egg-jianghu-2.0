@@ -1,5 +1,5 @@
 import { SX } from './attribute-ids'
-import { buffAttributeBonus, isControlled } from './statuses'
+import { buffAttributeBonus } from './statuses'
 import type { CombatUnit } from './types'
 
 export const COMBAT_TICK_MS = 100
@@ -23,22 +23,4 @@ export const advanceGaugeAndCooldowns = (unit: CombatUnit, elapsedMs = COMBAT_TI
     const key = Number(id)
     unit.cooldowns[key] = Math.max(0, unit.cooldowns[key] - safeElapsed)
   }
-}
-
-export const readyOrder = (units: CombatUnit[]): CombatUnit[] => units
-  .filter((unit) => unit.alive && unit.gauge >= 1000 && !isControlled(unit))
-  .sort((left, right) =>
-    (right.gauge - left.gauge)
-    || (right.effectiveAgility - left.effectiveAgility)
-    || (left.formationOrder - right.formationOrder),
-  )
-
-export const advanceCombatTime = (units: CombatUnit[], tickCount = 1): CombatUnit[] => {
-  const count = Math.max(0, Math.floor(tickCount))
-  for (let tick = 0; tick < count; tick += 1) {
-    for (const unit of units) {
-      if (unit.alive) advanceGaugeAndCooldowns(unit, COMBAT_TICK_MS)
-    }
-  }
-  return readyOrder(units)
 }

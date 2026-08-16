@@ -1,4 +1,5 @@
 import type { CombatEvent } from '../combat/types'
+import { canonicalEnemyId } from '../content/enemy-names'
 import { addCareerExperience } from './careers'
 import { grantKillLoot } from './loot'
 import { applyKillToQuests } from './quests'
@@ -46,19 +47,20 @@ export const settleCombatEvent = (
 ): CombatSettlementResult => {
   if (event.type !== 'enemy-defeated') return { needsSave: false, addedEquipmentUids: [] }
 
-  grantKillProgress(state, event)
+  const settledEvent = { ...event, enemyId: canonicalEnemyId(event.enemyId) }
+  grantKillProgress(state, settledEvent)
   applyKillToQuests(state, {
-    enemyId: event.enemyId,
-    rank: event.rank,
-    bossId: event.rank === 'boss' ? event.enemyId : null,
+    enemyId: settledEvent.enemyId,
+    rank: settledEvent.rank,
+    bossId: settledEvent.rank === 'boss' ? settledEvent.enemyId : null,
   })
   const addedEquipmentUids = grantKillLoot(state, {
-    worldId: event.worldId,
-    difficulty: event.difficulty ?? 1,
-    stage: event.stage,
-    rank: event.rank,
-    seed: event.seed,
-    enemyId: event.enemyId,
+    worldId: settledEvent.worldId,
+    difficulty: settledEvent.difficulty ?? 1,
+    stage: settledEvent.stage,
+    rank: settledEvent.rank,
+    seed: settledEvent.seed,
+    enemyId: settledEvent.enemyId,
   })
   return { needsSave: true, addedEquipmentUids }
 }

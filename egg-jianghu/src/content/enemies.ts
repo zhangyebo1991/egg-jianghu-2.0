@@ -1,11 +1,11 @@
 // 本文件由 scripts/generate-zhutian-enemies.mjs 从《诸天刷宝录》解包数据生成，请勿手改。
-// 数据源：sq.json（地点 → 5 小怪 + 1 首领）、dr.json（怪物图鉴）、drsx.json（六维成长模板）、js.json（首领四技能）、zy.json（职业普攻）。
+// 数据源：sq.json（地点 → 5 小怪 + 1 首领）、dr.json（怪物图鉴）、drsx.json（六维成长模板）、js.json（首领四技能）、zy.json（职业普攻）、zx.json（波次阵型）。
 
 export interface EnemyDefinition {
   /** 原版 dr 图鉴 id，同时是立绘文件名 zt_{drId}.webp */
   drId: number
   name: string
-  /** 六维成长系数（生命/物攻/物防/法防/法攻/速度，基准 100），推断自诸天 drsx 模板 */
+  /** 六维成长系数（生命/速度/物攻/物防/法攻/法防，基准 100），对应 sx6..11 */
   growth: readonly [number, number, number, number, number, number]
   /** 普攻技能 id（jn 表）：小怪按 dr 模板职业、首领按 js 职业 */
   attackSkillId: number
@@ -14,15 +14,51 @@ export interface EnemyDefinition {
 }
 
 export interface StageEnemyGroup {
+  /** sq 原始行号，参与普通战斗难度系数 */
+  locationId: number
   /** 本关 5 种普通小怪 */
   mobs: readonly [EnemyDefinition, EnemyDefinition, EnemyDefinition, EnemyDefinition, EnemyDefinition]
   /** 本关首领 */
   boss: EnemyDefinition
 }
 
+export interface EnemyFormationEntry {
+  /** 单边本地阵位 1..15 */
+  localPosition: number
+  /** 1..5 为本关小怪序号，6 为首领 */
+  enemyIndex: number
+}
+
+export const ENEMY_FORMATIONS: Readonly<Record<number, readonly EnemyFormationEntry[]>> = {
+  1: [{ localPosition: 7, enemyIndex: 4 }, { localPosition: 9, enemyIndex: 1 }],
+  2: [{ localPosition: 2, enemyIndex: 2 }, { localPosition: 7, enemyIndex: 5 }, { localPosition: 9, enemyIndex: 3 }],
+  3: [{ localPosition: 2, enemyIndex: 4 }, { localPosition: 4, enemyIndex: 1 }, { localPosition: 10, enemyIndex: 3 }, { localPosition: 12, enemyIndex: 4 }, { localPosition: 14, enemyIndex: 1 }],
+  4: [{ localPosition: 3, enemyIndex: 2 }, { localPosition: 5, enemyIndex: 1 }, { localPosition: 7, enemyIndex: 5 }, { localPosition: 13, enemyIndex: 2 }, { localPosition: 15, enemyIndex: 1 }],
+  5: [{ localPosition: 1, enemyIndex: 5 }, { localPosition: 4, enemyIndex: 3 }, { localPosition: 7, enemyIndex: 4 }, { localPosition: 11, enemyIndex: 5 }, { localPosition: 14, enemyIndex: 1 }],
+  6: [{ localPosition: 1, enemyIndex: 4 }, { localPosition: 3, enemyIndex: 3 }, { localPosition: 8, enemyIndex: 1 }, { localPosition: 11, enemyIndex: 2 }, { localPosition: 13, enemyIndex: 3 }],
+  7: [{ localPosition: 2, enemyIndex: 2 }, { localPosition: 3, enemyIndex: 3 }, { localPosition: 10, enemyIndex: 1 }, { localPosition: 12, enemyIndex: 2 }, { localPosition: 13, enemyIndex: 3 }],
+  8: [{ localPosition: 4, enemyIndex: 3 }, { localPosition: 6, enemyIndex: 4 }, { localPosition: 7, enemyIndex: 5 }, { localPosition: 9, enemyIndex: 1 }, { localPosition: 14, enemyIndex: 3 }],
+  9: [{ localPosition: 8, enemyIndex: 2 }, { localPosition: 9, enemyIndex: 1 }, { localPosition: 11, enemyIndex: 5 }, { localPosition: 14, enemyIndex: 2 }, { localPosition: 15, enemyIndex: 1 }],
+  10: [{ localPosition: 3, enemyIndex: 3 }, { localPosition: 4, enemyIndex: 1 }, { localPosition: 6, enemyIndex: 5 }, { localPosition: 8, enemyIndex: 4 }, { localPosition: 10, enemyIndex: 1 }],
+  11: [{ localPosition: 1, enemyIndex: 5 }, { localPosition: 2, enemyIndex: 2 }, { localPosition: 6, enemyIndex: 4 }, { localPosition: 7, enemyIndex: 2 }, { localPosition: 10, enemyIndex: 1 }],
+  12: [{ localPosition: 5, enemyIndex: 3 }, { localPosition: 6, enemyIndex: 2 }, { localPosition: 7, enemyIndex: 5 }, { localPosition: 10, enemyIndex: 1 }, { localPosition: 15, enemyIndex: 3 }],
+  13: [{ localPosition: 3, enemyIndex: 4 }, { localPosition: 4, enemyIndex: 3 }, { localPosition: 6, enemyIndex: 2 }, { localPosition: 8, enemyIndex: 5 }, { localPosition: 10, enemyIndex: 3 }],
+  14: [{ localPosition: 7, enemyIndex: 2 }, { localPosition: 9, enemyIndex: 1 }, { localPosition: 11, enemyIndex: 4 }, { localPosition: 13, enemyIndex: 2 }, { localPosition: 15, enemyIndex: 3 }],
+  15: [{ localPosition: 7, enemyIndex: 5 }, { localPosition: 9, enemyIndex: 4 }, { localPosition: 11, enemyIndex: 2 }, { localPosition: 13, enemyIndex: 5 }, { localPosition: 14, enemyIndex: 3 }],
+  16: [{ localPosition: 2, enemyIndex: 2 }, { localPosition: 5, enemyIndex: 3 }, { localPosition: 10, enemyIndex: 3 }, { localPosition: 12, enemyIndex: 4 }, { localPosition: 15, enemyIndex: 1 }],
+  17: [{ localPosition: 3, enemyIndex: 1 }, { localPosition: 6, enemyIndex: 4 }, { localPosition: 9, enemyIndex: 3 }, { localPosition: 11, enemyIndex: 2 }, { localPosition: 14, enemyIndex: 3 }],
+  18: [{ localPosition: 6, enemyIndex: 4 }, { localPosition: 7, enemyIndex: 5 }, { localPosition: 9, enemyIndex: 3 }, { localPosition: 11, enemyIndex: 2 }, { localPosition: 15, enemyIndex: 1 }],
+  19: [{ localPosition: 3, enemyIndex: 2 }, { localPosition: 5, enemyIndex: 1 }, { localPosition: 7, enemyIndex: 6 }, { localPosition: 9, enemyIndex: 2 }, { localPosition: 13, enemyIndex: 2 }, { localPosition: 15, enemyIndex: 1 }],
+  20: [{ localPosition: 4, enemyIndex: 4 }, { localPosition: 5, enemyIndex: 3 }, { localPosition: 7, enemyIndex: 6 }, { localPosition: 10, enemyIndex: 3 }, { localPosition: 14, enemyIndex: 4 }, { localPosition: 15, enemyIndex: 3 }],
+  21: [{ localPosition: 4, enemyIndex: 5 }, { localPosition: 5, enemyIndex: 1 }, { localPosition: 7, enemyIndex: 6 }, { localPosition: 10, enemyIndex: 1 }, { localPosition: 14, enemyIndex: 5 }, { localPosition: 15, enemyIndex: 1 }],
+  22: [{ localPosition: 4, enemyIndex: 5 }, { localPosition: 5, enemyIndex: 3 }, { localPosition: 7, enemyIndex: 6 }, { localPosition: 9, enemyIndex: 5 }, { localPosition: 14, enemyIndex: 5 }, { localPosition: 15, enemyIndex: 3 }],
+  23: [{ localPosition: 4, enemyIndex: 2 }, { localPosition: 5, enemyIndex: 4 }, { localPosition: 7, enemyIndex: 6 }, { localPosition: 9, enemyIndex: 4 }, { localPosition: 14, enemyIndex: 2 }, { localPosition: 15, enemyIndex: 4 }],
+}
+
 export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   // world_01 第 1 关 · 黄巾起义
   'world_01:1': {
+    locationId: 1,
     mobs: [
       { drId: 1, name: '黄巾战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 2, name: '随军参谋', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -34,6 +70,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 2 关 · 联军讨董
   'world_01:2': {
+    locationId: 2,
     mobs: [
       { drId: 6, name: '土匪豪强', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 7, name: '奸佞乡官', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -45,6 +82,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 3 关 · 濮阳之战
   'world_01:3': {
+    locationId: 3,
     mobs: [
       { drId: 1, name: '黄巾战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 7, name: '奸佞乡官', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -56,6 +94,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 4 关 · 新野之战
   'world_01:4': {
+    locationId: 4,
     mobs: [
       { drId: 6, name: '土匪豪强', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 2, name: '随军参谋', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -67,6 +106,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 5 关 · 会师江夏
   'world_01:5': {
+    locationId: 5,
     mobs: [
       { drId: 1, name: '黄巾战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 2, name: '随军参谋', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -78,6 +118,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 6 关 · 刮骨疗毒
   'world_01:6': {
+    locationId: 6,
     mobs: [
       { drId: 6, name: '土匪豪强', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 7, name: '奸佞乡官', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -89,6 +130,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 7 关 · 败走麦城
   'world_01:7': {
+    locationId: 7,
     mobs: [
       { drId: 1, name: '黄巾战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 2, name: '随军参谋', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -100,6 +142,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 8 关 · 夷陵之战
   'world_01:8': {
+    locationId: 8,
     mobs: [
       { drId: 6, name: '土匪豪强', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 7, name: '奸佞乡官', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -111,6 +154,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 9 关 · 濡须口战
   'world_01:9': {
+    locationId: 9,
     mobs: [
       { drId: 6, name: '土匪豪强', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 2, name: '随军参谋', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -122,6 +166,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_01 第 10 关 · 六出祁山
   'world_01:10': {
+    locationId: 10,
     mobs: [
       { drId: 1, name: '黄巾战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 7, name: '奸佞乡官', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -133,6 +178,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 1 关 · 丐帮内乱
   'world_02:1': {
+    locationId: 11,
     mobs: [
       { drId: 31, name: '青城弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 32, name: '武当弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -144,6 +190,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 2 关 · 聚义山庄
   'world_02:2': {
+    locationId: 12,
     mobs: [
       { drId: 36, name: '苍山弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 37, name: '嵩山弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -155,6 +202,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 3 关 · 少室山下
   'world_02:3': {
+    locationId: 13,
     mobs: [
       { drId: 31, name: '青城弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 37, name: '嵩山弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -166,6 +214,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 4 关 · 巫山云雨
   'world_02:4': {
+    locationId: 14,
     mobs: [
       { drId: 36, name: '苍山弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 32, name: '武当弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -177,6 +226,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 5 关 · 绝情山谷
   'world_02:5': {
+    locationId: 15,
     mobs: [
       { drId: 31, name: '青城弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 32, name: '武当弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -188,6 +238,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 6 关 · 华山崖壁
   'world_02:6': {
+    locationId: 16,
     mobs: [
       { drId: 36, name: '苍山弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 37, name: '嵩山弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -199,6 +250,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 7 关 · 雁门山麓
   'world_02:7': {
+    locationId: 17,
     mobs: [
       { drId: 31, name: '青城弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 32, name: '武当弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -210,6 +262,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 8 关 · 西湖湖畔
   'world_02:8': {
+    locationId: 18,
     mobs: [
       { drId: 36, name: '苍山弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 37, name: '嵩山弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -221,6 +274,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 9 关 · 英雄大会
   'world_02:9': {
+    locationId: 19,
     mobs: [
       { drId: 36, name: '苍山弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 32, name: '武当弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -232,6 +286,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_02 第 10 关 · 海外孤岛
   'world_02:10': {
+    locationId: 20,
     mobs: [
       { drId: 31, name: '青城弟子', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 37, name: '嵩山弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -243,6 +298,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 1 关 · 东北深山
   'world_03:1': {
+    locationId: 21,
     mobs: [
       { drId: 41, name: '摸金劲敌', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 42, name: '护宝猛士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -254,6 +310,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 2 关 · 太行秘穴
   'world_03:2': {
+    locationId: 22,
     mobs: [
       { drId: 46, name: '阻盗强民', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 47, name: '护陵硬汉', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -265,6 +322,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 3 关 · 流沙古墓
   'world_03:3': {
+    locationId: 23,
     mobs: [
       { drId: 41, name: '摸金劲敌', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 47, name: '护陵硬汉', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -276,6 +334,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 4 关 · 海底墓葬
   'world_03:4': {
+    locationId: 24,
     mobs: [
       { drId: 46, name: '阻盗强民', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 42, name: '护宝猛士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -287,6 +346,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 5 关 · 湘西地宫
   'world_03:5': {
+    locationId: 25,
     mobs: [
       { drId: 41, name: '摸金劲敌', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 42, name: '护宝猛士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -298,6 +358,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 6 关 · 云南虫谷
   'world_03:6': {
+    locationId: 26,
     mobs: [
       { drId: 46, name: '阻盗强民', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 47, name: '护陵硬汉', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -309,6 +370,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 7 关 · 巴蜀棺崖
   'world_03:7': {
+    locationId: 27,
     mobs: [
       { drId: 41, name: '摸金劲敌', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 42, name: '护宝猛士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -320,6 +382,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 8 关 · 楼兰遗址
   'world_03:8': {
+    locationId: 28,
     mobs: [
       { drId: 46, name: '阻盗强民', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 47, name: '护陵硬汉', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -331,6 +394,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 9 关 · 秦岭古墓
   'world_03:9': {
+    locationId: 29,
     mobs: [
       { drId: 46, name: '阻盗强民', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 42, name: '护宝猛士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -342,6 +406,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_03 第 10 关 · 昆仑雪山
   'world_03:10': {
+    locationId: 30,
     mobs: [
       { drId: 41, name: '摸金劲敌', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 47, name: '护陵硬汉', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -353,6 +418,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 1 关 · 尼西亚
   'world_04:1': {
+    locationId: 31,
     mobs: [
       { drId: 51, name: '无畏骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 52, name: '狂暴骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -364,6 +430,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 2 关 · 多里列
   'world_04:2': {
+    locationId: 32,
     mobs: [
       { drId: 56, name: '暗影骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 57, name: '钢铁骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -375,6 +442,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 3 关 · 安条克
   'world_04:3': {
+    locationId: 33,
     mobs: [
       { drId: 51, name: '无畏骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 57, name: '钢铁骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -386,6 +454,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 4 关 · 的黎波里
   'world_04:4': {
+    locationId: 34,
     mobs: [
       { drId: 56, name: '暗影骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 52, name: '狂暴骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -397,6 +466,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 5 关 · 开罗
   'world_04:5': {
+    locationId: 35,
     mobs: [
       { drId: 51, name: '无畏骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 52, name: '狂暴骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -408,6 +478,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 6 关 · 安卡拉
   'world_04:6': {
+    locationId: 36,
     mobs: [
       { drId: 56, name: '暗影骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 57, name: '钢铁骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -419,6 +490,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 7 关 · 阿克萨
   'world_04:7': {
+    locationId: 37,
     mobs: [
       { drId: 51, name: '无畏骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 52, name: '狂暴骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -430,6 +502,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 8 关 · 安提瓦利
   'world_04:8': {
+    locationId: 38,
     mobs: [
       { drId: 56, name: '暗影骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 57, name: '钢铁骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -441,6 +514,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 9 关 · 图尔库
   'world_04:9': {
+    locationId: 39,
     mobs: [
       { drId: 56, name: '暗影骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 52, name: '狂暴骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -452,6 +526,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_04 第 10 关 · 特拉布宗
   'world_04:10': {
+    locationId: 40,
     mobs: [
       { drId: 51, name: '无畏骑士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 57, name: '钢铁骑士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -463,6 +538,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 1 关 · 盂兰会
   'world_05:1': {
+    locationId: 41,
     mobs: [
       { drId: 61, name: '噬魂鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 62, name: '迷心鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -474,6 +550,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 2 关 · 上京路
   'world_05:2': {
+    locationId: 42,
     mobs: [
       { drId: 66, name: '恶念鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 67, name: '魅人鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -485,6 +562,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 3 关 · 蓬莱岛
   'world_05:3': {
+    locationId: 43,
     mobs: [
       { drId: 61, name: '噬魂鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 67, name: '魅人鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -496,6 +574,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 4 关 · 黑风山
   'world_05:4': {
+    locationId: 44,
     mobs: [
       { drId: 66, name: '恶念鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 62, name: '迷心鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -507,6 +586,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 5 关 · 鬼门关
   'world_05:5': {
+    locationId: 45,
     mobs: [
       { drId: 61, name: '噬魂鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 62, name: '迷心鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -518,6 +598,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 6 关 · 上清山
   'world_05:6': {
+    locationId: 46,
     mobs: [
       { drId: 66, name: '恶念鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 67, name: '魅人鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -529,6 +610,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 7 关 · 青丘岭
   'world_05:7': {
+    locationId: 47,
     mobs: [
       { drId: 61, name: '噬魂鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 62, name: '迷心鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -540,6 +622,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 8 关 · 桃花谷
   'world_05:8': {
+    locationId: 48,
     mobs: [
       { drId: 66, name: '恶念鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 67, name: '魅人鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -551,6 +634,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 9 关 · 罗刹海
   'world_05:9': {
+    locationId: 49,
     mobs: [
       { drId: 66, name: '恶念鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 62, name: '迷心鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -562,6 +646,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_05 第 10 关 · 幽冥谷
   'world_05:10': {
+    locationId: 50,
     mobs: [
       { drId: 61, name: '噬魂鬼', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 67, name: '魅人鬼', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -573,6 +658,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 1 关 · 桶狭间战
   'world_06:1': {
+    locationId: 51,
     mobs: [
       { drId: 71, name: '萨摩武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 72, name: '长州武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -584,6 +670,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 2 关 · 川中岛战
   'world_06:2': {
+    locationId: 52,
     mobs: [
       { drId: 76, name: '甲斐武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 77, name: '越后武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -595,6 +682,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 3 关 · 姉川合战
   'world_06:3': {
+    locationId: 53,
     mobs: [
       { drId: 71, name: '萨摩武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 77, name: '越后武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -606,6 +694,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 4 关 · 三方原战
   'world_06:4': {
+    locationId: 54,
     mobs: [
       { drId: 76, name: '甲斐武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 72, name: '长州武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -617,6 +706,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 5 关 · 长筱合战
   'world_06:5': {
+    locationId: 55,
     mobs: [
       { drId: 71, name: '萨摩武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 72, name: '长州武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -628,6 +718,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 6 关 · 贱岳合战
   'world_06:6': {
+    locationId: 56,
     mobs: [
       { drId: 76, name: '甲斐武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 77, name: '越后武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -639,6 +730,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 7 关 · 山崎合战
   'world_06:7': {
+    locationId: 57,
     mobs: [
       { drId: 71, name: '萨摩武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 72, name: '长州武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -650,6 +742,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 8 关 · 长久手战
   'world_06:8': {
+    locationId: 58,
     mobs: [
       { drId: 76, name: '甲斐武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 77, name: '越后武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -661,6 +754,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 9 关 · 关原合战
   'world_06:9': {
+    locationId: 59,
     mobs: [
       { drId: 76, name: '甲斐武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 72, name: '长州武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -672,6 +766,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_06 第 10 关 · 大阪冬阵
   'world_06:10': {
+    locationId: 60,
     mobs: [
       { drId: 71, name: '萨摩武士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 77, name: '越后武士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -683,6 +778,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 1 关 · 闪击波兰
   'world_07:1': {
+    locationId: 61,
     mobs: [
       { drId: 81, name: '突击兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 82, name: '机枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -694,6 +790,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 2 关 · 敦刻尔克
   'world_07:2': {
+    locationId: 62,
     mobs: [
       { drId: 86, name: '冲锋兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 87, name: '步枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -705,6 +802,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 3 关 · 巴巴罗萨
   'world_07:3': {
+    locationId: 63,
     mobs: [
       { drId: 81, name: '突击兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 87, name: '步枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -716,6 +814,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 4 关 · 基辅战役
   'world_07:4': {
+    locationId: 64,
     mobs: [
       { drId: 86, name: '冲锋兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 82, name: '机枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -727,6 +826,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 5 关 · 列宁格勒
   'world_07:5': {
+    locationId: 65,
     mobs: [
       { drId: 81, name: '突击兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 82, name: '机枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -738,6 +838,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 6 关 · 斯大林格勒
   'world_07:6': {
+    locationId: 66,
     mobs: [
       { drId: 86, name: '冲锋兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 87, name: '步枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -749,6 +850,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 7 关 · 库尔斯克
   'world_07:7': {
+    locationId: 67,
     mobs: [
       { drId: 81, name: '突击兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 82, name: '机枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -760,6 +862,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 8 关 · 诺曼底
   'world_07:8': {
+    locationId: 68,
     mobs: [
       { drId: 86, name: '冲锋兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 87, name: '步枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -771,6 +874,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 9 关 · 阿登战役
   'world_07:9': {
+    locationId: 69,
     mobs: [
       { drId: 86, name: '冲锋兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 82, name: '机枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -782,6 +886,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_07 第 10 关 · 柏林战役
   'world_07:10': {
+    locationId: 70,
     mobs: [
       { drId: 81, name: '突击兵', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 87, name: '步枪兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -793,6 +898,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 1 关 · 青鸾仙岛
   'world_08:1': {
+    locationId: 71,
     mobs: [
       { drId: 91, name: '毒修士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 92, name: '邪刀客', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -804,6 +910,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 2 关 · 苍云秘洞
   'world_08:2': {
+    locationId: 72,
     mobs: [
       { drId: 96, name: '毒蛊人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 97, name: '血刀卫', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -815,6 +922,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 3 关 · 幽影魔林
   'world_08:3': {
+    locationId: 73,
     mobs: [
       { drId: 91, name: '毒修士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 97, name: '血刀卫', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -826,6 +934,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 4 关 · 紫炎灵峰
   'world_08:4': {
+    locationId: 74,
     mobs: [
       { drId: 96, name: '毒蛊人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 92, name: '邪刀客', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -837,6 +946,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 5 关 · 灵霄仙谷
   'world_08:5': {
+    locationId: 75,
     mobs: [
       { drId: 91, name: '毒修士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 92, name: '邪刀客', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -848,6 +958,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 6 关 · 皓月天池
   'world_08:6': {
+    locationId: 76,
     mobs: [
       { drId: 96, name: '毒蛊人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 97, name: '血刀卫', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -859,6 +970,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 7 关 · 玄冰剑冢
   'world_08:7': {
+    locationId: 77,
     mobs: [
       { drId: 91, name: '毒修士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 92, name: '邪刀客', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -870,6 +982,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 8 关 · 炎阳圣地
   'world_08:8': {
+    locationId: 78,
     mobs: [
       { drId: 96, name: '毒蛊人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 97, name: '血刀卫', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -881,6 +994,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 9 关 · 灵风峡谷
   'world_08:9': {
+    locationId: 79,
     mobs: [
       { drId: 96, name: '毒蛊人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 92, name: '邪刀客', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -892,6 +1006,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_08 第 10 关 · 翠羽仙林
   'world_08:10': {
+    locationId: 80,
     mobs: [
       { drId: 91, name: '毒修士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 97, name: '血刀卫', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -903,6 +1018,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 1 关 · 阿德拉行星
   'world_09:1': {
+    locationId: 81,
     mobs: [
       { drId: 101, name: '暗星卫卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 102, name: '镭影战兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -914,6 +1030,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 2 关 · 塞伦诺星
   'world_09:2': {
+    locationId: 82,
     mobs: [
       { drId: 106, name: '风暴劲卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 107, name: '磁能卫士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -925,6 +1042,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 3 关 · 维兰星
   'world_09:3': {
+    locationId: 83,
     mobs: [
       { drId: 101, name: '暗星卫卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 107, name: '磁能卫士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -936,6 +1054,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 4 关 · 泽洛斯星
   'world_09:4': {
+    locationId: 84,
     mobs: [
       { drId: 106, name: '风暴劲卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 102, name: '镭影战兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -947,6 +1066,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 5 关 · 凯拉星
   'world_09:5': {
+    locationId: 85,
     mobs: [
       { drId: 101, name: '暗星卫卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 102, name: '镭影战兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -958,6 +1078,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 6 关 · 奥瑞恩星
   'world_09:6': {
+    locationId: 86,
     mobs: [
       { drId: 106, name: '风暴劲卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 107, name: '磁能卫士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -969,6 +1090,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 7 关 · 菲尼克斯星
   'world_09:7': {
+    locationId: 87,
     mobs: [
       { drId: 101, name: '暗星卫卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 102, name: '镭影战兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -980,6 +1102,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 8 关 · 塔尔西斯星
   'world_09:8': {
+    locationId: 88,
     mobs: [
       { drId: 106, name: '风暴劲卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 107, name: '磁能卫士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -991,6 +1114,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 9 关 · 艾瑞丹星
   'world_09:9': {
+    locationId: 89,
     mobs: [
       { drId: 106, name: '风暴劲卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 102, name: '镭影战兵', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1002,6 +1126,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_09 第 10 关 · 伽马星
   'world_09:10': {
+    locationId: 90,
     mobs: [
       { drId: 101, name: '暗星卫卒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 107, name: '磁能卫士', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1013,6 +1138,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 1 关 · 焚炎谷
   'world_10:1': {
+    locationId: 91,
     mobs: [
       { drId: 111, name: '星陨门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 112, name: '紫阳弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1024,6 +1150,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 2 关 · 寒霜岭
   'world_10:2': {
+    locationId: 92,
     mobs: [
       { drId: 116, name: '紫雷门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 117, name: '焚天弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1035,6 +1162,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 3 关 · 雷陨崖
   'world_10:3': {
+    locationId: 93,
     mobs: [
       { drId: 111, name: '星陨门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 117, name: '焚天弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1046,6 +1174,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 4 关 · 风翔原
   'world_10:4': {
+    locationId: 94,
     mobs: [
       { drId: 116, name: '紫雷门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 112, name: '紫阳弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1057,6 +1186,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 5 关 · 灵木林
   'world_10:5': {
+    locationId: 95,
     mobs: [
       { drId: 111, name: '星陨门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 112, name: '紫阳弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1068,6 +1198,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 6 关 · 暗魔窟
   'world_10:6': {
+    locationId: 96,
     mobs: [
       { drId: 116, name: '紫雷门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 117, name: '焚天弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1079,6 +1210,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 7 关 · 金锐峰
   'world_10:7': {
+    locationId: 97,
     mobs: [
       { drId: 111, name: '星陨门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 112, name: '紫阳弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1090,6 +1222,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 8 关 · 水泽湖
   'world_10:8': {
+    locationId: 98,
     mobs: [
       { drId: 116, name: '紫雷门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 117, name: '焚天弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1101,6 +1234,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 9 关 · 岩罡山
   'world_10:9': {
+    locationId: 99,
     mobs: [
       { drId: 116, name: '紫雷门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 112, name: '紫阳弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1112,6 +1246,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_10 第 10 关 · 幻雾谷
   'world_10:10': {
+    locationId: 100,
     mobs: [
       { drId: 111, name: '星陨门徒', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 117, name: '焚天弟子', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1123,6 +1258,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 1 关 · 幽影裂谷
   'world_11:1': {
+    locationId: 101,
     mobs: [
       { drId: 291, name: '兽族战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 292, name: '人类法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1134,6 +1270,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 2 关 · 熔火隘口
   'world_11:2': {
+    locationId: 102,
     mobs: [
       { drId: 296, name: '矮人战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 297, name: '德莱法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1145,6 +1282,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 3 关 · 霜语峰
   'world_11:3': {
+    locationId: 103,
     mobs: [
       { drId: 291, name: '兽族战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 297, name: '德莱法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1156,6 +1294,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 4 关 · 翡翠迷径
   'world_11:4': {
+    locationId: 104,
     mobs: [
       { drId: 296, name: '矮人战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 292, name: '人类法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1167,6 +1306,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 5 关 · 虚空礁
   'world_11:5': {
+    locationId: 105,
     mobs: [
       { drId: 291, name: '兽族战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 292, name: '人类法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1178,6 +1318,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 6 关 · 暮光圣所
   'world_11:6': {
+    locationId: 106,
     mobs: [
       { drId: 296, name: '矮人战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 297, name: '德莱法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1189,6 +1330,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 7 关 · 铁棘原
   'world_11:7': {
+    locationId: 107,
     mobs: [
       { drId: 291, name: '兽族战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 292, name: '人类法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1200,6 +1342,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 8 关 · 星陨台
   'world_11:8': {
+    locationId: 108,
     mobs: [
       { drId: 296, name: '矮人战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 297, name: '德莱法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1211,6 +1354,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 9 关 · 潮汐深渊
   'world_11:9': {
+    locationId: 109,
     mobs: [
       { drId: 296, name: '矮人战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 292, name: '人类法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1222,6 +1366,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_11 第 10 关 · 烬羽林
   'world_11:10': {
+    locationId: 110,
     mobs: [
       { drId: 291, name: '兽族战士', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 297, name: '德莱法师', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1233,6 +1378,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 1 关 · 英雄集结
   'world_12:1': {
+    locationId: 111,
     mobs: [
       { drId: 301, name: '机械异种', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 302, name: '鳄鱼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1244,6 +1390,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 2 关 · 超能觉醒
   'world_12:2': {
+    locationId: 112,
     mobs: [
       { drId: 306, name: '暗黑机甲', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 307, name: '变种狼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1255,6 +1402,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 3 关 · 无限序曲
   'world_12:3': {
+    locationId: 113,
     mobs: [
       { drId: 301, name: '机械异种', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 307, name: '变种狼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1266,6 +1414,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 4 关 · 神域陨落
   'world_12:4': {
+    locationId: 114,
     mobs: [
       { drId: 306, name: '暗黑机甲', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 302, name: '鳄鱼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1277,6 +1426,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 5 关 · 内战裂痕
   'world_12:5': {
+    locationId: 115,
     mobs: [
       { drId: 301, name: '机械异种', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 302, name: '鳄鱼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1288,6 +1438,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 6 关 · 量子狂潮
   'world_12:6': {
+    locationId: 116,
     mobs: [
       { drId: 306, name: '暗黑机甲', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 307, name: '变种狼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1299,6 +1450,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 7 关 · 终局计时
   'world_12:7': {
+    locationId: 117,
     mobs: [
       { drId: 301, name: '机械异种', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 302, name: '鳄鱼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1310,6 +1462,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 8 关 · 烁灭回声
   'world_12:8': {
+    locationId: 118,
     mobs: [
       { drId: 306, name: '暗黑机甲', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 307, name: '变种狼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1321,6 +1474,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 9 关 · 终焉之战
   'world_12:9': {
+    locationId: 119,
     mobs: [
       { drId: 306, name: '暗黑机甲', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 302, name: '鳄鱼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1332,6 +1486,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_12 第 10 关 · 传奇不灭
   'world_12:10': {
+    locationId: 120,
     mobs: [
       { drId: 301, name: '机械异种', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 307, name: '变种狼人', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
@@ -1343,6 +1498,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 1 关 · 白马佛寺
   'world_13:1': {
+    locationId: 121,
     mobs: [
       { drId: 311, name: '金狮鬃圣', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 312, name: '复眼蜈蚣', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1354,6 +1510,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 2 关 · 鹰渊化龙
   'world_13:2': {
+    locationId: 122,
     mobs: [
       { drId: 316, name: '土匪虎妖', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 317, name: '蜘蛛精后', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1365,6 +1522,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 3 关 · 高家老庄
   'world_13:3': {
+    locationId: 123,
     mobs: [
       { drId: 311, name: '金狮鬃圣', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 317, name: '蜘蛛精后', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1376,6 +1534,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 4 关 · 流沙天河
   'world_13:4': {
+    locationId: 124,
     mobs: [
       { drId: 316, name: '土匪虎妖', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 312, name: '复眼蜈蚣', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1387,6 +1546,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 5 关 · 翠云焰窟
   'world_13:5': {
+    locationId: 125,
     mobs: [
       { drId: 311, name: '金狮鬃圣', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 312, name: '复眼蜈蚣', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1398,6 +1558,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 6 关 · 积雷魔寨
   'world_13:6': {
+    locationId: 126,
     mobs: [
       { drId: 316, name: '土匪虎妖', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 317, name: '蜘蛛精后', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1409,6 +1570,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 7 关 · 三幻尸丘
   'world_13:7': {
+    locationId: 127,
     mobs: [
       { drId: 311, name: '金狮鬃圣', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 312, name: '复眼蜈蚣', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1420,6 +1582,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 8 关 · 火云妖市
   'world_13:8': {
+    locationId: 128,
     mobs: [
       { drId: 316, name: '土匪虎妖', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 317, name: '蜘蛛精后', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },
@@ -1431,6 +1594,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 9 关 · 莲花魔炉
   'world_13:9': {
+    locationId: 129,
     mobs: [
       { drId: 316, name: '土匪虎妖', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 6, skillIds: [] },
       { drId: 312, name: '复眼蜈蚣', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 2, skillIds: [] },
@@ -1442,6 +1606,7 @@ export const STAGE_ENEMIES: Readonly<Record<string, StageEnemyGroup>> = {
   },
   // world_13 第 10 关 · 小雷音寺
   'world_13:10': {
+    locationId: 130,
     mobs: [
       { drId: 311, name: '金狮鬃圣', growth: [110, 110, 120, 100, 80, 90], attackSkillId: 1, skillIds: [] },
       { drId: 317, name: '蜘蛛精后', growth: [90, 100, 80, 90, 130, 110], attackSkillId: 7, skillIds: [] },

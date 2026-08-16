@@ -22,12 +22,14 @@ const TIERS = {
   6: '五阶',
 }
 
+// zy 列 12..17 是六类职业基础系数，18..23 是对应的每级成长值。
+// 属性编码 1..6 依次用于：物攻、物防、法攻、法防、核心面板、治疗。
 const GROWTH_KEYS = [
   'physicalAttack',
-  'magicAttack',
-  'speed',
   'physicalDefense',
+  'magicAttack',
   'magicDefense',
+  'core',
   'heal',
 ]
 
@@ -50,6 +52,10 @@ for (let x = 1; x <= 41; x += 1) {
     key,
     Number(String(cell(x, 12 + index)).trim()) / 100,
   ]))
+  const levelGrowth = Object.fromEntries(GROWTH_KEYS.map((key, index) => [
+    key,
+    Number(String(cell(x, 18 + index)).trim()) / 1000,
+  ]))
   lines.push(`  {
     id: 'job_${x}',
     zyId: ${x},
@@ -60,11 +66,19 @@ for (let x = 1; x <= 41; x += 1) {
     skillTypeIds: [${skillTypeIds.join(', ')}],
     growth: {
       physicalAttack: ${growth.physicalAttack},
-      magicAttack: ${growth.magicAttack},
-      speed: ${growth.speed},
       physicalDefense: ${growth.physicalDefense},
+      magicAttack: ${growth.magicAttack},
       magicDefense: ${growth.magicDefense},
+      core: ${growth.core},
       heal: ${growth.heal},
+    },
+    levelGrowth: {
+      physicalAttack: ${levelGrowth.physicalAttack},
+      physicalDefense: ${levelGrowth.physicalDefense},
+      magicAttack: ${levelGrowth.magicAttack},
+      magicDefense: ${levelGrowth.magicDefense},
+      core: ${levelGrowth.core},
+      heal: ${levelGrowth.heal},
     },
     requirements: [${requirements.map((item) => `{ careerId: '${item.careerId}', level: ${item.level} }`).join(', ')}],
     basicAttackSkillId: ${Number(cell(x, 6))},
@@ -100,10 +114,10 @@ export interface CareerRequirement {
 
 export interface CareerGrowth {
   physicalAttack: number
-  magicAttack: number
-  speed: number
   physicalDefense: number
+  magicAttack: number
   magicDefense: number
+  core: number
   heal: number
 }
 
@@ -116,6 +130,7 @@ export interface CareerDefinition {
   rank: 1 | 2 | 3 | 4 | 5 | 6
   skillTypeIds: number[]
   growth: CareerGrowth
+  levelGrowth: CareerGrowth
   requirements: CareerRequirement[]
   basicAttackSkillId: number
 }
@@ -126,8 +141,28 @@ export const CAREERS: CareerDefinition[] = [
 ${lines.join(',\n')}
 ]
 
+export const CAREER_GROWTH_FIELDS: Array<{ id: keyof CareerGrowth; label: string }> = [
+  { id: 'physicalAttack', label: '物攻' },
+  { id: 'physicalDefense', label: '物防' },
+  { id: 'magicAttack', label: '法攻' },
+  { id: 'magicDefense', label: '法防' },
+  { id: 'core', label: '核心' },
+  { id: 'heal', label: '治疗' },
+]
+
 export const careerById = (id: string): CareerDefinition | undefined =>
   CAREERS.find((career) => career.id === id)
+
+export const careersInRank = (rank: CareerDefinition['rank']): CareerDefinition[] =>
+  CAREERS.filter((career) => career.rank === rank)
+
+export const careerCoefficientAtLevel = (
+  career: CareerDefinition,
+  field: keyof CareerGrowth,
+  level: number,
+): number => Math.round(
+  (career.growth[field] + Math.max(0, level - 1) * career.levelGrowth[field]) * 100,
+) / 100
 
 export const careerSkillTypeNames = (career: CareerDefinition): string[] =>
   career.skillTypeIds.map((id) => SKILL_TYPE_NAMES[id] ?? '未知')

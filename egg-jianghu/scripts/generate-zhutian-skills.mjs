@@ -1,19 +1,20 @@
 // 生成脚本：从诸天刷宝录解包数据导出战斗技能表、buff 表与召唤物（含立绘）
 // 用法：node scripts/generate-zhutian-skills.mjs
-// 前置：scripts/tmp/zhutian-pkg/ 已解出 jn/fw/buff/js/zy/sq/dr/data.json；tmp/zhutian-sheets/ 已解压合图
+// 前置：相邻《诸天刷宝录》_analysis/ 已导出原版数据；tmp/zhutian-sheets/ 已解压合图
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const PKG = join(HERE, 'tmp/zhutian-pkg')
+const ORIGINAL_ANALYSIS = join(HERE, '../../../诸天刷宝录/_analysis')
 const SHEET_DIR = join(HERE, 'tmp/zhutian-sheets')
 const ASSET_DIR = join(HERE, '../src/assets/enemies/zt')
 const SKILLS_FILE = join(HERE, '../src/content/skills.ts')
+const RANGES_FILE = join(HERE, '../src/content/skill-ranges.ts')
 const BUFFS_FILE = join(HERE, '../src/content/buffs.ts')
 
-const load = (name, root = PKG) => JSON.parse(readFileSync(join(root, `${name}.json`), 'utf8')).data.map((col) => col.map((cell) => cell[0]))
+const load = (name, root = ORIGINAL_ANALYSIS) => JSON.parse(readFileSync(join(root, `${name}.json`), 'utf8')).data.map((col) => col.map((cell) => cell[0]))
 
 const jn = load('jn')
 const fw = load('fw')
@@ -84,21 +85,6 @@ const BEHAVIORS = {
 
 const routeOf = (value) => value === '物理' ? 'external' : value === '法术' ? 'internal' : 'support'
 
-// fw 范围 → 形状：按类型 + 覆盖数近似（十字/九宫等统一为从主目标邻近扩散）
-const rangeOf = (skill, behavior) => {
-  if (behavior === 'passive') return { kind: 'self', count: 1 }
-  const fwRow = fw[skill[37]]
-  if (!fwRow) return { kind: 'single', count: 1 }
-  const count = Number(fwRow[20]) || 1
-  if (count >= 15) return { kind: 'all', count: 15 }
-  if (count <= 1) {
-    // 自身向行为（自身护盾/自身状态/自身治疗/自身加能）单格即施加给自己
-    if (['自身护盾', '自身状态', '自身治疗', '自身增加能量'].includes(String(skill[15]))) return { kind: 'self', count: 1 }
-    return { kind: 'single', count: 1 }
-  }
-  return { kind: 'spread', count }
-}
-
 const skills = []
 const advanceGaugeSamples = []
 for (const id of [...usedSkillIds].sort((a, b) => a - b)) {
@@ -110,10 +96,10 @@ for (const id of [...usedSkillIds].sort((a, b) => a - b)) {
     continue
   }
   const powerPercent = (typeof row[16] === 'number' && row[16] > 0 ? row[16] : Number(row[29])) || 100
-  const range = rangeOf(row, mapping.behavior)
   const skill = {
     id,
     name: String(row[1]),
+    originalBehavior: String(row[15]),
     behavior: mapping.behavior,
     targetSide: mapping.side,
     route: routeOf(String(row[26])),
@@ -122,15 +108,20 @@ for (const id of [...usedSkillIds].sort((a, b) => a - b)) {
     energyCost: Number(row[19]) || 0,
     cooldownMs: (Number(row[19]) || 0) * 4000,
     hits: Math.max(1, Number(row[36]) || 1),
-    rangeKind: range.kind,
-    rangeCount: range.count,
+    rangeId: Number(row[37]) || 0,
     reach: mapping.reach,
     skillCategory: Number(row[4]) || 0,
+    skillGroupId: Number(row[49]) || 0,
+    selfBuffId: typeof row[18] === 'number' && row[18] > 0 ? row[18] : null,
+    selfBuffStacks: typeof row[24] === 'number' && row[24] > 0 ? row[24] : 1,
     appliedBuffId: typeof row[21] === 'number' && row[21] > 0 ? row[21] : null,
     appliedBuffChance: typeof row[22] === 'number' && row[22] > 0 ? row[22] / 100 : null,
     appliedBuffStacks: typeof row[24] === 'number' && row[24] > 0 ? row[24] : 1,
     enhanceBuffId: typeof row[41] === 'number' && row[41] > 0 ? row[41] : null,
     enhancePerStack: typeof row[42] === 'number' ? row[42] : 0,
+    enhanceTarget: row[40] === '敌方' ? 'target' : 'actor',
+    enhanceConsumeStacks: typeof row[43] === 'number' && row[43] > 0 ? row[43] : 0,
+    reviveHpPercent: mapping.behavior === 'revive' ? Number(row[23]) || 0 : null,
     summonId: mapping.behavior === 'summon' ? Number(row[51]) || 0 : null,
     passiveAttributes: mapping.behavior === 'passive'
       ? [[row[8], row[9]], [row[10], row[11]]].filter(([sxId, value]) => typeof sxId === 'number' && sxId > 0 && typeof value === 'number' && value !== 0)
@@ -151,18 +142,18 @@ for (let x = 1; x < buff.length; x += 1) {
     .filter(([sxId, value]) => typeof sxId === 'number' && sxId > 0 && typeof value === 'number' && value !== 0)
   const desc = String(row[13] ?? '')
   const polarity = String(row[12]) === '增益' ? 'buff' : 'debuff'
+  const tickKind = desc.includes('每秒')
+    ? polarity === 'debuff' ? 'dot' : 'hot'
+    : null
   const kind = attributes.length > 0
     ? 'attribute'
-    : desc.includes('每秒') && polarity === 'debuff'
-      ? 'dot'
-      : desc.includes('每秒') && polarity === 'buff'
-        ? 'hot'
-        : 'marker'
+    : tickKind ?? 'marker'
   buffs.push({
     id: Number(row[0]),
     name: String(row[1]),
     polarity,
     kind,
+    tickKind,
     attributes,
     maxStacks: Math.max(1, Number(row[9]) || 1),
     durationMs: Math.max(1000, (Number(row[10]) || 1) * 1000),
@@ -172,7 +163,7 @@ for (let x = 1; x < buff.length; x += 1) {
 console.log('导出 buff 数：', buffs.length)
 
 // ---------- 召唤物 ----------
-// zh 列：0 id、1 名、3 形象 key、5-10 六维系数（生命/物攻/物防/法防/法攻/速度）、11 召唤时间秒、12 物攻系/法攻系
+// zh 列：0 id、1 名、3 形象 key/普攻技能、5-10 六维系数（生命/物攻/物防/法防/法攻/速度）、11 召唤时间秒、12 类型
 const summons = []
 for (let x = 1; x < zh.length; x += 1) {
   const row = zh[x]
@@ -181,6 +172,7 @@ for (let x = 1; x < zh.length; x += 1) {
     id: Number(row[0]),
     name: String(row[1]),
     imageKey: String(row[3]),
+    baseAttackId: Number(row[3]),
     coeffs: [row[5], row[6], row[7], row[8], row[9], row[10]].map((value) => Number(value) || 100),
     durationMs: (Number(row[11]) || 30) * 1000,
     route: String(row[12]).includes('法') ? 'internal' : 'external',
@@ -189,7 +181,7 @@ for (let x = 1; x < zh.length; x += 1) {
 console.log('召唤物：', summons.map((summon) => `${summon.id}=${summon.name}(形象${summon.imageKey})`).join(', '))
 
 // ---------- 召唤物立绘切图 ----------
-const data = JSON.parse(readFileSync(join(PKG, 'data.json'), 'utf8'))
+const data = JSON.parse(readFileSync(join(ORIGINAL_ANALYSIS, 'data.json'), 'utf8'))
 let objectNode = null
 const visit = (node) => {
   if (objectNode || node === null || typeof node !== 'object') return
@@ -243,6 +235,7 @@ const skillLiteral = (skill) => {
   const parts = [
     `id: ${skill.id}`,
     `name: ${quote(skill.name)}`,
+    `originalBehavior: ${quote(skill.originalBehavior)}`,
     `behavior: ${quote(skill.behavior)}`,
     `targetSide: ${quote(skill.targetSide)}`,
     `route: ${quote(skill.route)}`,
@@ -251,15 +244,24 @@ const skillLiteral = (skill) => {
     `energyCost: ${skill.energyCost}`,
     `cooldownMs: ${skill.cooldownMs}`,
     `hits: ${skill.hits}`,
-    `rangeKind: ${quote(skill.rangeKind)}`,
-    `rangeCount: ${skill.rangeCount}`,
+    `rangeId: ${skill.rangeId}`,
     `reach: ${quote(skill.reach)}`,
     `skillCategory: ${skill.skillCategory}`,
+    `skillGroupId: ${skill.skillGroupId}`,
   ]
+  if (skill.selfBuffId) parts.push(`selfBuffId: ${skill.selfBuffId}`, `selfBuffStacks: ${skill.selfBuffStacks}`)
   if (skill.appliedBuffId) {
     parts.push(`appliedBuffId: ${skill.appliedBuffId}`, `appliedBuffChance: ${skill.appliedBuffChance ?? 1}`, `appliedBuffStacks: ${skill.appliedBuffStacks}`)
   }
-  if (skill.enhanceBuffId) parts.push(`enhanceBuffId: ${skill.enhanceBuffId}`, `enhancePerStack: ${skill.enhancePerStack}`)
+  if (skill.enhanceBuffId) {
+    parts.push(
+      `enhanceBuffId: ${skill.enhanceBuffId}`,
+      `enhancePerStack: ${skill.enhancePerStack}`,
+      `enhanceTarget: ${quote(skill.enhanceTarget)}`,
+      `enhanceConsumeStacks: ${skill.enhanceConsumeStacks}`,
+    )
+  }
+  if (skill.reviveHpPercent) parts.push(`reviveHpPercent: ${skill.reviveHpPercent}`)
   if (skill.summonId) parts.push(`summonId: ${skill.summonId}`)
   if (skill.passiveAttributes.length) {
     parts.push(`passiveAttributes: [${skill.passiveAttributes.map(([sxId, value]) => `{ sxId: ${sxId}, value: ${value} }`).join(', ')}]`)
@@ -270,15 +272,15 @@ const skillLiteral = (skill) => {
 const skillLines = []
 skillLines.push('// 本文件由 scripts/generate-zhutian-skills.mjs 从《诸天刷宝录》解包数据生成，请勿手改。')
 skillLines.push('// 数据源：jn.json（技能）、fw.json（范围）、zh.json（召唤物）、zy.json（职业普攻）。')
-skillLines.push('// 范围翻译：单体/自身/全体保持原义，十字与九宫等按「主目标邻近扩散 N 格」近似。')
+skillLines.push('// 范围由 skill-ranges.ts 按原版 fw 矩阵逐阵位判定。')
 skillLines.push('')
 skillLines.push("export type SkillBehavior = 'attack' | 'heal' | 'shield' | 'status' | 'revive' | 'advance-gauge' | 'grant-energy' | 'summon' | 'passive'")
-skillLines.push("export type SkillRangeKind = 'single' | 'spread' | 'all' | 'self'")
-skillLines.push('')
 skillLines.push('export interface CombatSkillContent {')
 skillLines.push('  /** 原版 jn 表 id */')
 skillLines.push('  id: number')
 skillLines.push('  name: string')
+skillLines.push('  /** 原版 jn[15] 行为字符串，供自动技能条件原样判断。 */')
+skillLines.push('  originalBehavior: string')
 skillLines.push('  behavior: SkillBehavior')
 skillLines.push("  targetSide: 'enemy' | 'ally'")
 skillLines.push("  route: 'external' | 'internal' | 'support'")
@@ -289,18 +291,29 @@ skillLines.push('  powerPercent: number')
 skillLines.push('  /** 能量档 0-5；冷却 = 能量档 × 4 秒 */')
 skillLines.push('  energyCost: number')
 skillLines.push('  cooldownMs: number')
+skillLines.push('  /** 原版 jn 字段 36“分段数”，只写入子弹表现实例，不增加碰撞伤害次数。 */')
 skillLines.push('  hits: number')
-skillLines.push('  rangeKind: SkillRangeKind')
-skillLines.push('  rangeCount: number')
+skillLines.push('  /** 原版 jn[37] 范围类型；具体阵位矩阵见 skill-ranges.ts。 */')
+skillLines.push('  rangeId: number')
 skillLines.push("  reach: 'melee' | 'ranged'")
 skillLines.push('  /** 技能系（专精乘区 60+cat-1） */')
 skillLines.push('  skillCategory: number')
+skillLines.push('  /** 原版 jn[49] 技能组；威力属性 id = 152 + skillGroupId，0 表示无技能组。 */')
+skillLines.push('  skillGroupId: number')
+skillLines.push('  /** 原版 jn[18]/jn[24]：技能结算后给施法者附加的 buff 与层数。 */')
+skillLines.push('  selfBuffId?: number')
+skillLines.push('  selfBuffStacks?: number')
 skillLines.push('  appliedBuffId?: number')
 skillLines.push('  appliedBuffChance?: number')
 skillLines.push('  appliedBuffStacks?: number')
 skillLines.push('  /** 增效：施法者身上每层该 buff 提升伤害百分比 */')
 skillLines.push('  enhanceBuffId?: number')
 skillLines.push('  enhancePerStack?: number')
+skillLines.push("  enhanceTarget?: 'actor' | 'target'")
+skillLines.push('  /** 原版 jn[43]：结算后消耗的增效 buff 层数；99 表示清空。 */')
+skillLines.push('  enhanceConsumeStacks?: number')
+skillLines.push('  /** 原版 jn[23]：复活后生命百分比。 */')
+skillLines.push('  reviveHpPercent?: number')
 skillLines.push('  summonId?: number')
 skillLines.push('  passiveAttributes?: ReadonlyArray<{ sxId: number; value: number }>')
 skillLines.push('}')
@@ -315,6 +328,8 @@ skillLines.push('export interface SummonUnitContent {')
 skillLines.push('  /** 原版 zh 表 id，立绘文件 zt_s{id}.webp */')
 skillLines.push('  id: number')
 skillLines.push('  name: string')
+skillLines.push('  /** 原版 zh[3]：召唤物自动行动使用的技能。 */')
+skillLines.push('  baseAttackId: number')
 skillLines.push('  /** 六维系数（生命/物攻/物防/法防/法攻/速度，%），乘施法者面板 */')
 skillLines.push('  coeffs: readonly [number, number, number, number, number, number]')
 skillLines.push('  durationMs: number')
@@ -323,7 +338,7 @@ skillLines.push('}')
 skillLines.push('')
 skillLines.push('export const SUMMON_UNITS: Readonly<Record<number, SummonUnitContent>> = {')
 for (const summon of summons) {
-  skillLines.push(`  ${summon.id}: { id: ${summon.id}, name: ${quote(summon.name)}, coeffs: [${summon.coeffs.join(', ')}], durationMs: ${summon.durationMs}, route: ${quote(summon.route)} },`)
+  skillLines.push(`  ${summon.id}: { id: ${summon.id}, name: ${quote(summon.name)}, baseAttackId: ${summon.baseAttackId}, coeffs: [${summon.coeffs.join(', ')}], durationMs: ${summon.durationMs}, route: ${quote(summon.route)} },`)
 }
 skillLines.push('}')
 skillLines.push('')
@@ -342,6 +357,40 @@ skillLines.push('')
 writeFileSync(SKILLS_FILE, skillLines.join('\n'), 'utf8')
 console.log('技能表已生成：', SKILLS_FILE)
 
+// ---------- 输出原版技能范围矩阵 ----------
+// fw 查询公式（原版“技能范围阵位号”）：fw[尝试阵位 + 15 × (范围类型 - 1), 核心阵位]
+const rangeLines = []
+rangeLines.push('// 本文件由 scripts/generate-zhutian-skills.mjs 从《诸天刷宝录》fw.json 生成，请勿手改。')
+rangeLines.push('// 每个范围类型包含 15 行；行是尝试阵位 1..15，列是核心阵位 1..15。')
+rangeLines.push('')
+rangeLines.push("export type SkillRangeTargetMode = '目标' | '地面' | '自身' | '随机' | ''")
+rangeLines.push('')
+rangeLines.push('export interface SkillRangeContent {')
+rangeLines.push('  id: number')
+rangeLines.push('  targetMode: SkillRangeTargetMode')
+rangeLines.push('  matrix: ReadonlyArray<ReadonlyArray<0 | 1>>')
+rangeLines.push('}')
+rangeLines.push('')
+rangeLines.push('export const COMBAT_SKILL_RANGES: Readonly<Record<number, SkillRangeContent>> = {')
+for (let rangeId = 1; rangeId <= 36; rangeId += 1) {
+  const rows = []
+  for (let attemptSlot = 1; attemptSlot <= 15; attemptSlot += 1) {
+    const tableIndex = attemptSlot + 15 * (rangeId - 1)
+    const row = fw[tableIndex]
+    if (!row || Number(row[0]) !== attemptSlot) throw new Error(`fw#${tableIndex} 阵位索引异常`)
+    rows.push(`[${row.slice(1, 16).map((value) => value === 1 ? 1 : 0).join(', ')}]`)
+  }
+  const targetMode = String(fw[rangeId]?.[18] ?? '')
+  if (!['目标', '地面', '自身', '随机', ''].includes(targetMode)) throw new Error(`fw 范围 ${rangeId} 目标类型异常：${targetMode}`)
+  rangeLines.push(`  ${rangeId}: { id: ${rangeId}, targetMode: ${quote(targetMode)}, matrix: [${rows.join(', ')}] },`)
+}
+rangeLines.push('}')
+rangeLines.push('')
+rangeLines.push('export const skillRangeById = (id: number): SkillRangeContent | undefined => COMBAT_SKILL_RANGES[id]')
+rangeLines.push('')
+writeFileSync(RANGES_FILE, rangeLines.join('\n'), 'utf8')
+console.log('技能范围表已生成：', RANGES_FILE)
+
 // ---------- 输出 buffs.ts ----------
 const buffLines = []
 buffLines.push('// 本文件由 scripts/generate-zhutian-skills.mjs 从《诸天刷宝录》buff.json 生成，请勿手改。')
@@ -353,6 +402,7 @@ buffLines.push('  id: number')
 buffLines.push('  name: string')
 buffLines.push("  polarity: 'buff' | 'debuff'")
 buffLines.push('  kind: BuffKind')
+buffLines.push("  tickKind: 'dot' | 'hot' | null")
 buffLines.push('  /** 属性修正（sx 属性 id → 修正值）；控制类为 { sxId: 113, value: -100 } */')
 buffLines.push('  attributes: ReadonlyArray<{ sxId: number; value: number }>')
 buffLines.push('  maxStacks: number')
@@ -363,7 +413,7 @@ buffLines.push('')
 buffLines.push('export const COMBAT_BUFFS: Readonly<Record<number, BuffContent>> = {')
 for (const item of buffs) {
   const attrs = item.attributes.map(([sxId, value]) => `{ sxId: ${sxId}, value: ${value} }`).join(', ')
-  buffLines.push(`  ${item.id}: { id: ${item.id}, name: ${quote(item.name)}, polarity: ${quote(item.polarity)}, kind: ${quote(item.kind)}, attributes: [${attrs}], maxStacks: ${item.maxStacks}, durationMs: ${item.durationMs}, unit: ${quote(item.unit)} },`)
+  buffLines.push(`  ${item.id}: { id: ${item.id}, name: ${quote(item.name)}, polarity: ${quote(item.polarity)}, kind: ${quote(item.kind)}, tickKind: ${item.tickKind ? quote(item.tickKind) : 'null'}, attributes: [${attrs}], maxStacks: ${item.maxStacks}, durationMs: ${item.durationMs}, unit: ${quote(item.unit)} },`)
 }
 buffLines.push('}')
 buffLines.push('')

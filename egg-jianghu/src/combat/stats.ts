@@ -1,9 +1,10 @@
-import { careerById } from '../content/careers'
+import { careerById, careerCoefficientAtLevel } from '../content/careers'
 import { heartMethodByIdV10 } from '../content/martials'
 import { artifactSoulById, equipmentAttributeValue, equipmentDefinitionById } from '../content/equipment'
 import type { HeroDefinitionV10 } from '../content/heroes'
 import type { EquipmentInstance, HeroProgressV10 } from '../domain/types'
 import type { AttributeMap } from '../content/attributes'
+import type { CareerCombatCoefficients } from './types'
 
 export interface CombatStats {
   maxHp: number
@@ -28,8 +29,28 @@ export interface CombatStats {
   perfectedBonusPool: number
 }
 
-const gradeMultiplier = { 丙: 0.9, 乙: 1, 甲: 1.08, 地: 1.16, 天: 1.25 } as const
 const COMBAT_STAT_ATTRIBUTE_IDS = new Set([6, 7, 8, 9, 10, 11, 12, 13, 14, 18, 19, 28, 29, 37])
+
+const DEFAULT_CAREER_COMBAT_COEFFICIENTS: CareerCombatCoefficients = {
+  physicalAttack: 1,
+  physicalDefense: 1,
+  magicAttack: 1,
+  magicDefense: 1,
+  heal: 1,
+}
+
+export const buildCareerCombatCoefficients = (progress: HeroProgressV10): CareerCombatCoefficients => {
+  const career = careerById(progress.currentCareerId)
+  if (!career) return { ...DEFAULT_CAREER_COMBAT_COEFFICIENTS }
+  const level = progress.careers[progress.currentCareerId]?.level ?? 1
+  return {
+    physicalAttack: careerCoefficientAtLevel(career, 'physicalAttack', level),
+    physicalDefense: careerCoefficientAtLevel(career, 'physicalDefense', level),
+    magicAttack: careerCoefficientAtLevel(career, 'magicAttack', level),
+    magicDefense: careerCoefficientAtLevel(career, 'magicDefense', level),
+    heal: careerCoefficientAtLevel(career, 'heal', level),
+  }
+}
 
 export const buildCombatStats = (
   definition: HeroDefinitionV10,
@@ -40,50 +61,55 @@ export const buildCombatStats = (
   const career = careerById(progress.currentCareerId)
   const careerRecord = progress.careers[progress.currentCareerId]
   const careerLevel = careerRecord?.level ?? 1
-  const growth = career?.growth
-  const grade = gradeMultiplier[definition.grade]
-  const levelScale = 1 + Math.max(0, progress.level - 1) * 0.035
-  const careerScale = 1 + Math.max(0, careerLevel - 1) * 0.02
-  const sharedScale = grade * levelScale * careerScale
+  const coreCoefficient = career ? careerCoefficientAtLevel(career, 'core', careerLevel) : 1
   const heartMethod = progress.heartMethodId ? heartMethodByIdV10(progress.heartMethodId) : undefined
 
-  // 原版《诸天刷宝录》资质→面板公式（c3runtime.js 源码逆向，证据等级 A）。
-  // 指数底数 1.0095：资质每 +1，指数项 × 1.0095^10 ≈ ×1.099。
-  // 6 项核心属性（生命/速度/物攻/物防/法攻/法防）均以「体」资质推导（c3runtime 基础核心属性function 统一读 ExpObject(人物编号, 3, 1)，3 = 体）。
-  // 见 docs/诸天刷宝录_资质面板公式_源码逆向.md
-  const aptitudeIndex = (value: number): number => Math.pow(1.0095, value * 10)
+  const equipmentBonuses: AttributeMap = {}
+  const addEquipmentBonus = (attributeId: number, value: number): void => {
+    equipmentBonuses[attributeId] = (equipmentBonuses[attributeId] ?? 0) + value
+  }
+  for (const equipmentUid of Object.values(progress.equipmentBySlot)) {
+    if (!equipmentUid) continue
+    const instance = equipment.find((item) => item.uid === equipmentUid)
+    const equipmentDefinition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
+    if (!instance || !equipmentDefinition) continue
+    for (const core of instance.coreStats) {
+      addEquipmentBonus(core.attributeId, equipmentAttributeValue(core.attributeId, instance.level, core.coefficient, 100))
+    }
+    for (const affix of instance.affixes) {
+      addEquipmentBonus(affix.attributeId, equipmentAttributeValue(affix.attributeId, instance.level, affix.coefficient, 50))
+    }
+    for (const effect of equipmentDefinition.fixedEffects ?? []) addEquipmentBonus(effect.attributeId, effect.value)
+    const artifactSoul = artifactSoulById(equipmentDefinition.artifactSoulId)
+    if (artifactSoul) addEquipmentBonus(artifactSoul.attributeId, artifactSoul.value)
+  }
 
-  // 核心指数模板校准（权威白板号面板，docs/诸天刷宝录_角色属性面板_白板号.md）：
-  //   模板分配：物攻/法攻共用 ×1、物防/法防共用 ×0.5、生命 ×5（文档：物攻=法攻=117、物防=法防=58、生命=580）。
-  //   逆向基准 100 + 1.0095^(体×10) × 5 在体=10 ≈ 112.87，而白板面板基准为 117（攻击）/116（防御·生命）——
-  //   差值来自原版职业属性系数（逆向文档 §3.3：面板 = 基础 × 职业系数），此处以校准系数落地并取整：
-  //   攻击 ×1.04 → 117；防御·生命 ×1.028 → 116（0.5×116=58、5×116=580）。体=10 时逐项与文档一致。
-  const attackBase = (constitution: number): number => Math.floor((100 + aptitudeIndex(constitution) * 5) * 1.04)
-  const defenseBase = (constitution: number): number => Math.floor((100 + aptitudeIndex(constitution) * 5) * 1.028)
+  // expr#1026..1029：六项基础核心都读取「体」；装备核心值在天资与职业系数之前相加。
+  const sharedCoreBase = 100 + Math.pow(1.0095, aptitude.constitution * 10) * 5
+  const coreStat = (base: number, equipmentAttributeId: number, aptitudeBonus: number): number => Math.round(
+    (base + (equipmentBonuses[equipmentAttributeId] ?? 0))
+    * (100 + aptitudeBonus) / 100
+    * coreCoefficient,
+  )
 
   const stats: CombatStats = {
-    // 生命：防御模板 ×5（体）—— 白板 580
-    maxHp: Math.floor(5 * defenseBase(aptitude.constitution) * sharedScale),
+    // expr#1030..1035 天资加成：生命=(体+精)/2、速度=敏、物攻=勇、物防=体、法攻=智、法防=精。
+    maxHp: coreStat(5 * sharedCoreBase, 6, (aptitude.constitution + aptitude.resolve) / 2),
     maxEnergy: 5,
     // 初始能量：原版 sx28 白板 0（用户实测）；战斗开始能量 = 0
     initialEnergy: 0,
     // 能量回复：原版 sx29 白板 1（用户实测）；egg 战斗循环另有行动回能机制（未确证粒度前保持）
     energyRecovery: 1 + (heartMethod?.energyRecovery ?? 0),
-    // 物攻：攻击模板 × 职业物攻系数
-    externalAttack: Math.floor(attackBase(aptitude.constitution) * sharedScale * (growth?.physicalAttack ?? 1)),
-    // 物防：防御模板 ×0.5 × 职业物防系数
-    externalDefense: Math.floor(0.5 * defenseBase(aptitude.constitution) * sharedScale * (growth?.physicalDefense ?? 1)),
-    // 法攻：攻击模板 × 职业法攻系数
-    internalAttack: Math.floor(attackBase(aptitude.constitution) * sharedScale * (growth?.magicAttack ?? 1)),
-    // 法防：防御模板 ×0.5 × 职业法防系数
-    internalDefense: Math.floor(0.5 * defenseBase(aptitude.constitution) * sharedScale * (growth?.magicDefense ?? 1)),
-    // 速度：线性模板 × 职业速度系数
-    effectiveAgility: Math.max(1, (150 + (aptitude.constitution - 10) / 4) * (growth?.speed ?? 1) * (1 + (heartMethod?.gaugeRate ?? 0))),
+    externalAttack: coreStat(sharedCoreBase, 8, aptitude.strength),
+    externalDefense: coreStat(0.5 * sharedCoreBase, 9, aptitude.constitution),
+    internalAttack: coreStat(sharedCoreBase, 10, aptitude.insight),
+    internalDefense: coreStat(0.5 * sharedCoreBase, 11, aptitude.resolve),
+    effectiveAgility: Math.max(1, coreStat(150 + aptitude.constitution / 4, 7, aptitude.agility)),
     // 命中修正：原版 sx18 走特定属性统计默认分支（无资质/固有基础），白板 0；战斗命中率 = 97×(100+命中)/(100+闪避)
     accuracy: 0,
     // 闪避修正：原版 sx19 同上，白板 0
     evade: 0,
-    controlResistance: Math.min(0.8, aptitude.resolve * 0.012),
+    controlResistance: 0,
     // 暴击几率：原版不随资质（特定属性统计 sx12 = 角色初始天资 + 天命天资 + 装备总属性，无资质推导项），白板恒 5%
     criticalChance: 0.05,
     criticalMultiplier: 1.5,
@@ -169,22 +195,10 @@ export const buildCombatStats = (
     if (id === 'controlResistance') stats.controlResistance = Math.min(0.95, stats.controlResistance + value / 100)
   }
 
-  for (const equipmentUid of Object.values(progress.equipmentBySlot)) {
-    if (!equipmentUid) continue
-    const instance = equipment.find((item) => item.uid === equipmentUid)
-    const equipmentDefinition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
-    if (!instance || !equipmentDefinition) continue
-    for (const core of instance.coreStats) {
-      applyBonus(String(core.attributeId), equipmentAttributeValue(core.attributeId, instance.level, core.coefficient, 100))
-    }
-    for (const affix of instance.affixes) {
-      applyBonus(String(affix.attributeId), equipmentAttributeValue(affix.attributeId, instance.level, affix.coefficient, 50))
-    }
-    for (const effect of equipmentDefinition.fixedEffects ?? []) {
-      applyBonus(String(effect.attributeId), effect.value)
-    }
-    const artifactSoul = artifactSoulById(equipmentDefinition.artifactSoulId)
-    if (artifactSoul) applyBonus(String(artifactSoul.attributeId), artifactSoul.value)
+  for (const [attributeId, value] of Object.entries(equipmentBonuses)) {
+    const sxId = Number(attributeId)
+    if (sxId >= 6 && sxId <= 11) continue
+    applyBonus(attributeId, value)
   }
 
   return stats
@@ -285,4 +299,16 @@ export const buildAttributeMap = (
     }
   }
   return map
+}
+
+/** 取得当前装备方案的主手 wp[7] 武器类型，供战斗熟练增伤乘区使用。 */
+export const equippedMainhandWeaponType = (
+  progress: HeroProgressV10,
+  equipment: EquipmentInstance[] = [],
+): number | undefined => {
+  const uid = progress.equipmentBySlot.weapon
+  if (!uid) return undefined
+  const instance = equipment.find((item) => item.uid === uid)
+  const definition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
+  return definition?.slot === 'weapon' ? definition.weaponType : undefined
 }

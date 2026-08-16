@@ -1,4 +1,5 @@
 import type { Rng } from '../combat/rng'
+import type { CombatRank } from '../combat/types'
 import { factionById } from '../content/factions'
 import type {
   ActionResult,
@@ -122,7 +123,7 @@ export const acceptQuest = (state: GameStateV10, factionId: string, slotIndex: n
 
 export interface QuestKill {
   enemyId: string
-  rank: 'normal' | 'elite' | 'boss'
+  rank: CombatRank
   bossId: string | null
 }
 

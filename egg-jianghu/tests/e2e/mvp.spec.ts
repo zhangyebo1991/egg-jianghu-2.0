@@ -56,6 +56,90 @@ test('江湖按大关小关分层并在点击小关后立即驻守', async ({ pa
   })
 })
 
+test('首波在 1 秒边界显示敌阵并在 1.5 秒边界开始积攒', async ({ page }, testInfo) => {
+  const states = await page.evaluate(() => {
+    window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
+    const read = () => ({
+      arrival: Boolean(document.querySelector('[data-testid="enemy-arrival"]')),
+      enemyCount: document.querySelectorAll('.battle-half.enemy .combat-unit').length,
+      phase: window.__EGG_JIANGHU__.getCombat()?.timeline.phase,
+      elapsedMs: window.__EGG_JIANGHU__.getCombat()?.elapsedMs,
+    })
+    window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 17)
+    const initial = read()
+    window.__EGG_JIANGHU__.advanceCombat(9)
+    const beforeRefresh = read()
+    window.__EGG_JIANGHU__.advanceCombat(1)
+    const refreshed = read()
+    window.__EGG_JIANGHU__.advanceCombat(5)
+    const accumulating = read()
+    window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 17)
+    return { initial, beforeRefresh, refreshed, accumulating }
+  })
+
+  expect(states.initial).toMatchObject({ arrival: true, enemyCount: 0, phase: 'wave-transition', elapsedMs: 0 })
+  expect(states.beforeRefresh).toMatchObject({ arrival: true, enemyCount: 0, phase: 'wave-transition', elapsedMs: 900 })
+  expect(states.refreshed.arrival).toBe(false)
+  expect(states.refreshed.enemyCount).toBeGreaterThan(0)
+  expect(states.refreshed).toMatchObject({ phase: 'wave-transition', elapsedMs: 1000 })
+  expect(states.accumulating).toMatchObject({ phase: 'accumulating', elapsedMs: 1500 })
+  await expect(page.getByTestId('enemy-arrival')).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('combat-initial-arrival.png'), animations: 'disabled' })
+})
+
+test('驻守胜利显示 3 秒倒计时并在额外 0.3 秒后重开', async ({ page }, testInfo) => {
+  const states = await page.evaluate(() => {
+    window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
+    window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
+    window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 19)
+    window.__EGG_JIANGHU__.forceCombatResult('victory')
+    const text = () => document.querySelector('[data-testid="combat-settlement"]')?.textContent ?? ''
+    const initial = { text: text(), selection: window.__EGG_JIANGHU__.getSelection() }
+    window.__EGG_JIANGHU__.advanceCombat(29)
+    const beforeZero = text()
+    window.__EGG_JIANGHU__.advanceCombat(1)
+    const closing = text()
+    window.__EGG_JIANGHU__.advanceCombat(3)
+    const restarted = {
+      overlay: Boolean(document.querySelector('[data-testid="combat-settlement"]')),
+      result: window.__EGG_JIANGHU__.getCombat()?.result,
+      elapsedMs: window.__EGG_JIANGHU__.getCombat()?.elapsedMs,
+      phase: window.__EGG_JIANGHU__.getCombat()?.timeline.phase,
+    }
+    window.__EGG_JIANGHU__.forceCombatResult('victory')
+    return { initial, beforeZero, closing, restarted }
+  })
+
+  expect(states.initial.text).toContain('3 秒后自动重新挑战')
+  expect(states.initial.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 1, mode: 'guard' })
+  expect(states.beforeZero).toContain('1 秒后自动重新挑战')
+  expect(states.closing).toContain('重整战场中')
+  expect(states.restarted).toEqual({ overlay: false, result: 'fighting', elapsedMs: 0, phase: 'wave-transition' })
+  await expect(page.getByTestId('combat-settlement')).toContainText('破阵告捷')
+  await page.screenshot({ path: testInfo.outputPath('combat-victory-settlement.png'), animations: 'disabled' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  const mobile = await page.getByTestId('combat-settlement').evaluate((element) => {
+    const rect = element.getBoundingClientRect()
+    const battlefield = document.querySelector<HTMLElement>('[data-testid="battlefield"]')!.getBoundingClientRect()
+    const rail = document.querySelector<HTMLElement>('.combat-rail')!.getBoundingClientRect()
+    return {
+      left: rect.left,
+      right: rect.right,
+      battlefieldWidth: battlefield.width,
+      battlefieldBottom: battlefield.bottom,
+      railTop: rail.top,
+      documentWidth: document.documentElement.scrollWidth,
+    }
+  })
+  expect(mobile.left).toBeGreaterThanOrEqual(64)
+  expect(mobile.right).toBeLessThanOrEqual(390)
+  expect(mobile.battlefieldWidth).toBeGreaterThanOrEqual(300)
+  expect(mobile.railTop).toBeGreaterThanOrEqual(mobile.battlefieldBottom)
+  expect(mobile.documentWidth).toBeLessThanOrEqual(390)
+  await page.screenshot({ path: testInfo.outputPath('combat-victory-settlement-mobile.png'), animations: 'disabled', fullPage: true })
+})
+
 test('战场左右对峙且敌我最前列在中线两侧相邻', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1000 })
   await page.evaluate(() => {
@@ -390,7 +474,7 @@ test('战斗使用当前职业普攻', async ({ page }) => {
   expect(events).toContainEqual(expect.objectContaining({ type: 'skill-used', skillId: 1 }))
 })
 
-test('每个小关第十波显示 Boss 精英和小怪', async ({ page }) => {
+test('每个小关第十波显示一个 Boss 与五个普通品级敌人', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
     window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
@@ -400,8 +484,8 @@ test('每个小关第十波显示 Boss 精英和小怪', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '第 10 / 10 波' })).toBeVisible()
   const enemyBoard = page.getByRole('region', { name: '敌方阵容' })
   await expect(enemyBoard.locator('[data-rank="boss"]')).toHaveCount(1)
-  await expect(enemyBoard.locator('[data-rank="elite"]')).toHaveCount(1)
-  await expect(enemyBoard.locator('[data-rank="normal"]')).toHaveCount(1)
+  await expect(enemyBoard.locator('[data-rank]')).toHaveCount(6)
+  await expect(enemyBoard.locator('[data-rank="normal"], [data-rank="elite"], [data-rank="captain"]')).toHaveCount(5)
 })
 
 test('闯荡失败回退上一小关并切换驻守', async ({ page }) => {
@@ -412,6 +496,8 @@ test('闯荡失败回退上一小关并切换驻守', async ({ page }) => {
     window.__EGG_JIANGHU__.startStage('world_01', 4, 'roam', 31)
     window.__EGG_JIANGHU__.forceCombatResult('defeat')
   })
+  await expect(page.getByTestId('combat-settlement')).toContainText('败退重整')
+  await page.evaluate(() => window.__EGG_JIANGHU__.advanceCombat(33))
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getSelection())).toEqual({ worldId: 'world_01', difficulty: 1, stage: 3, mode: 'guard' })
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.wave)).toBe(1)
 })
