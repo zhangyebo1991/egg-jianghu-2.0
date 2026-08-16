@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { originalFactionExchangeByFaction } from '../../src/content/original-faction-exchange.generated'
 
 let pageErrors: string[]
 
@@ -614,6 +615,40 @@ test('势力页支持切换匾额和门人拜帖', async ({ page }) => {
   await expect(page.getByTestId('faction-invite-panel')).toBeVisible()
   await expect(page.getByTestId('faction-hero-hero_qingfeng_hall_01')).toContainText('孙不二')
   await expect(page.getByTestId('faction-meridian')).toBeVisible()
+})
+
+test('势力声望与贡献兑换在势力页和城镇页共享同一状态', async ({ page }, testInfo) => {
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
+    window.__EGG_JIANGHU__.grantContribution('tieyi_school', 100_000)
+    window.__EGG_JIANGHU__.grantWorldReputation('world_01', 200)
+  })
+  await openWorldSection(page, 'factions')
+  await page.getByTestId('faction-plaque-tieyi_school').click()
+
+  const exchange = page.getByTestId('faction-exchange')
+  await expect(exchange).toHaveAttribute('data-faction-id', 'tieyi_school')
+  await expect(page.getByTestId('faction-reputation')).toContainText('友好')
+  await expect(exchange.locator('[data-testid^="faction-exchange-item-"]'))
+    .toHaveCount(originalFactionExchangeByFaction(2).length)
+  const blueprint = page.getByTestId('faction-exchange-item-2')
+  await expect(blueprint).toContainText('虎豹之头盔图纸')
+  await blueprint.getByRole('button', { name: '兑换' }).click()
+  await expect(blueprint.getByRole('button', { name: '已拥有' })).toBeDisabled()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().blueprints['5'])).toBe(1)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school)).toBe(78_516)
+  await exchange.scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath('faction-exchange.png'), fullPage: true })
+
+  await openWorldSection(page, 'towns')
+  const town = page.getByTestId('faction-town-tieyi_school')
+  await town.getByRole('button', { name: '贡献兑换' }).click()
+  await expect(page.getByTestId('faction-exchange')).toHaveAttribute('data-faction-id', 'tieyi_school')
+  await page.getByTestId('faction-exchange-item-1').getByRole('button', { name: '兑换' }).click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().jobBooks.job_2)).toBe(1)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school)).toBe(73_828)
+  await page.getByTestId('faction-exchange').scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath('town-exchange.png'), fullPage: true })
 })
 
 test('势力页主区可滚动查看悬榜与门人拜帖', async ({ page }) => {

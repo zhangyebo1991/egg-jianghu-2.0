@@ -1341,6 +1341,16 @@ assertExpressions('位面声望等级', [
 assertExpressions('位面声望经验', [
   'Math.round(((200 + ((位面编号 - 1) * 20)) * Math.pow(C3.clamp((等级 - 1), 0, 4), 2)))',
 ])
+const factionReputationLevelNames = Array.from(
+  { length: 5 },
+  (_, offset) => String(arrays.mc[offset + 1]?.[13] ?? '')
+    .replace(/\[\/?color(?:=[^\]]+)?\]/gi, '')
+    .trim(),
+)
+assert(
+  JSON.stringify(factionReputationLevelNames) === JSON.stringify(['冷淡', '友好', '尊敬', '崇拜', '信仰']),
+  'mc[1..5][13] 的位面声望等级名称与预期不符',
+)
 assertExpressions('代理人贡献加成', [
   '((100 + (最终能力等级(save.At(位面编号, 54, 0), 9) * 5)) / 100)',
 ])
@@ -1489,6 +1499,7 @@ const factionRules = {
     minimumLevel: 1,
     maximumLevel: 5,
     thresholdExponent: 2,
+    levelNames: factionReputationLevelNames,
   },
   agentBonus: {
     abilityId: 9,
@@ -1780,6 +1791,9 @@ export const originalWorldReputationBase = (worldIndex: number): number =>
 
 export const originalWorldReputationLevel = (reputation: number, worldIndex: number): number =>
   clamp(Math.floor(Math.sqrt(reputation / originalWorldReputationBase(worldIndex))) + 1, 1, 5)
+
+export const originalWorldReputationLevelName = (level: number): string =>
+  ORIGINAL_FACTION_RULES.reputation.levelNames[clamp(level, 1, 5) - 1]
 
 export const originalWorldReputationThreshold = (level: number, worldIndex: number): number =>
   Math.round(originalWorldReputationBase(worldIndex) * clamp(level - 1, 0, 4) ** 2)
@@ -2110,6 +2124,7 @@ const factionRulesMarkdown = `# 原版势力规则与状态契约
 
 - 位面基础值：\`200 + (worldIndex - 1) * 20\`。
 - 声望等级：\`clamp(floor(sqrt(reputation / base)) + 1, 1, 5)\`。
+- 等级名称：${factionReputationLevelNames.map((name, index) => `${index + 1} ${name}`).join('、')}（\`mc[1..5][13]\`）。
 - 等级阈值：\`round(base * clamp(level - 1, 0, 4)^2)\`。
 - 代理人使用能力 9；贡献倍率为 \`(100 + abilityLevel * 5) / 100\`，声望倍率为 \`(100 + abilityLevel * 2) / 100\`；无代理人时均为 1。
 

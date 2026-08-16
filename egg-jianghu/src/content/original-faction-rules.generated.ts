@@ -108,7 +108,14 @@ export const ORIGINAL_FACTION_RULES = {
     "baseWorldStep": 20,
     "minimumLevel": 1,
     "maximumLevel": 5,
-    "thresholdExponent": 2
+    "thresholdExponent": 2,
+    "levelNames": [
+      "冷淡",
+      "友好",
+      "尊敬",
+      "崇拜",
+      "信仰"
+    ]
   },
   "agentBonus": {
     "abilityId": 9,
@@ -3672,6 +3679,9 @@ export const originalWorldReputationBase = (worldIndex: number): number =>
 
 export const originalWorldReputationLevel = (reputation: number, worldIndex: number): number =>
   clamp(Math.floor(Math.sqrt(reputation / originalWorldReputationBase(worldIndex))) + 1, 1, 5)
+
+export const originalWorldReputationLevelName = (level: number): string =>
+  ORIGINAL_FACTION_RULES.reputation.levelNames[clamp(level, 1, 5) - 1]
 
 export const originalWorldReputationThreshold = (level: number, worldIndex: number): number =>
   Math.round(originalWorldReputationBase(worldIndex) * clamp(level - 1, 0, 4) ** 2)

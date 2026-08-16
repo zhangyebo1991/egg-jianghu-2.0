@@ -14,6 +14,7 @@ import {
   originalFactionWorldPriceMultiplier,
   originalWorldReputationBase,
   originalWorldReputationLevel,
+  originalWorldReputationLevelName,
   originalWorldReputationThreshold,
 } from './original-faction-rules.generated'
 
@@ -27,6 +28,10 @@ describe('原版势力规则契约', () => {
     expect(originalWorldReputationLevel(799, 1)).toBe(2)
     expect(originalWorldReputationLevel(800, 1)).toBe(3)
     expect(originalWorldReputationLevel(1_000_000, 1)).toBe(5)
+    expect(Array.from({ length: 5 }, (_, index) => originalWorldReputationLevelName(index + 1))).toEqual([
+      '冷淡', '友好', '尊敬', '崇拜', '信仰',
+    ])
+    expect(originalWorldReputationLevelName(99)).toBe('信仰')
     expect(originalWorldReputationThreshold(1, 13)).toBe(0)
     expect(originalWorldReputationThreshold(2, 13)).toBe(440)
     expect(originalWorldReputationThreshold(5, 13)).toBe(7040)

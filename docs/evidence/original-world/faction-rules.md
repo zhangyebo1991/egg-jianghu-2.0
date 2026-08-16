@@ -20,6 +20,7 @@
 
 - 位面基础值：`200 + (worldIndex - 1) * 20`。
 - 声望等级：`clamp(floor(sqrt(reputation / base)) + 1, 1, 5)`。
+- 等级名称：1 冷淡、2 友好、3 尊敬、4 崇拜、5 信仰（`mc[1..5][13]`）。
 - 等级阈值：`round(base * clamp(level - 1, 0, 4)^2)`。
 - 代理人使用能力 9；贡献倍率为 `(100 + abilityLevel * 5) / 100`，声望倍率为 `(100 + abilityLevel * 2) / 100`；无代理人时均为 1。
 

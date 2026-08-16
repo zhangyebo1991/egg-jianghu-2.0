@@ -2166,12 +2166,60 @@ body {
 .faction-calling-card.recruited { filter: saturate(.7) brightness(.92); }
 .faction-calling-card.recruited .faction-invite-button { cursor: default; background: #8d8468; box-shadow: none; }
 .faction-calling-stamp { position: absolute; top: 14px; right: 14px; z-index: 2; padding: 3px 10px; border: 2px solid var(--faction-cinnabar-deep); border-radius: 4px; color: var(--faction-cinnabar-deep); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 19px; letter-spacing: .14em; opacity: .85; pointer-events: none; transform: rotate(10deg); }
+.faction-exchange { position: relative; z-index: 1; display: grid; gap: 20px; margin: 0 0 30px; padding: 24px; border: 1px solid rgb(201 163 92 / 24%); border-radius: 10px; background: radial-gradient(circle at 88% 4%, rgb(201 163 92 / 13%), transparent 30%), linear-gradient(160deg, rgb(31 34 27 / 96%), rgb(16 18 15 / 98%)); box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 18px 34px rgb(0 0 0 / 22%); }
+.towns-page .faction-exchange { margin: 0; }
+.faction-exchange-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 16px; border-bottom: 1px solid rgb(201 163 92 / 18%); }
+.faction-exchange-head > div:first-child > span { color: #8d8267; font-size: 9px; letter-spacing: .34em; }
+.faction-exchange-head h2 { margin: 3px 0 0; color: #eadcb8; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 32px; font-weight: 400; letter-spacing: .14em; }
+.faction-exchange-head p { margin: 5px 0 0; color: #8f8d80; font-size: 10px; letter-spacing: .12em; }
+.faction-exchange-wallet { flex: none; text-align: right; }
+.faction-exchange-wallet strong { display: block; color: #e6c67f; font-size: 25px; font-variant-numeric: tabular-nums; line-height: 1; }
+.faction-exchange-wallet span { display: block; margin-top: 5px; color: #b79655; font-size: 9px; letter-spacing: .26em; }
+.faction-reputation { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 22px; align-items: center; padding: 16px 18px; border: 1px solid rgb(143 111 58 / 30%); border-radius: 8px; background: rgb(201 163 92 / 5%); }
+.faction-reputation-level { display: flex; align-items: baseline; gap: 9px; }
+.faction-reputation-level > span { color: #8f8d80; font-size: 9px; letter-spacing: .18em; }
+.faction-reputation-level strong { color: #e6c67f; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 25px; font-weight: 400; letter-spacing: .12em; }
+.faction-reputation-level small { color: #6f7369; font-size: 9px; white-space: nowrap; }
+.faction-reputation-progress { display: grid; gap: 7px; }
+.faction-reputation-progress > div { display: flex; justify-content: space-between; gap: 16px; color: #c7b98f; font-size: 10px; }
+.faction-reputation-progress small { color: #777a70; }
+.faction-reputation-track { height: 5px; overflow: hidden; border-radius: 999px; background: rgb(255 255 255 / 7%); }
+.faction-reputation-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #8f6f3a, #e6c67f); box-shadow: 0 0 10px rgb(230 198 127 / 30%); }
+.faction-exchange-groups { display: grid; gap: 19px; }
+.faction-exchange-group { display: grid; gap: 10px; }
+.faction-exchange-group > header { display: flex; align-items: baseline; justify-content: space-between; padding-inline: 2px; }
+.faction-exchange-group h3 { margin: 0; color: #d8c9a6; font-size: 15px; font-weight: 500; letter-spacing: .16em; }
+.faction-exchange-group > header span { color: #6f7369; font-size: 9px; letter-spacing: .12em; }
+.faction-exchange-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.faction-exchange-item { display: grid; min-height: 132px; padding: 13px; border: 1px solid rgb(233 222 195 / 11%); border-radius: 7px; background: linear-gradient(150deg, rgb(233 222 195 / 5%), rgb(5 7 6 / 26%)); transition: border-color .2s, transform .2s, background .2s; }
+.faction-exchange-item:hover { border-color: rgb(201 163 92 / 40%); background: linear-gradient(150deg, rgb(201 163 92 / 9%), rgb(5 7 6 / 26%)); transform: translateY(-2px); }
+.faction-exchange-item > header { display: flex; justify-content: space-between; gap: 8px; color: #b79655; font-size: 9px; letter-spacing: .12em; }
+.faction-exchange-item > header small { color: #73776c; font-size: 8px; letter-spacing: .05em; }
+.faction-exchange-item h4 { margin: 9px 0 13px; color: #ddd1b4; font-size: 12px; font-weight: 500; line-height: 1.55; letter-spacing: .05em; }
+.faction-exchange-item-foot { display: flex; align-items: end; justify-content: space-between; gap: 8px; margin-top: auto; }
+.faction-exchange-item-foot > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; }
+.faction-exchange-item-foot b { color: #e6c67f; font-size: 15px; font-variant-numeric: tabular-nums; }
+.faction-exchange-item-foot small { color: #7f7e72; font-size: 8px; }
+.faction-exchange-count { flex-basis: 100%; color: #7fa28d; font-size: 8px; letter-spacing: .08em; }
+.faction-exchange-item button { min-width: 64px; padding: 6px 8px; border: 1px solid rgb(201 163 92 / 38%); border-radius: 4px; color: #e3d4af; background: rgb(201 163 92 / 8%); font-size: 9px; letter-spacing: .1em; }
+.faction-exchange-item button:hover:not(:disabled) { border-color: #e6c67f; background: rgb(201 163 92 / 17%); }
+.faction-exchange-item button:disabled { border-color: rgb(255 255 255 / 8%); color: #686b64; background: rgb(255 255 255 / 3%); cursor: not-allowed; }
+.faction-exchange-item.owned { opacity: .62; }
+.faction-exchange-item[data-kind="skin"] { border-color: rgb(169 95 130 / 24%); }
+.faction-exchange-empty { display: grid; justify-items: center; gap: 5px; padding: 38px 20px; border: 1px dashed rgb(233 222 195 / 13%); color: #8f8d80; text-align: center; }
+.faction-exchange-empty strong { color: #c9bda1; font-size: 14px; font-weight: 500; letter-spacing: .12em; }
+.faction-exchange-empty span { font-size: 10px; }
+.faction-town-card.selected { border-color: rgb(201 163 92 / 48%); box-shadow: inset 0 0 0 1px rgb(201 163 92 / 9%); }
+.faction-town-actions { display: flex; justify-content: flex-end; gap: 7px; }
+.faction-town-actions button { padding: 6px 10px; border-color: rgb(201 163 92 / 30%); color: #d6c292; background: rgb(201 163 92 / 6%); font-size: 9px; letter-spacing: .1em; }
+.faction-town-actions button:first-child { color: #ead9ad; background: rgb(201 163 92 / 12%); }
 .faction-page-foot { position: relative; z-index: 1; padding: 20px 0 4px; color: rgb(233 222 195 / 26%); font-size: 10px; letter-spacing: .4em; text-align: center; }
 .faction-empty-page { display: block; }
 .faction-empty-page .section-empty { min-height: 260px; }
 
 @media (max-width: 1240px) {
   .faction-quest-grid, .faction-calling-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .faction-exchange-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .faction-ghost-meridian { top: 1180px; }
   .faction-ghost-heroes { top: 2050px; }
 }
@@ -2183,6 +2231,7 @@ body {
 
 @media (max-width: 980px) {
   .game-main:has(.faction-page) { padding: 20px 18px 48px; }
+  .faction-exchange-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .faction-plaque-row { grid-template-columns: 1fr; }
   .faction-plaque:last-child { grid-column: auto; }
   .faction-branch { grid-template-columns: 76px minmax(0, 1fr); margin: 10px 16px 6px; }
@@ -2217,6 +2266,11 @@ body {
   .faction-detail-origin { float: none; display: block; margin-bottom: 2px; }
   .faction-learn-button { width: 100%; }
   .faction-calling-cards { grid-template-columns: 1fr; gap: 12px; padding-inline: 6px; }
+  .faction-exchange { gap: 15px; padding: 16px; }
+  .faction-exchange-head { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .faction-exchange-wallet { text-align: left; }
+  .faction-reputation { grid-template-columns: 1fr; gap: 12px; padding: 14px; }
+  .faction-exchange-grid { grid-template-columns: 1fr; }
   .faction-disciples-head { margin: 0 6px 14px; }
   .faction-disciples-head h2 { font-size: 28px; }
   .faction-page-foot { padding-bottom: 12px; letter-spacing: .2em; }

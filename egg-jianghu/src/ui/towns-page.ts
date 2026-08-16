@@ -1,4 +1,5 @@
 import { escapeHtml, formatNumber } from './html'
+import { renderFactionExchange, type FactionExchangeViewModel } from './faction-exchange'
 
 export interface TownTavernHeroView {
   id: string
@@ -23,6 +24,7 @@ export interface FactionTownView {
   factionId: string
   factionName: string
   unlocked: boolean
+  selected: boolean
   functions: readonly string[]
 }
 
@@ -33,6 +35,7 @@ export interface TownsPageViewModel {
   worldCurrency: number
   publicLocations: readonly TownLocationView[]
   factionTowns: readonly FactionTownView[]
+  factionExchange: FactionExchangeViewModel | null
   tavernHeroes: readonly TownTavernHeroView[]
 }
 
@@ -77,11 +80,11 @@ const renderFactionTowns = (view: TownsPageViewModel): string => `<section class
     <p>阵营任务、技能学习、贡献兑换与势力招募共用同一套势力状态。</p>
   </header>
   <div class="faction-town-grid" data-testid="faction-towns">
-    ${view.factionTowns.map((town) => `<article class="faction-town-card${town.unlocked ? '' : ' locked'}" data-testid="faction-town-${escapeHtml(town.factionId)}">
+    ${view.factionTowns.map((town) => `<article class="faction-town-card${town.unlocked ? '' : ' locked'}${town.selected ? ' selected' : ''}" data-testid="faction-town-${escapeHtml(town.factionId)}">
       <header><span class="faction-town-seal" aria-hidden="true">镇</span><div><h3>${escapeHtml(town.name)}</h3><p>${escapeHtml(town.factionName)}</p></div></header>
       <div class="town-function-tags">${renderFunctionTags(town.functions)}</div>
       ${town.unlocked
-        ? `<button type="button" data-action="open-faction-town" data-faction-id="${escapeHtml(town.factionId)}">查看势力总览</button>`
+        ? `<div class="faction-town-actions"><button type="button" data-action="select-town-exchange" data-faction-id="${escapeHtml(town.factionId)}">贡献兑换</button><button type="button" data-action="open-faction-town" data-faction-id="${escapeHtml(town.factionId)}">查看势力总览</button></div>`
         : '<p class="faction-town-lock">本存档尚未解锁此势力</p>'}
     </article>`).join('')}
   </div>
@@ -123,6 +126,7 @@ export const renderTownsPage = (view: TownsPageViewModel): string => `<section c
   <div class="towns-scroll">
     ${renderPublicLocations(view)}
     ${renderFactionTowns(view)}
+    ${view.factionExchange ? renderFactionExchange(view.factionExchange) : ''}
     ${renderTavern(view)}
   </div>
   <footer class="city-page-foot">原版城镇 · ${view.publicLocations.length} 处公共场所 · ${view.factionTowns.length} 座势力城镇</footer>

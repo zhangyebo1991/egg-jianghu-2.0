@@ -2,6 +2,7 @@ import { escapeHtml, formatNumber } from './html'
 import { careerCategoryIconAsset } from './career-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
 import type { MartialLore } from '../content/martial-lore'
+import { renderFactionExchange, type FactionExchangeViewModel } from './faction-exchange'
 
 export type FactionMartialState = 'learned' | 'next' | 'locked'
 
@@ -82,6 +83,7 @@ export interface FactionsPageViewModel {
   worldName: string
   selectedFactionId: string
   factions: FactionSelectorView[]
+  exchange: FactionExchangeViewModel | null
   refreshRemainingMs: number
   quests: Array<{
     slot: number
@@ -312,6 +314,8 @@ export const renderFactionsPage = (view: FactionsPageViewModel): string => {
         <div class="faction-quest-grid">${view.quests.map(({ slot, quest }) => renderQuest(view.selectedFactionId, slot, quest)).join('')}</div>
       </div>
     </section>
+
+    ${view.exchange ? renderFactionExchange(view.exchange) : ''}
 
     <section class="faction-meridian" data-testid="faction-meridian">
       <header class="faction-section-head faction-meridian-head">

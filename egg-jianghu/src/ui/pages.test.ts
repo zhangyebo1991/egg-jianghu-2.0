@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { EQUIPMENT_SLOTS } from '../content/equipment'
 import { renderCityPage, type CityPageViewModel } from './city-page'
 import { renderFactionsPage, type FactionsPageViewModel } from './factions-page'
+import type { FactionExchangeViewModel } from './faction-exchange'
 import { renderHeroesPage, type HeroesPageViewModel } from './heroes-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './inventory-page'
 import { renderFormationPage, type FormationPageViewModel } from './formation-page'
@@ -70,6 +71,26 @@ const heroesFixture = (): HeroesPageViewModel => ({
   },
 })
 
+const exchangeFixture = (factionId = 'qingfeng_hall', factionName = '全真教'): FactionExchangeViewModel => ({
+  factionId,
+  factionName,
+  contribution: 600,
+  reputation: 120,
+  reputationLevel: 1,
+  reputationLevelName: '冷淡',
+  reputationCurrentThreshold: 0,
+  reputationNextThreshold: 200,
+  items: [{
+    slot: 1, kind: 'job-book', name: '护卫转职书', price: 200,
+    requiredReputationLevel: null, requiredReputationName: null,
+    quantity: 1, owned: false, actionDisabled: false, actionReason: null,
+  }, {
+    slot: 2, kind: 'blueprint', name: '虎豹之头盔图纸', price: 800,
+    requiredReputationLevel: 2, requiredReputationName: '友好',
+    quantity: 0, owned: false, actionDisabled: true, actionReason: '需友好声望',
+  }],
+})
+
 const factionsFixture = (): FactionsPageViewModel => ({
   worldIndex: 1,
   worldName: '牛家村',
@@ -77,6 +98,7 @@ const factionsFixture = (): FactionsPageViewModel => ({
   factions: [{
     id: 'qingfeng_hall', name: '全真教', category: '剑', branchNames: ['快剑', '重剑'], contribution: 600, selected: true,
   }],
+  exchange: exchangeFixture(),
   refreshRemainingMs: 3_600_000,
   quests: Array.from({ length: 5 }, (_, index) => ({
     slot: index,
@@ -151,10 +173,11 @@ const townsFixture = (): TownsPageViewModel => ({
     { name: '铁匠铺', npcTitle: '铁匠', functions: ['合成锻造'], tavern: false },
   ],
   factionTowns: [
-    { name: '许昌', factionId: 'tieyi_school', factionName: '魏国', unlocked: true, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
-    { name: '成都', factionId: 'renxin_hall', factionName: '蜀国', unlocked: false, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
-    { name: '建业', factionId: 'original_faction_04', factionName: '吴国', unlocked: true, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
+    { name: '许昌', factionId: 'tieyi_school', factionName: '魏国', unlocked: true, selected: true, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
+    { name: '成都', factionId: 'renxin_hall', factionName: '蜀国', unlocked: false, selected: false, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
+    { name: '建业', factionId: 'original_faction_04', factionName: '吴国', unlocked: true, selected: false, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
   ],
+  factionExchange: exchangeFixture('tieyi_school', '魏国'),
   tavernHeroes: [{ id: 'hero_guo_jing', name: '郭靖', grade: '乙', category: '拳', careerName: '白丁', cost: 240, recruited: false, line: '憨厚少年，根骨清奇。' }],
 })
 
@@ -308,6 +331,11 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('451 SP + 势力贡献 80')
     expect(html).toContain('效果值 100')
     expect(html).toContain('来源 <b>全真教</b>')
+    expect(html).toContain('data-testid="faction-reputation"')
+    expect(html).toContain('<strong>冷淡</strong>')
+    expect(html).toContain('护卫转职书')
+    expect(html).toContain('虎豹之头盔图纸')
+    expect(html).toContain('data-action="faction-exchange"')
   })
 
   it('城市和背包页没有抽卡、残页与旧铁匠操作', () => {
@@ -324,6 +352,9 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('阵营任务')
     expect(html).toContain('贡献兑换')
     expect(html).toContain('data-action="open-faction-town"')
+    expect(html).toContain('data-action="select-town-exchange"')
+    expect(html).toContain('data-testid="faction-exchange"')
+    expect(html).toContain('data-faction-id="tieyi_school"')
     expect(html).toContain('本存档尚未解锁此势力')
     expect(html).toContain('data-testid="tavern-hero_guo_jing"')
     expect(html).toContain('data-action="tavern-recruit"')

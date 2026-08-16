@@ -42,7 +42,11 @@ import {
   originalFactionTaskRequiredAmount,
   originalFactionTaskReward,
   originalFactionTaskTargetName,
+  originalWorldReputationLevel,
+  originalWorldReputationLevelName,
+  originalWorldReputationThreshold,
 } from './content/original-faction-rules.generated'
+import { originalFactionExchangeByFaction } from './content/original-faction-exchange.generated'
 import { ORIGINAL_CITY_FOUNDATION, originalWorldTownByIndex } from './content/original-towns.generated'
 import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
@@ -52,6 +56,7 @@ import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEq
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
+import { exchangeFactionItem, factionExchangeItemOwned, factionExchangeItemQuantity } from './domain/faction-exchange'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
 import { settleCombatEvent } from './domain/rewards'
@@ -89,6 +94,7 @@ import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationColumn
 import { renderCityPage, type CityPageViewModel } from './ui/city-page'
 import { MARTIAL_LORE } from './content/martial-lore'
 import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
+import type { FactionExchangeViewModel } from './ui/faction-exchange'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
 import { renderHeroesPage, type HeroesHeroView, type HeroesPageViewModel } from './ui/heroes-page'
 import {
@@ -194,6 +200,7 @@ type FactionContributionAnimation = {
 }
 
 let factionSwitchAnimationPending = false
+let factionExchangeFocusPending = false
 let factionContributionAnimation: FactionContributionAnimation | null = null
 let factionMotionTimer: number | null = null
 
@@ -1045,6 +1052,54 @@ const clearFormation = (): ActionResult => {
   return { ok: true, message: '已悉数下阵' }
 }
 
+const factionExchangeViewModel = (factionId: string): FactionExchangeViewModel | null => {
+  const faction = FACTIONS.find((candidate) => candidate.id === factionId)
+  if (!faction || !session.state.unlockedFactionIds.includes(factionId)) return null
+
+  const worldIndex = Number(faction.worldId.slice(-2))
+  const reputation = session.state.worldReputation[faction.worldId] ?? 0
+  const reputationLevel = originalWorldReputationLevel(reputation, worldIndex)
+  const contribution = session.state.contribution[factionId] ?? 0
+  return {
+    factionId,
+    factionName: faction.name,
+    contribution,
+    reputation,
+    reputationLevel,
+    reputationLevelName: originalWorldReputationLevelName(reputationLevel),
+    reputationCurrentThreshold: originalWorldReputationThreshold(reputationLevel, worldIndex),
+    reputationNextThreshold: reputationLevel < 5
+      ? originalWorldReputationThreshold(reputationLevel + 1, worldIndex)
+      : null,
+    items: originalFactionExchangeByFaction(faction.originalId).map((item) => {
+      const owned = factionExchangeItemOwned(session.state, item)
+      const requiredReputationName = item.requiredReputationLevel === null
+        ? null
+        : originalWorldReputationLevelName(item.requiredReputationLevel)
+      let actionReason: string | null = null
+      if (item.requiredReputationLevel !== null && reputationLevel < item.requiredReputationLevel) {
+        actionReason = `需${requiredReputationName}声望`
+      } else if (owned) {
+        actionReason = '已拥有'
+      } else if (contribution < item.price) {
+        actionReason = '贡献不足'
+      }
+      return {
+        slot: item.slot,
+        kind: item.kind,
+        name: item.originalName,
+        price: item.price,
+        requiredReputationLevel: item.requiredReputationLevel,
+        requiredReputationName,
+        quantity: factionExchangeItemQuantity(session.state, item),
+        owned,
+        actionDisabled: actionReason !== null,
+        actionReason,
+      }
+    }),
+  }
+}
+
 const factionsViewModel = (): FactionsPageViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const availableFactions = FACTIONS.filter((faction) =>
@@ -1147,6 +1202,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
     worldIndex: world.index,
     worldName: world.name,
     selectedFactionId,
+    exchange: faction ? factionExchangeViewModel(faction.id) : null,
     factions: availableFactions.map((item) => ({
       id: item.id,
       name: item.name,
@@ -1228,6 +1284,21 @@ const tavernHeroesForWorld = (worldId: string): TownsPageViewModel['tavernHeroes
 const townsViewModel = (): TownsPageViewModel => {
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const town = originalWorldTownByIndex(world.index)
+  const factionTowns = town?.factionTowns.map((factionTown) => {
+    const faction = factionByOriginalId(factionTown.factionSourceId)
+    return {
+      name: factionTown.name,
+      factionId: faction?.id ?? '',
+      factionName: faction?.name ?? '未知势力',
+      unlocked: Boolean(faction && session.state.unlockedFactionIds.includes(faction.id)),
+      selected: false,
+      functions: factionTown.functions.map((fn) => fn.name),
+    }
+  }) ?? []
+  const exchangeFactionId = factionTowns.find((candidate) =>
+    candidate.unlocked && candidate.factionId === selectedFactionId)?.factionId
+    ?? factionTowns.find((candidate) => candidate.unlocked)?.factionId
+    ?? null
   return {
     worldIndex: world.index,
     worldName: world.name,
@@ -1239,16 +1310,11 @@ const townsViewModel = (): TownsPageViewModel => {
       functions: location.functions.map((fn) => fn.name),
       tavern: location.functions.some((fn) => fn.sourceId === 5),
     })) ?? [],
-    factionTowns: town?.factionTowns.map((factionTown) => {
-      const faction = factionByOriginalId(factionTown.factionSourceId)
-      return {
-        name: factionTown.name,
-        factionId: faction?.id ?? '',
-        factionName: faction?.name ?? '未知势力',
-        unlocked: Boolean(faction && session.state.unlockedFactionIds.includes(faction.id)),
-        functions: factionTown.functions.map((fn) => fn.name),
-      }
-    }) ?? [],
+    factionTowns: factionTowns.map((candidate) => ({
+      ...candidate,
+      selected: candidate.factionId === exchangeFactionId,
+    })),
+    factionExchange: exchangeFactionId ? factionExchangeViewModel(exchangeFactionId) : null,
     tavernHeroes: tavernHeroesForWorld(world.id),
   }
 }
@@ -1622,6 +1688,15 @@ const render = (): void => {
   if (shouldPlayFactionSwitch) {
     factionSwitchAnimationPending = false
     playFactionSwitchMotion()
+  }
+  if (factionExchangeFocusPending) {
+    factionExchangeFocusPending = false
+    window.requestAnimationFrame(() => {
+      app.querySelector<HTMLElement>('[data-testid="faction-exchange"]')?.scrollIntoView({
+        block: 'start',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      })
+    })
   }
   updateFactionContributionAnimation()
   positionOpenEquipmentTooltip()
@@ -2001,6 +2076,13 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'quest-accept') commitAction(acceptQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
   else if (action === 'quest-cancel') commitAction(cancelQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
   else if (action === 'quest-claim') commitAction(claimQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'faction-exchange') {
+    const factionId = button.dataset.factionId ?? ''
+    selectedFactionId = factionId
+    const result = exchangeFactionItem(session.state, factionId, dataNumber(button, 'slot'))
+    if (result.ok) startFactionContributionAnimation(session.state.contribution[factionId] ?? 0)
+    commitAction(result)
+  }
   else if (action === 'tavern-recruit') {
     const result = recruitFromTavern(session.state, heroId)
     if (result.ok) {
@@ -2460,6 +2542,15 @@ app.addEventListener('click', (event) => {
     heroRosterCategoryFilter = 'all'
     heroRosterLocatePending = Boolean(selectedHeroId)
   }
+  else if (action === 'select-town-exchange') {
+    const nextFactionId = button.dataset.factionId ?? ''
+    if (!session.state.unlockedFactionIds.includes(nextFactionId)) {
+      notify('此势力尚未解锁', true)
+    } else {
+      selectedFactionId = nextFactionId
+      factionExchangeFocusPending = true
+    }
+  }
   else if (action === 'open-faction-town') {
     const nextFactionId = button.dataset.factionId ?? ''
     if (!session.state.unlockedFactionIds.includes(nextFactionId)) {
@@ -2664,6 +2755,7 @@ declare global {
       advanceRuntime: (elapsedMs: number) => void
       grantWorldCurrency: (worldId: string, amount: number) => void
       grantContribution: (factionId: string, amount: number) => void
+      grantWorldReputation: (worldId: string, amount: number) => void
       unlockFaction: (factionId: string) => void
       recruitHero: (heroId: string) => void
       placeHero: (heroId: string, row: FormationRow, col: FormationColumn) => void
@@ -2733,6 +2825,7 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   advanceRuntime: (elapsedMs) => { ensurePlaying(); session.advanceRuntime(elapsedMs); render() },
   grantWorldCurrency: (worldId, amount) => { ensurePlaying(); session.state.worldCurrency[worldId] = amount; saveSession(); render() },
   grantContribution: (factionId, amount) => { ensurePlaying(); session.state.contribution[factionId] = amount; saveSession(); render() },
+  grantWorldReputation: (worldId, amount) => { ensurePlaying(); session.state.worldReputation[worldId] = amount; saveSession(); render() },
   unlockFaction: (factionId) => {
     ensurePlaying()
     const faction = FACTIONS.find((item) => item.id === factionId)

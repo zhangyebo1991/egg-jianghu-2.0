@@ -101,7 +101,14 @@
     "baseWorldStep": 20,
     "minimumLevel": 1,
     "maximumLevel": 5,
-    "thresholdExponent": 2
+    "thresholdExponent": 2,
+    "levelNames": [
+      "冷淡",
+      "友好",
+      "尊敬",
+      "崇拜",
+      "信仰"
+    ]
   },
   "agentBonus": {
     "abilityId": 9,
