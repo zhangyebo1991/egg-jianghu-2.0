@@ -48,6 +48,11 @@ import {
 } from './content/original-faction-rules.generated'
 import { originalFactionExchangeByFaction } from './content/original-faction-exchange.generated'
 import { originalFactionRecruitmentByFaction } from './content/original-faction-recruitment.generated'
+import {
+  ORIGINAL_CITY_CONSTANTS,
+  ORIGINAL_CITY_PENDING_RULES,
+  originalCityBuildingById,
+} from './content/original-city.generated'
 import { ORIGINAL_CITY_FOUNDATION, originalWorldTownByIndex } from './content/original-towns.generated'
 import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
@@ -92,8 +97,17 @@ import {
 import { clearSaveV10, hasLegacySaveV17, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
+import {
+  cityBaseMonthlyRent,
+  cityDevelopment,
+  cityEffectiveGrid,
+  cityOwnedLandValue,
+  cityTileById,
+  cityTilePrice,
+  cityTotals,
+} from './domain/city'
 import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationColumn, FormationRow, GameStateV10 } from './domain/types'
-import { renderCityPage, type CityPageViewModel } from './ui/city-page'
+import { renderCityPage, type CityPageSection, type CityPageViewModel } from './ui/city-page'
 import { MARTIAL_LORE } from './content/martial-lore'
 import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
 import type { FactionExchangeViewModel } from './ui/faction-exchange'
@@ -169,6 +183,8 @@ let dragCandidateHeroId: string | null = null
 let selectedFactionId = ''
 let selectedFactionMartialId: string | null = null
 let townFactionFunction: 'exchange' | 'recruitment' | 'agent' = 'exchange'
+let cityPageSection: CityPageSection = 'map'
+let selectedCityTileId = 172
 let careerTreeOpen = false
 let selectedTreeCareerId: string | null = null
 let factionRosterOpen = false
@@ -1400,12 +1416,78 @@ const townsViewModel = (): TownsPageViewModel => {
   }
 }
 
-const cityViewModel = (): CityPageViewModel => ({
-  gridColumns: ORIGINAL_CITY_FOUNDATION.gridColumns,
-  gridRows: ORIGINAL_CITY_FOUNDATION.gridRows,
-  buildingCount: ORIGINAL_CITY_FOUNDATION.buildings,
-  technologyCount: ORIGINAL_CITY_FOUNDATION.technologies,
-})
+const cityViewModel = (): CityPageViewModel => {
+  const effectiveGrid = cityEffectiveGrid(session.state)
+  const totals = cityTotals(session.state)
+  const selectedTile = cityTileById(session.state, selectedCityTileId) ?? session.state.city.tiles[0]
+  selectedCityTileId = selectedTile.tileId
+  const selectedBuilding = originalCityBuildingById(selectedTile.buildingId)
+  const specialPricePending = selectedTile.tileId === 48
+  const finance = session.state.city.company.currentFinance
+  const cleanOriginalText = (value: string): string => value.replace(/\[\/?color(?:=[^\]]+)?\]/gi, '')
+  return {
+    section: cityPageSection,
+    gridColumns: ORIGINAL_CITY_FOUNDATION.gridColumns,
+    gridRows: ORIGINAL_CITY_FOUNDATION.gridRows,
+    effectiveColumns: effectiveGrid.columns,
+    effectiveRows: effectiveGrid.rows,
+    buildingCount: ORIGINAL_CITY_FOUNDATION.buildings,
+    technologyCount: ORIGINAL_CITY_FOUNDATION.technologies,
+    cityLevel: session.state.city.level,
+    development: cityDevelopment(session.state),
+    ...totals,
+    tiles: session.state.city.tiles.map((tile) => {
+      const building = originalCityBuildingById(tile.buildingId)
+      return {
+        tileId: tile.tileId,
+        buildingName: building?.name ?? '空地',
+        buildingType: building?.buildingType ?? '无',
+        buildingLevel: tile.buildingLevel,
+        owned: tile.owned,
+        buildable: tile.buildable,
+        locked: tile.gridX >= effectiveGrid.columns || tile.gridY >= effectiveGrid.rows,
+        selected: tile.tileId === selectedTile.tileId,
+      }
+    }),
+    selectedTile: {
+      tileId: selectedTile.tileId,
+      coordinates: `${selectedTile.gridX + 1} 行 · ${selectedTile.gridY + 1} 列`,
+      buildingName: selectedBuilding?.name ?? '空地',
+      buildingType: selectedBuilding?.buildingType ?? '无',
+      buildingLevel: selectedTile.buildingLevel,
+      description: cleanOriginalText(selectedBuilding?.description ?? '可开发的建设用地。'),
+      owned: selectedTile.owned,
+      buildable: selectedTile.buildable,
+      landPriceTier: selectedTile.landPriceTier,
+      population: selectedTile.population,
+      commerce: selectedTile.commerce,
+      industry: selectedTile.industry,
+      purchasePrice: specialPricePending ? null : cityTilePrice(session.state, selectedTile, 'buy'),
+      salePrice: specialPricePending ? null : cityTilePrice(session.state, selectedTile, 'sell'),
+      priceNote: specialPricePending ? ORIGINAL_CITY_PENDING_RULES.specialTile48Unlock : null,
+    },
+    company: {
+      name: session.state.city.company.name,
+      cash: session.state.city.company.cash,
+      ownedLandCount: session.state.city.tiles.filter((tile) => tile.owned).length,
+      ownedLandValue: cityOwnedLandValue(session.state),
+      baseMonthlyRent: cityBaseMonthlyRent(session.state),
+      previousNetIncome: session.state.city.company.previousNetIncome,
+      finance: [
+        { name: '销售收入', amount: finance.销售收入, expense: false },
+        { name: '租金收入', amount: finance.租金收入, expense: false },
+        { name: '门票收入', amount: finance.门票收入, expense: false },
+        { name: '其他收入', amount: finance.其他收入, expense: false },
+        { name: '科研支出', amount: finance.科研支出, expense: true },
+        { name: '建造支出', amount: finance.建造支出, expense: true },
+        { name: '其他支出', amount: finance.其他支出, expense: true },
+      ],
+      registrationCost: ORIGINAL_CITY_CONSTANTS.companyRegistrationCost,
+      nameRuleReason: ORIGINAL_CITY_PENDING_RULES.companyNameValidation,
+      positionRuleReason: ORIGINAL_CITY_PENDING_RULES.companyPositionBonuses,
+    },
+  }
+}
 
 const inventorySlotNames = EQUIPMENT_SLOT_NAMES
 
@@ -2565,7 +2647,15 @@ app.addEventListener('click', (event) => {
   const { action } = button.dataset
   if (handleStartOrResetAction(action)) return
   if (appScreen !== 'playing') return
-  if (action === 'select-plane' && button.dataset.worldId) {
+  if (action === 'select-city-section') {
+    const section = button.dataset.citySection
+    if (section === 'map' || section === 'company') cityPageSection = section
+  } else if (action === 'select-city-tile') {
+    const tileId = Number(button.dataset.cityTileId)
+    const tile = cityTileById(session.state, tileId)
+    const effectiveGrid = cityEffectiveGrid(session.state)
+    if (tile && tile.gridX < effectiveGrid.columns && tile.gridY < effectiveGrid.rows) selectedCityTileId = tileId
+  } else if (action === 'select-plane' && button.dataset.worldId) {
     selectedPlaneId = button.dataset.worldId
     const highest = highestUnlockedDifficulty(
       session.state.unlockedWorldIds,

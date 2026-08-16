@@ -24,6 +24,8 @@
 - `formula-index.md`：从原版事件表和 `_all_func_names.txt` 定位的相关函数入口。
 - `faction-runtime-evidence.json`：势力资源、声望、兑换、任务与解锁函数的逐表达式证据。
 - `faction-runtime-evidence.md`：上述函数的人工审阅版索引。
+- `city-runtime-evidence.json`：城市、土地、公司、财务、项目、升级与迁移核心函数的逐表达式证据。
+- `city-runtime-evidence.md`：上述城市与公司核心函数的人工审阅版索引。
 - `faction-exchange-catalog.json`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
 - `faction-exchange-catalog.md`：上述 396 条兑换商品的人工审阅表。
 - `faction-recruitment-catalog.json`：完整势力招募角色、声望门槛、基础价格和最终价格。
@@ -36,6 +38,7 @@
 - `egg-jianghu/src/content/original-faction-exchange.generated.ts`：运行时使用的完整势力贡献兑换目录。
 - `egg-jianghu/src/content/original-faction-recruitment.generated.ts`：运行时使用的完整势力招募目录。
 - `egg-jianghu/src/content/original-faction-rules.generated.ts`：运行时使用的势力规则常量与纯函数。
+- `egg-jianghu/src/content/original-city.generated.ts`：运行时使用的 25 类建筑、324 块初始地块、城市与土地公式。
 
 ## 证据规则
 

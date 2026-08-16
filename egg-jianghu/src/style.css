@@ -1201,6 +1201,97 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .city-domain-modules p { margin: 7px 0 0; color: #85887b; font-size: 10px; line-height: 1.7; }
 .city-domain-modules small { grid-column: 2; color: var(--city-cinnabar-bright); font-size: 8.5px; letter-spacing: .16em; }
 
+/* 现世城市 · 地图与公司核心 */
+.city-core-page { display: flex; flex-direction: column; }
+.city-core-tabs { position: relative; z-index: 2; display: flex; align-items: center; gap: 5px; margin-top: -12px; }
+.city-core-tabs button { padding: 9px 17px; border: 0; border-bottom: 2px solid transparent; color: #777c70; background: transparent; font-size: 11px; letter-spacing: .14em; }
+.city-core-tabs button:hover { color: #d5c7aa; }
+.city-core-tabs button[aria-pressed="true"] { border-bottom-color: var(--city-cinnabar); color: #eadfc9; background: linear-gradient(180deg, transparent, rgb(181 80 60 / 8%)); }
+.city-core-tabs > span { margin-left: auto; color: #696f66; font-size: 9px; letter-spacing: .12em; }
+.city-attribute-ribbon { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 12px 0; border: 1px solid var(--city-line-soft); background: rgb(12 14 11 / 34%); }
+.city-attribute-ribbon span { display: flex; align-items: baseline; justify-content: center; gap: 10px; padding: 8px 12px; color: #6f766c; font-size: 9px; letter-spacing: .16em; }
+.city-attribute-ribbon span + span { border-left: 1px solid var(--city-line-soft); }
+.city-attribute-ribbon strong { color: #cbbd9f; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.city-core-layout { position: relative; z-index: 1; display: grid; flex: 1 1 auto; min-height: 0; grid-template-columns: minmax(520px, 1.4fr) minmax(290px, .6fr); gap: 14px; }
+.city-map-panel, .city-land-deed, .city-company-overview, .city-finance-book { border: 1px solid var(--city-line); border-radius: 9px; background: linear-gradient(160deg, rgb(31 36 28 / 94%), rgb(15 18 13 / 97%)); box-shadow: 0 18px 38px rgb(0 0 0 / 24%); }
+.city-map-panel { display: flex; min-height: 0; flex-direction: column; padding: 14px; }
+.city-panel-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 0 2px 11px; }
+.city-panel-head div { display: grid; gap: 3px; }
+.city-panel-head span, .city-company-name span, .city-finance-book header span { color: var(--city-cinnabar-bright); font-size: 8px; letter-spacing: .24em; }
+.city-panel-head strong { color: #d8caaa; font-size: 13px; font-weight: 500; letter-spacing: .1em; }
+.city-panel-head small { color: #686e65; font-size: 8.5px; letter-spacing: .08em; }
+.city-map-scroll { display: grid; flex: 1 1 auto; min-height: 0; overflow: auto; place-items: center; scrollbar-width: thin; scrollbar-color: #394036 transparent; }
+.city-map-grid { display: grid; aspect-ratio: 1; width: min(100%, 650px); min-width: 500px; grid-template-columns: repeat(var(--city-grid-columns), minmax(0, 1fr)); gap: 2px; padding: 8px; border: 1px solid rgb(201 163 92 / 20%); background: #0c0f0b; box-shadow: inset 0 0 40px rgb(0 0 0 / 58%); }
+.city-map-tile { position: relative; display: grid; min-width: 0; aspect-ratio: 1; place-items: center; padding: 0; overflow: hidden; border: 1px solid rgb(123 130 113 / 20%); border-radius: 2px; color: #888d81; background: #171c15; }
+.city-map-tile::before { position: absolute; inset: 2px; border: 1px solid transparent; content: ""; pointer-events: none; }
+.city-map-tile i { position: relative; z-index: 1; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: clamp(9px, 1vw, 14px); font-style: normal; line-height: 1; }
+.city-map-tile small { position: absolute; right: 2px; bottom: 0; z-index: 1; color: rgb(238 222 185 / 62%); font-size: 6px; font-variant-numeric: tabular-nums; }
+.city-map-tile.type-住宅 { color: #aeb998; background: #252d20; }
+.city-map-tile.type-商业 { color: #cbb67b; background: #302a1b; }
+.city-map-tile.type-工业 { color: #9ca7a6; background: #252b2b; }
+.city-map-tile.type-产业 { color: #c6aa73; background: #2a251a; }
+.city-map-tile.type-特殊 { color: #c78776; background: #2d201d; }
+.city-map-tile.type-树木 { color: #69806a; background: #182219; }
+.city-map-tile:hover:not(:disabled) { z-index: 2; border-color: rgb(230 198 127 / 55%); filter: brightness(1.17); transform: scale(1.1); }
+.city-map-tile.selected { z-index: 3; border-color: var(--city-gold-bright); box-shadow: 0 0 0 1px #171b14, 0 0 13px rgb(230 198 127 / 45%); transform: scale(1.1); }
+.city-map-tile:focus-visible { z-index: 4; outline: 2px solid var(--city-gold-bright); outline-offset: -1px; }
+.city-map-tile.owned::before { border-color: var(--city-cinnabar-bright); }
+.city-map-tile.owned::after { position: absolute; top: -6px; left: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--city-cinnabar); content: ""; }
+.city-map-tile.locked { border-color: rgb(255 255 255 / 4%); color: #333831; background: repeating-linear-gradient(135deg, #11140f 0 4px, #151812 4px 8px); opacity: .36; }
+.city-map-tile:disabled { cursor: not-allowed; }
+.city-map-legend { display: flex; flex-wrap: wrap; gap: 12px; padding: 10px 2px 0; color: #6e746b; font-size: 8px; letter-spacing: .08em; }
+.city-map-legend span { display: flex; align-items: center; gap: 5px; }
+.city-map-legend i { width: 9px; height: 9px; border: 1px solid #4b5148; }
+.city-map-legend .legend-owned { border-color: var(--city-cinnabar); }
+.city-map-legend .legend-built { background: #302a1b; }
+.city-map-legend .legend-open { background: #171c15; }
+.city-map-legend .legend-locked { background: repeating-linear-gradient(135deg, #11140f 0 2px, #242820 2px 4px); opacity: .55; }
+.city-land-deed { display: flex; min-height: 0; flex-direction: column; padding: 20px; }
+.city-land-deed > header { display: flex; align-items: start; justify-content: space-between; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--city-line-soft); }
+.city-land-deed header span { color: #747a70; font-size: 8.5px; letter-spacing: .14em; }
+.city-land-deed h2, .city-company-name h2, .city-finance-book h2 { margin: 5px 0 0; color: #eadcc0; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 26px; font-weight: 400; letter-spacing: .08em; }
+.city-land-deed header > b { padding: 4px 8px; border: 1px solid #555c51; border-radius: 3px; color: #777d73; font-size: 9px; font-weight: 500; letter-spacing: .16em; }
+.city-land-deed header > b.owned { border-color: var(--city-cinnabar-deep); color: var(--city-cinnabar-bright); transform: rotate(3deg); }
+.city-land-deed > p { margin: 13px 0; color: #888e82; font-size: 10px; line-height: 1.8; }
+.city-tile-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--city-line-soft); border-left: 1px solid var(--city-line-soft); }
+.city-tile-stats > div { display: flex; align-items: baseline; justify-content: space-between; gap: 7px; padding: 8px; border-right: 1px solid var(--city-line-soft); border-bottom: 1px solid var(--city-line-soft); }
+.city-tile-stats dt { color: #656c63; font-size: 8px; }
+.city-tile-stats dd { margin: 0; color: #c3b797; font-size: 10px; font-variant-numeric: tabular-nums; }
+.city-price-ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.city-price-ledger span { padding: 9px; border: 1px solid rgb(201 163 92 / 16%); color: #686f65; background: rgb(201 163 92 / 3%); font-size: 8px; }
+.city-price-ledger strong { display: block; margin-top: 3px; color: var(--city-gold-bright); font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.city-rule-note { padding: 8px 10px; border-left: 2px solid var(--city-cinnabar-deep); color: #9a8177 !important; background: rgb(181 80 60 / 5%); font-size: 9px !important; line-height: 1.7 !important; }
+.city-land-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 14px; }
+.city-land-actions button, .city-company-name button { padding: 9px; border-color: rgb(201 163 92 / 23%); color: #777568; background: rgb(201 163 92 / 4%); font-size: 9px; letter-spacing: .12em; }
+.city-land-actions button:disabled, .city-company-name button:disabled { opacity: .56; }
+.city-action-reason { margin-top: 8px; color: #5f655d; font-size: 7.5px; line-height: 1.65; }
+.city-company-layout { position: relative; z-index: 1; display: grid; flex: 1 1 auto; min-height: 0; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: 14px; }
+.city-company-overview, .city-finance-book { padding: 20px; }
+.city-company-name, .city-finance-book > header { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--city-line-soft); }
+.city-company-name button { min-width: 96px; }
+.city-company-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 16px 0; }
+.city-company-metrics article { padding: 12px; border: 1px solid var(--city-line-soft); background: rgb(255 255 255 / 1.5%); }
+.city-company-metrics span { color: #666d63; font-size: 8px; letter-spacing: .1em; }
+.city-company-metrics strong { display: block; margin-top: 6px; color: #d2c39f; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.city-position-board { padding-top: 4px; }
+.city-position-board > header { display: flex; align-items: center; justify-content: space-between; }
+.city-position-board h3 { margin: 0; color: #cfc1a2; font-size: 13px; font-weight: 500; letter-spacing: .12em; }
+.city-position-board header span { color: #777064; font-size: 8px; }
+.city-position-board > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.city-position-board article { display: grid; gap: 6px; padding: 13px; border: 1px solid var(--city-line-soft); background: #151913; }
+.city-position-board article b { color: #a99468; font-size: 10px; font-weight: 500; }
+.city-position-board article span { color: #62675f; font-size: 8px; }
+.city-position-board > p { margin: 11px 0 0; color: #686e65; font-size: 8.5px; line-height: 1.7; }
+.city-finance-book > header strong { color: var(--city-jade); font-size: 10px; font-weight: 500; }
+.city-finance-book > header strong.negative { color: var(--city-cinnabar-bright); }
+.city-finance-lines { display: grid; margin-top: 12px; }
+.city-finance-lines > div { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 10px 4px; border-bottom: 1px dashed rgb(123 130 113 / 18%); }
+.city-finance-lines span { color: #7b8277; font-size: 9px; letter-spacing: .1em; }
+.city-finance-lines b { font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.city-finance-lines .income { color: var(--city-jade); }
+.city-finance-lines .expense { color: var(--city-cinnabar-bright); }
+.city-finance-book > footer { margin-top: 15px; color: #5f655d; font-size: 8px; letter-spacing: .08em; }
+
 /* 空状态 */
 .city-page-empty .city-empty-note { position: relative; z-index: 1; display: grid; place-content: center; gap: 10px; min-height: 280px; border: 1px solid var(--city-line); border-radius: 10px; background: linear-gradient(170deg, var(--city-ink-850), var(--city-ink-900) 75%); text-align: center; }
 .city-page-empty .city-empty-note strong { color: #d6c8ad; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 20px; font-weight: 400; letter-spacing: .12em; }
@@ -1210,6 +1301,8 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 @media (max-width: 1279px) {
   .city-page .street { grid-template-columns: 1fr; }
   .town-place-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .city-core-layout, .city-company-layout { flex: none; grid-template-columns: minmax(0, 1fr); }
+  .city-map-panel, .city-land-deed, .city-company-overview, .city-finance-book { min-width: 0; }
 }
 @media (max-width: 980px) {
   .city-ghost { display: none; }
@@ -1218,6 +1311,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .faction-agent-automation > div { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .city-domain-intro { grid-template-columns: 1fr; }
   .city-grid-preview { width: min(220px, 70vw); }
+  .city-company-metrics, .city-position-board > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
   .city-page-title { font-size: 40px; }
@@ -1237,6 +1331,21 @@ button:disabled { cursor: not-allowed; opacity: .38; }
   .city-foundation-counts { justify-content: flex-start; }
   .city-foundation-counts > span { min-width: 86px; }
   .city-domain-intro { padding: 18px; }
+  .city-core-tabs { flex-wrap: wrap; margin-top: 0; }
+  .city-core-tabs button { flex: 1 1 0; padding-inline: 10px; }
+  .city-core-tabs > span { flex-basis: 100%; margin: 4px 0 0; text-align: center; }
+  .city-attribute-ribbon span { flex-direction: column; gap: 2px; padding: 7px 4px; }
+  .city-core-layout, .city-company-layout { gap: 10px; }
+  .city-map-panel, .city-land-deed, .city-company-overview, .city-finance-book { padding: 12px; }
+  .city-panel-head, .city-company-name, .city-finance-book > header { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .city-map-scroll { justify-content: start; place-items: start; }
+  .city-map-grid { width: 500px; }
+  .city-price-ledger, .city-land-actions, .city-company-metrics, .city-position-board > div { grid-template-columns: 1fr; }
+  .city-company-name button { width: 100%; }
+}
+@media (hover: none) {
+  .city-map-tile:hover:not(:disabled) { border-color: rgb(123 130 113 / 20%); filter: none; transform: none; }
+  .city-map-tile.selected, .city-map-tile.selected:hover { border-color: var(--city-gold-bright); transform: scale(1.08); }
 }
 /* 桌面一屏布局：主区定高，铺体内部滚动（与设计稿一致） */
 @media (min-width: 1280px) {

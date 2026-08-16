@@ -12,6 +12,7 @@ const RUNTIME_TOWNS_FILE = resolve(HERE, '../src/content/original-towns.generate
 const RUNTIME_FACTION_EXCHANGE_FILE = resolve(HERE, '../src/content/original-faction-exchange.generated.ts')
 const RUNTIME_FACTION_RECRUITMENT_FILE = resolve(HERE, '../src/content/original-faction-recruitment.generated.ts')
 const RUNTIME_FACTION_RULES_FILE = resolve(HERE, '../src/content/original-faction-rules.generated.ts')
+const RUNTIME_CITY_FILE = resolve(HERE, '../src/content/original-city.generated.ts')
 
 const sourceNames = [
   'gg.json',
@@ -113,6 +114,7 @@ const buildings = arrays.jz.slice(1).map((row) => ({
   category: String(row[11]),
   raw: row,
 }))
+const buildingBySourceId = new Map(buildings.map((building) => [building.sourceId, building]))
 
 const technologies = arrays.kj.slice(1).map((row) => ({
   sourceId: asNumber(row[0]),
@@ -324,6 +326,46 @@ assertUnique(worldHubs.map((hub) => hub.sourceId), '位面主城')
 assertUnique(factionTowns.map((town) => town.sourceId), '势力城镇')
 assertUnique(buildings.map((building) => building.sourceId), '建筑')
 assertUnique(technologies.map((technology) => technology.sourceId), '科技')
+
+const initialCityTileLayout = Array.from({ length: 18 }, (_, gridX) =>
+  Array.from({ length: 18 }, (_, gridY) => {
+    const sourceBuildingId = asNumber(arrays.cscz[gridX][gridY])
+    const building = buildingBySourceId.get(sourceBuildingId)
+    assert(sourceBuildingId === 0 || building, `城市地块 (${gridX}, ${gridY}) 引用了未知建筑 ${sourceBuildingId}`)
+    const buildingType = sourceBuildingId === 0 ? String(arrays.jz[0][3]) : building.buildingType
+    const buildable = buildingType === '无' || buildingType === '树木'
+    return {
+      tileId: gridX * 18 + gridY + 1,
+      buildingId: sourceBuildingId,
+      buildingLevel: buildable ? 0 : asNumber(arrays.cscz[gridX + 20][gridY]),
+      owned: sourceBuildingId === 15,
+      buildable,
+      gridX,
+      gridY,
+      landPriceTier: asNumber(arrays.cscz[gridX + 34][gridY]),
+    }
+  }),
+).flat()
+const initialCityTiles = initialCityTileLayout.map((target) => {
+  const metrics = initialCityTileLayout.reduce((total, source) => {
+    const building = buildingBySourceId.get(source.buildingId)
+    if (!building || source.buildingLevel <= 0) return total
+    const range = Math.round(asNumber(building.raw[10]) + Math.ceil(source.buildingLevel / 2))
+    const distance = Math.abs(target.gridX - source.gridX) + Math.abs(target.gridY - source.gridY)
+    if (distance > range) return total
+    total.population += asNumber(building.raw[6]) * source.buildingLevel
+    total.commerce += asNumber(building.raw[7]) * source.buildingLevel
+    total.industry += asNumber(building.raw[8]) * source.buildingLevel
+    return total
+  }, { population: 0, commerce: 0, industry: 0 })
+  return { ...target, ...metrics }
+})
+
+assert(initialCityTiles.length === 324, `城市初始地块数量异常：${initialCityTiles.length}`)
+assert(initialCityTiles[0].tileId === 1 && initialCityTiles.at(-1)?.tileId === 324, '城市初始地块编号不是 1～324')
+assert(initialCityTiles.filter((tile) => tile.owned).length === 1, '城市初始自有地块不是 1 块')
+assert(initialCityTiles.find((tile) => tile.owned)?.buildingId === 15, '城市初始自有地块不是古玩店')
+assert(initialCityTiles.every((tile) => !tile.buildable || tile.buildingLevel === 0), '空地或树木初始等级未归零')
 
 const known = (name, evidence) => ({ name, status: 'confirmed', evidence })
 const pending = (column) => ({
@@ -630,7 +672,7 @@ const fieldUsageArrays = Object.fromEntries(
 const trackedArrayNameById = new Map(
   Object.entries(runtimeArrays).map(([name, value]) => [value.objectId, name]),
 )
-const citySaveColumns = new Set([0, 1, 2, 11, 12, 45])
+const citySaveColumns = new Set([0, 1, 2, 3, 4, 7, 8, 9, 11, 12, 45])
 const factionSaveColumns = new Set([4, 5, 40, 54, 55])
 const factionTaskSaveColumns = new Set(Array.from({ length: 13 }, (_, index) => index))
 
@@ -1114,7 +1156,7 @@ const functionCallsIn = (root) => {
   visit(root)
   return calls
 }
-const factionRuntimeFunctions = factionRuntimeFunctionNames.map((name) => {
+const runtimeFunctionEvidence = (name) => {
   const definition = functionByName.get(name)
   const nodes = namedEventNodes.get(name) ?? []
   assert(definition, `原版函数索引缺少 ${name}`)
@@ -1129,7 +1171,52 @@ const factionRuntimeFunctions = factionRuntimeFunctionNames.map((name) => {
     calls: functionCallsIn(nodes[0]),
     fieldUsages: fieldUsages.filter((usage) => usage.functionName === name),
   }
-})
+}
+const factionRuntimeFunctions = factionRuntimeFunctionNames.map(runtimeFunctionEvidence)
+const cityRuntimeFunctionNames = [
+  '初始化',
+  '角色任职位置function',
+  '刷新公司总览function',
+  '公司人员任命function',
+  '主角公司加成function',
+  '建筑总监加成function',
+  '公司总资产function',
+  '公司总租金function',
+  '总部地块编号function',
+  '公司土地数量function',
+  '公司建筑数量function',
+  '指定建筑数量function',
+  '在建建筑数量function',
+  '指定建筑地块编号function',
+  '财务结算function',
+  '记录收支function',
+  '有效地块function',
+  '建筑属性function',
+  '土地价格function',
+  '土地租金价格function',
+  '地块范围判定function',
+  '土地买卖点击',
+  '土地买卖function',
+  '刷新地块数据function',
+  '公司注册点击',
+  '创建公司名显示',
+  '打开公司注册function',
+  '公司更名点击',
+  '公司注册function',
+  '公司更名function',
+  '项目计划function',
+  '项目建成function',
+  '城市总属性function',
+  '城市发展度function',
+  '城市升级属性function',
+  '城市建筑统计function',
+  '升级扩建点击',
+  '项目扩建计划function',
+  '建筑迁移确定点击',
+  '建筑迁移function',
+  '迁移费用function',
+]
+const cityRuntimeFunctions = cityRuntimeFunctionNames.map(runtimeFunctionEvidence)
 const inlineFactionFunctionNames = [
   '幻化类型文本',
   '代理人贡献加成',
@@ -1141,7 +1228,7 @@ const inlineFactionFunctionNames = [
   '前置技能等级',
   '位面首势力编号',
 ]
-for (const name of inlineFactionFunctionNames) {
+const inlineRuntimeFunctionEvidence = (name) => {
   const matches = []
   const visit = (node, path) => {
     if (!Array.isArray(node)) return
@@ -1155,7 +1242,7 @@ for (const name of inlineFactionFunctionNames) {
   for (const sheet of runtimeData.project[6]) visit(sheet[1], [String(sheet[0])])
   assert(matches.length === 1, `原版内联函数 ${name} 节点数量异常：${matches.length}`)
   const [{ node, path }] = matches
-  factionRuntimeFunctions.push({
+  return {
     name,
     eventId: node[5],
     uid: String(node[4]),
@@ -1164,10 +1251,15 @@ for (const name of inlineFactionFunctionNames) {
     operations: runtimeOperationsIn(node),
     calls: functionCallsIn(node),
     fieldUsages: [],
-  })
+  }
+}
+for (const name of inlineFactionFunctionNames) factionRuntimeFunctions.push(inlineRuntimeFunctionEvidence(name))
+for (const name of ['刷新发展度', 'CEO管理加成', '店铺总价值', '建造现金点', '科技效果加成']) {
+  cityRuntimeFunctions.push(inlineRuntimeFunctionEvidence(name))
 }
 
 const factionRuntimeFunctionByName = new Map(factionRuntimeFunctions.map((fn) => [fn.name, fn]))
+const cityRuntimeFunctionByName = new Map(cityRuntimeFunctions.map((fn) => [fn.name, fn]))
 const requiredFactionRuntimeFunction = (name) => {
   const fn = factionRuntimeFunctionByName.get(name)
   assert(fn, `势力规则契约缺少原版函数 ${name}`)
@@ -1709,6 +1801,76 @@ const factionRuntimeEvidence = {
   saveUsages: factionSaveUsages,
 }
 
+const cityConfirmedRules = {
+  stateLayout: {
+    gridColumns: 18,
+    gridRows: 18,
+    tileCount: 324,
+    tileIds: [1, 324],
+    initialOwnedBuildingId: 15,
+    headquartersBuildingId: 16,
+  },
+  constants: {
+    initialCash: 0,
+    companyRegistrationCost: 100000,
+    companyRenameCost: 100000,
+    buildingRelocationCost: 200000,
+    specialLandPrice: {
+      tileId: 48,
+      amount: 450000,
+      status: 'pending-extra-unlock-condition',
+    },
+  },
+  formulas: {
+    cityDevelopment: 'round((population + commerce + industry) / 60)',
+    buildingAttribute: 'baseAttribute * buildingLevel',
+    buildingInfluenceRange: 'round(baseInfluenceRange + ceil(buildingLevel / 2))',
+    buildingCashCost: 'round(cashCost * 8^buildingLevel)',
+    effectiveGridWidth: 'min(18, 12 + ceil(cityLevel / 2))',
+    effectiveGridHeight: 'min(18, 12 + floor(cityLevel / 2))',
+    cityUpgradeAttribute: '(cityLevel + 1) * 150000',
+    landPurchasePrice: 'round(0.01 * (development + 5000) * (10000 + population + commerce + industry) * landPriceTier^3 + accumulatedBuildingValue)',
+    landSalePrice: 'round(0.6 * 0.01 * (development + 5000) * (10000 + population + commerce + industry) * landPriceTier^3 + accumulatedBuildingValue)',
+    buildingAccumulatedValue: 'sum(round(cashCost * 8^level) * 0.5), level = 0..buildingLevel-1',
+    basicMonthlyRent: 'round((1 + technologyBonus) * purchasePrice * 0.03 / 12)',
+  },
+  pending: {
+    companyNameValidation: '创建宗门判断的字符与长度规则尚未解码',
+    specialTileUnlock: '地块 48 固定 450000 的额外解锁条件尚未解码',
+    companyPositionBonuses: '角色公司能力尚未接入，不能用等级或资质代替',
+  },
+}
+
+const cityFunctionExpressions = (name) => {
+  const fn = cityRuntimeFunctionByName.get(name)
+  assert(fn, `城市运行时证据缺少 ${name}`)
+  return fn.expressions.map((item) => item.expression).join('\n')
+}
+assert(cityRuntimeFunctions.length === 46, `城市运行时核心函数数量异常：${cityRuntimeFunctions.length}`)
+assert(cityFunctionExpressions('刷新发展度').includes('/ 60'), '城市发展度公式证据缺少除以 60')
+assert(cityFunctionExpressions('建筑属性function').includes('Math.ceil'), '建筑范围公式证据缺少 Math.ceil')
+assert(cityFunctionExpressions('土地价格function').includes('pow(save.At(地块编号, 45, 10), 3)'), '土地价格公式证据缺少地价档三次方')
+assert(cityFunctionExpressions('土地租金价格function').includes('(0.03 / 12)'), '土地租金公式证据缺少月租换算')
+assert(cityFunctionExpressions('建造现金点').includes('Math.pow(8, 建筑等级)'), '建筑现金公式证据缺少 8 次方成长')
+assert(cityFunctionExpressions('城市升级属性function').includes('150000'), '城市升级属性公式证据缺少 150000')
+assert(cityFunctionExpressions('迁移费用function').includes('200000'), '建筑迁移费用证据缺少 200000')
+
+const cityRuntimeEvidence = {
+  schemaVersion: 1,
+  source: {
+    eventTree: 'data.json',
+    runtime: 'scripts/c3runtime.js',
+  },
+  summary: {
+    functionCount: cityRuntimeFunctions.length,
+    tileCount: initialCityTiles.length,
+    buildingCount: buildings.length,
+  },
+  confirmedRules: cityConfirmedRules,
+  functions: cityRuntimeFunctions,
+  saveUsages: citySaveUsages,
+}
+
 const versionText = String(arrays.gg[2]?.[0] ?? '')
 const version = versionText.match(/版本号([^\[]+)/)?.[1]?.trim() ?? 'unknown'
 const runtimeSceneSnapshot = (scene) => ({
@@ -1785,6 +1947,203 @@ export const ORIGINAL_CITY_FOUNDATION = {
 
 export const originalWorldTownByIndex = (worldIndex: number): OriginalWorldTownDefinition | undefined =>
   ORIGINAL_WORLD_TOWNS.find((town) => town.worldIndex === worldIndex)
+`
+const runtimeBuildings = buildings.map((building) => ({
+  sourceId: building.sourceId,
+  name: building.name,
+  visualKey: building.visualKey,
+  buildingType: building.buildingType,
+  sceneId: asNumber(building.raw[4]),
+  cashCost: asNumber(building.raw[5]),
+  populationPerLevel: asNumber(building.raw[6]),
+  commercePerLevel: asNumber(building.raw[7]),
+  industryPerLevel: asNumber(building.raw[8]),
+  description: building.description,
+  baseInfluenceRange: asNumber(building.raw[10]),
+  category: building.category,
+  positionAbilityIds: building.raw.slice(12, 19).map(asNumber),
+  positionTitleIds: building.raw.slice(19, 26).map(asNumber),
+  unlockTechnologyId: asNumber(building.raw[26]),
+  maxBuildCount: asNumber(building.raw[27]),
+  buildPointCost: asNumber(building.raw[28]),
+  industryIndex: asNumber(building.raw[29]),
+}))
+const runtimeCitySource = `/**
+ * 原版现世城市核心快照——由《诸天刷宝录》jz.json、cscz.json 与运行时事件生成。
+ * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
+ */
+
+export interface OriginalCityBuildingDefinition {
+  sourceId: number
+  name: string
+  visualKey: string
+  buildingType: string
+  sceneId: number
+  cashCost: number
+  populationPerLevel: number
+  commercePerLevel: number
+  industryPerLevel: number
+  description: string
+  baseInfluenceRange: number
+  category: string
+  positionAbilityIds: readonly number[]
+  positionTitleIds: readonly number[]
+  unlockTechnologyId: number
+  maxBuildCount: number
+  buildPointCost: number
+  industryIndex: number
+}
+
+export interface OriginalCityInitialTile {
+  tileId: number
+  buildingId: number
+  buildingLevel: number
+  owned: boolean
+  buildable: boolean
+  gridX: number
+  gridY: number
+  landPriceTier: number
+  population: number
+  commerce: number
+  industry: number
+}
+
+export const ORIGINAL_CITY_BUILDINGS: readonly OriginalCityBuildingDefinition[] = ${JSON.stringify(runtimeBuildings, null, 2)}
+
+export const ORIGINAL_CITY_INITIAL_TILES: readonly OriginalCityInitialTile[] = ${JSON.stringify(initialCityTiles, null, 2)}
+
+export const ORIGINAL_CITY_CONSTANTS = {
+  gridColumns: 18,
+  gridRows: 18,
+  initialCash: 0,
+  initialOwnedBuildingId: 15,
+  headquartersBuildingId: 16,
+  companyRegistrationCost: 100000,
+  companyRenameCost: 100000,
+  buildingRelocationCost: 200000,
+} as const
+
+export const ORIGINAL_CITY_PENDING_RULES = {
+  companyNameValidation: '原版创建宗门判断的字符与长度规则尚未解码',
+  specialTile48Unlock: '固定 450000 价格伴随的额外解锁条件尚未解码',
+  companyPositionBonuses: '角色公司能力尚未接入',
+} as const
+
+const buildingById = new Map(ORIGINAL_CITY_BUILDINGS.map((building) => [building.sourceId, building]))
+
+export const originalCityBuildingById = (buildingId: number): OriginalCityBuildingDefinition | undefined =>
+  buildingById.get(buildingId)
+
+export const originalCityDevelopment = (population: number, commerce: number, industry: number): number =>
+  Math.round((population + commerce + industry) / 60)
+
+export const originalCityBuildingAttribute = (
+  buildingId: number,
+  buildingLevel: number,
+  attribute: 'population' | 'commerce' | 'industry',
+): number => {
+  const building = originalCityBuildingById(buildingId)
+  if (!building) return 0
+  const level = Math.max(0, Math.floor(buildingLevel))
+  if (attribute === 'population') return building.populationPerLevel * level
+  if (attribute === 'commerce') return building.commercePerLevel * level
+  return building.industryPerLevel * level
+}
+
+export const originalCityBuildingInfluenceRange = (buildingId: number, buildingLevel: number): number => {
+  const building = originalCityBuildingById(buildingId)
+  if (!building) return 0
+  return Math.round(building.baseInfluenceRange + Math.ceil(Math.max(0, Math.floor(buildingLevel)) / 2))
+}
+
+export const originalCityTileInRange = (
+  source: Pick<OriginalCityInitialTile, 'buildingId' | 'buildingLevel' | 'gridX' | 'gridY'>,
+  target: Pick<OriginalCityInitialTile, 'gridX' | 'gridY'>,
+): boolean => Math.abs(target.gridX - source.gridX) + Math.abs(target.gridY - source.gridY)
+  <= originalCityBuildingInfluenceRange(source.buildingId, source.buildingLevel)
+
+export const originalCityRecalculateTileAttributes = (
+  tiles: readonly OriginalCityInitialTile[],
+): OriginalCityInitialTile[] => tiles.map((target) => {
+  const metrics = tiles.reduce((total, source) => {
+    if (!originalCityTileInRange(source, target)) return total
+    total.population += originalCityBuildingAttribute(source.buildingId, source.buildingLevel, 'population')
+    total.commerce += originalCityBuildingAttribute(source.buildingId, source.buildingLevel, 'commerce')
+    total.industry += originalCityBuildingAttribute(source.buildingId, source.buildingLevel, 'industry')
+    return total
+  }, { population: 0, commerce: 0, industry: 0 })
+  return { ...target, ...metrics }
+})
+
+export const originalCityBuildingCashCost = (buildingId: number, buildingLevel: number): number => {
+  const building = originalCityBuildingById(buildingId)
+  if (!building) return 0
+  return Math.round(building.cashCost * 8 ** Math.max(0, Math.floor(buildingLevel)))
+}
+
+export const originalCityAccumulatedBuildingValue = (buildingId: number, buildingLevel: number): number => {
+  let value = 0
+  for (let level = 0; level < Math.max(0, Math.floor(buildingLevel)); level += 1) {
+    value += Math.round(originalCityBuildingCashCost(buildingId, level) * 0.5)
+  }
+  return value
+}
+
+export const originalCityEffectiveGrid = (cityLevel: number): { columns: number; rows: number } => {
+  const level = Math.max(0, Math.floor(cityLevel))
+  return {
+    columns: Math.min(18, 12 + Math.ceil(level / 2)),
+    rows: Math.min(18, 12 + Math.floor(level / 2)),
+  }
+}
+
+export const originalCityTotals = (
+  tiles: readonly OriginalCityInitialTile[],
+  cityLevel: number,
+): { population: number; commerce: number; industry: number } => {
+  const grid = originalCityEffectiveGrid(cityLevel)
+  return tiles.reduce((total, tile) => {
+    if (tile.gridX >= grid.columns || tile.gridY >= grid.rows) return total
+    total.population += tile.population
+    total.commerce += tile.commerce
+    total.industry += tile.industry
+    return total
+  }, { population: 0, commerce: 0, industry: 0 })
+}
+
+export const originalCityUpgradeAttribute = (cityLevel: number): number =>
+  (Math.max(0, Math.floor(cityLevel)) + 1) * 150000
+
+export interface OriginalCityLandPriceInput {
+  development: number
+  population: number
+  commerce: number
+  industry: number
+  landPriceTier: number
+  buildingId: number
+  buildingLevel: number
+  mode: 'buy' | 'sell'
+}
+
+export const originalCityLandPrice = (input: OriginalCityLandPriceInput): number => {
+  const landRate = input.mode === 'sell' ? 0.6 : 1
+  const landValue = landRate
+    * 0.01
+    * (input.development + 5000)
+    * (10000 + input.population + input.commerce + input.industry)
+    * input.landPriceTier ** 3
+  return Math.round(landValue + originalCityAccumulatedBuildingValue(input.buildingId, input.buildingLevel))
+}
+
+export const originalCityMonthlyRent = (
+  buildingId: number,
+  purchasePrice: number,
+  technologyBonus = 0,
+): number => {
+  const buildingType = originalCityBuildingById(buildingId)?.buildingType
+  if (buildingType !== '住宅' && buildingType !== '商业' && buildingType !== '工业') return 0
+  return Math.round((1 + technologyBonus) * purchasePrice * 0.03 / 12)
+}
 `
 const factionExchangeCatalog = {
   schemaVersion: 1,
@@ -2205,6 +2564,42 @@ const factionRuntimeMarkdown = factionRuntimeFunctions.flatMap((fn) => [
   '',
 ]).join('\n')
 
+const cityRulesMarkdown = `## 已确认规则摘要
+
+- 初始城市：18×18，共 324 块；地块编号 1～324。
+- 初始资产：仅古玩店（建筑 15）归玩家所有；总部为建筑 16；原版初始化现金为 0。
+- 公司注册 / 更名：各消耗 100000 现金；建筑迁移固定消耗 200000 现金。
+- 发展度：\`round((人口 + 商业 + 工业) / 60)\`。
+- 建造现金：\`round(基础现金 × 8^建筑等级)\`。
+- 买地价格：\`round(0.01 × (发展度 + 5000) × (10000 + 地块人口 + 地块商业 + 地块工业) × 地价档^3 + 建筑累计价值)\`。
+- 卖地价格：土地基础部分按 60% 计算，建筑累计价值不折价。
+- 基础区月租：\`round((1 + 科技加成) × 买地价格 × 0.03 / 12)\`；其他建筑租金为 0。
+
+### 暂不开放
+
+- 地块 48 的 450000 固定价还伴随未解码解锁条件。
+- 公司名称由原版“创建宗门判断”校验，完整字符和长度规则尚未解码。
+- 公司职位加成依赖角色公司能力，当前角色数据尚未接入。
+
+`
+
+const cityRuntimeMarkdown = cityRuntimeFunctions.flatMap((fn) => [
+  `## ${fn.name}`,
+  '',
+  `- Event ID：${fn.eventId}`,
+  `- 事件路径：${fn.paths[0] ?? '路径待定位'}`,
+  `- 运行时操作：${fn.operations.length} 条`,
+  `- 函数调用：${fn.calls.length} 条`,
+  `- 表字段访问：${fn.fieldUsages.length} 条`,
+  '',
+  '### 运行时表达式',
+  '',
+  ...(fn.expressions.length
+    ? fn.expressions.map((item) => `- \`#${item.expressionId}\` \`${inlineCode(item.expression)}\``)
+    : ['- 无表达式参数']),
+  '',
+]).join('\n')
+
 const markdownCell = (value) => String(value ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
 const factionExchangeKindLabels = {
   'job-book': '转职书',
@@ -2450,6 +2845,8 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - \`formula-index.md\`：从原版事件表和 \`_all_func_names.txt\` 定位的相关函数入口。
 - \`faction-runtime-evidence.json\`：势力资源、声望、兑换、任务与解锁函数的逐表达式证据。
 - \`faction-runtime-evidence.md\`：上述函数的人工审阅版索引。
+- \`city-runtime-evidence.json\`：城市、土地、公司、财务、项目、升级与迁移核心函数的逐表达式证据。
+- \`city-runtime-evidence.md\`：上述城市与公司核心函数的人工审阅版索引。
 - \`faction-exchange-catalog.json\`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
 - \`faction-exchange-catalog.md\`：上述 396 条兑换商品的人工审阅表。
 - \`faction-recruitment-catalog.json\`：完整势力招募角色、声望门槛、基础价格和最终价格。
@@ -2462,6 +2859,7 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - \`egg-jianghu/src/content/original-faction-exchange.generated.ts\`：运行时使用的完整势力贡献兑换目录。
 - \`egg-jianghu/src/content/original-faction-recruitment.generated.ts\`：运行时使用的完整势力招募目录。
 - \`egg-jianghu/src/content/original-faction-rules.generated.ts\`：运行时使用的势力规则常量与纯函数。
+- \`egg-jianghu/src/content/original-city.generated.ts\`：运行时使用的 25 类建筑、324 块初始地块、城市与土地公式。
 
 ## 证据规则
 
@@ -2481,6 +2879,8 @@ const outputs = {
   'formula-index.md': `# 原版运行时函数索引\n\n${formulaMarkdown}`,
   'faction-runtime-evidence.json': `${JSON.stringify(factionRuntimeEvidence, null, 2)}\n`,
   'faction-runtime-evidence.md': `# 原版势力运行时公式证据\n\n${factionRuntimeMarkdown}`,
+  'city-runtime-evidence.json': `${JSON.stringify(cityRuntimeEvidence, null, 2)}\n`,
+  'city-runtime-evidence.md': `# 原版城市与公司核心运行时证据\n\n${cityRulesMarkdown}${cityRuntimeMarkdown}`,
   'faction-exchange-catalog.json': `${JSON.stringify(factionExchangeCatalog, null, 2)}\n`,
   'faction-exchange-catalog.md': factionExchangeMarkdown,
   'faction-recruitment-catalog.json': `${JSON.stringify(factionRecruitmentCatalog, null, 2)}\n`,
@@ -2527,6 +2927,13 @@ if (process.argv.includes('--check')) {
     throw new Error('运行时势力规则契约缺失，请先运行 npm run evidence:world')
   }
   assert(currentRuntimeFactionRules === runtimeFactionRulesSource, '运行时势力规则契约已过期，请运行 npm run evidence:world 并审阅差异')
+  let currentRuntimeCity = null
+  try {
+    currentRuntimeCity = readFileSync(RUNTIME_CITY_FILE, 'utf8')
+  } catch {
+    throw new Error('运行时城市核心快照缺失，请先运行 npm run evidence:world')
+  }
+  assert(currentRuntimeCity === runtimeCitySource, '运行时城市核心快照已过期，请运行 npm run evidence:world 并审阅差异')
   console.log('原版势力、城镇与城市经营真值包已是最新')
 } else {
   mkdirSync(OUT_DIR, { recursive: true })
@@ -2541,6 +2948,8 @@ if (process.argv.includes('--check')) {
   writeFileSync(RUNTIME_FACTION_RECRUITMENT_FILE, runtimeFactionRecruitmentSource, 'utf8')
   mkdirSync(dirname(RUNTIME_FACTION_RULES_FILE), { recursive: true })
   writeFileSync(RUNTIME_FACTION_RULES_FILE, runtimeFactionRulesSource, 'utf8')
+  mkdirSync(dirname(RUNTIME_CITY_FILE), { recursive: true })
+  writeFileSync(RUNTIME_CITY_FILE, runtimeCitySource, 'utf8')
   console.log(`已生成真值包：势力 ${factions.length}、主城 ${worldHubs.length}、公共场所 ${publicLocations.length}、势力城镇 ${factionTowns.length}`)
   console.log(`贡献兑换：商品 ${factionExchangeCounts.total}、正式势力 ${factionExchangeCounts.factions}`)
   console.log(`势力招募：角色 ${factionRecruitmentCounts.total}、势力 ${factionRecruitmentCounts.factions}`)

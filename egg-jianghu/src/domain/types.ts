@@ -124,6 +124,47 @@ export interface SacredBeastProgressState {
   claimedStages: number[]
 }
 
+export type CityFinanceCategory =
+  | '销售收入'
+  | '租金收入'
+  | '门票收入'
+  | '其他收入'
+  | '科研支出'
+  | '建造支出'
+  | '其他支出'
+
+export type CityFinanceLedger = Record<CityFinanceCategory, number>
+
+export interface CityTileState {
+  tileId: number
+  buildingId: number
+  buildingLevel: number
+  owned: boolean
+  buildable: boolean
+  gridX: number
+  gridY: number
+  landPriceTier: number
+  population: number
+  commerce: number
+  industry: number
+}
+
+export interface CityCompanyState {
+  name: string | null
+  cash: number
+  /** 原版职位存档索引 -> 侠客 ID；角色公司能力接入前不生效。 */
+  appointments: Record<string, string | null>
+  currentFinance: CityFinanceLedger
+  previousFinance: CityFinanceLedger
+  previousNetIncome: number
+}
+
+export interface CityState {
+  level: number
+  tiles: CityTileState[]
+  company: CityCompanyState
+}
+
 export interface GameStateV10 {
   version: 18
   worldCurrency: CurrencyWallet
@@ -153,6 +194,7 @@ export interface GameStateV10 {
   deities: Record<string, DeityProgressState>
   sacredBeasts: Record<string, SacredBeastProgressState>
   largeDungeonClears: Record<string, number>
+  city: CityState
   statistics: {
     kills: number
     bossKills: number

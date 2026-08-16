@@ -194,8 +194,70 @@ const factionsFixture = (): FactionsPageViewModel => ({
   },
 })
 
-const cityFixture = (): CityPageViewModel => ({
-  gridColumns: 18, gridRows: 18, buildingCount: 25, technologyCount: 75,
+const cityFixture = (section: CityPageViewModel['section'] = 'map'): CityPageViewModel => ({
+  section,
+  gridColumns: 18,
+  gridRows: 18,
+  effectiveColumns: 12,
+  effectiveRows: 12,
+  buildingCount: 25,
+  technologyCount: 75,
+  cityLevel: 0,
+  development: 4129,
+  population: 74000,
+  commerce: 117350,
+  industry: 56400,
+  tiles: Array.from({ length: 324 }, (_, index) => {
+    const tileId = index + 1
+    const owned = tileId === 172
+    return {
+      tileId,
+      buildingName: owned ? '古玩店' : '空地',
+      buildingType: owned ? '商业' : '无',
+      buildingLevel: owned ? 1 : 0,
+      owned,
+      buildable: !owned,
+      locked: index % 18 >= 12 || Math.floor(index / 18) >= 12,
+      selected: owned,
+    }
+  }),
+  selectedTile: {
+    tileId: 172,
+    coordinates: '10 行 · 10 列',
+    buildingName: '古玩店',
+    buildingType: '商业',
+    buildingLevel: 1,
+    description: '经营古玩与收藏品的商店。',
+    owned: true,
+    buildable: false,
+    landPriceTier: 3,
+    population: 0,
+    commerce: 5000,
+    industry: 0,
+    purchasePrice: 620000,
+    salePrice: 372000,
+    priceNote: null,
+  },
+  company: {
+    name: null,
+    cash: 0,
+    ownedLandCount: 1,
+    ownedLandValue: 620000,
+    baseMonthlyRent: 0,
+    previousNetIncome: 0,
+    finance: [
+      { name: '销售收入', amount: 0, expense: false },
+      { name: '租金收入', amount: 0, expense: false },
+      { name: '门票收入', amount: 0, expense: false },
+      { name: '其他收入', amount: 0, expense: false },
+      { name: '科研支出', amount: 0, expense: true },
+      { name: '建造支出', amount: 0, expense: true },
+      { name: '其他支出', amount: 0, expense: true },
+    ],
+    registrationCost: 100000,
+    nameRuleReason: '原版公司名称完整校验尚未解码',
+    positionRuleReason: '原版公司职位能力尚未解码',
+  },
 })
 
 const townsFixture = (): TownsPageViewModel => ({
@@ -424,11 +486,24 @@ describe('version 10 长期循环页面', () => {
     const html = renderCityPage(cityFixture())
     expect(html).toContain('data-testid="city-page"')
     expect(html).toContain('跨位面经营')
-    expect(html).toContain('<strong>18×18</strong>初始地块')
+    expect(html).toContain('data-testid="city-map"')
+    expect(html.match(/data-city-tile-id=/g)).toHaveLength(324)
+    expect(html).toContain('18×18 地块 · 75 项科技')
     expect(html).toContain('<strong>25</strong>类建筑')
-    expect(html).toContain('<strong>75</strong>项科技')
-    expect(html).toContain('不会提供近似操作或虚构收益')
+    expect(html).toContain('10 行 · 10 列')
+    expect(html).toContain('<button type="button" disabled>出售土地</button>')
+    expect(html).toContain('未核验操作保持关闭')
     expect(html).not.toContain('本卷货币')
+  })
+
+  it('城市公司总览展示七类财务并关闭未核验的注册与职位操作', () => {
+    const html = renderCityPage(cityFixture('company'))
+    expect(html).toContain('data-testid="city-company"')
+    expect(html).toContain('<button type="button" disabled>注册公司</button>')
+    expect(html).toContain('原版公司名称完整校验尚未解码')
+    expect(html.match(/class="(?:income|expense)"/g)).toHaveLength(7)
+    expect(html).toContain('原版七类收支')
+    expect(html).toContain('职位能力待接入')
   })
 
   it('背包页按原型输出原版装备图标、详情器影和品质件数', () => {

@@ -1,8 +1,9 @@
 import { STARTER_CAREER_ID } from '../content/careers'
 import { FACTIONS } from '../content/factions'
 import { PLAYER_HERO_ID } from '../content/heroes'
+import { ORIGINAL_CITY_CONSTANTS, ORIGINAL_CITY_INITIAL_TILES } from '../content/original-city.generated'
 import { ORIGINAL_DEITIES, ORIGINAL_SACRED_BEASTS } from '../content/original-progression.generated'
-import type { GameStateV10, HeroProgressV10 } from './types'
+import type { CityFinanceLedger, CityState, GameStateV10, HeroProgressV10 } from './types'
 
 export const createHeroEquipmentSets = (): HeroProgressV10['equipmentSets'] => [{}, {}, {}]
 
@@ -29,6 +30,29 @@ export const createHeroProgress = (careerId: string): HeroProgressV10 => {
     equipmentBySlot: equipmentSets[0],
   }
 }
+
+export const createEmptyCityFinanceLedger = (): CityFinanceLedger => ({
+  销售收入: 0,
+  租金收入: 0,
+  门票收入: 0,
+  其他收入: 0,
+  科研支出: 0,
+  建造支出: 0,
+  其他支出: 0,
+})
+
+export const createInitialCityState = (): CityState => ({
+  level: 0,
+  tiles: ORIGINAL_CITY_INITIAL_TILES.map((tile) => ({ ...tile })),
+  company: {
+    name: null,
+    cash: ORIGINAL_CITY_CONSTANTS.initialCash,
+    appointments: {},
+    currentFinance: createEmptyCityFinanceLedger(),
+    previousFinance: createEmptyCityFinanceLedger(),
+    previousNetIncome: 0,
+  },
+})
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
   version: 18,
@@ -64,6 +88,7 @@ export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
     claimedStages: [],
   }])),
   largeDungeonClears: {},
+  city: createInitialCityState(),
   statistics: {
     kills: 0,
     bossKills: 0,

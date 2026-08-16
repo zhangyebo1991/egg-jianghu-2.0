@@ -29,4 +29,4 @@
 | 12 | `gridY` |
 | 45 | `landPriceTier` |
 
-`field-usage-index.json` 的 `targetedCitySaveUsages` 保留这些字段在初始化、建筑、土地、公司和城市属性链中的逐次读写表达式，共 547 条。
+`field-usage-index.json` 的 `targetedCitySaveUsages` 保留这些字段在初始化、建筑、土地、公司和城市属性链中的逐次读写表达式，共 722 条。

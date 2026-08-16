@@ -222,6 +222,66 @@ const isSacredBeastProgress = (value: unknown): boolean =>
   && isNumberArray(value.claimedStages)
   && value.claimedStages.every((stage) => Number.isInteger(stage) && stage >= 1 && stage <= 9)
 
+const cityFinanceCategories = ['销售收入', '租金收入', '门票收入', '其他收入', '科研支出', '建造支出', '其他支出'] as const
+
+const isCityFinanceLedger = (value: unknown): boolean =>
+  isRecord(value)
+  && Object.keys(value).length === cityFinanceCategories.length
+  && cityFinanceCategories.every((category) => isFiniteNumber(value[category]) && Number(value[category]) >= 0)
+
+const isCityTile = (value: unknown): boolean =>
+  isRecord(value)
+  && Number.isInteger(Number(value.tileId))
+  && Number(value.tileId) >= 1
+  && Number(value.tileId) <= 324
+  && Number.isInteger(Number(value.buildingId))
+  && Number(value.buildingId) >= 0
+  && Number(value.buildingId) <= 25
+  && Number.isInteger(Number(value.buildingLevel))
+  && Number(value.buildingLevel) >= 0
+  && typeof value.owned === 'boolean'
+  && typeof value.buildable === 'boolean'
+  && Number.isInteger(Number(value.gridX))
+  && Number(value.gridX) >= 0
+  && Number(value.gridX) < 18
+  && Number.isInteger(Number(value.gridY))
+  && Number(value.gridY) >= 0
+  && Number(value.gridY) < 18
+  && isFiniteNumber(value.landPriceTier)
+  && Number(value.landPriceTier) >= 0
+  && isFiniteNumber(value.population)
+  && Number(value.population) >= 0
+  && isFiniteNumber(value.commerce)
+  && Number(value.commerce) >= 0
+  && isFiniteNumber(value.industry)
+  && Number(value.industry) >= 0
+
+const isCityState = (value: unknown): boolean => {
+  if (!isRecord(value)
+    || !Number.isInteger(Number(value.level))
+    || Number(value.level) < 0
+    || Number(value.level) > 12
+    || !Array.isArray(value.tiles)
+    || value.tiles.length !== 324
+    || !value.tiles.every(isCityTile)
+    || !isRecord(value.company)) return false
+  const tileIds = new Set(value.tiles.map((tile) => Number((tile as Record<string, unknown>).tileId)))
+  const coordinates = new Set(value.tiles.map((tile) => {
+    const record = tile as Record<string, unknown>
+    return `${record.gridX}:${record.gridY}`
+  }))
+  if (tileIds.size !== 324 || coordinates.size !== 324) return false
+  const company = value.company
+  return (company.name === null || typeof company.name === 'string')
+    && isFiniteNumber(company.cash)
+    && Number(company.cash) >= 0
+    && isRecord(company.appointments)
+    && Object.values(company.appointments).every((heroId) => heroId === null || typeof heroId === 'string')
+    && isCityFinanceLedger(company.currentFinance)
+    && isCityFinanceLedger(company.previousFinance)
+    && isFiniteNumber(company.previousNetIncome)
+}
+
 const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameStateV10['inventory']): void => {
   normalizeInventoryDefinitionIds(inventory)
   for (const hero of Object.values(heroes) as HeroProgressV10[]) {
@@ -258,6 +318,7 @@ const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10
   deities: structuredClone(state.deities),
   sacredBeasts: structuredClone(state.sacredBeasts),
   largeDungeonClears: structuredClone(state.largeDungeonClears),
+  city: structuredClone(state.city),
   statistics: structuredClone(state.statistics),
   lastSavedAt,
 })
@@ -308,7 +369,8 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     || !Object.values(raw.deities).every(isDeityProgress)
     || !isRecord(raw.sacredBeasts)
     || !Object.values(raw.sacredBeasts).every(isSacredBeastProgress)
-    || !isNumberRecord(raw.largeDungeonClears)) {
+    || !isNumberRecord(raw.largeDungeonClears)
+    || !isCityState(raw.city)) {
     throw new Error('存档版本不受支持或格式无效')
   }
 
@@ -344,6 +406,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     deities: structuredClone(raw.deities) as GameStateV10['deities'],
     sacredBeasts: structuredClone(raw.sacredBeasts) as GameStateV10['sacredBeasts'],
     largeDungeonClears: structuredClone(raw.largeDungeonClears) as Record<string, number>,
+    city: structuredClone(raw.city) as GameStateV10['city'],
     statistics: isRecord(raw.statistics) ? structuredClone(raw.statistics) as GameStateV10['statistics'] : state.statistics,
   }, Math.min(now, Number(raw.lastSavedAt) || now)))
   normalizeLoadedHeroes(loaded.heroes, loaded.inventory)

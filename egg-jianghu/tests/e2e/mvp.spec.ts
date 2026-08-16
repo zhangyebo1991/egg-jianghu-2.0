@@ -315,6 +315,39 @@ test('江湖位面侧栏显示四个分离入口并可切换城镇与城市', as
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
+test('城市地图可选择 324 块地块并切换公司总览，未核验操作保持关闭', async ({ page }) => {
+  await enterWorld(page)
+  await page.getByTestId('world-section-city').click()
+
+  const map = page.getByTestId('city-map')
+  const tileDetail = page.getByTestId('city-tile-detail')
+  await expect(map.locator('[data-city-tile-id]')).toHaveCount(324)
+  await expect(tileDetail).toContainText('10 行 · 10 列')
+
+  const firstTile = map.locator('[data-city-tile-id="1"]')
+  await firstTile.click()
+  await expect(firstTile).toHaveAttribute('aria-pressed', 'true')
+  await expect(tileDetail).toContainText('1 行 · 1 列')
+  await expect(page.getByRole('button', { name: '购买土地' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: '规划建设' })).toBeDisabled()
+
+  await page.locator('button[data-city-section="company"]').click()
+  await expect(page.getByTestId('city-company')).toBeVisible()
+  await expect(page.locator('.city-finance-lines > div')).toHaveCount(7)
+  await expect(page.getByRole('button', { name: '注册公司' })).toBeDisabled()
+  await expect(page.getByTestId('city-company')).toContainText('职位能力待接入')
+
+  await page.locator('button[data-city-section="map"]').click()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.getByTestId('city-map')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  const mapOverflow = await page.locator('.city-map-scroll').evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }))
+  expect(mapOverflow.scrollWidth).toBeGreaterThan(mapOverflow.clientWidth)
+})
+
 test('离页后恢复同一战斗并在停止后返回小关列表', async ({ page }) => {
   await prepareParty(page)
   await enterWorld(page)

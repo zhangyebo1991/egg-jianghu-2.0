@@ -115,6 +115,24 @@ describe('version 18 存档', () => {
     expect(loaded.state.acceptedFactionQuests['1'].progress).toBe(3)
   })
 
+  it('保存并恢复原版城市地块、公司现金与财务状态', () => {
+    const storage = memoryStorage()
+    const state = createInitialStateV10(1000)
+    state.city.company.cash = 200_000
+    state.city.company.name = '试剑商会'
+    state.city.company.currentFinance.其他支出 = 100_000
+    state.city.company.appointments['1'] = 'hero_player'
+    state.city.tiles[171].owned = true
+    saveGameV10(storage, state, 1000)
+
+    const loaded = loadGameV10(storage, 2000)
+
+    expect(loaded.recoveredFromError).toBe(false)
+    expect(loaded.state.city.company).toEqual(state.city.company)
+    expect(loaded.state.city.tiles).toHaveLength(324)
+    expect(loaded.state.city.tiles[171]).toEqual(state.city.tiles[171])
+  })
+
   it.each([
     ['缺少位面声望', (raw: Record<string, unknown>) => { delete raw.worldReputation }],
     ['代理人字段损坏', (raw: Record<string, unknown>) => { raw.factionAgents = { world_01: { heroId: 7, enabled: true } } }],
@@ -132,7 +150,20 @@ describe('version 18 存档', () => {
       }
     }],
     ['幻型 ID 非整数', (raw: Record<string, unknown>) => { raw.unlockedSkinIds = [1.5] }],
-  ])('拒绝 v18 势力状态损坏：%s', (_name, mutate) => {
+    ['城市地块数量损坏', (raw: Record<string, unknown>) => {
+      const city = raw.city as { tiles: unknown[] }
+      city.tiles.pop()
+    }],
+    ['城市地块坐标重复', (raw: Record<string, unknown>) => {
+      const city = raw.city as { tiles: Array<Record<string, unknown>> }
+      city.tiles[1].gridX = city.tiles[0].gridX
+      city.tiles[1].gridY = city.tiles[0].gridY
+    }],
+    ['公司现金损坏', (raw: Record<string, unknown>) => {
+      const city = raw.city as { company: Record<string, unknown> }
+      city.company.cash = -1
+    }],
+  ])('拒绝 v18 关键状态损坏：%s', (_name, mutate) => {
     const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>
     mutate(raw)
     expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
