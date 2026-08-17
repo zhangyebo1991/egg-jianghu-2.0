@@ -117,7 +117,7 @@ describe('version 18 存档', () => {
 
   it('保存并恢复侠客计略培养，并拒绝越界能力字段', () => {
     const storage = memoryStorage()
-    const state = createInitialStateV10(1000)
+    const state = createNewGameStateV10('燕七', 1000)
     state.heroes.hero_player.abilityTraining = { 9: 4 }
     saveGameV10(storage, state, 1000)
 
@@ -129,6 +129,38 @@ describe('version 18 存档', () => {
     const heroes = raw.heroes as Record<string, Record<string, unknown>>
     heroes.hero_player.abilityTraining = { 9: 9 }
     expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
+  })
+
+  it('保存并恢复代理人筛选矩阵，拒绝越界列号与非法行 key', () => {
+    const storage = memoryStorage()
+    const state = createNewGameStateV10('燕七', 1000)
+    state.factionAgentFilters = { 'world_01:3': [1, 7], 'world_02:5': [11] }
+    saveGameV10(storage, state, 1000)
+
+    const loaded = loadGameV10(storage, 2000)
+    expect(loaded.recoveredFromError).toBe(false)
+    expect(loaded.state.factionAgentFilters).toEqual({ 'world_01:3': [1, 7], 'world_02:5': [11] })
+
+    const raw = JSON.parse(storage.values.get(SAVE_KEY_V10) ?? '{}') as Record<string, unknown>
+    const withBadColumn = { ...raw, factionAgentFilters: { 'world_01:3': [21] } }
+    expect(() => hydrateStateV10(withBadColumn, 2000)).toThrow('存档版本不受支持或格式无效')
+
+    const withBadTaskId = { ...raw, factionAgentFilters: { 'world_01:9': [1] } }
+    expect(() => hydrateStateV10(withBadTaskId, 2000)).toThrow('存档版本不受支持或格式无效')
+
+    const withDuplicateColumn = { ...raw, factionAgentFilters: { 'world_01:3': [1, 1] } }
+    expect(() => hydrateStateV10(withDuplicateColumn, 2000)).toThrow('存档版本不受支持或格式无效')
+  })
+
+  it('缺少筛选矩阵的旧 v18 存档按全部放行载入', () => {
+    const storage = memoryStorage()
+    const state = createNewGameStateV10('燕七', 1000)
+    saveGameV10(storage, state, 1000)
+
+    const raw = JSON.parse(storage.values.get(SAVE_KEY_V10) ?? '{}') as Record<string, unknown>
+    delete raw.factionAgentFilters
+
+    expect(hydrateStateV10(raw, 2000).factionAgentFilters).toEqual({})
   })
 
   it('保存并恢复原版城市地块、公司现金与财务状态', () => {

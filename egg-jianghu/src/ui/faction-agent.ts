@@ -10,6 +10,21 @@ export interface FactionAgentHeroView {
   selected: boolean
 }
 
+export interface FactionAgentQualityFilterView {
+  quality: number
+  column: number
+  allowed: boolean
+}
+
+export interface FactionAgentTaskFilterView {
+  taskId: number
+  name: string
+  column: number
+  /** 该任务类型是否参与自动接受（未被矩阵排除）。 */
+  allowed: boolean
+  qualities: readonly FactionAgentQualityFilterView[]
+}
+
 export interface FactionAgentViewModel {
   worldId: string
   worldName: string
@@ -20,9 +35,43 @@ export interface FactionAgentViewModel {
   contributionBonusPercent: number
   reputationBonusPercent: number
   taskAutomationAvailable: boolean
+  taskFilters: readonly FactionAgentTaskFilterView[]
+  acceptedTaskCount: number
+  concurrentTaskLimit: number
 }
 
-const taskNames = ['消灭', '筹措', '收集', '挑战', '寻宝'] as const
+const filterButton = (
+  view: FactionAgentViewModel,
+  taskId: number,
+  column: number,
+  label: string,
+  allowed: boolean,
+  extraClass: string,
+): string => `<button type="button" class="${extraClass}${allowed ? '' : ' excluded'}"
+  data-action="toggle-agent-task-filter"
+  data-world-id="${escapeHtml(view.worldId)}"
+  data-task-id="${taskId}"
+  data-column="${column}"
+  aria-pressed="${allowed}"
+  ${view.taskAutomationAvailable ? '' : 'disabled'}>${escapeHtml(label)}</button>`
+
+const renderTaskFilter = (view: FactionAgentViewModel, filter: FactionAgentTaskFilterView): string =>
+  `<article class="faction-agent-task-filter${filter.allowed ? '' : ' excluded'}" data-testid="agent-task-filter-${filter.taskId}">
+    ${filterButton(view, filter.taskId, filter.column, filter.name, filter.allowed, 'faction-agent-task-toggle')}
+    <span>${filter.allowed ? '已启用' : '已排除'}</span>
+    <div class="faction-agent-quality-filters">
+      ${filter.qualities
+        .map((quality) => filterButton(
+          view,
+          filter.taskId,
+          quality.column,
+          String(quality.quality),
+          quality.allowed,
+          'faction-agent-quality-toggle',
+        ))
+        .join('')}
+    </div>
+  </article>`
 
 const renderCurrentAgent = (view: FactionAgentViewModel): string => view.currentAgent
   ? `<div class="faction-agent-current-card">
@@ -55,12 +104,20 @@ export const renderFactionAgent = (view: FactionAgentViewModel): string => `<sec
     <div class="faction-agent-bonus" data-testid="faction-agent-bonus">
       <span>奖励加成</span>
       <strong>${view.abilityLevel > 0 ? '已生效' : '计略 Lv.0'}</strong>
-      <small>计略 Lv.${view.abilityLevel} · 贡献 +${view.contributionBonusPercent}% · 声望 +${view.reputationBonusPercent}%。只受原版能力 9，白板未接入时基础为 0，不使用等级或资质代替。</small>
+      <small>计略 Lv.${view.abilityLevel} · 贡献 +${view.contributionBonusPercent}% · 声望 +${view.reputationBonusPercent}%。等级 = 原版角色白板 + 培养 + 至宝加成，上限 5；本作自创侠客原版无对应角色，白板为 0。</small>
     </div>
   </div>
   <div class="faction-agent-automation">
-    <header><div><span>任务类型设置</span><strong>自动接受 / 完成</strong></div><small>${view.taskAutomationAvailable ? '已开放' : '条件矩阵尚未接入，保持关闭'}</small></header>
-    <div>${taskNames.map((name) => `<span>${name}<i>未启用</i></span>`).join('')}</div>
+    <header>
+      <div><span>任务类型设置</span><strong>自动接受 / 完成</strong></div>
+      <small>${view.taskAutomationAvailable
+        ? `已开放 · 已接 ${view.acceptedTaskCount}/${view.concurrentTaskLimit} · 每秒结算一轮，先交付再接受`
+        : '需先任命代理人'}</small>
+    </header>
+    <p class="faction-agent-automation-hint">点击类型或品质即可排除；缺省为全部放行。势力与子类筛选已按原版接入结算，暂未提供界面。</p>
+    <div class="faction-agent-task-filters">
+      ${view.taskFilters.map((filter) => renderTaskFilter(view, filter)).join('')}
+    </div>
   </div>
   <div class="faction-agent-candidates">
     <header><h3>任命人选</h3><span>已招募 · 非主角 · 战斗中不可任命</span></header>

@@ -96,8 +96,23 @@ export interface FactionBoardState {
 
 export interface FactionAgentState {
   heroId: string | null
+  /**
+   * 是否开启自动接受/完成。对应原版 save[位面][55]，但极性相反：
+   * 原版列值 1 表示关闭、0 表示开启，且任命与卸任都写 1（即默认关闭）。
+   * 本作在此用直觉极性（true = 开启），读写边界的换算见 `faction-agent.ts`。
+   */
   enabled: boolean
 }
+
+/**
+ * 位面代理人任务筛选矩阵。
+ *
+ * key 为 `${worldId}:${taskId}`，对应原版 save 第 16 层的行 `(位面 - 1) * 5 + taskId`；
+ * value 是被排除的列号（黑名单语义：列出现即排除，缺省或空数组即全部放行）。
+ * 列语义见 `ORIGINAL_FACTION_RULES.stateLayout.agentFilter`：
+ * 1 = 任务类型总开关、2..4 = 势力、5..10 = 品质、11..20 = 子类（按 taskId 切换 key）。
+ */
+export type FactionAgentFilters = Record<string, number[]>
 
 export interface EquipmentInstance {
   uid: string
@@ -175,6 +190,7 @@ export interface GameStateV10 {
   contribution: ContributionWallet
   worldReputation: Record<string, number>
   factionAgents: Record<string, FactionAgentState>
+  factionAgentFilters: FactionAgentFilters
   unlockedFactionIds: string[]
   heroes: Record<string, HeroProgressV10>
   jobBooks: Record<string, number>

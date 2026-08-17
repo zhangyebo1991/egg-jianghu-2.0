@@ -65,6 +65,7 @@ export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
   contribution: {},
   worldReputation: { world_01: 0 },
   factionAgents: { world_01: { heroId: null, enabled: false } },
+  factionAgentFilters: {},
   unlockedFactionIds: FACTIONS
     .filter((faction) => faction.worldId === 'world_01' && faction.currencyKind === 'worldCurrency')
     .map((faction) => faction.id),

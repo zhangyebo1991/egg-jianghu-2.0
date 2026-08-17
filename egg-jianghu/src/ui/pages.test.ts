@@ -129,7 +129,21 @@ const factionAgentFixture = (): NonNullable<TownsPageViewModel['factionAgent']> 
   abilityLevel: 0,
   contributionBonusPercent: 0,
   reputationBonusPercent: 0,
-  taskAutomationAvailable: false,
+  taskAutomationAvailable: true,
+  taskFilters: ['消灭', '筹措', '收集', '挑战', '寻宝'].map((name, offset) => ({
+    taskId: offset + 1,
+    name,
+    column: 1,
+    // 「收集」被排除，用来验证渲染出 excluded 态。
+    allowed: offset !== 2,
+    qualities: Array.from({ length: 6 }, (_, qualityOffset) => ({
+      quality: qualityOffset + 1,
+      column: qualityOffset + 5,
+      allowed: true,
+    })),
+  })),
+  acceptedTaskCount: 3,
+  concurrentTaskLimit: 12,
 })
 
 const factionsFixture = (): FactionsPageViewModel => ({
@@ -481,7 +495,18 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('计略 Lv.0')
     expect(html).toContain('贡献 +0%')
     expect(html).toContain('声望 +0%')
-    expect(html).toContain('条件矩阵尚未接入，保持关闭')
+    // 自动化已接入：展示并发计数，并把筛选矩阵渲染成可点击的类型/品质开关。
+    expect(html).toContain('已接 3/12')
+    expect(html).toContain('data-action="toggle-agent-task-filter"')
+    expect(html).toContain('data-testid="agent-task-filter-3"')
+    expect(html).toContain('data-task-id="3"')
+    expect(html).toContain('data-column="1"')
+    expect(html).toContain('data-column="10"')
+    // 「收集」在夹具里被排除，应渲染出 excluded 态与文案。
+    expect(html).toContain('faction-agent-task-filter excluded')
+    expect(html).toContain('>已排除</span>')
+    expect(html).toContain('>已启用</span>')
+    expect(html).not.toContain('条件矩阵尚未接入')
     expect(html).toContain('>已任命</button>')
     expect(html).toContain('>战斗中</button>')
   })

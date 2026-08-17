@@ -1153,6 +1153,21 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 .faction-agent-automation > div { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .faction-agent-automation > div > span { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 7px 9px; border: 1px solid rgb(201 163 92 / 12%); border-radius: 4px; color: #9d9a8a; background: rgb(255 255 255 / 2%); font-size: 9px; }
 .faction-agent-automation i { color: #676d66; font-size: 8px; font-style: normal; }
+.faction-agent-automation-hint { margin: 0; color: #6f7469; font-size: 8.5px; line-height: 1.6; }
+.faction-agent-task-filters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.faction-agent-task-filter { display: grid; gap: 5px; padding: 8px; border: 1px solid rgb(201 163 92 / 12%); border-radius: 4px; background: rgb(255 255 255 / 2%); }
+.faction-agent-task-filter.excluded { border-color: rgb(140 90 80 / 30%); background: rgb(140 90 80 / 6%); }
+.faction-agent-task-filter > span { color: #676d66; font-size: 8px; letter-spacing: .06em; }
+.faction-agent-task-filter.excluded > span { color: #a5766c; }
+.faction-agent-task-toggle { padding: 5px 6px; border: 1px solid rgb(201 163 92 / 22%); border-radius: 3px; color: #c7b996; background: rgb(201 163 92 / 8%); font-size: 10px; cursor: pointer; }
+.faction-agent-task-toggle.excluded { border-color: rgb(165 118 108 / 35%); color: #a5766c; background: rgb(165 118 108 / 8%); text-decoration: line-through; }
+.faction-agent-quality-filters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; }
+.faction-agent-quality-toggle { padding: 3px 0; border: 1px solid rgb(201 163 92 / 16%); border-radius: 2px; color: #9d9a8a; background: rgb(255 255 255 / 3%); font-size: 8px; cursor: pointer; }
+.faction-agent-quality-toggle.excluded { border-color: rgb(165 118 108 / 30%); color: #7a5a54; background: transparent; text-decoration: line-through; }
+.faction-agent-task-toggle:disabled, .faction-agent-quality-toggle:disabled { opacity: .45; cursor: not-allowed; }
+@media (width <= 720px) {
+  .faction-agent-task-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .faction-agent-candidates { display: grid; gap: 10px; }
 .faction-agent-candidates > header { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
 .faction-agent-candidates h3 { margin: 0; color: #d9ccb0; font-size: 14px; font-weight: 500; letter-spacing: .13em; }

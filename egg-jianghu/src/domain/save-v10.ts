@@ -4,6 +4,7 @@ import {
   ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS,
   ORIGINAL_CITY_TECHNOLOGIES,
 } from '../content/original-city.generated'
+import { ORIGINAL_FACTION_RULES } from '../content/original-faction-rules.generated'
 import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
@@ -130,7 +131,6 @@ const isHeroProgress = (value: unknown): boolean => {
 
 const isStringRecord = (value: unknown): value is Record<string, string> =>
   isRecord(value) && Object.values(value).every((item) => typeof item === 'string')
-
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string')
 
@@ -191,6 +191,29 @@ const isFactionAgentState = (value: unknown): boolean =>
   isRecord(value)
   && (value.heroId === null || typeof value.heroId === 'string')
   && typeof value.enabled === 'boolean'
+
+/**
+ * 筛选矩阵校验。key 形如 `${worldId}:${taskId}`（taskId 1..5），
+ * value 是被排除的列号数组，列号取值 1..20 且不重复。缺省（undefined）视为全放行。
+ */
+const isFactionAgentFilters = (value: unknown): boolean => {
+  if (value === undefined) return true
+  if (!isRecord(value)) return false
+  const [columnMin, columnMax] = [1, ORIGINAL_FACTION_RULES.stateLayout.agentFilter.targetSubtypeColumns[1]]
+  const taskRows = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.taskRowsPerWorld
+  return Object.entries(value).every(([key, columns]) => {
+    const [worldId, taskId] = key.split(':')
+    const parsedTaskId = Number(taskId)
+    return Boolean(worldId)
+      && String(parsedTaskId) === taskId
+      && Number.isInteger(parsedTaskId)
+      && parsedTaskId >= 1
+      && parsedTaskId <= taskRows
+      && Array.isArray(columns)
+      && columns.every((column) => Number.isInteger(column) && column >= columnMin && column <= columnMax)
+      && new Set(columns).size === columns.length
+  })
+}
 
 const hasConsistentFactionQuestLinks = (boards: unknown, acceptedQuests: unknown): boolean => {
   if (!isRecord(boards) || !isRecord(acceptedQuests)) return false
@@ -332,6 +355,7 @@ const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10
   contribution: structuredClone(state.contribution),
   worldReputation: structuredClone(state.worldReputation),
   factionAgents: structuredClone(state.factionAgents),
+  factionAgentFilters: structuredClone(state.factionAgentFilters),
   unlockedFactionIds: structuredClone(state.unlockedFactionIds),
   heroes: structuredClone(state.heroes),
   jobBooks: structuredClone(state.jobBooks),
@@ -382,6 +406,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     || !isNumberRecord(raw.worldReputation)
     || !isRecord(raw.factionAgents)
     || !Object.values(raw.factionAgents).every(isFactionAgentState)
+    || !isFactionAgentFilters(raw.factionAgentFilters)
     || !isStringArray(raw.unlockedFactionIds)
     || !isRecord(raw.factionBoards)
     || !Object.values(raw.factionBoards).every(isFactionBoardState)
@@ -418,6 +443,10 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     contribution: isRecord(raw.contribution) ? structuredClone(raw.contribution) as GameStateV10['contribution'] : state.contribution,
     worldReputation: structuredClone(raw.worldReputation) as GameStateV10['worldReputation'],
     factionAgents: structuredClone(raw.factionAgents) as GameStateV10['factionAgents'],
+    // v18 早期存档没有筛选矩阵，缺省即全部放行。
+    factionAgentFilters: isRecord(raw.factionAgentFilters)
+      ? structuredClone(raw.factionAgentFilters) as GameStateV10['factionAgentFilters']
+      : state.factionAgentFilters,
     unlockedFactionIds: structuredClone(raw.unlockedFactionIds) as string[],
     heroes: structuredClone(raw.heroes) as GameStateV10['heroes'],
     jobBooks: isNumberRecord(raw.jobBooks) ? structuredClone(raw.jobBooks) as GameStateV10['jobBooks'] : state.jobBooks,

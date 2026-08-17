@@ -65,6 +65,17 @@ import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBook
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
 import { appointFactionAgent, dismissFactionAgent, factionAgentAbilityLevel, factionAgentCandidateIds, toggleFactionAgent } from './domain/faction-agent'
+import {
+  AGENT_CONCURRENT_TASK_LIMIT,
+  factionAgentAutomationAvailable,
+  isFactionAgentColumnExcluded,
+  toggleFactionAgentFilterColumn,
+} from './domain/faction-agent-automation'
+import { originalAgentFilterQualityColumn, ORIGINAL_FACTION_RULES } from './content/original-faction-rules.generated'
+
+const AGENT_FILTER = ORIGINAL_FACTION_RULES.stateLayout.agentFilter
+/** 悬榜任务类型 1..5 的显示名，与 rw 表行 1..5 对应。 */
+const AGENT_TASK_FILTER_NAMES = ['消灭', '筹措', '收集', '挑战', '寻宝'] as const
 import { exchangeFactionItem, factionExchangeItemOwned, factionExchangeItemQuantity } from './domain/faction-exchange'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
@@ -1370,7 +1381,27 @@ const factionAgentViewModel = (worldId: string, worldName: string): NonNullable<
     abilityLevel,
     contributionBonusPercent: Math.round((originalFactionAgentContributionMultiplier(abilityLevel) - 1) * 100),
     reputationBonusPercent: Math.round((originalFactionAgentReputationMultiplier(abilityLevel) - 1) * 100),
-    taskAutomationAvailable: false,
+    taskAutomationAvailable: factionAgentAutomationAvailable(session.state, worldId),
+    taskFilters: AGENT_TASK_FILTER_NAMES.map((name, offset) => {
+      const taskId = offset + 1
+      return {
+        taskId,
+        name,
+        column: AGENT_FILTER.taskEnabledColumn,
+        allowed: !isFactionAgentColumnExcluded(session.state, worldId, taskId, AGENT_FILTER.taskEnabledColumn),
+        qualities: Array.from({ length: 6 }, (_, qualityOffset) => {
+          const quality = qualityOffset + 1
+          const column = originalAgentFilterQualityColumn(quality)
+          return {
+            quality,
+            column: column ?? 0,
+            allowed: !isFactionAgentColumnExcluded(session.state, worldId, taskId, column),
+          }
+        }),
+      }
+    }),
+    acceptedTaskCount: Object.keys(session.state.acceptedFactionQuests).length,
+    concurrentTaskLimit: AGENT_CONCURRENT_TASK_LIMIT,
   }
 }
 
@@ -2774,6 +2805,17 @@ app.addEventListener('click', (event) => {
   else if (action === 'toggle-faction-agent') {
     commitAction(toggleFactionAgent(session.state, button.dataset.worldId ?? selectedWorldId))
   }
+  else if (action === 'toggle-agent-task-filter') {
+    const worldId = button.dataset.worldId ?? selectedWorldId
+    const taskId = Number(button.dataset.taskId)
+    const column = Number(button.dataset.column)
+    if (!Number.isInteger(taskId) || !Number.isInteger(column) || column <= 0) {
+      notify('筛选项无效', true)
+    } else {
+      const excluded = toggleFactionAgentFilterColumn(session.state, worldId, taskId, column)
+      commitAction({ ok: true, message: excluded ? '已排除该筛选项' : '已恢复该筛选项' })
+    }
+  }
   else if (action === 'open-faction-town') {
     const nextFactionId = button.dataset.factionId ?? ''
     if (!session.state.unlockedFactionIds.includes(nextFactionId)) {
@@ -2877,7 +2919,7 @@ const runGameLoop = (): void => {
         .map((item) => item.uid))
       trackedCombat = session.combat
     }
-    session.advanceRuntime(runtimePulse.elapsedMs)
+    session.advanceRuntime(runtimePulse.elapsedMs, selectedWorldId || null)
   } catch (error) {
     handleSessionSaveError(error)
     return

@@ -16,6 +16,10 @@ import {
   type CampaignSelection,
 } from '../domain/progression'
 import { advanceQuestBoards, initializeQuestBoard } from '../domain/quests'
+import {
+  AGENT_AUTOMATION_TICK_MS,
+  runFactionAgentAutomation,
+} from '../domain/faction-agent-automation'
 import { settleCombatEvent } from '../domain/rewards'
 import { loadExistingGameV10, loadGameV10, SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
 import { createNewGameStateV10 } from '../domain/state'
@@ -103,6 +107,7 @@ export class GameSession {
   private readonly combatRng: Rng
   private readonly storage: StorageLike
   private expectedSaveSnapshot: string | null
+  private agentAutomationElapsedMs = 0
 
   private constructor(state: GameStateV10, storage: StorageLike, expectedSaveSnapshot: string | null) {
     this.state = state
@@ -215,10 +220,22 @@ export class GameSession {
     return events
   }
 
-  advanceRuntime(elapsedMs: number): void {
+  advanceRuntime(elapsedMs: number, currentWorldId: string | null = null): void {
     const before = JSON.stringify(this.state.factionBoards)
     advanceQuestBoards(this.state, elapsedMs, this.runtimeRng)
-    if (JSON.stringify(this.state.factionBoards) !== before) this.save()
+    let changed = JSON.stringify(this.state.factionBoards) !== before
+
+    // 代理人自动化：原版 Event 11713 是 System.Every(1 秒)，按累计时长补齐整数个 tick。
+    // 原版门禁还包含「未打开任何功能面板」「不在狩猎中」，那是为避免 UI 冲突的措施，
+    // 与本作的渲染架构无关，故不复刻；位面/任命/开关三项门禁在 automation 内部判定。
+    this.agentAutomationElapsedMs += Math.max(0, elapsedMs)
+    while (this.agentAutomationElapsedMs >= AGENT_AUTOMATION_TICK_MS) {
+      this.agentAutomationElapsedMs -= AGENT_AUTOMATION_TICK_MS
+      const result = runFactionAgentAutomation(this.state, currentWorldId)
+      if (result.accepted > 0 || result.completed > 0) changed = true
+    }
+
+    if (changed) this.save()
   }
 
   setCombatMode(mode: CampaignMode): ActionResult {

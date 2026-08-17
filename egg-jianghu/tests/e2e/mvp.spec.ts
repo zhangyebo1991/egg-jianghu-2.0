@@ -707,26 +707,41 @@ test('城镇代理人支持任命、替换、卸任和启停且不虚构能力�
   await expect(agent).toHaveAttribute('data-world-id', 'world_01')
   await expect(agent).toContainText('计略 Lv.0')
   await expect(agent).toContainText('贡献 +0%')
-  await expect(agent).toContainText('条件矩阵尚未接入，保持关闭')
+  // 尚未任命时自动化不可用。
+  await expect(agent).toContainText('需先任命代理人')
 
   await page.getByTestId('faction-agent-candidate-hero_guo_jing').getByRole('button', { name: '任命' }).click()
+  // 原版任命后把开关列写为 1（= 关闭），自动化需玩家手动开启。
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
-    .toEqual({ heroId: 'hero_guo_jing', enabled: true })
+    .toEqual({ heroId: 'hero_guo_jing', enabled: false })
   await expect(agent).toContainText('当前代理人郭靖')
+  await expect(agent).toContainText('已接 0/12')
 
-  await agent.getByRole('button', { name: '开启中' }).click()
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01.enabled)).toBe(false)
+  await agent.getByRole('button', { name: '关闭中' }).click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01.enabled)).toBe(true)
+
+  // 筛选矩阵：点击「收集」把该任务类型排除，再点一次恢复。
+  const collectFilter = page.getByTestId('agent-task-filter-3')
+  await expect(collectFilter).toContainText('已启用')
+  await collectFilter.getByRole('button', { name: '收集' }).click()
+  await expect(collectFilter).toContainText('已排除')
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgentFilters['world_01:3']))
+    .toEqual([1])
+  await collectFilter.getByRole('button', { name: '收集' }).click()
+  await expect(collectFilter).toContainText('已启用')
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgentFilters['world_01:3']))
+    .toBeUndefined()
 
   await page.getByTestId('faction-agent-candidate-hero_mu_nianci').getByRole('button', { name: '替换' }).click()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
-    .toEqual({ heroId: 'hero_mu_nianci', enabled: true })
+    .toEqual({ heroId: 'hero_mu_nianci', enabled: false })
   await expect(agent).toContainText('当前代理人穆念慈')
   await agent.scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('town-agent.png') })
 
   await agent.getByRole('button', { name: '卸任' }).click()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
-    .toEqual({ heroId: null, enabled: true })
+    .toEqual({ heroId: null, enabled: false })
   await expect(agent).toContainText('无代理人')
 
   await page.setViewportSize({ width: 390, height: 844 })
