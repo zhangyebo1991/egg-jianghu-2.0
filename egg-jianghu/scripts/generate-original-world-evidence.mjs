@@ -1192,7 +1192,10 @@ const runtimeFunctionEvidence = (name) => {
 const factionRuntimeFunctions = factionRuntimeFunctionNames.map(runtimeFunctionEvidence)
 const cityRuntimeFunctionNames = [
   '初始化',
+  '最终能力等级function',
+  '特定属性统计function',
   '角色任职位置function',
+  '刷新公司临时function',
   '刷新公司总览function',
   '公司人员任命function',
   '主角公司加成function',
@@ -1208,6 +1211,7 @@ const cityRuntimeFunctionNames = [
   '建筑状态判定function',
   '建筑升级经验function',
   '建筑执行function',
+  '建筑建造点击',
   '财务结算function',
   '记录收支function',
   '有效地块function',
@@ -1225,8 +1229,22 @@ const cityRuntimeFunctionNames = [
   '公司注册function',
   '公司更名function',
   '在研科技等级function',
+  '打开科研管理function',
+  '刷新研究所信息function',
+  '刷新科研队列function',
+  '科研取消点击',
+  '取消研究function',
+  '队列整理function',
+  '已有研究数function',
   '科研总速度function',
+  '研究所职员速度function',
+  '研究所研速加成function',
+  '研究所研费加成function',
+  '研究所评价加成function',
+  '科研信息显示',
   '科研时间function',
+  '刷新科技树function',
+  '科技研究点击',
   '科技研究function',
   '科技计算等级function',
   '科技研发点function',
@@ -1236,15 +1254,20 @@ const cityRuntimeFunctionNames = [
   '建筑建造点function',
   '建造现金点function',
   '取消建造function',
+  '刷新建造局信息function',
+  '刷新建造队列function',
+  '建造取消点击',
   '建造局职员速度function',
   '建造局建速加成function',
   '建造局建费加成function',
   '建造局评价加成function',
   '建造总速度function',
+  '建造信息显示',
   '建造时间function',
   '建筑主管加速function',
   '项目计划function',
   '项目建成function',
+  '建造物检测检测',
   '城市总属性function',
   '城市发展度function',
   '城市升级属性function',
@@ -1906,7 +1929,7 @@ const cityFunctionExpressions = (name) => {
   assert(fn, `城市运行时证据缺少 ${name}`)
   return fn.expressions.map((item) => item.expression).join('\n')
 }
-assert(cityRuntimeFunctions.length === 68, `城市运行时核心函数数量异常：${cityRuntimeFunctions.length}`)
+assert(cityRuntimeFunctions.length === 91, `城市运行时核心函数数量异常：${cityRuntimeFunctions.length}`)
 assert(cityFunctionExpressions('刷新发展度').includes('/ 60'), '城市发展度公式证据缺少除以 60')
 assert(cityFunctionExpressions('建筑属性function').includes('Math.ceil'), '建筑范围公式证据缺少 Math.ceil')
 assert(cityFunctionExpressions('土地价格function').includes('pow(save.At(地块编号, 45, 10), 3)'), '土地价格公式证据缺少地价档三次方')
