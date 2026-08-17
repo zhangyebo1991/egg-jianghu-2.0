@@ -11,6 +11,7 @@ const OUT_DIR = resolve(HERE, '../../docs/evidence/original-world')
 const RUNTIME_TOWNS_FILE = resolve(HERE, '../src/content/original-towns.generated.ts')
 const RUNTIME_FACTION_EXCHANGE_FILE = resolve(HERE, '../src/content/original-faction-exchange.generated.ts')
 const RUNTIME_FACTION_RECRUITMENT_FILE = resolve(HERE, '../src/content/original-faction-recruitment.generated.ts')
+const RUNTIME_HERO_ABILITIES_FILE = resolve(HERE, '../src/content/original-hero-abilities.generated.ts')
 const RUNTIME_FACTION_RULES_FILE = resolve(HERE, '../src/content/original-faction-rules.generated.ts')
 const RUNTIME_CITY_FILE = resolve(HERE, '../src/content/original-city.generated.ts')
 
@@ -1491,10 +1492,10 @@ const factionTaskWorldTargets = Array.from({ length: 13 }, (_, offset) => {
     },
     normalEnemies: enemyRows
       .filter((row) => String(row[5]) === '小怪')
-      .map((row) => ({ drId: asNumber(row[0]), name: String(row[1]) })),
+      .map((row) => ({ drId: asNumber(row[0]), name: String(row[1]), subtypeIndex: asNumber(row[14]) })),
     bossEnemies: enemyRows
       .filter((row) => String(row[5]) === '首领')
-      .map((row) => ({ drId: asNumber(row[0]), name: String(row[1]) })),
+      .map((row) => ({ drId: asNumber(row[0]), name: String(row[1]), subtypeIndex: asNumber(row[14]) })),
     materialItemsByQuality: Array.from({ length: 6 }, (_, qualityOffset) => ({
       quality: qualityOffset + 1,
       items: factionTaskMaterialTargets(worldIndex, qualityOffset + 1),
@@ -1505,6 +1506,35 @@ assert(factionTaskWorldTargets.every((target) => target.normalEnemies.length ===
 assert(factionTaskWorldTargets.every((target) => target.bossEnemies.length === 10), '势力任务不是每个位面 10 个首领目标')
 assert(factionTaskWorldTargets.every((target) => target.currency.sourceId > 0 && target.currency.name), '势力任务存在未知位面货币目标')
 assert(factionTaskWorldTargets.every((target) => target.materialItemsByQuality.every((group) => group.items.length >= 3)), '势力任务存在空材料目标池')
+// dr 列 14 = 位面内同类序号 1..10，是代理人筛选矩阵 taskId 1/4 的子类列 key（列 = 序号 + 10）。
+assert(
+  factionTaskWorldTargets.every((target) => [...target.normalEnemies, ...target.bossEnemies]
+    .every((enemy) => Number.isInteger(enemy.subtypeIndex) && enemy.subtypeIndex >= 1 && enemy.subtypeIndex <= 10)),
+  'dr 列 14 的位面内序号超出 1～10',
+)
+assert(
+  factionTaskWorldTargets.every((target) => [target.normalEnemies, target.bossEnemies]
+    .every((group) => new Set(group.map((enemy) => enemy.subtypeIndex)).size === group.length)),
+  'dr 列 14 的位面内序号在同一位面同类中重复',
+)
+// 代理人筛选矩阵 taskId 3 的子类列 key 是材料族（wp 列 7），取值 1..4。
+assert(
+  factionTaskWorldTargets.every((target) => target.materialItemsByQuality
+    .every((group) => group.items.every((item) => item.family >= 1 && item.family <= 4))),
+  '势力任务材料族超出 1～4',
+)
+// 势力筛选列的 key：正式势力在位面内的槽位（shili 列 25），原版取值 1～4。
+assert(
+  formalFactions.every((faction) => {
+    const slot = asNumber(faction.raw[25])
+    return Number.isInteger(slot) && slot >= 1 && slot <= 4
+  }),
+  'shili 列 25 的位面内势力槽位超出 1～4',
+)
+assert(
+  militiaFactions.every((faction) => asNumber(faction.raw[25]) === 0),
+  '民团的 shili 列 25 不为 0，位面内势力槽位口径与预期不符',
+)
 
 assertExpressions('位面声望等级', [
   'C3.clamp(Math.floor((Math.sqrt((声望值 / (200 + ((位面编号 - 1) * 20)))) + 1)), 1, 5)',
@@ -1575,6 +1605,70 @@ assert(
 assert(factionRecruitmentEntries.every((entry) => entry.basePrice > 0), '原版势力招募存在非正基础价格')
 assert(factionRecruitmentEntries.every((entry) => entry.price > 0), '原版势力招募存在非正最终价格')
 assert(factionRecruitmentEntries.every((entry) => entry.specialRequirement === 0), '原版势力招募存在尚未解码的特殊条件')
+
+// 原版 Event 1598「最终能力等级function」的第一项：js.At(角色, 11 + 能力编号)。
+// 能力编号 1..10 = 驯兽/管理/锻造/修习/研究/建造/商业/合成/计略/收藏（mc[能力][8]）。
+const ABILITY_COUNT = 10
+const ABILITY_BASE_COLUMN_OFFSET = 11
+const abilityNames = Array.from(
+  { length: ABILITY_COUNT },
+  (_, offset) => String(arrays.mc[offset + 1]?.[8] ?? '').trim(),
+)
+assert(
+  JSON.stringify(abilityNames) === JSON.stringify(['驯兽', '管理', '锻造', '修习', '研究', '建造', '商业', '合成', '计略', '收藏']),
+  'mc[1..10][8] 的能力名称与预期不符',
+)
+
+const heroAbilityBaseEntries = arrays.js.slice(1).map((row) => ({
+  heroSourceId: asNumber(row[0]),
+  name: String(row[1]),
+  worldIndex: asNumber(row[5]),
+  factionSourceId: asNumber(row[25]),
+  abilityBase: Array.from(
+    { length: ABILITY_COUNT },
+    (_, offset) => asNumber(row[ABILITY_BASE_COLUMN_OFFSET + offset + 1]),
+  ),
+}))
+
+const abilityLevelDistribution = (abilityId) => Object.fromEntries(
+  Array.from({ length: 6 }, (_, level) => [
+    String(level),
+    heroAbilityBaseEntries.filter((entry) => entry.abilityBase[abilityId - 1] === level).length,
+  ]),
+)
+
+const heroAbilityCounts = {
+  heroes: heroAbilityBaseEntries.length,
+  abilities: ABILITY_COUNT,
+  strategyDistribution: abilityLevelDistribution(9),
+}
+
+assert(heroAbilityBaseEntries.length === 193, `原版角色应为 193 人，实际 ${heroAbilityBaseEntries.length}`)
+assert(
+  heroAbilityBaseEntries.every((entry) => entry.heroSourceId > 0 && entry.name.length > 0),
+  '原版角色存在空 sourceId 或空姓名',
+)
+assert(
+  heroAbilityBaseEntries.every((entry, index) => entry.heroSourceId === index + 1),
+  'js.json 的角色 sourceId 与数组下标不连续，能力白板无法按 sourceId 索引',
+)
+assert(
+  heroAbilityBaseEntries.every((entry) => entry.abilityBase.every((level) => Number.isInteger(level) && level >= 0 && level <= 5)),
+  '原版能力白板存在 0～5 之外的等级',
+)
+// 白板真值锚点：主角能力全 0、诸葛亮计略 4、关羽计略 2（Event 1598 clamp 上限 5）。
+const heroAbilityBySourceId = new Map(heroAbilityBaseEntries.map((entry) => [entry.heroSourceId, entry]))
+assert(
+  heroAbilityBySourceId.get(1)?.name === '主角'
+    && heroAbilityBySourceId.get(1)?.abilityBase.every((level) => level === 0),
+  'js[1] 应为主角且能力白板全为 0',
+)
+assert(heroAbilityBySourceId.get(12)?.name === '诸葛亮' && heroAbilityBySourceId.get(12)?.abilityBase[8] === 4, 'js[12][20] 诸葛亮计略白板应为 4')
+assert(heroAbilityBySourceId.get(9)?.name === '关羽' && heroAbilityBySourceId.get(9)?.abilityBase[8] === 2, 'js[9][20] 关羽计略白板应为 2')
+assert(
+  JSON.stringify(heroAbilityCounts.strategyDistribution) === JSON.stringify({ 0: 136, 1: 18, 2: 18, 3: 11, 4: 8, 5: 2 }),
+  `原版计略白板分布与预期不符：${JSON.stringify(heroAbilityCounts.strategyDistribution)}`,
+)
 assertJsonEqual(factionRecruitmentCounts.byReputationLevel, {
   1: 27,
   2: 26,
@@ -1718,7 +1812,25 @@ const factionRules = {
     worldReputation: { indexAxis: 'worldIndex', fieldColumn: 5 },
     factionUnlocked: { indexAxis: 'factionSourceId', fieldColumn: 40 },
     agentHero: { indexAxis: 'worldIndex', fieldColumn: 54 },
-    agentEnabled: { indexAxis: 'worldIndex', fieldColumn: 55 },
+    agentEnabled: {
+      indexAxis: 'worldIndex',
+      fieldColumn: 55,
+      // 极性与直觉相反：列值 1 = 关闭，0（或任何非 1）= 开启。
+      // Event 11510/11511：save[位面][55] != 1 且 save[位面][54] > 0 → 按钮显示「开启中」。
+      // Event 11656：任命写 54 = 角色编号后写 55 = 1，即任命后默认关闭，需玩家手动开启。
+      // 卸任分支同样写 55 = 1。Event 6937「进入位面时自动开启」把有代理人位面的 55 写 0。
+      disabledValue: 1,
+      enabledValue: 0,
+      valueAfterAppoint: 1,
+      valueAfterDismiss: 1,
+    },
+    autoEnableAgentOnEnterWorld: {
+      // save[56][1][0]，值 1 = 勾选「进入位面时自动开启」（Event 11629/11630 写，Event 6937 读）。
+      indexAxis: 'constant',
+      index: 56,
+      fieldColumn: 1,
+      checkedValue: 1,
+    },
     taskDepth: 9,
     taskBoard: {
       slotCount: 5,
@@ -1753,11 +1865,67 @@ const factionRules = {
     agentFilterDepth: 16,
     agentFilter: {
       row: '(worldIndex - 1) * 5 + taskId',
+      // 每位面 5 行，对应 taskId 1..5（rw 表只有 1..5 进入代理人 UI，Event 11515）。
+      taskRowsPerWorld: 5,
       taskEnabledColumn: 1,
       factionColumns: [2, 4],
       qualityColumns: [5, 10],
       targetSubtypeColumns: [11, 20],
+      // 黑名单语义：列值 1 = 排除，0（或缺省）= 放行。默认全 0 即全部放行。
+      // 写入 Event 11599/11605/11611/11617；读取 Event 11686/11687/11688/11690/11694/11696。
+      excludedValue: 1,
+      allowedValue: 0,
+      // 势力列用位面内正式势力槽（shili 列 25，魏/蜀/吴 = 1/2/3；民团为 0 不参与）。
+      factionColumnExpression: 'shili[factionSourceId][25] + 1',
+      // 品质列。
+      qualityColumnExpression: 'quality + 4',
+      // 子类列的 key 按 taskId 切换，列区间也随之收窄。
+      targetSubtypeByTask: {
+        1: { key: 'enemySubtypeIndex', expression: 'dr[targetId][14] + 10', columns: [11, 20] },
+        2: { key: null, expression: null, columns: [11, 11], readByAcceptLogic: false },
+        3: { key: 'materialFamily', expression: 'wp[targetId][7] + 10', columns: [11, 14] },
+        4: { key: 'enemySubtypeIndex', expression: 'dr[targetId][14] + 10', columns: [11, 20] },
+        5: { key: 'equipmentQualityTier', expression: '(quality - 3) + 10', columns: [11, 13] },
+      },
+      // 原版 taskId 2 会生成一个货币子类勾选框，但接受逻辑（Event 11692）不读取它——
+      // UI 有开关而无效，属原版自身的不一致。本作按「不读取」复刻，不生成该勾选框。
+      taskWithoutSubtypeFilter: 2,
+      // 势力列的 key：正式势力在其位面内的槽位（shili 列 25）。
+      // 原版 UI（Event 11605）写入时按 clamp(槽位 + 1, 2, 4) 收口，但运行时（Event 11687）
+      // 直接用 槽位 + 1 且不 clamp；前三个位面各有 4 个正式势力，第 4 个会算出列 5，
+      // 落进品质列区间。本作按 UI 的 clamp 实现，避免读串列。
+      factionWorldSlots: formalFactions.map((faction) => ({
+        factionSourceId: faction.sourceId,
+        worldIndex: faction.worldIndex,
+        worldSlotIndex: asNumber(faction.raw[25]),
+      })),
     },
+  },
+  agentAutomation: {
+    // Event 11712 门禁 + Event 11713 System.Every(1 * timescale())。
+    tickSeconds: 1,
+    // Event 11714：先完成再接受；Event 11711 在本 tick 完成过任务后再接受一轮。
+    order: ['complete', 'accept'],
+    reacceptAfterComplete: true,
+    // Event 10488：已接任务数量 < 任务数量上限（全局变量初值 12，全项目无写入 → 常量）。
+    concurrentTaskLimit: 12,
+    concurrentLimitScope: 'allWorlds',
+    // Event 11684 只遍历「当前所在位面」的势力；Event 11698 完成时遍历全部记录。
+    acceptScope: 'currentWorld',
+    completeScope: 'allWorlds',
+    // Event 11690/11692/11694/11696：唯一的槽位条件是 acceptedRecordId == 0，无冷却、无剩余时间判断。
+    slotCondition: 'acceptedRecordId == 0',
+    hasCooldown: false,
+    // taskId 6（捕捉灵兽）在接受与完成两侧都没有分支，无法自动化。
+    automatableTaskIds: [1, 2, 3, 4, 5],
+    // Event 11715：上交装备挑选规则。
+    equipmentSurrender: {
+      matchesQuality: true,
+      excludesTreasure: true,
+      excludesLocked: true,
+      picks: 'lowestItemLevel',
+    },
+    sourceEvents: [11681, 11682, 11697, 11712, 11713, 11714, 11711, 11715, 10488],
   },
   reputation: {
     baseAtWorld1: 200,
@@ -2434,6 +2602,51 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
 export const originalFactionRecruitmentByFaction = (factionSourceId: number): readonly OriginalFactionRecruitmentEntry[] =>
   ORIGINAL_FACTION_RECRUITMENT.filter((entry) => entry.factionSourceId === factionSourceId)
 `
+const runtimeHeroAbilitiesSource = `/**
+ * 原版角色能力白板——由《诸天刷宝录》js/mc 表生成。
+ * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
+ *
+ * 对应 Event 1598「最终能力等级function」的第一项 js.At(角色, 11 + 能力编号)：
+ * 最终等级 = clamp(round(白板 + 培养 + 特定属性统计(角色, 101 + 能力编号, "")), 0, 5)
+ * abilityBase 下标 0..9 = 能力编号 1..10（驯兽/管理/锻造/修习/研究/建造/商业/合成/计略/收藏）。
+ */
+
+/** 能力编号 1..10 的原版名称（mc[能力][8]）。 */
+export const ORIGINAL_ABILITY_NAMES = ${JSON.stringify(abilityNames)} as const
+
+/** 能力编号：计略（贡献/声望加成所用）。 */
+export const ORIGINAL_ABILITY_ID_STRATEGY = 9
+
+/** Event 1598 的能力等级上限。 */
+export const ORIGINAL_ABILITY_MAX_LEVEL = 5
+
+export interface OriginalHeroAbilityEntry {
+  heroSourceId: number
+  name: string
+  worldIndex: number
+  factionSourceId: number
+  /** 能力 1..10 的白板等级，取值 0..5。 */
+  abilityBase: readonly number[]
+}
+
+export const ORIGINAL_HERO_ABILITY_COUNTS = ${JSON.stringify(heroAbilityCounts, null, 2)} as const
+
+export const ORIGINAL_HERO_ABILITIES: readonly OriginalHeroAbilityEntry[] = ${JSON.stringify(heroAbilityBaseEntries)}
+
+const byHeroSourceId = new Map(ORIGINAL_HERO_ABILITIES.map((entry) => [entry.heroSourceId, entry]))
+
+export const originalHeroAbilityEntry = (heroSourceId: number | undefined): OriginalHeroAbilityEntry | undefined =>
+  heroSourceId === undefined ? undefined : byHeroSourceId.get(heroSourceId)
+
+/**
+ * 取原版角色的能力白板等级。
+ * 无 sourceId（本作自创侠客，原版无此角色）或能力编号越界时返回 0——原版角色列为空即等级 0。
+ */
+export const originalHeroAbilityBase = (heroSourceId: number | undefined, abilityId: number): number => {
+  if (!Number.isInteger(abilityId) || abilityId < 1 || abilityId > ORIGINAL_ABILITY_NAMES.length) return 0
+  return originalHeroAbilityEntry(heroSourceId)?.abilityBase[abilityId - 1] ?? 0
+}
+`
 const runtimeFactionRulesSource = `/**
  * 原版势力规则契约——由《诸天刷宝录》rw/shili 表与 Construct 运行时事件生成。
  * 生成器：scripts/generate-original-world-evidence.mjs；请勿手改本文件。
@@ -2514,6 +2727,66 @@ export const originalFactionTaskTargetName = (
   if (taskId === 4) return world.bossEnemies.find((enemy) => enemy.drId === targetId)?.name ?? '未知首领'
   if (taskId === 5) return '品质 ' + targetId + ' 装备'
   return '未启用任务'
+}
+
+/** 代理人筛选矩阵行号：每位面 5 行，taskId 1..5。 */
+export const originalAgentFilterRow = (worldIndex: number, taskId: number): number =>
+  (worldIndex - 1) * ORIGINAL_FACTION_RULES.stateLayout.agentFilter.taskRowsPerWorld + taskId
+
+/**
+ * 势力列号。原版 UI 写入时按 clamp(槽位 + 1, 2, 4) 收口，本作沿用该 clamp，
+ * 因此前三个位面的第 4 个正式势力与第 3 个共用列 4（详见生成器注释）。
+ * 民团（槽位 0）不参与势力筛选，返回 null。
+ */
+export const originalAgentFilterFactionColumn = (factionSourceId: number): number | null => {
+  const entry = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.factionWorldSlots
+    .find((slot) => slot.factionSourceId === factionSourceId)
+  if (!entry || entry.worldSlotIndex <= 0) return null
+  const [min, max] = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.factionColumns
+  return clamp(entry.worldSlotIndex + 1, min, max)
+}
+
+/** 品质列号：quality + 4，落在品质列区间内。 */
+export const originalAgentFilterQualityColumn = (quality: number): number | null => {
+  const [min, max] = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.qualityColumns
+  const column = quality + 4
+  return column >= min && column <= max ? column : null
+}
+
+/**
+ * 子类列号。key 按 taskId 切换：
+ * taskId 1/4 用 dr 列 14 的位面内序号、taskId 3 用材料族、taskId 5 用装备品质档。
+ * taskId 2（筹措货币）在原版接受逻辑中不读子类列，返回 null。
+ */
+export const originalAgentFilterSubtypeColumn = (
+  worldIndex: number,
+  taskId: number,
+  quality: number,
+  targetId: number,
+): number | null => {
+  const rule = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.targetSubtypeByTask[
+    String(taskId) as keyof typeof ORIGINAL_FACTION_RULES.stateLayout.agentFilter.targetSubtypeByTask
+  ]
+  if (!rule?.key) return null
+  const world = ORIGINAL_FACTION_RULES.tasks.targetPools.find((target) => target.worldIndex === worldIndex)
+  if (!world) return null
+  const [min, max] = rule.columns
+  const withinRange = (column: number): number | null => column >= min && column <= max ? column : null
+
+  if (taskId === 1 || taskId === 4) {
+    const pool = taskId === 1 ? world.normalEnemies : world.bossEnemies
+    const enemy = pool.find((candidate) => candidate.drId === targetId)
+    return enemy ? withinRange(enemy.subtypeIndex + 10) : null
+  }
+  if (taskId === 3) {
+    for (const group of world.materialItemsByQuality) {
+      const item = group.items.find((candidate) => candidate.itemId === targetId)
+      if (item) return withinRange(item.family + 10)
+    }
+    return null
+  }
+  if (taskId === 5) return withinRange(quality - 3 + 10)
+  return null
 }
 
 export const originalFactionTaskRequiredAmount = (
@@ -3075,6 +3348,13 @@ if (process.argv.includes('--check')) {
     throw new Error('运行时势力招募目录缺失，请先运行 npm run evidence:world')
   }
   assert(currentRuntimeFactionRecruitment === runtimeFactionRecruitmentSource, '运行时势力招募目录已过期，请运行 npm run evidence:world 并审阅差异')
+  let currentRuntimeHeroAbilities = null
+  try {
+    currentRuntimeHeroAbilities = readFileSync(RUNTIME_HERO_ABILITIES_FILE, 'utf8')
+  } catch {
+    throw new Error('运行时角色能力白板缺失，请先运行 npm run evidence:world')
+  }
+  assert(currentRuntimeHeroAbilities === runtimeHeroAbilitiesSource, '运行时角色能力白板已过期，请运行 npm run evidence:world 并审阅差异')
   let currentRuntimeFactionRules = null
   try {
     currentRuntimeFactionRules = readFileSync(RUNTIME_FACTION_RULES_FILE, 'utf8')
@@ -3101,6 +3381,8 @@ if (process.argv.includes('--check')) {
   writeFileSync(RUNTIME_FACTION_EXCHANGE_FILE, runtimeFactionExchangeSource, 'utf8')
   mkdirSync(dirname(RUNTIME_FACTION_RECRUITMENT_FILE), { recursive: true })
   writeFileSync(RUNTIME_FACTION_RECRUITMENT_FILE, runtimeFactionRecruitmentSource, 'utf8')
+  mkdirSync(dirname(RUNTIME_HERO_ABILITIES_FILE), { recursive: true })
+  writeFileSync(RUNTIME_HERO_ABILITIES_FILE, runtimeHeroAbilitiesSource, 'utf8')
   mkdirSync(dirname(RUNTIME_FACTION_RULES_FILE), { recursive: true })
   writeFileSync(RUNTIME_FACTION_RULES_FILE, runtimeFactionRulesSource, 'utf8')
   mkdirSync(dirname(RUNTIME_CITY_FILE), { recursive: true })
@@ -3108,5 +3390,6 @@ if (process.argv.includes('--check')) {
   console.log(`已生成真值包：势力 ${factions.length}、主城 ${worldHubs.length}、公共场所 ${publicLocations.length}、势力城镇 ${factionTowns.length}`)
   console.log(`贡献兑换：商品 ${factionExchangeCounts.total}、正式势力 ${factionExchangeCounts.factions}`)
   console.log(`势力招募：角色 ${factionRecruitmentCounts.total}、势力 ${factionRecruitmentCounts.factions}`)
+  console.log(`角色能力白板：角色 ${heroAbilityCounts.heroes}、能力 ${heroAbilityCounts.abilities}、计略分布 ${JSON.stringify(heroAbilityCounts.strategyDistribution)}`)
   console.log(`城市数据：建筑 ${buildings.length}、科技 ${technologies.length}；运行时索引 ${parsedFunctions.length} 条中筛选相关入口`)
 }

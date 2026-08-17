@@ -52,7 +52,17 @@ export const ORIGINAL_FACTION_RULES = {
     },
     "agentEnabled": {
       "indexAxis": "worldIndex",
-      "fieldColumn": 55
+      "fieldColumn": 55,
+      "disabledValue": 1,
+      "enabledValue": 0,
+      "valueAfterAppoint": 1,
+      "valueAfterDismiss": 1
+    },
+    "autoEnableAgentOnEnterWorld": {
+      "indexAxis": "constant",
+      "index": 56,
+      "fieldColumn": 1,
+      "checkedValue": 1
     },
     "taskDepth": 9,
     "taskBoard": {
@@ -88,6 +98,7 @@ export const ORIGINAL_FACTION_RULES = {
     "agentFilterDepth": 16,
     "agentFilter": {
       "row": "(worldIndex - 1) * 5 + taskId",
+      "taskRowsPerWorld": 5,
       "taskEnabledColumn": 1,
       "factionColumns": [
         2,
@@ -100,8 +111,241 @@ export const ORIGINAL_FACTION_RULES = {
       "targetSubtypeColumns": [
         11,
         20
+      ],
+      "excludedValue": 1,
+      "allowedValue": 0,
+      "factionColumnExpression": "shili[factionSourceId][25] + 1",
+      "qualityColumnExpression": "quality + 4",
+      "targetSubtypeByTask": {
+        "1": {
+          "key": "enemySubtypeIndex",
+          "expression": "dr[targetId][14] + 10",
+          "columns": [
+            11,
+            20
+          ]
+        },
+        "2": {
+          "key": null,
+          "expression": null,
+          "columns": [
+            11,
+            11
+          ],
+          "readByAcceptLogic": false
+        },
+        "3": {
+          "key": "materialFamily",
+          "expression": "wp[targetId][7] + 10",
+          "columns": [
+            11,
+            14
+          ]
+        },
+        "4": {
+          "key": "enemySubtypeIndex",
+          "expression": "dr[targetId][14] + 10",
+          "columns": [
+            11,
+            20
+          ]
+        },
+        "5": {
+          "key": "equipmentQualityTier",
+          "expression": "(quality - 3) + 10",
+          "columns": [
+            11,
+            13
+          ]
+        }
+      },
+      "taskWithoutSubtypeFilter": 2,
+      "factionWorldSlots": [
+        {
+          "factionSourceId": 2,
+          "worldIndex": 1,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 3,
+          "worldIndex": 1,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 4,
+          "worldIndex": 1,
+          "worldSlotIndex": 3
+        },
+        {
+          "factionSourceId": 6,
+          "worldIndex": 2,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 7,
+          "worldIndex": 2,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 8,
+          "worldIndex": 2,
+          "worldSlotIndex": 3
+        },
+        {
+          "factionSourceId": 10,
+          "worldIndex": 3,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 11,
+          "worldIndex": 3,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 12,
+          "worldIndex": 3,
+          "worldSlotIndex": 3
+        },
+        {
+          "factionSourceId": 14,
+          "worldIndex": 4,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 15,
+          "worldIndex": 4,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 17,
+          "worldIndex": 5,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 18,
+          "worldIndex": 5,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 20,
+          "worldIndex": 6,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 21,
+          "worldIndex": 6,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 23,
+          "worldIndex": 7,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 24,
+          "worldIndex": 7,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 26,
+          "worldIndex": 8,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 27,
+          "worldIndex": 8,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 29,
+          "worldIndex": 9,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 30,
+          "worldIndex": 9,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 32,
+          "worldIndex": 10,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 33,
+          "worldIndex": 10,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 35,
+          "worldIndex": 11,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 36,
+          "worldIndex": 11,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 38,
+          "worldIndex": 12,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 39,
+          "worldIndex": 12,
+          "worldSlotIndex": 2
+        },
+        {
+          "factionSourceId": 41,
+          "worldIndex": 13,
+          "worldSlotIndex": 1
+        },
+        {
+          "factionSourceId": 42,
+          "worldIndex": 13,
+          "worldSlotIndex": 2
+        }
       ]
     }
+  },
+  "agentAutomation": {
+    "tickSeconds": 1,
+    "order": [
+      "complete",
+      "accept"
+    ],
+    "reacceptAfterComplete": true,
+    "concurrentTaskLimit": 12,
+    "concurrentLimitScope": "allWorlds",
+    "acceptScope": "currentWorld",
+    "completeScope": "allWorlds",
+    "slotCondition": "acceptedRecordId == 0",
+    "hasCooldown": false,
+    "automatableTaskIds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "equipmentSurrender": {
+      "matchesQuality": true,
+      "excludesTreasure": true,
+      "excludesLocked": true,
+      "picks": "lowestItemLevel"
+    },
+    "sourceEvents": [
+      11681,
+      11682,
+      11697,
+      11712,
+      11713,
+      11714,
+      11711,
+      11715,
+      10488
+    ]
   },
   "reputation": {
     "baseAtWorld1": 200,
@@ -222,85 +466,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 1,
-            "name": "黄巾战士"
+            "name": "黄巾战士",
+            "subtypeIndex": 1
           },
           {
             "drId": 2,
-            "name": "随军参谋"
+            "name": "随军参谋",
+            "subtypeIndex": 2
           },
           {
             "drId": 3,
-            "name": "护卫甲兵"
+            "name": "护卫甲兵",
+            "subtypeIndex": 3
           },
           {
             "drId": 4,
-            "name": "长弓手"
+            "name": "长弓手",
+            "subtypeIndex": 4
           },
           {
             "drId": 5,
-            "name": "汉末中医"
+            "name": "汉末中医",
+            "subtypeIndex": 5
           },
           {
             "drId": 6,
-            "name": "土匪豪强"
+            "name": "土匪豪强",
+            "subtypeIndex": 6
           },
           {
             "drId": 7,
-            "name": "奸佞乡官"
+            "name": "奸佞乡官",
+            "subtypeIndex": 7
           },
           {
             "drId": 8,
-            "name": "随军校尉"
+            "name": "随军校尉",
+            "subtypeIndex": 8
           },
           {
             "drId": 9,
-            "name": "江洋大盗"
+            "name": "江洋大盗",
+            "subtypeIndex": 9
           },
           {
             "drId": 10,
-            "name": "黄巾信徒"
+            "name": "黄巾信徒",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 11,
-            "name": "张角"
+            "name": "张角",
+            "subtypeIndex": 1
           },
           {
             "drId": 12,
-            "name": "貂蝉"
+            "name": "貂蝉",
+            "subtypeIndex": 2
           },
           {
             "drId": 13,
-            "name": "吕布"
+            "name": "吕布",
+            "subtypeIndex": 3
           },
           {
             "drId": 14,
-            "name": "甄宓"
+            "name": "甄宓",
+            "subtypeIndex": 4
           },
           {
             "drId": 15,
-            "name": "小乔"
+            "name": "小乔",
+            "subtypeIndex": 5
           },
           {
             "drId": 16,
-            "name": "华佗"
+            "name": "华佗",
+            "subtypeIndex": 6
           },
           {
             "drId": 17,
-            "name": "关羽"
+            "name": "关羽",
+            "subtypeIndex": 7
           },
           {
             "drId": 18,
-            "name": "孙尚香"
+            "name": "孙尚香",
+            "subtypeIndex": 8
           },
           {
             "drId": 19,
-            "name": "王异"
+            "name": "王异",
+            "subtypeIndex": 9
           },
           {
             "drId": 20,
-            "name": "诸葛亮"
+            "name": "诸葛亮",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -453,85 +717,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 31,
-            "name": "青城弟子"
+            "name": "青城弟子",
+            "subtypeIndex": 1
           },
           {
             "drId": 32,
-            "name": "武当弟子"
+            "name": "武当弟子",
+            "subtypeIndex": 2
           },
           {
             "drId": 33,
-            "name": "崆峒弟子"
+            "name": "崆峒弟子",
+            "subtypeIndex": 3
           },
           {
             "drId": 34,
-            "name": "狂刀弟子"
+            "name": "狂刀弟子",
+            "subtypeIndex": 4
           },
           {
             "drId": 35,
-            "name": "泰山弟子"
+            "name": "泰山弟子",
+            "subtypeIndex": 5
           },
           {
             "drId": 36,
-            "name": "苍山弟子"
+            "name": "苍山弟子",
+            "subtypeIndex": 6
           },
           {
             "drId": 37,
-            "name": "嵩山弟子"
+            "name": "嵩山弟子",
+            "subtypeIndex": 7
           },
           {
             "drId": 38,
-            "name": "雪山弟子"
+            "name": "雪山弟子",
+            "subtypeIndex": 8
           },
           {
             "drId": 39,
-            "name": "唐门弟子"
+            "name": "唐门弟子",
+            "subtypeIndex": 9
           },
           {
             "drId": 40,
-            "name": "逍遥弟子"
+            "name": "逍遥弟子",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 121,
-            "name": "马夫人"
+            "name": "马夫人",
+            "subtypeIndex": 1
           },
           {
             "drId": 122,
-            "name": "蓉儿"
+            "name": "蓉儿",
+            "subtypeIndex": 2
           },
           {
             "drId": 123,
-            "name": "扫地僧"
+            "name": "扫地僧",
+            "subtypeIndex": 3
           },
           {
             "drId": 124,
-            "name": "空竹"
+            "name": "空竹",
+            "subtypeIndex": 4
           },
           {
             "drId": 125,
-            "name": "龙姑娘"
+            "name": "龙姑娘",
+            "subtypeIndex": 5
           },
           {
             "drId": 126,
-            "name": "令狐少侠"
+            "name": "令狐少侠",
+            "subtypeIndex": 6
           },
           {
             "drId": 127,
-            "name": "萧帮主"
+            "name": "萧帮主",
+            "subtypeIndex": 7
           },
           {
             "drId": 128,
-            "name": "小师妹"
+            "name": "小师妹",
+            "subtypeIndex": 8
           },
           {
             "drId": 129,
-            "name": "张三丰"
+            "name": "张三丰",
+            "subtypeIndex": 9
           },
           {
             "drId": 130,
-            "name": "无极"
+            "name": "无极",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -720,85 +1004,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 41,
-            "name": "摸金劲敌"
+            "name": "摸金劲敌",
+            "subtypeIndex": 1
           },
           {
             "drId": 42,
-            "name": "护宝猛士"
+            "name": "护宝猛士",
+            "subtypeIndex": 2
           },
           {
             "drId": 43,
-            "name": "防墓刚汉"
+            "name": "防墓刚汉",
+            "subtypeIndex": 3
           },
           {
             "drId": 44,
-            "name": "夺宝悍民"
+            "name": "夺宝悍民",
+            "subtypeIndex": 4
           },
           {
             "drId": 45,
-            "name": "守陵勇者"
+            "name": "守陵勇者",
+            "subtypeIndex": 5
           },
           {
             "drId": 46,
-            "name": "阻盗强民"
+            "name": "阻盗强民",
+            "subtypeIndex": 6
           },
           {
             "drId": 47,
-            "name": "护陵硬汉"
+            "name": "护陵硬汉",
+            "subtypeIndex": 7
           },
           {
             "drId": 48,
-            "name": "守墓勇夫"
+            "name": "守墓勇夫",
+            "subtypeIndex": 8
           },
           {
             "drId": 49,
-            "name": "拦盗猛者"
+            "name": "拦盗猛者",
+            "subtypeIndex": 9
           },
           {
             "drId": 50,
-            "name": "御贼刚民"
+            "name": "御贼刚民",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 131,
-            "name": "秦宇"
+            "name": "秦宇",
+            "subtypeIndex": 1
           },
           {
             "drId": 132,
-            "name": "凌雪"
+            "name": "凌雪",
+            "subtypeIndex": 2
           },
           {
             "drId": 133,
-            "name": "吴刚"
+            "name": "吴刚",
+            "subtypeIndex": 3
           },
           {
             "drId": 134,
-            "name": "苏瑶瑶"
+            "name": "苏瑶瑶",
+            "subtypeIndex": 4
           },
           {
             "drId": 135,
-            "name": "叶老"
+            "name": "叶老",
+            "subtypeIndex": 5
           },
           {
             "drId": 136,
-            "name": "林悦"
+            "name": "林悦",
+            "subtypeIndex": 6
           },
           {
             "drId": 137,
-            "name": "赵猛"
+            "name": "赵猛",
+            "subtypeIndex": 7
           },
           {
             "drId": 138,
-            "name": "楚萱"
+            "name": "楚萱",
+            "subtypeIndex": 8
           },
           {
             "drId": 139,
-            "name": "陈老九"
+            "name": "陈老九",
+            "subtypeIndex": 9
           },
           {
             "drId": 140,
-            "name": "柳青青"
+            "name": "柳青青",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -951,85 +1255,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 51,
-            "name": "无畏骑士"
+            "name": "无畏骑士",
+            "subtypeIndex": 1
           },
           {
             "drId": 52,
-            "name": "狂暴骑士"
+            "name": "狂暴骑士",
+            "subtypeIndex": 2
           },
           {
             "drId": 53,
-            "name": "忠诚卫兵"
+            "name": "忠诚卫兵",
+            "subtypeIndex": 3
           },
           {
             "drId": 54,
-            "name": "铠甲刺客"
+            "name": "铠甲刺客",
+            "subtypeIndex": 4
           },
           {
             "drId": 55,
-            "name": "神秘教徒"
+            "name": "神秘教徒",
+            "subtypeIndex": 5
           },
           {
             "drId": 56,
-            "name": "暗影骑士"
+            "name": "暗影骑士",
+            "subtypeIndex": 6
           },
           {
             "drId": 57,
-            "name": "钢铁骑士"
+            "name": "钢铁骑士",
+            "subtypeIndex": 7
           },
           {
             "drId": 58,
-            "name": "坚毅卫兵"
+            "name": "坚毅卫兵",
+            "subtypeIndex": 8
           },
           {
             "drId": 59,
-            "name": "重装刺客"
+            "name": "重装刺客",
+            "subtypeIndex": 9
           },
           {
             "drId": 60,
-            "name": "狂热教徒"
+            "name": "狂热教徒",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 141,
-            "name": "居伊"
+            "name": "居伊",
+            "subtypeIndex": 1
           },
           {
             "drId": 142,
-            "name": "艾莉丝"
+            "name": "艾莉丝",
+            "subtypeIndex": 2
           },
           {
             "drId": 143,
-            "name": "阿丽克丝"
+            "name": "阿丽克丝",
+            "subtypeIndex": 3
           },
           {
             "drId": 144,
-            "name": "雷纳德"
+            "name": "雷纳德",
+            "subtypeIndex": 4
           },
           {
             "drId": 145,
-            "name": "戈弗雷"
+            "name": "戈弗雷",
+            "subtypeIndex": 5
           },
           {
             "drId": 146,
-            "name": "克莱尔"
+            "name": "克莱尔",
+            "subtypeIndex": 6
           },
           {
             "drId": 147,
-            "name": "伊莎贝拉"
+            "name": "伊莎贝拉",
+            "subtypeIndex": 7
           },
           {
             "drId": 148,
-            "name": "鲍德温四世"
+            "name": "鲍德温四世",
+            "subtypeIndex": 8
           },
           {
             "drId": 149,
-            "name": "萨拉丁"
+            "name": "萨拉丁",
+            "subtypeIndex": 9
           },
           {
             "drId": 150,
-            "name": "狮心王理查"
+            "name": "狮心王理查",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -1182,85 +1506,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 61,
-            "name": "噬魂鬼"
+            "name": "噬魂鬼",
+            "subtypeIndex": 1
           },
           {
             "drId": 62,
-            "name": "迷心鬼"
+            "name": "迷心鬼",
+            "subtypeIndex": 2
           },
           {
             "drId": 63,
-            "name": "幻形鬼"
+            "name": "幻形鬼",
+            "subtypeIndex": 3
           },
           {
             "drId": 64,
-            "name": "勾魂鬼"
+            "name": "勾魂鬼",
+            "subtypeIndex": 4
           },
           {
             "drId": 65,
-            "name": "摄魄鬼"
+            "name": "摄魄鬼",
+            "subtypeIndex": 5
           },
           {
             "drId": 66,
-            "name": "恶念鬼"
+            "name": "恶念鬼",
+            "subtypeIndex": 6
           },
           {
             "drId": 67,
-            "name": "魅人鬼"
+            "name": "魅人鬼",
+            "subtypeIndex": 7
           },
           {
             "drId": 68,
-            "name": "阴灵鬼"
+            "name": "阴灵鬼",
+            "subtypeIndex": 8
           },
           {
             "drId": 69,
-            "name": "怨煞鬼"
+            "name": "怨煞鬼",
+            "subtypeIndex": 9
           },
           {
             "drId": 70,
-            "name": "邪祟鬼"
+            "name": "邪祟鬼",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 151,
-            "name": "聂小倩"
+            "name": "聂小倩",
+            "subtypeIndex": 1
           },
           {
             "drId": 152,
-            "name": "宁采臣"
+            "name": "宁采臣",
+            "subtypeIndex": 2
           },
           {
             "drId": 153,
-            "name": "燕赤霞"
+            "name": "燕赤霞",
+            "subtypeIndex": 3
           },
           {
             "drId": 154,
-            "name": "辛十四娘"
+            "name": "辛十四娘",
+            "subtypeIndex": 4
           },
           {
             "drId": 155,
-            "name": "冯生"
+            "name": "冯生",
+            "subtypeIndex": 5
           },
           {
             "drId": 156,
-            "name": "婴宁"
+            "name": "婴宁",
+            "subtypeIndex": 6
           },
           {
             "drId": 157,
-            "name": "小翠"
+            "name": "小翠",
+            "subtypeIndex": 7
           },
           {
             "drId": 158,
-            "name": "王生"
+            "name": "王生",
+            "subtypeIndex": 8
           },
           {
             "drId": 159,
-            "name": "画皮鬼"
+            "name": "画皮鬼",
+            "subtypeIndex": 9
           },
           {
             "drId": 160,
-            "name": "孔雪笠"
+            "name": "孔雪笠",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -1449,85 +1793,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 71,
-            "name": "萨摩武士"
+            "name": "萨摩武士",
+            "subtypeIndex": 1
           },
           {
             "drId": 72,
-            "name": "长州武士"
+            "name": "长州武士",
+            "subtypeIndex": 2
           },
           {
             "drId": 73,
-            "name": "足轻步兵"
+            "name": "足轻步兵",
+            "subtypeIndex": 3
           },
           {
             "drId": 74,
-            "name": "铁炮步兵"
+            "name": "铁炮步兵",
+            "subtypeIndex": 4
           },
           {
             "drId": 75,
-            "name": "旗本步兵"
+            "name": "旗本步兵",
+            "subtypeIndex": 5
           },
           {
             "drId": 76,
-            "name": "甲斐武士"
+            "name": "甲斐武士",
+            "subtypeIndex": 6
           },
           {
             "drId": 77,
-            "name": "越后武士"
+            "name": "越后武士",
+            "subtypeIndex": 7
           },
           {
             "drId": 78,
-            "name": "尾张武士"
+            "name": "尾张武士",
+            "subtypeIndex": 8
           },
           {
             "drId": 79,
-            "name": "弓取步兵"
+            "name": "弓取步兵",
+            "subtypeIndex": 9
           },
           {
             "drId": 80,
-            "name": "薙刀步兵"
+            "name": "薙刀步兵",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 161,
-            "name": "织田信长"
+            "name": "织田信长",
+            "subtypeIndex": 1
           },
           {
             "drId": 162,
-            "name": "上杉谦信"
+            "name": "上杉谦信",
+            "subtypeIndex": 2
           },
           {
             "drId": 163,
-            "name": "真田幸村"
+            "name": "真田幸村",
+            "subtypeIndex": 3
           },
           {
             "drId": 164,
-            "name": "服部半藏"
+            "name": "服部半藏",
+            "subtypeIndex": 4
           },
           {
             "drId": 165,
-            "name": "武田信玄"
+            "name": "武田信玄",
+            "subtypeIndex": 5
           },
           {
             "drId": 166,
-            "name": "丰臣秀吉"
+            "name": "丰臣秀吉",
+            "subtypeIndex": 6
           },
           {
             "drId": 167,
-            "name": "明智光秀"
+            "name": "明智光秀",
+            "subtypeIndex": 7
           },
           {
             "drId": 168,
-            "name": "本多忠胜"
+            "name": "本多忠胜",
+            "subtypeIndex": 8
           },
           {
             "drId": 169,
-            "name": "石田三成"
+            "name": "石田三成",
+            "subtypeIndex": 9
           },
           {
             "drId": 170,
-            "name": "德川家康"
+            "name": "德川家康",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -1680,85 +2044,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 81,
-            "name": "突击兵"
+            "name": "突击兵",
+            "subtypeIndex": 1
           },
           {
             "drId": 82,
-            "name": "机枪兵"
+            "name": "机枪兵",
+            "subtypeIndex": 2
           },
           {
             "drId": 83,
-            "name": "宪卫兵"
+            "name": "宪卫兵",
+            "subtypeIndex": 3
           },
           {
             "drId": 84,
-            "name": "狙击兵"
+            "name": "狙击兵",
+            "subtypeIndex": 4
           },
           {
             "drId": 85,
-            "name": "山地兵"
+            "name": "山地兵",
+            "subtypeIndex": 5
           },
           {
             "drId": 86,
-            "name": "冲锋兵"
+            "name": "冲锋兵",
+            "subtypeIndex": 6
           },
           {
             "drId": 87,
-            "name": "步枪兵"
+            "name": "步枪兵",
+            "subtypeIndex": 7
           },
           {
             "drId": 88,
-            "name": "侦察兵"
+            "name": "侦察兵",
+            "subtypeIndex": 8
           },
           {
             "drId": 89,
-            "name": "雪地兵"
+            "name": "雪地兵",
+            "subtypeIndex": 9
           },
           {
             "drId": 90,
-            "name": "特种兵"
+            "name": "特种兵",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 171,
-            "name": "曼施坦因"
+            "name": "曼施坦因",
+            "subtypeIndex": 1
           },
           {
             "drId": 172,
-            "name": "隆美尔"
+            "name": "隆美尔",
+            "subtypeIndex": 2
           },
           {
             "drId": 173,
-            "name": "古德里安"
+            "name": "古德里安",
+            "subtypeIndex": 3
           },
           {
             "drId": 174,
-            "name": "邓尼茨"
+            "name": "邓尼茨",
+            "subtypeIndex": 4
           },
           {
             "drId": 175,
-            "name": "朱可夫"
+            "name": "朱可夫",
+            "subtypeIndex": 5
           },
           {
             "drId": 176,
-            "name": "科涅夫"
+            "name": "科涅夫",
+            "subtypeIndex": 6
           },
           {
             "drId": 177,
-            "name": "艾森豪威尔"
+            "name": "艾森豪威尔",
+            "subtypeIndex": 7
           },
           {
             "drId": 178,
-            "name": "巴顿"
+            "name": "巴顿",
+            "subtypeIndex": 8
           },
           {
             "drId": 179,
-            "name": "麦克阿瑟"
+            "name": "麦克阿瑟",
+            "subtypeIndex": 9
           },
           {
             "drId": 180,
-            "name": "蒙哥马利"
+            "name": "蒙哥马利",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -1947,85 +2331,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 91,
-            "name": "毒修士"
+            "name": "毒修士",
+            "subtypeIndex": 1
           },
           {
             "drId": 92,
-            "name": "邪刀客"
+            "name": "邪刀客",
+            "subtypeIndex": 2
           },
           {
             "drId": 93,
-            "name": "暗刃手"
+            "name": "暗刃手",
+            "subtypeIndex": 3
           },
           {
             "drId": 94,
-            "name": "邪灵者"
+            "name": "邪灵者",
+            "subtypeIndex": 4
           },
           {
             "drId": 95,
-            "name": "魔火徒"
+            "name": "魔火徒",
+            "subtypeIndex": 5
           },
           {
             "drId": 96,
-            "name": "毒蛊人"
+            "name": "毒蛊人",
+            "subtypeIndex": 6
           },
           {
             "drId": 97,
-            "name": "血刀卫"
+            "name": "血刀卫",
+            "subtypeIndex": 7
           },
           {
             "drId": 98,
-            "name": "血影卫"
+            "name": "血影卫",
+            "subtypeIndex": 8
           },
           {
             "drId": 99,
-            "name": "暗魔者"
+            "name": "暗魔者",
+            "subtypeIndex": 9
           },
           {
             "drId": 100,
-            "name": "邪火使"
+            "name": "邪火使",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 181,
-            "name": "洛尘羽"
+            "name": "洛尘羽",
+            "subtypeIndex": 1
           },
           {
             "drId": 182,
-            "name": "沐雪瑶"
+            "name": "沐雪瑶",
+            "subtypeIndex": 2
           },
           {
             "drId": 183,
-            "name": "轩辕逸"
+            "name": "轩辕逸",
+            "subtypeIndex": 3
           },
           {
             "drId": 184,
-            "name": "苏灵月"
+            "name": "苏灵月",
+            "subtypeIndex": 4
           },
           {
             "drId": 185,
-            "name": "萧逸云"
+            "name": "萧逸云",
+            "subtypeIndex": 5
           },
           {
             "drId": 186,
-            "name": "云霓裳"
+            "name": "云霓裳",
+            "subtypeIndex": 6
           },
           {
             "drId": 187,
-            "name": "墨羽轩"
+            "name": "墨羽轩",
+            "subtypeIndex": 7
           },
           {
             "drId": 188,
-            "name": "凌紫嫣"
+            "name": "凌紫嫣",
+            "subtypeIndex": 8
           },
           {
             "drId": 189,
-            "name": "叶清婉"
+            "name": "叶清婉",
+            "subtypeIndex": 9
           },
           {
             "drId": 190,
-            "name": "风无痕"
+            "name": "风无痕",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -2214,85 +2618,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 101,
-            "name": "暗星卫卒"
+            "name": "暗星卫卒",
+            "subtypeIndex": 1
           },
           {
             "drId": 102,
-            "name": "镭影战兵"
+            "name": "镭影战兵",
+            "subtypeIndex": 2
           },
           {
             "drId": 103,
-            "name": "幽光锐士"
+            "name": "幽光锐士",
+            "subtypeIndex": 3
           },
           {
             "drId": 104,
-            "name": "炽炎猛士"
+            "name": "炽炎猛士",
+            "subtypeIndex": 4
           },
           {
             "drId": 105,
-            "name": "寒霜锐兵"
+            "name": "寒霜锐兵",
+            "subtypeIndex": 5
           },
           {
             "drId": 106,
-            "name": "风暴劲卒"
+            "name": "风暴劲卒",
+            "subtypeIndex": 6
           },
           {
             "drId": 107,
-            "name": "磁能卫士"
+            "name": "磁能卫士",
+            "subtypeIndex": 7
           },
           {
             "drId": 108,
-            "name": "电浆锐士"
+            "name": "电浆锐士",
+            "subtypeIndex": 8
           },
           {
             "drId": 109,
-            "name": "量子战兵"
+            "name": "量子战兵",
+            "subtypeIndex": 9
           },
           {
             "drId": 110,
-            "name": "星陨猛士"
+            "name": "星陨猛士",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 191,
-            "name": "亚历克斯雷顿"
+            "name": "亚历克斯雷顿",
+            "subtypeIndex": 1
           },
           {
             "drId": 192,
-            "name": "凯斯哈特曼"
+            "name": "凯斯哈特曼",
+            "subtypeIndex": 2
           },
           {
             "drId": 193,
-            "name": "艾丽娅斯通"
+            "name": "艾丽娅斯通",
+            "subtypeIndex": 3
           },
           {
             "drId": 194,
-            "name": "琳恩帕克"
+            "name": "琳恩帕克",
+            "subtypeIndex": 4
           },
           {
             "drId": 195,
-            "name": "卓格克里克斯"
+            "name": "卓格克里克斯",
+            "subtypeIndex": 5
           },
           {
             "drId": 196,
-            "name": "托克斯维恩"
+            "name": "托克斯维恩",
+            "subtypeIndex": 6
           },
           {
             "drId": 197,
-            "name": "米娅拉克斯"
+            "name": "米娅拉克斯",
+            "subtypeIndex": 7
           },
           {
             "drId": 198,
-            "name": "妮拉索尔"
+            "name": "妮拉索尔",
+            "subtypeIndex": 8
           },
           {
             "drId": 199,
-            "name": "星语者"
+            "name": "星语者",
+            "subtypeIndex": 9
           },
           {
             "drId": 200,
-            "name": "影刃"
+            "name": "影刃",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -2445,85 +2869,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 111,
-            "name": "星陨门徒"
+            "name": "星陨门徒",
+            "subtypeIndex": 1
           },
           {
             "drId": 112,
-            "name": "紫阳弟子"
+            "name": "紫阳弟子",
+            "subtypeIndex": 2
           },
           {
             "drId": 113,
-            "name": "灵云长老"
+            "name": "灵云长老",
+            "subtypeIndex": 3
           },
           {
             "drId": 114,
-            "name": "寒霜门徒"
+            "name": "寒霜门徒",
+            "subtypeIndex": 4
           },
           {
             "drId": 115,
-            "name": "清风弟子"
+            "name": "清风弟子",
+            "subtypeIndex": 5
           },
           {
             "drId": 116,
-            "name": "紫雷门徒"
+            "name": "紫雷门徒",
+            "subtypeIndex": 6
           },
           {
             "drId": 117,
-            "name": "焚天弟子"
+            "name": "焚天弟子",
+            "subtypeIndex": 7
           },
           {
             "drId": 118,
-            "name": "皓月长老"
+            "name": "皓月长老",
+            "subtypeIndex": 8
           },
           {
             "drId": 119,
-            "name": "苍炎门徒"
+            "name": "苍炎门徒",
+            "subtypeIndex": 9
           },
           {
             "drId": 120,
-            "name": "燃月弟子"
+            "name": "燃月弟子",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 201,
-            "name": "萧尘"
+            "name": "萧尘",
+            "subtypeIndex": 1
           },
           {
             "drId": 202,
-            "name": "言慕然"
+            "name": "言慕然",
+            "subtypeIndex": 2
           },
           {
             "drId": 203,
-            "name": "雷震天"
+            "name": "雷震天",
+            "subtypeIndex": 3
           },
           {
             "drId": 204,
-            "name": "岩峰"
+            "name": "岩峰",
+            "subtypeIndex": 4
           },
           {
             "drId": 205,
-            "name": "林羽"
+            "name": "林羽",
+            "subtypeIndex": 5
           },
           {
             "drId": 206,
-            "name": "展灵儿"
+            "name": "展灵儿",
+            "subtypeIndex": 6
           },
           {
             "drId": 207,
-            "name": "苏雪"
+            "name": "苏雪",
+            "subtypeIndex": 7
           },
           {
             "drId": 208,
-            "name": "语昕"
+            "name": "语昕",
+            "subtypeIndex": 8
           },
           {
             "drId": 209,
-            "name": "灵心月"
+            "name": "灵心月",
+            "subtypeIndex": 9
           },
           {
             "drId": 210,
-            "name": "雷紫"
+            "name": "雷紫",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -2712,85 +3156,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 291,
-            "name": "兽族战士"
+            "name": "兽族战士",
+            "subtypeIndex": 1
           },
           {
             "drId": 292,
-            "name": "人类法师"
+            "name": "人类法师",
+            "subtypeIndex": 2
           },
           {
             "drId": 293,
-            "name": "牛头人护卫"
+            "name": "牛头人护卫",
+            "subtypeIndex": 3
           },
           {
             "drId": 294,
-            "name": "巨魔弓箭手"
+            "name": "巨魔弓箭手",
+            "subtypeIndex": 4
           },
           {
             "drId": 295,
-            "name": "人类牧师"
+            "name": "人类牧师",
+            "subtypeIndex": 5
           },
           {
             "drId": 296,
-            "name": "矮人战士"
+            "name": "矮人战士",
+            "subtypeIndex": 6
           },
           {
             "drId": 297,
-            "name": "德莱法师"
+            "name": "德莱法师",
+            "subtypeIndex": 7
           },
           {
             "drId": 298,
-            "name": "人类骑士"
+            "name": "人类骑士",
+            "subtypeIndex": 8
           },
           {
             "drId": 299,
-            "name": "精灵弓箭手"
+            "name": "精灵弓箭手",
+            "subtypeIndex": 9
           },
           {
             "drId": 300,
-            "name": "萨满祭祀"
+            "name": "萨满祭祀",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 321,
-            "name": "珍娜潮歌"
+            "name": "珍娜潮歌",
+            "subtypeIndex": 1
           },
           {
             "drId": 322,
-            "name": "西尔维夜影"
+            "name": "西尔维夜影",
+            "subtypeIndex": 2
           },
           {
             "drId": 323,
-            "name": "乌瑟圣辉"
+            "name": "乌瑟圣辉",
+            "subtypeIndex": 3
           },
           {
             "drId": 324,
-            "name": "泰莉丝月瞳"
+            "name": "泰莉丝月瞳",
+            "subtypeIndex": 4
           },
           {
             "drId": 325,
-            "name": "维里安预视"
+            "name": "维里安预视",
+            "subtypeIndex": 5
           },
           {
             "drId": 326,
-            "name": "萨恩裂地"
+            "name": "萨恩裂地",
+            "subtypeIndex": 6
           },
           {
             "drId": 327,
-            "name": "凯兰炽翼"
+            "name": "凯兰炽翼",
+            "subtypeIndex": 7
           },
           {
             "drId": 328,
-            "name": "莫林铁须"
+            "name": "莫林铁须",
+            "subtypeIndex": 8
           },
           {
             "drId": 329,
-            "name": "玛洛恩林语"
+            "name": "玛洛恩林语",
+            "subtypeIndex": 9
           },
           {
             "drId": 330,
-            "name": "奥菲莉天翼"
+            "name": "奥菲莉天翼",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -2979,85 +3443,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 301,
-            "name": "机械异种"
+            "name": "机械异种",
+            "subtypeIndex": 1
           },
           {
             "drId": 302,
-            "name": "鳄鱼人"
+            "name": "鳄鱼人",
+            "subtypeIndex": 2
           },
           {
             "drId": 303,
-            "name": "黑暗毒液"
+            "name": "黑暗毒液",
+            "subtypeIndex": 3
           },
           {
             "drId": 304,
-            "name": "血色蜘蛛"
+            "name": "血色蜘蛛",
+            "subtypeIndex": 4
           },
           {
             "drId": 305,
-            "name": "章鱼怪"
+            "name": "章鱼怪",
+            "subtypeIndex": 5
           },
           {
             "drId": 306,
-            "name": "暗黑机甲"
+            "name": "暗黑机甲",
+            "subtypeIndex": 6
           },
           {
             "drId": 307,
-            "name": "变种狼人"
+            "name": "变种狼人",
+            "subtypeIndex": 7
           },
           {
             "drId": 308,
-            "name": "鲨鱼异形"
+            "name": "鲨鱼异形",
+            "subtypeIndex": 8
           },
           {
             "drId": 309,
-            "name": "忍者猫侠"
+            "name": "忍者猫侠",
+            "subtypeIndex": 9
           },
           {
             "drId": 310,
-            "name": "通灵人"
+            "name": "通灵人",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 331,
-            "name": "猩红梦魇"
+            "name": "猩红梦魇",
+            "subtypeIndex": 1
           },
           {
             "drId": 332,
-            "name": "暗夜裁决"
+            "name": "暗夜裁决",
+            "subtypeIndex": 2
           },
           {
             "drId": 333,
-            "name": "雷霆王托尔"
+            "name": "雷霆王托尔",
+            "subtypeIndex": 3
           },
           {
             "drId": 334,
-            "name": "白凤凰"
+            "name": "白凤凰",
+            "subtypeIndex": 4
           },
           {
             "drId": 335,
-            "name": "狂怒巨人"
+            "name": "狂怒巨人",
+            "subtypeIndex": 5
           },
           {
             "drId": 336,
-            "name": "神射天眼"
+            "name": "神射天眼",
+            "subtypeIndex": 6
           },
           {
             "drId": 337,
-            "name": "神裔之女"
+            "name": "神裔之女",
+            "subtypeIndex": 7
           },
           {
             "drId": 338,
-            "name": "小丑女王"
+            "name": "小丑女王",
+            "subtypeIndex": 8
           },
           {
             "drId": 339,
-            "name": "磁控领主"
+            "name": "磁控领主",
+            "subtypeIndex": 9
           },
           {
             "drId": 340,
-            "name": "不朽战狼"
+            "name": "不朽战狼",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -3246,85 +3730,105 @@ export const ORIGINAL_FACTION_RULES = {
         "normalEnemies": [
           {
             "drId": 311,
-            "name": "金狮鬃圣"
+            "name": "金狮鬃圣",
+            "subtypeIndex": 1
           },
           {
             "drId": 312,
-            "name": "复眼蜈蚣"
+            "name": "复眼蜈蚣",
+            "subtypeIndex": 2
           },
           {
             "drId": 313,
-            "name": "皈依黑熊"
+            "name": "皈依黑熊",
+            "subtypeIndex": 3
           },
           {
             "drId": 314,
-            "name": "大鹏金雕"
+            "name": "大鹏金雕",
+            "subtypeIndex": 4
           },
           {
             "drId": 315,
-            "name": "白骨鬼女"
+            "name": "白骨鬼女",
+            "subtypeIndex": 5
           },
           {
             "drId": 316,
-            "name": "土匪虎妖"
+            "name": "土匪虎妖",
+            "subtypeIndex": 6
           },
           {
             "drId": 317,
-            "name": "蜘蛛精后"
+            "name": "蜘蛛精后",
+            "subtypeIndex": 7
           },
           {
             "drId": 318,
-            "name": "邪魄巨象"
+            "name": "邪魄巨象",
+            "subtypeIndex": 8
           },
           {
             "drId": 319,
-            "name": "恶毒蝎女"
+            "name": "恶毒蝎女",
+            "subtypeIndex": 9
           },
           {
             "drId": 320,
-            "name": "月宫白兔"
+            "name": "月宫白兔",
+            "subtypeIndex": 10
           }
         ],
         "bossEnemies": [
           {
             "drId": 341,
-            "name": "唐僧"
+            "name": "唐僧",
+            "subtypeIndex": 1
           },
           {
             "drId": 342,
-            "name": "熬烈"
+            "name": "熬烈",
+            "subtypeIndex": 2
           },
           {
             "drId": 343,
-            "name": "猪八戒"
+            "name": "猪八戒",
+            "subtypeIndex": 3
           },
           {
             "drId": 344,
-            "name": "沙和尚"
+            "name": "沙和尚",
+            "subtypeIndex": 4
           },
           {
             "drId": 345,
-            "name": "铁扇公主"
+            "name": "铁扇公主",
+            "subtypeIndex": 5
           },
           {
             "drId": 346,
-            "name": "牛魔王"
+            "name": "牛魔王",
+            "subtypeIndex": 6
           },
           {
             "drId": 347,
-            "name": "嫦娥"
+            "name": "嫦娥",
+            "subtypeIndex": 7
           },
           {
             "drId": 348,
-            "name": "红孩儿"
+            "name": "红孩儿",
+            "subtypeIndex": 8
           },
           {
             "drId": 349,
-            "name": "紫霞"
+            "name": "紫霞",
+            "subtypeIndex": 9
           },
           {
             "drId": 350,
-            "name": "太上老君"
+            "name": "太上老君",
+            "subtypeIndex": 10
           }
         ],
         "materialItemsByQuality": [
@@ -3753,6 +4257,66 @@ export const originalFactionTaskTargetName = (
   if (taskId === 4) return world.bossEnemies.find((enemy) => enemy.drId === targetId)?.name ?? '未知首领'
   if (taskId === 5) return '品质 ' + targetId + ' 装备'
   return '未启用任务'
+}
+
+/** 代理人筛选矩阵行号：每位面 5 行，taskId 1..5。 */
+export const originalAgentFilterRow = (worldIndex: number, taskId: number): number =>
+  (worldIndex - 1) * ORIGINAL_FACTION_RULES.stateLayout.agentFilter.taskRowsPerWorld + taskId
+
+/**
+ * 势力列号。原版 UI 写入时按 clamp(槽位 + 1, 2, 4) 收口，本作沿用该 clamp，
+ * 因此前三个位面的第 4 个正式势力与第 3 个共用列 4（详见生成器注释）。
+ * 民团（槽位 0）不参与势力筛选，返回 null。
+ */
+export const originalAgentFilterFactionColumn = (factionSourceId: number): number | null => {
+  const entry = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.factionWorldSlots
+    .find((slot) => slot.factionSourceId === factionSourceId)
+  if (!entry || entry.worldSlotIndex <= 0) return null
+  const [min, max] = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.factionColumns
+  return clamp(entry.worldSlotIndex + 1, min, max)
+}
+
+/** 品质列号：quality + 4，落在品质列区间内。 */
+export const originalAgentFilterQualityColumn = (quality: number): number | null => {
+  const [min, max] = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.qualityColumns
+  const column = quality + 4
+  return column >= min && column <= max ? column : null
+}
+
+/**
+ * 子类列号。key 按 taskId 切换：
+ * taskId 1/4 用 dr 列 14 的位面内序号、taskId 3 用材料族、taskId 5 用装备品质档。
+ * taskId 2（筹措货币）在原版接受逻辑中不读子类列，返回 null。
+ */
+export const originalAgentFilterSubtypeColumn = (
+  worldIndex: number,
+  taskId: number,
+  quality: number,
+  targetId: number,
+): number | null => {
+  const rule = ORIGINAL_FACTION_RULES.stateLayout.agentFilter.targetSubtypeByTask[
+    String(taskId) as keyof typeof ORIGINAL_FACTION_RULES.stateLayout.agentFilter.targetSubtypeByTask
+  ]
+  if (!rule?.key) return null
+  const world = ORIGINAL_FACTION_RULES.tasks.targetPools.find((target) => target.worldIndex === worldIndex)
+  if (!world) return null
+  const [min, max] = rule.columns
+  const withinRange = (column: number): number | null => column >= min && column <= max ? column : null
+
+  if (taskId === 1 || taskId === 4) {
+    const pool = taskId === 1 ? world.normalEnemies : world.bossEnemies
+    const enemy = pool.find((candidate) => candidate.drId === targetId)
+    return enemy ? withinRange(enemy.subtypeIndex + 10) : null
+  }
+  if (taskId === 3) {
+    for (const group of world.materialItemsByQuality) {
+      const item = group.items.find((candidate) => candidate.itemId === targetId)
+      if (item) return withinRange(item.family + 10)
+    }
+    return null
+  }
+  if (taskId === 5) return withinRange(quality - 3 + 10)
+  return null
 }
 
 export const originalFactionTaskRequiredAmount = (

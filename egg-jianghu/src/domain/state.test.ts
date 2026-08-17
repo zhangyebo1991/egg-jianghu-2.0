@@ -58,6 +58,8 @@ describe('新建玩家角色', () => {
       source: 'starter',
       cost: 0,
       factionId: null,
+      // 原版 js.json 第 1 列「主角」，其能力白板全为 0。
+      sourceId: 1,
       aptitudes: { strength: 10, insight: 10, constitution: 10, agility: 10, resolve: 10 },
     })
     expect(HEROES_V10[0]).toBe(PLAYER_HERO_V10)

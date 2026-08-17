@@ -23,6 +23,12 @@ export interface HeroDefinitionV10 {
   aptitudes: HeroAptitudes
   /** 酒馆英雄帖上的一句话点评（仅部分侠客有） */
   line?: string
+  /**
+   * 原版《诸天刷宝录》js.json 的角色列号，用于继承原版能力白板等按角色索引的真值。
+   * 仅在原版确有同一角色时填写；本作自创侠客（金庸人物）在原版名录中不存在，故留空，
+   * 由 `originalHeroAbilityBase` 按「原版无此角色 → 白板 0」处理，不做姓名近似或位置猜测。
+   */
+  sourceId?: number
 }
 
 // [id, 姓名, 基础职业, 江湖卷]
@@ -70,6 +76,8 @@ export const PLAYER_HERO_V10: HeroDefinitionV10 = {
   source: 'starter',
   cost: 0,
   factionId: null,
+  // 主角对应原版 js.json 第 1 列（"主角"），其能力 1..10 白板全为 0（生成器已 assert）。
+  sourceId: 1,
   // 白板号资质对齐原版《诸天刷宝录》主角（js.json id=1）：勇/智/体/敏/精全 10，天资总和 50。
   // 见 docs/诸天刷宝录_资质面板公式_源码逆向.md
   aptitudes: {
