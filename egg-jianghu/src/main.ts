@@ -38,6 +38,8 @@ import {
   ORIGINAL_SACRED_UPGRADES,
 } from './content/original-progression.generated'
 import {
+  originalFactionAgentContributionMultiplier,
+  originalFactionAgentReputationMultiplier,
   originalFactionTaskDefinitionById,
   originalFactionTaskRequiredAmount,
   originalFactionTaskReward,
@@ -62,7 +64,7 @@ import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEq
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
-import { appointFactionAgent, dismissFactionAgent, factionAgentCandidateIds, toggleFactionAgent } from './domain/faction-agent'
+import { appointFactionAgent, dismissFactionAgent, factionAgentAbilityLevel, factionAgentCandidateIds, toggleFactionAgent } from './domain/faction-agent'
 import { exchangeFactionItem, factionExchangeItemOwned, factionExchangeItemQuantity } from './domain/faction-exchange'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
@@ -1355,6 +1357,7 @@ const factionAgentViewModel = (worldId: string, worldName: string): NonNullable<
       selected: agent.heroId === heroId,
     }
   }
+  const abilityLevel = factionAgentAbilityLevel(session.state, worldId)
   return {
     worldId,
     worldName,
@@ -1364,7 +1367,9 @@ const factionAgentViewModel = (worldId: string, worldName: string): NonNullable<
       const candidate = heroView(heroId)
       return candidate ? [candidate] : []
     }),
-    abilityBonusAvailable: false,
+    abilityLevel,
+    contributionBonusPercent: Math.round((originalFactionAgentContributionMultiplier(abilityLevel) - 1) * 100),
+    reputationBonusPercent: Math.round((originalFactionAgentReputationMultiplier(abilityLevel) - 1) * 100),
     taskAutomationAvailable: false,
   }
 }

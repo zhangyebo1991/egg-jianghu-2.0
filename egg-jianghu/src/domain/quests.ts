@@ -8,6 +8,7 @@ import {
   originalFactionTaskReward,
   originalFactionTaskTargetPool,
 } from '../content/original-faction-rules.generated'
+import { applyFactionQuestAgentReward, factionAgentAbilityLevel } from './faction-agent'
 import { backpackEquipment } from './inventory'
 import type {
   AcceptedFactionQuest,
@@ -224,7 +225,11 @@ export const claimQuest = (state: GameStateV10, factionId: string, slotIndex: nu
     return { ok: false, message: '任务尚不可领取' }
   }
 
-  const reward = originalFactionTaskReward(accepted.taskId, accepted.quality, accepted.worldIndex)
+  const worldId = `world_${String(accepted.worldIndex).padStart(2, '0')}`
+  const reward = applyFactionQuestAgentReward(
+    originalFactionTaskReward(accepted.taskId, accepted.quality, accepted.worldIndex),
+    factionAgentAbilityLevel(state, worldId),
+  )
   state.worldCurrency[faction.worldId] = (state.worldCurrency[faction.worldId] ?? 0) + reward.currency
   state.contribution[factionId] = (state.contribution[factionId] ?? 0) + reward.contribution
   state.worldReputation[faction.worldId] = (state.worldReputation[faction.worldId] ?? 0) + reward.reputation

@@ -705,7 +705,8 @@ test('城镇代理人支持任命、替换、卸任和启停且不虚构能力�
 
   const agent = page.getByTestId('faction-agent')
   await expect(agent).toHaveAttribute('data-world-id', 'world_01')
-  await expect(agent).toContainText('当前角色数据未接入该能力')
+  await expect(agent).toContainText('计略 Lv.0')
+  await expect(agent).toContainText('贡献 +0%')
   await expect(agent).toContainText('条件矩阵尚未接入，保持关闭')
 
   await page.getByTestId('faction-agent-candidate-hero_guo_jing').getByRole('button', { name: '任命' }).click()

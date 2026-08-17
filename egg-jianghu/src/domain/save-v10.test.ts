@@ -115,6 +115,22 @@ describe('version 18 存档', () => {
     expect(loaded.state.acceptedFactionQuests['1'].progress).toBe(3)
   })
 
+  it('保存并恢复侠客计略培养，并拒绝越界能力字段', () => {
+    const storage = memoryStorage()
+    const state = createInitialStateV10(1000)
+    state.heroes.hero_player.abilityTraining = { 9: 4 }
+    saveGameV10(storage, state, 1000)
+
+    const loaded = loadGameV10(storage, 2000)
+    expect(loaded.recoveredFromError).toBe(false)
+    expect(loaded.state.heroes.hero_player.abilityTraining).toEqual({ 9: 4 })
+
+    const raw = JSON.parse(storage.values.get(SAVE_KEY_V10) ?? '{}') as Record<string, unknown>
+    const heroes = raw.heroes as Record<string, Record<string, unknown>>
+    heroes.hero_player.abilityTraining = { 9: 9 }
+    expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
+  })
+
   it('保存并恢复原版城市地块、公司现金与财务状态', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(1000)

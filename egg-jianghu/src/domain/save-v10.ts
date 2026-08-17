@@ -86,6 +86,20 @@ const isEquipmentInstance = (value: unknown): boolean =>
   && value.affixes.every(isEquipmentRoll)
   && typeof value.locked === 'boolean'
 
+const isAbilityTraining = (value: unknown): boolean => {
+  if (!isRecord(value)) return false
+  return Object.entries(value).every(([abilityId, level]) => {
+    const id = Number(abilityId)
+    return String(id) === abilityId
+      && Number.isInteger(id)
+      && id >= 1
+      && id <= 10
+      && Number.isInteger(Number(level))
+      && Number(level) >= 0
+      && Number(level) <= 5
+  })
+}
+
 const isHeroProgress = (value: unknown): boolean => {
   if (!isRecord(value)) return false
   const hasLoadoutField = 'equipmentBySlot' in value
@@ -111,6 +125,7 @@ const isHeroProgress = (value: unknown): boolean => {
     && (value.heartMethodId === null || typeof value.heartMethodId === 'string')
     && (setIndex === undefined || setIndex === 0 || setIndex === 1 || setIndex === 2)
     && (value.customName === undefined || typeof value.customName === 'string')
+    && (value.abilityTraining === undefined || isAbilityTraining(value.abilityTraining))
 }
 
 const isStringRecord = (value: unknown): value is Record<string, string> =>

@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { PLAYER_HERO_ID } from '../content/heroes'
 import { createHeroProgress, createNewGameStateV10 } from './state'
 import {
+  applyFactionQuestAgentReward,
   appointFactionAgent,
   dismissFactionAgent,
+  factionAgentAbilityLevel,
   factionAgentCandidateIds,
+  originalFinalAbilityLevel,
   toggleFactionAgent,
 } from './faction-agent'
 
@@ -59,5 +62,22 @@ describe('位面代理人', () => {
     expect(dismissFactionAgent(state, 'world_01').message).toBe('已卸任当前位面代理人')
     expect(state.factionAgents.world_01).toEqual({ heroId: null, enabled: true })
     expect(dismissFactionAgent(state, 'world_01').message).toBe('当前位面尚未任命代理人')
+  })
+
+  it('复算最终能力等级并按计略乘任务奖励', () => {
+    expect(originalFinalAbilityLevel(0, 4)).toBe(4)
+    expect(originalFinalAbilityLevel(4, 2)).toBe(5)
+    expect(originalFinalAbilityLevel(0, 0, 1.4)).toBe(1)
+
+    const state = recruitedState()
+    expect(factionAgentAbilityLevel(state, 'world_01')).toBe(0)
+    expect(applyFactionQuestAgentReward({ currency: 100, contribution: 450, reputation: 4 }, 0))
+      .toEqual({ currency: 100, contribution: 450, reputation: 4 })
+
+    appointFactionAgent(state, 'world_01', 'hero_guo_jing')
+    state.heroes.hero_guo_jing.abilityTraining = { 9: 4 }
+    expect(factionAgentAbilityLevel(state, 'world_01')).toBe(4)
+    expect(applyFactionQuestAgentReward({ currency: 100, contribution: 450, reputation: 4 }, 4))
+      .toEqual({ currency: 100, contribution: 540, reputation: 4 })
   })
 })

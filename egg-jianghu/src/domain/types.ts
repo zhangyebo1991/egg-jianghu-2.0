@@ -55,6 +55,8 @@ export interface HeroProgressV10 {
   equipmentSets: [Record<string, string | null>, Record<string, string | null>, Record<string, string | null>]
   activeEquipmentSetIndex: 0 | 1 | 2
   equipmentBySlot: Record<string, string | null>
+  /** 原版 save[hero, 39+能力, 1] 培养等级；缺省视为 0。当前无培养 UI。 */
+  abilityTraining?: Record<string, number>
 }
 
 export interface FormationSlot {

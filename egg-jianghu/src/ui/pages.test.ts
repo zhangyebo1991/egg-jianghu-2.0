@@ -126,7 +126,9 @@ const factionAgentFixture = (): NonNullable<TownsPageViewModel['factionAgent']> 
     id: 'hero_mu_nianci', name: '穆念慈', grade: '乙', category: '剑', level: 10,
     fighting: true, selected: false,
   }],
-  abilityBonusAvailable: false,
+  abilityLevel: 0,
+  contributionBonusPercent: 0,
+  reputationBonusPercent: 0,
   taskAutomationAvailable: false,
 })
 
@@ -476,7 +478,9 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-action="toggle-faction-agent"')
     expect(html).toContain('data-action="dismiss-faction-agent"')
     expect(html).toContain('data-action="appoint-faction-agent"')
-    expect(html).toContain('当前角色数据未接入该能力')
+    expect(html).toContain('计略 Lv.0')
+    expect(html).toContain('贡献 +0%')
+    expect(html).toContain('声望 +0%')
     expect(html).toContain('条件矩阵尚未接入，保持关闭')
     expect(html).toContain('>已任命</button>')
     expect(html).toContain('>战斗中</button>')

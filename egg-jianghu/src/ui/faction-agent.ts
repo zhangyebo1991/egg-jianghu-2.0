@@ -16,7 +16,9 @@ export interface FactionAgentViewModel {
   enabled: boolean
   currentAgent: FactionAgentHeroView | null
   candidates: readonly FactionAgentHeroView[]
-  abilityBonusAvailable: boolean
+  abilityLevel: number
+  contributionBonusPercent: number
+  reputationBonusPercent: number
   taskAutomationAvailable: boolean
 }
 
@@ -52,8 +54,8 @@ export const renderFactionAgent = (view: FactionAgentViewModel): string => `<sec
     ${renderCurrentAgent(view)}
     <div class="faction-agent-bonus" data-testid="faction-agent-bonus">
       <span>奖励加成</span>
-      <strong>${view.abilityBonusAvailable ? '已生效' : '暂不生效'}</strong>
-      <small>原版只受角色“能力 9”影响：每级贡献 +5%、声望 +2%。当前角色数据未接入该能力，不使用等级或资质代替。</small>
+      <strong>${view.abilityLevel > 0 ? '已生效' : '计略 Lv.0'}</strong>
+      <small>计略 Lv.${view.abilityLevel} · 贡献 +${view.contributionBonusPercent}% · 声望 +${view.reputationBonusPercent}%。只受原版能力 9，白板未接入时基础为 0，不使用等级或资质代替。</small>
     </div>
   </div>
   <div class="faction-agent-automation">

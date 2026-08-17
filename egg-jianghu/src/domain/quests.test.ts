@@ -10,7 +10,7 @@ import {
   initializeQuestBoard,
   QUEST_REFRESH_MS,
 } from './quests'
-import { createInitialStateV10 } from './state'
+import { createHeroProgress, createInitialStateV10 } from './state'
 import type { AcceptedFactionQuest, FactionQuestBoardEntry, GameStateV10 } from './types'
 
 const FACTION_ID = 'tieyi_school'
@@ -139,6 +139,30 @@ describe('原版势力五格悬榜', () => {
     })
     expect(state.factionBoards[FACTION_ID].slots[1]).toMatchObject({ id: 'cancel', acceptedRecordId: 0 })
     expect(state.acceptedFactionQuests['2']).toBeUndefined()
+  })
+
+  it('领取时按位面代理人计略乘贡献与声望，货币不乘', () => {
+    const base = createInitialStateV10(0)
+    base.factionBoards[FACTION_ID] = {
+      refreshRemainingMs: QUEST_REFRESH_MS,
+      slots: [boardQuest('claim', 1), null, null, null, null],
+    }
+    base.acceptedFactionQuests = { 1: { ...acceptedQuest(1, 0), progress: 2 } }
+    expect(claimQuest(base, FACTION_ID, 0).ok).toBe(true)
+
+    const trained = createInitialStateV10(0)
+    trained.heroes.hero_guo_jing = createHeroProgress('job_1')
+    trained.heroes.hero_guo_jing.abilityTraining = { 9: 4 }
+    trained.factionAgents.world_01 = { heroId: 'hero_guo_jing', enabled: true }
+    trained.factionBoards[FACTION_ID] = {
+      refreshRemainingMs: QUEST_REFRESH_MS,
+      slots: [boardQuest('claim', 1), null, null, null, null],
+    }
+    trained.acceptedFactionQuests = { 1: { ...acceptedQuest(1, 0), progress: 2 } }
+    expect(claimQuest(trained, FACTION_ID, 0).ok).toBe(true)
+    expect(trained.contribution[FACTION_ID]).toBe(Math.round((base.contribution[FACTION_ID] ?? 0) * 1.2))
+    expect(trained.worldReputation.world_01).toBe(Math.round((base.worldReputation.world_01 ?? 0) * 1.08))
+    expect(trained.worldCurrency.world_01).toBe(base.worldCurrency.world_01)
   })
 
   it('筹措、收集与寻宝任务领取时原子扣除对应资源', () => {

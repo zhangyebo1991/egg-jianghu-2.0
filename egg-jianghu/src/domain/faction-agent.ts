@@ -1,5 +1,38 @@
 import { HEROES_V10, PLAYER_HERO_ID, heroDisplayNameV10 } from '../content/heroes'
+import {
+  originalFactionAgentContributionMultiplier,
+  originalFactionAgentReputationMultiplier,
+} from '../content/original-faction-rules.generated'
 import type { ActionResult, GameStateV10 } from './types'
+
+const AGENT_ABILITY_ID = 9
+const MAX_ABILITY_LEVEL = 5
+
+export const originalFinalAbilityLevel = (
+  baseLevel: number,
+  trainedLevel: number,
+  attributeBonus = 0,
+): number => Math.min(
+  MAX_ABILITY_LEVEL,
+  Math.max(0, Math.round(baseLevel + trainedLevel + attributeBonus)),
+)
+
+export const factionAgentAbilityLevel = (state: GameStateV10, worldId: string): number => {
+  const heroId = state.factionAgents[worldId]?.heroId
+  if (!heroId) return 0
+  const progress = state.heroes[heroId]
+  if (!progress?.recruited) return 0
+  return originalFinalAbilityLevel(0, progress.abilityTraining?.[String(AGENT_ABILITY_ID)] ?? 0)
+}
+
+export const applyFactionQuestAgentReward = <T extends { currency: number; contribution: number; reputation: number }>(
+  reward: T,
+  abilityLevel: number,
+): T => ({
+  ...reward,
+  contribution: Math.round(reward.contribution * originalFactionAgentContributionMultiplier(abilityLevel)),
+  reputation: Math.round(reward.reputation * originalFactionAgentReputationMultiplier(abilityLevel)),
+})
 
 const knownWorld = (state: GameStateV10, worldId: string): boolean =>
   state.unlockedWorldIds.includes(worldId)
