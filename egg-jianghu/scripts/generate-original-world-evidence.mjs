@@ -1579,9 +1579,40 @@ const factionRecruitmentEntries = arrays.js.slice(1)
       basePrice,
       price,
       specialRequirement: asNumber(row[35]),
+      // js.json 下标 7..11 = 勇/智/体/敏/精（docs/诸天刷宝录_资质面板公式_源码逆向.md §2 铁证）。
+      aptitudes: {
+        strength: asNumber(row[7]),
+        insight: asNumber(row[8]),
+        constitution: asNumber(row[9]),
+        agility: asNumber(row[10]),
+        resolve: asNumber(row[11]),
+      },
     }
   })
   .filter(Boolean)
+
+// 资质列位锚点：主角全 10，邢道荣 38/17/47/26/34，张角 15/54/24/36/42（同文档 §2 旁证表）。
+const recruitmentAptitudeAnchor = (heroSourceId) => {
+  const entry = factionRecruitmentEntries.find((item) => item.heroSourceId === heroSourceId)
+  const row = arrays.js[heroSourceId]
+  return entry && [entry.aptitudes.strength, entry.aptitudes.insight, entry.aptitudes.constitution, entry.aptitudes.agility, entry.aptitudes.resolve]
+    .join(',') === row.slice(7, 12).map((cell) => String(asNumber(cell))).join(',')
+}
+assert(
+  arrays.js.slice(1).every((row) => {
+    const sourceId = asNumber(row[0])
+    return sourceId === 1
+      || [asNumber(row[7]), asNumber(row[8]), asNumber(row[9]), asNumber(row[10]), asNumber(row[11])]
+        .every((value) => value > 0)
+  }),
+  '原版角色资质列（下标 7..11）存在非正值，资质列位可能错位',
+)
+assert(
+  asNumber(arrays.js[1][7]) === 10 && asNumber(arrays.js[1][11]) === 10,
+  'js[1] 主角资质应全 10，资质列位铁证失效',
+)
+assert(recruitmentAptitudeAnchor(2), 'js[2] 邢道荣资质锚点不一致')
+assert(recruitmentAptitudeAnchor(3), 'js[3] 张角资质锚点不一致')
 
 const factionRecruitmentCounts = {
   total: factionRecruitmentEntries.length,
@@ -2581,6 +2612,14 @@ const runtimeFactionRecruitmentSource = `/**
 
 export type OriginalFactionRecruitmentResourceKind = '货币' | '贡献'
 
+export interface OriginalHeroAptitudes {
+  strength: number
+  insight: number
+  constitution: number
+  agility: number
+  resolve: number
+}
+
 export interface OriginalFactionRecruitmentEntry {
   heroSourceId: number
   name: string
@@ -2593,6 +2632,8 @@ export interface OriginalFactionRecruitmentEntry {
   basePrice: number
   price: number
   specialRequirement: number
+  /** 原版资质五维（勇/智/体/敏/精），来自 js.json 下标 7..11。 */
+  aptitudes: OriginalHeroAptitudes
 }
 
 export const ORIGINAL_FACTION_RECRUITMENT_COUNTS = ${JSON.stringify(factionRecruitmentCounts, null, 2)} as const
@@ -3081,7 +3122,7 @@ ${factionExchangeItems.map((item) => `| ${item.worldIndex} | ${markdownCell(item
 `
 const factionRecruitmentMarkdown = `# 原版势力招募目录
 
-本目录由 \`js.json\` 与 \`shili.json\` 生成，覆盖 42 个势力、${factionRecruitmentCounts.total} 名可招募角色。角色战斗定义未接入前，运行时只能展示原版名录、声望门槛和价格，不能把自定义角色数据冒充原版招募。
+本目录由 \`js.json\` 与 \`shili.json\` 生成，覆盖 42 个势力、${factionRecruitmentCounts.total} 名可招募角色。名录、声望门槛、价格与资质（js 下标 7..11 勇/智/体/敏/精）均已接入运行时，可直接招募。
 
 ## 规则
 

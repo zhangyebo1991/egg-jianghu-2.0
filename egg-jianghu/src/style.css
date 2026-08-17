@@ -2413,6 +2413,9 @@ body {
 .faction-recruitment-copy header span { flex: none; color: #9c8250; font-size: 9px; letter-spacing: .08em; }
 .faction-recruitment-copy p { margin: 7px 0 0; color: #777f76; font-size: 9px; line-height: 1.55; }
 .faction-recruitment-card button { grid-column: 1 / -1; width: 100%; padding: 7px 10px; border: 1px solid rgb(201 163 92 / 16%); border-radius: 4px; color: #72766f; background: rgb(255 255 255 / 3%); font-size: 9px; letter-spacing: .08em; cursor: not-allowed; }
+.faction-recruitment-card button:not(:disabled) { border-color: rgb(201 163 92 / 38%); color: #ead9ad; background: rgb(201 163 92 / 12%); cursor: pointer; }
+.faction-recruitment-card button:not(:disabled):hover { filter: brightness(1.15); }
+.faction-recruitment-card.recruited { filter: saturate(.7) brightness(.92); }
 .faction-town-card.selected { border-color: rgb(201 163 92 / 48%); box-shadow: inset 0 0 0 1px rgb(201 163 92 / 9%); }
 .faction-town-actions { display: flex; justify-content: flex-end; gap: 7px; }
 .faction-town-actions button { padding: 6px 10px; border-color: rgb(201 163 92 / 30%); color: #d6c292; background: rgb(201 163 92 / 6%); font-size: 9px; letter-spacing: .1em; }

@@ -24,7 +24,7 @@ import {
   type EquipmentSlot,
 } from './content/equipment'
 import { ATTRIBUTE_BY_ID } from './content/attributes'
-import { FACTIONS, factionByOriginalId } from './content/factions'
+import { FACTIONS, factionById, factionByOriginalId } from './content/factions'
 import { HEROES_V10, PLAYER_HERO_ID, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
 import { FACTION_MARTIALS, martialBuffChanceAtLevel, martialByIdV10, martialByOriginalId, martialEffectAtLevel, martialResourceCost, martialSpCost } from './content/martials'
 import { buffById } from './content/buffs'
@@ -1155,18 +1155,23 @@ const factionRecruitmentViewModel = (factionId: string): FactionRecruitmentViewM
     reputationLevel,
     reputationLevelName: originalWorldReputationLevelName(reputationLevel),
     heroes: originalFactionRecruitmentByFaction(faction.originalId).map((hero) => {
-      let actionReason = '角色资料待开放'
-      if (reputationLevel < hero.requiredReputationLevel) {
+      const heroId = `hero_orig_${hero.heroSourceId}`
+      const recruited = Boolean(session.state.heroes[heroId]?.recruited)
+      let actionReason: string | null = null
+      if (recruited) actionReason = '已邀请'
+      else if (reputationLevel < hero.requiredReputationLevel) {
         actionReason = `需${hero.requiredReputationName}声望`
       } else if (balance < hero.price) {
         actionReason = `${resourceName}不足`
       }
       return {
         heroSourceId: hero.heroSourceId,
+        heroId,
         name: hero.name,
         requiredReputationLevel: hero.requiredReputationLevel,
         requiredReputationName: hero.requiredReputationName,
         price: hero.price,
+        aptitudes: hero.aptitudes,
         actionReason,
       }
     }),
@@ -2306,7 +2311,17 @@ const performAction = (button: HTMLButtonElement): void => {
       selectedHeroId = result.heroId
       if (saveSession()) notify('邀请成功')
     } else notify(result.message, true)
-  } else if (action === 'faction-recruit') commitAction(recruitFromFaction(session.state, button.dataset.factionId ?? '', heroId))
+  } else if (action === 'faction-recruit') {
+    const factionId = button.dataset.factionId ?? ''
+    const result = recruitFromFaction(session.state, factionId, heroId)
+    if (result.ok) {
+      selectedHeroId = heroId
+      if (factionById(factionId)?.currencyKind === 'contribution') {
+        startFactionContributionAnimation(session.state.contribution[factionId] ?? 0)
+      }
+    }
+    commitAction(result)
+  }
   else if (action === 'inventory-select') {
     selectedInventoryUid = button.dataset.equipmentUid ?? null
     inventoryDetailOpen = true
@@ -2955,7 +2970,12 @@ const debugRecruit = (heroId: string): void => {
     const result = recruitFromTavern(session.state, heroId)
     if (!result.ok) throw new Error(result.message)
   } else {
-    session.state.contribution[definition.factionId!] = Math.max(session.state.contribution[definition.factionId!] ?? 0, definition.cost)
+    const faction = factionById(definition.factionId!)
+    if (faction?.currencyKind === 'worldCurrency') {
+      session.state.worldCurrency[definition.worldId] = Math.max(session.state.worldCurrency[definition.worldId] ?? 0, definition.cost)
+    } else {
+      session.state.contribution[definition.factionId!] = Math.max(session.state.contribution[definition.factionId!] ?? 0, definition.cost)
+    }
     const result = recruitFromFaction(session.state, definition.factionId!, heroId)
     if (!result.ok) throw new Error(result.message)
   }

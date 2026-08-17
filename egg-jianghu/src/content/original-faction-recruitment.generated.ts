@@ -5,6 +5,14 @@
 
 export type OriginalFactionRecruitmentResourceKind = '货币' | '贡献'
 
+export interface OriginalHeroAptitudes {
+  strength: number
+  insight: number
+  constitution: number
+  agility: number
+  resolve: number
+}
+
 export interface OriginalFactionRecruitmentEntry {
   heroSourceId: number
   name: string
@@ -17,6 +25,8 @@ export interface OriginalFactionRecruitmentEntry {
   basePrice: number
   price: number
   specialRequirement: number
+  /** 原版资质五维（勇/智/体/敏/精），来自 js.json 下标 7..11。 */
+  aptitudes: OriginalHeroAptitudes
 }
 
 export const ORIGINAL_FACTION_RECRUITMENT_COUNTS = {
@@ -43,7 +53,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 100,
     "price": 100,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 38,
+      "insight": 17,
+      "constitution": 47,
+      "agility": 26,
+      "resolve": 34
+    }
   },
   {
     "heroSourceId": 3,
@@ -56,7 +73,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 200000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 15,
+      "insight": 54,
+      "constitution": 24,
+      "agility": 36,
+      "resolve": 42
+    }
   },
   {
     "heroSourceId": 4,
@@ -69,7 +93,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 30000,
     "price": 30000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 18,
+      "insight": 42,
+      "constitution": 28,
+      "agility": 30,
+      "resolve": 48
+    }
   },
   {
     "heroSourceId": 5,
@@ -82,7 +113,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 1600000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 68,
+      "insight": 10,
+      "constitution": 48,
+      "agility": 54,
+      "resolve": 23
+    }
   },
   {
     "heroSourceId": 6,
@@ -95,7 +133,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 20000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 23,
+      "insight": 31,
+      "constitution": 56,
+      "agility": 18,
+      "resolve": 49
+    }
   },
   {
     "heroSourceId": 7,
@@ -108,7 +153,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 20000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 47,
+      "insight": 23,
+      "constitution": 18,
+      "agility": 55,
+      "resolve": 26
+    }
   },
   {
     "heroSourceId": 8,
@@ -121,7 +173,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 80000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 18,
+      "insight": 56,
+      "constitution": 32,
+      "agility": 38,
+      "resolve": 68
+    }
   },
   {
     "heroSourceId": 9,
@@ -134,7 +193,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 160000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 64,
+      "insight": 38,
+      "constitution": 52,
+      "agility": 31,
+      "resolve": 34
+    }
   },
   {
     "heroSourceId": 10,
@@ -147,7 +213,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 40000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 41,
+      "insight": 18,
+      "constitution": 24,
+      "agility": 53,
+      "resolve": 40
+    }
   },
   {
     "heroSourceId": 11,
@@ -160,7 +233,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 40000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 34,
+      "constitution": 49,
+      "agility": 18,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 12,
@@ -173,7 +253,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 160000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 18,
+      "insight": 69,
+      "constitution": 34,
+      "agility": 49,
+      "resolve": 45
+    }
   },
   {
     "heroSourceId": 13,
@@ -186,7 +273,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 360000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 12,
+      "insight": 43,
+      "constitution": 32,
+      "agility": 20,
+      "resolve": 55
+    }
   },
   {
     "heroSourceId": 14,
@@ -199,7 +293,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 720000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 50,
+      "constitution": 28,
+      "agility": 34,
+      "resolve": 33
+    }
   },
   {
     "heroSourceId": 15,
@@ -212,7 +313,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 290000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 44,
+      "insight": 52,
+      "constitution": 48,
+      "agility": 18,
+      "resolve": 56
+    }
   },
   {
     "heroSourceId": 16,
@@ -225,7 +333,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 40000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 52,
+      "insight": 33,
+      "constitution": 48,
+      "agility": 30,
+      "resolve": 33
+    }
   },
   {
     "heroSourceId": 17,
@@ -238,7 +353,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 70000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 34,
+      "insight": 51,
+      "constitution": 29,
+      "agility": 22,
+      "resolve": 48
+    }
   },
   {
     "heroSourceId": 18,
@@ -251,7 +373,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 70000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 57,
+      "insight": 23,
+      "constitution": 38,
+      "agility": 60,
+      "resolve": 27
+    }
   },
   {
     "heroSourceId": 19,
@@ -264,7 +393,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 2880000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 62,
+      "insight": 28,
+      "constitution": 54,
+      "agility": 34,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 20,
@@ -277,7 +413,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 20000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 46,
+      "insight": 18,
+      "constitution": 34,
+      "agility": 51,
+      "resolve": 23
+    }
   },
   {
     "heroSourceId": 21,
@@ -290,7 +433,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 290000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 33,
+      "insight": 68,
+      "constitution": 39,
+      "agility": 18,
+      "resolve": 60
+    }
   },
   {
     "heroSourceId": 22,
@@ -303,7 +453,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 140000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 45,
+      "insight": 58,
+      "constitution": 34,
+      "agility": 40,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 23,
@@ -316,7 +473,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 8320000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 60,
+      "insight": 28,
+      "constitution": 50,
+      "agility": 48,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 24,
@@ -329,7 +493,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 1040000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 29,
+      "insight": 54,
+      "constitution": 28,
+      "agility": 46,
+      "resolve": 36
+    }
   },
   {
     "heroSourceId": 25,
@@ -342,7 +513,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 30000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 45,
+      "insight": 28,
+      "constitution": 50,
+      "agility": 22,
+      "resolve": 37
+    }
   },
   {
     "heroSourceId": 26,
@@ -355,7 +533,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 520000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 42,
+      "constitution": 29,
+      "agility": 28,
+      "resolve": 50
+    }
   },
   {
     "heroSourceId": 27,
@@ -368,7 +553,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 210000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 16,
+      "insight": 60,
+      "constitution": 22,
+      "agility": 28,
+      "resolve": 54
+    }
   },
   {
     "heroSourceId": 28,
@@ -381,7 +573,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 420000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 61,
+      "insight": 23,
+      "constitution": 42,
+      "agility": 48,
+      "resolve": 38
+    }
   },
   {
     "heroSourceId": 29,
@@ -394,7 +593,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 50000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 42,
+      "constitution": 54,
+      "agility": 14,
+      "resolve": 38
+    }
   },
   {
     "heroSourceId": 30,
@@ -407,7 +613,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 100000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 16,
+      "insight": 58,
+      "constitution": 28,
+      "agility": 52,
+      "resolve": 30
+    }
   },
   {
     "heroSourceId": 31,
@@ -420,7 +633,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 210000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 63,
+      "constitution": 38,
+      "agility": 34,
+      "resolve": 50
+    }
   },
   {
     "heroSourceId": 32,
@@ -433,7 +653,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 100000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 52,
+      "insight": 28,
+      "constitution": 30,
+      "agility": 50,
+      "resolve": 34
+    }
   },
   {
     "heroSourceId": 33,
@@ -446,7 +673,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 70000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 29,
+      "insight": 48,
+      "constitution": 26,
+      "agility": 20,
+      "resolve": 54
+    }
   },
   {
     "heroSourceId": 34,
@@ -459,7 +693,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 2720000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 19,
+      "insight": 54,
+      "constitution": 20,
+      "agility": 37,
+      "resolve": 60
+    }
   },
   {
     "heroSourceId": 35,
@@ -472,7 +713,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 70000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 42,
+      "insight": 38,
+      "constitution": 32,
+      "agility": 29,
+      "resolve": 54
+    }
   },
   {
     "heroSourceId": 36,
@@ -485,7 +733,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 680000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 17,
+      "constitution": 50,
+      "agility": 42,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 37,
@@ -498,7 +753,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 140000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 50,
+      "insight": 28,
+      "constitution": 42,
+      "agility": 32,
+      "resolve": 40
+    }
   },
   {
     "heroSourceId": 38,
@@ -511,7 +773,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 30000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 24,
+      "insight": 34,
+      "constitution": 32,
+      "agility": 44,
+      "resolve": 48
+    }
   },
   {
     "heroSourceId": 39,
@@ -524,7 +793,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 270000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 18,
+      "insight": 54,
+      "constitution": 28,
+      "agility": 42,
+      "resolve": 70
+    }
   },
   {
     "heroSourceId": 40,
@@ -537,7 +813,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 5440000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 40,
+      "insight": 42,
+      "constitution": 60,
+      "agility": 28,
+      "resolve": 47
+    }
   },
   {
     "heroSourceId": 41,
@@ -550,7 +833,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 540000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 32,
+      "insight": 59,
+      "constitution": 32,
+      "agility": 54,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 42,
@@ -563,7 +853,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 540000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 34,
+      "constitution": 58,
+      "agility": 18,
+      "resolve": 62
+    }
   },
   {
     "heroSourceId": 43,
@@ -576,7 +873,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 670000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 58,
+      "constitution": 38,
+      "agility": 32,
+      "resolve": 54
+    }
   },
   {
     "heroSourceId": 44,
@@ -589,7 +893,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 1680000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 21,
+      "insight": 52,
+      "constitution": 34,
+      "agility": 38,
+      "resolve": 48
+    }
   },
   {
     "heroSourceId": 45,
@@ -602,7 +913,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 13440000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 64,
+      "insight": 22,
+      "constitution": 51,
+      "agility": 48,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 46,
@@ -615,7 +933,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 170000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 44,
+      "constitution": 37,
+      "agility": 52,
+      "resolve": 43
+    }
   },
   {
     "heroSourceId": 47,
@@ -628,7 +953,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 840000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 34,
+      "insight": 52,
+      "constitution": 32,
+      "agility": 28,
+      "resolve": 38
+    }
   },
   {
     "heroSourceId": 48,
@@ -641,7 +973,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 340000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 55,
+      "constitution": 38,
+      "agility": 48,
+      "resolve": 39
+    }
   },
   {
     "heroSourceId": 49,
@@ -654,7 +993,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 80000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 24,
+      "insight": 51,
+      "constitution": 36,
+      "agility": 52,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 50,
@@ -667,7 +1013,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 840000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 38,
+      "insight": 34,
+      "constitution": 34,
+      "agility": 34,
+      "resolve": 38
+    }
   },
   {
     "heroSourceId": 51,
@@ -680,7 +1033,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 170000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 39,
+      "constitution": 38,
+      "agility": 48,
+      "resolve": 42
+    }
   },
   {
     "heroSourceId": 52,
@@ -693,7 +1053,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 340000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 18,
+      "insight": 59,
+      "constitution": 28,
+      "agility": 44,
+      "resolve": 52
+    }
   },
   {
     "heroSourceId": 53,
@@ -706,7 +1073,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 800000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 30,
+      "insight": 48,
+      "constitution": 52,
+      "agility": 28,
+      "resolve": 60
+    }
   },
   {
     "heroSourceId": 54,
@@ -719,7 +1093,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 16000000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 44,
+      "insight": 62,
+      "constitution": 48,
+      "agility": 28,
+      "resolve": 38
+    }
   },
   {
     "heroSourceId": 55,
@@ -732,7 +1113,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 1000000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 52,
+      "insight": 22,
+      "constitution": 42,
+      "agility": 54,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 56,
@@ -745,7 +1133,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 400000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 58,
+      "insight": 16,
+      "constitution": 38,
+      "agility": 62,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 57,
@@ -758,7 +1153,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 8000000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 40,
+      "insight": 54,
+      "constitution": 42,
+      "agility": 33,
+      "resolve": 37
+    }
   },
   {
     "heroSourceId": 58,
@@ -771,7 +1173,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 100000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 48,
+      "constitution": 27,
+      "agility": 34,
+      "resolve": 44
+    }
   },
   {
     "heroSourceId": 59,
@@ -784,7 +1193,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 50000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 38,
+      "insight": 47,
+      "constitution": 40,
+      "agility": 18,
+      "resolve": 39
+    }
   },
   {
     "heroSourceId": 60,
@@ -797,7 +1213,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 200000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 60,
+      "insight": 17,
+      "constitution": 54,
+      "agility": 26,
+      "resolve": 34
+    }
   },
   {
     "heroSourceId": 61,
@@ -810,7 +1233,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 200000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 18,
+      "insight": 55,
+      "constitution": 28,
+      "agility": 38,
+      "resolve": 37
+    }
   },
   {
     "heroSourceId": 62,
@@ -823,7 +1253,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 100000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 29,
+      "insight": 54,
+      "constitution": 24,
+      "agility": 36,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 63,
@@ -836,7 +1273,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 930000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 53,
+      "insight": 60,
+      "constitution": 34,
+      "agility": 48,
+      "resolve": 18
+    }
   },
   {
     "heroSourceId": 64,
@@ -849,7 +1293,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 460000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 54,
+      "constitution": 32,
+      "agility": 50,
+      "resolve": 24
+    }
   },
   {
     "heroSourceId": 65,
@@ -862,7 +1313,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 60000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 46,
+      "insight": 48,
+      "constitution": 24,
+      "agility": 28,
+      "resolve": 26
+    }
   },
   {
     "heroSourceId": 66,
@@ -875,7 +1333,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 120000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 32,
+      "insight": 42,
+      "constitution": 32,
+      "agility": 48,
+      "resolve": 50
+    }
   },
   {
     "heroSourceId": 67,
@@ -888,7 +1353,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 460000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 66,
+      "constitution": 50,
+      "agility": 20,
+      "resolve": 52
+    }
   },
   {
     "heroSourceId": 68,
@@ -901,7 +1373,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 230000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 38,
+      "insight": 47,
+      "constitution": 24,
+      "agility": 50,
+      "resolve": 43
+    }
   },
   {
     "heroSourceId": 69,
@@ -914,7 +1393,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 2320000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 31,
+      "insight": 42,
+      "constitution": 54,
+      "agility": 34,
+      "resolve": 34
+    }
   },
   {
     "heroSourceId": 70,
@@ -927,7 +1413,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 1160000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 51,
+      "insight": 28,
+      "constitution": 48,
+      "agility": 32,
+      "resolve": 20
+    }
   },
   {
     "heroSourceId": 71,
@@ -940,7 +1433,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 18560000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 41,
+      "insight": 42,
+      "constitution": 58,
+      "agility": 20,
+      "resolve": 54
+    }
   },
   {
     "heroSourceId": 72,
@@ -953,7 +1453,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 4640000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 18,
+      "insight": 50,
+      "constitution": 42,
+      "agility": 37,
+      "resolve": 48
+    }
   },
   {
     "heroSourceId": 73,
@@ -966,7 +1473,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 21120000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 34,
+      "insight": 60,
+      "constitution": 27,
+      "agility": 50,
+      "resolve": 48
+    }
   },
   {
     "heroSourceId": 74,
@@ -979,7 +1493,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 2640000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 50,
+      "insight": 24,
+      "constitution": 46,
+      "agility": 30,
+      "resolve": 44
+    }
   },
   {
     "heroSourceId": 75,
@@ -992,7 +1513,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 400000,
     "price": 130000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 32,
+      "insight": 49,
+      "constitution": 24,
+      "agility": 32,
+      "resolve": 56
+    }
   },
   {
     "heroSourceId": 76,
@@ -1005,7 +1533,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 70000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 32,
+      "insight": 51,
+      "constitution": 27,
+      "agility": 47,
+      "resolve": 37
+    }
   },
   {
     "heroSourceId": 77,
@@ -1018,7 +1553,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 530000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 57,
+      "insight": 26,
+      "constitution": 54,
+      "agility": 37,
+      "resolve": 40
+    }
   },
   {
     "heroSourceId": 78,
@@ -1031,7 +1573,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 3200000,
     "price": 1060000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 17,
+      "insight": 70,
+      "constitution": 28,
+      "agility": 34,
+      "resolve": 61
+    }
   },
   {
     "heroSourceId": 79,
@@ -1044,7 +1593,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 260000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 52,
+      "insight": 24,
+      "constitution": 57,
+      "agility": 32,
+      "resolve": 22
+    }
   },
   {
     "heroSourceId": 80,
@@ -1057,7 +1613,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 530000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 21,
+      "insight": 58,
+      "constitution": 44,
+      "agility": 24,
+      "resolve": 53
+    }
   },
   {
     "heroSourceId": 81,
@@ -1070,7 +1633,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 260000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 34,
+      "insight": 44,
+      "constitution": 40,
+      "agility": 27,
+      "resolve": 52
+    }
   },
   {
     "heroSourceId": 82,
@@ -1083,7 +1653,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 200000,
     "price": 1320000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 28,
+      "constitution": 37,
+      "agility": 44,
+      "resolve": 36
+    }
   },
   {
     "heroSourceId": 83,
@@ -1096,7 +1673,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 150000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 58,
+      "insight": 38,
+      "constitution": 54,
+      "agility": 28,
+      "resolve": 18
+    }
   },
   {
     "heroSourceId": 84,
@@ -1109,7 +1693,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 5920000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 34,
+      "insight": 31,
+      "constitution": 53,
+      "agility": 54,
+      "resolve": 20
+    }
   },
   {
     "heroSourceId": 85,
@@ -1122,7 +1713,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 1600000,
     "price": 590000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 57,
+      "insight": 17,
+      "constitution": 28,
+      "agility": 62,
+      "resolve": 42
+    }
   },
   {
     "heroSourceId": 86,
@@ -1135,7 +1733,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 2960000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 20,
+      "constitution": 42,
+      "agility": 58,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 87,
@@ -1148,7 +1753,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 1600000,
     "price": 11840000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 49,
+      "insight": 31,
+      "constitution": 58,
+      "agility": 28,
+      "resolve": 38
+    }
   },
   {
     "heroSourceId": 88,
@@ -1161,7 +1773,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 1180000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 64,
+      "insight": 28,
+      "constitution": 38,
+      "agility": 32,
+      "resolve": 48
+    }
   },
   {
     "heroSourceId": 89,
@@ -1174,7 +1793,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 300000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 32,
+      "insight": 58,
+      "constitution": 22,
+      "agility": 52,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 90,
@@ -1187,7 +1813,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 23680000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 32,
+      "insight": 54,
+      "constitution": 28,
+      "agility": 32,
+      "resolve": 67
+    }
   },
   {
     "heroSourceId": 91,
@@ -1200,7 +1833,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 2370000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 48,
+      "insight": 44,
+      "constitution": 64,
+      "agility": 28,
+      "resolve": 44
+    }
   },
   {
     "heroSourceId": 92,
@@ -1213,7 +1853,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 2370000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 72,
+      "insight": 28,
+      "constitution": 36,
+      "agility": 54,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 93,
@@ -1226,7 +1873,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 52480000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 75,
+      "insight": 34,
+      "constitution": 32,
+      "agility": 48,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 94,
@@ -1239,7 +1893,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 1600000,
     "price": 660000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 67,
+      "insight": 28,
+      "constitution": 47,
+      "agility": 33,
+      "resolve": 27
+    }
   },
   {
     "heroSourceId": 95,
@@ -1252,7 +1913,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 6560000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 37,
+      "insight": 28,
+      "constitution": 62,
+      "agility": 43,
+      "resolve": 22
+    }
   },
   {
     "heroSourceId": 96,
@@ -1265,7 +1933,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 330000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 47,
+      "insight": 15,
+      "constitution": 51,
+      "agility": 47,
+      "resolve": 33
+    }
   },
   {
     "heroSourceId": 97,
@@ -1278,7 +1953,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 3280000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 44,
+      "insight": 48,
+      "constitution": 32,
+      "agility": 18,
+      "resolve": 54
+    }
   },
   {
     "heroSourceId": 98,
@@ -1291,7 +1973,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 1310000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 69,
+      "insight": 32,
+      "constitution": 47,
+      "agility": 57,
+      "resolve": 12
+    }
   },
   {
     "heroSourceId": 99,
@@ -1304,7 +1993,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 1600000,
     "price": 660000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 67,
+      "insight": 31,
+      "constitution": 41,
+      "agility": 51,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 100,
@@ -1317,7 +2013,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 160000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 37,
+      "insight": 46,
+      "constitution": 32,
+      "agility": 28,
+      "resolve": 53
+    }
   },
   {
     "heroSourceId": 101,
@@ -1330,7 +2033,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 1310000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 12,
+      "insight": 69,
+      "constitution": 32,
+      "agility": 37,
+      "resolve": 63
+    }
   },
   {
     "heroSourceId": 102,
@@ -1343,7 +2053,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 2620000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 71,
+      "insight": 27,
+      "constitution": 44,
+      "agility": 57,
+      "resolve": 23
+    }
   },
   {
     "heroSourceId": 103,
@@ -1356,7 +2073,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 2880000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 17,
+      "insight": 73,
+      "constitution": 34,
+      "agility": 42,
+      "resolve": 63
+    }
   },
   {
     "heroSourceId": 104,
@@ -1369,7 +2093,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 2880000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 70,
+      "insight": 34,
+      "constitution": 37,
+      "agility": 69,
+      "resolve": 17
+    }
   },
   {
     "heroSourceId": 105,
@@ -1382,7 +2113,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 1600000,
     "price": 720000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 57,
+      "insight": 43,
+      "constitution": 67,
+      "agility": 18,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 106,
@@ -1395,7 +2133,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 3200000,
     "price": 28800000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 19,
+      "insight": 42,
+      "constitution": 37,
+      "agility": 54,
+      "resolve": 66
+    }
   },
   {
     "heroSourceId": 107,
@@ -1408,7 +2153,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 800000,
     "price": 360000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 13,
+      "insight": 67,
+      "constitution": 27,
+      "agility": 48,
+      "resolve": 58
+    }
   },
   {
     "heroSourceId": 108,
@@ -1421,7 +2173,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 1440000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 73,
+      "insight": 14,
+      "constitution": 64,
+      "agility": 34,
+      "resolve": 34
+    }
   },
   {
     "heroSourceId": 109,
@@ -1434,7 +2193,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 1600000,
     "price": 14400000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 20,
+      "insight": 63,
+      "constitution": 41,
+      "agility": 57,
+      "resolve": 37
+    }
   },
   {
     "heroSourceId": 110,
@@ -1447,7 +2213,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 180000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 57,
+      "insight": 34,
+      "constitution": 59,
+      "agility": 27,
+      "resolve": 40
+    }
   },
   {
     "heroSourceId": 111,
@@ -1460,7 +2233,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 3600000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 58,
+      "constitution": 47,
+      "agility": 23,
+      "resolve": 67
+    }
   },
   {
     "heroSourceId": 112,
@@ -1473,7 +2253,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 360000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 63,
+      "insight": 34,
+      "constitution": 28,
+      "agility": 60,
+      "resolve": 27
+    }
   },
   {
     "heroSourceId": 113,
@@ -1486,7 +2273,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 62720000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 24,
+      "insight": 68,
+      "constitution": 17,
+      "agility": 74,
+      "resolve": 38
+    }
   },
   {
     "heroSourceId": 114,
@@ -1499,7 +2293,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 390000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 61,
+      "insight": 28,
+      "constitution": 38,
+      "agility": 58,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 115,
@@ -1512,7 +2313,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 31360000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 78,
+      "insight": 18,
+      "constitution": 64,
+      "agility": 47,
+      "resolve": 27
+    }
   },
   {
     "heroSourceId": 116,
@@ -1525,7 +2333,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 3140000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 12,
+      "insight": 64,
+      "constitution": 13,
+      "agility": 71,
+      "resolve": 80
+    }
   },
   {
     "heroSourceId": 117,
@@ -1538,7 +2353,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 1600000,
     "price": 15680000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 64,
+      "insight": 7,
+      "constitution": 82,
+      "agility": 25,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 118,
@@ -1551,7 +2373,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 200000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 54,
+      "insight": 48,
+      "constitution": 28,
+      "agility": 67,
+      "resolve": 28
+    }
   },
   {
     "heroSourceId": 119,
@@ -1564,7 +2393,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 1600000,
     "price": 780000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 12,
+      "insight": 49,
+      "constitution": 28,
+      "agility": 64,
+      "resolve": 74
+    }
   },
   {
     "heroSourceId": 120,
@@ -1577,7 +2413,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 3920000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 47,
+      "insight": 42,
+      "constitution": 47,
+      "agility": 60,
+      "resolve": 21
+    }
   },
   {
     "heroSourceId": 121,
@@ -1590,7 +2433,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 1570000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 28,
+      "insight": 68,
+      "constitution": 32,
+      "agility": 57,
+      "resolve": 54
+    }
   },
   {
     "heroSourceId": 122,
@@ -1603,7 +2453,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 390000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 67,
+      "insight": 23,
+      "constitution": 68,
+      "agility": 47,
+      "resolve": 21
+    }
   },
   {
     "heroSourceId": 123,
@@ -1616,7 +2473,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 67840000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 14,
+      "insight": 57,
+      "constitution": 23,
+      "agility": 54,
+      "resolve": 75
+    }
   },
   {
     "heroSourceId": 124,
@@ -1629,7 +2493,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 8480000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 57,
+      "insight": 52,
+      "constitution": 27,
+      "agility": 52,
+      "resolve": 27
+    }
   },
   {
     "heroSourceId": 125,
@@ -1642,7 +2513,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 33920000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 62,
+      "insight": 23,
+      "constitution": 74,
+      "agility": 28,
+      "resolve": 37
+    }
   },
   {
     "heroSourceId": 126,
@@ -1655,7 +2533,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 400000,
     "price": 4240000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 59,
+      "insight": 48,
+      "constitution": 58,
+      "agility": 44,
+      "resolve": 13
+    }
   },
   {
     "heroSourceId": 127,
@@ -1668,7 +2553,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "冷淡",
     "basePrice": 800000,
     "price": 420000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 19,
+      "insight": 63,
+      "constitution": 31,
+      "agility": 57,
+      "resolve": 48
+    }
   },
   {
     "heroSourceId": 128,
@@ -1681,7 +2573,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "崇拜",
     "basePrice": 3200000,
     "price": 1700000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 72,
+      "insight": 27,
+      "constitution": 71,
+      "agility": 14,
+      "resolve": 27
+    }
   },
   {
     "heroSourceId": 129,
@@ -1694,7 +2593,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 1600000,
     "price": 850000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 10,
+      "insight": 62,
+      "constitution": 28,
+      "agility": 54,
+      "resolve": 68
+    }
   },
   {
     "heroSourceId": 130,
@@ -1707,7 +2613,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "尊敬",
     "basePrice": 1600000,
     "price": 850000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 58,
+      "insight": 48,
+      "constitution": 24,
+      "agility": 67,
+      "resolve": 18
+    }
   },
   {
     "heroSourceId": 131,
@@ -1720,7 +2633,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "信仰",
     "basePrice": 6400000,
     "price": 3390000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 24,
+      "insight": 71,
+      "constitution": 34,
+      "agility": 69,
+      "resolve": 32
+    }
   },
   {
     "heroSourceId": 132,
@@ -1733,7 +2653,14 @@ export const ORIGINAL_FACTION_RECRUITMENT: readonly OriginalFactionRecruitmentEn
     "requiredReputationName": "友好",
     "basePrice": 800000,
     "price": 420000,
-    "specialRequirement": 0
+    "specialRequirement": 0,
+    "aptitudes": {
+      "strength": 19,
+      "insight": 72,
+      "constitution": 20,
+      "agility": 48,
+      "resolve": 60
+    }
   }
 ]
 

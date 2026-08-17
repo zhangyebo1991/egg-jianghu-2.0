@@ -103,11 +103,13 @@ const recruitmentFixture = (
   reputationLevelName: '冷淡',
   heroes: [{
     heroSourceId: 2,
+    heroId: 'hero_orig_2',
     name: '邢道荣',
     requiredReputationLevel: 1,
     requiredReputationName: '冷淡',
     price: 100,
-    actionReason: '角色资料待开放',
+    aptitudes: { strength: 38, insight: 17, constitution: 47, agility: 26, resolve: 34 },
+    actionReason: null,
   }],
 })
 
@@ -440,7 +442,10 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('村中泼皮')
     expect(html).toContain('势力招募')
     expect(html).toContain('邢道荣')
-    expect(html).toContain('角色资料待开放')
+    expect(html).toContain('邀请入队')
+    expect(html).toContain('data-action="faction-recruit"')
+    expect(html).toContain('data-hero-id="hero_orig_2"')
+    expect(html).toContain('勇38 · 智17 · 体47 · 敏26 · 精34')
     expect(html).not.toContain('world_01_stage_01_mob_1')
     expect(html).toContain('data-testid="faction-meridian"')
     expect(html.match(/class="faction-node /g)).toHaveLength(6)

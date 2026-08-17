@@ -1,5 +1,6 @@
 import { STARTER_CAREER_ID } from './careers'
-import { FACTIONS } from './factions'
+import { FACTIONS, factionByOriginalId } from './factions'
+import { ORIGINAL_FACTION_RECRUITMENT } from './original-faction-recruitment.generated'
 import type { CareerCategory } from './careers'
 import type { HeroGrade, HeroProgressV10 } from '../domain/types'
 
@@ -23,6 +24,8 @@ export interface HeroDefinitionV10 {
   aptitudes: HeroAptitudes
   /** 酒馆英雄帖上的一句话点评（仅部分侠客有） */
   line?: string
+  /** 招募声望门槛（1..5）；势力招募侠客来自原版名录，未达门槛不可邀请。 */
+  requiredReputationLevel?: number
   /**
    * 原版《诸天刷宝录》js.json 的角色列号，用于继承原版能力白板等按角色索引的真值。
    * 仅在原版确有同一角色时填写；本作自创侠客（金庸人物）在原版名录中不存在，故留空，
@@ -147,54 +150,24 @@ export const TAVERN_HEROES: HeroDefinitionV10[] = TAVERN_HERO_ROWS.map(
   }),
 )
 
-// 每个势力 3 名可招募门人（按势力 id 索引，名称避开本卷敌人/BOSS）。
-export const FACTION_RECRUIT_NAMES: Record<string, readonly [string, string, string]> = {
-  qingfeng_hall: ['孙不二', '刘处玄', '谭处端'],
-  tieyi_school: ['洪七公', '黎生', '余兆兴'],
-  renxin_hall: ['冯默风', '程英', '傻姑'],
-  duanlang_blade: ['陆展元', '陆立鼎', '陆二娘'],
-  yexing_tower: ['欧阳锋', '杨康', '欧阳克'],
-  guiyuan_manor: ['李莫愁', '陆无双', '洪凌波'],
-  tingyu_sword: ['公孙止', '公孙绿萼', '樊一翁'],
-  feixing_dock: ['史伯威', '史仲猛', '史叔刚'],
-  tiaoxi_court: ['丘处机', '王处一', '马钰'],
-  zhenyue_blade: ['段誉', '刀白凤', '阮星竹'],
-  mianshan_school: ['本观', '本相', '本参'],
-  baicao_hall: ['岳老三', '叶二娘', '云中鹤'],
-  cangfeng_manor: ['康广陵', '范百龄', '苟读'],
-  hengjiang_blade: ['余婆', '石嫂', '程青霜'],
-  xinglin_valley: ['钟万仇', '甘宝宝', '于婆婆'],
-  zhenshan_gate: ['霍都', '达尔巴', '潇湘子'],
-  wuteng_stockade: ['黄蓉', '耶律齐', '鲁有脚'],
-  baoyuan_temple: ['朱子柳', '武三通', '点苍渔隐'],
-  wanren_court: ['杨逍', '范遥', '殷天正'],
-  juezong_gate: ['张三丰', '宋远桥', '俞莲舟'],
-  jingmai_court: ['灭绝师太', '纪晓芙', '周芷若'],
-  shuofeng_blade: ['玄慈', '玄苦', '扫地僧'],
-  huajin_hall: ['吴领军', '冯阿三', '李傀儡'],
-  jingang_court: ['段正明', '枯荣大师', '本因'],
-  tianxia_sword: ['吴长风', '宋长老', '奚长老'],
-  tongbi_society: ['石清露', '杨友连', '李傀儡'],
-  zhoutian_sect: ['古笃诚', '朱子柳', '武三通'],
-  baizhan_blade: ['竹剑', '兰剑', '梅剑'],
-  zhuiming_office: ['阿紫', '天狼子', '追风子'],
-  qihuang_society: ['邓百川', '公冶乾', '风波恶'],
-}
-
-export const FACTION_HEROES: HeroDefinitionV10[] = FACTIONS.flatMap((faction) => {
-  const names = FACTION_RECRUIT_NAMES[faction.id] ?? []
-  const worldIdx = worldIndex(faction.worldId)
-  return names.map((name, index) => ({
-    id: `hero_${faction.id}_${String(index + 1).padStart(2, '0')}`,
-    name,
+// 势力招募门人 = 原版《诸天刷宝录》名录全量 131 人（42 势力）。
+// 名录、声望门槛、价格与资质均为原版真值；id 按原版角色列号稳定生成。
+export const FACTION_HEROES: HeroDefinitionV10[] = ORIGINAL_FACTION_RECRUITMENT.flatMap((entry) => {
+  const faction = factionByOriginalId(entry.factionSourceId)
+  if (!faction) return []
+  return [{
+    id: `hero_orig_${entry.heroSourceId}`,
+    name: entry.name,
     grade: factionGrade(faction.worldId),
     baseCareerId: STARTER_CAREER_ID,
     worldId: faction.worldId,
-    source: 'faction',
-    cost: 600 + worldIdx * 200,
+    source: 'faction' as const,
+    cost: entry.price,
     factionId: faction.id,
-    aptitudes: aptitudesFor(faction.category, worldIdx),
-  }))
+    aptitudes: entry.aptitudes,
+    sourceId: entry.heroSourceId,
+    requiredReputationLevel: entry.requiredReputationLevel,
+  }]
 })
 
 export const HEROES_V10: HeroDefinitionV10[] = [PLAYER_HERO_V10, ...TAVERN_HEROES, ...FACTION_HEROES]

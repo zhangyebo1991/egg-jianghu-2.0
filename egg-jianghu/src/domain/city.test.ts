@@ -129,13 +129,35 @@ describe('城市、势力与装备操作', () => {
     expect(state).toEqual(before)
   })
 
-  it('势力侠客消耗贡献直接邀请', () => {
+  it('正式势力侠客消耗贡献直接邀请', () => {
     const state = createInitialStateV10(0)
-    state.contribution.qingfeng_hall = 800
+    state.contribution.tieyi_school = 20_000
+    // 甄宓需「友好」（等级 2）声望，world_01 阈值 200。
+    state.worldReputation.world_01 = 200
 
-    expect(recruitFromFaction(state, 'qingfeng_hall', 'hero_qingfeng_hall_01').ok).toBe(true)
-    expect(state.contribution.qingfeng_hall).toBe(0)
-    expect(state.heroes.hero_qingfeng_hall_01.recruited).toBe(true)
+    expect(recruitFromFaction(state, 'tieyi_school', 'hero_orig_6').ok).toBe(true)
+    expect(state.contribution.tieyi_school).toBe(0)
+    expect(state.heroes.hero_orig_6.recruited).toBe(true)
+  })
+
+  it('民团侠客消耗位面货币邀请', () => {
+    const state = createInitialStateV10(0)
+    state.worldCurrency.world_01 = 100
+
+    expect(recruitFromFaction(state, 'qingfeng_hall', 'hero_orig_2').ok).toBe(true)
+    expect(state.worldCurrency.world_01).toBe(0)
+    expect(state.heroes.hero_orig_2.recruited).toBe(true)
+  })
+
+  it('声望不足时拒绝邀请且不扣贡献', () => {
+    const state = createInitialStateV10(0)
+    state.contribution.tieyi_school = 100_000
+
+    const result = recruitFromFaction(state, 'tieyi_school', 'hero_orig_6')
+    expect(result.ok).toBe(false)
+    expect(result.message).toBe('需友好声望')
+    expect(state.contribution.tieyi_school).toBe(100_000)
+    expect(state.heroes.hero_orig_6).toBeUndefined()
   })
 
   it('失败交易不会留下部分扣款或升级', () => {

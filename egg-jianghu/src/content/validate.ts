@@ -195,8 +195,9 @@ export const validateContent = (): string[] => {
       errors.push(`${hero.id} 所属势力不在位面目录`)
     }
   }
-  for (const [factionId, count] of factionHeroCounts) {
-    if (count !== 3) errors.push(`${factionId} 势力侠客数不是 3`)
+  // 原版名录覆盖全部 42 个势力，每势力 2～4 人。
+  if (factionHeroCounts.size !== FACTIONS.length) {
+    errors.push(`势力侠客未覆盖全部势力：${FACTIONS.length - factionHeroCounts.size} 个缺员`)
   }
 
   const groupNames = (group: StageEnemyGroup | undefined): string[] =>
@@ -208,7 +209,8 @@ export const validateContent = (): string[] => {
     return false
   }
   for (const hero of HEROES_V10) {
-    if (hero.source === 'starter') continue
+    // 原版真值角色（有 sourceId）本就与敌人图鉴同源，重名是原版设计；仅约束自创侠客。
+    if (hero.source === 'starter' || hero.sourceId !== undefined) continue
     if (sameWorldEnemy(hero)) errors.push(`${hero.id} 与 ${hero.worldId} 敌人/BOSS 重名：${hero.name}`)
   }
 

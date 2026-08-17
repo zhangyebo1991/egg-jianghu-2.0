@@ -51,8 +51,8 @@ describe('首发内容目录', () => {
     expect(WORLDS[12].stageNames[9]).toBe('小雷音寺')
   })
 
-  it('酒馆侠客仍按前十个位面 id 各 3 名，后三面暂无酒馆', () => {
-    expect(HEROES_V10).toHaveLength(121)
+  it('酒馆侠客仍按前十个位面 id 各 3 名，势力门人为原版名录 131 人', () => {
+    expect(HEROES_V10).toHaveLength(162)
     const tavernByWorld = new Map<string, number>()
     const factionHeroCounts = new Map<string, number>()
     for (const hero of HEROES_V10) {
@@ -61,9 +61,16 @@ describe('首发内容目录', () => {
     }
     for (const world of WORLDS.slice(0, 10)) expect(tavernByWorld.get(world.id)).toBe(3)
     for (const world of WORLDS.slice(10)) expect(tavernByWorld.get(world.id) ?? 0).toBe(0)
-    expect([...factionHeroCounts.values()].every((count) => count === 3)).toBe(true)
-    expect(factionHeroCounts.size).toBe(30)
-    expect(FACTIONS.filter((faction) => !factionHeroCounts.has(faction.id))).toHaveLength(12)
+    // 原版名录覆盖全部 42 个势力，每势力 2～4 人，资质与能力白板均带原版真值。
+    expect(factionHeroCounts.size).toBe(FACTIONS.length)
+    expect([...factionHeroCounts.values()].every((count) => count >= 2 && count <= 4)).toBe(true)
+    expect(HEROES_V10.filter((hero) => hero.source === 'faction')).toHaveLength(131)
+    for (const hero of HEROES_V10) {
+      if (hero.source !== 'faction') continue
+      expect(hero.sourceId, `${hero.id} 缺少原版角色列号`).toBeGreaterThan(1)
+      expect(hero.requiredReputationLevel, `${hero.id} 缺少声望门槛`).toBeGreaterThanOrEqual(1)
+      expect(Object.values(hero.aptitudes).every((value) => value > 0), `${hero.id} 资质存在非正值`).toBe(true)
+    }
     expect(validateContent()).toEqual([])
   })
 

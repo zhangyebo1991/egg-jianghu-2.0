@@ -148,9 +148,9 @@ test('战场左右对峙且敌我最前列在中线两侧相邻', async ({ page 
     const placements = [
       ['hero_mu_nianci', 0, 0],
       ['hero_yang_tiexin', 2, 0],
-      ['hero_qingfeng_hall_01', 1, 1],
-      ['hero_tieyi_school_01', 0, 2],
-      ['hero_renxin_hall_01', 2, 2],
+      ['hero_orig_2', 1, 1],
+      ['hero_orig_3', 0, 2],
+      ['hero_orig_4', 2, 2],
     ] as const
     for (const [heroId, row, col] of placements) {
       window.__EGG_JIANGHU__.recruitHero(heroId)
@@ -450,7 +450,7 @@ test('侠客页展示八槽装备栏与行囊', async ({ page }) => {
 
   await expect(page.getByTestId('hero-inventory-panel')).toBeVisible()
   await expect(page.getByTestId('hero-equipment-slots')).toBeVisible()
-  await expect(page.getByTestId('hero-equipment-slots').locator('.pd-slot')).toHaveCount(8)
+  await expect(page.getByTestId('hero-equipment-slots').locator('.pd-slot')).toHaveCount(9)
   await expect(page.getByTestId('hero-career-panel')).toBeVisible()
   await expect(page.getByTestId('open-career-tree')).toBeVisible()
 
@@ -689,8 +689,16 @@ test('势力声望、贡献兑换与招募在势力页和城镇页共享同一�
   await expect(recruitment).toHaveAttribute('data-faction-id', 'tieyi_school')
   await expect(recruitment.locator('[data-testid^="faction-recruitment-hero-"]'))
     .toHaveCount(originalFactionRecruitmentByFaction(2).length)
-  await expect(page.getByTestId('faction-recruitment-hero-6')).toContainText('甄宓')
-  await expect(page.getByTestId('faction-recruitment-hero-6').getByRole('button')).toBeDisabled()
+  // 王异需「尊敬」（等级 3）声望，当前友好不可邀。
+  await expect(page.getByTestId('faction-recruitment-hero-11').getByRole('button')).toBeDisabled()
+  // 甄宓需「友好」（等级 2）声望，贡献充足可直接邀请。
+  const zhenMi = page.getByTestId('faction-recruitment-hero-6')
+  await expect(zhenMi).toContainText('甄宓')
+  await expect(zhenMi.getByRole('button', { name: '邀请入队' })).toBeEnabled()
+  await zhenMi.getByRole('button', { name: '邀请入队' }).click()
+  await expect(zhenMi.getByRole('button', { name: '已邀请' })).toBeDisabled()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school)).toBe(53_828)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_orig_6.recruited)).toBe(true)
   await recruitment.scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('town-recruitment.png'), fullPage: true })
 })
