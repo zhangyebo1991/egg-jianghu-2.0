@@ -1,6 +1,7 @@
 import type { Rng } from '../combat/rng'
 import type { CombatRank } from '../combat/types'
 import { enemyDefinitionById, parseEnemyId } from '../content/enemy-names'
+import { equipmentDefinitionById } from '../content/equipment'
 import { factionById } from '../content/factions'
 import {
   ORIGINAL_FACTION_RULES,
@@ -13,6 +14,7 @@ import { backpackEquipment } from './inventory'
 import type {
   AcceptedFactionQuest,
   ActionResult,
+  EquipmentInstance,
   FactionBoardState,
   FactionQuestBoardEntry,
   FactionQuestQuality,
@@ -190,9 +192,23 @@ export const factionQuestCurrentProgress = (
     return state.worldCurrency[worldId] ?? 0
   }
   if (quest.taskId === 3) return state.materials[String(quest.targetId)] ?? 0
-  if (quest.taskId === 5) return backpackEquipment(state).filter((item) => item.quality === quest.targetId).length
+  // 进度口径必须与交付时的挑选规则一致，否则会出现「显示可交付但实际不足」。
+  if (quest.taskId === 5) return surrenderableEquipment(state, quest.targetId).length
   return quest.progress
 }
+
+/**
+ * 可上缴的装备，按原版「随机上交装备序号」(Event 11715) 的挑选规则：
+ * 品质等于目标、排除至宝、排除已上锁，并在符合者中优先取物品等级最小的。
+ *
+ * 排除上锁尤为关键：代理人自动交付每秒结算一轮，若不排除会静默吃掉玩家特意锁定的装备。
+ */
+const surrenderableEquipment = (state: GameStateV10, quality: number): EquipmentInstance[] =>
+  backpackEquipment(state)
+    .filter((item) => item.quality === quality
+      && !item.locked
+      && equipmentDefinitionById(item.definitionId)?.slot !== 'treasure')
+    .sort((left, right) => left.level - right.level)
 
 const consumeQuestRequirement = (state: GameStateV10, quest: AcceptedFactionQuest): boolean => {
   if (factionQuestCurrentProgress(state, quest) < quest.requiredAmount) return false
@@ -202,12 +218,9 @@ const consumeQuestRequirement = (state: GameStateV10, quest: AcceptedFactionQues
   } else if (quest.taskId === 3) {
     state.materials[String(quest.targetId)] -= quest.requiredAmount
   } else if (quest.taskId === 5) {
-    const candidateUids = new Set(
-      backpackEquipment(state)
-        .filter((item) => item.quality === quest.targetId)
-        .slice(0, quest.requiredAmount)
-        .map((item) => item.uid),
-    )
+    const surrendered = surrenderableEquipment(state, quest.targetId).slice(0, quest.requiredAmount)
+    if (surrendered.length < quest.requiredAmount) return false
+    const candidateUids = new Set(surrendered.map((item) => item.uid))
     state.inventory = state.inventory.filter((item) => !candidateUids.has(item.uid))
   }
   quest.progress = quest.requiredAmount

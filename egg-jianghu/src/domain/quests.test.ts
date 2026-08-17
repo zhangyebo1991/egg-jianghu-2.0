@@ -201,4 +201,58 @@ describe('原版势力五格悬榜', () => {
     expect(claimQuest(state, FACTION_ID, 2).ok).toBe(true)
     expect(state.inventory).toHaveLength(0)
   })
+
+  it('上缴装备排除上锁与至宝，并优先交出等级最低的一件', () => {
+    const state = createInitialStateV10(0)
+    const equipment = (uid: string, definitionId: string, level: number, locked: boolean) => ({
+      uid,
+      definitionId,
+      level,
+      quality: 8 as const,
+      coreStats: [],
+      affixes: [],
+      locked,
+    })
+    // 同为品质 8：一件上锁、一件至宝（孙子兵法 wp_215）、两件普通装备等级 5 与 3。
+    state.inventory.push(
+      equipment('locked', 'wp_101', 1, true),
+      equipment('treasure', 'wp_215', 1, false),
+      equipment('normal-high', 'wp_101', 5, false),
+      equipment('normal-low', 'wp_101', 3, false),
+    )
+    state.factionBoards[FACTION_ID] = {
+      refreshRemainingMs: QUEST_REFRESH_MS,
+      slots: [boardQuest('equipment', 1, 5, 8), null, null, null, null],
+    }
+    state.acceptedFactionQuests = { 1: acceptedQuest(1, 0, 5, 8, 1) }
+
+    expect(claimQuest(state, FACTION_ID, 0).ok).toBe(true)
+
+    // 只交出等级最低的普通装备，上锁件与至宝都必须留下。
+    expect(state.inventory.map((item) => item.uid).sort())
+      .toEqual(['locked', 'normal-high', 'treasure'])
+  })
+
+  it('可上缴装备不足时拒绝领取且不扣除任何装备', () => {
+    const state = createInitialStateV10(0)
+    // 唯一一件品质 8 装备已上锁，不计入可上缴数量。
+    state.inventory.push({
+      uid: 'locked-only',
+      definitionId: 'wp_101',
+      level: 1,
+      quality: 8,
+      coreStats: [],
+      affixes: [],
+      locked: true,
+    })
+    state.factionBoards[FACTION_ID] = {
+      refreshRemainingMs: QUEST_REFRESH_MS,
+      slots: [boardQuest('equipment', 1, 5, 8), null, null, null, null],
+    }
+    state.acceptedFactionQuests = { 1: acceptedQuest(1, 0, 5, 8, 1) }
+
+    expect(claimQuest(state, FACTION_ID, 0).ok).toBe(false)
+    expect(state.inventory).toHaveLength(1)
+    expect(state.acceptedFactionQuests['1']).toBeDefined()
+  })
 })
