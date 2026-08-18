@@ -4,6 +4,7 @@ import {
   equipmentPoolForStage,
   equipmentSetPoolForStage,
   rollEquipmentLevel,
+  equipmentWearLevel,
   rollEquipmentStats,
   type EquipmentSlot,
 } from '../content/equipment'
@@ -75,11 +76,12 @@ export const grantKillLoot = (state: GameStateV10, input: LootDropInput): string
     const fromSet = setDefinition !== undefined && shouldDropSetPiece(input.rank, rng.nextFloat())
     const definition = fromSet ? setDefinition : rng.pick(pool)
     const quality = definition.fixedQuality ?? pickWeightedQuality(input.rank, rng.nextFloat())
-    const level = rollEquipmentLevel(input.worldId, input.difficulty, input.stage, quality)
+      const level = rollEquipmentLevel(input.worldId, input.difficulty, input.stage, quality)
     const equipment: EquipmentInstance = {
       uid: `eq_${input.seed}_${input.enemyId}_${index}`,
       definitionId: definition.id,
       level,
+      equipmentLevel: equipmentWearLevel(level, quality),
       quality,
       ...rollEquipmentStats(definition, quality, rng),
       locked: false,

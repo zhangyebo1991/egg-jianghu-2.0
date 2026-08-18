@@ -42,6 +42,8 @@ const equipment = (uid: string, definitionId: string, locked = false): Equipment
     uid,
     definitionId,
     level: 1,
+    // 穿戴等级独立于物品等级；本用例只验证部位与占用，取最低门槛。
+    equipmentLevel: 1,
     quality: 0,
     coreStats: definition.coreStats.map((core) => ({
       attributeId: core.attributeId,

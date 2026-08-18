@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   EQUIPMENT_DEFINITIONS,
   COMBAT_EQUIPMENT_SLOTS,
+  EQUIPMENT_QUALITIES,
   EQUIPMENT_STYLE_FAMILIES,
   combatDifficultyCoefficient,
   equipmentIdBySlot,
@@ -10,6 +11,8 @@ import {
   equipmentSetNameForStage,
   equipmentSetPoolForStage,
   equipmentDisplayName,
+  equipmentWearLevel,
+  originalStageId,
   planeBaseItemLevel,
   rollEquipmentLevel,
 } from './equipment'
@@ -131,18 +134,44 @@ describe('诸天装备表', () => {
     expect(EQUIPMENT_DEFINITIONS.find((item) => item.id === 'wp_101')?.name).toBe('长戟')
   })
 
-  it('物品等级用诸天普通物品等级+装备装等计算，层数取开战默认 1', () => {
+  it('物品等级只走装备装等计算，位面差异由 sq 全局地点编号承载', () => {
+    // 普通物品等级只管材料，装备不走这条链路
     expect(planeBaseItemLevel(1)).toBe(5)
     expect(planeBaseItemLevel(2)).toBe(25)
+    // 地点编号是 sq 总表全局编号：位面 1 占 1-10，位面 2 占 11-20
+    expect(originalStageId(1, 1)).toBe(1)
+    expect(originalStageId(1, 10)).toBe(10)
+    expect(originalStageId(2, 1)).toBe(11)
+    expect(originalStageId(13, 10)).toBe(130)
     expect(combatDifficultyCoefficient(1, 1)).toBe(1)
     expect(combatDifficultyCoefficient(1, 10)).toBe(91)
-    expect(rollEquipmentLevel('world_01', 1, 1, 0)).toBe(4)
-    expect(rollEquipmentLevel('world_01', 1, 1, 1)).toBe(6)
-    expect(rollEquipmentLevel('world_01', 1, 10, 1)).toBe(15)
-    expect(rollEquipmentLevel('world_02', 1, 1, 1)).toBe(26)
-    expect(rollEquipmentLevel('world_01', 2, 1, 1)).toBe(16)
-    expect(rollEquipmentLevel('world_13', 10, 10, 1)).toBe(400)
-    expect(rollEquipmentLevel('world_01', 1, 1, 5)).toBe(14)
+    // 原版实测样本：东汉三国「黄巾起义」难度 1，4 阶装备 → 物品等级 7、Lv1 可装备
+    expect(rollEquipmentLevel('world_01', 1, 1, 4)).toBe(7)
+    expect(equipmentWearLevel(7, 4)).toBe(1)
+    expect(rollEquipmentLevel('world_01', 1, 1, 1)).toBe(1)
+    expect(rollEquipmentLevel('world_01', 1, 10, 1)).toBe(10)
+    expect(rollEquipmentLevel('world_02', 1, 1, 1)).toBe(11)
+    expect(rollEquipmentLevel('world_01', 2, 1, 1)).toBe(11)
+    expect(rollEquipmentLevel('world_13', 10, 10, 1)).toBe(220)
+  })
+
+  it('穿戴等级是装备装等计算的逆运算，只吃物品等级与品质', () => {
+    // 原版 `装备穿戴等级function` 通用分支：round(clamp(物品等级-(物品品质-1)*2, 1))
+    expect(equipmentWearLevel(10, 1)).toBe(10)
+    expect(equipmentWearLevel(10, 0)).toBe(12)
+    expect(equipmentWearLevel(20, 5)).toBe(12)
+    // 下限 clamp 到 1，不会出现 0 或负数门槛
+    expect(equipmentWearLevel(14, 9)).toBe(1)
+    expect(equipmentWearLevel(1, 9)).toBe(1)
+    expect(equipmentWearLevel(3, 9)).toBe(1)
+  })
+
+  it('同一位面同一地点掉落的装备，穿戴等级与品质无关', () => {
+    // 品质只抬物品等级；扣回品质加成后落回同一基础难度等级。
+    const wearLevels = EQUIPMENT_QUALITIES.map((quality) =>
+      equipmentWearLevel(rollEquipmentLevel('world_01', 1, 1, quality), quality))
+    expect(new Set(wearLevels).size).toBe(1)
+    expect(wearLevels[0]).toBe(1)
   })
 
   it('展示名按诸天规则拼接词条前缀与底名', () => {

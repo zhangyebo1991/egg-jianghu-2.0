@@ -5,7 +5,7 @@ import {
   ORIGINAL_CITY_TECHNOLOGIES,
 } from '../content/original-city.generated'
 import { ORIGINAL_FACTION_RULES } from '../content/original-faction-rules.generated'
-import { normalizeHeroEquipment, normalizeInventoryDefinitionIds } from './inventory'
+import { normalizeHeroEquipment, normalizeInventoryInstances } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
 // v18：原版势力、城镇与城市经营共享状态。v17 不迁移、不覆盖。
@@ -76,6 +76,11 @@ const isEquipmentInstance = (value: unknown): boolean =>
   && typeof value.level === 'number'
   && Number.isInteger(Number(value.level))
   && Number(value.level) > 0
+  // v18 早期存档没有穿戴等级，加载时按物品等级与品质补齐。
+  && (value.equipmentLevel === undefined
+    || (typeof value.equipmentLevel === 'number'
+      && Number.isInteger(Number(value.equipmentLevel))
+      && Number(value.equipmentLevel) > 0))
   && typeof value.quality === 'number'
   && Number.isInteger(Number(value.quality))
   && Number(value.quality) >= 0
@@ -343,7 +348,7 @@ const isCityState = (value: unknown): boolean => {
 }
 
 const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameStateV10['inventory']): void => {
-  normalizeInventoryDefinitionIds(inventory)
+  normalizeInventoryInstances(inventory)
   for (const hero of Object.values(heroes) as HeroProgressV10[]) {
     normalizeHeroEquipment(hero)
   }

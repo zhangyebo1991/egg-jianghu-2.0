@@ -10,6 +10,7 @@ import {
 import {
   EQUIPMENT_SLOT_NAMES,
   equipmentDefinitionById,
+  equipmentWearLevel,
   rollEquipmentStats,
   type EquipmentDefinitionV10,
 } from '../content/equipment'
@@ -73,6 +74,7 @@ export const createOriginalEquipmentInstance = (
     uid,
     definitionId,
     level,
+    equipmentLevel: equipmentWearLevel(level, definition.fixedQuality),
     quality: definition.fixedQuality,
     coreStats: rolled.coreStats,
     affixes: definition.fixedAffixes?.length

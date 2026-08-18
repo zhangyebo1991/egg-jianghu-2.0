@@ -19,6 +19,7 @@ import {
   equipmentDefinitionById,
   equipmentDisplayName,
   equipmentPoolForWorld,
+  equipmentWearLevel,
   formatEquipmentAttributeValue,
   isEquipmentQuality,
   type EquipmentSlot,
@@ -1548,6 +1549,7 @@ const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
     slot,
     slotName: inventorySlotNames[slot],
     level: item.level,
+    equipmentLevel: item.equipmentLevel ?? equipmentWearLevel(item.level, item.quality),
     quality: item.quality,
     locked: item.locked,
     weaponTypeName: definition?.weaponTypeName,
@@ -2989,11 +2991,14 @@ const debugFillInventory = (count: number): void => {
   const pool = equipmentPoolForWorld('world_01')
   session.state.inventory = Array.from({ length: Math.max(0, Math.min(INVENTORY_CAPACITY, Math.floor(count))) }, (_, index): EquipmentInstance => {
     const definition = pool[index % pool.length] ?? pool[0]
+    const level = 1 + (index % 5)
+    const quality = EQUIPMENT_QUALITIES[index % EQUIPMENT_QUALITIES.length]
     return {
       uid: `debug-equipment-${index}`,
       definitionId: definition.id,
-      level: 1 + (index % 5),
-      quality: EQUIPMENT_QUALITIES[index % EQUIPMENT_QUALITIES.length],
+      level,
+      equipmentLevel: equipmentWearLevel(level, quality),
+      quality,
       coreStats: definition.coreStats.map((core) => ({
         attributeId: core.attributeId,
         coefficient: core.baseCoefficient,

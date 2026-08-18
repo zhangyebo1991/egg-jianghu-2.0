@@ -384,7 +384,7 @@ const renderEquipmentTooltip = (item: InventoryItemView, footer: string): string
     <header>
       <span>${escapeHtml(item.slotName)}</span>
       <strong>${escapeHtml(item.name)}</strong>
-      <em>品质 ${item.quality} · Lv.${item.level}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</em>
+      <em>品质 ${item.quality} · 物品等级 Lv.${item.level} · 穿戴等级 Lv.${item.equipmentLevel}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</em>
     </header>
     <div class="equipment-tooltip-columns">
       <section>
@@ -410,9 +410,9 @@ const renderEquipmentSection = (hero: HeroesHeroView, equipment: HeroesEquipment
       ${item ? `<img class="equipment-art" src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}">` : ''}
       <span class="pd-slot-name">${EQUIPMENT_SLOT_NAMES[entry.slot]}</span>
       <strong class="pd-item-name">${item ? escapeHtml(item.name) : '虚位以待'}</strong>
-      <span class="pd-item-meta">${item ? `品质 ${item.quality} · Lv.${item.level}` : '未装备'}</span>
+      <span class="pd-item-meta">${item ? `品质 ${item.quality} · 装等 ${item.level}` : '未装备'}</span>
       ${item ? `<button type="button" class="pd-unequip" data-action="equipment-unequip" data-hero-id="${escapeHtml(hero.id)}" data-slot="${entry.slot}">卸下</button>` : ''}
-      ${item ? renderEquipmentTooltip(item, hero.level < item.level ? `需人物 Lv.${item.level} 方可穿戴` : '双击行囊中物品，可替换此位') : ''}
+      ${item ? renderEquipmentTooltip(item, hero.level < item.equipmentLevel ? `需人物 Lv.${item.equipmentLevel} 方可穿戴` : '双击行囊中物品，可替换此位') : ''}
     </article>`
   }).join('')
   return `<section class="dossier-sec" data-testid="hero-equipment-slots">
@@ -432,7 +432,7 @@ const renderEquipmentSection = (hero: HeroesHeroView, equipment: HeroesEquipment
             data-action="equipment-set-switch" data-hero-id="${escapeHtml(hero.id)}" data-set-index="${index}"
             data-testid="equipment-set-${index}">第${index + 1}套</button>`).join('')}
         </div>
-        <p class="pd-set-hint">人物等级低于物品等级时不能穿戴</p>
+        <p class="pd-set-hint">人物等级低于穿戴等级时不能穿戴</p>
       </div>
     </div>
   </section>`
@@ -466,7 +466,7 @@ const renderPackRail = (view: HeroesPageViewModel): string => {
         <span class="pr-icon"><img src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}"></span>
         <span class="pr-body">
           <span class="pr-name">${escapeHtml(item.name)}${item.locked ? ' <span class="pack-lock">锁</span>' : ''}</span>
-          <span class="pr-meta"><span class="pr-q">品质 ${item.quality}</span> · Lv.${item.level}${item.current ? ' · <span class="pr-owner">已装备</span>' : item.ownerName ? ` · <span class="pr-owner">${escapeHtml(item.ownerName)}</span>` : ''}</span>
+          <span class="pr-meta"><span class="pr-q">品质 ${item.quality}</span> · 装等 ${item.level}${item.current ? ' · <span class="pr-owner">已装备</span>' : item.ownerName ? ` · <span class="pr-owner">${escapeHtml(item.ownerName)}</span>` : ''}</span>
         </span>
         <span class="pr-slot-tag">${escapeHtml(item.slotName)}</span>
         ${renderEquipmentTooltip(item, item.current ? '正穿于当前侠客' : item.ownerName ? `由 ${item.ownerName} 穿戴 · 双击仍可换装` : '双击左键，为当前侠客装备')}

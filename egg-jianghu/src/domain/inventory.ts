@@ -6,6 +6,7 @@ import {
   canonicalEquipmentSlot,
   equipmentDefinitionById,
   equipmentDisplayName,
+  equipmentWearLevel,
   isEquipmentSetIndex,
   type EquipmentSetIndex,
 } from '../content/equipment'
@@ -44,9 +45,10 @@ export const normalizeHeroEquipment = (hero: HeroProgressV10): void => {
   hero.equipmentBySlot = equipmentSets[activeEquipmentSetIndex]
 }
 
-export const normalizeInventoryDefinitionIds = (inventory: EquipmentInstance[]): void => {
+export const normalizeInventoryInstances = (inventory: EquipmentInstance[]): void => {
   for (const item of inventory) {
     item.definitionId = canonicalEquipmentDefinitionId(item.definitionId)
+    item.equipmentLevel ??= equipmentWearLevel(item.level, item.quality)
   }
 }
 
@@ -98,7 +100,8 @@ export const equipEquipment = (
   if (!equipment) return { ok: false, message: '装备不存在' }
   const definition = equipmentDefinitionById(canonicalEquipmentDefinitionId(equipment.definitionId))
   if (!definition) return { ok: false, message: '装备部位定义不存在' }
-  if (hero.level < equipment.level) return { ok: false, message: `人物等级不足，需达到 Lv.${equipment.level}` }
+  const equipmentLevel = equipment.equipmentLevel ?? equipmentWearLevel(equipment.level, equipment.quality)
+  if (hero.level < equipmentLevel) return { ok: false, message: `人物等级不足，需达到穿戴等级 Lv.${equipmentLevel}` }
   const ownerId = equipmentOwnerId(state, equipmentUid)
   if (ownerId && ownerId !== heroId) return { ok: false, message: '装备已被其他侠客穿戴' }
   const loadout = bindActiveEquipmentLoadout(hero)

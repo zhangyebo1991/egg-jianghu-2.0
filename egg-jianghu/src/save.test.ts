@@ -47,7 +47,8 @@ describe('version 18 公开存档入口', () => {
     const loaded = loadGame(storage, 300)
     expect(loaded.recoveredFromError).toBe(false)
     expect(loaded.state.worldCurrency.world_01).toBe(4321)
-    expect(loaded.state.inventory).toEqual(state.inventory)
+    // 旧存档没有穿戴等级字段，加载时按物品等级与品质补齐：1-(0-1)*2 = 3
+    expect(loaded.state.inventory).toEqual([{ ...state.inventory[0], equipmentLevel: 3 }])
     expect(loaded.state.lastSavedAt).toBe(200)
     clearSave(storage)
     expect(storage.getItem(SAVE_KEY)).toBeNull()

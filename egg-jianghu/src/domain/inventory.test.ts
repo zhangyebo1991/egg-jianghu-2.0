@@ -10,9 +10,9 @@ import {
   switchEquipmentSet,
   unequipEquipment,
 } from './inventory'
-import { equipmentDefinitionById, equipmentIdBySlot } from '../content/equipment'
+import { equipmentDefinitionById, equipmentIdBySlot, equipmentWearLevel } from '../content/equipment'
 import { createHeroProgress, createInitialStateV10, createNewGameStateV10 } from './state'
-import type { EquipmentInstance, EquipmentQuality } from './types'
+import type { EquipmentInstance, EquipmentQuality, GameStateV10 } from './types'
 
 const equipment = (uid: string, quality: EquipmentQuality = 0): EquipmentInstance => {
   const definitionId = equipmentIdBySlot('weapon')
@@ -21,11 +21,17 @@ const equipment = (uid: string, quality: EquipmentQuality = 0): EquipmentInstanc
     uid,
     definitionId,
     level: 1,
+    equipmentLevel: equipmentWearLevel(1, quality),
     quality,
     coreStats: definition.coreStats.map((core) => ({ attributeId: core.attributeId, coefficient: core.baseCoefficient })),
     affixes: [],
     locked: false,
   }
+}
+
+// 穿戴等级门槛由 equipmentWearLevel 独立计算；只验证部位与占用规则的用例把侠客等级抬到门槛之上。
+const liftHeroLevels = (state: GameStateV10): void => {
+  for (const hero of Object.values(state.heroes)) hero.level = 50
 }
 
 describe('装备背包', () => {
@@ -49,6 +55,7 @@ describe('装备背包', () => {
 
   it('穿戴后移出物品栏，卸下后重新进入物品栏', () => {
     const state = createNewGameStateV10('测试')
+    liftHeroLevels(state)
     state.inventory = [equipment('weapon')]
 
     expect(equipEquipment(state, 'hero_player', 'weapon')).toEqual({ ok: true, message: '装备成功' })
@@ -58,15 +65,25 @@ describe('装备背包', () => {
     expect(backpackEquipment(state).map((item) => item.uid)).toEqual(['weapon'])
   })
 
-  it('人物等级低于物品等级时不能穿戴', () => {
+  it('人物等级低于穿戴等级时不能穿戴', () => {
     const state = createNewGameStateV10('测试')
-    state.inventory = [{ ...equipment('high'), level: 10 }]
+    // 品质 0 物品等级 10 → 穿戴等级 10-(0-1)*2 = 12
+    state.inventory = [{ ...equipment('high'), level: 10, equipmentLevel: equipmentWearLevel(10, 0) }]
 
     expect(equipEquipment(state, 'hero_player', 'high')).toEqual({
       ok: false,
-      message: '人物等级不足，需达到 Lv.10',
+      message: '人物等级不足，需达到穿戴等级 Lv.12',
     })
     expect(state.heroes.hero_player.equipmentBySlot.weapon).toBeUndefined()
+  })
+
+  it('人物等级达到穿戴等级即可穿戴，与物品等级无关', () => {
+    const state = createNewGameStateV10('测试')
+    // 品质 5 物品等级 20 → 穿戴等级 20-(5-1)*2 = 12；人物 Lv.12 已足够
+    state.inventory = [{ ...equipment('rare'), level: 20, quality: 5, equipmentLevel: equipmentWearLevel(20, 5) }]
+    state.heroes.hero_player.level = 12
+
+    expect(equipEquipment(state, 'hero_player', 'rare')).toEqual({ ok: true, message: '装备成功' })
   })
 
   it('已穿戴装备不占用物品栏容量', () => {
@@ -98,6 +115,7 @@ describe('装备背包', () => {
 
   it('物品栏已满时仍可原子替换同部位装备', () => {
     const state = createNewGameStateV10('测试')
+    liftHeroLevels(state)
     state.inventory = [
       equipment('worn'),
       equipment('replacement'),
@@ -216,6 +234,7 @@ describe('装备背包', () => {
   describe('三套装备预设', () => {
     it('每位侠客可独立保存三套并切换当前生效套', () => {
       const state = createNewGameStateV10('测试')
+      liftHeroLevels(state)
       state.inventory = [
         equipment('weapon-a'),
         { ...equipment('weapon-b'), uid: 'weapon-b', definitionId: equipmentIdBySlot('weapon', '江湖') },
@@ -240,6 +259,7 @@ describe('装备背包', () => {
     it('非当前套占用的装备仍视为已穿戴，不可丢弃也不可给其他侠客', () => {
       const state = createNewGameStateV10('测试')
       state.heroes.hero_other = createHeroProgress('blade')
+      liftHeroLevels(state)
       state.inventory = [equipment('weapon-a')]
       expect(equipEquipment(state, 'hero_player', 'weapon-a').ok).toBe(true)
       expect(switchEquipmentSet(state, 'hero_player', 1).ok).toBe(true)
@@ -251,6 +271,7 @@ describe('装备背包', () => {
 
     it('同一侠客可把其他套中的装备改穿到当前套', () => {
       const state = createNewGameStateV10('测试')
+      liftHeroLevels(state)
       state.inventory = [equipment('weapon-a')]
       expect(equipEquipment(state, 'hero_player', 'weapon-a').ok).toBe(true)
       expect(switchEquipmentSet(state, 'hero_player', 2).ok).toBe(true)

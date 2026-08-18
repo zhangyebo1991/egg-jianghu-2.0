@@ -310,7 +310,7 @@ const inventoryFixture = (): InventoryPageViewModel => ({
   detailOpen: false,
   items: [{
     uid: 'equipment_1', definitionId: 'wp_101', name: '长戟', slot: 'weapon', slotName: '武器',
-    level: 1, quality: 1, locked: false,
+    level: 1, equipmentLevel: 1, quality: 1, locked: false,
     coreStats: [
       { attributeId: 8, name: '物攻', value: 12, formattedValue: '12', rollPercent: 94 },
       { attributeId: 20, name: '物理增伤', value: 0.1, formattedValue: '10%', rollPercent: 103 },
@@ -319,7 +319,7 @@ const inventoryFixture = (): InventoryPageViewModel => ({
   }],
   selectedItem: {
     uid: 'equipment_1', definitionId: 'wp_101', name: '长戟', slot: 'weapon', slotName: '武器',
-    level: 1, quality: 1, locked: false,
+    level: 1, equipmentLevel: 1, quality: 1, locked: false,
     coreStats: [
       { attributeId: 8, name: '物攻', value: 12, formattedValue: '12', rollPercent: 94 },
       { attributeId: 20, name: '物理增伤', value: 0.1, formattedValue: '10%', rollPercent: 103 },
@@ -555,6 +555,19 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-testid="job-book-shop"')
     expect(html).toContain('弓手转职书')
     expect(html).toContain('data-testid="shop-buy-job_5"')
+  })
+
+  it('装备详情区分物品等级与穿戴等级', () => {
+    const item = { ...inventoryFixture().items[0], level: 20, equipmentLevel: 12 }
+    const html = renderInventoryPage({
+      ...inventoryFixture(), detailOpen: true, items: [item], selectedItem: item,
+    })
+    expect(html).toContain('data-testid="inventory-item-level">物品等级 Lv.20')
+    expect(html).toContain('data-testid="inventory-equipment-level">穿戴等级 Lv.12')
+    expect(html).toContain('Item Lv.20 · Wear Lv.12')
+    expect(html).toContain('人物等级达到穿戴等级 Lv.12 方可穿戴')
+    // 背包格只显示物品等级，避免与穿戴等级混淆
+    expect(html).toContain('class="inventory-cell-level" title="物品等级">Lv.20')
   })
 
   it('当前大关没有势力内容时显示本卷空状态', () => {

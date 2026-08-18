@@ -117,7 +117,10 @@ export type FactionAgentFilters = Record<string, number[]>
 export interface EquipmentInstance {
   uid: string
   definitionId: string
+  /** 物品等级：决定装备属性、词条系数与平均装等。 */
   level: number
+  /** 穿戴等级：人物达到该等级后才可装备；旧存档缺省时按物品等级与品质派生。 */
+  equipmentLevel?: number
   quality: EquipmentQuality
   coreStats: Array<{ attributeId: number; coefficient: number }>
   affixes: Array<{ attributeId: number; coefficient: number }>

@@ -1,6 +1,7 @@
 import type { EquipmentInstance, EquipmentQuality } from '../domain/types'
 import type { Rng } from '../combat/rng'
 import { ATTRIBUTE_BY_ID } from './attributes'
+import { STAGE_COUNT } from './worlds'
 import {
   GENERATED_EQUIPMENT,
   GENERATED_EQUIPMENT_IDS_BY_STYLE,
@@ -415,19 +416,29 @@ export const EQUIPMENT_QUALITY_LEVEL_GAP = 2
 /** 诸天开战默认 `当前层数`。本游戏无地点内层数，固定用 1。 */
 export const ZHUTIAN_BATTLE_FLOOR = 1
 
-/** 诸天 `普通物品等级function`：clamp((位面-1)*25, 5)。 */
+/**
+ * 诸天 `普通物品等级function`：clamp((阶级-1)*25, 5)。
+ * 仅用于「普通物品」（材料等）等级，装备装等不走这条链路。
+ */
 export const planeBaseItemLevel = (worldIndex: number): number =>
   Math.max(5, (Math.max(1, worldIndex) - 1) * 25)
 
 /**
+ * 诸天 `地点编号`：sq 总表全局编号，13 位面 × 10 关连续编号（1–130）。
+ * sq.json col2 为位面编号，验证「东汉三国」占 1–10、「武侠江湖」占 11–20。
+ */
+export const originalStageId = (worldIndex: number, stage: number): number =>
+  (Math.max(1, worldIndex) - 1) * STAGE_COUNT + Math.max(1, stage)
+
+/**
  * 诸天 `普通战斗难度系数`：((难度编号-1)*100)+((地点编号-1)*10)+层数。
- * 地点编号用位面内 1–10（地点标识.地点编号），不是 sq 总表 id。
+ * 地点编号用 sq 总表全局编号，位面成长由它承载。
  */
 export const combatDifficultyCoefficient = (
   difficulty: number,
-  stage: number,
+  stageId: number,
   floor = ZHUTIAN_BATTLE_FLOOR,
-): number => ((Math.max(1, difficulty) - 1) * 100) + ((Math.max(1, stage) - 1) * 10) + Math.max(1, floor)
+): number => ((Math.max(1, difficulty) - 1) * 100) + ((Math.max(1, stageId) - 1) * 10) + Math.max(1, floor)
 
 /** 诸天 `装备装等计算function`：floor((系数+9)/10)+(物品品质-1)*装备品质等级差。 */
 export const equipmentLevelFromCoefficient = (
@@ -437,7 +448,19 @@ export const equipmentLevelFromCoefficient = (
 ): number => Math.floor((coefficient + 9) / 10) + (quality - 1) * qualityGap
 
 /**
- * 战斗掉落物品等级 = 普通物品等级(位面) + 装备装等计算(难度系数, 实际品质)。
+ * 原版 `装备穿戴等级function`：round(clamp(物品等级-(物品品质-1)*装备品质等级差, 1))。
+ * 正好是 `装备装等计算` 的逆运算，即扣掉品质加成后的基础难度等级。
+ */
+export const equipmentWearLevel = (
+  itemLevel: number,
+  quality: EquipmentQuality,
+  qualityGap = EQUIPMENT_QUALITY_LEVEL_GAP,
+): number => Math.max(1, Math.round(itemLevel - (quality - 1) * qualityGap))
+
+/**
+ * 战斗掉落物品等级 = 装备装等计算(难度系数, 实际品质)。
+ * 原版 `掉落计算function` 只调用 `装备装等计算`，位面不额外加基础等级；
+ * 位面差异通过 sq 全局地点编号进入难度系数。
  */
 export const rollEquipmentLevel = (
   worldId: string,
@@ -446,6 +469,8 @@ export const rollEquipmentLevel = (
   quality: EquipmentQuality,
 ): number => {
   const worldIndex = Number(worldId.replace(/\D/g, '')) || 1
-  return planeBaseItemLevel(worldIndex)
-    + equipmentLevelFromCoefficient(combatDifficultyCoefficient(difficulty, stage), quality)
+  return equipmentLevelFromCoefficient(
+    combatDifficultyCoefficient(difficulty, originalStageId(worldIndex, stage)),
+    quality,
+  )
 }

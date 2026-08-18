@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { equipmentDefinitionById, equipmentDisplayName, rollEquipmentLevel } from '../content/equipment'
+import { equipmentDefinitionById, equipmentDisplayName, equipmentWearLevel, rollEquipmentLevel } from '../content/equipment'
 import { grantKillLoot, pickWeightedQuality, SET_PIECE_DROP_CHANCE, shouldDropSetPiece } from './loot'
 import { createInitialStateV10 } from './state'
 import { INVENTORY_CAPACITY } from './inventory'
@@ -20,6 +20,8 @@ describe('击杀掉落', () => {
     const displayName = equipmentDisplayName(definition!, state.inventory[0].affixes)
     expect(displayName.includes('的') || displayName.includes('·')).toBe(true)
     expect(state.inventory[0].level).toBe(rollEquipmentLevel('world_01', 1, 1, state.inventory[0].quality))
+    expect(state.inventory[0].equipmentLevel)
+      .toBe(equipmentWearLevel(state.inventory[0].level, state.inventory[0].quality))
     expect(['铁爪', '皮帽', '项链', '文卷', '布帽', '护符', '长戟', '头盔', '铁甲', '长弓', '皮甲', '戒指', '古剑', '长衫', '扳指', '符箓']).toContain(definition?.name)
     expect(Object.keys(state.jobBooks)).toEqual([])
   })
@@ -54,7 +56,8 @@ describe('击杀掉落', () => {
           seenSetIds.add(definition.id)
           setIdsInThisKill.push(definition.id)
           expect(item.quality).toBe(5)
-          expect(item.level).toBe(14)
+          expect(item.level).toBe(rollEquipmentLevel('world_01', 1, 1, 5))
+          expect(item.level).toBe(9)
           expect(item.affixes).toHaveLength(3)
         } else {
           expect(item.level).toBe(rollEquipmentLevel('world_01', 1, 1, item.quality))

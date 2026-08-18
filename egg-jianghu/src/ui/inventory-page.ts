@@ -25,6 +25,7 @@ export interface InventoryItemView {
   slot: EquipmentSlot
   slotName: string
   level: number
+  equipmentLevel: number
   quality: EquipmentQuality
   locked: boolean
   weaponTypeName?: string
@@ -100,9 +101,9 @@ const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null
   <button type="button" class="inventory-cell${item.uid === selectedUid ? ' selected' : ''}" data-rarity="${item.quality}"
     data-equipment-uid="${escapeHtml(item.uid)}" data-testid="equipment-${escapeHtml(item.uid)}"
     data-action="inventory-select" aria-pressed="${item.uid === selectedUid}"
-    aria-label="${escapeHtml(`${item.name}，品质 ${item.quality}，等级 ${item.level}`)}">
+    aria-label="${escapeHtml(`${item.name}，品质 ${item.quality}，物品等级 ${item.level}，穿戴等级 ${item.equipmentLevel}`)}">
     ${item.locked ? '<span class="inventory-lock-mark" aria-label="已锁定">锁</span>' : ''}
-    <span class="inventory-cell-level">Lv.${item.level}</span>
+    <span class="inventory-cell-level" title="物品等级">Lv.${item.level}</span>
     <span class="inventory-cell-icon" aria-hidden="true">${renderEquipmentIcon(item)}</span>
     <span class="inventory-cell-name">${escapeHtml(item.name)}</span>
     <span class="inventory-cell-slot">${escapeHtml(item.slotName)}</span>
@@ -147,13 +148,14 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
   return `<div class="inventory-appraise-head">
     <span class="inventory-slot-tag">${escapeHtml(item.slotName)}</span>
     <span class="inventory-quality-tag" data-rarity="${item.quality}">品质 ${item.quality}</span>
-    <span class="inventory-slot-tag">Lv.${item.level}</span>
+    <span class="inventory-slot-tag" data-testid="inventory-item-level">物品等级 Lv.${item.level}</span>
+    <span class="inventory-slot-tag" data-testid="inventory-equipment-level">穿戴等级 Lv.${item.equipmentLevel}</span>
   </div>
   <div class="inventory-appraise-figure">
     <span class="inventory-figure-ring" data-rarity="${item.quality}">${renderEquipmentIcon(item)}</span>
     <div>
       <h2 class="inventory-appraise-name">${escapeHtml(item.name)}</h2>
-      <div class="inventory-appraise-latin">品质 ${item.quality} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Level ${item.level}</div>
+      <div class="inventory-appraise-latin">品质 ${item.quality} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Item Lv.${item.level} · Wear Lv.${item.equipmentLevel}</div>
       ${item.equipmentKindLabel ? `<div class="inventory-kind-label">${escapeHtml(item.equipmentKindLabel)}</div>` : ''}
     </div>
   </div>
@@ -171,7 +173,7 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
     </div>
     <div class="inventory-appraise-note">
       ${item.locked ? '<b>已锁定</b> · 不参与批量丢弃，亦不误手。' : '锁定后可免于「批量丢弃」误伤。'}
-      <span>人物等级低于物品等级时无法穿戴。</span>
+      <span>物品等级决定属性与词条系数；人物等级达到穿戴等级 Lv.${item.equipmentLevel} 方可穿戴。</span>
     </div>
   </div>`
 }
