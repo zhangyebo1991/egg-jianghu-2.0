@@ -489,6 +489,65 @@ const renderMainTabs = (view: HeroesPageViewModel, hero: HeroesHeroView): string
   <div class="hero-tab-panel" data-main-tab="equipment"${view.mainTab === 'equipment' ? '' : ' hidden'}>${view.equipment ? renderEquipmentTab(hero, view.equipment) : ''}</div>
   <div class="hero-tab-panel" data-main-tab="career"${view.mainTab === 'career' ? '' : ' hidden'}>${renderCareerTab(hero)}</div>`
 
+export type PackPaginationItem =
+  | { type: 'page'; page: number; isCurrent: boolean }
+  | { type: 'ellipsis'; jumpTo: number; label: string }
+
+export const buildPackPaginationItems = (currentPage: number, pageCount: number): PackPaginationItem[] => {
+  if (pageCount <= 1) {
+    return [{ type: 'page', page: 1, isCurrent: true }]
+  }
+  if (pageCount <= 5) {
+    return Array.from({ length: pageCount }, (_, i) => ({
+      type: 'page',
+      page: i + 1,
+      isCurrent: i + 1 === currentPage,
+    }))
+  }
+
+  const items: PackPaginationItem[] = []
+  items.push({ type: 'page', page: 1, isCurrent: currentPage === 1 })
+
+  if (currentPage <= 3) {
+    for (let p = 2; p <= Math.min(4, pageCount - 1); p++) {
+      items.push({ type: 'page', page: p, isCurrent: p === currentPage })
+    }
+    if (pageCount > 5) {
+      items.push({
+        type: 'ellipsis',
+        jumpTo: Math.min(pageCount, currentPage + 5),
+        label: '向后翻 5 页',
+      })
+    }
+  } else if (currentPage >= pageCount - 2) {
+    items.push({
+      type: 'ellipsis',
+      jumpTo: Math.max(1, currentPage - 5),
+      label: '向前翻 5 页',
+    })
+    for (let p = Math.max(2, pageCount - 3); p < pageCount; p++) {
+      items.push({ type: 'page', page: p, isCurrent: p === currentPage })
+    }
+  } else {
+    items.push({
+      type: 'ellipsis',
+      jumpTo: Math.max(1, currentPage - 5),
+      label: '向前翻 5 页',
+    })
+    items.push({ type: 'page', page: currentPage - 1, isCurrent: false })
+    items.push({ type: 'page', page: currentPage, isCurrent: true })
+    items.push({ type: 'page', page: currentPage + 1, isCurrent: false })
+    items.push({
+      type: 'ellipsis',
+      jumpTo: Math.min(pageCount, currentPage + 5),
+      label: '向后翻 5 页',
+    })
+  }
+
+  items.push({ type: 'page', page: pageCount, isCurrent: currentPage === pageCount })
+  return items
+}
+
 const renderPackRail = (view: HeroesPageViewModel): string => {
   const pack = view.pack
   if (!pack) return ''
@@ -515,7 +574,14 @@ const renderPackRail = (view: HeroesPageViewModel): string => {
         ${renderEquipmentTooltip(item, '双击左键，为当前侠客装备')}
       </button>`
   }).join('')
-  const pages = Array.from({ length: pack.pageCount }, (_, index) => index + 1)
+  const pageItems = buildPackPaginationItems(pack.page, pack.pageCount)
+  const pageButtons = pageItems.map((item) => {
+    if (item.type === 'ellipsis') {
+      return `<button type="button" class="pg-num pg-ellipsis" data-action="hero-pack-page" data-page="${item.jumpTo}" title="${escapeHtml(item.label)}" aria-label="${escapeHtml(item.label)}">…</button>`
+    }
+    return `<button type="button" class="pg-num${item.isCurrent ? ' active' : ''}" data-action="hero-pack-page" data-page="${item.page}" aria-label="第 ${item.page} 页" ${item.isCurrent ? 'aria-current="page"' : ''}>${item.page}</button>`
+  }).join('')
+
   return `<aside class="pack-rail hero-inventory-panel" data-testid="hero-inventory-panel">
     <div class="pack-inner">
       <header class="pack-head">
@@ -533,10 +599,10 @@ const renderPackRail = (view: HeroesPageViewModel): string => {
       </div>
       ${sellPanel}
       <nav class="pack-page" aria-label="行囊分页">
-        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page - 1}" ${pack.page <= 1 ? 'disabled' : ''}>‹</button>
-        <div class="pg-nums">${pages.map((page) => `<button type="button" class="pg-num${page === pack.page ? ' active' : ''}" data-action="hero-pack-page" data-page="${page}">${page}</button>`).join('')}</div>
+        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page - 1}" ${pack.page <= 1 ? 'disabled' : ''} title="上一页" aria-label="上一页">‹</button>
+        <div class="pg-nums">${pageButtons}</div>
+        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page + 1}" ${pack.page >= pack.pageCount ? 'disabled' : ''} title="下一页" aria-label="下一页">›</button>
         <span class="pack-page-status">第 ${pack.page} / ${pack.pageCount} 页</span>
-        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page + 1}" ${pack.page >= pack.pageCount ? 'disabled' : ''}>›</button>
       </nav>
       <footer class="pack-foot">悬停查看属性笺 · 双击为当前侠客装备</footer>
     </div>

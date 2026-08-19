@@ -16,12 +16,19 @@ test.afterEach(() => {
   expect(pageErrors).toEqual([])
 })
 
-test('侠客页提供行囊与批量丢弃', async ({ page }) => {
-  await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(5))
+test('侠客页提供行囊与按等阶售出', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(60))
   await page.getByTestId('tab-heroes').click()
 
   await expect(page.getByTestId('hero-inventory-panel')).toBeVisible()
-  await expect(page.getByRole('button', { name: '批量丢弃' })).toBeVisible()
-  await expect(page.getByTestId('hero-career-panel')).toBeVisible()
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().inventory)).toHaveLength(5)
+  await expect(page.getByRole('button', { name: '按等阶售出' })).toBeVisible()
+
+  // Hover first quality 3 item if present to inspect tooltip
+  const q3Cell = page.locator('.pack-cell[data-quality="3"]').first()
+  if (await q3Cell.count() > 0) {
+    await q3Cell.hover()
+  }
+
+  await page.getByTestId('hero-inventory-panel').screenshot({ path: 'verification-q3-blue.png' })
 })

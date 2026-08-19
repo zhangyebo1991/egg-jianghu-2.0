@@ -593,7 +593,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 [data-rarity="0"] { --rarity: lightgray; }
 [data-rarity="1"] { --rarity: white; }
 [data-rarity="2"] { --rarity: lightgreen; }
-[data-rarity="3"] { --rarity: lightblue; }
+[data-rarity="3"] { --rarity: #3b9cf7; }
 [data-rarity="4"] { --rarity: yellow; }
 [data-rarity="5"] { --rarity: fuchsia; }
 [data-rarity="6"] { --rarity: orange; }
@@ -602,7 +602,7 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 [data-rarity="9"] { --rarity: aqua; }
 [data-affix-grade="E"] { --affix-grade: white; }
 [data-affix-grade="D"] { --affix-grade: lightgreen; }
-[data-affix-grade="C"] { --affix-grade: lightblue; }
+[data-affix-grade="C"] { --affix-grade: #3b9cf7; }
 [data-affix-grade="B"] { --affix-grade: yellow; }
 [data-affix-grade="A"] { --affix-grade: fuchsia; }
 [data-affix-grade="S"] { --affix-grade: orange; }
@@ -2841,7 +2841,7 @@ body {
 .inventory-legend [data-quality="0"] { --rarity: lightgray; }
 .inventory-legend [data-quality="1"] { --rarity: white; }
 .inventory-legend [data-quality="2"] { --rarity: lightgreen; }
-.inventory-legend [data-quality="3"] { --rarity: lightblue; }
+.inventory-legend [data-quality="3"] { --rarity: #3b9cf7; }
 .inventory-legend [data-quality="4"] { --rarity: yellow; }
 .inventory-legend [data-quality="5"] { --rarity: aqua; }
 .inventory-legend [data-quality="6"] { --rarity: fuchsia; }
@@ -3550,7 +3550,7 @@ body {
   --q-0: lightgray;
   --q-1: white;
   --q-2: lightgreen;
-  --q-3: lightblue;
+  --q-3: #3b9cf7;
   --q-4: yellow;
   --q-5: fuchsia;
   --q-6: orange;
@@ -3905,13 +3905,17 @@ body {
 .heroes-page .pack-empty { grid-column: 1 / -1; min-height: 120px; display: grid; place-content: center; gap: 8px; padding: 24px 10px; text-align: center; }
 .heroes-page .pack-empty strong { color: rgb(233 222 195 / 45%); font-family: var(--font-brush); font-size: 20px; font-weight: 400; letter-spacing: .2em; }
 .heroes-page .pack-empty span { color: var(--paper-mute); font-size: 10px; letter-spacing: .18em; }
-.heroes-page .pack-page { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 8px 14px 10px; border-top: 1px solid var(--line-soft); }
-.heroes-page .pg-btn { padding: 5px 11px; border: 1px solid var(--line); border-radius: 5px; color: var(--paper-dim); font-size: 11px; }
+.heroes-page .pack-page { display: flex; align-items: center; gap: 4px; padding: 8px 12px 10px; border-top: 1px solid var(--line-soft); }
+.heroes-page .pg-btn { width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 5px; color: var(--paper-dim); font-size: 13px; line-height: 1; flex: 0 0 auto; transition: all .18s; }
+.heroes-page .pg-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-bright); background: rgb(201 163 92 / 8%); }
 .heroes-page .pg-btn:disabled { opacity: .35; cursor: not-allowed; }
-.heroes-page .pg-nums { min-width: 0; display: flex; justify-content: flex-start; gap: 4px; }
-.heroes-page .pg-num { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 5px; color: var(--paper-mute); font-size: 11px; font-variant-numeric: tabular-nums; }
+.heroes-page .pg-nums { min-width: 0; display: flex; align-items: center; gap: 3px; flex: 0 0 auto; }
+.heroes-page .pg-num { min-width: 24px; height: 24px; padding: 0 3px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 5px; color: var(--paper-mute); font-size: 11px; font-variant-numeric: tabular-nums; line-height: 1; transition: all .18s; }
+.heroes-page .pg-num:hover:not(.active) { border-color: var(--line); color: var(--paper-dim); background: rgb(233 222 195 / 5%); }
 .heroes-page .pg-num.active { color: #2e2208; background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep)); font-weight: 700; }
-.heroes-page .pack-page-status { justify-self: end; color: var(--paper-mute); font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.heroes-page .pg-num.pg-ellipsis { color: var(--paper-mute); font-size: 11px; letter-spacing: -1px; cursor: pointer; }
+.heroes-page .pg-num.pg-ellipsis:hover { color: var(--gold-bright); border-color: var(--gold-deep); background: rgb(201 163 92 / 10%); }
+.heroes-page .pack-page-status { margin-left: auto; color: var(--paper-mute); font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; flex: 0 0 auto; }
 .heroes-page .pack-foot { padding: 0 16px 12px; color: var(--paper-mute); font-size: 10.5px; letter-spacing: .12em; text-align: center; }
 
 /* 按等阶售出弹层：点档即卖，点外收起 */

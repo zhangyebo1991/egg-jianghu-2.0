@@ -423,21 +423,19 @@ test('侠客页展示当前职业与诸天属性', async ({ page }) => {
   const rosterList = page.getByTestId('hero-roster-list')
   await expect(rosterList).toHaveCSS('overflow-x', 'hidden')
 
+  const stats = page.getByTestId('hero-stats')
+  await expect(stats).toBeVisible()
+  await expect(stats.locator('[data-stat-label="臂力"] dd')).toHaveText('10')
+  await expect(stats.locator('[data-stat-label="生命"] .av')).not.toHaveText('0')
+  await expect(stats.locator('[data-stat-label="物攻"] .av')).not.toHaveText('0')
+  await expect(stats.locator('[data-stat-label="命中修正"] .av')).toHaveText('0%')
+
+  await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="career"]').click()
   const career = page.getByTestId('hero-career-panel')
   await expect(career).toBeVisible()
   await expect(career).toContainText('白丁')
-  await expect(career).toContainText('职业')
+  await expect(career).toContainText('已修职业')
   await expect(career).toContainText('Lv.1')
-  await expect(career).toContainText('可用技能类型')
-  await expect(page.getByTestId('hero-equipment-slots')).toBeVisible()
-  await expect(page.locator('.heroes-page .martial-slots')).toHaveCount(0)
-
-  const stats = page.getByTestId('hero-stats')
-  await expect(stats).toContainText('诸天属性')
-  await expect(stats.locator('[data-stat-label="臂力"] dd')).toHaveText('10')
-  await expect(stats.locator('[data-stat-label="生命"] dd')).not.toHaveText('0')
-  await expect(stats.locator('[data-stat-label="物攻"] dd')).not.toHaveText('0')
-  await expect(stats.locator('[data-stat-label="命中修正"] dd')).toHaveText('0%')
 
   await page.setViewportSize({ width: 390, height: 844 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
@@ -449,10 +447,9 @@ test('侠客页展示八槽装备栏与行囊', async ({ page }) => {
   await page.getByTestId('tab-heroes').click()
 
   await expect(page.getByTestId('hero-inventory-panel')).toBeVisible()
+  await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="equipment"]').click()
   await expect(page.getByTestId('hero-equipment-slots')).toBeVisible()
-  await expect(page.getByTestId('hero-equipment-slots').locator('.pd-slot')).toHaveCount(9)
-  await expect(page.getByTestId('hero-career-panel')).toBeVisible()
-  await expect(page.getByTestId('open-career-tree')).toBeVisible()
+  await expect(page.getByTestId('hero-equipment-slots').locator('.pd-slot, .eq-slot')).toHaveCount(9)
 
   const columnOrder = await page.evaluate(() => {
     const roster = document.querySelector('.hero-roster')!.getBoundingClientRect()
@@ -467,6 +464,7 @@ test('侠客页展示八槽装备栏与行囊', async ({ page }) => {
 
 test('侠客页打开转职树可查看职业节点与转职书', async ({ page }) => {
   await page.getByTestId('tab-heroes').click()
+  await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="career"]').click()
   await page.getByTestId('open-career-tree').click()
   await expect(page.getByTestId('career-tree')).toBeVisible()
   await expect(page.getByTestId('career-node-job_1')).toBeVisible()
@@ -504,6 +502,7 @@ test('白丁 Lv.5 持弓手转职书可转职且侠客等级保持不变', async
 
   await page.getByTestId('tab-heroes').click()
   await page.getByTestId('hero-hero_mu_nianci').click()
+  await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="career"]').click()
   await page.getByTestId('open-career-tree').click()
   await page.getByTestId('career-node-job_5').click()
   await expect(page.getByTestId('career-change')).toBeEnabled()

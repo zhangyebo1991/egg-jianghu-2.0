@@ -183,6 +183,7 @@ let selectedProgressionEquipmentUid: string | null = null
 let heroPackSlotFilter: EquipmentSlot | 'all' = 'all'
 let heroPackQualityFilter: EquipmentQuality | 'all' = 'all'
 let heroPackPage = 1
+let heroPackDynamicRows = 8
 let heroMainTab: HeroesMainTab = 'basic'
 let heroSellOpen = false
 let heroRosterQuery = ''
@@ -820,6 +821,23 @@ const careerGrowthView = (career: NonNullable<ReturnType<typeof careerById>>) =>
     coeff: formatGrowthCoeff(career.growth[field.id]),
   }))
 
+const computeHeroPackRows = (): number => {
+  const grid = app.querySelector<HTMLElement>('.heroes-page .pack-grid')
+  if (grid && grid.clientHeight > 0 && grid.clientWidth > 0) {
+    const width = grid.clientWidth
+    const height = grid.clientHeight
+    const cellWidth = Math.max(36, (width - 5 * 6) / 6)
+    const rowHeight = cellWidth + 6
+    const rows = Math.max(6, Math.floor((height + 6) / rowHeight))
+    return rows
+  }
+  if (typeof window !== 'undefined' && window.innerHeight > 0) {
+    const estimatedHeight = Math.max(300, window.innerHeight - 300)
+    return Math.max(6, Math.floor((estimatedHeight + 6) / 54))
+  }
+  return 8
+}
+
 const heroesViewModel = (): HeroesPageViewModel => {
   const selectedId = normalizeSelectedHero()
   const selectedProgress = selectedId ? session.state.heroes[selectedId] : undefined
@@ -944,7 +962,9 @@ const heroesViewModel = (): HeroesPageViewModel => {
     if (heroPackQualityFilter !== 'all' && item.quality !== heroPackQualityFilter) return false
     return true
   })
-  const packPageSize = 18
+  const packRows = computeHeroPackRows()
+  heroPackDynamicRows = packRows
+  const packPageSize = packRows * 6
   const packPageCount = Math.max(1, Math.ceil(packSource.length / packPageSize))
   heroPackPage = Math.min(packPageCount, Math.max(1, heroPackPage))
   const packPageItems = packSource.slice((heroPackPage - 1) * packPageSize, heroPackPage * packPageSize)
@@ -1910,6 +1930,13 @@ const render = (): void => {
   toast.classList.toggle('inventory-toast', activeTab === 'inventory')
   syncInventoryDetailScrollLock()
   playInventoryDropMotion()
+  if (activeTab === 'heroes') {
+    const nextRows = computeHeroPackRows()
+    if (nextRows !== heroPackDynamicRows) {
+      heroPackDynamicRows = nextRows
+      window.requestAnimationFrame(() => render())
+    }
+  }
 }
 
 const createAndEnter = (playerName: string, expectedSnapshot: string | null): void => {
