@@ -215,6 +215,28 @@ export const discardEquipmentByQuality = (
   return { ok: true, message: `已丢弃 ${discarded.length} 件品质 ${maxQuality} 及以下装备` }
 }
 
+// 原版「物品买卖价格function」：买价 max(round((修正系数×10)×(10+物品等级)×2.5^品质), 1)，售价为买价 × 0.4。
+// 装备的修正系数按 1 处理。
+export const equipmentSellPrice = (equipment: EquipmentInstance): number =>
+  Math.max(Math.round((10 + equipment.level) * Math.pow(2.5, equipment.quality) * 10 * 0.4), 1)
+
+export const sellEquipmentByQuality = (
+  state: GameStateV10,
+  maxQuality: EquipmentQuality,
+  worldId: string,
+): ActionResult => {
+  const sold = state.inventory.filter((item) =>
+    item.quality <= maxQuality
+    && !item.locked
+    && !isEquipmentEquipped(state, item.uid))
+  if (sold.length === 0) return { ok: false, message: '没有可售出的装备' }
+  const removed = new Set(sold.map((item) => item.uid))
+  state.inventory = state.inventory.filter((item) => !removed.has(item.uid))
+  const income = sold.reduce((total, item) => total + equipmentSellPrice(item), 0)
+  state.worldCurrency[worldId] = (state.worldCurrency[worldId] ?? 0) + income
+  return { ok: true, message: `已售出 ${sold.length} 件装备，获得铜钱 ${income}` }
+}
+
 export const averageItemLevel = (hero: HeroProgressV10, inventory: EquipmentInstance[]): number => {
   const loadout = bindActiveEquipmentLoadout(hero)
   const total = EQUIPMENT_SLOTS.reduce((sum, slot) => {

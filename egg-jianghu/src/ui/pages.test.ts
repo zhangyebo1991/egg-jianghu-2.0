@@ -10,9 +10,10 @@ import { renderTownsPage, type TownsPageViewModel } from './towns-page'
 
 const heroesFixture = (): HeroesPageViewModel => ({
   selectedHeroId: 'hero_test',
+  mainTab: 'basic',
   heroes: [{
     id: 'hero_test', name: '试剑人', grade: '乙', recruited: true,
-    level: 12, careerId: 'job_1', careerName: '白丁', careerLevel: 5,
+    level: 12, experience: 340, experienceRequired: 1200, careerId: 'job_1', careerName: '白丁', careerLevel: 5,
     careerTier: '初级', skillTypeNames: ['通用'],
     growth: [
       { id: 'physicalAttack', label: '物攻', grade: 'D', coeff: '0.9' },
@@ -53,8 +54,6 @@ const heroesFixture = (): HeroesPageViewModel => ({
   equipment: {
     heroId: 'hero_test',
     setIndex: 0,
-    averageItemLevel: 0,
-    wornCount: 0,
     slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: null })),
   },
   pack: {
@@ -65,9 +64,7 @@ const heroesFixture = (): HeroesPageViewModel => ({
     page: 1,
     pageCount: 1,
     items: [],
-    batchOpen: false,
-    batchQuality: 'all',
-    batchCount: 0,
+    sellOpen: false,
   },
 })
 
@@ -370,7 +367,7 @@ const formationFixture = (): FormationPageViewModel => ({
 describe('version 10 长期循环页面', () => {
   it('侠客页展示职业独立等级且不再含阵容编辑器', () => {
     const html = renderHeroesPage(heroesFixture())
-    expect(html).toContain('职业 <b>Lv.5</b>')
+    expect(html).toContain('<b class="hc-lv">Lv.5</b>')
     expect(html).toContain('当前职业')
     expect(html).toContain('白丁')
     expect(html).toContain('data-testid="open-career-tree"')
@@ -382,7 +379,6 @@ describe('version 10 长期循环页面', () => {
   it('侠客页用诸天六标签页展示属性（基础/附加/特殊/元素/专精/武器）', () => {
     const html = renderHeroesPage(heroesFixture())
     expect(html).toContain('data-testid="hero-stats"')
-    expect(html).toContain('诸天属性')
     expect(html).toContain('class="attr-tab-label" data-attr-tab="basic"')
     expect(html).toContain('data-attr-tab="additive"')
     expect(html).toContain('data-attr-tab="element"')
@@ -400,13 +396,12 @@ describe('version 10 长期循环页面', () => {
   it('侠客页展示当前职业、已修列表与转职树入口', () => {
     const html = renderHeroesPage(heroesFixture())
     expect(html).toContain('data-testid="hero-career-panel"')
-    expect(html).toContain('可用技能类型')
+    expect(html).toContain('可用技能')
     expect(html).toContain('已修职业')
     expect(html).toContain('class="hero-medallion"')
     expect(html).toContain('class="roster-search"')
     expect(html).toContain('data-testid="hero-equipment-slots"')
     expect(html).toContain('data-testid="hero-inventory-panel"')
-    expect(html).toContain('随身装备')
     expect(html).not.toContain('四槽武功')
     const open = renderHeroesPage({ ...heroesFixture(), careerTreeOpen: true })
     expect(open).toContain('data-testid="career-tree"')
@@ -420,20 +415,18 @@ describe('version 10 长期循环页面', () => {
     view.equipment = {
       heroId: 'hero_test',
       setIndex: 0,
-      averageItemLevel: item.level,
-      wornCount: 1,
       slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: slot === item.slot ? item : null })),
     }
     view.pack = {
       ...view.pack!,
       itemCount: 1,
-      items: [{ ...item, ownerName: null, current: false, occupied: false }],
+      items: [{ ...item }],
     }
 
     const html = renderHeroesPage(view)
     expect(html.match(/data-equipment-icon-source="unique"/g)).toHaveLength(2)
     expect(html).toContain('class="equipment-art"')
-    expect(html).toContain('class="pr-icon"><img')
+    expect(html).toContain('class="pack-cell"')
   })
 
   it('势力页显示五格悬榜、两线三门传承和原版招募名录', () => {

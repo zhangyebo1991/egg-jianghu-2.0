@@ -23,6 +23,8 @@ export const EQUIPMENT_SET_COUNT = 3
 export const COMBAT_EQUIPMENT_SLOTS = ['weapon', 'offhand', 'head', 'armor', 'wrist', 'boots', 'necklace', 'ring'] as const
 export const EQUIPMENT_SLOTS = [...COMBAT_EQUIPMENT_SLOTS, 'treasure'] as const
 export const EQUIPMENT_QUALITIES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const
+// 原版品质中文名（0–9 升序）；0 档原版未命名，暂拟「粗糙」
+export const EQUIPMENT_QUALITY_NAMES = ['粗糙', '普通', '精致', '优秀', '不朽', '绝世', '逆天', '神物', '圣阶', '创世'] as const
 export const EQUIPMENT_STYLE_FAMILIES = ['中式古代', '江湖', '西方', '日式', '近代', '未来'] as const
 export const EQUIPMENT_AFFIX_COUNTS = [0, 1, 2, 2, 3, 3, 4, 4, 5, 5] as const
 

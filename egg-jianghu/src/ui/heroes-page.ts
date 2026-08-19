@@ -1,12 +1,20 @@
 import { escapeHtml } from './html'
 import { panelToAttributeMap, type CombatStats } from '../combat/stats'
 import { ATTRIBUTES, type AttributeMap } from '../content/attributes'
-import { EQUIPMENT_QUALITIES, EQUIPMENT_SLOTS, EQUIPMENT_SLOT_MARKS, EQUIPMENT_SLOT_NAMES, type EquipmentSlot } from '../content/equipment'
+import {
+  EQUIPMENT_QUALITIES,
+  EQUIPMENT_QUALITY_NAMES,
+  EQUIPMENT_SLOTS,
+  EQUIPMENT_SLOT_MARKS,
+  EQUIPMENT_SLOT_NAMES,
+  type EquipmentSlot,
+} from '../content/equipment'
 import type { EquipmentQuality } from '../domain/types'
 import type { HeroAptitudes } from '../content/heroes'
 import { careerIconAsset } from './career-icon-assets'
 import { equipmentIconAsset } from './equipment-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
+import heroStandFigure from '../assets/heroes/hero_stand.webp'
 import type { InventoryItemView } from './inventory-page'
 
 export interface CareerGrowthView {
@@ -56,12 +64,16 @@ export interface CareerTreeDetailView {
   actionDisabled: boolean
 }
 
+export type HeroesMainTab = 'basic' | 'equipment' | 'career'
+
 export interface HeroesHeroView {
   id: string
   name: string
   grade: string
   recruited: boolean
   level: number
+  experience: number
+  experienceRequired: number
   careerId: string
   careerName: string
   careerLevel: number
@@ -87,15 +99,7 @@ export interface HeroEquipmentSlotView {
 export interface HeroesEquipmentView {
   heroId: string
   setIndex: 0 | 1 | 2
-  averageItemLevel: number
-  wornCount: number
   slots: HeroEquipmentSlotView[]
-}
-
-export interface HeroesPackItemView extends InventoryItemView {
-  ownerName: string | null
-  current: boolean
-  occupied: boolean
 }
 
 export interface HeroesPackView {
@@ -105,14 +109,13 @@ export interface HeroesPackView {
   qualityFilter: 'all' | EquipmentQuality
   page: number
   pageCount: number
-  items: HeroesPackItemView[]
-  batchOpen: boolean
-  batchQuality: EquipmentQuality | 'all'
-  batchCount: number
+  items: InventoryItemView[]
+  sellOpen: boolean
 }
 
 export interface HeroesPageViewModel {
   selectedHeroId: string | null
+  mainTab: HeroesMainTab
   heroes: HeroesHeroView[]
   rosterHeroes?: HeroesHeroView[]
   rosterQuery?: string
@@ -138,7 +141,21 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 const TREE_RANKS: Array<1 | 2 | 3 | 4 | 5 | 6> = [6, 5, 4, 3, 2, 1]
 
+const HERO_MAIN_TABS: Array<{ tab: HeroesMainTab; label: string }> = [
+  { tab: 'basic', label: '基础' },
+  { tab: 'equipment', label: '装备' },
+  { tab: 'career', label: '职业' },
+]
+
+// 装备页槽位左右分列（对齐原版）：左 武器/头部/护腕/项链/至宝，右 副手/身体/足部/戒指
+const EQUIP_LEFT_SLOTS: EquipmentSlot[] = ['weapon', 'head', 'wrist', 'necklace', 'treasure']
+const EQUIP_RIGHT_SLOTS: EquipmentSlot[] = ['offhand', 'armor', 'boots', 'ring']
+
+// 行囊右缘竖排部位筛选的显示字（对齐原版）
+const PACK_STRIP_MARKS: Record<EquipmentSlot, string> = { ...EQUIPMENT_SLOT_MARKS, necklace: '链' }
+
 const formatNumber = (value: number): string => Number.isInteger(value) ? String(value) : value.toFixed(1)
+const formatExp = (value: number): string => Math.floor(value).toLocaleString('zh-CN')
 
 const statMarks: Record<string, string> = {
   臂力: '力', 悟性: '悟', 体魄: '骨', 身法: '身', 定力: '心',
@@ -146,15 +163,21 @@ const statMarks: Record<string, string> = {
   暴击几率: '暴', 暴击伤害: '破', 物理增伤: '攻', 法术增伤: '法', 普攻增伤: '拳', 最终增伤: '终', 吸血: '血',
   物理减伤: '减', 法术减伤: '御', 最终减伤: '护', 命中修正: '羽', 闪避修正: '闪',
   初始能量: '✣', 能量回复: '◉', 技能冷却: '冷', 技能学习: '学',
+  驯兽等级: '驯', 管理等级: '管', 锻造等级: '锻', 修习等级: '修', 研究等级: '研',
+  建造等级: '建', 商业等级: '商', 合成等级: '合', 计略等级: '计', 收藏等级: '藏',
 }
 
-const aptitudeKeys: Array<{ key: keyof HeroAptitudes; label: string }> = [
-  { key: 'strength', label: '臂力' },
-  { key: 'insight', label: '悟性' },
-  { key: 'constitution', label: '体魄' },
-  { key: 'agility', label: '身法' },
-  { key: 'resolve', label: '定力' },
+const aptitudeKeys: Array<{ key: keyof HeroAptitudes; label: string; sub: string }> = [
+  { key: 'strength', label: '臂力', sub: '勇' },
+  { key: 'insight', label: '悟性', sub: '智' },
+  { key: 'constitution', label: '体魄', sub: '体' },
+  { key: 'agility', label: '身法', sub: '敏' },
+  { key: 'resolve', label: '定力', sub: '精' },
 ]
+
+// 五维天资评级字母（对齐原版资质评级风格）
+const aptitudeGrade = (value: number): string =>
+  value >= 22 ? 'S' : value >= 18 ? 'A' : value >= 14 ? 'B' : value >= 10 ? 'C' : 'D'
 
 const formatStatValue = (value: string | number): string => typeof value === 'number' ? formatNumber(value) : value
 
@@ -183,9 +206,6 @@ const renderAptitudeRadar = (aptitudes: HeroAptitudes): string => {
   return `<svg class="radar-svg" viewBox="0 0 236 236" role="img" aria-label="五维根骨资质">${rings}${axes}<polygon class="radar-shape" points="${shape}"></polygon>${dots}${labels}</svg>`
 }
 
-const renderCombatChip = (label: string, value: string | number, hot = false): string =>
-  `<div class="st-chip${hot ? ' hot' : ''}" data-stat-label="${escapeHtml(label)}" title="${escapeHtml(label)}"><i aria-hidden="true">${statMarks[label] ?? '◇'}</i><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(formatStatValue(value))}</dd></div>`
-
 const formatAttr = (value: number, unit: string): string => {
   if (unit === '百分比') return `${formatNumber(value)}%`
   if (unit === '每秒') return `${formatNumber(value)}/s`
@@ -202,11 +222,27 @@ const ATTR_TABS: Array<{ tab: string; label: string; cats: string[] }> = [
 ]
 const ATTR_TAB_CATS = ATTR_TABS.flatMap((tab) => tab.cats)
 
-const renderAttrChips = (cats: readonly string[], attrs: AttributeMap): string =>
+// 能力区对齐原版：名称 + Lv.N + 5 格历练印（ORIGINAL_ABILITY_MAX_LEVEL = 5），已修得的印点亮
+const renderAbilityRows = (items: typeof ATTRIBUTES, attrs: AttributeMap): string =>
+  `<div class="ability-grid">${items.map((attribute) => {
+    const value = Math.max(0, Math.floor(attrs[attribute.id] ?? 0))
+    const pips = Array.from({ length: 5 }, (_, index) =>
+      `<i class="pip${index < value ? ' lit' : ''}" aria-hidden="true">${statMarks[attribute.name] ?? '◇'}</i>`,
+    ).join('')
+    return `<div class="ability-row${value === 0 ? ' zero' : ''}" data-stat-label="${escapeHtml(attribute.name)}" title="${escapeHtml(attribute.name)}"><span class="ab-name">${escapeHtml(attribute.name.replace(/等级$/, ''))}</span><span class="ab-lv">Lv.${value}</span><span class="ab-pips">${pips}</span></div>`
+  }).join('')}</div>`
+
+const renderAttrRows = (cats: readonly string[], attrs: AttributeMap): string =>
   cats.map((cat) => {
     const items = ATTRIBUTES.filter((attribute) => attribute.category === cat)
     if (items.length === 0) return ''
-    return `<div class="attr-group"><span class="attr-group-title">${escapeHtml(cat)}</span><div class="chips">${items.map((attribute) => renderCombatChip(attribute.name, formatAttr(attrs[attribute.id] ?? 0, attribute.unit))).join('')}</div></div>`
+    if (cat === '能力') {
+      return `<div class="attr-group"><span class="attr-group-title">${escapeHtml(cat)}</span>${renderAbilityRows(items, attrs)}</div>`
+    }
+    return `<div class="attr-group"><span class="attr-group-title">${escapeHtml(cat)}</span><div class="attr2-grid">${items.map((attribute) => {
+      const value = attrs[attribute.id] ?? 0
+      return `<div class="attr2${value === 0 ? ' zero' : ''}" data-stat-label="${escapeHtml(attribute.name)}" title="${escapeHtml(attribute.name)}"><i aria-hidden="true">${statMarks[attribute.name] ?? '◇'}</i><span class="an">${escapeHtml(attribute.name)}</span><span class="av">${escapeHtml(formatAttr(value, attribute.unit))}</span></div>`
+    }).join('')}</div></div>`
   }).join('')
 
 const renderAccessibleHeroStats = (hero: HeroesHeroView): string => {
@@ -226,7 +262,12 @@ const renderHeroPortrait = (hero: HeroesHeroView, className: string): string => 
   return `<img class="${className}" src="${escapeHtml(portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">`
 }
 
-const renderHeroStats = (hero: HeroesHeroView): string => {
+const renderXpBar = (value: number, required: number, maxed: boolean, extraClass = ''): string => {
+  const ratio = maxed ? 100 : Math.min(100, value / Math.max(1, required) * 100)
+  return `<span class="bar${extraClass}" aria-hidden="true"><i style="width:${ratio.toFixed(1)}%"></i></span>`
+}
+
+const renderBasicTab = (hero: HeroesHeroView): string => {
   const aptitudes = hero.aptitudes
   const attrs = panelToAttributeMap(hero.combatStats, aptitudes)
   const aptitudeTotal = aptitudeKeys.reduce((total, { key }) => total + aptitudes[key], 0)
@@ -238,65 +279,62 @@ const renderHeroStats = (hero: HeroesHeroView): string => {
     `<label for="attrtab-${escapeHtml(uid)}-${tab.tab}" class="attr-tab-label" data-attr-tab="${tab.tab}">${escapeHtml(tab.label)}</label>`,
   ).join('')
   const panels = ATTR_TABS.map((tab) =>
-    `<div class="attr-panel" data-attr-tab="${tab.tab}">${renderAttrChips(tab.cats, attrs)}</div>`,
+    `<div class="attr-panel" data-attr-tab="${tab.tab}">${renderAttrRows(tab.cats, attrs)}</div>`,
   ).join('')
-  return `<section class="dossier-sec hero-stats-section" data-testid="hero-stats">
-    <header><div class="sec-title"><h2>根骨资质</h2><span class="sub">其壹 · 五维天资 · <i>诸天属性 · 基础 / 附加 / 特殊 / 元素 / 专精 / 武器</i></span></div></header>
-    <div class="sec-body aptitude-grid">
-      <div class="radar-box">${renderAptitudeRadar(aptitudes)}<div class="radar-total"><b>${aptitudeTotal}</b><span>天资总和</span></div></div>
-      <div class="combat-stats attr-tabs">
-        <div class="attr-tab-bar">${radios}${labels}</div>
-        <div class="attr-panels">${panels}</div>
-        ${renderAccessibleHeroStats(hero)}
+  const aptitudeRows = aptitudeKeys.map(({ key, label, sub }) =>
+    `<div class="apt"><span class="an">${label}（${sub}）</span><span class="av">${aptitudes[key]}</span><span class="ag">${aptitudeGrade(aptitudes[key])}</span></div>`,
+  ).join('')
+  const careerXpText = hero.careerMaxed ? '已达上限' : `${formatExp(hero.careerExperience)} / ${formatExp(hero.careerExperienceRequired)}`
+  return `<div class="hero-basic">
+    <div class="hb-idrow">
+      <div class="hb-idcard">
+        ${renderHeroPortrait(hero, 'hb-portrait')}
+        <div class="hb-idmain">
+          <b class="hb-name">${escapeHtml(hero.name)}</b>
+          <div class="hb-idtags"><span class="hero-medallion" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span><span class="hb-cat">${escapeHtml(hero.category ?? '侠')}之脉系</span></div>
+        </div>
       </div>
+      <div class="hb-radar"><div class="radar-box">${renderAptitudeRadar(aptitudes)}<div class="radar-total"><b>${aptitudeTotal}</b><span>天资总和</span></div></div></div>
+      <div class="hb-aptlist">${aptitudeRows}</div>
     </div>
-  </section>`
+    <div class="hb-growrow">
+      <div class="hb-growline"><span class="gl-label">等级</span><b>Lv.${hero.level}</b>${renderXpBar(hero.experience, hero.experienceRequired, false)}<span class="gl-num">${formatExp(hero.experience)} / ${formatExp(hero.experienceRequired)}</span></div>
+      <div class="hb-growline"><span class="gl-label">职业</span><b>${escapeHtml(hero.careerName)} Lv.${hero.careerLevel}</b>${renderXpBar(hero.careerExperience, hero.careerExperienceRequired, hero.careerMaxed, ' xp')}<span class="gl-num">${escapeHtml(careerXpText)}</span></div>
+    </div>
+    <div class="hb-attrs attr-tabs" data-testid="hero-stats">
+      <div class="attr-tab-bar">${radios}${labels}</div>
+      <div class="attr-panels">${panels}</div>
+      ${renderAccessibleHeroStats(hero)}
+    </div>
+  </div>`
 }
 
 const renderGrowthGrid = (growth: CareerGrowthView[]): string =>
-  `<div class="cg-grid">${growth.map((item) => `<div class="cg-cell" data-grade="${escapeHtml(item.grade)}"><span>${escapeHtml(item.label)}</span><b>${escapeHtml(item.grade)}</b><em>${escapeHtml(item.coeff)}</em></div>`).join('')}</div>`
+  `<div class="cg-grid">${growth.map((item) => `<div class="cg-cell" data-grade="${escapeHtml(item.grade)}"><span>${escapeHtml(item.label)}</span><b>${escapeHtml(item.grade)}</b><em>×${escapeHtml(item.coeff)}</em></div>`).join('')}</div>`
 
-const renderPrototypeHeroHead = (hero: HeroesHeroView): string => {
-  const category = hero.category ?? '剑'
-  const gradeLabel = hero.grade === '主' ? '天命主角' : hero.grade + '品侠客'
-  return `<header class="dossier-head"><div class="dossier-head-inner">
-    <span class="dh-ghost" aria-hidden="true">${escapeHtml(category)}</span><span class="hero-medallion" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span>${renderHeroPortrait(hero, 'dh-portrait')}
-    <div class="dh-main"><p class="dh-kicker">侠客列传 · <i>${escapeHtml(category)}之脉</i></p><h2 class="dh-name">${escapeHtml(hero.name)}</h2>
-      <div class="dh-tags"><span class="dh-tag gold">${gradeLabel}</span><span class="dh-tag">${escapeHtml(category)}之脉系</span><span class="dh-tag">${escapeHtml(hero.source ?? '江湖行走')}</span></div>
-    </div>
-    <div class="dh-level"><small>侠客</small><b>Lv.${hero.level}</b><span class="dh-career">${escapeHtml(hero.careerName)}</span></div><span class="dh-vertical">侠之大者 · 为国为民</span>
-  </div></header>`
-}
-
-const renderCurrentCareer = (hero: HeroesHeroView): string => {
-  const required = Math.max(1, hero.careerExperienceRequired)
-  const ratio = hero.careerMaxed ? 100 : Math.min(100, hero.careerExperience / required * 100)
+const renderCareerTab = (hero: HeroesHeroView): string => {
   const xpText = hero.careerMaxed
     ? '已达上限'
-    : `${hero.careerExperience} / ${hero.careerExperienceRequired}`
+    : `${formatExp(hero.careerExperience)} / ${formatExp(hero.careerExperienceRequired)}`
   const learned = hero.learnedCareers.map((career) =>
-    `<li class="${career.current ? 'current' : ''}"><img src="${escapeHtml(careerIconAsset(career.id))}" alt="" aria-hidden="true" draggable="false"><span>${escapeHtml(career.name)}</span><b>Lv.${career.level}</b></li>`).join('')
-  return `<section class="dossier-sec career-dossier" data-testid="hero-career-panel">
-    <header><div class="sec-title"><h2>当前职业</h2><span class="sub">其贰 · ${escapeHtml(hero.careerTier)} · <i>${escapeHtml(hero.skillTypeNames.join(' / ') || '通用')}</i></span></div></header>
-    <div class="sec-body">
-      <div class="career-now">
-        <img class="cn-icon" src="${escapeHtml(careerIconAsset(hero.careerId))}" alt="" aria-hidden="true" draggable="false">
-        <div class="cn-copy">
-          <span class="cn-tier">${escapeHtml(hero.careerTier)}</span>
-          <strong class="cn-name">${escapeHtml(hero.careerName)}</strong>
-          <span class="cn-lv">职业 <b>Lv.${hero.careerLevel}</b></span>
-        </div>
-        <div class="cn-xp"><span>${xpText}</span><span class="cn-bar" aria-hidden="true"><i style="width:${ratio.toFixed(1)}%"></i></span></div>
+    `<div class="hc-cell${career.current ? ' current' : ''}"><img src="${escapeHtml(careerIconAsset(career.id))}" alt="" aria-hidden="true" draggable="false"><b>${escapeHtml(career.name)}</b><small>Lv.${career.level}${career.current ? ' · 当前' : ''}</small></div>`).join('')
+  return `<div class="hc-wrap" data-testid="hero-career-panel">
+    <section class="hc-now">
+      <div class="hc-title">当前职业<small>${escapeHtml(hero.careerTier)}</small></div>
+      <div class="hc-main">
+        <img class="hc-icon" src="${escapeHtml(careerIconAsset(hero.careerId))}" alt="" aria-hidden="true" draggable="false">
+        <div class="hc-names"><b>${escapeHtml(hero.careerName)}</b><span>可用技能 · ${escapeHtml(hero.skillTypeNames.join('、') || '通用')}</span></div>
+        <b class="hc-lv">Lv.${hero.careerLevel}</b>
       </div>
-      <div class="cn-skills">可用技能类型 · <b>${escapeHtml(hero.skillTypeNames.join('、') || '通用')}</b></div>
       ${renderGrowthGrid(hero.growth)}
-      <div class="learned-careers">
-        <div class="lc-head"><span>已修职业</span><b>${hero.learnedCareers.length}</b></div>
-        <ul>${learned}</ul>
-      </div>
-      <div class="career-actions"><button type="button" class="btn-career-tree" data-action="open-career-tree" data-hero-id="${escapeHtml(hero.id)}" data-testid="open-career-tree">转职</button></div>
-    </div>
-  </section>`
+      <div class="hc-xp"><span class="gl-label">经验</span>${renderXpBar(hero.careerExperience, hero.careerExperienceRequired, hero.careerMaxed, ' xp')}<span class="gl-num">${escapeHtml(xpText)}</span></div>
+    </section>
+    <section class="hc-learned">
+      <div class="hc-title">已修职业<small>${hero.learnedCareers.length}</small></div>
+      <div class="hc-grid">${learned || '<div class="hc-none">尚未修习任何职业</div>'}</div>
+    </section>
+    <footer class="hc-foot"><button type="button" class="btn-career-tree" data-action="open-career-tree" data-hero-id="${escapeHtml(hero.id)}" data-testid="open-career-tree">转职</button></footer>
+  </div>`
 }
 
 const treePoint = (node: CareerTreeNodeView): { x: number; y: number } => ({
@@ -380,11 +418,11 @@ const renderPrototypeRoster = (view: HeroesPageViewModel): string => {
 }
 
 const renderEquipmentTooltip = (item: InventoryItemView, footer: string): string => `
-  <div class="equipment-tooltip" popover="manual">
+  <div class="equipment-tooltip" popover="manual" data-rarity="${item.quality}">
     <header>
-      <span>${escapeHtml(item.slotName)}</span>
+      <span>${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</span>
       <strong>${escapeHtml(item.name)}</strong>
-      <em>品质 ${item.quality} · 物品等级 Lv.${item.level} · 穿戴等级 Lv.${item.equipmentLevel}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</em>
+      <em>品质 <b class="tt-q">${escapeHtml(EQUIPMENT_QUALITY_NAMES[item.quality])}</b> · 物品等级 Lv.${item.level} · 穿戴等级 Lv.${item.equipmentLevel}</em>
     </header>
     <div class="equipment-tooltip-columns">
       <section>
@@ -399,104 +437,106 @@ const renderEquipmentTooltip = (item: InventoryItemView, footer: string): string
     <footer>${escapeHtml(footer)}</footer>
   </div>`
 
-const renderEquipmentSection = (hero: HeroesHeroView, equipment: HeroesEquipmentView): string => {
-  const slots = equipment.slots.map((entry) => {
-    const item = entry.item
-    const empty = !item
-    const icon = equipmentIconAsset(entry.slot, item?.definitionId)
-    return `<article class="pd-slot pd-pos-${entry.slot}${empty ? ' empty' : ' equipped hero-equipment-slot'}"
-      ${item ? `data-rarity="${item.quality}" data-equipment-uid="${escapeHtml(item.uid)}"` : ''} data-slot="${entry.slot}">
-      <span class="pd-icon">${EQUIPMENT_SLOT_MARKS[entry.slot]}</span>
-      ${item ? `<img class="equipment-art" src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}">` : ''}
-      <span class="pd-slot-name">${EQUIPMENT_SLOT_NAMES[entry.slot]}</span>
-      <strong class="pd-item-name">${item ? escapeHtml(item.name) : '虚位以待'}</strong>
-      <span class="pd-item-meta">${item ? `品质 ${item.quality} · 装等 ${item.level}` : '未装备'}</span>
-      ${item ? `<button type="button" class="pd-unequip" data-action="equipment-unequip" data-hero-id="${escapeHtml(hero.id)}" data-slot="${entry.slot}">卸下</button>` : ''}
-      ${item ? renderEquipmentTooltip(item, hero.level < item.equipmentLevel ? `需人物 Lv.${item.equipmentLevel} 方可穿戴` : '双击行囊中物品，可替换此位') : ''}
-    </article>`
-  }).join('')
-  return `<section class="dossier-sec" data-testid="hero-equipment-slots">
-    <header><div class="sec-title"><h2>随身装备</h2><span class="sub">其贰 · 八部位 · <i>三套方案</i></span></div></header>
-    <div class="sec-body pd-grid">
-      <div class="pd-sil">
-        <span class="sil-char">${escapeHtml(hero.category ?? '侠')}</span>
-        <span class="sil-dantian" aria-hidden="true"></span>
-        <div class="sil-sum"><span>穿戴 <b>${equipment.wornCount} / 8</b></span><span>均装等 <b>${equipment.averageItemLevel}</b></span></div>
-        <span class="sil-cap">立身中正 · 气沉丹田</span>
-      </div>
-      ${slots}
-      <div class="pd-sets">
-        <div class="pd-ilvl">当前方案均装等 <b>${equipment.averageItemLevel}</b></div>
-        <div class="pd-set-row">
-          ${[0, 1, 2].map((index) => `<button type="button" class="pd-set-btn${equipment.setIndex === index ? ' active' : ''}"
-            data-action="equipment-set-switch" data-hero-id="${escapeHtml(hero.id)}" data-set-index="${index}"
-            data-testid="equipment-set-${index}">第${index + 1}套</button>`).join('')}
-        </div>
-        <p class="pd-set-hint">人物等级低于穿戴等级时不能穿戴</p>
-      </div>
-    </div>
-  </section>`
+const renderEquipmentSlot = (hero: HeroesHeroView, entry: HeroEquipmentSlotView): string => {
+  const item = entry.item
+  const icon = equipmentIconAsset(entry.slot, item?.definitionId)
+  return `<article class="eq-slot${item ? ' hero-equipment-slot' : ' empty'}"
+    ${item ? `data-rarity="${item.quality}" data-equipment-uid="${escapeHtml(item.uid)}"` : ''} data-slot="${entry.slot}">
+    <span class="eq-box">${item
+      ? `<img class="equipment-art" src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}">`
+      : `<span class="eq-mark" aria-hidden="true">${EQUIPMENT_SLOT_MARKS[entry.slot]}</span>`}</span>
+    <span class="eq-slot-name">${EQUIPMENT_SLOT_NAMES[entry.slot]}</span>
+    ${item ? `<button type="button" class="eq-unequip" data-action="equipment-unequip" data-hero-id="${escapeHtml(hero.id)}" data-slot="${entry.slot}" aria-label="卸下${escapeHtml(item.name)}">卸</button>` : ''}
+    ${item ? renderEquipmentTooltip(item, hero.level < item.equipmentLevel ? `需人物 Lv.${item.equipmentLevel} 方可穿戴` : '双击行囊中物品，可替换此位') : ''}
+  </article>`
 }
+
+const renderEquipmentTab = (hero: HeroesHeroView, equipment: HeroesEquipmentView): string => {
+  const bySlot = new Map(equipment.slots.map((entry) => [entry.slot, entry]))
+  const column = (slots: EquipmentSlot[]): string =>
+    slots.map((slot) => renderEquipmentSlot(hero, bySlot.get(slot) ?? { slot, item: null })).join('')
+  const gradeLabel = hero.grade === '主' ? '天命主角' : `${hero.grade}品侠客`
+  return `<div class="hero-equip" data-testid="hero-equipment-slots">
+    <header class="eq-head">
+      <b class="eq-name">${escapeHtml(hero.name)}</b>
+      <span class="eq-lv">Lv.${hero.level}</span>
+      <span class="eq-sub">${escapeHtml(hero.careerName)} · ${escapeHtml(gradeLabel)}</span>
+    </header>
+    <div class="eq-wrap">
+      <div class="eq-col">${column(EQUIP_LEFT_SLOTS)}</div>
+      <div class="eq-stand">
+        <img class="eq-figure-img" src="${escapeHtml(heroStandFigure)}" alt="" aria-hidden="true" draggable="false">
+        <div class="eq-disc" aria-hidden="true"></div>
+      </div>
+      <div class="eq-col">${column(EQUIP_RIGHT_SLOTS)}</div>
+    </div>
+    <footer class="eq-foot">
+      <div class="eq-sets">
+        ${[0, 1, 2].map((index) => `<button type="button" class="eq-set-btn${equipment.setIndex === index ? ' active' : ''}"
+          data-action="equipment-set-switch" data-hero-id="${escapeHtml(hero.id)}" data-set-index="${index}"
+          data-testid="equipment-set-${index}">第${index + 1}套</button>`).join('')}
+      </div>
+      <span class="eq-hint">双击行囊物品直接换装 · 悬停槽位看详情</span>
+    </footer>
+  </div>`
+}
+
+const renderMainTabs = (view: HeroesPageViewModel, hero: HeroesHeroView): string => `
+  <nav class="hero-htabs" aria-label="侠客资料分页">
+    ${HERO_MAIN_TABS.map(({ tab, label }) => `<button type="button" class="htab${view.mainTab === tab ? ' active' : ''}" data-action="hero-main-tab" data-main-tab="${tab}" aria-pressed="${view.mainTab === tab}">${label}</button>`).join('')}
+  </nav>
+  <div class="hero-tab-panel" data-main-tab="basic"${view.mainTab === 'basic' ? '' : ' hidden'}>${renderBasicTab(hero)}</div>
+  <div class="hero-tab-panel" data-main-tab="equipment"${view.mainTab === 'equipment' ? '' : ' hidden'}>${view.equipment ? renderEquipmentTab(hero, view.equipment) : ''}</div>
+  <div class="hero-tab-panel" data-main-tab="career"${view.mainTab === 'career' ? '' : ' hidden'}>${renderCareerTab(hero)}</div>`
 
 const renderPackRail = (view: HeroesPageViewModel): string => {
   const pack = view.pack
   if (!pack) return ''
   const slotIds: Array<'all' | EquipmentSlot> = ['all', ...EQUIPMENT_SLOTS]
-  const slotChips = slotIds.map((id) => id === 'all'
-    ? `<button type="button" class="fchip${pack.slotFilter === 'all' ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="all">全</button>`
-    : `<button type="button" class="fchip seal${pack.slotFilter === id ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="${id}" title="${EQUIPMENT_SLOT_NAMES[id]}">${EQUIPMENT_SLOT_MARKS[id]}</button>`).join('')
+  const strip = slotIds.map((id) => id === 'all'
+    ? `<button type="button" class="strip-btn${pack.slotFilter === 'all' ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="all" title="全部">全</button>`
+    : `<button type="button" class="strip-btn${pack.slotFilter === id ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="${id}" title="${EQUIPMENT_SLOT_NAMES[id]}">${PACK_STRIP_MARKS[id]}</button>`).join('')
   const qualityChips = (['all', ...EQUIPMENT_QUALITIES] as const).map((quality) => quality === 'all'
-    ? `<button type="button" class="fchip${pack.qualityFilter === 'all' ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="all">全</button>`
-    : `<button type="button" class="fchip qc${pack.qualityFilter === quality ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${quality}</button>`).join('')
-  const batchPanel = pack.batchOpen ? `<div class="batch-panel">
-      <p class="bp-tip">择一品质为界，<b>含该品质以下</b>尽数丢弃；已装备与已锁定者不受影响。</p>
-      <div class="chip-row">${EQUIPMENT_QUALITIES.map((quality) => `<button type="button" class="fchip danger qc${pack.batchQuality === quality ? ' active' : ''}" data-action="hero-batch-discard-filter" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${quality}</button>`).join('')}</div>
-      <p class="bp-count">${pack.batchQuality === 'all' ? '尚未择定品质' : `将丢弃 <b>${pack.batchCount}</b> 件装备`}</p>
-      <div class="bp-btns">
-        <button type="button" class="pc-yes" data-action="confirm-batch-discard" ${pack.batchQuality === 'all' || pack.batchCount === 0 ? 'disabled' : ''}>确认丢弃</button>
-        <button type="button" class="pc-no" data-action="cancel-batch-discard">收手</button>
-      </div>
+    ? `<button type="button" class="qchip${pack.qualityFilter === 'all' ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="all">全部</button>`
+    : `<button type="button" class="qchip${pack.qualityFilter === quality ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${EQUIPMENT_QUALITY_NAMES[quality]}</button>`).join('')
+  const sellPanel = pack.sellOpen ? `<div class="sellpop">
+      <div class="sp-title">按等阶售出<small>点档位立即售出 ≤ 该档的未装备物品</small></div>
+      ${EQUIPMENT_QUALITIES.map((quality) => `<button type="button" class="sp-opt" data-action="hero-sell-quality" data-quality="${quality}" style="color:var(--q-${quality})">${EQUIPMENT_QUALITY_NAMES[quality]}及以下</button>`).join('')}
     </div>` : ''
-  const rows = pack.items.map((item, index) => {
+  const cells = pack.items.map((item) => {
     const icon = equipmentIconAsset(item.slot, item.definitionId)
     return `
-      <button type="button" class="pack-row${item.current ? ' current' : item.occupied ? ' occupied' : ''}" data-quality="${item.quality}"
-        data-equipment-uid="${escapeHtml(item.uid)}" data-testid="hero-pack-${escapeHtml(item.uid)}" style="--row-delay:${index * 35}ms"
+      <button type="button" class="pack-cell" data-quality="${item.quality}" style="--qc:var(--q-${item.quality})"
+        data-equipment-uid="${escapeHtml(item.uid)}" data-testid="hero-pack-${escapeHtml(item.uid)}"
         aria-label="${escapeHtml(item.name)}">
-        <span class="pr-icon"><img src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}"></span>
-        <span class="pr-body">
-          <span class="pr-name">${escapeHtml(item.name)}${item.locked ? ' <span class="pack-lock">锁</span>' : ''}</span>
-          <span class="pr-meta"><span class="pr-q">品质 ${item.quality}</span> · 装等 ${item.level}${item.current ? ' · <span class="pr-owner">已装备</span>' : item.ownerName ? ` · <span class="pr-owner">${escapeHtml(item.ownerName)}</span>` : ''}</span>
-        </span>
-        <span class="pr-slot-tag">${escapeHtml(item.slotName)}</span>
-        ${renderEquipmentTooltip(item, item.current ? '正穿于当前侠客' : item.ownerName ? `由 ${item.ownerName} 穿戴 · 双击仍可换装` : '双击左键，为当前侠客装备')}
+        ${item.locked ? '<span class="pk-lock">锁</span>' : ''}
+        <img src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}">
+        <span class="pk-lv">Lv.${item.level}</span>
+        ${renderEquipmentTooltip(item, '双击左键，为当前侠客装备')}
       </button>`
   }).join('')
   const pages = Array.from({ length: pack.pageCount }, (_, index) => index + 1)
   return `<aside class="pack-rail hero-inventory-panel" data-testid="hero-inventory-panel">
     <div class="pack-inner">
       <header class="pack-head">
-        <div class="sec-title"><h2>行囊</h2></div>
-        <div class="pack-cap">
-          <div><b>${pack.itemCount}</b> <span>/ ${pack.capacity}</span></div>
-          <div class="cap-bar"><i style="width:${Math.max(2, Math.min(100, pack.itemCount / pack.capacity * 100))}%"></i></div>
-        </div>
+        <div class="sec-title"><h2>行囊</h2><span class="sub">仅未装备</span></div>
+        <div class="pack-cap"><b>${pack.itemCount}</b><span> / ${pack.capacity}</span></div>
       </header>
-      <div class="pack-chips">
-        <div class="chip-row"><span class="chip-label">部位</span>${slotChips}</div>
-        <div class="chip-row"><span class="chip-label">品质</span>${qualityChips}</div>
-      </div>
       <div class="pack-tool-btns">
         <button type="button" class="pk-btn" data-action="organize-hero-inventory">整理</button>
-        <button type="button" class="pk-btn danger" data-action="request-batch-discard">${pack.batchOpen ? '收起丢弃' : '批量丢弃'}</button>
+        <button type="button" class="pk-btn danger${pack.sellOpen ? ' active' : ''}" data-action="hero-sell-toggle">按等阶售出</button>
       </div>
-      ${batchPanel}
-      <div class="pack-list">${rows || '<div class="pack-empty"><strong>行囊空空</strong><span>调整筛选，或往江湖战斗获取</span></div>'}</div>
+      <div class="qchips">${qualityChips}</div>
+      <div class="packbody">
+        <div class="pack-grid">${cells || '<div class="pack-empty"><strong>行囊空空</strong><span>调整筛选，或往江湖战斗获取</span></div>'}</div>
+        <div class="slotstrip">${strip}</div>
+      </div>
+      ${sellPanel}
       <nav class="pack-page" aria-label="行囊分页">
-        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page - 1}" ${pack.page <= 1 ? 'disabled' : ''}>上一页</button>
+        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page - 1}" ${pack.page <= 1 ? 'disabled' : ''}>‹</button>
         <div class="pg-nums">${pages.map((page) => `<button type="button" class="pg-num${page === pack.page ? ' active' : ''}" data-action="hero-pack-page" data-page="${page}">${page}</button>`).join('')}</div>
-        <span class="pack-page-status">${pack.page}/${pack.pageCount} · ${pack.items.length}件</span>
-        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page + 1}" ${pack.page >= pack.pageCount ? 'disabled' : ''}>下一页</button>
+        <span class="pack-page-status">第 ${pack.page} / ${pack.pageCount} 页</span>
+        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page + 1}" ${pack.page >= pack.pageCount ? 'disabled' : ''}>›</button>
       </nav>
       <footer class="pack-foot">悬停查看属性笺 · 双击为当前侠客装备</footer>
     </div>
@@ -510,14 +550,13 @@ export const renderHeroesPage = (view: HeroesPageViewModel): string => {
   return `<section class="heroes-page" data-testid="heroes-page">
     <span class="ghost-char ghost-roster" aria-hidden="true">侠</span>
     <span class="ghost-char ghost-pack" aria-hidden="true">囊</span>
-    <header class="page-head heroes-page-head"><div><p class="crumb">侠客 · <b>点将谱</b> · 群侠列传</p><h1>侠客</h1><p class="latin">Heroes · The Roster &amp; Records</p></div></header>
     <div class="heroes-stage">
-      <aside class="roster-rail hero-roster" data-testid="hero-roster-panel"><div class="roster-inner"><header class="roster-head"><div class="sec-title"><h2>点将谱</h2></div><div class="roster-head-right"><button type="button" class="btn-locate" data-action="locate-hero">定位</button><div class="roster-count"><b>${total}</b><span>${rosterCount === total ? '在队' : '筛中 / ' + total}</span></div></div></header>
+      <aside class="roster-rail hero-roster" data-testid="hero-roster-panel"><div class="roster-inner"><header class="roster-head"><div class="sec-title"><h2>点将谱</h2></div><div class="roster-head-right"><button type="button" class="btn-locate" data-action="locate-hero">定位</button><div class="roster-count"><span>${rosterCount === total ? '在队' : '筛中'}</span><b>${rosterCount === total ? total : `${rosterCount} / ${total}`}</b></div></div></header>
         <div class="roster-search-row"><input type="search" class="roster-search" data-action="hero-roster-search" value="${escapeHtml(view.rosterQuery ?? '')}" placeholder="以名相寻…" autocomplete="off" aria-label="搜索侠客">${renderPrototypeRosterFilters(view)}</div>
         <div class="roster-list" data-testid="hero-roster-list">${renderPrototypeRoster(view)}</div><footer class="roster-foot">品级印 <b>丙乙甲地天</b> · 点将即阅其列传</footer>
       </div></aside>
       <section class="dossier hero-workbench" data-testid="selected-hero">${selected
-        ? renderPrototypeHeroHead(selected) + renderHeroStats(selected) + (view.equipment ? renderEquipmentSection(selected, view.equipment) : '') + renderCurrentCareer(selected)
+        ? renderMainTabs(view, selected)
         : '<section class="dossier-sec hero-empty"><strong>尚无侠客</strong><span>前往城市酒馆直接邀请。</span></section>'}</section>
       ${renderPackRail(view)}
     </div>

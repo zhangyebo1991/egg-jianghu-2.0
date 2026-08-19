@@ -5,8 +5,10 @@ import {
   discardEquipment,
   discardEquipmentByQuality,
   equipEquipment,
+  equipmentSellPrice,
   INVENTORY_CAPACITY,
   organizeInventory,
+  sellEquipmentByQuality,
   switchEquipmentSet,
   unequipEquipment,
 } from './inventory'
@@ -228,6 +230,58 @@ describe('装备背包', () => {
 
       expect(result.ok).toBe(true)
       expect(state.inventory).toHaveLength(0)
+    })
+  })
+
+  describe('按等阶售出', () => {
+    it('单件售价按原版公式：max(round((10+物品等级)×2.5^品质×10×0.4), 1)', () => {
+      expect(equipmentSellPrice({ ...equipment('p0', 0), level: 1 })).toBe(44)
+      expect(equipmentSellPrice({ ...equipment('p1', 1), level: 1 })).toBe(110)
+      expect(equipmentSellPrice({ ...equipment('p2', 2), level: 1 })).toBe(275)
+      expect(equipmentSellPrice({ ...equipment('p9', 9), level: 1 })).toBe(167847)
+    })
+
+    it('售出低于等于阈值的装备并按当前位面结算铜钱', () => {
+      const state = createInitialStateV10()
+      state.inventory = [
+        equipment('a', 0),
+        equipment('b', 1),
+        equipment('c', 2),
+      ]
+      const before = state.worldCurrency.world_01
+
+      const result = sellEquipmentByQuality(state, 1, 'world_01')
+
+      expect(result).toEqual({ ok: true, message: '已售出 2 件装备，获得铜钱 154' })
+      expect(state.inventory.map((item) => item.uid)).toEqual(['c'])
+      expect(state.worldCurrency.world_01).toBe(before + 154)
+    })
+
+    it('跳过已锁定与已穿戴装备', () => {
+      const state = createNewGameStateV10('测试')
+      state.inventory = [
+        { ...equipment('locked', 0), locked: true },
+        equipment('worn', 0),
+        equipment('free', 0),
+      ]
+      state.heroes.hero_player.equipmentBySlot.weapon = 'worn'
+
+      const result = sellEquipmentByQuality(state, 0, 'world_01')
+
+      expect(result.ok).toBe(true)
+      expect(state.inventory.map((item) => item.uid)).toEqual(['locked', 'worn'])
+    })
+
+    it('无可售出装备时返回失败提示且不改变库存与铜钱', () => {
+      const state = createInitialStateV10()
+      state.inventory = [equipment('high', 3)]
+      const before = state.worldCurrency.world_01
+
+      const result = sellEquipmentByQuality(state, 1, 'world_01')
+
+      expect(result).toEqual({ ok: false, message: '没有可售出的装备' })
+      expect(state.inventory).toHaveLength(1)
+      expect(state.worldCurrency.world_01).toBe(before)
     })
   })
 

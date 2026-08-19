@@ -61,7 +61,7 @@ import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
-import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipmentOwnerId, INVENTORY_CAPACITY, organizeInventory, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, averageItemLevel, bindActiveEquipmentLoadout } from './domain/inventory'
+import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, INVENTORY_CAPACITY, organizeInventory, sellEquipmentByQuality, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, bindActiveEquipmentLoadout } from './domain/inventory'
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
@@ -127,7 +127,7 @@ import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPa
 import type { FactionExchangeViewModel } from './ui/faction-exchange'
 import type { FactionRecruitmentViewModel } from './ui/faction-recruitment'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
-import { renderHeroesPage, type HeroesHeroView, type HeroesPageViewModel } from './ui/heroes-page'
+import { renderHeroesPage, type HeroesHeroView, type HeroesMainTab, type HeroesPageViewModel } from './ui/heroes-page'
 import {
   renderIdlePage,
   type IdleCombatEffectKind,
@@ -183,8 +183,8 @@ let selectedProgressionEquipmentUid: string | null = null
 let heroPackSlotFilter: EquipmentSlot | 'all' = 'all'
 let heroPackQualityFilter: EquipmentQuality | 'all' = 'all'
 let heroPackPage = 1
-let heroBatchDiscardQuality: EquipmentQuality | 'all' = 'all'
-let showBatchDiscardConfirm = false
+let heroMainTab: HeroesMainTab = 'basic'
+let heroSellOpen = false
 let heroRosterQuery = ''
 let heroRosterGradeFilter = 'all'
 let heroRosterCategoryFilter = 'all'
@@ -240,7 +240,7 @@ let factionAgentFocusPending = false
 let factionContributionAnimation: FactionContributionAnimation | null = null
 let factionMotionTimer: number | null = null
 
-const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item, .pack-row, .pd-slot'
+const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item, .pack-row, .pd-slot, .pack-cell'
 const EQUIPMENT_TOOLTIP_GAP = 10
 const EQUIPMENT_TOOLTIP_VIEWPORT_PADDING = 12
 
@@ -568,8 +568,8 @@ const enterPlaying = (nextSession: GameSession): void => {
   heroPackSlotFilter = 'all'
   heroPackQualityFilter = 'all'
   heroPackPage = 1
-  heroBatchDiscardQuality = 'all'
-  showBatchDiscardConfirm = false
+  heroMainTab = 'basic'
+  heroSellOpen = false
   heroRosterQuery = ''
   heroRosterGradeFilter = 'all'
   heroRosterCategoryFilter = 'all'
@@ -842,6 +842,8 @@ const heroesViewModel = (): HeroesPageViewModel => {
       grade: definition.source === 'starter' ? '主' : definition.grade,
       recruited: progress.recruited,
       level: progress.level,
+      experience: progress.experience,
+      experienceRequired: progress.level * 100,
       careerId: progress.currentCareerId,
       careerName: career?.name ?? progress.currentCareerId,
       careerLevel: record?.level ?? 1,
@@ -926,8 +928,6 @@ const heroesViewModel = (): HeroesPageViewModel => {
     ? {
       heroId: selectedId,
       setIndex: selectedHero.activeEquipmentSetIndex,
-      averageItemLevel: averageItemLevel(selectedHero, session.state.inventory),
-      wornCount: EQUIPMENT_SLOTS.filter((slot) => Boolean(loadout[slot])).length,
       slots: EQUIPMENT_SLOTS.map((slot) => {
         const uid = loadout[slot]
         const instance = uid ? session.state.inventory.find((item) => item.uid === uid) : undefined
@@ -936,49 +936,32 @@ const heroesViewModel = (): HeroesPageViewModel => {
     }
     : null
 
-  const packSource = session.state.inventory.filter((item) => {
+  // 行囊只陈列未穿戴装备（对齐原版：已装备不入行囊）
+  const backpackAll = backpackEquipment(session.state)
+  const packSource = backpackAll.filter((item) => {
     const view = inventoryItemView(item)
     if (heroPackSlotFilter !== 'all' && view.slot !== heroPackSlotFilter) return false
     if (heroPackQualityFilter !== 'all' && item.quality !== heroPackQualityFilter) return false
     return true
   })
-  const packPageSize = 8
+  const packPageSize = 18
   const packPageCount = Math.max(1, Math.ceil(packSource.length / packPageSize))
   heroPackPage = Math.min(packPageCount, Math.max(1, heroPackPage))
   const packPageItems = packSource.slice((heroPackPage - 1) * packPageSize, heroPackPage * packPageSize)
   const pack = {
     capacity: INVENTORY_CAPACITY,
-    itemCount: backpackEquipment(session.state).length,
+    itemCount: backpackAll.length,
     slotFilter: heroPackSlotFilter,
     qualityFilter: heroPackQualityFilter,
     page: heroPackPage,
     pageCount: packPageCount,
-    items: packPageItems.map((item) => {
-      const view = inventoryItemView(item)
-      const ownerId = equipmentOwnerId(session.state, item.uid)
-      const ownerDefinition = ownerId ? heroByIdV10(ownerId) : undefined
-      const ownerProgress = ownerId ? session.state.heroes[ownerId] : undefined
-      return {
-        ...view,
-        ownerName: ownerDefinition && ownerProgress ? heroDisplayNameV10(ownerDefinition, ownerProgress) : null,
-        current: ownerId === selectedId,
-        occupied: Boolean(ownerId),
-      }
-    }),
-    batchOpen: showBatchDiscardConfirm,
-    batchQuality: heroBatchDiscardQuality,
-    batchCount: (() => {
-      if (heroBatchDiscardQuality === 'all') return 0
-      const maxQuality = heroBatchDiscardQuality
-      return session.state.inventory.filter((item) =>
-        item.quality <= maxQuality
-        && !item.locked
-        && !equipmentOwnerId(session.state, item.uid)).length
-    })(),
+    items: packPageItems.map((item) => inventoryItemView(item)),
+    sellOpen: heroSellOpen,
   }
 
   return {
     selectedHeroId: selectedId,
+    mainTab: heroMainTab,
     heroes,
     rosterHeroes,
     rosterQuery: heroRosterQuery,
@@ -2157,7 +2140,7 @@ window.addEventListener('resize', positionOpenEquipmentTooltip)
 app.addEventListener('pointerover', (event) => {
   const target = event.target
   if (!(target instanceof Element)) return
-  const chip = target.closest<HTMLElement>('.st-chip[data-stat-label]')
+  const chip = target.closest<HTMLElement>('[data-stat-label]')
   if (chip) {
     const label = chip.dataset.statLabel ?? ''
     const desc = STAT_DESC[label]
@@ -2175,7 +2158,7 @@ app.addEventListener('pointerover', (event) => {
 app.addEventListener('pointerout', (event) => {
   const target = event.target
   if (!(target instanceof Element)) return
-  const anchor = target.closest<HTMLElement>('.st-chip[data-stat-label], [data-apt-label]')
+  const anchor = target.closest<HTMLElement>('[data-stat-label], [data-apt-label]')
   if (!anchor || anchor !== statTooltipAnchor) return
   if (event.relatedTarget instanceof Node && anchor.contains(event.relatedTarget)) return
   hideStatTooltip()
@@ -2378,23 +2361,19 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'equipment-set-switch') commitAction(switchEquipmentSet(session.state, heroId, dataNumber(button, 'setIndex')))
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
   else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
-  else if (action === 'hero-batch-discard-filter') {
-    const value = Number(button.dataset.filterValue)
-    heroBatchDiscardQuality = isEquipmentQuality(value) ? value : 'all'
-    showBatchDiscardConfirm = heroBatchDiscardQuality !== 'all'
+  else if (action === 'hero-main-tab') {
+    const tab = button.dataset.mainTab
+    if (tab === 'basic' || tab === 'equipment' || tab === 'career') heroMainTab = tab
   }
-  else if (action === 'request-batch-discard') {
-    showBatchDiscardConfirm = !showBatchDiscardConfirm
-    heroBatchDiscardQuality = 'all'
-  } else if (action === 'cancel-batch-discard') {
-    showBatchDiscardConfirm = false
-    heroBatchDiscardQuality = 'all'
-  } else if (action === 'confirm-batch-discard') {
-    if (heroBatchDiscardQuality !== 'all') {
-      commitAction(discardEquipmentByQuality(session.state, heroBatchDiscardQuality))
-      showBatchDiscardConfirm = false
-      heroBatchDiscardQuality = 'all'
+  else if (action === 'hero-sell-toggle') {
+    heroSellOpen = !heroSellOpen
+  }
+  else if (action === 'hero-sell-quality') {
+    const quality = Number(button.dataset.quality)
+    if (isEquipmentQuality(quality)) {
+      commitAction(sellEquipmentByQuality(session.state, quality, selectedWorldId || selectedPlaneId))
     }
+    heroSellOpen = false
   } else if (action === 'progression-section') {
     const section = button.dataset.section as ProgressionSection
     if (['dungeons', 'beasts', 'divine', 'forge', 'interworld'].includes(section)) progressionSection = section
@@ -2507,14 +2486,7 @@ app.addEventListener('change', (event) => {
   const target = event.target as HTMLElement
   const select = target.closest<HTMLSelectElement>('[data-action="select-hero-input"]')
   if (select) selectedHeroId = select.value || null
-  const batchDiscardSelect = target.closest<HTMLSelectElement>('[data-batch-discard-quality]')
-  if (batchDiscardSelect) {
-    const value = batchDiscardSelect.value
-    const quality = Number(value)
-    heroBatchDiscardQuality = value === 'all' ? 'all' : isEquipmentQuality(quality) ? quality : 'all'
-    showBatchDiscardConfirm = false
-  }
-  if (!select && !batchDiscardSelect) return
+  if (!select) return
   render()
 })
 
@@ -2672,6 +2644,10 @@ app.addEventListener('click', (event) => {
   if (factionRosterOpen && !target.closest('.faction-disciple')) {
     factionRosterOpen = false
     factionRosterQuery = ''
+  }
+  // 按等阶售出下拉：点弹窗与触发按钮以外的区域即收起
+  if (heroSellOpen && !target.closest('.sellpop') && !target.closest('[data-action="hero-sell-toggle"]')) {
+    heroSellOpen = false
   }
   const tab = target.closest<HTMLElement>('[data-tab]')?.dataset.tab as TabId | undefined
   if (tab) {
