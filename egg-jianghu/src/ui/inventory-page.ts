@@ -71,6 +71,11 @@ export interface InventoryShopView {
 }
 
 export interface InventoryPageViewModel {
+  category?: 'all' | 'equipment' | 'material' | 'special'
+  query?: string
+  categoryCounts?: Record<'all' | 'equipment' | 'material' | 'special', number>
+  stacks?: InventoryStackView[]
+  selectedStack?: InventoryStackView | null
   worldName: string
   capacity: number
   itemCount: number
@@ -84,6 +89,31 @@ export interface InventoryPageViewModel {
   selectedItem: InventoryItemView | null
   shop: InventoryShopView
 }
+
+export interface InventoryStackView {
+  id: number
+  name: string
+  kind: 'material' | 'special'
+  quality: number
+  quantity: number
+  description: string
+}
+
+const renderStack = (item: InventoryStackView, selectedId?: number): string => `
+  <button type="button" class="inventory-cell${selectedId === item.id ? ' selected' : ''}" data-rarity="${item.quality}"
+    data-action="inventory-stack-select" data-item-id="${item.id}" data-testid="stack-item-${item.id}"
+    aria-pressed="${selectedId === item.id}" aria-label="${escapeHtml(item.name)}，数量 ${item.quantity}">
+    <span class="inventory-cell-level">×${item.quantity.toLocaleString('zh-CN')}</span>
+    <span class="inventory-cell-icon inventory-stack-mark" aria-hidden="true">${item.kind === 'material' ? '材' : '物'}</span>
+    <span class="inventory-cell-name">${escapeHtml(item.name)}</span>
+    <span class="inventory-cell-slot">${item.kind === 'material' ? '材料' : '特殊物品'}</span>
+  </button>`
+
+const renderStackDetail = (item: InventoryStackView): string => `
+  <div class="inventory-appraise-head"><span class="inventory-slot-tag">${item.kind === 'material' ? '材料' : '特殊物品'}</span><span class="inventory-quality-tag" data-rarity="${item.quality}">品质 ${item.quality}</span></div>
+  <h2>${escapeHtml(item.name)}</h2><p>持有数量：<strong>${item.quantity.toLocaleString('zh-CN')}</strong></p>
+  <p class="inventory-original-description">${escapeHtml(item.description)}</p>
+  <p>${item.kind === 'material' ? '收集任务提交时会扣除所需数量。' : '在对应玩法中使用。'}</p>`
 
 const renderEquipmentIcon = (item: InventoryItemView): string => {
   const icon = equipmentIconAsset(item.slot, item.definitionId)
@@ -109,12 +139,12 @@ const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null
     <span class="inventory-cell-slot">${escapeHtml(item.slotName)}</span>
   </button>`
 
-const renderInventoryGrid = (view: InventoryPageViewModel): string => view.items.length
-  ? view.items.map((item) => renderInventoryCell(item, view.selectedUid)).join('')
+const renderInventoryGrid = (view: InventoryPageViewModel): string => view.items.length || view.stacks?.length
+  ? view.items.map((item) => renderInventoryCell(item, view.selectedUid)).join('') + (view.stacks ?? []).map(item => renderStack(item, view.selectedStack?.id)).join('')
   : `<div class="inventory-empty">
       <span class="inventory-empty-seal" aria-hidden="true">空</span>
       <strong>囊 中 无 物</strong>
-      <span>${view.itemCount ? '此部位暂未收得装备。' : '敌人殒命之时，随机装备即刻入囊。'}</span>
+      <span>暂无符合当前分类和搜索条件的物品。</span>
     </div>`
 
 const renderAffixes = (item: InventoryItemView): string => item.affixes.length
@@ -217,13 +247,13 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
   <header class="inventory-page-head">
     <div>
       <div class="inventory-crumb">行囊 · <b>即时掉落</b> · ${escapeHtml(view.worldName)}</div>
-      <h1>装备背包</h1>
+      <h1>背包</h1>
       <div class="inventory-latin">Inventory · Spoils of the Jianghu</div>
     </div>
     <div class="inventory-head-note">
       <span class="inventory-head-note-seal" aria-hidden="true">囊</span>
       <div class="inventory-head-note-copy">
-        <span>纯行囊之地 · <b>已装备不入此囊</b></span>
+        <span>装备 · 材料 · 特殊物品 · <b>已装备不入此囊</b></span>
         <small>穿戴与卸下 · 请往侠客页操办 · 坊市只卖转职书</small>
       </div>
     </div>
@@ -236,11 +266,11 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
         <header class="inventory-board-head">
           <div class="inventory-board-title">
             <h2>百宝囊</h2>
-            <span>敌人殒命 · <i>随机装备即刻入囊</i></span>
+            <span>战斗掉落入囊 · <i>材料与特殊物品自动堆叠</i></span>
           </div>
           <div class="inventory-board-side">
             <div class="inventory-capacity">
-              <span class="inventory-capacity-number"><b>${view.itemCount}</b> / ${view.capacity}</span>
+              <span class="inventory-capacity-number">装备 <b>${view.itemCount}</b> / ${view.capacity}</span>
               <span class="inventory-capacity-bar"><i style="width:${view.capacityRatio}%"></i></span>
             </div>
             <div class="inventory-actions">
@@ -249,18 +279,20 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
             </div>
           </div>
         </header>
-        <nav class="inventory-slot-tabs" aria-label="部位筛选">${renderSlotTabs(view)}</nav>
+        <nav class="inventory-slot-tabs" aria-label="物品分类">${(['all', 'equipment', 'material', 'special'] as const).map((category, index) => `<button type="button" class="inventory-slot-tab${(view.category ?? 'all') === category ? ' active' : ''}" data-action="inventory-category" data-category="${category}" aria-pressed="${(view.category ?? 'all') === category}">${['全部', '装备', '材料', '特殊物品'][index]}<small>${view.categoryCounts?.[category] ?? (category === 'all' || category === 'equipment' ? view.itemCount : 0)}</small></button>`).join('')}</nav>
+        <label class="inventory-search">搜索物品<input type="search" data-action="inventory-search" aria-label="搜索背包物品" placeholder="输入物品名称" value="${escapeHtml(view.query ?? '')}"></label>
+        ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="inventory-slot-tabs" aria-label="部位筛选">${renderSlotTabs(view)}</nav>` : ''}
         <div class="inventory-grid-wrap"><div class="inventory-grid">${renderInventoryGrid(view)}</div></div>
         <footer class="inventory-legend">
-          ${EQUIPMENT_QUALITIES.map((quality) => `<span data-quality="${quality}">品质 ${quality}<b>${view.qualityCounts[quality]}</b></span>`).join('')}
-          <span class="inventory-legend-total">共 ${view.itemCount} 件 · 囊容 ${view.capacity}</span>
+          ${(view.category ?? 'all') === 'all' || view.category === 'equipment' ? EQUIPMENT_QUALITIES.map((quality) => `<span data-quality="${quality}">品质 ${quality}<b>${view.qualityCounts[quality]}</b></span>`).join('') : ''}
+          <span class="inventory-legend-total">装备 ${view.itemCount} 件 · 堆叠物品不占装备格</span>
         </footer>
       </div>
     </section>
 
-    <aside class="inventory-appraise${view.detailOpen ? ' open' : ''}" data-testid="inventory-detail" aria-label="装备详情">
+    <aside class="inventory-appraise${view.detailOpen ? ' open' : ''}" data-testid="inventory-detail" aria-label="物品详情">
       <button type="button" class="inventory-appraise-close" data-action="inventory-close-detail" aria-label="关闭详情">✕</button>
-      <div class="inventory-appraise-paper">${renderSelectedDetail(view.selectedItem)}</div>
+      <div class="inventory-appraise-paper">${view.selectedStack ? renderStackDetail(view.selectedStack) : renderSelectedDetail(view.selectedItem)}</div>
     </aside>
   </div>
 

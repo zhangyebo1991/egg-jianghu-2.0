@@ -125,6 +125,7 @@ export class GameSession {
     this.expectedSaveSnapshot = expectedSaveSnapshot
     this.runtimeRng = createRng(state.lastSavedAt)
     this.combatRng = createRng(state.lastSavedAt)
+    for (const worldId of state.unlockedWorldIds) syncFactionUnlocks(state, worldId)
     this.ensureFactionBoards()
   }
 

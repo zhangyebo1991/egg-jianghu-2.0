@@ -49,6 +49,18 @@ const makePartyOverwhelming = (session: GameSession): void => {
 }
 
 describe('GameSession', () => {
+  it.each(['create', 'continue'] as const)('%s 载入旧档时补齐基础难度已达到的势力且可以保存', (entry) => {
+    const storage = memoryStorage()
+    const state = createNewGameStateV10('燕七', 1000)
+    state.clearedStageByWorldDifficulty['world_01:1'] = 3
+    saveGameV10(storage, state, 1000)
+    const session = GameSession[entry](storage, 2000)
+    expect(session.state.unlockedFactionIds).toEqual(['qingfeng_hall', 'tieyi_school'])
+    session.save(2000)
+    expect(GameSession.continue(storage, 3000).state.unlockedFactionIds)
+      .toEqual(['qingfeng_hall', 'tieyi_school'])
+  })
+
   it('新建游戏立即保存玩家角色和默认阵型', () => {
     const storage = memoryStorage()
 

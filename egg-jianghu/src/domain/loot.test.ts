@@ -1,111 +1,100 @@
 import { describe, expect, it } from 'vitest'
-import { equipmentDefinitionById, equipmentDisplayName, equipmentWearLevel, rollEquipmentLevel } from '../content/equipment'
-import { grantKillLoot, pickWeightedQuality, SET_PIECE_DROP_CHANCE, shouldDropSetPiece } from './loot'
+import { equipmentDefinitionById } from '../content/equipment'
+import { CAMPAIGN_LOOT_STAGES, CAMPAIGN_ENEMY_DROPS, CAMPAIGN_DROP_ITEMS, CAMPAIGN_MATERIALS } from '../content/campaign-loot.generated'
+import { campaignDropBonus, campaignDropChance, grantKillLoot, materialExtraQuality, pickWeightedQuality } from './loot'
 import { createInitialStateV10 } from './state'
 import { INVENTORY_CAPACITY } from './inventory'
+import { ORIGINAL_FACTION_RULES } from '../content/original-faction-rules.generated'
 
-describe('击杀掉落', () => {
-  it('小怪掉 1 件诸天具名装，不进转职书', () => {
-    const state = createInitialStateV10()
-    const added = grantKillLoot(state, {
-      worldId: 'world_01', difficulty: 1, stage: 1, rank: 'normal', seed: 11, enemyId: 'mob_1',
-    })
+const input = { worldId: 'world_01', difficulty: 1, stage: 1, rank: 'normal' as const, seed: 11, enemyId: 'world_01_stage_01_mob_1' }
 
-    expect(added).toHaveLength(1)
-    expect(state.inventory).toHaveLength(1)
-    expect(state.inventory[0].uid).toBe(added[0])
-    expect(state.inventory[0].definitionId.startsWith('wp_')).toBe(true)
-    const definition = equipmentDefinitionById(state.inventory[0].definitionId)
-    expect(['柴刀', '屠龙宝刀', '祝融灵珠', '小李飞刀']).not.toContain(definition?.name)
-    const displayName = equipmentDisplayName(definition!, state.inventory[0].affixes)
-    expect(displayName.includes('的') || displayName.includes('·')).toBe(true)
-    expect(state.inventory[0].level).toBe(rollEquipmentLevel('world_01', 1, 1, state.inventory[0].quality))
-    expect(state.inventory[0].equipmentLevel)
-      .toBe(equipmentWearLevel(state.inventory[0].level, state.inventory[0].quality))
-    expect(['铁爪', '皮帽', '项链', '文卷', '布帽', '护符', '长戟', '头盔', '铁甲', '长弓', '皮甲', '戒指', '古剑', '长衫', '扳指', '符箓']).toContain(definition?.name)
-    expect(Object.keys(state.jobBooks)).toEqual([])
-  })
-
-  it('地点套装只由首领按每件 15% 独立判定', () => {
-    expect(SET_PIECE_DROP_CHANCE).toBe(0.15)
-    expect(shouldDropSetPiece('normal', 0)).toBe(false)
-    expect(shouldDropSetPiece('elite', 0)).toBe(false)
-    expect(shouldDropSetPiece('boss', 0.149_999)).toBe(true)
-    expect(shouldDropSetPiece('boss', 0.15)).toBe(false)
-
-    for (const rank of ['normal', 'elite'] as const) {
-      for (let seed = 1; seed <= 100; seed += 1) {
-        const state = createInitialStateV10()
-        grantKillLoot(state, {
-          worldId: 'world_01', difficulty: 1, stage: 1, rank, seed, enemyId: rank,
-        })
-        expect(state.inventory.every((item) => !equipmentDefinitionById(item.definitionId)?.setName)).toBe(true)
+describe('原版普通位面掉落', () => {
+  it.each(Array.from({ length: 13 }, (_, i) => i + 1))('第 %i 世界十关所有敌人的物品及材料均能入库且不串池', (world) => {
+    const stages = CAMPAIGN_LOOT_STAGES.filter(s => s.worldId === `world_${String(world).padStart(2, '0')}`)
+    expect(stages).toHaveLength(10)
+    for (const quality of ORIGINAL_FACTION_RULES.tasks.targetPools.find(pool => pool.worldIndex === world)!.materialItemsByQuality) {
+      for (const target of quality.items) {
+        expect(stages.some(stage => stage.materials.some(slot => slot.family === target.family
+          && target.itemQuality >= slot.baseQuality && target.itemQuality <= slot.baseQuality + 3))).toBe(true)
       }
     }
-
-    const seenSetIds = new Set<string>()
-    for (let seed = 1; seed <= 200; seed += 1) {
-      const state = createInitialStateV10()
-      grantKillLoot(state, {
-        worldId: 'world_01', difficulty: 1, stage: 1, rank: 'boss', seed, enemyId: 'boss',
-      })
-      const setIdsInThisKill: string[] = []
-      for (const item of state.inventory) {
-        const definition = equipmentDefinitionById(item.definitionId)!
-        if (definition.setName === '鬼谋') {
-          seenSetIds.add(definition.id)
-          setIdsInThisKill.push(definition.id)
-          expect(item.quality).toBe(5)
-          expect(item.level).toBe(rollEquipmentLevel('world_01', 1, 1, 5))
-          expect(item.level).toBe(9)
-          expect(item.affixes).toHaveLength(3)
-        } else {
-          expect(item.level).toBe(rollEquipmentLevel('world_01', 1, 1, item.quality))
-        }
+    for (const stage of stages) for (const [index, enemyId] of stage.enemyIds.entries()) {
+      const state = createInitialStateV10(0)
+      // 概率推至上限，穷举每个原版表项的实际入库路径。
+      state.city.technologyLevels['65'] = 1_000_000
+      const enemyKey = `${stage.worldId}_stage_${String(stage.stage).padStart(2, '0')}_${index === 5 ? 'boss' : `mob_${index + 1}`}`
+      grantKillLoot(state, { ...input, worldId: stage.worldId, stage: stage.stage, enemyId: enemyKey, rank: index === 5 ? 'boss' : 'normal' })
+      const expected = CAMPAIGN_ENEMY_DROPS[enemyId].map(id => CAMPAIGN_DROP_ITEMS[id])
+      expect(state.inventory.map(i => i.definitionId)).toEqual(expected.filter(i => i.kind === 'equipment').map(i => `wp_${i.id}`))
+      for (const item of state.inventory) expect(equipmentDefinitionById(item.definitionId)).toBeDefined()
+      for (const item of expected.filter(i => i.kind === 'material')) expect(state.materials[String(item.id)]).toBe(1)
+      const entries = Object.entries(state.materials).filter(([id]) => Number(id) >= 11)
+      expect(entries.reduce((sum, [, count]) => sum + count, 0)).toBe(stage.materials.length)
+      for (const [id] of entries) {
+        const material = CAMPAIGN_MATERIALS.find(m => m.id === Number(id))!
+        expect(stage.materials.some(slot => slot.family === material.family)).toBe(true)
+        expect(index === 5 ? [3, 4] : [1, 2]).toContain(material.quality)
       }
-      expect(new Set(setIdsInThisKill).size).toBe(setIdsInThisKill.length)
     }
-    expect([...seenSetIds].sort()).toEqual(['wp_386', 'wp_387'])
   })
 
-  it('同 seed 掉落完全一致', () => {
-    const left = createInitialStateV10()
-    const right = createInitialStateV10()
-    const input = { worldId: 'world_01' as const, difficulty: 2, stage: 4, rank: 'boss' as const, seed: 99, enemyId: 'boss' }
-    expect(grantKillLoot(left, input)).toEqual(grantKillLoot(right, input))
-    expect(left.inventory).toEqual(right.inventory)
+  it('材料和装备品质边界符合原版权重', () => {
+    expect([0, .89999, .9, .99999].map(r => materialExtraQuality('normal', r))).toEqual([0, 0, 1, 1])
+    expect([0, .5, .9].map(r => materialExtraQuality('elite', r))).toEqual([0, 1, 2])
+    expect([0, .7].map(r => materialExtraQuality('captain', r))).toEqual([1, 2])
+    expect([0, .7].map(r => materialExtraQuality('boss', r))).toEqual([2, 3])
+    expect(pickWeightedQuality('normal', .7)).toBe(2)
+    expect(pickWeightedQuality('boss', .7)).toBe(4)
   })
 
-  it('normal/elite/boss 使用原版品级 1/2/4 的品质权重并叠加位面品质 1', () => {
-    expect(pickWeightedQuality('normal', 0)).toBe(1)
-    expect(pickWeightedQuality('normal', 0.7)).toBe(2)
-    expect(pickWeightedQuality('normal', 0.95)).toBe(3)
-    expect(pickWeightedQuality('elite', 0.2)).toBe(2)
-    expect(pickWeightedQuality('elite', 0.7)).toBe(3)
-    expect(pickWeightedQuality('elite', 0.95)).toBe(4)
-    expect(pickWeightedQuality('boss', 0)).toBe(2)
-    expect(pickWeightedQuality('boss', 0.1)).toBe(3)
-    expect(pickWeightedQuality('boss', 0.7)).toBe(4)
+  it('基础掉率、科技加成和上下限正确', () => {
+    expect(CAMPAIGN_LOOT_STAGES[0].materials.map(m => m.baseChance)).toEqual([.37, .28])
+    const state = createInitialStateV10(0)
+    expect(campaignDropBonus(state)).toBe(0)
+    state.city.technologyLevels['65'] = 10
+    expect(campaignDropBonus(state)).toBe(15)
+    expect(campaignDropChance(.37, 5)).toBeCloseTo(.3885)
+    expect(campaignDropChance(.15, 100)).toBe(.3)
+    expect(campaignDropChance(.37, -200)).toBe(0)
+    expect(campaignDropChance(.37, 10000)).toBe(1)
   })
 
-  it('背包满时跳过掉落并记入错过件数', () => {
-    const state = createInitialStateV10()
-    state.inventory = Array.from({ length: INVENTORY_CAPACITY }, (_, index) => ({
-      uid: `full_${index}`,
-      definitionId: 'wp_101',
-      level: 1,
-      quality: 0 as const,
-      coreStats: [{ attributeId: 8, coefficient: 180 }, { attributeId: 6, coefficient: 80 }],
-      affixes: [],
-      locked: false,
-    }))
+  it('基础概率允许空掉落，材料与三种票券均能自然取得', () => {
+    const seen = new Set<number>()
+    let emptyKills = 0, ore = 0
+    for (let seed = 1; seed <= 1000; seed++) {
+      const state = createInitialStateV10(0)
+      grantKillLoot(state, { ...input, seed })
+      if (!state.inventory.length) emptyKills++
+      expect(state.inventory.every(i => ['wp_102', 'wp_115', 'wp_123'].includes(i.definitionId))).toBe(true)
+      ore += (state.materials['11'] ?? 0) + (state.materials['12'] ?? 0)
+      grantKillLoot(state, { ...input, seed: seed + 1000, rank: 'boss', enemyId: 'world_01_stage_01_boss' })
+      Object.keys(state.materials).forEach(id => seen.add(Number(id)))
+    }
+    expect(emptyKills).toBeGreaterThan(400)
+    expect(ore).toBeGreaterThan(300)
+    expect(ore).toBeLessThan(440)
+    expect([5, 6, 7].every(id => seen.has(id))).toBe(true)
+  })
 
-    const added = grantKillLoot(state, {
-      worldId: 'world_01', difficulty: 1, stage: 1, rank: 'boss', seed: 3, enemyId: 'boss',
-    })
+  it('同 seed 可重现，非法敌人不借用整关掉落池', () => {
+    const left = createInitialStateV10(0), right = createInitialStateV10(0)
+    grantKillLoot(left, input)
+    grantKillLoot(right, input)
+    expect(left).toEqual(right)
+    const state = createInitialStateV10(0)
+    expect(grantKillLoot(state, { ...input, enemyId: 'world_02_stage_01_boss' })).toEqual([])
+    expect(state.materials).toEqual({})
+  })
 
-    expect(added).toEqual([])
+  it('装备背包满仍结算材料与票券，未装入装备均计数', () => {
+    const state = createInitialStateV10(0)
+    state.city.technologyLevels['65'] = 1_000_000
+    state.inventory = Array.from({ length: INVENTORY_CAPACITY }, (_, i) => ({ uid: `full_${i}`, definitionId: 'wp_101', level: 1, quality: 1 as const, coreStats: [], affixes: [], locked: false }))
+    expect(grantKillLoot(state, { ...input, rank: 'boss', enemyId: 'world_01_stage_01_boss' })).toEqual([])
     expect(state.inventory).toHaveLength(INVENTORY_CAPACITY)
-    expect(state.statistics.equipmentMissedAtCapacity).toBeGreaterThan(0)
+    expect(state.statistics.equipmentMissedAtCapacity).toBe(2)
+    expect(state.materials).toMatchObject({ '5': 1, '6': 1, '7': 1 })
+    expect(Object.keys(state.materials).some(id => [13, 14].includes(Number(id)))).toBe(true)
   })
 })

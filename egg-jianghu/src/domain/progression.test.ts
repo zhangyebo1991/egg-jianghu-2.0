@@ -1,3 +1,4 @@
+import { FACTIONS } from '../content/factions'
 import { describe, expect, it } from 'vitest'
 import {
   clearedStageOf,
@@ -53,24 +54,34 @@ describe('位面难度解锁', () => {
     expect(difficultyLabel(2)).toBe('难度2')
   })
 
-  it('按连续战斗进度 31、51、71 解锁第一位面的三个正式势力', () => {
-    const state = createInitialStateV10(0)
-    expect(state.unlockedFactionIds).toEqual(['qingfeng_hall'])
-    for (let difficulty = 1; difficulty <= 3; difficulty += 1) {
-      state.clearedStageByWorldDifficulty[progressKey('world_01', difficulty)] = 10
-    }
-    expect(worldBattleProgress(state.clearedStageByWorldDifficulty, 'world_01')).toBe(30)
-    expect(syncFactionUnlocks(state, 'world_01')).toEqual([])
+  it('进度编码按下一层计算，每小关十层、每难度一百层', () => {
+    expect(worldBattleProgress({}, 'world_01')).toBe(1)
+    expect(worldBattleProgress({ 'world_01:1': 3 }, 'world_01')).toBe(31)
+    expect(worldBattleProgress({ 'world_01:1': 10 }, 'world_01')).toBe(101)
+    expect(worldBattleProgress({ 'world_01:1': 10, 'world_01:2': 2 }, 'world_01')).toBe(121)
+  })
 
-    state.clearedStageByWorldDifficulty[progressKey('world_01', 4)] = 1
-    expect(syncFactionUnlocks(state, 'world_01')).toEqual(['tieyi_school'])
-    state.clearedStageByWorldDifficulty[progressKey('world_01', 4)] = 10
-    state.clearedStageByWorldDifficulty[progressKey('world_01', 5)] = 10
-    state.clearedStageByWorldDifficulty[progressKey('world_01', 6)] = 1
-    expect(syncFactionUnlocks(state, 'world_01')).toEqual(['renxin_hall'])
-    state.clearedStageByWorldDifficulty[progressKey('world_01', 6)] = 10
-    state.clearedStageByWorldDifficulty[progressKey('world_01', 7)] = 10
-    state.clearedStageByWorldDifficulty[progressKey('world_01', 8)] = 1
-    expect(syncFactionUnlocks(state, 'world_01')).toEqual(['original_faction_04'])
+  it.each(Array.from({ length: 13 }, (_, index) => index + 1))('第 %i 大关全部势力在基础难度内解锁', (worldNumber) => {
+    const worldId = `world_${String(worldNumber).padStart(2, '0')}`
+    const state = createInitialStateV10(0)
+    state.unlockedWorldIds = [worldId]
+    state.unlockedFactionIds = []
+    const factions = FACTIONS.filter((faction) => faction.worldId === worldId)
+    const requiredClears = worldNumber <= 3 ? [0, 3, 5, 7] : [0, 3, 6]
+    expect(factions).toHaveLength(requiredClears.length)
+    for (let cleared = 0; cleared <= 10; cleared += 1) {
+      state.clearedStageByWorldDifficulty[progressKey(worldId, 1)] = cleared
+      syncFactionUnlocks(state, worldId)
+      expect(state.unlockedFactionIds).toEqual(factions
+        .filter((_, index) => cleared >= requiredClears[index])
+        .map((faction) => faction.id))
+      expect(syncFactionUnlocks(state, worldId)).toEqual([])
+    }
+  })
+
+  it('未开放世界不能因残留进度解锁势力', () => {
+    const state = createInitialStateV10(0)
+    state.clearedStageByWorldDifficulty['world_02:1'] = 10
+    expect(syncFactionUnlocks(state, 'world_02')).toEqual([])
   })
 })

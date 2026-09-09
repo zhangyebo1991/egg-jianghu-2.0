@@ -1,8 +1,12 @@
+import { CAMPAIGN_LOOT_STAGES, CAMPAIGN_ENEMY_DROPS, CAMPAIGN_DROP_ITEMS, CAMPAIGN_MATERIALS } from '../content/campaign-loot.generated'
+import { enemyDefinitionById } from '../content/enemy-names'
+import { heroByIdV10 } from '../content/heroes'
+import { originalCityTechnologyEffectBonus } from '../content/original-city.generated'
+import { buildAttributeMap } from '../combat/stats'
 import { createRng } from '../combat/rng'
 import type { CombatRank } from '../combat/types'
 import {
-  equipmentPoolForStage,
-  equipmentSetPoolForStage,
+  equipmentDefinitionById,
   rollEquipmentLevel,
   equipmentWearLevel,
   rollEquipmentStats,
@@ -18,19 +22,6 @@ export interface LootDropInput {
   rank: CombatRank
   seed: number
   enemyId: string
-}
-
-/** 诸天 `wp.col32`：地点套装的两件装备各自以 1500/10000 判定，且只挂在首领掉落表。 */
-export const SET_PIECE_DROP_CHANCE = 0.15
-
-export const shouldDropSetPiece = (rank: CombatRank, roll: number): boolean =>
-  rank === 'boss' && roll < SET_PIECE_DROP_CHANCE
-
-const DROP_COUNT: Record<CombatRank, number> = {
-  normal: 1,
-  elite: 2,
-  captain: 2,
-  boss: 2,
 }
 
 export const ENEMY_GRADE_BY_RANK: Record<CombatRank, 1 | 2 | 3 | 4> = {
@@ -62,21 +53,57 @@ export const pickWeightedQuality = (rank: CombatRank, roll: number): EquipmentQu
   return (weights.length - 1 + WORLD_EQUIPMENT_QUALITY_BONUS) as EquipmentQuality
 }
 
-export const dropCountForRank = (rank: CombatRank): number => DROP_COUNT[rank]
+/** 原版掉落计算：每个 dl 表项独立判定，材料两个槽位也各自判定。 */
+export const MATERIAL_QUALITY_WEIGHTS = {
+  normal: [90, 10, 0, 0], elite: [50, 40, 10, 0],
+  captain: [0, 70, 30, 0], boss: [0, 0, 70, 30],
+} as const
+
+export const materialExtraQuality = (rank: CombatRank, roll: number): number => {
+  let cumulative = 0
+  for (const [quality, weight] of MATERIAL_QUALITY_WEIGHTS[rank].entries()) {
+    cumulative += weight
+    if (roll * 100 < cumulative) return quality
+  }
+  return 3
+}
+
+export const campaignDropChance = (baseChance: number, bonus: number): number =>
+  Math.min(1, Math.max(0, baseChance * (100 + bonus) / 100))
+
+/** 原版总掉落率加成：当前队伍 sx42 合计 + 科技 65 的百分比效果。 */
+export const campaignDropBonus = (state: GameStateV10): number => {
+  let bonus = originalCityTechnologyEffectBonus(65, state.city.technologyLevels['65'] ?? 0) * 100
+  for (const heroId of new Set(state.formation.map(slot => slot.heroId))) {
+    const progress = state.heroes[heroId]
+    const definition = heroByIdV10(heroId)
+    if (progress?.recruited && definition) bonus += buildAttributeMap(definition, progress, state.inventory)[42] ?? 0
+  }
+  return Math.round(bonus * 100) / 100
+}
 
 export const grantKillLoot = (state: GameStateV10, input: LootDropInput): string[] => {
-  const pool = equipmentPoolForStage(input.worldId, input.stage)
-  if (pool.length === 0) return []
-  const setPool = equipmentSetPoolForStage(input.worldId, input.stage)
+  const stage = CAMPAIGN_LOOT_STAGES.find(s => s.worldId === input.worldId && s.stage === input.stage)
+  const enemy = enemyDefinitionById(input.enemyId)
+  if (!stage || !enemy || !(stage.enemyIds as readonly number[]).includes(enemy.drId)) return []
   const rng = createRng(input.seed)
+  const bonus = campaignDropBonus(state)
   const added: string[] = []
-  const count = input.rank === 'elite' ? rng.nextInt(1, 3) : DROP_COUNT[input.rank]
-  for (let index = 0; index < count; index += 1) {
-    const setDefinition = setPool[index]
-    const fromSet = setDefinition !== undefined && shouldDropSetPiece(input.rank, rng.nextFloat())
-    const definition = fromSet ? setDefinition : rng.pick(pool)
+  const addMaterial = (id: number): void => {
+    const key = String(id)
+    state.materials[key] = (state.materials[key] ?? 0) + 1
+  }
+  for (const [index, id] of (CAMPAIGN_ENEMY_DROPS[enemy.drId] ?? []).entries()) {
+    const item = CAMPAIGN_DROP_ITEMS[id]
+    if (rng.nextFloat() >= campaignDropChance(item.chance, bonus)) continue
+    if (item.kind === 'material') {
+      addMaterial(id)
+      continue
+    }
+    const definition = equipmentDefinitionById(`wp_${id}`)
+    if (!definition) throw new Error(`原版掉落装备定义缺失：${id}`)
     const quality = definition.fixedQuality ?? pickWeightedQuality(input.rank, rng.nextFloat())
-      const level = rollEquipmentLevel(input.worldId, input.difficulty, input.stage, quality)
+    const level = rollEquipmentLevel(input.worldId, input.difficulty, input.stage, quality)
     const equipment: EquipmentInstance = {
       uid: `eq_${input.seed}_${input.enemyId}_${index}`,
       definitionId: definition.id,
@@ -86,9 +113,14 @@ export const grantKillLoot = (state: GameStateV10, input: LootDropInput): string
       ...rollEquipmentStats(definition, quality, rng),
       locked: false,
     }
-    const result = addEquipment(state, equipment)
-    if (!result.ok) break
-    added.push(equipment.uid)
+    if (addEquipment(state, equipment).ok) added.push(equipment.uid)
+  }
+  // 材料是独立堆叠库存；装备背包满不能截断后续物品与材料结算。
+  for (const slot of stage.materials) {
+    if (rng.nextFloat() >= campaignDropChance(slot.baseChance, bonus)) continue
+    const quality = slot.baseQuality + materialExtraQuality(input.rank, rng.nextFloat())
+    const material = CAMPAIGN_MATERIALS.find(m => m.family === slot.family && m.quality === quality)
+    if (material) addMaterial(material.id)
   }
   return added
 }

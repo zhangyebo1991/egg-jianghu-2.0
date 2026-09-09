@@ -1,0 +1,5832 @@
+{
+  "掉落计算function": {
+    "ops": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "parameters": [
+          {
+            "expressionId": 10401,
+            "expression": "\"掉落计算function\"",
+            "runtimeExpression": "\"掉落计算function\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.ArrForEach",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[3,2]",
+            "runtimeExpression": "[3,2]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+        "parameters": [
+          {
+            "expressionId": 30,
+            "expression": "dl.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": 135,
+            "expression": "敌人编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,4]",
+            "runtimeExpression": "[8,4]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "166084910634147",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.CreateProbabilityTable",
+        "parameters": [
+          {
+            "expressionId": 10402,
+            "expression": "\"物品掉落计算\"",
+            "runtimeExpression": "\"物品掉落计算\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "开发模式",
+            "runtimeExpression": "[11,748511225128039]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "144818708397049",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10403,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 32)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 32)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "620495631334210",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "战斗模式",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 541,
+            "expression": "\"副本\"",
+            "runtimeExpression": "\"副本\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "192956686891655",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10404,
+            "expression": "C3.clamp(multiply(副本物品掉率(dl.At(dl.CurX(), 敌人编号), 难度系数), divide(add(save.At(48, 1, 0), 100), 100)), 0, 10000)",
+            "runtimeExpression": "C3.clamp(multiply(f0(n1.ExpObject(n2.ExpObject(), v3.GetValue()), v4.GetValue()), divide(add(n5.ExpObject(48, 1, 0), 100), 100)), 0, 10000)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "142761921710517",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 10405,
+            "expression": "(10000 - C3.clamp(multiply(副本物品掉率(dl.At(dl.CurX(), 敌人编号), 难度系数), divide(add(save.At(48, 1, 0), 100), 100)), 0, 10000))",
+            "runtimeExpression": "(10000 - C3.clamp(multiply(f0(n1.ExpObject(n2.ExpObject(), v3.GetValue()), v4.GetValue()), divide(add(n5.ExpObject(48, 1, 0), 100), 100)), 0, 10000))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "694935833743877",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10406,
+            "expression": "C3.clamp(multiply(wp.At(dl.At(dl.CurX(), 敌人编号), 32), divide(add(save.At(48, 1, 0), 100), 100)), 0, 10000)",
+            "runtimeExpression": "C3.clamp(multiply(n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 32), divide(add(n4.ExpObject(48, 1, 0), 100), 100)), 0, 10000)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          8,
+          1,
+          7,
+          1
+        ],
+        "sid": "704656493327310",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 10407,
+            "expression": "(10000 - C3.clamp(multiply(wp.At(dl.At(dl.CurX(), 敌人编号), 32), divide(add(save.At(48, 1, 0), 100), 100)), 0, 10000))",
+            "runtimeExpression": "(10000 - C3.clamp(multiply(n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 32), divide(add(n4.ExpObject(48, 1, 0), 100), 100)), 0, 10000))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 409,
+            "expression": "AdvancedRandom.Weighted()",
+            "runtimeExpression": "f0()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 10408,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 5)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 5)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 153,
+            "expression": "\"装备\"",
+            "runtimeExpression": "\"装备\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 10409,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 9)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 9)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 158,
+            "expression": "\"普通\"",
+            "runtimeExpression": "\"普通\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 10410,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 4)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,3]",
+            "runtimeExpression": "[8,3]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "512522770283501",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质",
+            "runtimeExpression": "[11,574772804524506]"
+          },
+          {
+            "expressionId": 565,
+            "expression": "普通装备随机品质(敌人品质)",
+            "runtimeExpression": "f0(v1.GetValue())"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          2
+        ],
+        "sid": "400907696143837",
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "装备累计",
+            "runtimeExpression": "[11,166666730500671]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "801142618443284",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质",
+            "runtimeExpression": "[11,574772804524506]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          7,
+          2
+        ],
+        "sid": "727734902972749",
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "装备累计",
+            "runtimeExpression": "[11,166666730500671]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 10409,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 9)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 9)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 159,
+            "expression": "\"套装\"",
+            "runtimeExpression": "\"套装\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "272960379662499",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质",
+            "runtimeExpression": "[11,574772804524506]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          1,
+          7,
+          2
+        ],
+        "sid": "485434816455834",
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "装备累计",
+            "runtimeExpression": "[11,166666730500671]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 10408,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 5)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 5)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 132,
+            "expression": "\"特殊\"",
+            "runtimeExpression": "\"特殊\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "战斗模式",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 839,
+            "expression": "\"战斗\"",
+            "runtimeExpression": "\"战斗\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 48,
+            "expression": "5",
+            "runtimeExpression": "5"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 55,
+            "expression": "6",
+            "runtimeExpression": "6"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 83,
+            "expression": "7",
+            "runtimeExpression": "7"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          8,
+          3,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 85,
+            "expression": "8",
+            "runtimeExpression": "8"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "战斗模式",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 541,
+            "expression": "\"副本\"",
+            "runtimeExpression": "\"副本\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "战斗模式",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 534,
+            "expression": "\"异界\"",
+            "runtimeExpression": "\"异界\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 10408,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 5)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 5)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 2463,
+            "expression": "\"材料\"",
+            "runtimeExpression": "\"材料\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          2,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "战斗模式",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 534,
+            "expression": "\"异界\"",
+            "runtimeExpression": "\"异界\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          3,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 10408,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 5)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 5)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 2426,
+            "expression": "\"兽魂\"",
+            "runtimeExpression": "\"兽魂\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "战斗模式",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 539,
+            "expression": "\"秘境\"",
+            "runtimeExpression": "\"秘境\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品质",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 66,
+            "expression": "4",
+            "runtimeExpression": "4"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.ArrForEach",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[3,2]",
+            "runtimeExpression": "[3,2]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 30,
+            "expression": "mj.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,2]",
+            "runtimeExpression": "[8,2]"
+          },
+          {
+            "expressionId": 91,
+            "expression": "16",
+            "runtimeExpression": "16"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          1
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+        "parameters": [
+          {
+            "expressionId": 30,
+            "expression": "mj.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": 5880,
+            "expression": "(14 + (位面编号 * 2))",
+            "runtimeExpression": "(14 + (v0.GetValue() * 2))"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,4]",
+            "runtimeExpression": "[8,4]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          2
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+        "parameters": [
+          {
+            "expressionId": 30,
+            "expression": "mj.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": 10419,
+            "expression": "(15 + (位面编号 * 2))",
+            "runtimeExpression": "(15 + (v0.GetValue() * 2))"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 135,
+            "expression": "秘境敌人序号",
+            "runtimeExpression": "v0.GetValue()"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "860865449998228",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.CreateProbabilityTable",
+        "parameters": [
+          {
+            "expressionId": 10420,
+            "expression": "\"秘境掉落计算\"",
+            "runtimeExpression": "\"秘境掉落计算\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "开发模式",
+            "runtimeExpression": "[11,748511225128039]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "844488409648397",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10421,
+            "expression": "wp.At(mj.At(mj.CurX(), (14 + (位面编号 * 2))), 32)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), (14 + (v3.GetValue() * 2))), 32)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "575056333315413",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "198426994905408",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10422,
+            "expression": "C3.clamp(multiply(wp.At(mj.At(mj.CurX(), (14 + (位面编号 * 2))), 32), divide(add(save.At(48, 1, 0), 100), 100)), 0, 10000)",
+            "runtimeExpression": "C3.clamp(multiply(n0.ExpObject(n1.ExpObject(n2.ExpObject(), (14 + (v3.GetValue() * 2))), 32), divide(add(n4.ExpObject(48, 1, 0), 100), 100)), 0, 10000)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          7,
+          1
+        ],
+        "sid": "244518400179889",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 10423,
+            "expression": "(10000 - C3.clamp(multiply(wp.At(mj.At(mj.CurX(), (14 + (位面编号 * 2))), 32), divide(add(save.At(48, 1, 0), 100), 100)), 0, 10000))",
+            "runtimeExpression": "(10000 - C3.clamp(multiply(n0.ExpObject(n1.ExpObject(n2.ExpObject(), (14 + (v3.GetValue() * 2))), 32), divide(add(n4.ExpObject(48, 1, 0), 100), 100)), 0, 10000))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 409,
+            "expression": "AdvancedRandom.Weighted()",
+            "runtimeExpression": "f0()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 5881,
+            "expression": "wp.At(mj.At(mj.CurX(), (14 + (位面编号 * 2))), 5)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), (14 + (v3.GetValue() * 2))), 5)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 153,
+            "expression": "\"装备\"",
+            "runtimeExpression": "\"装备\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 10424,
+            "expression": "wp.At(mj.At(mj.CurX(), (14 + (位面编号 * 2))), 9)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), (14 + (v3.GetValue() * 2))), 9)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 159,
+            "expression": "\"套装\"",
+            "runtimeExpression": "\"套装\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "412377141373640",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质",
+            "runtimeExpression": "[11,574772804524506]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          2
+        ],
+        "sid": "757718643670413",
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "装备累计",
+            "runtimeExpression": "[11,166666730500671]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.ArrForEach",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[3,2]",
+            "runtimeExpression": "[3,2]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 30,
+            "expression": "mj.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,5]",
+            "runtimeExpression": "[8,5]"
+          },
+          {
+            "expressionId": 91,
+            "expression": "16",
+            "runtimeExpression": "16"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          6,
+          1
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+        "parameters": [
+          {
+            "expressionId": 30,
+            "expression": "mj.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": 5880,
+            "expression": "(14 + (位面编号 * 2))",
+            "runtimeExpression": "(14 + (v0.GetValue() * 2))"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,4]",
+            "runtimeExpression": "[8,4]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "557444011284802",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.CreateProbabilityTable",
+        "parameters": [
+          {
+            "expressionId": 10426,
+            "expression": "\"秘境命石计算\"",
+            "runtimeExpression": "\"秘境命石计算\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "开发模式",
+            "runtimeExpression": "[11,748511225128039]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "161285753030968",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 5754,
+            "expression": "1500",
+            "runtimeExpression": "1500"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "393311879247382",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "707114103933245",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10427,
+            "expression": "C3.clamp(multiply(2000, divide(add(save.At(48, 1, 0), 100), 100)), 0, 10000)",
+            "runtimeExpression": "C3.clamp(multiply(2000, divide(add(n0.ExpObject(48, 1, 0), 100), 100)), 0, 10000)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          7,
+          1
+        ],
+        "sid": "197054223536787",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 10428,
+            "expression": "(10000 - C3.clamp(multiply(2000, divide(add(save.At(48, 1, 0), 100), 100)), 0, 10000))",
+            "runtimeExpression": "(10000 - C3.clamp(multiply(2000, divide(add(n0.ExpObject(48, 1, 0), 100), 100)), 0, 10000))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 409,
+            "expression": "AdvancedRandom.Weighted()",
+            "runtimeExpression": "f0()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          2,
+          7,
+          0
+        ],
+        "sid": "219949698784063",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质",
+            "runtimeExpression": "[11,574772804524506]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          2,
+          7,
+          2
+        ],
+        "sid": "112703169186947",
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "装备累计",
+            "runtimeExpression": "[11,166666730500671]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          6,
+          1
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "战斗模式",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 839,
+            "expression": "\"战斗\"",
+            "runtimeExpression": "\"战斗\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 2015,
+            "expression": "sq.At(当前地点编号, 10)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), 10)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,4]",
+            "runtimeExpression": "[8,4]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "667256744504239",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质2",
+            "runtimeExpression": "[11,502066125521715]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "857836481169352",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.CreateProbabilityTable",
+        "parameters": [
+          {
+            "expressionId": 10429,
+            "expression": "\"材料掉落计算1\"",
+            "runtimeExpression": "\"材料掉落计算1\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "开发模式",
+            "runtimeExpression": "[11,748511225128039]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "466242272990169",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10430,
+            "expression": "wm.At(当前位面编号, add(23, multiply(sq.At(当前地点编号, 10), 2)))",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), add(23, multiply(n2.ExpObject(v3.GetValue(), 10), 2)))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "565911590923441",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "708392954957456",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10431,
+            "expression": "C3.clamp(multiply(divide(wm.At(当前位面编号, add(23, multiply(sq.At(当前地点编号, 10), 2))), 2), divide(add(save.At(48, 1, 0), 100), 100)), 0, 100)",
+            "runtimeExpression": "C3.clamp(multiply(divide(n0.ExpObject(v1.GetValue(), add(23, multiply(n2.ExpObject(v3.GetValue(), 10), 2))), 2), divide(add(n4.ExpObject(48, 1, 0), 100), 100)), 0, 100)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          1,
+          7,
+          1
+        ],
+        "sid": "526640284630075",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 10432,
+            "expression": "(100 - C3.clamp(multiply(divide(wm.At(当前位面编号, add(23, multiply(sq.At(当前地点编号, 10), 2))), 2), divide(add(save.At(48, 1, 0), 100), 100)), 0, 100))",
+            "runtimeExpression": "(100 - C3.clamp(multiply(divide(n0.ExpObject(v1.GetValue(), add(23, multiply(n2.ExpObject(v3.GetValue(), 10), 2))), 2), divide(add(n4.ExpObject(48, 1, 0), 100), 100)), 0, 100))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 409,
+            "expression": "AdvancedRandom.Weighted()",
+            "runtimeExpression": "f0()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          2,
+          7,
+          0
+        ],
+        "sid": "204080168548360",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质2",
+            "runtimeExpression": "[11,502066125521715]"
+          },
+          {
+            "expressionId": 565,
+            "expression": "材料随机品质(敌人品质)",
+            "runtimeExpression": "f0(v1.GetValue())"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.ArrForEach",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[3,2]",
+            "runtimeExpression": "[3,2]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 1442,
+            "expression": "wp.At(wp.CurX(), 5)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 5)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 2463,
+            "expression": "\"材料\"",
+            "runtimeExpression": "\"材料\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          1
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 171,
+            "expression": "wp.At(wp.CurX(), 7)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 7)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 2015,
+            "expression": "sq.At(当前地点编号, 10)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), 10)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          2
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 23,
+            "expression": "wp.At(wp.CurX(), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 4)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 10433,
+            "expression": "add(wm.At(当前位面编号, add(22, multiply(sq.At(当前地点编号, 10), 2))), 额外品质2)",
+            "runtimeExpression": "add(n0.ExpObject(v1.GetValue(), add(22, multiply(n2.ExpObject(v3.GetValue(), 10), 2))), v4.GetValue())"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "513934140510452",
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "材料累计",
+            "runtimeExpression": "[11,842002435815471]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 557,
+            "expression": "sq.At(当前地点编号, 11)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), 11)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,4]",
+            "runtimeExpression": "[8,4]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "498614015007543",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质2",
+            "runtimeExpression": "[11,502066125521715]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          7,
+          1
+        ],
+        "sid": "759480883174580",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.CreateProbabilityTable",
+        "parameters": [
+          {
+            "expressionId": 10434,
+            "expression": "\"材料掉落计算2\"",
+            "runtimeExpression": "\"材料掉落计算2\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "开发模式",
+            "runtimeExpression": "[11,748511225128039]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "916958636815173",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10435,
+            "expression": "wm.At(当前位面编号, add(23, multiply(sq.At(当前地点编号, 11), 2)))",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), add(23, multiply(n2.ExpObject(v3.GetValue(), 11), 2)))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "920705196528301",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "264444913323168",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          },
+          {
+            "expressionId": 10436,
+            "expression": "C3.clamp(multiply(divide(wm.At(当前位面编号, add(23, multiply(sq.At(当前地点编号, 11), 2))), 2), divide(add(save.At(48, 1, 0), 100), 100)), 0, 100)",
+            "runtimeExpression": "C3.clamp(multiply(divide(n0.ExpObject(v1.GetValue(), add(23, multiply(n2.ExpObject(v3.GetValue(), 11), 2))), 2), divide(add(n4.ExpObject(48, 1, 0), 100), 100)), 0, 100)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          1,
+          7,
+          1
+        ],
+        "sid": "829805986620393",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 8646,
+            "expression": "\"不掉落\"",
+            "runtimeExpression": "\"不掉落\""
+          },
+          {
+            "expressionId": 10437,
+            "expression": "(100 - C3.clamp(multiply(divide(wm.At(当前位面编号, add(23, multiply(sq.At(当前地点编号, 11), 2))), 2), divide(add(save.At(48, 1, 0), 100), 100)), 0, 100))",
+            "runtimeExpression": "(100 - C3.clamp(multiply(divide(n0.ExpObject(v1.GetValue(), add(23, multiply(n2.ExpObject(v3.GetValue(), 11), 2))), 2), divide(add(n4.ExpObject(48, 1, 0), 100), 100)), 0, 100))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 409,
+            "expression": "AdvancedRandom.Weighted()",
+            "runtimeExpression": "f0()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 3270,
+            "expression": "\"掉落\"",
+            "runtimeExpression": "\"掉落\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          7,
+          0
+        ],
+        "sid": "505662532644701",
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "额外品质2",
+            "runtimeExpression": "[11,502066125521715]"
+          },
+          {
+            "expressionId": 565,
+            "expression": "材料随机品质(敌人品质)",
+            "runtimeExpression": "f0(v1.GetValue())"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.ArrForEach",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[3,2]",
+            "runtimeExpression": "[3,2]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 1442,
+            "expression": "wp.At(wp.CurX(), 5)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 5)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 2463,
+            "expression": "\"材料\"",
+            "runtimeExpression": "\"材料\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          1
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 171,
+            "expression": "wp.At(wp.CurX(), 7)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 7)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 557,
+            "expression": "sq.At(当前地点编号, 11)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), 11)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          6,
+          2
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 23,
+            "expression": "wp.At(wp.CurX(), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 4)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 10438,
+            "expression": "add(wm.At(当前位面编号, add(22, multiply(sq.At(当前地点编号, 11), 2))), 额外品质2)",
+            "runtimeExpression": "add(n0.ExpObject(v1.GetValue(), add(22, multiply(n2.ExpObject(v3.GetValue(), 11), 2))), v4.GetValue())"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "435976666607021",
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "材料累计",
+            "runtimeExpression": "[11,842002435815471]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          0
+        ],
+        "sid": "209671446101873",
+        "reference": "C3.Plugins.System.Acts.WaitForPreviousActions",
+        "parameters": []
+      }
+    ],
+    "calls": [
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "name": "获得物品",
+        "sid": "548113357069757",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": 135,
+            "expression": "位面编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": 10411,
+            "expression": "add(额外品质, wm.At(位面编号, 20))",
+            "runtimeExpression": "add(v0.GetValue(), n1.ExpObject(v2.GetValue(), 20))"
+          },
+          {
+            "expressionId": 10412,
+            "expression": "装备装等计算(难度系数, add(额外品质, wm.At(位面编号, 20)))",
+            "runtimeExpression": "f0(v1.GetValue(), add(v2.GetValue(), n3.ExpObject(v4.GetValue(), 20)))"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          7,
+          1
+        ],
+        "name": "获得物品",
+        "sid": "910678073592680",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": 135,
+            "expression": "位面编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": 10410,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 4)"
+          },
+          {
+            "expressionId": 10413,
+            "expression": "装备装等计算(难度系数, wp.At(dl.At(dl.CurX(), 敌人编号), 4))",
+            "runtimeExpression": "f0(v1.GetValue(), n2.ExpObject(n3.ExpObject(n4.ExpObject(), v5.GetValue()), 4))"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          1,
+          7,
+          1
+        ],
+        "name": "获得物品",
+        "sid": "297247323489276",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": 135,
+            "expression": "位面编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": 10410,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 4)"
+          },
+          {
+            "expressionId": 10413,
+            "expression": "装备装等计算(难度系数, wp.At(dl.At(dl.CurX(), 敌人编号), 4))",
+            "runtimeExpression": "f0(v1.GetValue(), n2.ExpObject(n3.ExpObject(n4.ExpObject(), v5.GetValue()), 4))"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "677569684895366",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 48,
+            "expression": "5",
+            "runtimeExpression": "5"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 10414,
+            "expression": "wp.At(5, 4)",
+            "runtimeExpression": "n0.ExpObject(5, 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "725648044280614",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 55,
+            "expression": "6",
+            "runtimeExpression": "6"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 10415,
+            "expression": "wp.At(6, 4)",
+            "runtimeExpression": "n0.ExpObject(6, 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          8,
+          2,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "979682227729195",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 83,
+            "expression": "7",
+            "runtimeExpression": "7"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 10416,
+            "expression": "wp.At(7, 4)",
+            "runtimeExpression": "n0.ExpObject(7, 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          0,
+          8,
+          3,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "190507439774572",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 85,
+            "expression": "8",
+            "runtimeExpression": "8"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 6027,
+            "expression": "wp.At(8, 4)",
+            "runtimeExpression": "n0.ExpObject(8, 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          1,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "207906048579995",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 10417,
+            "expression": "add(dl.At(dl.CurX(), 敌人编号), 转生材料编号增量(难度系数, dl.At(dl.CurX(), 敌人编号)))",
+            "runtimeExpression": "add(n0.ExpObject(n1.ExpObject(), v2.GetValue()), f3(v4.GetValue(), n5.ExpObject(n6.ExpObject(), v7.GetValue())))"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 10418,
+            "expression": "wp.At(add(dl.At(dl.CurX(), 敌人编号), 转生材料编号增量(难度系数, dl.At(dl.CurX(), 敌人编号))), 4)",
+            "runtimeExpression": "n0.ExpObject(add(n1.ExpObject(n2.ExpObject(), v3.GetValue()), f4(v5.GetValue(), n6.ExpObject(n7.ExpObject(), v8.GetValue()))), 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "580518447248426",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 10410,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          2,
+          8,
+          0,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "591127675425863",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 3034,
+            "expression": "dl.At(dl.CurX(), 敌人编号)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), v2.GetValue())"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 10410,
+            "expression": "wp.At(dl.At(dl.CurX(), 敌人编号), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), v3.GetValue()), 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          3,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "493578532461338",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 318,
+            "expression": "90",
+            "runtimeExpression": "90"
+          },
+          {
+            "expressionId": 5209,
+            "expression": "save.At(当前狩猎序号, 11, 0)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), 11, 0)"
+          },
+          {
+            "expressionId": 349,
+            "expression": "ls.At(当前狩猎编号, 5)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), 5)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 135,
+            "expression": "当前狩猎编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "name": "获得物品",
+        "sid": "418719298036241",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 5882,
+            "expression": "mj.At(mj.CurX(), (14 + (位面编号 * 2)))",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), (14 + (v2.GetValue() * 2)))"
+          },
+          {
+            "expressionId": 135,
+            "expression": "位面编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": 5883,
+            "expression": "wp.At(mj.At(mj.CurX(), (14 + (位面编号 * 2))), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(n2.ExpObject(), (14 + (v3.GetValue() * 2))), 4)"
+          },
+          {
+            "expressionId": 10425,
+            "expression": "装备装等计算(难度系数, wp.At(mj.At(mj.CurX(), (14 + (位面编号 * 2))), 4))",
+            "runtimeExpression": "f0(v1.GetValue(), n2.ExpObject(n3.ExpObject(n4.ExpObject(), (14 + (v5.GetValue() * 2))), 4))"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          8,
+          2,
+          7,
+          1
+        ],
+        "name": "获得物品",
+        "sid": "944939566214777",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 135,
+            "expression": "位面编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 4329,
+            "expression": "装备装等计算(难度系数, 0)",
+            "runtimeExpression": "f0(v1.GetValue(), 0)"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 5882,
+            "expression": "mj.At(mj.CurX(), (14 + (位面编号 * 2)))",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), (14 + (v2.GetValue() * 2)))"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "627893875625537",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 30,
+            "expression": "wp.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 23,
+            "expression": "wp.At(wp.CurX(), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          8,
+          1,
+          8,
+          2,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "name": "获得物品",
+        "sid": "583572177665463",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 30,
+            "expression": "wp.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 23,
+            "expression": "wp.At(wp.CurX(), 4)",
+            "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 4)"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 135,
+            "expression": "阵位号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "true",
+            "runtimeExpression": "[16,true]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 17,
+            "expression": "\"\"",
+            "runtimeExpression": "\"\""
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": null,
+            "expression": "false",
+            "runtimeExpression": "[16,false]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          1
+        ],
+        "name": "准备刷新背包",
+        "sid": "969460324614565",
+        "parameters": []
+      }
+    ]
+  },
+  "材料随机品质function": {
+    "ops": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "parameters": [
+          {
+            "expressionId": 10529,
+            "expression": "\"材料随机品质function\"",
+            "runtimeExpression": "\"材料随机品质function\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "895793159490039",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.CreateProbabilityTable",
+        "parameters": [
+          {
+            "expressionId": 10530,
+            "expression": "\"材料额外品质\"",
+            "runtimeExpression": "\"材料额外品质\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品级",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "611255567790208",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 318,
+            "expression": "90",
+            "runtimeExpression": "90"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "460953094622507",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 33,
+            "expression": "10",
+            "runtimeExpression": "10"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          2
+        ],
+        "sid": "838273414747678",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          3
+        ],
+        "sid": "681507967699873",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品级",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "178663475667800",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 44,
+            "expression": "50",
+            "runtimeExpression": "50"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          1
+        ],
+        "sid": "319879464856873",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 120,
+            "expression": "40",
+            "runtimeExpression": "40"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          2
+        ],
+        "sid": "626159434903176",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          },
+          {
+            "expressionId": 33,
+            "expression": "10",
+            "runtimeExpression": "10"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          3
+        ],
+        "sid": "403969348464259",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品级",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          7,
+          0
+        ],
+        "sid": "602099733786446",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          7,
+          1
+        ],
+        "sid": "157488419065547",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 102,
+            "expression": "70",
+            "runtimeExpression": "70"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          7,
+          2
+        ],
+        "sid": "352409114909270",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          },
+          {
+            "expressionId": 108,
+            "expression": "30",
+            "runtimeExpression": "30"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          7,
+          3
+        ],
+        "sid": "861330596683505",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品级",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 66,
+            "expression": "4",
+            "runtimeExpression": "4"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          0
+        ],
+        "sid": "642066783547826",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          1
+        ],
+        "sid": "790917019013963",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          2
+        ],
+        "sid": "203762990497608",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          },
+          {
+            "expressionId": 102,
+            "expression": "70",
+            "runtimeExpression": "70"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          3
+        ],
+        "sid": "666568732472392",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          },
+          {
+            "expressionId": 108,
+            "expression": "30",
+            "runtimeExpression": "30"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          4,
+          7,
+          0
+        ],
+        "sid": "375759633413535",
+        "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+        "parameters": [
+          {
+            "expressionId": 409,
+            "expression": "AdvancedRandom.Weighted()",
+            "runtimeExpression": "f0()"
+          }
+        ]
+      }
+    ],
+    "calls": []
+  },
+  "普通装备随机品质function": {
+    "ops": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "parameters": [
+          {
+            "expressionId": 10527,
+            "expression": "\"普通装备随机品质function\"",
+            "runtimeExpression": "\"普通装备随机品质function\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "547702130028535",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.CreateProbabilityTable",
+        "parameters": [
+          {
+            "expressionId": 10528,
+            "expression": "\"普通装备额外品质\"",
+            "runtimeExpression": "\"普通装备额外品质\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品级",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "551541692196877",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 102,
+            "expression": "70",
+            "runtimeExpression": "70"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "sid": "810755550481283",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 130,
+            "expression": "25",
+            "runtimeExpression": "25"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          2
+        ],
+        "sid": "495636468486238",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          },
+          {
+            "expressionId": 48,
+            "expression": "5",
+            "runtimeExpression": "5"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          3
+        ],
+        "sid": "651623205462673",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品级",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "480727419609597",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 59,
+            "expression": "20",
+            "runtimeExpression": "20"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          1
+        ],
+        "sid": "727970434015839",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 44,
+            "expression": "50",
+            "runtimeExpression": "50"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          2
+        ],
+        "sid": "447533342323999",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          },
+          {
+            "expressionId": 130,
+            "expression": "25",
+            "runtimeExpression": "25"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          3
+        ],
+        "sid": "776791957408983",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          },
+          {
+            "expressionId": 48,
+            "expression": "5",
+            "runtimeExpression": "5"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品级",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          7,
+          0
+        ],
+        "sid": "828739612278423",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 33,
+            "expression": "10",
+            "runtimeExpression": "10"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          7,
+          1
+        ],
+        "sid": "172447291653612",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 108,
+            "expression": "30",
+            "runtimeExpression": "30"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          7,
+          2
+        ],
+        "sid": "808314959527203",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          },
+          {
+            "expressionId": 142,
+            "expression": "45",
+            "runtimeExpression": "45"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          2,
+          7,
+          3
+        ],
+        "sid": "552749767122183",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          },
+          {
+            "expressionId": 43,
+            "expression": "15",
+            "runtimeExpression": "15"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "敌人品级",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 66,
+            "expression": "4",
+            "runtimeExpression": "4"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          0
+        ],
+        "sid": "317994208768660",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          1
+        ],
+        "sid": "382107460485433",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 33,
+            "expression": "10",
+            "runtimeExpression": "10"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          2
+        ],
+        "sid": "825696952515783",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 12,
+            "expression": "2",
+            "runtimeExpression": "2"
+          },
+          {
+            "expressionId": 125,
+            "expression": "60",
+            "runtimeExpression": "60"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          3,
+          7,
+          3
+        ],
+        "sid": "294147399595289",
+        "reference": "C3.Plugins.AdvancedRandom.Acts.AddProbabilityEntry",
+        "parameters": [
+          {
+            "expressionId": 14,
+            "expression": "3",
+            "runtimeExpression": "3"
+          },
+          {
+            "expressionId": 108,
+            "expression": "30",
+            "runtimeExpression": "30"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          4,
+          7,
+          0
+        ],
+        "sid": "118550049329646",
+        "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+        "parameters": [
+          {
+            "expressionId": 409,
+            "expression": "AdvancedRandom.Weighted()",
+            "runtimeExpression": "f0()"
+          }
+        ]
+      }
+    ],
+    "calls": []
+  },
+  "总掉落率加成function": {
+    "ops": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "parameters": [
+          {
+            "expressionId": 10440,
+            "expression": "\"总掉落率加成function\"",
+            "runtimeExpression": "\"总掉落率加成function\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.ArrForEach",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[3,2]",
+            "runtimeExpression": "[3,2]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+        "parameters": [
+          {
+            "expressionId": 30,
+            "expression": "save.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": 108,
+            "expression": "30",
+            "runtimeExpression": "30"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 135,
+            "expression": "队伍编号",
+            "runtimeExpression": "v0.GetValue()"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "sid": "0",
+        "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+        "parameters": [
+          {
+            "expressionId": 30,
+            "expression": "save.CurX()",
+            "runtimeExpression": "n0.ExpObject()"
+          },
+          {
+            "expressionId": 48,
+            "expression": "5",
+            "runtimeExpression": "5"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,4]",
+            "runtimeExpression": "[8,4]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "sid": "471261725113604",
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "计数",
+            "runtimeExpression": "[11,304457458271988]"
+          },
+          {
+            "expressionId": 10441,
+            "expression": "特定属性统计(save.CurX(), 42, \"\")",
+            "runtimeExpression": "f0(n1.ExpObject(), 42, \"\")"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "sid": "942021532853567",
+        "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+        "parameters": [
+          {
+            "expressionId": 10442,
+            "expression": "(Math.round((100 * (计数 + (科技效果加成(65) * 100)))) / 100)",
+            "runtimeExpression": "(Math.round((100 * (v0.GetValue() + (f1(65) * 100)))) / 100)"
+          }
+        ]
+      }
+    ],
+    "calls": []
+  }
+}

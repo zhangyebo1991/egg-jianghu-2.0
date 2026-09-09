@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../combat/rng'
 import { enemyDefinitionById } from '../content/enemy-names'
+import { settleCombatEvent } from './rewards'
+import { factionQuestCurrentProgress } from './quests'
+import { loadGameV10, saveGameV10 } from './save-v10'
 import {
   acceptQuest,
   advanceQuestBoards,
@@ -57,6 +60,31 @@ const acceptedQuest = (
 })
 
 describe('原版势力五格悬榜', () => {
+  it.each([11, 12])('材料 %i 从真实击杀入库，经存读档后可交付且只扣一次', (targetId) => {
+    const state = targetState()
+    state.factionBoards[FACTION_ID].slots[0] = boardQuest('collect', 1, 3, targetId)
+    state.acceptedFactionQuests['1'] = acceptedQuest(1, 0, 3, targetId, 8)
+    for (let seed = 1; seed <= 2000 && (state.materials[String(targetId)] ?? 0) < 9; seed++) {
+      settleCombatEvent(state, { type: 'enemy-defeated', atMs: seed, worldId: 'world_01', stage: 1,
+        difficulty: 1, rank: 'elite', enemyId: 'world_01_stage_01_mob_1', enemyLevel: 1, seed })
+    }
+    expect(factionQuestCurrentProgress(state, state.acceptedFactionQuests['1'])).toBeGreaterThanOrEqual(9)
+    const values = new Map<string, string>()
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value) },
+      removeItem: (key: string) => { values.delete(key) },
+    }
+    saveGameV10(storage, state, 1000)
+    const loaded = loadGameV10(storage, 2000).state
+    const count = loaded.materials[String(targetId)]
+    expect(claimQuest(loaded, FACTION_ID, 0).ok).toBe(true)
+    expect(loaded.materials[String(targetId)]).toBe(count - 8)
+    expect(loaded.contribution[FACTION_ID]).toBeGreaterThan(0)
+    expect(claimQuest(loaded, FACTION_ID, 0).ok).toBe(false)
+    expect(loaded.materials[String(targetId)]).toBe(count - 8)
+  })
+
   it('正式势力初始化五个任务刷新位且任务 6 不进入随机池', () => {
     const state = targetState()
     const board = state.factionBoards[FACTION_ID]

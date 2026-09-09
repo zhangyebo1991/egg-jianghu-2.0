@@ -138,6 +138,7 @@ import {
   type IdlePageViewModel,
 } from './ui/idle-page'
 import { renderInventoryPage, type InventoryItemView, type InventoryPageViewModel } from './ui/inventory-page'
+import { STACK_ITEM_DEFINITIONS } from './content/campaign-loot.generated'
 import { renderProgressionPage, type ProgressionPageViewModel, type ProgressionSection } from './ui/progression-page'
 import { renderStageList, renderWorldOverview, type PlaneSelectViewModel, type StageListViewModel } from './ui/jianghu-page'
 import { createDomPatcher } from './ui/dom-patch'
@@ -173,6 +174,9 @@ let selectedDifficulty = 1
 let selectedStage = 1
 let selectedHeroId: string | null = null
 let inventorySlotFilter: EquipmentSlot | 'all' = 'all'
+let inventoryCategory: 'all' | 'equipment' | 'material' | 'special' = 'all'
+let inventoryQuery = ''
+let selectedStackId: number | null = null
 let selectedInventoryUid: string | null = null
 let inventoryDetailOpen = false
 let pendingInventoryDropUids: string[] = []
@@ -568,6 +572,9 @@ const enterPlaying = (nextSession: GameSession): void => {
   careerTreeOpen = false
   selectedTreeCareerId = null
   inventorySlotFilter = 'all'
+  inventoryCategory = 'all'
+  inventoryQuery = ''
+  selectedStackId = null
   selectedInventoryUid = null
   inventoryDetailOpen = false
   pendingInventoryDropUids = []
@@ -1279,24 +1286,19 @@ const factionsViewModel = (): FactionsPageViewModel => {
     }, MARTIAL_LORE[martial.id])
   })
   const selectedMartial = martialViews.find((martial) => martial.id === selectedFactionMartialId) ?? null
+  const selectedMartialDefinition = factionMartials.find((martial) => martial.id === selectedFactionMartialId)
   const recruited = recruitedHeroes()
-  const careerCategoryOf = (heroId: string): string => {
-    const definition = heroByIdV10(heroId)
-    return definition ? heroMeridianCategory(definition) : '未知'
-  }
   const rosterQuery = factionRosterQuery.trim()
   const roster = recruited
     .filter(({ name }) => !rosterQuery || name.includes(rosterQuery))
-    .map(({ definition, name }) => {
-      const category = careerCategoryOf(definition.id)
+    .map(({ definition, progress, name }) => {
       const heroFaction = definition.factionId ? FACTIONS.find((item) => item.id === definition.factionId) : undefined
       return {
         id: definition.id,
         name,
         grade: definition.source === 'starter' ? '主' : definition.grade,
-        category,
         factionName: heroFaction?.name ?? '江湖散人',
-        compatible: Boolean(faction && category === faction.category),
+        compatible: Boolean(selectedMartialDefinition && isMartialCareerCompatible(progress.currentCareerId, selectedMartialDefinition)),
         selected: definition.id === normalizedHeroId,
         isPlayer: definition.source === 'starter',
       }
@@ -1629,12 +1631,25 @@ const inventoryItemView = (item: EquipmentInstance): InventoryItemView => {
 
 const inventoryViewModel = (): InventoryPageViewModel => {
   const allItems = backpackEquipment(session.state).map(inventoryItemView)
-  const selectedItem = allItems.find((item) => item.uid === selectedInventoryUid) ?? allItems[0] ?? null
-  if (selectedItem && selectedInventoryUid !== selectedItem.uid) selectedInventoryUid = selectedItem.uid
-  if (!selectedItem) selectedInventoryUid = null
-  const visibleItems = inventorySlotFilter === 'all'
-    ? allItems
-    : allItems.filter((item) => item.slot === inventorySlotFilter)
+  const allStacks = Object.entries(session.state.materials).filter(([, quantity]) => quantity > 0).map(([key, quantity]) => {
+    const id = Number(key)
+    const definition = STACK_ITEM_DEFINITIONS[id]
+    return { id, quantity, name: definition?.name ?? `未知物品 ${key}`, kind: definition?.kind ?? 'special' as const,
+      quality: definition?.quality ?? 0, description: definition?.description ?? '' }
+  }).sort((a, b) => a.id - b.id)
+  const query = inventoryQuery.trim().toLocaleLowerCase()
+  const visibleItems = allItems.filter(item => (inventoryCategory === 'all' || inventoryCategory === 'equipment')
+    && (inventorySlotFilter === 'all' || item.slot === inventorySlotFilter) && item.name.toLocaleLowerCase().includes(query))
+  const stacks = allStacks.filter(item => (inventoryCategory === 'all' || item.kind === inventoryCategory)
+    && item.name.toLocaleLowerCase().includes(query))
+  let selectedStack = stacks.find(item => item.id === selectedStackId) ?? null
+  let selectedItem = selectedStack ? null : visibleItems.find(item => item.uid === selectedInventoryUid) ?? null
+  if (!selectedStack && !selectedItem) {
+    selectedItem = visibleItems[0] ?? null
+    selectedStack = selectedItem ? null : stacks[0] ?? null
+  }
+  selectedInventoryUid = selectedItem?.uid ?? null
+  selectedStackId = selectedStack?.id ?? null
   const slotTabs = [
     { id: 'all' as const, name: '全部', count: allItems.length },
     ...EQUIPMENT_SLOTS.map((slot) => ({ id: slot, name: inventorySlotNames[slot], count: allItems.filter((item) => item.slot === slot).length })),
@@ -1647,6 +1662,13 @@ const inventoryViewModel = (): InventoryPageViewModel => {
   const currency = session.state.worldCurrency[world.id] ?? 0
   return {
     worldName: world.name,
+    category: inventoryCategory,
+    query: inventoryQuery,
+    categoryCounts: { all: allItems.length + allStacks.length, equipment: allItems.length,
+      material: allStacks.filter(item => item.kind === 'material').length,
+      special: allStacks.filter(item => item.kind === 'special').length },
+    stacks,
+    selectedStack,
     capacity: INVENTORY_CAPACITY,
     itemCount: allItems.length,
     capacityRatio: Math.max(2, Math.min(100, allItems.length / INVENTORY_CAPACITY * 100)),
@@ -2405,11 +2427,22 @@ const performAction = (button: HTMLButtonElement): void => {
     commitAction(result)
   }
   else if (action === 'inventory-select') {
+    selectedStackId = null
     selectedInventoryUid = button.dataset.equipmentUid ?? null
     inventoryDetailOpen = true
+  } else if (action === 'inventory-stack-select') {
+    selectedStackId = Number(button.dataset.itemId)
+    selectedInventoryUid = null
+    inventoryDetailOpen = true
+  } else if (action === 'inventory-category') {
+    const category = button.dataset.category
+    if (category === 'all' || category === 'equipment' || category === 'material' || category === 'special') inventoryCategory = category
+    inventorySlotFilter = 'all'
   } else if (action === 'inventory-close-detail') {
     inventoryDetailOpen = false
   } else if (action === 'inventory-filter') {
+    inventoryCategory = 'equipment'
+    selectedStackId = null
     const nextFilter = button.dataset.inventorySlot ?? 'all'
     inventorySlotFilter = nextFilter === 'all' || EQUIPMENT_SLOTS.includes(nextFilter as EquipmentSlot)
       ? nextFilter as EquipmentSlot | 'all'
@@ -2613,6 +2646,12 @@ app.addEventListener('change', (event) => {
 
 app.addEventListener('input', (event) => {
   const target = event.target as HTMLElement
+  const inventoryInput = target.closest<HTMLInputElement>('[data-action="inventory-search"]')
+  if (inventoryInput) {
+    inventoryQuery = inventoryInput.value
+    render()
+    return
+  }
   const martialInput = target.closest<HTMLInputElement>('[data-action="hero-martial-search"]')
   if (martialInput) {
     heroMartialQuery = martialInput.value

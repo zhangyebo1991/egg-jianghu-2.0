@@ -12,6 +12,7 @@ export interface FactionDefinition {
   currencyKind: 'worldCurrency' | 'contribution'
   branchLabels: readonly [string, string]
   skillIds: readonly number[]
+  /** 原版下一待打层编码：每小关 10 层、每难度 100 层，初始为 1。 */
   requiredProgress: number
   /** 诸天技能组威力属性 id（sx153-194 段）。 */
   factionPowerSxId: number

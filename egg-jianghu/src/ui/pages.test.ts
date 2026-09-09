@@ -187,10 +187,10 @@ const factionsFixture = (): FactionsPageViewModel => ({
   recruitment: recruitmentFixture(),
   selectedHeroId: 'hero_test',
   selectedHero: {
-    id: 'hero_test', name: '试剑人', grade: '主', category: '剑', factionName: '江湖散人', compatible: true, selected: true, isPlayer: true,
+    id: 'hero_test', name: '试剑人', grade: '主', factionName: '江湖散人', compatible: true, selected: true, isPlayer: true,
   },
   roster: [{
-    id: 'hero_test', name: '试剑人', grade: '主', category: '剑', factionName: '江湖散人', compatible: true, selected: true, isPlayer: true,
+    id: 'hero_test', name: '试剑人', grade: '主', factionName: '江湖散人', compatible: true, selected: true, isPlayer: true,
   }],
   rosterCount: 1,
   rosterOpen: false,
@@ -600,7 +600,7 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('物攻</span>')
     expect(html).toContain('(94%)')
     expect(html).toContain('[C]')
-    expect(html).toContain('共 1 件 · 囊容 300')
+    expect(html).toContain('装备 1 件 · 堆叠物品不占装备格')
     expect(html).toContain('data-testid="job-book-shop"')
     expect(html).toContain('弓手转职书')
     expect(html).toContain('data-testid="shop-buy-job_5"')

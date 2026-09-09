@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { martialByIdV10 } from '../../src/content/martials'
+import { FACTION_MARTIALS, martialByIdV10 } from '../../src/content/martials'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
 test.beforeEach(async ({ page }) => {
@@ -7,6 +7,37 @@ test.beforeEach(async ({ page }) => {
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').fill('配招少侠')
   await page.getByLabel('玩家姓名').press('Enter')
+})
+
+test('传承研习对象不显示旧脉系，通用武馆六门技能对全部侠客显示可传', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.evaluate(() => window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci'))
+  await page.getByTestId('world-world_01').click()
+  await page.getByTestId('start-crossing').click()
+  await page.getByTestId('world-section-factions').click()
+  const firstFactionId = martialByIdV10('original_skill_42')!.factionId
+  const martialIds = FACTION_MARTIALS.filter((martial) => martial.factionId === firstFactionId).map((martial) => martial.id)
+  expect(martialIds).toHaveLength(6)
+  for (const id of martialIds) {
+    await page.locator(`[data-action="select-martial"][data-martial-id="${id}"]`).click()
+    await page.locator('[data-action="toggle-faction-roster"]').click()
+    const roster = page.getByTestId('faction-roster')
+    await expect(roster).toBeVisible()
+    await expect(roster.locator('.faction-roster-fit')).toHaveText(['可传', '可传'])
+    await expect(page.locator('.faction-disciple')).not.toContainText('脉')
+    await expect(roster.locator('.faction-roster-row.dim')).toHaveCount(0)
+    await page.locator('[data-action="toggle-faction-roster"]').click()
+  }
+  await page.locator('[data-action="toggle-faction-roster"]').click()
+  await page.getByTestId('faction-roster').screenshot({ path: testInfo.outputPath('faction-roster-universal.png'), animations: 'disabled' })
+  await page.locator('[data-action="toggle-faction-roster"]').click()
+  // 非通用技能仍按当前所选技能的职业限制显示，不能一律标记可传。
+  const restricted = FACTION_MARTIALS.find((martial) => martial.worldId === 'world_01' && martial.skillCategory !== 1)!
+  await page.evaluate((id) => window.__EGG_JIANGHU__.unlockFaction(id), restricted.factionId!)
+  await page.getByTestId(`faction-plaque-${restricted.factionId}`).click()
+  await page.locator(`[data-action="select-martial"][data-martial-id="${restricted.id}"]`).click()
+  await page.locator('[data-action="toggle-faction-roster"]').click()
+  await expect(page.getByTestId('faction-roster-hero_player')).toContainText('职不符')
 })
 
 test('武学装配替换卸下、筛选记忆、保存和战斗快照', async ({ page }, testInfo) => {

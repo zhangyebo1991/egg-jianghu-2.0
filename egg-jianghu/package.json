@@ -12,6 +12,8 @@
     "evidence:combat": "node scripts/extract-zhutian-combat-evidence.mjs",
     "evidence:world": "node scripts/generate-original-world-evidence.mjs",
     "evidence:world:check": "node scripts/generate-original-world-evidence.mjs --check",
+    "evidence:loot": "node scripts/generate-campaign-loot.mjs",
+    "evidence:loot:check": "node scripts/generate-campaign-loot.mjs --check",
     "generate:original": "node scripts/generate-original-progression.mjs && node scripts/generate-zhutian-skills.mjs",
     "desktop": "npm run build && electron .",
     "desktop:dir": "npm run build && electron-builder --win --x64 --dir",

@@ -50,10 +50,11 @@ export const worldBattleProgress = (
   progress: Record<string, number>,
   worldId: string,
 ): number => {
-  let total = 0
+  // 原版 save[world, 2, 0] 记录下一层：每小关 10 层、每难度 100 层。
+  let total = 1
   for (let difficulty = 1; difficulty <= DIFFICULTY_COUNT; difficulty += 1) {
     const cleared = clearedStageOf(progress, worldId, difficulty)
-    total = (difficulty - 1) * STAGE_COUNT + cleared
+    total = ((difficulty - 1) * STAGE_COUNT + cleared) * 10 + 1
     if (cleared < STAGE_COUNT) break
   }
   return total
