@@ -1169,8 +1169,74 @@ export const CAREER_GROWTH_FIELDS: Array<{ id: keyof CareerGrowth; label: string
   { id: 'heal', label: '治疗' },
 ]
 
+export const LEGACY_CAREER_NAMES: Record<string, string> = {
+  universal: '通用',
+  sword: '剑客',
+  sword_swift: '快剑',
+  sword_swift_mid: '游剑客',
+  sword_swift_high: '追风剑师',
+  sword_swift_top: '无痕剑宗',
+  sword_heavy: '重剑',
+  sword_heavy_mid: '重剑客',
+  sword_heavy_high: '镇岳剑师',
+  sword_heavy_top: '玄铁剑宗',
+
+  blade: '刀客',
+  blade_swift: '快刀',
+  blade_swift_mid: '快刀客',
+  blade_swift_high: '追魂刀师',
+  blade_swift_top: '无影刀宗',
+  blade_fury: '狂刀',
+  blade_fury_mid: '狂刀客',
+  blade_fury_high: '血战刀师',
+  blade_fury_top: '百战刀宗',
+
+  fist: '拳师',
+  fist_hard: '刚拳',
+  fist_hard_mid: '长拳师',
+  fist_hard_high: '震山拳师',
+  fist_hard_top: '通臂宗师',
+  fist_soft: '绵掌',
+  fist_soft_mid: '绵掌师',
+  fist_soft_high: '化劲掌师',
+  fist_soft_top: '化境宗师',
+
+  shadow: '暗客',
+  shadow_assassin: '影刺',
+  shadow_assassin_mid: '影客',
+  shadow_assassin_high: '追命使',
+  shadow_assassin_top: '无踪魁首',
+  shadow_poison: '毒术',
+  shadow_poison_mid: '毒手',
+  shadow_poison_high: '百毒使',
+  shadow_poison_top: '毒门魁首',
+
+  doctor: '医者',
+  doctor_heal: '疗伤',
+  doctor_heal_mid: '仁心医士',
+  doctor_heal_high: '杏林圣手',
+  doctor_heal_top: '岐黄国手',
+  doctor_medicine: '药理',
+  doctor_medicine_mid: '调息医士',
+  doctor_medicine_high: '经脉医师',
+  doctor_medicine_top: '药王',
+
+  inner: '内家',
+  inner_flow: '运气',
+  inner_flow_mid: '运气士',
+  inner_flow_high: '周天师',
+  inner_flow_top: '气宗',
+  inner_guard: '护体',
+  inner_guard_mid: '护气士',
+  inner_guard_high: '铁衣护法',
+  inner_guard_top: '金刚宗师',
+}
+
 export const careerById = (id: string): CareerDefinition | undefined =>
   CAREERS.find((career) => career.id === id)
+
+export const careerNameById = (id: string): string =>
+  careerById(id)?.name ?? LEGACY_CAREER_NAMES[id] ?? id
 
 export const careersInRank = (rank: CareerDefinition['rank']): CareerDefinition[] =>
   CAREERS.filter((career) => career.rank === rank)

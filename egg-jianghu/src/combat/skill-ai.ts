@@ -1,4 +1,5 @@
 import { skillById, type CombatSkillContent } from '../content/skills'
+import { martialByOriginalId, martialEffectAtLevel, martialBuffChanceAtLevel } from '../content/martials'
 import { buffById } from '../content/buffs'
 import { skillRangeById } from '../content/skill-ranges'
 import { SX } from './attribute-ids'
@@ -16,6 +17,18 @@ import type { CombatSummon, CombatUnit } from './types'
 
 export interface SkillSelection {
   skill: CombatSkillContent
+}
+
+export const unitSkillById = (actor: CombatUnit, id: number): CombatSkillContent | undefined => {
+  const skill = skillById(id)
+  const level = actor.skillLevels?.[id]
+  const martial = level ? martialByOriginalId(id) : undefined
+  if (!skill || !martial || !level) return skill
+  return {
+    ...skill,
+    powerPercent: martialEffectAtLevel(martial, level),
+    ...(martial.buffId ? { appliedBuffChance: martialBuffChanceAtLevel(martial, level) / 100 } : {}),
+  }
 }
 
 const isSummon = (unit: CombatUnit): unit is CombatSummon => 'summonerId' in unit
@@ -107,7 +120,7 @@ export const selectSkill = (
   enemies: CombatUnit[],
 ): SkillSelection => {
   for (const skillId of actor.skillIds) {
-    const skill = skillById(skillId)
+    const skill = unitSkillById(actor, skillId)
     if (!skill) continue
     if (unavailableReason(actor, skill, allies, enemies)) continue
     return { skill }

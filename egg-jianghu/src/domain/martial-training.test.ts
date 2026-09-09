@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FACTION_MARTIALS, martialByIdV10, martialResourceCost, martialSpCost } from '../content/martials'
-import { createInitialStateV10, createHeroProgress } from './state'
+import { createInitialStateV10, createHeroProgress, createNewGameStateV10 } from './state'
 import {
   equipHeartMethod,
   equipMartial,
@@ -30,6 +30,22 @@ const learnedAt = (
 ): LearnedMartial => ({ level, investedSp, invested })
 
 describe('邀请与技能修习', () => {
+  it('默认主角为白丁职业，可以直接修习野球拳等通用技能', () => {
+    const state = createNewGameStateV10('测试少侠')
+    // 默认主角初始职业是 job_1 (白丁)
+    expect(state.heroes.hero_player.currentCareerId).toBe('job_1')
+
+    // 给主角足够的技能点和铜钱
+    state.heroes.hero_player.skillPoints = 500
+    state.worldCurrency.world_01 = 2000
+
+    const result = learnFactionMartial(state, 'hero_player', 'original_skill_42')
+    expect(result.message).toBe('学会武功')
+    expect(result.ok).toBe(true)
+    expect(state.heroes.hero_player.learnedMartials['original_skill_42']).toBeDefined()
+    expect(state.heroes.hero_player.learnedMartials['original_skill_42'].level).toBe(1)
+  })
+
   it('从明确名单直接邀请侠客，不返回随机结果', () => {
     const state = createInitialStateV10(1000)
 

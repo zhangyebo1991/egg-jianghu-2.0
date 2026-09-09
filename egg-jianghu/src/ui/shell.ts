@@ -47,7 +47,7 @@ export const renderShell = (view: ShellViewModel): string => {
         </nav>
         ${worldContext ? `
           <nav class="world-subnav" aria-label="${escapeHtml(worldContext.worldName)}">
-            <button type="button" class="world-back" data-action="return-worlds">返回江湖</button>
+            <button type="button" class="world-back" data-action="return-worlds">世界总览</button>
             <span class="world-subnav-title">${escapeHtml(worldContext.worldName)}</span>
             <div class="world-subnav-sections">
               ${jianghuSections.map((section) => `

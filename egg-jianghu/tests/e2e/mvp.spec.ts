@@ -375,6 +375,7 @@ test('返回总览隐藏二级导航且通关基础后可穿越下一位面', as
     window.__EGG_JIANGHU__.forceCombatResult('victory')
   })
   await page.getByTestId('tab-idle').click()
+  await page.locator('.world-subnav [data-action="return-worlds"]').click()
   await page.getByTestId('world-world_02').click()
   await page.getByTestId('start-crossing').click()
   await expect(page.getByTestId('stage-overview')).toBeVisible()

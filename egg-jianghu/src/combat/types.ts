@@ -59,6 +59,8 @@ export interface CombatUnit {
   statuses: CombatStatus[]
   /** 主动技能栏（jn 表 id，从左到右优先） */
   skillIds: readonly number[]
+  /** 开战时携带武学的等级快照。 */
+  skillLevels?: Record<number, number>
   /** 普攻技能 id（jn 表） */
   baseAttackId: number
   /** 人物主手 wp[7] 武器类型 1..10；敌人、召唤物或未装备主手时为空。 */

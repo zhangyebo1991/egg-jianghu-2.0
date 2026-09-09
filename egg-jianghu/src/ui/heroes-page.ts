@@ -16,6 +16,7 @@ import { equipmentIconAsset } from './equipment-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
 import heroStandFigure from '../assets/heroes/hero_stand.webp'
 import type { InventoryItemView } from './inventory-page'
+import { renderHeroMartials, type HeroMartialsView } from './hero-martials'
 
 export interface CareerGrowthView {
   id: string
@@ -64,7 +65,7 @@ export interface CareerTreeDetailView {
   actionDisabled: boolean
 }
 
-export type HeroesMainTab = 'basic' | 'equipment' | 'career'
+export type HeroesMainTab = 'basic' | 'equipment' | 'martials' | 'career'
 
 export interface HeroesHeroView {
   id: string
@@ -116,6 +117,8 @@ export interface HeroesPackView {
 export interface HeroesPageViewModel {
   selectedHeroId: string | null
   mainTab: HeroesMainTab
+  martials?: HeroMartialsView
+  returnLabel?: string
   heroes: HeroesHeroView[]
   rosterHeroes?: HeroesHeroView[]
   rosterQuery?: string
@@ -144,6 +147,7 @@ const TREE_RANKS: Array<1 | 2 | 3 | 4 | 5 | 6> = [6, 5, 4, 3, 2, 1]
 const HERO_MAIN_TABS: Array<{ tab: HeroesMainTab; label: string }> = [
   { tab: 'basic', label: '基础' },
   { tab: 'equipment', label: '装备' },
+  { tab: 'martials', label: '武学' },
   { tab: 'career', label: '职业' },
 ]
 
@@ -482,11 +486,13 @@ const renderEquipmentTab = (hero: HeroesHeroView, equipment: HeroesEquipmentView
 }
 
 const renderMainTabs = (view: HeroesPageViewModel, hero: HeroesHeroView): string => `
+  ${view.returnLabel ? `<button type="button" class="hero-world-return" data-tab="idle" data-testid="hero-world-return">返回 · ${escapeHtml(view.returnLabel)}</button>` : ''}
   <nav class="hero-htabs" aria-label="侠客资料分页">
     ${HERO_MAIN_TABS.map(({ tab, label }) => `<button type="button" class="htab${view.mainTab === tab ? ' active' : ''}" data-action="hero-main-tab" data-main-tab="${tab}" aria-pressed="${view.mainTab === tab}">${label}</button>`).join('')}
   </nav>
   <div class="hero-tab-panel" data-main-tab="basic"${view.mainTab === 'basic' ? '' : ' hidden'}>${renderBasicTab(hero)}</div>
   <div class="hero-tab-panel" data-main-tab="equipment"${view.mainTab === 'equipment' ? '' : ' hidden'}>${view.equipment ? renderEquipmentTab(hero, view.equipment) : ''}</div>
+  <div class="hero-tab-panel" data-main-tab="martials"${view.mainTab === 'martials' ? '' : ' hidden'}>${view.martials ? renderHeroMartials(view.martials) : ''}</div>
   <div class="hero-tab-panel" data-main-tab="career"${view.mainTab === 'career' ? '' : ' hidden'}>${renderCareerTab(hero)}</div>`
 
 export type PackPaginationItem =
@@ -627,6 +633,6 @@ export const renderHeroesPage = (view: HeroesPageViewModel): string => {
       ${renderPackRail(view)}
     </div>
     ${selected ? renderCareerTreeOverlay(selected, view) : ''}
-    <footer class="page-foot heroes-page-foot"><span><b>侠客页</b> · 蛋蛋江湖 2.0 · 装备、职业与转职树</span><span>获取侠客请前往城市或势力</span></footer>
+    <footer class="page-foot heroes-page-foot"><span><b>侠客页</b> · 蛋蛋江湖 2.0 · 装备、武学与职业</span><span>获取侠客请前往城市或势力</span></footer>
   </section>`
 }

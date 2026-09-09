@@ -7,7 +7,7 @@ import { buildCombatStats } from './combat/stats'
 import { COMBAT_TICK_MS } from './combat/timeline'
 import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
 import { createWave } from './combat/waves'
-import { CAREERS, CAREER_GROWTH_FIELDS, STARTER_CAREER_ID, careerById, careerJobBookName, careerSkillTypeNames, careersInRank, formatGrowthCoeff, growthGrade } from './content/careers'
+import { CAREERS, CAREER_GROWTH_FIELDS, STARTER_CAREER_ID, careerById, careerJobBookName, careerNameById, careerSkillTypeNames, careersInRank, formatGrowthCoeff, growthGrade } from './content/careers'
 import {
   EQUIPMENT_QUALITIES,
   EQUIPMENT_SLOT_NAMES,
@@ -63,7 +63,7 @@ import { worldPresentation } from './content/world-presentations'
 import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
 import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, INVENTORY_CAPACITY, organizeInventory, sellEquipmentByQuality, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, bindActiveEquipmentLoadout } from './domain/inventory'
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
-import { equipHeartMethod, equipMartial, forgetMartial, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
+import { equipHeartMethod, equipMartial, forgetMartial, isMartialCareerCompatible, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
 import { appointFactionAgent, dismissFactionAgent, factionAgentAbilityLevel, factionAgentCandidateIds, toggleFactionAgent } from './domain/faction-agent'
 import {
@@ -183,8 +183,14 @@ let selectedProgressionEquipmentUid: string | null = null
 let heroPackSlotFilter: EquipmentSlot | 'all' = 'all'
 let heroPackQualityFilter: EquipmentQuality | 'all' = 'all'
 let heroPackPage = 1
-let heroPackDynamicRows = 8
+let heroPackDynamicPageSize = 48
 let heroMainTab: HeroesMainTab = 'basic'
+let heroMartialSlot: number | null = null
+let heroMartialQuery = ''
+let heroMartialCategory = 'all'
+let highlightedHeroMartialId: string | null = null
+let renderedLocationKey = ''
+const pageScrollMemory = new Map<string, Array<{ selector: string; top: number; left: number }>>()
 let heroSellOpen = false
 let heroRosterQuery = ''
 let heroRosterGradeFilter = 'all'
@@ -569,7 +575,14 @@ const enterPlaying = (nextSession: GameSession): void => {
   heroPackSlotFilter = 'all'
   heroPackQualityFilter = 'all'
   heroPackPage = 1
+  heroPackDynamicPageSize = 48
   heroMainTab = 'basic'
+  heroMartialSlot = null
+  heroMartialQuery = ''
+  heroMartialCategory = 'all'
+  highlightedHeroMartialId = null
+  pageScrollMemory.clear()
+  renderedLocationKey = ''
   heroSellOpen = false
   heroRosterQuery = ''
   heroRosterGradeFilter = 'all'
@@ -821,21 +834,21 @@ const careerGrowthView = (career: NonNullable<ReturnType<typeof careerById>>) =>
     coeff: formatGrowthCoeff(career.growth[field.id]),
   }))
 
-const computeHeroPackRows = (): number => {
+const computeHeroPackPageSize = (): number => {
   const grid = app.querySelector<HTMLElement>('.heroes-page .pack-grid')
   if (grid && grid.clientHeight > 0 && grid.clientWidth > 0) {
     const width = grid.clientWidth
     const height = grid.clientHeight
-    const cellWidth = Math.max(36, (width - 5 * 6) / 6)
-    const rowHeight = cellWidth + 6
-    const rows = Math.max(6, Math.floor((height + 6) / rowHeight))
-    return rows
+    const style = window.getComputedStyle(grid)
+    const columns = style.gridTemplateColumns.split(/\s+/).length
+    const columnGap = Number.parseFloat(style.columnGap) || 0
+    const rowGap = Number.parseFloat(style.rowGap) || 0
+    const cellWidth = (width - (columns - 1) * columnGap) / columns
+    const rows = Math.max(1, Math.floor((height + rowGap) / (cellWidth + rowGap)))
+    return rows * columns
   }
-  if (typeof window !== 'undefined' && window.innerHeight > 0) {
-    const estimatedHeight = Math.max(300, window.innerHeight - 300)
-    return Math.max(6, Math.floor((estimatedHeight + 6) / 54))
-  }
-  return 8
+  // 离开侠客页时没有网格，沿用上次容量，避免返回时暂用估算值挤掉末页。
+  return heroPackDynamicPageSize
 }
 
 const heroesViewModel = (): HeroesPageViewModel => {
@@ -873,7 +886,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
       careerMaxed: (record?.level ?? 1) >= CAREER_MAX_LEVEL,
       learnedCareers: Object.entries(progress.careers).map(([id, learned]) => ({
         id,
-        name: careerById(id)?.name ?? id,
+        name: careerNameById(id),
         level: learned.level,
         current: id === progress.currentCareerId,
       })),
@@ -922,7 +935,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
       skillTypeNames: careerSkillTypeNames(selectedCareer),
       growth: careerGrowthView(selectedCareer),
       requirements: selectedCareer.requirements.map((requirement) => ({
-        name: careerById(requirement.careerId)?.name ?? requirement.careerId,
+        name: careerNameById(requirement.careerId),
         requiredLevel: requirement.level,
         currentLevel: selectedProgress.careers[requirement.careerId]?.level ?? 0,
         met: (selectedProgress.careers[requirement.careerId]?.level ?? 0) >= requirement.level,
@@ -962,9 +975,8 @@ const heroesViewModel = (): HeroesPageViewModel => {
     if (heroPackQualityFilter !== 'all' && item.quality !== heroPackQualityFilter) return false
     return true
   })
-  const packRows = computeHeroPackRows()
-  heroPackDynamicRows = packRows
-  const packPageSize = packRows * 6
+  const packPageSize = computeHeroPackPageSize()
+  heroPackDynamicPageSize = packPageSize
   const packPageCount = Math.max(1, Math.ceil(packSource.length / packPageSize))
   heroPackPage = Math.min(packPageCount, Math.max(1, heroPackPage))
   const packPageItems = packSource.slice((heroPackPage - 1) * packPageSize, heroPackPage * packPageSize)
@@ -982,6 +994,17 @@ const heroesViewModel = (): HeroesPageViewModel => {
   return {
     selectedHeroId: selectedId,
     mainTab: heroMainTab,
+    martials: selectedProgress ? {
+      hero: selectedProgress,
+      query: heroMartialQuery,
+      category: heroMartialCategory,
+      selectedSlot: heroMartialSlot,
+      highlightedId: highlightedHeroMartialId,
+      locked: Boolean(session.combat || session.pendingCombatRestart),
+    } : undefined,
+    returnLabel: jianghuView !== 'worlds'
+      ? `${WORLDS.find((world) => world.id === selectedWorldId)?.name ?? '江湖'} / ${jianghuView === 'combat' && session.combat ? '战斗' : ({ stages: '关卡', factions: '势力', towns: '城镇', city: '城市' })[jianghuSection]}`
+      : undefined,
     heroes,
     rosterHeroes,
     rosterQuery: heroRosterQuery,
@@ -1211,7 +1234,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
     const resourceWallet = martial.currencySource.kind === 'contribution' ? session.state.contribution : session.state.worldCurrency
     const availableResource = resourceWallet[martial.currencySource.id] ?? 0
     const availableSp = heroProgress?.skillPoints ?? 0
-    const careerCompatible = Boolean(heroProgress && martial.careerIds.includes(heroProgress.currentCareerId))
+    const careerCompatible = Boolean(heroProgress && isMartialCareerCompatible(heroProgress.currentCareerId, martial))
     let actionReason: string | null = null
     if (!normalizedHeroId) actionReason = '请先选择研习对象'
     else if (learned && level >= martial.maxLevel) actionReason = '已臻化境'
@@ -1247,7 +1270,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
       power: martial.power,
       previousName: previous?.name ?? null,
       previousMaxLevel: previous?.maxLevel ?? null,
-      careerNames: [...new Set(martial.careerIds.map((careerId) => careerById(careerId)?.name ?? careerId))],
+      careerNames: [...new Set(martial.careerIds.map((careerId) => careerNameById(careerId)))],
       careerCompatible,
       affordable: availableSp >= spCost && availableResource >= resourceCost,
       actionDisabled: actionReason !== null,
@@ -1840,6 +1863,35 @@ const playPendingJianghuMotion = (): void => {
   jianghuMotionPending = null
 }
 
+// 每个页面保留独立滚动位置；切换栏目、侠客或资料页签也有各自的位置。
+const navigationLocationKey = (): string => activeTab === 'idle'
+  ? `idle:${jianghuView}:${selectedWorldId}:${jianghuSection}:${selectedDifficulty}`
+  : activeTab === 'heroes' ? `heroes:${selectedHeroId}:${heroMainTab}` : activeTab
+
+const rememberPageScroll = (): void => {
+  if (!renderedLocationKey) return
+  const positions = [{ selector: 'document', top: window.scrollY, left: window.scrollX }]
+  const main = app.querySelector<HTMLElement>('.game-main')
+  if (main) for (const element of [main, ...main.querySelectorAll<HTMLElement>('*')]) {
+    if (element.scrollHeight <= element.clientHeight && element.scrollWidth <= element.clientWidth) continue
+    const path: string[] = []
+    let node: Element = element
+    while (node !== main && node.parentElement) {
+      path.unshift(`${node.tagName.toLowerCase()}:nth-child(${Array.from(node.parentElement.children).indexOf(node) + 1})`)
+      node = node.parentElement
+    }
+    positions.push({ selector: ['.game-main', ...path].join(' > '), top: element.scrollTop, left: element.scrollLeft })
+  }
+  pageScrollMemory.set(renderedLocationKey, positions)
+}
+
+const restorePageScroll = (key: string): void => {
+  for (const position of pageScrollMemory.get(key) ?? [{ selector: 'document', top: 0, left: 0 }, { selector: '.game-main', top: 0, left: 0 }]) {
+    if (position.selector === 'document') window.scrollTo({ top: position.top, left: position.left, behavior: 'instant' })
+    else app.querySelector<HTMLElement>(position.selector)?.scrollTo({ top: position.top, left: position.left, behavior: 'instant' })
+  }
+}
+
 const render = (): void => {
   if (appScreen !== 'playing') {
     toast.classList.remove('inventory-toast')
@@ -1856,6 +1908,9 @@ const render = (): void => {
     return
   }
   normalizeSelectedWorld()
+  const locationKey = navigationLocationKey()
+  const locationChanged = locationKey !== renderedLocationKey
+  if (locationChanged) rememberPageScroll()
   const shouldPlayFactionSwitch = factionSwitchAnimationPending
     && activeTab === 'idle'
     && jianghuView === 'world'
@@ -1880,6 +1935,13 @@ const render = (): void => {
     jianghuChrome: activeTab === 'idle' && jianghuView !== 'combat',
     content,
   }))
+  renderedLocationKey = locationKey
+  if (locationChanged) {
+    restorePageScroll(locationKey)
+    window.requestAnimationFrame(() => {
+      if (renderedLocationKey === locationKey) restorePageScroll(locationKey)
+    })
+  }
   if (activeTab === 'idle' && jianghuView !== 'combat') playPendingJianghuMotion()
   if (heroRosterLocatePending && activeTab === 'heroes') {
     heroRosterLocatePending = false
@@ -1931,9 +1993,9 @@ const render = (): void => {
   syncInventoryDetailScrollLock()
   playInventoryDropMotion()
   if (activeTab === 'heroes') {
-    const nextRows = computeHeroPackRows()
-    if (nextRows !== heroPackDynamicRows) {
-      heroPackDynamicRows = nextRows
+    const nextPageSize = computeHeroPackPageSize()
+    if (nextPageSize !== heroPackDynamicPageSize) {
+      heroPackDynamicPageSize = nextPageSize
       window.requestAnimationFrame(() => render())
     }
   }
@@ -2254,6 +2316,10 @@ app.addEventListener('dragend', () => {
 const performAction = (button: HTMLButtonElement): void => {
   const action = button.dataset.action
   const heroId = button.dataset.heroId ?? selectedHeroId ?? ''
+  if (['martial-equip', 'martial-unequip'].includes(action ?? '') && (session.combat || session.pendingCombatRestart)) {
+    notify('战斗进行中，结束或退出战斗后可调整武学', true)
+    return
+  }
   if (action === 'formation-remove') commitAction(removeFormation(session.state, heroId))
   else if (action === 'formation-select') {
     formationDetailHeroId = heroId
@@ -2295,7 +2361,11 @@ const performAction = (button: HTMLButtonElement): void => {
   }
   else if (action === 'martial-learn') commitAction(learnFactionMartial(session.state, heroId, button.dataset.martialId ?? ''))
   else if (action === 'martial-upgrade') commitAction(upgradeMartial(session.state, heroId, button.dataset.martialId ?? ''))
-  else if (action === 'martial-equip') commitAction(equipMartial(session.state, heroId, button.dataset.martialId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'martial-equip') {
+    const result = equipMartial(session.state, heroId, button.dataset.martialId ?? '', dataNumber(button, 'slot'))
+    commitAction(result)
+    if (result.ok) heroMartialSlot = null
+  }
   else if (action === 'martial-unequip') commitAction(unequipMartial(session.state, heroId, dataNumber(button, 'slot')))
   else if (action === 'martial-forget') commitAction(forgetMartial(session.state, heroId, button.dataset.martialId ?? ''))
   else if (action === 'toggle-faction-roster') {
@@ -2390,7 +2460,25 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
   else if (action === 'hero-main-tab') {
     const tab = button.dataset.mainTab
-    if (tab === 'basic' || tab === 'equipment' || tab === 'career') heroMainTab = tab
+    if (tab === 'basic' || tab === 'equipment' || tab === 'martials' || tab === 'career') heroMainTab = tab
+  }
+  else if (action === 'hero-martial-slot') {
+    const slot = dataNumber(button, 'slot')
+    if (slot >= 0 && slot < 4) heroMartialSlot = slot
+  }
+  else if (action === 'hero-martial-cancel') heroMartialSlot = null
+  else if (action === 'open-hero-martials') {
+    const martialId = button.dataset.martialId ?? ''
+    const hero = session.state.heroes[heroId]
+    if (!hero?.recruited || !hero.learnedMartials[martialId]) return
+    selectedHeroId = heroId
+    heroMainTab = 'martials'
+    heroMartialQuery = ''
+    heroMartialCategory = 'all'
+    highlightedHeroMartialId = martialId
+    const emptySlot = hero.equippedMartialIds.indexOf(null)
+    heroMartialSlot = emptySlot >= 0 ? emptySlot : null
+    activeTab = 'heroes'
   }
   else if (action === 'hero-sell-toggle') {
     heroSellOpen = !heroSellOpen
@@ -2511,6 +2599,12 @@ app.addEventListener('submit', (event) => {
 
 app.addEventListener('change', (event) => {
   const target = event.target as HTMLElement
+  const category = target.closest<HTMLSelectElement>('[data-action="hero-martial-category"]')
+  if (category) {
+    heroMartialCategory = category.value
+    render()
+    return
+  }
   const select = target.closest<HTMLSelectElement>('[data-action="select-hero-input"]')
   if (select) selectedHeroId = select.value || null
   if (!select) return
@@ -2519,6 +2613,12 @@ app.addEventListener('change', (event) => {
 
 app.addEventListener('input', (event) => {
   const target = event.target as HTMLElement
+  const martialInput = target.closest<HTMLInputElement>('[data-action="hero-martial-search"]')
+  if (martialInput) {
+    heroMartialQuery = martialInput.value
+    render()
+    return
+  }
   const heroRosterInput = target.closest<HTMLInputElement>('[data-action="hero-roster-search"]')
   if (heroRosterInput) {
     heroRosterQuery = heroRosterInput.value
@@ -2680,11 +2780,6 @@ app.addEventListener('click', (event) => {
   if (tab) {
     activeTab = tab
     if (tab !== 'inventory') inventoryDetailOpen = false
-    if (tab === 'idle') {
-      jianghuView = 'worlds'
-      jianghuSection = 'stages'
-      jianghuMotionPending = 'overview'
-    }
     render()
     return
   }
@@ -2772,6 +2867,10 @@ app.addEventListener('click', (event) => {
     return
   } else if (action === 'select-hero') {
     selectedHeroId = button.dataset.heroId ?? null
+    heroMartialSlot = null
+    heroMartialQuery = ''
+    heroMartialCategory = 'all'
+    highlightedHeroMartialId = null
     careerTreeOpen = false
     selectedTreeCareerId = null
   }
@@ -3073,11 +3172,6 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   setTab: (tab) => {
     ensurePlaying()
     activeTab = tab
-    if (tab === 'idle') {
-      jianghuView = 'worlds'
-      jianghuSection = 'stages'
-      jianghuMotionPending = 'overview'
-    }
     render()
   },
   setJianghuSection: (section) => {

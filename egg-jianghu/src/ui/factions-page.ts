@@ -260,6 +260,7 @@ const renderMartialDetail = (view: FactionsPageViewModel): string => {
     <div class="faction-detail-action">
       <span>${view.selectedHero ? `研习对象 · ${escapeHtml(view.selectedHero.name)} · 可用 ${formatNumber(martial.availableSp)} SP` : '请先选择研习对象'}</span>
       <button type="button" class="faction-learn-button ${martial.learned ? 'upgrade' : ''}" data-action="${action}" data-hero-id="${escapeHtml(view.selectedHeroId ?? '')}" data-martial-id="${escapeHtml(martial.id)}"${martial.actionDisabled ? ' disabled' : ''}>${escapeHtml(actionLabel)}</button>
+      ${martial.learned ? `<button type="button" class="faction-learn-button" data-action="open-hero-martials" data-hero-id="${escapeHtml(view.selectedHeroId ?? '')}" data-martial-id="${escapeHtml(martial.id)}">前往装配</button>` : ''}
       ${martial.learned ? `<button type="button" class="faction-forget-button" data-action="martial-forget" data-hero-id="${escapeHtml(view.selectedHeroId ?? '')}" data-martial-id="${escapeHtml(martial.id)}">遗忘 · 返还 ${formatNumber(martial.refundableSp)} SP</button>` : ''}
     </div>
   </div>`

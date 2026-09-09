@@ -6,6 +6,9 @@ import { careerById } from '../content/careers'
 import { FACTIONS } from '../content/factions'
 import { heroByIdV10, heroDisplayNameV10 } from '../content/heroes'
 import { WORLDS } from '../content/worlds'
+import { martialByIdV10 } from '../content/martials'
+import { skillById } from '../content/skills'
+import { applyPassiveAttributes } from '../combat/skill-ai'
 import {
   clearedStageOf,
   isDifficultyUnlocked,
@@ -36,7 +39,11 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
     const definition = heroByIdV10(slot.heroId)
     if (!progress?.recruited || !definition) return []
     const stats = buildCombatStats(definition, progress, state.inventory)
-    return [{
+    const carried = progress.equippedMartialIds.flatMap((id) => {
+      const martial = id ? martialByIdV10(id) : undefined
+      return martial && progress.learnedMartials[martial.id] && skillById(martial.originalSkillId) ? [martial] : []
+    })
+    const unit: CombatUnit = {
       id: slot.heroId,
       name: heroDisplayNameV10(definition, progress),
       careerId: progress.currentCareerId,
@@ -65,11 +72,14 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       controlResistance: stats.controlResistance,
       cooldowns: {},
       statuses: [],
-      skillIds: [],
+      skillIds: [...new Set(carried.map((martial) => martial.originalSkillId))],
+      skillLevels: Object.fromEntries(carried.map((martial) => [martial.originalSkillId, progress.learnedMartials[martial.id].level])),
       baseAttackId: careerById(progress.currentCareerId)?.basicAttackSkillId ?? 1,
       mainhandWeaponType: equippedMainhandWeaponType(progress, state.inventory),
       attributes: buildAttributeMap(definition, progress, state.inventory),
-    }]
+    }
+    applyPassiveAttributes(unit)
+    return [unit]
   })
 
 export const buildCombatStartInput = (

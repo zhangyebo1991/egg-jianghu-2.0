@@ -3581,7 +3581,7 @@ body {
 .heroes-page .ghost-roster { top: 240px; left: 190px; font-size: 300px; transform: rotate(-5deg); }
 .heroes-page .ghost-martial { top: 860px; right: 260px; font-size: 380px; transform: rotate(5deg); color: rgb(201 163 92 / 4%); }
 .heroes-page .ghost-pack { top: 1500px; left: 300px; font-size: 320px; transform: rotate(-4deg); color: rgb(181 80 60 / 4%); }
-.heroes-stage { position: relative; z-index: 1; display: grid; grid-template-columns: 300px minmax(0, 1fr) 400px; grid-template-rows: minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.heroes-stage { position: relative; z-index: 1; display: grid; grid-template-columns: 300px minmax(0, 1fr) clamp(400px, 32vw, 720px); grid-template-rows: minmax(0, 1fr); gap: 16px; align-items: stretch; }
 .heroes-page .sec-title { display: flex; align-items: baseline; gap: 14px; }
 .heroes-page .sec-title h2 { margin: 0; color: #e6d7b4; font-family: var(--font-brush); font-size: 30px; font-weight: 400; letter-spacing: .12em; }
 .heroes-page .sec-title .sub { color: var(--paper-mute); font-size: 10px; letter-spacing: .32em; }
@@ -3650,7 +3650,7 @@ body {
 /* 中栏：横向主标签与分页容器（对齐原版：基础 / 装备 / 职业） */
 .heroes-page .dossier { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .heroes-page .hero-workbench { height: auto; min-height: 0; }
-.heroes-page .hero-htabs { display: flex; justify-content: center; gap: 10px; }
+.heroes-page .hero-htabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
 .heroes-page .htab { padding: 7px 34px; border: 1px solid #54492c; border-radius: 7px; color: #b3a37f; background: #1b1710; font-family: var(--font-song); font-size: 14px; letter-spacing: .34em; text-indent: .34em; transition: all .2s cubic-bezier(.22,1,.36,1); }
 .heroes-page .htab:hover { border-color: var(--gold); color: var(--gold-bright); }
 .heroes-page .htab.active { border-color: var(--gold); color: #f4e2b6; background: linear-gradient(180deg, #574320, #3a2c14); box-shadow: 0 0 12px rgb(196 155 86 / 30%); }
@@ -3890,7 +3890,7 @@ body {
 .heroes-page .qchip:hover { color: var(--heroes-paper); background: rgb(233 222 195 / 6%); }
 .heroes-page .qchip.active { border-color: var(--gold-deep); color: var(--gold-bright); background: rgb(201 163 92 / 10%); }
 .heroes-page .packbody { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; min-height: 0; padding: 10px 12px; }
-.heroes-page .pack-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; align-content: start; min-height: 0; overflow-y: auto; scrollbar-color: #3d4438 transparent; scrollbar-width: thin; }
+.heroes-page .pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; align-content: start; min-height: 0; overflow-y: auto; scrollbar-color: #3d4438 transparent; scrollbar-width: thin; }
 .heroes-page .pack-grid::-webkit-scrollbar { width: 6px; }
 .heroes-page .pack-grid::-webkit-scrollbar-thumb { border-radius: 3px; background: #333a30; }
 .heroes-page .pack-cell { position: relative; aspect-ratio: 1; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--qc, #3a3222) 55%, transparent); border-radius: 6px; background: linear-gradient(160deg, color-mix(in srgb, var(--qc, #8a8a8a) 20%, transparent), color-mix(in srgb, var(--qc, #8a8a8a) 9%, #14170f)); transition: border-color .18s, box-shadow .18s; }
@@ -5303,3 +5303,42 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
   .progression-action-row { flex-direction: column; }
 }
 
+
+/* 武学配置与世界快捷返回 */
+.heroes-page .hero-world-return { align-self: flex-start; padding: 2px 0; color: var(--gold-bright); font-size: 12px; text-align: left; }
+.heroes-page .hero-martials { min-height: 0; overflow: auto; padding: 16px; border: 1px solid #3a3222; border-radius: 9px; background: linear-gradient(170deg, var(--heroes-ink-850), var(--heroes-ink-900)); scrollbar-width: thin; scrollbar-color: #3d4438 transparent; }
+.heroes-page .hm-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.heroes-page .hm-heading > strong { font-family: var(--font-brush); color: var(--gold-bright); font-size: 22px; font-weight: 400; }
+.heroes-page .hm-heading small, .heroes-page .hm-heading > span { color: var(--paper-mute); font-family: var(--font-song); font-size: 11px; }
+.heroes-page .hm-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+.heroes-page .hm-slot { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 7px; background: rgb(233 222 195 / 3%); }
+.heroes-page .hm-slot.selected, .heroes-page .hm-card.highlighted { border-color: var(--gold); background: rgb(201 163 92 / 9%); }
+.heroes-page .hm-slot-number { color: var(--gold); font-variant-numeric: tabular-nums; }
+.heroes-page .hm-slot img, .heroes-page .hm-card img { width: 34px; height: 34px; border-radius: 5px; object-fit: contain; }
+.heroes-page .hm-slot strong, .heroes-page .hm-card strong { color: var(--heroes-paper); font-size: 14px; overflow-wrap: anywhere; }
+.heroes-page .hm-slot small, .heroes-page .hm-card small { display: block; margin-top: 3px; color: var(--paper-mute); font-size: 11px; }
+.heroes-page .hm-slot-actions { display: flex; gap: 6px; margin-left: auto; }
+.heroes-page .hero-martials button { padding: 5px 9px; border: 1px solid var(--gold-deep); border-radius: 5px; color: var(--gold-bright); font-size: 12px; }
+.heroes-page .hero-martials button:disabled { border-color: var(--line); color: var(--paper-mute); cursor: not-allowed; }
+.heroes-page .hero-martials button:hover:not(:disabled) { background: rgb(201 163 92 / 15%); }
+.heroes-page .hm-filters { display: flex; gap: 8px; margin-bottom: 12px; }
+.heroes-page .hm-filters input { flex: 1; min-width: 0; }
+.heroes-page .hm-filters input, .heroes-page .hm-filters select { padding: 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--heroes-ink-950); color: var(--heroes-paper); font-size: 12px; }
+.heroes-page .hm-library { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.heroes-page .hm-card { display: flex; flex-direction: column; min-width: 0; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: rgb(233 222 195 / 2%); }
+.heroes-page .hm-card header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.heroes-page .hm-card p, .heroes-page .hm-extra p { margin: 0; color: var(--paper-dim); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.heroes-page .hm-card > button { margin-top: auto; }
+.heroes-page .hm-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--paper-mute); font-size: 11px; }
+.heroes-page .hm-new { color: var(--gold-bright); font-size: 10px; font-weight: 400; }
+.heroes-page .hm-extra { padding-top: 14px; margin-top: 16px; border-top: 1px solid var(--line); }
+.heroes-page .hm-extra > strong { display: block; margin-bottom: 6px; color: var(--gold); font-size: 13px; }
+.heroes-page .hm-extra > div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; color: var(--paper-dim); font-size: 12px; }
+.heroes-page .hm-empty { grid-column: 1 / -1; padding: 18px 0; color: var(--paper-mute); font-size: 13px; }
+.heroes-page .hm-notice { padding: 8px; border: 1px solid var(--gold-deep); border-radius: 5px; color: var(--gold-bright); font-size: 12px; }
+@media (max-width: 640px) {
+  .heroes-page .hero-htabs { gap: 6px; }
+  .heroes-page .htab { padding: 6px 12px; letter-spacing: .1em; text-indent: .1em; }
+  .heroes-page .hero-martials { padding: 12px; }
+  .heroes-page .hm-slots, .heroes-page .hm-library { grid-template-columns: 1fr; }
+}

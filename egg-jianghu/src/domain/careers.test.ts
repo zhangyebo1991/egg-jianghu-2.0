@@ -1,9 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import { STARTER_CAREER_ID, careerById, careerJobBookName } from '../content/careers'
+import { STARTER_CAREER_ID, careerById, careerJobBookName, careerNameById } from '../content/careers'
+import { FACTION_MARTIALS } from '../content/martials'
 import { addCareerExperience, careerExperienceForNextLevel, changeCareer } from './careers'
 import { createHeroProgress } from './state'
 
 describe('职业修习', () => {
+  it('careerNameById 能将所有传承职业 ID 及诸天职业正确解析为全中文', () => {
+    expect(careerNameById('inner')).toBe('内家')
+    expect(careerNameById('inner_flow_mid')).toBe('运气士')
+    expect(careerNameById('inner_flow_high')).toBe('周天师')
+    expect(careerNameById('inner_flow_top')).toBe('气宗')
+    expect(careerNameById('inner_guard_mid')).toBe('护气士')
+    expect(careerNameById('inner_guard_high')).toBe('铁衣护法')
+    expect(careerNameById('inner_guard_top')).toBe('金刚宗师')
+    expect(careerNameById('sword_swift_mid')).toBe('游剑客')
+    expect(careerNameById('job_1')).toBe('白丁')
+    expect(careerNameById('job_3')).toBe('武夫')
+
+    // 验证所有势力传承武功的 careerIds 解析后不含任何英文字符
+    for (const martial of FACTION_MARTIALS) {
+      const chineseNames = martial.careerIds.map((id) => careerNameById(id))
+      for (const name of chineseNames) {
+        expect(name).toMatch(/^[\u4e00-\u9fa5]+$/)
+      }
+    }
+  })
   it('白丁 1 级升 2 级经验为 114，且职业等级不修改侠客等级', () => {
     expect(careerExperienceForNextLevel(1, 1, 1)).toBe(114)
     const hero = createHeroProgress(STARTER_CAREER_ID)

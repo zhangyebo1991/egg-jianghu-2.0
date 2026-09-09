@@ -1,11 +1,11 @@
 import { buffById } from '../content/buffs'
 import { ATTRIBUTES, type AttributeMap } from '../content/attributes'
-import { skillById, summonById, type CombatSkillContent } from '../content/skills'
+import { summonById, type CombatSkillContent } from '../content/skills'
 import type { CampaignMode } from '../domain/types'
 import { calculateDamage, hitChance, rollCritical } from './damage'
 import { ELEMENT_IDS, skillGroupPowerAttributeId, SX, weaponMasteryAttributeId } from './attribute-ids'
 import { createRng, type Rng } from './rng'
-import { selectSkill, selectSkillTargets } from './skill-ai'
+import { selectSkill, selectSkillTargets, unitSkillById } from './skill-ai'
 import {
   advanceStatusDurations,
   applyBuff,
@@ -613,7 +613,7 @@ const resolveActionHit = (state: CombatSnapshot, rng: Rng): CombatEvent[] => {
   const action = state.timeline.activeAction
   if (!action) return []
   const actor = unitById(state, action.actorId)
-  const skill = skillById(action.skillId)
+  const skill = actor ? unitSkillById(actor, action.skillId) : undefined
   if (!actor || !actor.alive || !skill) return []
   const events: CombatEvent[] = []
   if (skill.behavior === 'summon') {

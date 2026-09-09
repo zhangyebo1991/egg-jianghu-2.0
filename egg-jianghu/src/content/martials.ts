@@ -179,7 +179,7 @@ const buildMartial = (original: typeof ORIGINAL_PLAYER_SKILLS[number]): MartialD
     buffBaseChance: original.buffBaseChance,
     buffChanceGrowthPerTenLevels: original.buffChanceGrowthPerTenLevels,
     previousId: original.previousSkillId ? martialIdFromOriginal(original.previousSkillId) : null,
-    careerIds: careersForCategory(category),
+    careerIds: original.skillCategory === 1 ? ['universal'] : careersForCategory(category),
     currencySource: {
       kind: currencyKind,
       id: currencyId,

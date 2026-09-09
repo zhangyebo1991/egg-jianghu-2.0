@@ -3,6 +3,7 @@ import {
   martialResourceCost,
   martialSpCost,
   martialByIdV10,
+  type HeartMethodDefinitionV10,
   type MartialDefinitionV10,
 } from '../content/martials'
 import type {
@@ -16,6 +17,26 @@ export const MAX_LEARNED_MARTIALS_V10 = 12
 
 const emptyLedger = (): InvestmentLedger => ({ worldCurrency: {}, contribution: {} })
 
+export const isMartialCareerCompatible = (
+  heroCareerId: string,
+  martial: MartialDefinitionV10,
+): boolean => {
+  if (martial.skillCategory === 1 || martial.careerIds.includes('universal') || martial.careerIds.length === 0) {
+    return true
+  }
+  return martial.careerIds.includes(heroCareerId)
+}
+
+export const isHeartMethodCareerCompatible = (
+  heroCareerId: string,
+  heartMethod: HeartMethodDefinitionV10,
+): boolean => {
+  if (heartMethod.careerIds.includes('universal') || heartMethod.careerIds.length === 0) {
+    return true
+  }
+  return heartMethod.careerIds.includes(heroCareerId)
+}
+
 export const canLearnMartial = (
   hero: HeroProgressV10,
   martial: MartialDefinitionV10,
@@ -24,7 +45,7 @@ export const canLearnMartial = (
   if (Object.keys(hero.learnedMartials).length >= MAX_LEARNED_MARTIALS_V10) {
     return { ok: false, message: '最多学习 12 门技能' }
   }
-  if (!martial.careerIds.includes(hero.currentCareerId)) return { ok: false, message: '当前职业不符' }
+  if (!isMartialCareerCompatible(hero.currentCareerId, martial)) return { ok: false, message: '当前职业不符' }
   const previous = martial.previousId ? martialByIdV10(martial.previousId) : undefined
   if (previous && hero.learnedMartials[previous.id]?.level !== previous.maxLevel) {
     return { ok: false, message: `前置技能必须达到 Lv.${previous.maxLevel}` }
@@ -100,7 +121,8 @@ export const equipMartial = (
   slot: number,
 ): ActionResult => {
   const hero = state.heroes[heroId]
-  if (!hero?.learnedMartials[martialId]) return { ok: false, message: '尚未学会该武功' }
+  if (!hero?.recruited || !hero.learnedMartials[martialId]) return { ok: false, message: '尚未学会该武功' }
+  if (!martialByIdV10(martialId)) return { ok: false, message: '武功定义不存在' }
   if (!Number.isInteger(slot) || slot < 0 || slot >= hero.equippedMartialIds.length) {
     return { ok: false, message: '主动槽位无效' }
   }
