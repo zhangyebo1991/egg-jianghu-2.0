@@ -1,0 +1,627 @@
+{
+  "mapping": "zy.json 第2列匹配职业标识动画名，提取第0帧",
+  "sourceHashes": {
+    "data.json": "d4b0af7ec45d009c60afacbd7a52c9a2c1691c7e8a010f74f33177d184a2aad5",
+    "zy.json": "6876276814a961f32556296ee161ddbff62dac73f41c7e033f5625ee740f787f"
+  },
+  "careerCount": 41,
+  "uniqueIconCount": 41,
+  "missingCareerIds": [],
+  "entries": [
+    {
+      "id": 1,
+      "name": "白丁",
+      "iconKey": "1",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 1,
+        "top": 257,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "715313164d8221844a4f8de1523b2ff7a1b2606887432449a044861c96029471"
+    },
+    {
+      "id": 2,
+      "name": "护卫",
+      "iconKey": "2",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 153,
+        "top": 257,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "de6751a06047256505d21b711a50ddac668812d9db0b666c8cab0922134af258"
+    },
+    {
+      "id": 3,
+      "name": "武夫",
+      "iconKey": "3",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 305,
+        "top": 257,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "8fe3a1d004ca65bd07ef9ab726ce527b26a3e2439a0e32c5b4304a920c4672dc"
+    },
+    {
+      "id": 4,
+      "name": "学者",
+      "iconKey": "4",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 513,
+        "top": 257,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "48aecc569beece6a7ccf58c7d870ff41421a6d13ae544832f49410118e6c6db2"
+    },
+    {
+      "id": 5,
+      "name": "弓手",
+      "iconKey": "5",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 769,
+        "top": 257,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "312630c974bd387c9fd85b2b43c2bff3931ba1d8ee2b811a60b77253d23b21ef"
+    },
+    {
+      "id": 6,
+      "name": "方士",
+      "iconKey": "6",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 769,
+        "top": 513,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "b2ec2b53de83da63dbe0b29e0e5f9d8fcdebdca21c75cfcb883ae57009ae140b"
+    },
+    {
+      "id": 7,
+      "name": "异能者",
+      "iconKey": "7",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 1,
+        "top": 513,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "0e6c280056a5844f8072c6416237ea4eb1e9dfdff4222f369f913a0ab293d8e6"
+    },
+    {
+      "id": 8,
+      "name": "圣教徒",
+      "iconKey": "8",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 153,
+        "top": 513,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "5cf8105f3edc66d7d0d638781035751c7d48d04909a7fa7514d206e1d89a109c"
+    },
+    {
+      "id": 9,
+      "name": "侠客",
+      "iconKey": "9",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 305,
+        "top": 513,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "d734d07f8c9ff3f45ab888b3378565a2fefdbfa939a47e72cfd729ce3700712d"
+    },
+    {
+      "id": 10,
+      "name": "武士",
+      "iconKey": "10",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 457,
+        "top": 513,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "f5f248f88d0f01084cded6c83ad84d76fdf4a93974ce2bc40e861d421ae5e1d1"
+    },
+    {
+      "id": 11,
+      "name": "巫师",
+      "iconKey": "11",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 609,
+        "top": 513,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "9b9d58ca8477f25e856a2be6240f6a554ebf62cee3774783e39e415dfda38324"
+    },
+    {
+      "id": 12,
+      "name": "道众",
+      "iconKey": "12",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 769,
+        "top": 769,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "b7962428cfd9cd0e28ceb080bb36e9ce14aec28a457f6b33eaa34a7e70707c63"
+    },
+    {
+      "id": 13,
+      "name": "游侠",
+      "iconKey": "13",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 1,
+        "top": 769,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "49a4a7e24ebe0ccfcd78a887978d932c54dffe04745bdde4206600992a29d1c3"
+    },
+    {
+      "id": 14,
+      "name": "火炮手",
+      "iconKey": "14",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 153,
+        "top": 769,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "0f05239f654761815d5bee4643e8ed1b024641dde3a65f5c64e22e3bd2093afb"
+    },
+    {
+      "id": 15,
+      "name": "通灵者",
+      "iconKey": "15",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 305,
+        "top": 769,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "a7055ec00212c1c6f06f1368c2337caf50d748df1d13136519fd4a3926e9fefd"
+    },
+    {
+      "id": 16,
+      "name": "医生",
+      "iconKey": "16",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 457,
+        "top": 769,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "39b7919f68d9e09953228758a0dbf2aa63600a9058dc00ded5a53a232b7584b7"
+    },
+    {
+      "id": 17,
+      "name": "变种人",
+      "iconKey": "17",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 609,
+        "top": 769,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "e13418040bfb8a474516126d78710d767e7b6718448aae423aa0dbfac53632a7"
+    },
+    {
+      "id": 18,
+      "name": "圣殿军",
+      "iconKey": "18",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 769,
+        "top": 1025,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "96fa7e5485ba041babd0231f09cb47411640f2ceb251200f6af43726c51525dd"
+    },
+    {
+      "id": 19,
+      "name": "斗者",
+      "iconKey": "19",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 1,
+        "top": 1025,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "f31c04a3659e02c73c63a42351df7d7f75f19d023ee55188f93f30a4e8befffd"
+    },
+    {
+      "id": 20,
+      "name": "忍者",
+      "iconKey": "20",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 153,
+        "top": 1025,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "33db4e9afb7c168f116de2e5262c83e604c6f295e0873f0e7e6ac8bfeb4b806b"
+    },
+    {
+      "id": 21,
+      "name": "魔法师",
+      "iconKey": "21",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 305,
+        "top": 1025,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "c32057cbc0e412d4f4b1135a273e625dd074d57739939aee10a3ddd15e5b7529"
+    },
+    {
+      "id": 22,
+      "name": "修真者",
+      "iconKey": "22",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 457,
+        "top": 1025,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "acfea48ad70aa6b1ec4ac593cf77540f72f6f1f059056e550970872c89fc8c69"
+    },
+    {
+      "id": 23,
+      "name": "枪手",
+      "iconKey": "23",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 609,
+        "top": 1025,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "6fb9c5654b4d8b73dd5958d403ca9e79c0658b3a0e3e4c9031efb7d45278cb99"
+    },
+    {
+      "id": 24,
+      "name": "机甲驾驶员",
+      "iconKey": "24",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 769,
+        "top": 1281,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "68dcc12849417651efadce7837e1d8b8ff5139973e4b74c3d19fdfdebed56b10"
+    },
+    {
+      "id": 25,
+      "name": "德鲁伊",
+      "iconKey": "25",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 1,
+        "top": 1281,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "66f6a33faf626dc4db2cd183fcb332b07b995f8b2debaef5d0565c5ec7836886"
+    },
+    {
+      "id": 26,
+      "name": "老中医",
+      "iconKey": "26",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 153,
+        "top": 1281,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "b667383ca87844d77600557d4be7adb5c9022d7d797686b6c3ee7845e38db33e"
+    },
+    {
+      "id": 27,
+      "name": "超能力者",
+      "iconKey": "27",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 305,
+        "top": 1281,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "09eb91c49c7cd073fa5d9ddfadf1aac3dfbbff86fa1d059582171061623def62"
+    },
+    {
+      "id": 28,
+      "name": "神殿教皇",
+      "iconKey": "28",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 457,
+        "top": 1281,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "1420f7b8cc4ad447f4c0b80fb14b69af33fc7ba071b9ec134e0b4c67f7311e0a"
+    },
+    {
+      "id": 29,
+      "name": "封号斗罗",
+      "iconKey": "29",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 609,
+        "top": 1281,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "911c3e889c3d0decd8929541a057db2366a3d88f089dbfa039562da54f0b527c"
+    },
+    {
+      "id": 30,
+      "name": "影",
+      "iconKey": "30",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 769,
+        "top": 1537,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "64b239b600a0ad5f79f6d575904d733ed2c119366b08bd9889618dcbef29962a"
+    },
+    {
+      "id": 31,
+      "name": "法皇",
+      "iconKey": "31",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 1,
+        "top": 1537,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "b7e670aa58ad084c73a4f44a7d5e5bfbc2f778a8599a8fb6759e59a375959a9b"
+    },
+    {
+      "id": 32,
+      "name": "散仙",
+      "iconKey": "32",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 153,
+        "top": 1537,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "b82ae440c7d6d58e3adc3ae98d26a7ded5300955454ffe64ba6d6d1e6ca7ad5b"
+    },
+    {
+      "id": 33,
+      "name": "新人类",
+      "iconKey": "33",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 305,
+        "top": 1537,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "884e810a7f8fef20a183eed617e0609a92a112fe4b22279a684aedfcad3a1a25"
+    },
+    {
+      "id": 34,
+      "name": "王牌机师",
+      "iconKey": "34",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 457,
+        "top": 1537,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "5a53ee315061dacb407fc428faa2531cf043dd3a34adcb1fdab6ffc8514a71ad"
+    },
+    {
+      "id": 35,
+      "name": "位面行者",
+      "iconKey": "35",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 609,
+        "top": 1537,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "256a48ea108ba257b44dfd426b1a19b673447b117dc9908f7d78f42bc740ed22"
+    },
+    {
+      "id": 36,
+      "name": "科学伟人",
+      "iconKey": "36",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 769,
+        "top": 1793,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "caed8db3daf7c8d977f57d46dd05d6242f35fa3f1f7a894387799fea13db659d"
+    },
+    {
+      "id": 37,
+      "name": "主神",
+      "iconKey": "37",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 1,
+        "top": 1793,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "643ba04996df37046b5c31b094299ceee885baff7a1165e2069adee5fd9ac70e"
+    },
+    {
+      "id": 38,
+      "name": "天帝",
+      "iconKey": "38",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 153,
+        "top": 1793,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "c5fa4acda9a99a41c7ca1b934e4011e10b9d150d804a709ab2e6919ef28d2ec3"
+    },
+    {
+      "id": 39,
+      "name": "仙尊",
+      "iconKey": "39",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 305,
+        "top": 1793,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "3e96f9ee3ce02d9e9e222c2d7210ca37592f2b766d373f29081bf4813f1a8211"
+    },
+    {
+      "id": 40,
+      "name": "人皇",
+      "iconKey": "40",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 457,
+        "top": 1793,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "6bbb7ad96eb32330fcb83830b3cce964a36ccb7589e2bccf853e43120242eac0"
+    },
+    {
+      "id": 41,
+      "name": "造物者",
+      "iconKey": "41",
+      "fallback": false,
+      "sheet": "images/职业标识-sheet0.webp",
+      "crop": {
+        "left": 609,
+        "top": 1793,
+        "width": 150,
+        "height": 150
+      },
+      "rotated": false,
+      "sha256": "5db94d2dcc0102e82cea9bd2dc9334e1c81e2cb28521cb887ce126c116073021"
+    }
+  ]
+}

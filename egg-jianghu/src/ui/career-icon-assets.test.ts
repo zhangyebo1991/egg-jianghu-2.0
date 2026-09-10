@@ -1,18 +1,24 @@
-import { describe, expect, it } from 'vitest'
-import { CAREERS, STARTER_CAREER_ID } from '../content/careers'
+import { expect, it } from 'vitest'
+import { CAREERS } from '../content/careers'
 import { careerCategoryIconAsset, careerIconAsset } from './career-icon-assets'
+import evidence from '../../../docs/evidence/original-world/career-icons-assets.json'
 
-describe('职业图标资源', () => {
-  it('六大脉系类别各有独立图标', () => {
-    const icons = ['剑', '刀', '拳', '暗', '医', '内家'].map(careerCategoryIconAsset)
-    expect(new Set(icons).size).toBe(6)
-    expect(icons.every((icon) => icon.endsWith('.png'))).toBe(true)
-  })
+const images = import.meta.glob<string>('../assets/careers/original/career_*.webp', { eager: true, import: 'default' })
 
-  it('全部诸天职业都能解析到图标', () => {
-    for (const career of CAREERS) {
-      expect(careerIconAsset(career.id).endsWith('.png')).toBe(true)
-    }
-    expect(careerIconAsset(STARTER_CAREER_ID)).toBe(careerIconAsset('job_1'))
-  })
+it('六大脉系类别保留各自独立图标', () => {
+  const icons = ['剑', '刀', '拳', '暗', '医', '内家'].map(careerCategoryIconAsset)
+  expect(new Set(icons).size).toBe(6)
+  expect(icons.every(icon => icon.endsWith('.png'))).toBe(true)
+})
+
+it('全部41个职业映射各自原版图标，无缺失或重复类别占位图', () => {
+  expect(CAREERS).toHaveLength(41)
+  expect(Object.keys(images)).toHaveLength(41)
+  expect(new Set(evidence.entries.map(entry => entry.sha256)).size).toBe(41)
+  for (const career of CAREERS) {
+    const entry = evidence.entries.find(entry => entry.id === career.zyId)
+    expect(entry?.name).toBe(career.name)
+    expect(careerIconAsset(career.id)).toBe(images[`../assets/careers/original/career_${career.zyId}.webp`])
+  }
+  expect(careerIconAsset('missing')).toBe(careerIconAsset('job_1'))
 })

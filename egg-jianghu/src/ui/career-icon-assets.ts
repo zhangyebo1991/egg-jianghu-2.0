@@ -17,30 +17,13 @@ const categoryIcons: Record<string, string> = {
   内家: innerIcon,
 }
 
-const skillTypeIcons: Record<number, string> = {
-  1: swordIcon,
-  2: fistIcon,
-  3: bladeIcon,
-  4: innerIcon,
-  5: shadowIcon,
-  6: doctorIcon,
-  7: fistIcon,
-  8: innerIcon,
-  9: bladeIcon,
-  10: shadowIcon,
-  11: innerIcon,
-  12: innerIcon,
-  13: shadowIcon,
-  14: fistIcon,
-  15: doctorIcon,
-  16: doctorIcon,
-}
+const careerImages = import.meta.glob<string>('../assets/careers/original/career_*.webp', { eager: true, import: 'default' })
 
 export const careerCategoryIconAsset = (category: string): string => categoryIcons[category] ?? categoryIcons['剑']
 
 export const careerIconAsset = (careerId: string): string => {
   const career = careerById(careerId)
-  return skillTypeIcons[career?.skillTypeIds[0] ?? 1] ?? swordIcon
+  return careerImages[`../assets/careers/original/career_${career?.zyId ?? 1}.webp`]
 }
 
 export const martialIconAsset = (martialId: string): string => {

@@ -463,7 +463,7 @@ test('侠客页展示八槽装备栏与行囊', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('侠客页打开转职树可查看职业节点与转职书', async ({ page }) => {
+test('侠客页打开转职树可查看职业节点与转职书', async ({ page }, testInfo) => {
   await page.getByTestId('tab-heroes').click()
   await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="career"]').click()
   await page.getByTestId('open-career-tree').click()
@@ -473,6 +473,14 @@ test('侠客页打开转职树可查看职业节点与转职书', async ({ page 
   await expect(page.getByTestId('career-tree-detail')).toContainText('弓手')
   await expect(page.getByTestId('career-tree-detail')).toContainText('弓手转职书')
   await expect(page.getByTestId('career-change')).toBeDisabled()
+  const icons = page.getByTestId('career-tree').locator('img')
+  expect(await icons.count()).toBeGreaterThanOrEqual(41)
+  for (const image of await icons.all()) {
+    await expect(image).toHaveAttribute('src', /career_\d+\.webp/)
+    expect(await image.evaluate(async (img: HTMLImageElement) => { await img.decode(); return img.naturalWidth > 0 })).toBe(true)
+  }
+  await page.getByTestId('career-tree').screenshot({ path: testInfo.outputPath('career-icons.png') })
+
 })
 
 test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
