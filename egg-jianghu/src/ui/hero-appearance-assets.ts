@@ -1,3 +1,4 @@
+import { HERO_FIGURE_BOUNDS } from '../content/hero-figure-bounds.generated'
 import { heroByIdV10 } from '../content/heroes'
 import { skinById, ownsSkin } from '../content/hero-skins'
 import { heroPortraitAsset } from './portrait-assets'
@@ -10,4 +11,15 @@ export const heroAppearanceAsset = (heroId: string, progress?: HeroProgressV10, 
   const skin = skinById(progress?.selectedSkinId ?? 0)
   if (skin && skin.heroSourceId === definition?.sourceId && ownsSkin(skin, unlockedIds)) return originalSkinAsset(skin.id)
   return images[`../assets/heroes/original/hero_${definition?.sourceId}.webp`] ?? heroPortraitAsset(heroId).url
+}
+const figureBoundsByUrl = new Map(Object.entries(images).map(([path, url]) => [
+  url, HERO_FIGURE_BOUNDS[path.split('/').at(-1)!.replace('.webp', '')],
+]))
+
+/** 让立绘的可见轮廓填满统一高度，透明边缘不参与缩放基准。 */
+export const heroFigureStyle = (url: string): string => {
+  const bounds = figureBoundsByUrl.get(url)
+  return bounds
+    ? `--figure-scale:${bounds.heightScale};--figure-bottom:${bounds.bottomOffset};--figure-center:${bounds.centerOffset}%`
+    : ''
 }

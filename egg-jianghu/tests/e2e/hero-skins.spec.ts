@@ -70,3 +70,33 @@ test('战斗期间不能通过按钮切换和升星', async ({ page }) => {
   await upgrade.click()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().materials['10'])).toBe(100)
 })
+
+test('不同宽高比立绘的可见角色高度一致，并保持原图比例', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  await page.locator('[data-action="hero-main-tab"][data-main-tab="skins"]').first().click()
+  await page.getByTestId('skin-213').getByRole('button', { name: '使用外观' }).click()
+  await page.locator('[data-action="hero-main-tab"][data-main-tab="equipment"]').first().click()
+  const visibleBounds = async () => page.getByTestId('hero-appearance').evaluate(async (image: HTMLImageElement) => {
+    await image.decode()
+    const canvas = document.createElement('canvas')
+    canvas.width = image.naturalWidth
+    canvas.height = image.naturalHeight
+    const context = canvas.getContext('2d')!
+    context.drawImage(image, 0, 0)
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+    let top = canvas.height, bottom = -1
+    for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+      if (pixels[(y * canvas.width + x) * 4 + 3] > 16) { top = Math.min(top, y); bottom = Math.max(bottom, y) }
+    }
+    const rect = image.getBoundingClientRect()
+    return { top: rect.top + top / canvas.height * rect.height, bottom: rect.top + (bottom + 1) / canvas.height * rect.height, scaleX: rect.width / canvas.width, scaleY: rect.height / canvas.height }
+  })
+  const first = await visibleBounds()
+  await page.getByTestId('hero-equipment-slots').screenshot({ path: testInfo.outputPath('height-skin-213.png') })
+  await page.locator(`[data-action="select-hero"][data-hero-id="${originalHero.id}"]`).click()
+  const second = await visibleBounds()
+  expect(Math.abs(first.top - second.top)).toBeLessThan(1)
+  expect(Math.abs(first.bottom - second.bottom)).toBeLessThan(1)
+  for (const bounds of [first, second]) expect(Math.abs(bounds.scaleX - bounds.scaleY)).toBeLessThan(0.01)
+  await page.getByTestId('hero-equipment-slots').screenshot({ path: testInfo.outputPath('height-hero-2.png') })
+})

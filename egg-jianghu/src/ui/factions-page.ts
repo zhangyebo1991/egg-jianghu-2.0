@@ -1,5 +1,5 @@
 import { escapeHtml, formatNumber } from './html'
-import { careerCategoryIconAsset } from './career-icon-assets'
+import { careerCategoryIconAsset, martialIconAsset } from './career-icon-assets'
 import type { MartialLore } from '../content/martial-lore'
 import { renderFactionExchange, type FactionExchangeViewModel } from './faction-exchange'
 import { renderFactionRecruitment, type FactionRecruitmentViewModel } from './faction-recruitment'
@@ -116,7 +116,6 @@ export interface FactionsPageViewModel {
 }
 
 const stageNames = ['初传', '进境', '真传', '秘传'] as const
-const stageLetters = ['初', '进', '真', '秘'] as const
 const nodePositions = [16, 50, 84, 96] as const
 const questRotations = [-1.6, 0.9, -0.7, 1.4, -1.1, 0.6] as const
 
@@ -202,7 +201,7 @@ const renderMartialNode = (martial: FactionMartialView, selected: boolean): stri
   const levelLabel = martial.learned ? `Lv.${martial.level}/${martial.maxLevel}` : `Lv.0/${martial.maxLevel}`
   return `<article class="faction-node faction-node-${martial.state} ${selected ? 'selected' : ''}" data-rarity="${escapeHtml(martial.rarity)}" data-stage-name="${stageNames[martial.stage - 1]}" style="--faction-node-left:${nodePositions[martial.stage - 1]}%" data-testid="faction-martial-${escapeHtml(martial.id)}">
     <button type="button" class="faction-node-button" data-action="select-martial" data-martial-id="${escapeHtml(martial.id)}" aria-label="查看${escapeHtml(martial.name)}">
-      <span>${stageLetters[martial.stage - 1]}</span><small>${levelLabel}</small>
+      <span><img class="faction-skill-icon" src="${escapeHtml(martialIconAsset(martial.id))}" alt="" draggable="false"></span><small>${levelLabel}</small>
     </button>
     <strong class="faction-node-name">${escapeHtml(martial.name)}</strong>
     <span class="faction-node-sub"><b>${escapeHtml(martial.rarity)}</b> · <i>${escapeHtml(martial.resourceName)} ${formatNumber(resourceCost)} · ${formatNumber(martial.spCost)} SP</i></span>
@@ -239,7 +238,7 @@ const renderMartialDetail = (view: FactionsPageViewModel): string => {
   const targetLevel = martial.learned ? martial.level + 1 : 1
   return `<div class="faction-martial-detail ${martial.state}" data-testid="faction-martial-detail">
     <div class="faction-detail-copy">
-      <div class="faction-detail-name">${escapeHtml(martial.name)} <small>Lv.${martial.level}/${martial.maxLevel}</small>${martial.origin ? `<span class="faction-detail-origin">${escapeHtml(martial.origin)}</span>` : ''}</div>
+      <div class="faction-detail-name"><img class="faction-detail-skill-icon" src="${escapeHtml(martialIconAsset(martial.id))}" alt="" draggable="false">${escapeHtml(martial.name)} <small>Lv.${martial.level}/${martial.maxLevel}</small>${martial.origin ? `<span class="faction-detail-origin">${escapeHtml(martial.origin)}</span>` : ''}</div>
       ${martial.description ? `<p class="faction-detail-desc">${escapeHtml(martial.description)}</p>` : ''}
       <div class="faction-detail-stats">
         <span>品阶 <b data-rarity="${escapeHtml(martial.rarity)}">${escapeHtml(martial.rarity)}</b></span>

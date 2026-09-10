@@ -14,7 +14,7 @@ import type { HeroAptitudes } from '../content/heroes'
 import { careerIconAsset } from './career-icon-assets'
 import { equipmentIconAsset } from './equipment-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
-import { heroAppearanceAsset } from './hero-appearance-assets'
+import { heroAppearanceAsset, heroFigureStyle } from './hero-appearance-assets'
 import type { InventoryItemView } from './inventory-page'
 import { renderHeroMartials, type HeroMartialsView } from './hero-martials'
 
@@ -472,7 +472,7 @@ const renderEquipmentTab = (hero: HeroesHeroView, equipment: HeroesEquipmentView
     <div class="eq-wrap">
       <div class="eq-col">${column(EQUIP_LEFT_SLOTS)}</div>
       <div class="eq-stand">
-        <img class="eq-figure-img" data-testid="hero-appearance" src="${escapeHtml(hero.appearanceUrl ?? heroAppearanceAsset(hero.id))}" alt="" aria-hidden="true" draggable="false">
+        <img class="eq-figure-img" data-testid="hero-appearance" style="${escapeHtml(heroFigureStyle(hero.appearanceUrl ?? heroAppearanceAsset(hero.id)))}" src="${escapeHtml(hero.appearanceUrl ?? heroAppearanceAsset(hero.id))}" alt="" aria-hidden="true" draggable="false">
         <div class="eq-disc" aria-hidden="true"></div>
       </div>
       <div class="eq-col">${column(EQUIP_RIGHT_SLOTS)}</div>

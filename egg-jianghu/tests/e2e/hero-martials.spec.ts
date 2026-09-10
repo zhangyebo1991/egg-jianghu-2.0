@@ -208,3 +208,22 @@ test('行囊末页与侠客选择在离页后保留', async ({ page }) => {
   await expect(page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('hero-hero_mu_nianci')).toHaveClass(/active/)
 })
+
+test('同类武学使用各自原版图标，携带槽位与列表一致', async ({ page }, testInfo) => {
+  await page.evaluate(() => {
+    for (const [slot, id] of [42, 43, 44].entries()) window.__EGG_JIANGHU__.seedLearnedMartial('hero_player', `original_skill_${id}`, 1, slot)
+  })
+  await page.getByTestId('tab-heroes').click()
+  await page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]').click()
+  for (const [slot, id] of [42, 43, 44].entries()) {
+    const icon = page.getByTestId(`learned-original_skill_${id}`).locator('header img')
+    await expect(icon).toHaveAttribute('src', new RegExp(`skill_${id}\\.webp`))
+    expect(await icon.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true)
+    await expect(page.getByTestId(`martial-slot-${slot}`).locator('img')).toHaveAttribute('src', await icon.getAttribute('src') as string)
+  }
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    await page.locator('.hero-martials').screenshot({ path: testInfo.outputPath(`original-skill-icons-${width}.png`) })
+  }
+})

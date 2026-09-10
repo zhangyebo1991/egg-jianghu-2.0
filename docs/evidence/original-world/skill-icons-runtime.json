@@ -1,0 +1,162 @@
+[
+  {
+    "path": [
+      0,
+      1,
+      157,
+      8,
+      2,
+      8,
+      20,
+      8,
+      0,
+      8,
+      0,
+      7,
+      7
+    ],
+    "objectId": 412,
+    "objectName": "技能图标",
+    "referenceIndex": 40,
+    "reference": "C3.Plugins.Sprite.Acts.SetAnim",
+    "sid": "181093111672782",
+    "inverted": false,
+    "parameters": [
+      {
+        "expressionId": 1886,
+        "expression": "(jn.At(技能图标.技能编号, 2)).toString()",
+        "runtimeExpression": "(n0.ExpObject(n1.ExpInstVar(), 2)).toString()"
+      },
+      {
+        "expressionId": null,
+        "expression": "[3,1]",
+        "runtimeExpression": "[3,1]"
+      }
+    ]
+  },
+  {
+    "path": [
+      0,
+      1,
+      157,
+      8,
+      2,
+      8,
+      20,
+      8,
+      0,
+      8,
+      0,
+      8,
+      2,
+      7,
+      0
+    ],
+    "objectId": 412,
+    "objectName": "技能图标",
+    "referenceIndex": 40,
+    "reference": "C3.Plugins.Sprite.Acts.SetAnim",
+    "sid": "346528862305158",
+    "inverted": false,
+    "parameters": [
+      {
+        "expressionId": 1892,
+        "expression": "\"未解锁\"",
+        "runtimeExpression": "\"未解锁\""
+      },
+      {
+        "expressionId": null,
+        "expression": "[3,1]",
+        "runtimeExpression": "[3,1]"
+      }
+    ]
+  },
+  {
+    "path": [
+      0,
+      1,
+      157,
+      8,
+      8,
+      8,
+      6,
+      8,
+      7,
+      8,
+      2,
+      8,
+      0,
+      8,
+      11,
+      8,
+      1,
+      8,
+      3,
+      8,
+      0,
+      8,
+      0,
+      8,
+      1,
+      7,
+      3
+    ],
+    "objectId": 412,
+    "objectName": "技能图标",
+    "referenceIndex": 40,
+    "reference": "C3.Plugins.Sprite.Acts.SetAnim",
+    "sid": "224485830839473",
+    "inverted": false,
+    "parameters": [
+      {
+        "expressionId": 5439,
+        "expression": "(jn.At(save.At(当前学习人物编号, 次数, 6), 2)).toString()",
+        "runtimeExpression": "(n0.ExpObject(n1.ExpObject(v2.GetValue(), v3.GetValue(), 6), 2)).toString()"
+      },
+      {
+        "expressionId": null,
+        "expression": "[3,1]",
+        "runtimeExpression": "[3,1]"
+      }
+    ]
+  },
+  {
+    "path": [
+      5,
+      1,
+      43,
+      8,
+      10,
+      8,
+      0,
+      8,
+      0,
+      8,
+      0,
+      8,
+      0,
+      8,
+      0,
+      7,
+      11
+    ],
+    "objectId": 412,
+    "objectName": "技能图标",
+    "referenceIndex": 40,
+    "reference": "C3.Plugins.Sprite.Acts.SetAnim",
+    "sid": "899876585535603",
+    "inverted": false,
+    "parameters": [
+      {
+        "expressionId": 1886,
+        "expression": "(jn.At(技能图标.技能编号, 2)).toString()",
+        "runtimeExpression": "(n0.ExpObject(n1.ExpInstVar(), 2)).toString()"
+      },
+      {
+        "expressionId": null,
+        "expression": "[3,1]",
+        "runtimeExpression": "[3,1]"
+      }
+    ]
+  }
+]

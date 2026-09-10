@@ -30,11 +30,29 @@ with zipfile.ZipFile(sys.argv[1]) as z:
  for n in json.loads(sys.argv[3]):
   pathlib.Path(sys.argv[2],pathlib.PurePosixPath(n).name).write_bytes(z.read(n))`,zipPath,sheets,JSON.stringify(sheetNames)],{stdio:'pipe'})
 const out=resolve(here,'../src/assets/heroes/original');mkdirSync(out,{recursive:true})
+const figureBounds = {}
 for(const req of requests){
  const f=frames.get(req.key), rotated=f[6]===true
  let im=sharp(resolve(sheets,basename(f[0]))).extract({left:f[2],top:f[3],width:rotated?f[5]:f[4],height:rotated?f[4]:f[5]})
  if(rotated) im=im.rotate(-90)
- await im.webp({quality:85}).toFile(resolve(out,req.file+'.webp'))
+ const imagePath = resolve(out,req.file+'.webp')
+ await im.webp({quality:85}).toFile(imagePath)
+ // 仅测量透明边缘，显示时按可见高度缩放，不裁切或拉伸原图。
+ const {data:pixels,info}=await sharp(imagePath).ensureAlpha().raw().toBuffer({resolveWithObject:true})
+ let left=info.width, top=info.height, right=-1, bottom=-1
+ for(let y=0;y<info.height;y++) for(let x=0;x<info.width;x++) {
+  if(pixels[(y*info.width+x)*4+3] <= 16) continue
+  left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)
+ }
+ if(bottom < top) throw Error('立绘没有可见像素: '+req.file)
+ const visibleHeight=bottom-top+1
+ figureBounds[req.file] = {
+  heightScale:info.height/visibleHeight,
+  bottomOffset:(info.height-bottom-1)/visibleHeight,
+  centerOffset:(info.width/2-(left+right+1)/2)/info.width*100,
+ }
+
 }
 writeFileSync(resolve(here,'../src/content/hero-skins.generated.ts'),`// 从原版 js / hh 表与角色形象图集提取；运行 scripts/generate-hero-skins.mjs 重建。\nexport const ORIGINAL_HERO_APPEARANCES = ${JSON.stringify(heroes)} as const\nexport const HERO_SKINS = ${JSON.stringify(skins)} as const\n`)
+writeFileSync(resolve(here,'../src/content/hero-figure-bounds.generated.ts'), `// 原版立绘透明边缘测量，由 generate-hero-skins.mjs 生成。\nexport const HERO_FIGURE_BOUNDS: Readonly<Record<string, { heightScale: number; bottomOffset: number; centerOffset: number }>> = ${JSON.stringify(figureBounds)}\n`)
 console.log(`提取 ${heroes.length} 角色、${skins.length} 皮肤，${requests.length} 张立绘`)

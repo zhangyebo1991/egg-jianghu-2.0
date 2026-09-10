@@ -1,3 +1,4 @@
+import { skillIconAsset } from './skill-icon-assets'
 import { heroByIdV10, heroMeridianCategory } from '../content/heroes'
 import { escapeHtml, percent } from './html'
 import { enemyPortraitAsset, heroPortraitAsset } from './portrait-assets'
@@ -22,6 +23,7 @@ export interface IdleCombatUnitView {
   gauge: number
   cooldownMs: number
   alive: boolean
+  skillId?: number
   skillName: string
   shield?: number
   statuses?: IdleCombatStatusView[]
@@ -214,7 +216,7 @@ const renderUnit = (
       ${statuses.length ? `<span class="unit-statuses">${statuses.map((status) =>
         `<span class="status-chip ${status.polarity}">${escapeHtml(status.name)}${status.stacks > 1 ? `×${status.stacks}` : ''}</span>`
       ).join('')}</span>` : ''}
-      <span class="unit-foot"><span class="foot-label">回气</span><span class="cool-num">${(unit.cooldownMs / 1000).toFixed(1)}s</span><span class="skill-name">${escapeHtml(unit.skillName)}</span></span>
+      <span class="unit-foot"><span class="foot-label">回气</span><span class="cool-num">${(unit.cooldownMs / 1000).toFixed(1)}s</span><span class="skill-name">${unit.skillId === undefined ? '' : `<img class="combat-skill-icon" src="${escapeHtml(skillIconAsset(unit.skillId))}" alt="" draggable="false">`}${escapeHtml(unit.skillName)}</span></span>
       ${side === 'party' ? renderPartyEnergy(unit) : ''}
     </span>
     ${unitEffects.filter((effect) => !motionKinds.has(effect.kind)).map(renderEffect).join('')}

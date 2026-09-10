@@ -1,3 +1,4 @@
+import { skillIconAsset } from './skill-icon-assets'
 import bladeIcon from '../assets/careers/blade.png'
 import doctorIcon from '../assets/careers/doctor.png'
 import fistIcon from '../assets/careers/fist.png'
@@ -44,8 +45,7 @@ export const careerIconAsset = (careerId: string): string => {
 
 export const martialIconAsset = (martialId: string): string => {
   const martial = martialByIdV10(martialId)
-  if (!martial) return categoryIcons['剑']
-  return categoryIcons[martial.category] ?? categoryIcons['剑']
+  return skillIconAsset(martial?.originalSkillId ?? 1)
 }
 
 export const heartMethodIconAsset = (heartMethodId: string): string => {

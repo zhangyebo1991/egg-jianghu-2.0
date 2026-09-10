@@ -680,6 +680,7 @@ const unitView = (unit: CombatUnit): IdleCombatUnitView => {
     gauge: unit.gauge,
     cooldownMs: Math.max(0, ...Object.values(unit.cooldowns), 0),
     alive: unit.alive,
+    skillId: equipped?.id ?? base?.id,
     skillName: equipped?.name ?? base?.name ?? (unit.side === 'party' ? '蓄势待发' : '伺机出手'),
     shield: unit.shield,
     statuses: unit.statuses.flatMap((status) => {
