@@ -590,24 +590,24 @@ button:disabled { cursor: not-allowed; opacity: .38; }
 [data-rarity="精妙"] { --rarity: #4e7fb8; }
 [data-rarity="上乘"] { --rarity: #8b63a8; }
 [data-rarity="绝学"] { --rarity: #c9953d; }
-[data-rarity="0"] { --rarity: lightgray; }
-[data-rarity="1"] { --rarity: white; }
-[data-rarity="2"] { --rarity: lightgreen; }
-[data-rarity="3"] { --rarity: #3b9cf7; }
-[data-rarity="4"] { --rarity: yellow; }
-[data-rarity="5"] { --rarity: fuchsia; }
-[data-rarity="6"] { --rarity: orange; }
-[data-rarity="7"] { --rarity: red; }
-[data-rarity="8"] { --rarity: deeppink; }
-[data-rarity="9"] { --rarity: aqua; }
-[data-affix-grade="E"] { --affix-grade: white; }
-[data-affix-grade="D"] { --affix-grade: lightgreen; }
-[data-affix-grade="C"] { --affix-grade: #3b9cf7; }
-[data-affix-grade="B"] { --affix-grade: yellow; }
-[data-affix-grade="A"] { --affix-grade: fuchsia; }
-[data-affix-grade="S"] { --affix-grade: orange; }
-[data-affix-grade="SS"] { --affix-grade: red; }
-[data-affix-grade="SSS"] { --affix-grade: deeppink; }
+[data-rarity="0"] { --rarity: #8f897b; }
+[data-rarity="1"] { --rarity: #e0d8c4; }
+[data-rarity="2"] { --rarity: #85b178; }
+[data-rarity="3"] { --rarity: #6d9fd6; }
+[data-rarity="4"] { --rarity: #d2b25b; }
+[data-rarity="5"] { --rarity: #b486cc; }
+[data-rarity="6"] { --rarity: #cf8a4e; }
+[data-rarity="7"] { --rarity: #cf6053; }
+[data-rarity="8"] { --rarity: #c96d92; }
+[data-rarity="9"] { --rarity: #62b1a6; }
+[data-affix-grade="E"] { --affix-grade: #c9c2b0; }
+[data-affix-grade="D"] { --affix-grade: #85b178; }
+[data-affix-grade="C"] { --affix-grade: #6d9fd6; }
+[data-affix-grade="B"] { --affix-grade: #d2b25b; }
+[data-affix-grade="A"] { --affix-grade: #b486cc; }
+[data-affix-grade="S"] { --affix-grade: #cf8a4e; }
+[data-affix-grade="SS"] { --affix-grade: #cf6053; }
+[data-affix-grade="SSS"] { --affix-grade: #c96d92; }
 [data-rarity] { border-color: var(--rarity, var(--line)) !important; }
 [data-rarity] > span:first-child, [data-rarity] > header em, span[data-rarity], strong[data-rarity] { color: var(--rarity, var(--paper)); }
 
@@ -3553,16 +3553,16 @@ body {
   --gold-deep: #8f6f3a;
   --jade-dim: #57705f;
   --line-soft: #252a22;
-  --q-0: lightgray;
-  --q-1: white;
-  --q-2: lightgreen;
-  --q-3: #3b9cf7;
-  --q-4: yellow;
-  --q-5: fuchsia;
-  --q-6: orange;
-  --q-7: red;
-  --q-8: deeppink;
-  --q-9: aqua;
+  --q-0: #8f897b;
+  --q-1: #e0d8c4;
+  --q-2: #85b178;
+  --q-3: #6d9fd6;
+  --q-4: #d2b25b;
+  --q-5: #b486cc;
+  --q-6: #cf8a4e;
+  --q-7: #cf6053;
+  --q-8: #c96d92;
+  --q-9: #62b1a6;
   --r-粗浅: #8e887d;
   --r-寻常: #4f9168;
   --r-精妙: #4e7fb8;
@@ -3932,26 +3932,41 @@ body {
 .heroes-page .sp-opt { padding: 7px 10px; border-radius: 5px; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-align: left; transition: background .15s; }
 .heroes-page .sp-opt:hover { background: rgb(233 222 195 / 7%); }
 
-/* 固定浮动装备属性笺（深墨底 + 金边亮字，保持 hover-only） */
-.heroes-page .equipment-tooltip { position: fixed; inset: auto; z-index: 90; width: min(340px, calc(100vw - 24px)); max-height: calc(100vh - 24px); display: none; margin: 0; padding: 0; overflow: auto; border: 1px solid var(--gold-deep); border-radius: 9px; color: var(--heroes-paper); background: linear-gradient(165deg, #1d2119, #12150f 75%); box-shadow: 0 20px 44px rgb(0 0 0 / 60%), inset 0 0 0 1px rgb(201 163 92 / 10%); pointer-events: none; }
+/* 固定浮动装备属性笺（暖墨底 + 金边亮字，保持 hover-only；对比模式双栏并排） */
+.heroes-page .equipment-tooltip { position: fixed; inset: auto; z-index: 90; width: min(400px, calc(100vw - 24px)); max-height: calc(100vh - 24px); display: none; margin: 0; padding: 0; overflow: auto; border: 1px solid var(--gold-deep); border-radius: 10px; color: var(--heroes-paper); background: linear-gradient(170deg, #241d11, #15100a 78%); box-shadow: 0 20px 44px rgb(0 0 0 / 60%), inset 0 0 0 1px rgb(201 163 92 / 12%); pointer-events: none; }
+.heroes-page .equipment-tooltip.has-compare { width: min(680px, calc(100vw - 24px)); }
 .heroes-page .equipment-tooltip:popover-open { display: block; }
-.heroes-page .equipment-tooltip > header { display: grid; grid-template-columns: 1fr; gap: 3px; padding: 11px 14px 9px; border-bottom: 1px solid #2a2f26; }
-.heroes-page .equipment-tooltip > header span { color: var(--paper-mute); font-size: 11px; letter-spacing: .18em; }
-.heroes-page .equipment-tooltip > header strong { color: var(--rarity, var(--heroes-paper)); font-family: var(--font-brush); font-size: 19px; font-weight: 400; letter-spacing: .06em; }
-.heroes-page .equipment-tooltip > header em { color: var(--paper-mute); font-size: 11.5px; font-style: normal; letter-spacing: .06em; }
+.heroes-page .equipment-tooltip > header { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 13px 16px 11px; border-bottom: 1px solid #3a3120; }
+.heroes-page .equipment-tooltip > header span { color: var(--paper-dim); font-size: 12.5px; letter-spacing: .18em; }
+.heroes-page .equipment-tooltip > header strong { color: var(--rarity, var(--heroes-paper)); font-family: var(--font-brush); font-size: 23px; font-weight: 400; letter-spacing: .06em; }
+.heroes-page .equipment-tooltip > header em { color: var(--paper-dim); font-size: 13px; font-style: normal; letter-spacing: .06em; }
 .heroes-page .equipment-tooltip > header em .tt-q { color: var(--rarity, var(--gold-bright)); font-weight: 700; }
 .heroes-page .equipment-tooltip-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .heroes-page .equipment-tooltip-columns > section:only-child { grid-column: 1 / -1; }
-.heroes-page .equipment-tooltip-columns section { min-width: 0; padding: 9px 14px 11px; }
-.heroes-page .equipment-tooltip-columns section + section { border-left: 1px solid #2a2f26; }
-.heroes-page .equipment-tooltip-columns section > small { display: block; margin-bottom: 6px; color: var(--gold); font-size: 11px; letter-spacing: .2em; }
-.heroes-page .equipment-properties { display: grid; gap: 3px; margin: 0; }
-.heroes-page .equipment-properties > div { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; line-height: 1.9; }
+.heroes-page .equipment-tooltip-columns section { min-width: 0; padding: 11px 16px 13px; }
+.heroes-page .equipment-tooltip-columns section + section { border-left: 1px solid #3a3120; }
+.heroes-page .equipment-tooltip-columns section > small { display: block; margin-bottom: 7px; color: var(--gold); font-size: 12.5px; letter-spacing: .2em; }
+.heroes-page .equipment-properties { display: grid; gap: 4px; margin: 0; }
+.heroes-page .equipment-properties > div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; line-height: 1.8; }
 .heroes-page .equipment-properties dt { color: var(--paper-dim); }
 .heroes-page .equipment-properties dd { margin: 0; color: var(--gold-bright); font-weight: 700; font-variant-numeric: tabular-nums; }
-.heroes-page .equipment-properties i { color: var(--affix-grade, var(--paper-mute)); font-style: normal; font-size: 10.5px; }
+.heroes-page .equipment-properties i { color: var(--affix-grade, var(--paper-mute)); font-style: normal; font-size: 11.5px; }
 .heroes-page .equipment-properties [data-affix-grade] dd { color: var(--affix-grade); }
-.heroes-page .equipment-tooltip > footer { padding: 8px 14px; border-top: 1px solid #2a2f26; color: var(--paper-mute); font-size: 11px; letter-spacing: .1em; }
+.heroes-page .tt-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.heroes-page .tt-compare > .tt-col { min-width: 0; padding: 11px 16px 13px; }
+.heroes-page .tt-compare > .tt-col + .tt-col { border-left: 1px solid #3a3120; }
+.heroes-page .tt-compare > .tt-col > small { display: block; margin-bottom: 3px; color: var(--gold); font-size: 12.5px; letter-spacing: .2em; }
+.heroes-page .tt-compare-name { overflow: hidden; margin-bottom: 8px; color: var(--rarity, var(--heroes-paper)); font-family: var(--font-brush); font-size: 19px; font-weight: 400; letter-spacing: .05em; text-overflow: ellipsis; white-space: nowrap; }
+.heroes-page .tt-stat-group + .tt-stat-group { margin-top: 10px; }
+.heroes-page .tt-stat-group h4 { margin: 0 0 6px; color: var(--gold); font-size: 12.5px; font-weight: 400; letter-spacing: .2em; }
+.heroes-page .tt-delta { margin-left: 7px; color: var(--paper-mute); font-size: 11.5px; font-weight: 400; }
+.heroes-page .tt-delta.up { color: #96c283; }
+.heroes-page .tt-delta.down { color: #d98a76; }
+.heroes-page .equipment-tooltip > footer { padding: 9px 16px; border-top: 1px solid #3a3120; color: var(--paper-dim); font-size: 12.5px; letter-spacing: .1em; }
+@media (max-width: 640px) {
+  .heroes-page .tt-compare { grid-template-columns: 1fr; }
+  .heroes-page .tt-compare > .tt-col + .tt-col { border-left: 0; border-top: 1px solid #3a3120; }
+}
 .heroes-page .page-foot { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 14px; padding: 34px 0 4px; color: rgb(233 222 195 / 26%); font-size: 10px; letter-spacing: .22em; }
 
 /* 桌面端一屏布局：三栏撑满视口，栏内各自滚动 */

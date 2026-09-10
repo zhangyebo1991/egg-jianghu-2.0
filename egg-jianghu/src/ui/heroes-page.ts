@@ -15,7 +15,7 @@ import { careerIconAsset } from './career-icon-assets'
 import { equipmentIconAsset } from './equipment-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
 import { heroAppearanceAsset, heroFigureStyle } from './hero-appearance-assets'
-import type { InventoryItemView } from './inventory-page'
+import type { InventoryAffixView, InventoryCoreStatView, InventoryItemView } from './inventory-page'
 import { renderHeroMartials, type HeroMartialsView } from './hero-martials'
 
 export interface CareerGrowthView {
@@ -425,25 +425,80 @@ const renderPrototypeRoster = (view: HeroesPageViewModel): string => {
   return rows || '<div class="roster-none">查无此侠</div>'
 }
 
-const renderEquipmentTooltip = (item: InventoryItemView, footer: string): string => `
-  <div class="equipment-tooltip" popover="manual" data-rarity="${item.quality}">
+type TooltipStat = InventoryCoreStatView | InventoryAffixView
+
+// 与身上同部位装备逐词条对比，标注 ▲/▼ 差值，便于扫一眼定优劣。
+const tooltipDeltaMark = (stat: TooltipStat, reference: Map<number, number>): string => {
+  const against = reference.get(stat.attributeId)
+  if (against === undefined) return ''
+  const difference = stat.value - against
+  const percent = stat.formattedValue.endsWith('%')
+  if (Math.abs(difference) < (percent ? 0.05 : 0.5)) return ''
+  const text = percent
+    ? `${difference > 0 ? '+' : ''}${Number(difference.toFixed(1))}%`
+    : `${difference > 0 ? '+' : ''}${Math.round(difference).toLocaleString('zh-CN')}`
+  return `<i class="tt-delta ${difference > 0 ? 'up' : 'down'}">${difference > 0 ? '▲' : '▼'}${text}</i>`
+}
+
+const renderTooltipStats = (stats: TooltipStat[], reference: Map<number, number> | null): string =>
+  `<dl class="equipment-properties">${stats.map((stat) => {
+    const grade = 'grade' in stat ? stat.grade : null
+    const roll = 'rollPercent' in stat ? stat.rollPercent : null
+    const delta = reference ? tooltipDeltaMark(stat, reference) : ''
+    const label = roll !== null ? ` <i>(${roll}%)</i>` : grade ? ` <i>[${grade}]</i>` : ''
+    return `<div${grade ? ` data-affix-grade="${grade}"` : ''}><dt>${escapeHtml(stat.name)}${label}</dt><dd>+${escapeHtml(stat.formattedValue)}${delta}</dd></div>`
+  }).join('')}</dl>`
+
+const renderTooltipStatGroups = (item: InventoryItemView, reference: Map<number, number> | null): string =>
+  `<div class="tt-stat-group"><h4>核心词条</h4>${renderTooltipStats(item.coreStats, reference)}</div>
+  ${item.affixes.length ? `<div class="tt-stat-group"><h4>附加词条</h4>${renderTooltipStats(item.affixes, reference)}</div>` : ''}`
+
+const renderEquipmentTooltipHeader = (item: InventoryItemView): string => `
     <header>
       <span>${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</span>
       <strong>${escapeHtml(item.name)}</strong>
       <em>品质 <b class="tt-q">${escapeHtml(EQUIPMENT_QUALITY_NAMES[item.quality])}</b> · 物品等级 Lv.${item.level} · 穿戴等级 Lv.${item.equipmentLevel}</em>
-    </header>
+    </header>`
+
+const renderEquipmentTooltip = (item: InventoryItemView, footer: string, comparison?: InventoryItemView | null): string => {
+  if (!comparison) {
+    return `
+  <div class="equipment-tooltip" popover="manual" data-rarity="${item.quality}">
+    ${renderEquipmentTooltipHeader(item)}
     <div class="equipment-tooltip-columns">
       <section>
         <small>核心词条</small>
-        <dl class="equipment-properties">${item.coreStats.map((core) => `<div><dt>${escapeHtml(core.name)} <i>(${core.rollPercent}%)</i></dt><dd>+${escapeHtml(core.formattedValue)}</dd></div>`).join('')}</dl>
+        ${renderTooltipStats(item.coreStats, null)}
       </section>
       ${item.affixes.length ? `<section>
         <small>附加词条</small>
-        <dl class="equipment-properties">${item.affixes.map((affix) => `<div data-affix-grade="${affix.grade}"><dt>${escapeHtml(affix.name)} <i>[${affix.grade}]</i></dt><dd>+${escapeHtml(affix.formattedValue)}</dd></div>`).join('')}</dl>
+        ${renderTooltipStats(item.affixes, null)}
       </section>` : ''}
     </div>
     <footer>${escapeHtml(footer)}</footer>
   </div>`
+  }
+  const reference = new Map<number, number>()
+  comparison.coreStats.forEach((stat) => reference.set(stat.attributeId, stat.value))
+  comparison.affixes.forEach((stat) => reference.set(stat.attributeId, stat.value))
+  return `
+  <div class="equipment-tooltip has-compare" popover="manual" data-rarity="${item.quality}">
+    ${renderEquipmentTooltipHeader(item)}
+    <div class="tt-compare">
+      <section class="tt-col">
+        <small>行囊物品</small>
+        <strong class="tt-compare-name" data-rarity="${item.quality}">${escapeHtml(item.name)}</strong>
+        ${renderTooltipStatGroups(item, reference)}
+      </section>
+      <section class="tt-col">
+        <small>身上装备</small>
+        <strong class="tt-compare-name" data-rarity="${comparison.quality}">${escapeHtml(comparison.name)}</strong>
+        ${renderTooltipStatGroups(comparison, null)}
+      </section>
+    </div>
+    <footer>${escapeHtml(footer)}</footer>
+  </div>`
+}
 
 const renderEquipmentSlot = (hero: HeroesHeroView, entry: HeroEquipmentSlotView): string => {
   const item = entry.item
@@ -577,8 +632,10 @@ const renderPackRail = (view: HeroesPageViewModel): string => {
       <div class="sp-title">按等阶售出<small>点档位立即售出 ≤ 该档的未装备物品</small></div>
       ${EQUIPMENT_QUALITIES.map((quality) => `<button type="button" class="sp-opt" data-action="hero-sell-quality" data-quality="${quality}" style="color:var(--q-${quality})">${EQUIPMENT_QUALITY_NAMES[quality]}及以下</button>`).join('')}
     </div>` : ''
+  const equippedBySlot = new Map((view.equipment?.slots ?? []).map((entry) => [entry.slot, entry.item]))
   const cells = pack.items.map((item) => {
     const icon = equipmentIconAsset(item.slot, item.definitionId)
+    const equipped = equippedBySlot.get(item.slot) ?? null
     return `
       <button type="button" class="pack-cell" data-quality="${item.quality}" style="--qc:var(--q-${item.quality})"
         data-equipment-uid="${escapeHtml(item.uid)}" data-testid="hero-pack-${escapeHtml(item.uid)}"
@@ -586,7 +643,7 @@ const renderPackRail = (view: HeroesPageViewModel): string => {
         ${item.locked ? '<span class="pk-lock">锁</span>' : ''}
         <img src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}">
         <span class="pk-lv">Lv.${item.level}</span>
-        ${renderEquipmentTooltip(item, '双击左键，为当前侠客装备')}
+        ${renderEquipmentTooltip(item, '双击左键，为当前侠客装备', equipped?.uid === item.uid ? null : equipped)}
       </button>`
   }).join('')
   const pageItems = buildPackPaginationItems(pack.page, pack.pageCount)
@@ -619,7 +676,7 @@ const renderPackRail = (view: HeroesPageViewModel): string => {
         <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page + 1}" ${pack.page >= pack.pageCount ? 'disabled' : ''} title="下一页" aria-label="下一页">›</button>
         <span class="pack-page-status">第 ${pack.page} / ${pack.pageCount} 页</span>
       </nav>
-      <footer class="pack-foot">悬停查看属性笺 · 双击为当前侠客装备</footer>
+      <footer class="pack-foot">悬停对比身上装备 · 双击为当前侠客装备</footer>
     </div>
   </aside>`
 }

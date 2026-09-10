@@ -430,6 +430,48 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="pack-cell"')
   })
 
+  it('行囊属性笺并排对比身上同部位装备并标注词条增减', () => {
+    const view = heroesFixture()
+    const backpackItem = inventoryFixture().items[0]
+    const equippedItem = {
+      ...backpackItem,
+      uid: 'equipped_1',
+      name: '玄铁重剑',
+      level: 8,
+      coreStats: [
+        { attributeId: 8, name: '物攻', value: 40, formattedValue: '40', rollPercent: 100 },
+        { attributeId: 20, name: '物理增伤', value: 0.05, formattedValue: '5%', rollPercent: 100 },
+      ],
+      affixes: [{ attributeId: 41, name: '火系增伤', value: 0.06, formattedValue: '6%', grade: 'B' }],
+    }
+    view.equipment = {
+      heroId: 'hero_test',
+      setIndex: 0,
+      slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: slot === 'weapon' ? equippedItem : null })),
+    }
+    view.pack = { ...view.pack!, itemCount: 1, items: [backpackItem] }
+
+    const html = renderHeroesPage(view)
+    expect(html).toContain('class="equipment-tooltip has-compare"')
+    expect(html).toContain('行囊物品')
+    expect(html).toContain('身上装备')
+    expect(html).toContain('>长戟</strong>')
+    expect(html).toContain('>玄铁重剑</strong>')
+    expect(html).toContain('tt-delta down')
+    expect(html).toContain('tt-delta up')
+    // 身上装备没有的词条不标注箭头
+    expect(html).toContain('<dd>+4%</dd>')
+    // 行囊物品与身上物品为同一件时不进入对比
+    const same = heroesFixture()
+    same.equipment = {
+      heroId: 'hero_test',
+      setIndex: 0,
+      slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: slot === backpackItem.slot ? backpackItem : null })),
+    }
+    same.pack = { ...same.pack!, itemCount: 1, items: [{ ...backpackItem }] }
+    expect(renderHeroesPage(same)).toContain('class="equipment-tooltip"')
+  })
+
   it('行囊分页智能生成窗口页码与省略号，避免页数过多时数字挤压重叠', () => {
     // 少于等于 5 页：全部显示
     expect(buildPackPaginationItems(1, 4)).toEqual([
