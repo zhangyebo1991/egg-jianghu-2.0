@@ -143,13 +143,13 @@ describe('原版阵位目标选择', () => {
     expect(selectSkillTargets(actor, skill(6), [summon, actor], [])[0]?.id).toBe(actor.id)
   })
 
-  it('群体治疗范围保留满血队友，受伤判定仅用于自动释放', () => {
+  it('群体治疗范围保留满血队友，全员满血也继续释放', () => {
     const actor = slotUnit(8, { skillIds: [168] })
     const wounded = slotUnit(1, { hp: 50 })
     expect(selectSkillTargets(actor, skill(168), [actor, wounded], []).map(target => target.id)).toEqual([wounded.id, actor.id])
     expect(selectSkill(actor, [actor, wounded], []).skill.id).toBe(168)
     wounded.hp = wounded.maxHp
-    expect(selectSkill(actor, [actor, wounded], []).skill.id).toBe(actor.baseAttackId)
+    expect(selectSkill(actor, [actor, wounded], []).skill.id).toBe(168)
   })
 
   it('能量目标比较物法双攻最大值，不按普攻的物法类型筛选', () => {
@@ -237,13 +237,13 @@ describe('四槽行招', () => {
     expect(selectSkill(actor, [actor], enemies).skill.id).toBe(56)
   })
 
-  it('治疗没有受伤目标时跳过并改用攻击技能', () => {
+  it('治疗没有受伤目标时仍按槽位优先级释放', () => {
     const actor = unit({ energy: 3, skillIds: [60, 32], baseAttackId: 1 })
     const result = selectSkill(actor, [unit({ id: 'ally', hp: 100, maxHp: 100 })], [unit({ id: 'enemy', side: 'enemy' })])
-    expect(result.skill.id).toBe(32)
+    expect(result.skill.id).toBe(60)
   })
 
-  it.each([338, 341])('特殊生命治疗技能 %s 在全员满血时仍可释放', (skillId) => {
+  it.each([44, 50, 128, 331, 338, 341])('治疗技能 %s 在全员满血时仍可释放', (skillId) => {
     const actor = unit({ energy: 5, skillIds: [skillId, 32] })
     const result = selectSkill(actor, [actor], [unit({ id: 'enemy', side: 'enemy' })])
 

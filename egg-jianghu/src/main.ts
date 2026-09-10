@@ -341,7 +341,7 @@ const presentCombatEvents = (events: CombatEvent[]): void => {
       const skill = skillById(event.skillId)
       if (skill) {
         addCombatEffect('skill-name', event.atMs, event.sourceId, skill.name)
-        if (skill.behavior !== 'attack' && skill.behavior !== 'heal') {
+        if (skill.behavior !== 'attack') {
           addCombatLog('skill', '绝', `${combatUnitName(event.sourceId)} 使出「${skill.name}」！`)
         }
       }
@@ -685,7 +685,8 @@ const unitView = (unit: CombatUnit): IdleCombatUnitView => {
     energy: unit.energy,
     maxEnergy: unit.maxEnergy,
     gauge: unit.gauge,
-    cooldownMs: Math.max(0, ...Object.values(unit.cooldowns), 0),
+    // 引擎冷却使用战斗时间；界面按当前倍率换算为等待秒数，避免再次加速结算。
+    cooldownMs: Math.max(0, ...Object.values(unit.cooldowns), 0) / combatSpeed,
     alive: unit.alive,
     skillId: equipped?.id ?? base?.id,
     skillName: equipped?.name ?? base?.name ?? (unit.side === 'party' ? '蓄势待发' : '伺机出手'),

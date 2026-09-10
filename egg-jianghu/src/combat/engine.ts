@@ -478,8 +478,7 @@ const executeHeal = (
   for (const target of targets) {
     if (!target.alive) continue
     const amount = skillHealingAmount(actor, target, skill)
-    const healed = Math.min(target.maxHp - target.hp, amount)
-    if (healed <= 0) continue
+    const healed = Math.max(0, Math.min(target.maxHp - target.hp, amount))
     target.hp += healed
     events.push({ type: 'healing', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, amount: healed, skillId: skill.id })
   }

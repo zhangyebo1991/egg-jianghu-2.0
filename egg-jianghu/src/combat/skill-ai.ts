@@ -48,9 +48,6 @@ const livingSummons = (actor: CombatUnit, allies: CombatUnit[]): CombatSummon[] 
   allies.filter((unit): unit is CombatSummon =>
     unit.alive && isSummon(unit) && unit.summonerId === actor.id)
 
-const unconditionalLifeHeal = (skill: CombatSkillContent): boolean =>
-  skill.originalBehavior === '生命治疗' && (skill.id === 338 || skill.id === 341)
-
 const candidatePool = (skill: CombatSkillContent, allies: CombatUnit[], enemies: CombatUnit[]): CombatUnit[] => {
   const pool = skill.targetSide === 'ally' ? allies : enemies
   if (skill.behavior === 'revive') return pool.filter((unit) => !unit.alive)
@@ -99,9 +96,7 @@ const unavailableReason = (
   if (skill.behavior === 'passive') return '被动技能不可主动释放'
   if (actor.energy < skill.energyCost) return '能量不足'
   if ((actor.cooldowns[skill.id] ?? 0) > 0) return '技能冷却中'
-  // 受伤判定只控制自动释放；确定核心后，范围内满血单位仍可获得附带状态。
-  if (skill.originalBehavior === '生命治疗' && !unconditionalLifeHeal(skill)
-    && !allies.some(unit => unit.alive && unit.hp < unit.maxHp)) return '没有受伤目标'
+  // 治疗与其他技能一样按槽位优先级释放，满血不影响可用性。
   if (skill.originalBehavior === '自身增加能量' && skill.rangeId === 1 && actor.energy >= 5) return '能量已满'
   if (skill.behavior === 'summon') {
     if (!firstEmptySlot(allies)) return '没有空余站位'
@@ -117,7 +112,7 @@ const unavailableReason = (
     }
   }
   if (selectSkillTargets(actor, skill, allies, enemies).length > 0) return null
-  if (skill.behavior === 'heal') return '没有受伤目标'
+  if (skill.behavior === 'heal') return '没有存活治疗目标'
   if (skill.behavior === 'revive') return '没有阵亡目标'
   return '没有合法目标'
 }

@@ -5,6 +5,7 @@ import type { CombatStartInput, CombatSummon, CombatUnit } from './types'
 import { panelToAttributeMap } from './stats'
 import { createActionPlan, createCombatTimeline } from './scheduler'
 import { SX } from './attribute-ids'
+import { COMBAT_SKILLS } from '../content/skills'
 import { applyBuff, dealCombatDamage, pulseStatuses, unitAttr } from './statuses'
 
 const partyUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => {
@@ -68,6 +69,41 @@ const createCombatEngine = (input: CombatStartInput) => {
   engine.state.elapsedMs = 0
   return engine
 }
+
+describe('治疗技能濒死施放回归', () => {
+  it.each([1, 5000])('伤口包扎在气血 %s 时正确结算、扣气并在行动结束进入冷却', (hp) => {
+    const actor = partyUnit({ skillIds: [44], hp, energy: 5, gauge: 1000, effectiveAgility: 1 })
+    const engine = createCombatEngine({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 17, party: [actor] })
+    const caster = engine.state.party[0]
+    caster.hp = hp
+    engine.state.enemies.forEach(enemy => { enemy.gauge = 0; enemy.effectiveAgility = 1 })
+    const start = engine.advance(100)
+    expect(start).toContainEqual(expect.objectContaining({ type: 'skill-used', skillId: 44 }))
+    expect(caster.energy).toBe(3)
+    expect(caster.cooldowns[44] ?? 0).toBe(0)
+    const hits = engine.advance(300)
+    const heal = hits.find(event => event.type === 'healing' && event.skillId === 44)
+    expect(heal).toBeDefined()
+    if (heal?.type !== 'healing') throw new Error('伤口包扎没有治疗事件')
+    expect(heal.amount).toBe(hp === 5000 ? 0 : caster.hp - hp)
+    if (hp === 1) expect(caster.hp).toBeGreaterThan(hp)
+    expect(hits.some(event => event.type === 'damage' && event.sourceId === caster.id)).toBe(false)
+    engine.advance(900)
+    expect(caster.cooldowns[44]).toBe(8000)
+    expect(caster.energy).toBe(3)
+  })
+  it.each(Object.values(COMBAT_SKILLS).filter(skill => skill.behavior === 'heal').map(skill => [skill.id, skill.name] as const))('%s %s 在施法者濒死时实际回血而非攻击', (skillId) => {
+    const actor = partyUnit({ skillIds: [skillId], hp: 1, energy: 5, gauge: 1000, effectiveAgility: 1 })
+    const engine = createCombatEngine({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 17, party: [actor] })
+    engine.state.party[0].hp = 1
+    engine.state.enemies.forEach(enemy => { enemy.gauge = 0; enemy.effectiveAgility = 1 })
+    const events = engine.advance(400)
+    expect(events).toContainEqual(expect.objectContaining({ type: 'skill-used', sourceId: actor.id, skillId }))
+    expect(events).toContainEqual(expect.objectContaining({ type: 'healing', sourceId: actor.id, targetId: actor.id, skillId, amount: expect.any(Number) }))
+    expect(engine.state.party[0].hp).toBeGreaterThan(1)
+    expect(events.filter(event => event.type === 'damage' && event.sourceId === actor.id)).toHaveLength(0)
+  })
+})
 
 const summonOnce = (
   skillId: number,
@@ -341,7 +377,7 @@ describe('十波战斗', () => {
     engine.state.enemies.forEach((enemy) => { enemy.gauge = 0 })
 
     const events = engine.tick(10)
-    const healing = events.find((event) => event.type === 'healing' && event.sourceId === 'healer')
+    const healing = events.find((event) => event.type === 'healing' && event.sourceId === 'healer' && event.targetId === 'patient')
 
     // 回春术 I 初始化系数 55%；法攻 1000 × 职业治疗系数 2 × 55%。
     expect(healing).toMatchObject({ type: 'healing', amount: 1100 })
