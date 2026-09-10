@@ -1,4 +1,5 @@
 import { escapeHtml, formatNumber } from './html'
+import { EQUIPMENT_QUALITY_NAMES, isEquipmentQuality } from '../content/equipment'
 import { careerCategoryIconAsset, martialIconAsset } from './career-icon-assets'
 import type { MartialLore } from '../content/martial-lore'
 import { renderFactionExchange, type FactionExchangeViewModel } from './faction-exchange'
@@ -94,6 +95,7 @@ export interface FactionsPageViewModel {
       targetKind: string
       quality: number
       targetName: string
+      equipmentQuality?: number
       progress: number
       targetCount: number
       rewardContribution: number
@@ -158,7 +160,9 @@ const renderQuest = (
       <span class="faction-notice-type">${escapeHtml(quest.taskName)}</span>
       <span class="faction-grade-seal" data-grade="${quest.quality}">${quest.quality}品</span>
     </div>
-    <h3>${escapeHtml(quest.targetName)}</h3>
+    <h3>${quest.taskId === 5 && isEquipmentQuality(quest.equipmentQuality)
+      ? `<span class="faction-equipment-quality" data-rarity="${quest.equipmentQuality}">${escapeHtml(EQUIPMENT_QUALITY_NAMES[quest.equipmentQuality])}</span> 装备`
+      : escapeHtml(quest.targetName)}</h3>
     <p class="faction-notice-scene">${escapeHtml(quest.actionName)} · ${escapeHtml(quest.targetKind)}</p>
     <div class="faction-tally-row">
       <span class="faction-tally" aria-hidden="true">${renderTally(quest.progress, quest.targetCount)}</span>

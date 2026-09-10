@@ -1361,6 +1361,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
           targetKind: task?.targetKind ?? '目标',
           quality: quest.quality,
           targetName: originalFactionTaskTargetName(world.index, quest.taskId, quest.targetId),
+          equipmentQuality: quest.taskId === 5 ? quest.targetId : undefined,
           progress,
           targetCount,
           rewardContribution: reward.contribution,
