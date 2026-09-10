@@ -99,6 +99,7 @@ export interface HeroEquipmentSlotView {
 }
 
 export interface HeroesEquipmentView {
+  autoEquipBuild?: 'physical' | 'magical'
   heroId: string
   setIndex: 0 | 1 | 2
   slots: HeroEquipmentSlotView[]
@@ -483,7 +484,10 @@ const renderEquipmentTab = (hero: HeroesHeroView, equipment: HeroesEquipmentView
           data-action="equipment-set-switch" data-hero-id="${escapeHtml(hero.id)}" data-set-index="${index}"
           data-testid="equipment-set-${index}">第${index + 1}套</button>`).join('')}
       </div>
-      <button type="button" class="eq-set-btn" data-action="hero-main-tab" data-main-tab="skins">更换皮肤</button>
+      <div class="eq-sets">
+        <button type="button" class="eq-set-btn" data-action="equipment-build-toggle" aria-label="切换一键穿戴方向" title="点击切换物理 / 法术">${equipment.autoEquipBuild === 'magical' ? '法术' : '物理'} ↔</button>
+        <button type="button" class="eq-set-btn" data-action="equipment-auto-equip" data-hero-id="${escapeHtml(hero.id)}" title="核心词条优先，附加词条次之；仅更新当前套装，不更换至宝">一键穿戴</button>
+      </div>
       <span class="eq-hint">双击行囊物品直接换装 · 悬停槽位看详情</span>
     </footer>
   </div>`

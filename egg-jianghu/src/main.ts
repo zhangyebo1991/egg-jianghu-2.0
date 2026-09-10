@@ -64,7 +64,7 @@ import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
-import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, INVENTORY_CAPACITY, organizeInventory, sellEquipmentByQuality, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, bindActiveEquipmentLoadout } from './domain/inventory'
+import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipBestEquipment, type EquipmentBuild, INVENTORY_CAPACITY, organizeInventory, sellEquipmentByQuality, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, bindActiveEquipmentLoadout } from './domain/inventory'
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, isMartialCareerCompatible, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
@@ -192,6 +192,7 @@ let heroPackQualityFilter: EquipmentQuality | 'all' = 'all'
 let heroPackPage = 1
 let heroPackDynamicPageSize = 48
 let heroMainTab: HeroesMainTab = 'basic'
+let heroAutoEquipBuild: EquipmentBuild = 'physical'
 let heroMartialSlot: number | null = null
 let heroMartialQuery = ''
 let heroMartialCategory = 'all'
@@ -972,6 +973,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
     ? {
       heroId: selectedId,
       setIndex: selectedHero.activeEquipmentSetIndex,
+      autoEquipBuild: heroAutoEquipBuild,
       slots: EQUIPMENT_SLOTS.map((slot) => {
         const uid = loadout[slot]
         const instance = uid ? session.state.inventory.find((item) => item.uid === uid) : undefined
@@ -2513,6 +2515,8 @@ const performAction = (button: HTMLButtonElement): void => {
     if (session.combat || session.pendingCombatRestart) { notify('战斗期间不能更换或升级皮肤', true); return }
     commitAction((action === 'skin-select' ? selectHeroSkin : upgradeHeroSkin)(session.state, heroId, dataNumber(button, 'skinId')))
   }
+  else if (action === 'equipment-build-toggle') heroAutoEquipBuild = heroAutoEquipBuild === 'physical' ? 'magical' : 'physical'
+  else if (action === 'equipment-auto-equip') commitAction(equipBestEquipment(session.state, heroId, heroAutoEquipBuild))
   else if (action === 'equipment-equip') commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
   else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
   else if (action === 'equipment-set-switch') commitAction(switchEquipmentSet(session.state, heroId, dataNumber(button, 'setIndex')))

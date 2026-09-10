@@ -12,6 +12,59 @@ import {
 } from '../content/equipment'
 import { martialIdFromOriginal } from '../content/martials'
 import { grantPermanentMartial } from './martial-training'
+import { ATTRIBUTE_BY_ID } from '../content/attributes'
+import { equipmentAttributeValue } from '../content/equipment'
+
+export type EquipmentBuild = 'physical' | 'magical'
+
+// 以一级、标准系数的装备属性归一化，避免生命的绝对数值压过攻击等词条。
+const equipmentScore = (item: EquipmentInstance, build: EquipmentBuild, core: boolean): number => {
+  const ignored = build === 'physical' ? [10, 22] : [8, 20]
+  return (core ? item.coreStats : item.affixes).reduce((sum, stat) => {
+    const attribute = ATTRIBUTE_BY_ID[stat.attributeId]
+    if (!attribute?.combatFlag || ignored.includes(stat.attributeId)) return sum
+    return sum + equipmentAttributeValue(stat.attributeId, item.level, stat.coefficient, core ? 100 : 50)
+      / equipmentAttributeValue(stat.attributeId, 1, 100, 100)
+  }, 0)
+}
+
+export const equipBestEquipment = (state: GameStateV10, heroId: string, build: EquipmentBuild): ActionResult => {
+  const hero = state.heroes[heroId]
+  if (!hero?.recruited) return { ok: false, message: '侠客尚未加入' }
+  const loadout = bindActiveEquipmentLoadout(hero)
+  // 备用方案也占用装备；自动穿戴不挪用它们，避免破坏已经搭配好的方案。
+  const available = state.inventory.filter((item) => equipmentOwnerId(state, item.uid) === null
+    || Object.values(loadout).includes(item.uid))
+  const matchesBuild = (item: EquipmentInstance): boolean => {
+    const desired = build === 'physical' ? [8, 20] : [10, 22]
+    const opposite = build === 'physical' ? [10, 22] : [8, 20]
+    return item.coreStats.some((stat) => desired.includes(stat.attributeId))
+      || !item.coreStats.some((stat) => opposite.includes(stat.attributeId))
+  }
+  let changed = 0
+  for (const slot of EQUIPMENT_SLOTS) {
+    // 至宝包含永久授予武学等特殊效果，不能按数值自动判断优劣。
+    if (slot === 'treasure') continue
+    const current = state.inventory.find((item) => item.uid === loadout[slot])
+    let best = current
+    for (const item of available) {
+      const definition = equipmentDefinitionById(canonicalEquipmentDefinitionId(item.definitionId))
+      if (definition?.slot !== slot || !matchesBuild(item) || hero.level < (item.equipmentLevel ?? equipmentWearLevel(item.level, item.quality))) continue
+      const core = equipmentScore(item, build, true)
+      // 只有另一流派攻击的装备不填入空槽；通用生命、防御、速度正常参与。
+      if (core <= 0) continue
+      const bestCore = best && matchesBuild(best) ? equipmentScore(best, build, true) : -1
+      if (core > bestCore || (core === bestCore && best && equipmentScore(item, build, false) > equipmentScore(best, build, false))) best = item
+    }
+    if (best && best.uid !== current?.uid) {
+      const result = equipEquipment(state, heroId, best.uid)
+      if (!result.ok) return result
+      changed += 1
+    }
+  }
+  const label = build === 'physical' ? '物理' : '法术'
+  return { ok: true, message: changed ? `已按${label}方向穿戴 ${changed} 件装备` : `当前已是可用装备中的${label}最优搭配` }
+}
 
 export const INVENTORY_CAPACITY = 300
 

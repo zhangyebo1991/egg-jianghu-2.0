@@ -3785,7 +3785,7 @@ body {
 .heroes-page .eq-name { color: #f2e7d0; font-family: var(--font-brush); font-size: 26px; font-weight: 400; letter-spacing: .1em; }
 .heroes-page .eq-lv { color: var(--gold-bright); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .heroes-page .eq-sub { color: var(--paper-mute); font-size: 12px; letter-spacing: .12em; }
-.heroes-page .eq-wrap { display: grid; flex: 1; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; min-height: 0; }
+.heroes-page .eq-wrap { display: grid; flex: 1; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; min-height: min-content; }
 .heroes-page .eq-col { position: relative; z-index: 2; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
 .heroes-page .eq-slot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .heroes-page .eq-box { width: 64px; height: 64px; display: grid; place-items: center; overflow: hidden; border: 1px solid #54492c; border-radius: 9px; background: #1b1710; }
@@ -3800,7 +3800,7 @@ body {
 .heroes-page .eq-stand { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-height: 0; }
 .heroes-page .eq-figure-img { position: absolute; z-index: 1; left: 50%; bottom: calc(16px - (100% - 16px) * var(--figure-bottom, 0)); height: calc((100% - 16px) * var(--figure-scale, 1)); width: auto; max-width: none; min-height: 0; transform: translateX(calc(-50% + var(--figure-center, 0%))); pointer-events: none; filter: drop-shadow(0 10px 18px rgb(0 0 0 / 55%)); }
 .heroes-page .eq-disc { width: 230px; max-width: 80%; height: 34px; margin-top: -18px; border: 1px solid #54492c; border-radius: 50%; background: radial-gradient(ellipse at 50% 40%, #4a4230, #221d12 70%); box-shadow: 0 0 18px rgb(196 155 86 / 20%); }
-.heroes-page .eq-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+.heroes-page .eq-foot { display: flex; flex-shrink: 0; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
 .heroes-page .eq-sets { display: flex; gap: 8px; }
 .heroes-page .eq-set-btn { white-space: nowrap; padding: 6px 18px; border: 1px solid #54492c; border-radius: 6px; color: #cbb27a; background: #221d12; font-size: 12.5px; letter-spacing: .2em; text-indent: .2em; transition: all .2s; }
 .heroes-page .eq-set-btn:hover { border-color: var(--gold); color: #f0dcae; }
