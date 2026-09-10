@@ -1,0 +1,2656 @@
+{
+  "finding": "save.At(人物编号,3,1)为角色等级，不是体魄；原实现误将存档列索引当作sx属性编号",
+  "sourceHashes": {
+    "data.json": "d4b0af7ec45d009c60afacbd7a52c9a2c1691c7e8a010f74f33177d184a2aad5",
+    "scripts/c3runtime.js": "5e74701617b101c6755ae1c82796b386947f8b51d24d80cf4104cd573cd82cdf",
+    "js.json": "4de8811212f0b644e16da2f8fea4887610006b1d4afb8bed54d168e4345bcfd4",
+    "zy.json": "6876276814a961f32556296ee161ddbff62dac73f41c7e033f5625ee740f787f"
+  },
+  "functions": [
+    {
+      "name": "职业属性系数",
+      "expressions": [
+        {
+          "expressionId": 2,
+          "expression": "0",
+          "runtimeExpression": "0"
+        },
+        {
+          "expressionId": 135,
+          "expression": "职业编号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 1021,
+          "expression": "(Math.round(multiply(100, divide(add(multiply((C3.clamp(save.At(人物编号, 职业编号, 4), 1, Infinity) - 1), divide(zy.At(职业编号, (17 + 属性编码)), 10)), zy.At(职业编号, (11 + 属性编码))), 100))) / 100)",
+          "runtimeExpression": "(Math.round(multiply(100, divide(add(multiply((C3.clamp(n0.ExpObject(v1.GetValue(), v2.GetValue(), 4), 1, Infinity) - 1), divide(n3.ExpObject(v4.GetValue(), (17 + v5.GetValue())), 10)), n6.ExpObject(v7.GetValue(), (11 + v8.GetValue()))), 100))) / 100)"
+        },
+        {
+          "expressionId": 1022,
+          "expression": "(Math.round(multiply(100, divide(add(multiply((C3.clamp(save.At(人物编号, save.At(人物编号, 6, 1), 4), 1, Infinity) - 1), divide(zy.At(save.At(人物编号, 6, 1), (17 + 属性编码)), 10)), zy.At(save.At(人物编号, 6, 1), (11 + 属性编码))), 100))) / 100)",
+          "runtimeExpression": "(Math.round(multiply(100, divide(add(multiply((C3.clamp(n0.ExpObject(v1.GetValue(), n2.ExpObject(v3.GetValue(), 6, 1), 4), 1, Infinity) - 1), divide(n4.ExpObject(n5.ExpObject(v6.GetValue(), 6, 1), (17 + v7.GetValue())), 10)), n8.ExpObject(n9.ExpObject(v10.GetValue(), 6, 1), (11 + v11.GetValue()))), 100))) / 100)"
+        }
+      ],
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "947195261626089",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "职业编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "152730269273273",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1021,
+              "expression": "(Math.round(multiply(100, divide(add(multiply((C3.clamp(save.At(人物编号, 职业编号, 4), 1, Infinity) - 1), divide(zy.At(职业编号, (17 + 属性编码)), 10)), zy.At(职业编号, (11 + 属性编码))), 100))) / 100)",
+              "runtimeExpression": "(Math.round(multiply(100, divide(add(multiply((C3.clamp(n0.ExpObject(v1.GetValue(), v2.GetValue(), 4), 1, Infinity) - 1), divide(n3.ExpObject(v4.GetValue(), (17 + v5.GetValue())), 10)), n6.ExpObject(v7.GetValue(), (11 + v8.GetValue()))), 100))) / 100)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "139226794652498",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            1,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "386709012544185",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1022,
+              "expression": "(Math.round(multiply(100, divide(add(multiply((C3.clamp(save.At(人物编号, save.At(人物编号, 6, 1), 4), 1, Infinity) - 1), divide(zy.At(save.At(人物编号, 6, 1), (17 + 属性编码)), 10)), zy.At(save.At(人物编号, 6, 1), (11 + 属性编码))), 100))) / 100)",
+              "runtimeExpression": "(Math.round(multiply(100, divide(add(multiply((C3.clamp(n0.ExpObject(v1.GetValue(), n2.ExpObject(v3.GetValue(), 6, 1), 4), 1, Infinity) - 1), divide(n4.ExpObject(n5.ExpObject(v6.GetValue(), 6, 1), (17 + v7.GetValue())), 10)), n8.ExpObject(n9.ExpObject(v10.GetValue(), 6, 1), (11 + v11.GetValue()))), 100))) / 100)"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "基础核心属性",
+      "expressions": [
+        {
+          "expressionId": 33,
+          "expression": "10",
+          "runtimeExpression": "10"
+        },
+        {
+          "expressionId": 35,
+          "expression": "11",
+          "runtimeExpression": "11"
+        },
+        {
+          "expressionId": 36,
+          "expression": "9",
+          "runtimeExpression": "9"
+        },
+        {
+          "expressionId": 55,
+          "expression": "6",
+          "runtimeExpression": "6"
+        },
+        {
+          "expressionId": 83,
+          "expression": "7",
+          "runtimeExpression": "7"
+        },
+        {
+          "expressionId": 85,
+          "expression": "8",
+          "runtimeExpression": "8"
+        },
+        {
+          "expressionId": 135,
+          "expression": "属性编号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 1026,
+          "expression": "multiply(5, add(100, multiply(pow(1.0095, multiply(save.At(人物编号, 3, 1), 10)), 5)))",
+          "runtimeExpression": "multiply(5, add(100, multiply(pow(1.0095, multiply(n0.ExpObject(v1.GetValue(), 3, 1), 10)), 5)))"
+        },
+        {
+          "expressionId": 1027,
+          "expression": "add(150, divide(save.At(人物编号, 3, 1), 4))",
+          "runtimeExpression": "add(150, divide(n0.ExpObject(v1.GetValue(), 3, 1), 4))"
+        },
+        {
+          "expressionId": 1028,
+          "expression": "add(100, multiply(pow(1.0095, multiply(save.At(人物编号, 3, 1), 10)), 5))",
+          "runtimeExpression": "add(100, multiply(pow(1.0095, multiply(n0.ExpObject(v1.GetValue(), 3, 1), 10)), 5))"
+        },
+        {
+          "expressionId": 1029,
+          "expression": "multiply(0.5, add(100, multiply(pow(1.0095, multiply(save.At(人物编号, 3, 1), 10)), 5)))",
+          "runtimeExpression": "multiply(0.5, add(100, multiply(pow(1.0095, multiply(n0.ExpObject(v1.GetValue(), 3, 1), 10)), 5)))"
+        }
+      ],
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "877238254532983",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 55,
+              "expression": "6",
+              "runtimeExpression": "6"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "907612138794575",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1026,
+              "expression": "multiply(5, add(100, multiply(pow(1.0095, multiply(save.At(人物编号, 3, 1), 10)), 5)))",
+              "runtimeExpression": "multiply(5, add(100, multiply(pow(1.0095, multiply(n0.ExpObject(v1.GetValue(), 3, 1), 10)), 5)))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "758169935975450",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 83,
+              "expression": "7",
+              "runtimeExpression": "7"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            1,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "511251328503173",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1027,
+              "expression": "add(150, divide(save.At(人物编号, 3, 1), 4))",
+              "runtimeExpression": "add(150, divide(n0.ExpObject(v1.GetValue(), 3, 1), 4))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            2,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "333658312002932",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 85,
+              "expression": "8",
+              "runtimeExpression": "8"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            2,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "950171722373414",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1028,
+              "expression": "add(100, multiply(pow(1.0095, multiply(save.At(人物编号, 3, 1), 10)), 5))",
+              "runtimeExpression": "add(100, multiply(pow(1.0095, multiply(n0.ExpObject(v1.GetValue(), 3, 1), 10)), 5))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            3,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "710479194601873",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 36,
+              "expression": "9",
+              "runtimeExpression": "9"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            3,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "757601428703140",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1029,
+              "expression": "multiply(0.5, add(100, multiply(pow(1.0095, multiply(save.At(人物编号, 3, 1), 10)), 5)))",
+              "runtimeExpression": "multiply(0.5, add(100, multiply(pow(1.0095, multiply(n0.ExpObject(v1.GetValue(), 3, 1), 10)), 5)))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            4,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "659053581063323",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 33,
+              "expression": "10",
+              "runtimeExpression": "10"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            4,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "623859463307602",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1028,
+              "expression": "add(100, multiply(pow(1.0095, multiply(save.At(人物编号, 3, 1), 10)), 5))",
+              "runtimeExpression": "add(100, multiply(pow(1.0095, multiply(n0.ExpObject(v1.GetValue(), 3, 1), 10)), 5))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            5,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "568189327916107",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 35,
+              "expression": "11",
+              "runtimeExpression": "11"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            5,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "834581875483087",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1029,
+              "expression": "multiply(0.5, add(100, multiply(pow(1.0095, multiply(save.At(人物编号, 3, 1), 10)), 5)))",
+              "runtimeExpression": "multiply(0.5, add(100, multiply(pow(1.0095, multiply(n0.ExpObject(v1.GetValue(), 3, 1), 10)), 5)))"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "天资属性加成",
+      "expressions": [
+        {
+          "expressionId": 33,
+          "expression": "10",
+          "runtimeExpression": "10"
+        },
+        {
+          "expressionId": 35,
+          "expression": "11",
+          "runtimeExpression": "11"
+        },
+        {
+          "expressionId": 36,
+          "expression": "9",
+          "runtimeExpression": "9"
+        },
+        {
+          "expressionId": 55,
+          "expression": "6",
+          "runtimeExpression": "6"
+        },
+        {
+          "expressionId": 83,
+          "expression": "7",
+          "runtimeExpression": "7"
+        },
+        {
+          "expressionId": 85,
+          "expression": "8",
+          "runtimeExpression": "8"
+        },
+        {
+          "expressionId": 135,
+          "expression": "属性编号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 1030,
+          "expression": "((特定属性统计(人物编号, 3, \"\") * 0.5) + (特定属性统计(人物编号, 5, \"\") * 0.5))",
+          "runtimeExpression": "((f0(v1.GetValue(), 3, \"\") * 0.5) + (f2(v3.GetValue(), 5, \"\") * 0.5))"
+        },
+        {
+          "expressionId": 1031,
+          "expression": "特定属性统计(人物编号, 4, \"\")",
+          "runtimeExpression": "f0(v1.GetValue(), 4, \"\")"
+        },
+        {
+          "expressionId": 1032,
+          "expression": "特定属性统计(人物编号, 1, \"\")",
+          "runtimeExpression": "f0(v1.GetValue(), 1, \"\")"
+        },
+        {
+          "expressionId": 1033,
+          "expression": "特定属性统计(人物编号, 3, \"\")",
+          "runtimeExpression": "f0(v1.GetValue(), 3, \"\")"
+        },
+        {
+          "expressionId": 1034,
+          "expression": "特定属性统计(人物编号, 2, \"\")",
+          "runtimeExpression": "f0(v1.GetValue(), 2, \"\")"
+        },
+        {
+          "expressionId": 1035,
+          "expression": "特定属性统计(人物编号, 5, \"\")",
+          "runtimeExpression": "f0(v1.GetValue(), 5, \"\")"
+        }
+      ],
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "215083058712609",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 55,
+              "expression": "6",
+              "runtimeExpression": "6"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "777343367606265",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1030,
+              "expression": "((特定属性统计(人物编号, 3, \"\") * 0.5) + (特定属性统计(人物编号, 5, \"\") * 0.5))",
+              "runtimeExpression": "((f0(v1.GetValue(), 3, \"\") * 0.5) + (f2(v3.GetValue(), 5, \"\") * 0.5))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "660814148181784",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 83,
+              "expression": "7",
+              "runtimeExpression": "7"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            1,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "183501867497842",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1031,
+              "expression": "特定属性统计(人物编号, 4, \"\")",
+              "runtimeExpression": "f0(v1.GetValue(), 4, \"\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            2,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "376016474340644",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 85,
+              "expression": "8",
+              "runtimeExpression": "8"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            2,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "145791797976856",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1032,
+              "expression": "特定属性统计(人物编号, 1, \"\")",
+              "runtimeExpression": "f0(v1.GetValue(), 1, \"\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            3,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "760245987145934",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 36,
+              "expression": "9",
+              "runtimeExpression": "9"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            3,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "843101514301830",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1033,
+              "expression": "特定属性统计(人物编号, 3, \"\")",
+              "runtimeExpression": "f0(v1.GetValue(), 3, \"\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            4,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "448967210663239",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 33,
+              "expression": "10",
+              "runtimeExpression": "10"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            4,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "235550613049212",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1034,
+              "expression": "特定属性统计(人物编号, 2, \"\")",
+              "runtimeExpression": "f0(v1.GetValue(), 2, \"\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            5,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "535778883578694",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 35,
+              "expression": "11",
+              "runtimeExpression": "11"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            5,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "650573574138093",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1035,
+              "expression": "特定属性统计(人物编号, 5, \"\")",
+              "runtimeExpression": "f0(v1.GetValue(), 5, \"\")"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "特定属性统计",
+      "expressions": [
+        {
+          "expressionId": 2,
+          "expression": "0",
+          "runtimeExpression": "0"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        },
+        {
+          "expressionId": 12,
+          "expression": "2",
+          "runtimeExpression": "2"
+        },
+        {
+          "expressionId": 14,
+          "expression": "3",
+          "runtimeExpression": "3"
+        },
+        {
+          "expressionId": 33,
+          "expression": "10",
+          "runtimeExpression": "10"
+        },
+        {
+          "expressionId": 35,
+          "expression": "11",
+          "runtimeExpression": "11"
+        },
+        {
+          "expressionId": 36,
+          "expression": "9",
+          "runtimeExpression": "9"
+        },
+        {
+          "expressionId": 48,
+          "expression": "5",
+          "runtimeExpression": "5"
+        },
+        {
+          "expressionId": 54,
+          "expression": "101",
+          "runtimeExpression": "101"
+        },
+        {
+          "expressionId": 55,
+          "expression": "6",
+          "runtimeExpression": "6"
+        },
+        {
+          "expressionId": 66,
+          "expression": "4",
+          "runtimeExpression": "4"
+        },
+        {
+          "expressionId": 72,
+          "expression": "75",
+          "runtimeExpression": "75"
+        },
+        {
+          "expressionId": 83,
+          "expression": "7",
+          "runtimeExpression": "7"
+        },
+        {
+          "expressionId": 85,
+          "expression": "8",
+          "runtimeExpression": "8"
+        },
+        {
+          "expressionId": 125,
+          "expression": "60",
+          "runtimeExpression": "60"
+        },
+        {
+          "expressionId": 135,
+          "expression": "核心属性类型",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 135,
+          "expression": "人物编号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 135,
+          "expression": "属性编号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 563,
+          "expression": "sx.At(属性编号, 2)",
+          "runtimeExpression": "n0.ExpObject(v1.GetValue(), 2)"
+        },
+        {
+          "expressionId": 811,
+          "expression": "92",
+          "runtimeExpression": "92"
+        },
+        {
+          "expressionId": 1003,
+          "expression": "\"基础\"",
+          "runtimeExpression": "\"基础\""
+        },
+        {
+          "expressionId": 1037,
+          "expression": "((角色初始天资(人物编号, 属性编号) + 天命天资属性(人物编号, 属性编号)) + 装备总属性(人物编号, 属性编号, 0, 0, 0, 0))",
+          "runtimeExpression": "((f0(v1.GetValue(), v2.GetValue()) + f3(v4.GetValue(), v5.GetValue())) + f6(v7.GetValue(), v8.GetValue(), 0, 0, 0, 0))"
+        },
+        {
+          "expressionId": 1038,
+          "expression": "(基础核心属性(人物编号, 属性编号) + 装备总属性(人物编号, 属性编号, 0, 0, 0, 0))",
+          "runtimeExpression": "(f0(v1.GetValue(), v2.GetValue()) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0, 0))"
+        },
+        {
+          "expressionId": 1039,
+          "expression": "(Math.round(((基础核心属性(人物编号, 属性编号) + 装备总属性(人物编号, 属性编号, 0, 0, 0, 0)) * ((((100 + 特定属性统计(人物编号, (125 + 属性编号), \"\")) + 天资属性加成(人物编号, 属性编号)) + 灵兽总属性(人物编号, 属性编号, 0, \"基础\", 0)) / 100))) * 职业属性系数(人物编号, 5, save.At(人物编号, 6, 1)))",
+          "runtimeExpression": "(Math.round(((f0(v1.GetValue(), v2.GetValue()) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0, 0)) * ((((100 + f6(v7.GetValue(), (125 + v8.GetValue()), \"\")) + f9(v10.GetValue(), v11.GetValue())) + f12(v13.GetValue(), v14.GetValue(), 0, \"基础\", 0)) / 100))) * f15(v16.GetValue(), 5, n17.ExpObject(v18.GetValue(), 6, 1)))"
+        },
+        {
+          "expressionId": 1040,
+          "expression": "(Math.round(((基础核心属性(人物编号, 属性编号) + 装备总属性(人物编号, 属性编号, 0, 0, 0, 0)) * ((((100 + 特定属性统计(人物编号, (125 + 属性编号), \"\")) + 天资属性加成(人物编号, 属性编号)) + 灵兽总属性(人物编号, 属性编号, 0, \"基础\", 0)) / 100))) + 副官总属性(人物编号, 属性编号, 0, \"基础\"))",
+          "runtimeExpression": "(Math.round(((f0(v1.GetValue(), v2.GetValue()) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0, 0)) * ((((100 + f6(v7.GetValue(), (125 + v8.GetValue()), \"\")) + f9(v10.GetValue(), v11.GetValue())) + f12(v13.GetValue(), v14.GetValue(), 0, \"基础\", 0)) / 100))) + f15(v16.GetValue(), v17.GetValue(), 0, \"基础\"))"
+        },
+        {
+          "expressionId": 1041,
+          "expression": "add(add(add(((((装备总属性(人物编号, 属性编号, 0, 0, 0, 0) + 技能总属性(人物编号, 属性编号, 0, 0, 0)) + 命石总属性(人物编号, 属性编号, 0, 0)) + 命格总属性(人物编号, 属性编号, 0, 0)) + 技能专精加成(技能专精等级计算(人物编号, (属性编号 - 59)))), divide(sx.At(属性编号, 5), 100)), 副官总属性(人物编号, 属性编号, 0, \"天命\")), 神位总属性(人物编号, 属性编号))",
+          "runtimeExpression": "add(add(add(((((f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0)) + f6(v7.GetValue(), v8.GetValue(), 0, 0)) + f9(v10.GetValue(), v11.GetValue(), 0, 0)) + f12(f13(v14.GetValue(), (v15.GetValue() - 59)))), divide(n16.ExpObject(v17.GetValue(), 5), 100)), f18(v19.GetValue(), v20.GetValue(), 0, \"天命\")), f21(v22.GetValue(), v23.GetValue()))"
+        },
+        {
+          "expressionId": 1042,
+          "expression": "add(add(add(((((装备总属性(人物编号, 属性编号, 0, 0, 0, 0) + 技能总属性(人物编号, 属性编号, 0, 0, 0)) + 命石总属性(人物编号, 属性编号, 0, 0)) + 命格总属性(人物编号, 属性编号, 0, 0)) + 武器熟练加成(武器熟练等级计算(人物编号, (属性编号 - 91)))), divide(sx.At(属性编号, 5), 100)), 副官总属性(人物编号, 属性编号, 0, \"天命\")), 神位总属性(人物编号, 属性编号))",
+          "runtimeExpression": "add(add(add(((((f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0)) + f6(v7.GetValue(), v8.GetValue(), 0, 0)) + f9(v10.GetValue(), v11.GetValue(), 0, 0)) + f12(f13(v14.GetValue(), (v15.GetValue() - 91)))), divide(n16.ExpObject(v17.GetValue(), 5), 100)), f18(v19.GetValue(), v20.GetValue(), 0, \"天命\")), f21(v22.GetValue(), v23.GetValue()))"
+        },
+        {
+          "expressionId": 1043,
+          "expression": "sx.At(属性编号, 8)",
+          "runtimeExpression": "n0.ExpObject(v1.GetValue(), 8)"
+        },
+        {
+          "expressionId": 1044,
+          "expression": "C3.clamp(add((((((装备总属性(人物编号, 属性编号, 0, 0, 0, 0) + 技能总属性(人物编号, 属性编号, 0, 0, 0)) + 命石总属性(人物编号, 属性编号, 0, 0)) + 命格总属性(人物编号, 属性编号, 0, 0)) + 灵兽总属性(人物编号, 属性编号, 0, \"技能\", 0)) + 副官总属性(人物编号, 属性编号, 0, \"天命\")), divide(sx.At(属性编号, 5), 100)), (-9999), sx.At(属性编号, 8))",
+          "runtimeExpression": "C3.clamp(add((((((f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0)) + f6(v7.GetValue(), v8.GetValue(), 0, 0)) + f9(v10.GetValue(), v11.GetValue(), 0, 0)) + f12(v13.GetValue(), v14.GetValue(), 0, \"技能\", 0)) + f15(v16.GetValue(), v17.GetValue(), 0, \"天命\")), divide(n18.ExpObject(v19.GetValue(), 5), 100)), (-9999), n20.ExpObject(v21.GetValue(), 8))"
+        },
+        {
+          "expressionId": 1045,
+          "expression": "\"技能组\"",
+          "runtimeExpression": "\"技能组\""
+        },
+        {
+          "expressionId": 1046,
+          "expression": "\"元素类\"",
+          "runtimeExpression": "\"元素类\""
+        },
+        {
+          "expressionId": 1047,
+          "expression": "装备总属性(人物编号, 属性编号, 0, 0, 0, 0)",
+          "runtimeExpression": "f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0)"
+        },
+        {
+          "expressionId": 1048,
+          "expression": "add(add(add(add(add((((装备总属性(人物编号, 属性编号, 0, 0, 0, 0) + 技能总属性(人物编号, 属性编号, 0, 0, 0)) + 命石总属性(人物编号, 属性编号, 0, 0)) + 命格总属性(人物编号, 属性编号, 0, 0)), divide(sx.At(属性编号, 5), 100)), 副官总属性(人物编号, 属性编号, 0, \"天命\")), 幻化总属性(人物编号, 属性编号, 0, 0, 0)), 灵兽总属性(人物编号, 属性编号, 0, \"技能\", 0)), 神位总属性(人物编号, 属性编号))",
+          "runtimeExpression": "add(add(add(add(add((((f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0)) + f6(v7.GetValue(), v8.GetValue(), 0, 0)) + f9(v10.GetValue(), v11.GetValue(), 0, 0)), divide(n12.ExpObject(v13.GetValue(), 5), 100)), f14(v15.GetValue(), v16.GetValue(), 0, \"天命\")), f17(v18.GetValue(), v19.GetValue(), 0, 0, 0)), f20(v21.GetValue(), v22.GetValue(), 0, \"技能\", 0)), f23(v24.GetValue(), v25.GetValue()))"
+        }
+      ],
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "884241276623737",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "人物编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "198128654291979",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1",
+              "runtimeExpression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "498857503183403",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 12,
+              "expression": "2",
+              "runtimeExpression": "2"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            6,
+            2
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "947398174842208",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 14,
+              "expression": "3",
+              "runtimeExpression": "3"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            6,
+            3
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "174727024850940",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 66,
+              "expression": "4",
+              "runtimeExpression": "4"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            6,
+            4
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "328874654635959",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 48,
+              "expression": "5",
+              "runtimeExpression": "5"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "635764463417940",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1037,
+              "expression": "((角色初始天资(人物编号, 属性编号) + 天命天资属性(人物编号, 属性编号)) + 装备总属性(人物编号, 属性编号, 0, 0, 0, 0))",
+              "runtimeExpression": "((f0(v1.GetValue(), v2.GetValue()) + f3(v4.GetValue(), v5.GetValue())) + f6(v7.GetValue(), v8.GetValue(), 0, 0, 0, 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "971317846504440",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "890794869424116",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 55,
+              "expression": "6",
+              "runtimeExpression": "6"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "240900500246307",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 83,
+              "expression": "7",
+              "runtimeExpression": "7"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            2
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "203278950507595",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 85,
+              "expression": "8",
+              "runtimeExpression": "8"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            3
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "808364083032543",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 36,
+              "expression": "9",
+              "runtimeExpression": "9"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            4
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "503159240634508",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 33,
+              "expression": "10",
+              "runtimeExpression": "10"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            5
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "132320312959293",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 35,
+              "expression": "11",
+              "runtimeExpression": "11"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "754572003659068",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "核心属性类型",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 1003,
+              "expression": "\"基础\"",
+              "runtimeExpression": "\"基础\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "273943123415926",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1038,
+              "expression": "(基础核心属性(人物编号, 属性编号) + 装备总属性(人物编号, 属性编号, 0, 0, 0, 0))",
+              "runtimeExpression": "(f0(v1.GetValue(), v2.GetValue()) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0, 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "603599207716547",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "174527973811937",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]",
+              "runtimeExpression": "[8,5]"
+            },
+            {
+              "expressionId": 55,
+              "expression": "6",
+              "runtimeExpression": "6"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "928885126458656",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,3]",
+              "runtimeExpression": "[8,3]"
+            },
+            {
+              "expressionId": 35,
+              "expression": "11",
+              "runtimeExpression": "11"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "315651517506432",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 83,
+              "expression": "7",
+              "runtimeExpression": "7"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "337727751345400",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1039,
+              "expression": "(Math.round(((基础核心属性(人物编号, 属性编号) + 装备总属性(人物编号, 属性编号, 0, 0, 0, 0)) * ((((100 + 特定属性统计(人物编号, (125 + 属性编号), \"\")) + 天资属性加成(人物编号, 属性编号)) + 灵兽总属性(人物编号, 属性编号, 0, \"基础\", 0)) / 100))) * 职业属性系数(人物编号, 5, save.At(人物编号, 6, 1)))",
+              "runtimeExpression": "(Math.round(((f0(v1.GetValue(), v2.GetValue()) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0, 0)) * ((((100 + f6(v7.GetValue(), (125 + v8.GetValue()), \"\")) + f9(v10.GetValue(), v11.GetValue())) + f12(v13.GetValue(), v14.GetValue(), 0, \"基础\", 0)) / 100))) * f15(v16.GetValue(), 5, n17.ExpObject(v18.GetValue(), 6, 1)))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "279897039537926",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "942569389501403",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1040,
+              "expression": "(Math.round(((基础核心属性(人物编号, 属性编号) + 装备总属性(人物编号, 属性编号, 0, 0, 0, 0)) * ((((100 + 特定属性统计(人物编号, (125 + 属性编号), \"\")) + 天资属性加成(人物编号, 属性编号)) + 灵兽总属性(人物编号, 属性编号, 0, \"基础\", 0)) / 100))) + 副官总属性(人物编号, 属性编号, 0, \"基础\"))",
+              "runtimeExpression": "(Math.round(((f0(v1.GetValue(), v2.GetValue()) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0, 0)) * ((((100 + f6(v7.GetValue(), (125 + v8.GetValue()), \"\")) + f9(v10.GetValue(), v11.GetValue())) + f12(v13.GetValue(), v14.GetValue(), 0, \"基础\", 0)) / 100))) + f15(v16.GetValue(), v17.GetValue(), 0, \"基础\"))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "104546927325088",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "686360957117964",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]",
+              "runtimeExpression": "[8,5]"
+            },
+            {
+              "expressionId": 125,
+              "expression": "60",
+              "runtimeExpression": "60"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "256093972171552",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,3]",
+              "runtimeExpression": "[8,3]"
+            },
+            {
+              "expressionId": 72,
+              "expression": "75",
+              "runtimeExpression": "75"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "307199875413570",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1041,
+              "expression": "add(add(add(((((装备总属性(人物编号, 属性编号, 0, 0, 0, 0) + 技能总属性(人物编号, 属性编号, 0, 0, 0)) + 命石总属性(人物编号, 属性编号, 0, 0)) + 命格总属性(人物编号, 属性编号, 0, 0)) + 技能专精加成(技能专精等级计算(人物编号, (属性编号 - 59)))), divide(sx.At(属性编号, 5), 100)), 副官总属性(人物编号, 属性编号, 0, \"天命\")), 神位总属性(人物编号, 属性编号))",
+              "runtimeExpression": "add(add(add(((((f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0)) + f6(v7.GetValue(), v8.GetValue(), 0, 0)) + f9(v10.GetValue(), v11.GetValue(), 0, 0)) + f12(f13(v14.GetValue(), (v15.GetValue() - 59)))), divide(n16.ExpObject(v17.GetValue(), 5), 100)), f18(v19.GetValue(), v20.GetValue(), 0, \"天命\")), f21(v22.GetValue(), v23.GetValue()))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "641843180640439",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "890211257426979",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]",
+              "runtimeExpression": "[8,5]"
+            },
+            {
+              "expressionId": 811,
+              "expression": "92",
+              "runtimeExpression": "92"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "820419129140778",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "属性编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,3]",
+              "runtimeExpression": "[8,3]"
+            },
+            {
+              "expressionId": 54,
+              "expression": "101",
+              "runtimeExpression": "101"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "116331779126334",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1042,
+              "expression": "add(add(add(((((装备总属性(人物编号, 属性编号, 0, 0, 0, 0) + 技能总属性(人物编号, 属性编号, 0, 0, 0)) + 命石总属性(人物编号, 属性编号, 0, 0)) + 命格总属性(人物编号, 属性编号, 0, 0)) + 武器熟练加成(武器熟练等级计算(人物编号, (属性编号 - 91)))), divide(sx.At(属性编号, 5), 100)), 副官总属性(人物编号, 属性编号, 0, \"天命\")), 神位总属性(人物编号, 属性编号))",
+              "runtimeExpression": "add(add(add(((((f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0)) + f6(v7.GetValue(), v8.GetValue(), 0, 0)) + f9(v10.GetValue(), v11.GetValue(), 0, 0)) + f12(f13(v14.GetValue(), (v15.GetValue() - 91)))), divide(n16.ExpObject(v17.GetValue(), 5), 100)), f18(v19.GetValue(), v20.GetValue(), 0, \"天命\")), f21(v22.GetValue(), v23.GetValue()))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "889271847057415",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "703248579056600",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1043,
+              "expression": "sx.At(属性编号, 8)",
+              "runtimeExpression": "n0.ExpObject(v1.GetValue(), 8)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "708913236682020",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1044,
+              "expression": "C3.clamp(add((((((装备总属性(人物编号, 属性编号, 0, 0, 0, 0) + 技能总属性(人物编号, 属性编号, 0, 0, 0)) + 命石总属性(人物编号, 属性编号, 0, 0)) + 命格总属性(人物编号, 属性编号, 0, 0)) + 灵兽总属性(人物编号, 属性编号, 0, \"技能\", 0)) + 副官总属性(人物编号, 属性编号, 0, \"天命\")), divide(sx.At(属性编号, 5), 100)), (-9999), sx.At(属性编号, 8))",
+              "runtimeExpression": "C3.clamp(add((((((f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0)) + f6(v7.GetValue(), v8.GetValue(), 0, 0)) + f9(v10.GetValue(), v11.GetValue(), 0, 0)) + f12(v13.GetValue(), v14.GetValue(), 0, \"技能\", 0)) + f15(v16.GetValue(), v17.GetValue(), 0, \"天命\")), divide(n18.ExpObject(v19.GetValue(), 5), 100)), (-9999), n20.ExpObject(v21.GetValue(), 8))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "507254789154724",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "907974098387525",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 563,
+              "expression": "sx.At(属性编号, 2)",
+              "runtimeExpression": "n0.ExpObject(v1.GetValue(), 2)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 1045,
+              "expression": "\"技能组\"",
+              "runtimeExpression": "\"技能组\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "512940500450220",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 563,
+              "expression": "sx.At(属性编号, 2)",
+              "runtimeExpression": "n0.ExpObject(v1.GetValue(), 2)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 1046,
+              "expression": "\"元素类\"",
+              "runtimeExpression": "\"元素类\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "983861279971525",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1047,
+              "expression": "装备总属性(人物编号, 属性编号, 0, 0, 0, 0)",
+              "runtimeExpression": "f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "119916198658623",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            8,
+            1,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "101140638418306",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1048,
+              "expression": "add(add(add(add(add((((装备总属性(人物编号, 属性编号, 0, 0, 0, 0) + 技能总属性(人物编号, 属性编号, 0, 0, 0)) + 命石总属性(人物编号, 属性编号, 0, 0)) + 命格总属性(人物编号, 属性编号, 0, 0)), divide(sx.At(属性编号, 5), 100)), 副官总属性(人物编号, 属性编号, 0, \"天命\")), 幻化总属性(人物编号, 属性编号, 0, 0, 0)), 灵兽总属性(人物编号, 属性编号, 0, \"技能\", 0)), 神位总属性(人物编号, 属性编号))",
+              "runtimeExpression": "add(add(add(add(add((((f0(v1.GetValue(), v2.GetValue(), 0, 0, 0, 0) + f3(v4.GetValue(), v5.GetValue(), 0, 0, 0)) + f6(v7.GetValue(), v8.GetValue(), 0, 0)) + f9(v10.GetValue(), v11.GetValue(), 0, 0)), divide(n12.ExpObject(v13.GetValue(), 5), 100)), f14(v15.GetValue(), v16.GetValue(), 0, \"天命\")), f17(v18.GetValue(), v19.GetValue(), 0, 0, 0)), f20(v21.GetValue(), v22.GetValue(), 0, \"技能\", 0)), f23(v24.GetValue(), v25.GetValue()))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "761582001901385",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            1,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "866579153432823",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "角色初始天资",
+      "expressions": [
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        },
+        {
+          "expressionId": 135,
+          "expression": "角色编号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 2248,
+          "expression": "js.At(角色编号, (6 + 属性编号))",
+          "runtimeExpression": "n0.ExpObject(v1.GetValue(), (6 + v2.GetValue()))"
+        },
+        {
+          "expressionId": 8720,
+          "expression": "add(js.At(角色编号, (6 + 属性编号)), multiply(save.At(角色编号, (6 + 属性编号), 1), 10))",
+          "runtimeExpression": "add(n0.ExpObject(v1.GetValue(), (6 + v2.GetValue())), multiply(n3.ExpObject(v4.GetValue(), (6 + v5.GetValue()), 1), 10))"
+        }
+      ],
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "164589474662573",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号",
+              "runtimeExpression": "v0.GetValue()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1",
+              "runtimeExpression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "436962436014852",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 8720,
+              "expression": "add(js.At(角色编号, (6 + 属性编号)), multiply(save.At(角色编号, (6 + 属性编号), 1), 10))",
+              "runtimeExpression": "add(n0.ExpObject(v1.GetValue(), (6 + v2.GetValue())), multiply(n3.ExpObject(v4.GetValue(), (6 + v5.GetValue()), 1), 10))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 52,
+          "reference": "C3.Plugins.System.Cnds.Else",
+          "sid": "868914672150795",
+          "inverted": false,
+          "parameters": []
+        },
+        {
+          "path": [
+            8,
+            1,
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "455708390165326",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2248,
+              "expression": "js.At(角色编号, (6 + 属性编号))",
+              "runtimeExpression": "n0.ExpObject(v1.GetValue(), (6 + v2.GetValue()))"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "人物升级经验",
+      "expressions": [
+        {
+          "expressionId": 2390,
+          "expression": "Math.round(((10000 * Math.pow(1.129, (等级 - 1))) - 9000))",
+          "runtimeExpression": "Math.round(((10000 * Math.pow(1.129, (v0.GetValue() - 1))) - 9000))"
+        }
+      ],
+      "operations": [
+        {
+          "path": [
+            7,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "346558293998440",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2390,
+              "expression": "Math.round(((10000 * Math.pow(1.129, (等级 - 1))) - 9000))",
+              "runtimeExpression": "Math.round(((10000 * Math.pow(1.129, (v0.GetValue() - 1))) - 9000))"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    }
+  ],
+  "levelFieldProofs": [
+    {
+      "path": [
+        6,
+        0,
+        1,
+        157,
+        8,
+        2,
+        8,
+        8,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "objectId": 301,
+      "objectName": "人物详情等级",
+      "referenceIndex": 57,
+      "reference": "C3.Plugins.Text.Acts.SetText",
+      "sid": "228718444474234",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": 1086,
+          "expression": "等级显示(save.At(人物详情等级.人物编号, 3, 1), 0)",
+          "runtimeExpression": "f0(n1.ExpObject(n2.ExpInstVar(), 3, 1), 0)"
+        }
+      ]
+    },
+    {
+      "path": [
+        6,
+        0,
+        1,
+        157,
+        8,
+        2,
+        8,
+        8,
+        8,
+        0,
+        8,
+        0,
+        7,
+        4
+      ],
+      "objectId": 300,
+      "objectName": "人物详情等级经验",
+      "referenceIndex": 57,
+      "reference": "C3.Plugins.Text.Acts.SetText",
+      "sid": "364540925109673",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": 1090,
+          "expression": "((数值显示(save.At(人物详情等级经验.人物编号, 4, 1)) + \" / \") + 数值显示(int(人物升级经验(save.At(人物详情等级经验.人物编号, 3, 1)))))",
+          "runtimeExpression": "((f0(n1.ExpObject(n2.ExpInstVar(), 4, 1)) + \" / \") + f3(f4(f5(n6.ExpObject(n7.ExpInstVar(), 3, 1)))))"
+        }
+      ]
+    },
+    {
+      "path": [
+        6,
+        0,
+        1,
+        157,
+        8,
+        2,
+        8,
+        8,
+        8,
+        0,
+        8,
+        0,
+        7,
+        5
+      ],
+      "objectId": 294,
+      "objectName": "人物详情经验进度条",
+      "referenceIndex": 99,
+      "reference": "C3.Plugins.Sprite.Acts.SetWidth",
+      "sid": "541218364518583",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": 1091,
+          "expression": "C3.clamp(multiply(divide(save.At(人物详情经验进度条.人物编号, 4, 1), 人物升级经验(save.At(人物详情经验进度条.人物编号, 3, 1))), 216), 0, 216)",
+          "runtimeExpression": "C3.clamp(multiply(divide(n0.ExpObject(n1.ExpInstVar(), 4, 1), f2(n3.ExpObject(n4.ExpInstVar(), 3, 1))), 216), 0, 216)"
+        }
+      ]
+    },
+    {
+      "path": [
+        6,
+        0,
+        1,
+        157,
+        8,
+        2,
+        8,
+        8,
+        8,
+        0,
+        8,
+        0,
+        8,
+        5,
+        7,
+        0
+      ],
+      "objectId": 300,
+      "objectName": "人物详情等级经验",
+      "referenceIndex": 57,
+      "reference": "C3.Plugins.Text.Acts.SetText",
+      "sid": "273586165619163",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": 1090,
+          "expression": "((数值显示(save.At(人物详情等级经验.人物编号, 4, 1)) + \" / \") + 数值显示(int(人物升级经验(save.At(人物详情等级经验.人物编号, 3, 1)))))",
+          "runtimeExpression": "((f0(n1.ExpObject(n2.ExpInstVar(), 4, 1)) + \" / \") + f3(f4(f5(n6.ExpObject(n7.ExpInstVar(), 3, 1)))))"
+        }
+      ]
+    }
+  ]
+}

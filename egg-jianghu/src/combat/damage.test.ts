@@ -153,12 +153,12 @@ describe('战斗面板派生（诸天源码公式）', () => {
     }
     const stats = buildCombatStats(definition, createHeroProgress('job_1'))
 
-    expect(stats.maxHp).toBeCloseTo(558.9)
-    expect(stats.effectiveAgility).toBeCloseTo(151.2)
-    expect(stats.externalAttack).toBeCloseTo(111.6)
-    expect(stats.externalDefense).toBeCloseTo(55.8)
-    expect(stats.internalAttack).toBeCloseTo(111.6)
-    expect(stats.internalDefense).toBeCloseTo(55.8)
+    expect(stats.maxHp).toBeCloseTo(522)
+    expect(stats.effectiveAgility).toBeCloseTo(148.5)
+    expect(stats.externalAttack).toBeCloseTo(104.4)
+    expect(stats.externalDefense).toBeCloseTo(52.2)
+    expect(stats.internalAttack).toBeCloseTo(104.4)
+    expect(stats.internalDefense).toBeCloseTo(52.2)
   })
 
   it('装备核心属性先加到基础值，再乘天资与职业核心系数', () => {
@@ -174,7 +174,7 @@ describe('战斗面板派生（诸天源码公式）', () => {
       coreStats: [{ attributeId: 8, coefficient: 10_000 }], affixes: [], locked: false,
     }
     const equipmentAttack = equipmentAttributeValue(8, equipment.level, 10_000, 100)
-    const baseAttack = 100 + Math.pow(1.0095, 100) * 5
+    const baseAttack = 100 + Math.pow(1.0095, 10) * 5 // 角色1级，天资全10
     const expected = Math.round((baseAttack + equipmentAttack) * 1.1) * 0.9
 
     expect(buildCombatStats(definition, progress, [equipment]).externalAttack).toBe(expected)

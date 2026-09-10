@@ -118,7 +118,8 @@ export const buildCombatStats = (
   const skinBonuses = ownedSkinAttributes(definition, progress, unlockedSkinIds)
   const skillBonuses = equippedSkillAttributes(progress, equipmentBonuses)
   // 原版先将技能增幅与天资相加，取整后再乘职业核心系数。
-  const sharedCoreBase = 100 + Math.pow(1.0095, aptitude.constitution * 10) * 5
+  // 原版 save.At(人物编号, 3, 1) 是角色等级，不是 sx3 体魄。
+  const sharedCoreBase = 100 + Math.pow(1.0095, progress.level * 10) * 5
   const coreStat = (base: number, equipmentAttributeId: number, aptitudeBonus: number): number => Math.round(
     (base + (equipmentBonuses[equipmentAttributeId] ?? 0))
     * (100 + aptitudeBonus + (equipmentBonuses[125 + equipmentAttributeId] ?? 0)
@@ -138,7 +139,7 @@ export const buildCombatStats = (
     externalDefense: coreStat(0.5 * sharedCoreBase, 9, aptitude.constitution),
     internalAttack: coreStat(sharedCoreBase, 10, aptitude.insight),
     internalDefense: coreStat(0.5 * sharedCoreBase, 11, aptitude.resolve),
-    effectiveAgility: Math.max(1, coreStat(150 + aptitude.constitution / 4, 7, aptitude.agility)),
+    effectiveAgility: Math.max(1, coreStat(150 + progress.level / 4, 7, aptitude.agility)),
     // 命中修正：原版 sx18 走特定属性统计默认分支（无资质/固有基础），白板 0；战斗命中率 = 97×(100+命中)/(100+闪避)
     accuracy: 0,
     // 闪避修正：原版 sx19 同上，白板 0
