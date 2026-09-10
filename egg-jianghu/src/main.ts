@@ -33,6 +33,7 @@ import { HEROES_V10, PLAYER_HERO_ID, TAVERN_HEROES, heroByIdV10, heroDisplayName
 import { FACTION_MARTIALS, martialBuffChanceAtLevel, martialByIdV10, martialByOriginalId, martialEffectAtLevel, martialResourceCost, martialSpCost } from './content/martials'
 import { buffById } from './content/buffs'
 import { skillById } from './content/skills'
+import { formatCombatResult } from './ui/combat-log'
 import {
   ORIGINAL_DEITIES,
   ORIGINAL_INTERWORLD_DROP_ITEMS,
@@ -340,7 +341,9 @@ const presentCombatEvents = (events: CombatEvent[]): void => {
       const skill = skillById(event.skillId)
       if (skill) {
         addCombatEffect('skill-name', event.atMs, event.sourceId, skill.name)
-        addCombatLog('skill', '绝', `${combatUnitName(event.sourceId)} 使出「${skill.name}」！`)
+        if (skill.behavior !== 'attack' && skill.behavior !== 'heal') {
+          addCombatLog('skill', '绝', `${combatUnitName(event.sourceId)} 使出「${skill.name}」！`)
+        }
       }
     } else if (event.type === 'skill-effect') {
       const skill = skillById(event.skillId)
@@ -353,12 +356,15 @@ const presentCombatEvents = (events: CombatEvent[]): void => {
       addCombatEffect('hit-shake', event.atMs, event.targetId)
       addCombatEffect('slash', event.atMs, event.targetId)
       addCombatEffect(event.critical ? 'critical' : 'damage', event.atMs, event.targetId, String(event.amount))
+      addCombatLog('skill', event.critical ? '暴' : '伤', formatCombatResult(event, combatUnitName))
+    } else if (event.type === 'attack-missed') {
+      addCombatLog('system', '避', formatCombatResult(event, combatUnitName))
     } else if (event.type === 'healing') {
       addCombatEffect('heal-aura', event.atMs, event.targetId)
       addCombatEffect('healing', event.atMs, event.targetId, String(event.amount))
-      addCombatLog('heal', '愈', `${combatUnitName(event.sourceId)} 为 ${combatUnitName(event.targetId)} 恢复 ${event.amount} 气血。`)
+      addCombatLog('heal', '愈', formatCombatResult(event, combatUnitName))
     } else if (event.type === 'shield-applied') {
-      addCombatLog('heal', '盾', `${combatUnitName(event.sourceId)} 为 ${combatUnitName(event.targetId)} 加上 ${event.amount} 护盾。`)
+      addCombatLog('heal', '盾', `${combatUnitName(event.sourceId)} 为 ${combatUnitName(event.targetId)} 加上 ${Math.round(event.amount).toLocaleString('zh-CN')} 点护盾。`)
     } else if (event.type === 'unit-revived') {
       addCombatLog('heal', '起', `${combatUnitName(event.sourceId)} 令 ${combatUnitName(event.targetId)} 重返战场。`)
     } else if (event.type === 'summoned') {

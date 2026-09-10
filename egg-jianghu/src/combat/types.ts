@@ -160,8 +160,9 @@ export interface CombatSnapshot {
 }
 
 export type CombatEvent =
-  | { type: 'damage'; atMs: number; sourceId: string; targetId: string; amount: number; critical: boolean }
-  | { type: 'healing'; atMs: number; sourceId: string; targetId: string; amount: number }
+  | { type: 'damage'; atMs: number; sourceId: string; targetId: string; amount: number; critical: boolean; skillId?: number }
+  | { type: 'attack-missed'; atMs: number; sourceId: string; targetId: string; skillId: number }
+  | { type: 'healing'; atMs: number; sourceId: string; targetId: string; amount: number; skillId?: number }
   | { type: 'shield-applied'; atMs: number; sourceId: string; targetId: string; amount: number }
   | { type: 'status-applied'; atMs: number; sourceId: string; targetId: string; buffId: number; stacks: number }
   | { type: 'unit-revived'; atMs: number; sourceId: string; targetId: string }

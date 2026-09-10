@@ -437,7 +437,11 @@ const executeAttack = (
   for (const target of targets) {
     if (!target.alive) continue
     const outcome = outcomes.find(hit => hit.targetId === target.id)
-    if (!outcome || outcome.evaded) continue
+    if (!outcome) continue
+    if (outcome.evaded) {
+      events.push({ type: 'attack-missed', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, skillId: skill.id })
+      continue
+    }
     const isCritical = outcome.critical
     const criticalCoeff = isCritical ? Math.max(0, unitAttr(actor, SX.暴击伤害) / 100) : 1
     const amount = skillDamageAmount(actor, target, skill, criticalCoeff, !skill.nonBasicAttack)
@@ -459,6 +463,7 @@ const executeAttack = (
       targetId: target.id,
       amount: settledAmount,
       critical: isCritical,
+      skillId: skill.id,
     })
   }
 }
@@ -476,7 +481,7 @@ const executeHeal = (
     const healed = Math.min(target.maxHp - target.hp, amount)
     if (healed <= 0) continue
     target.hp += healed
-    events.push({ type: 'healing', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, amount: healed })
+    events.push({ type: 'healing', atMs: state.elapsedMs, sourceId: actor.id, targetId: target.id, amount: healed, skillId: skill.id })
   }
 }
 

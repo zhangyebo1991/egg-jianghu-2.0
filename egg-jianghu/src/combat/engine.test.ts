@@ -203,7 +203,7 @@ describe('十波战斗', () => {
 
     const damage = engine.tick(20).find((event) => event.type === 'damage' && event.sourceId === 'hero_strong')
 
-    expect(damage).toMatchObject({ type: 'damage', critical: true })
+    expect(damage).toMatchObject({ type: 'damage', critical: true, skillId: expect.any(Number) })
   })
 
   it('闯荡最终胜利从行动结束的阵亡检查起等待 0.8 秒', () => {
