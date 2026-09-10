@@ -63,7 +63,7 @@ describe('原版普通关卡波次', () => {
       name: '张角',
       id: 'world_01_stage_01_boss_at_07',
       formationOrder: 22,
-      skillIds: [32, 74, 10, 47],
+      skillIds: [93],
       baseAttackId: 4,
     })
   })

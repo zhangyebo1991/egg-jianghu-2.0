@@ -44,7 +44,7 @@ export interface IdleCombatView {
     closing: boolean
   } | null
   timeline: {
-    phase: 'accumulating' | 'acting' | 'wave-transition' | 'ending'
+    phase: 'accumulating' | 'preparing' | 'acting' | 'wave-transition' | 'ending'
     activeActorId: string | null
     readyQueue: Array<{ actorId: string; readySeq: number }>
   }
@@ -268,7 +268,7 @@ const renderActionTimeline = (combat: IdleCombatView): string => {
       ? '换阵'
       : combat.timeline.phase === 'ending'
         ? '结算'
-        : '行动积攒'
+        : combat.timeline.phase === 'preparing' ? '准备出手' : '行动积攒'
   return `<section class="combat-action-timeline" data-testid="combat-action-timeline" aria-label="共用行动条">
     <span class="action-timeline-label"><strong>气机</strong><small>${phaseLabel}</small></span>
     <span class="action-track" aria-hidden="true">

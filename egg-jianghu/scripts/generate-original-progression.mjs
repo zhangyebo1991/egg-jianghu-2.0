@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { initializeOriginalSkills } from './original-skill-initialization.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const SOURCE_ROOT = resolve(HERE, '../../../诸天刷宝录/_analysis')
@@ -12,7 +13,7 @@ const load = (name) => JSON
   .parse(readFileSync(join(SOURCE_ROOT, `${name}.json`), 'utf8'))
   .data.map((row) => row.map((cell) => cell[0]))
 
-const jn = load('jn')
+const jn = initializeOriginalSkills(load('jn'), load('fw'))
 const shili = load('shili')
 const bk = load('bk')
 const qh = load('qh')

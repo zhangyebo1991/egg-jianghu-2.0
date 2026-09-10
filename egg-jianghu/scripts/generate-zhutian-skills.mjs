@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { initializeOriginalSkills } from './original-skill-initialization.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ORIGINAL_ANALYSIS = join(HERE, '../../../诸天刷宝录/_analysis')
@@ -16,56 +17,16 @@ const BUFFS_FILE = join(HERE, '../src/content/buffs.ts')
 
 const load = (name, root = ORIGINAL_ANALYSIS) => JSON.parse(readFileSync(join(root, `${name}.json`), 'utf8')).data.map((col) => col.map((cell) => cell[0]))
 
-const jn = load('jn')
 const fw = load('fw')
+const jn = initializeOriginalSkills(load('jn'), fw)
 const buff = load('buff')
-const js = load('js')
 const zy = load('zy')
-const sq = load('sq')
-const dr = load('dr')
 const zh = load('zh')
-const shili = load('shili')
-const wp = load('wp')
 
 // ---------- 收集被引用技能 ----------
 const usedSkillIds = new Set()
-const jsByName = new Map()
-for (let x = 1; x < js.length; x += 1) jsByName.set(String(js[x][1]), js[x])
-
-for (let x = 1; x < sq.length; x += 1) {
-  const world = sq[x][2]
-  const stage = sq[x][13]
-  if (typeof world !== 'number' || world < 1 || world > 13) continue
-  if (typeof stage !== 'number' || stage < 1 || stage > 10) continue
-  for (const col of [3, 4, 5, 6, 7]) {
-    usedSkillIds.add(zy[dr[sq[x][col]][3]][6])
-  }
-  const bossRow = jsByName.get(String(dr[sq[x][8]][1]))
-  usedSkillIds.add(zy[bossRow[4]][6])
-  for (const col of [28, 29, 30, 31]) {
-    const id = bossRow[col]
-    if (typeof id === 'number' && id > 0) usedSkillIds.add(id)
-  }
-}
-// 玩家 41 职业普攻
-for (let x = 1; x < zy.length; x += 1) {
-  const id = zy[x]?.[6]
-  if (typeof id === 'number' && id > 0) usedSkillIds.add(id)
-}
-// 玩家可学习技能：42 势力各 6 门、10 本至宝秘籍、7 门特殊/普攻替换技能。
-for (let x = 1; x < shili.length; x += 1) {
-  for (const col of [5, 6, 7, 8, 9, 10]) {
-    const id = shili[x]?.[col]
-    if (typeof id === 'number' && id > 0) usedSkillIds.add(id)
-  }
-}
-for (let x = 185; x <= 256; x += 1) {
-  if (String(wp[x]?.[5]) !== '秘籍') continue
-  const id = wp[x]?.[6]
-  if (typeof id === 'number' && id > 0) usedSkillIds.add(id)
-}
-for (const id of [71, 72, 74, 75, 81, 82, 83]) usedSkillIds.add(id)
-
+// 全量保留原版具名技能，包括尚未进入当前势力目录的技能及防御。
+for (const row of jn) if (String(row[1] ?? '').trim()) usedSkillIds.add(Number(row[0]))
 // ---------- 技能翻译 ----------
 const BEHAVIORS = {
   近战攻击: { behavior: 'attack', side: 'enemy', reach: 'melee' },
@@ -95,7 +56,9 @@ for (const id of [...usedSkillIds].sort((a, b) => a - b)) {
     console.log(`跳过无行为技能 jn#${id} ${row[1]}（行为="${row[15]}"）`)
     continue
   }
-  const powerPercent = (typeof row[16] === 'number' && row[16] > 0 ? row[16] : Number(row[29])) || 100
+  const powerPercent = mapping.behavior === 'advance-gauge'
+    ? Number(row[23])
+    : Math.round(Number(row[16]) * Number(row[29]) / 100)
   const skill = {
     id,
     name: String(row[1]),
@@ -103,14 +66,23 @@ for (const id of [...usedSkillIds].sort((a, b) => a - b)) {
     behavior: mapping.behavior,
     targetSide: mapping.side,
     route: routeOf(String(row[26])),
+    healingStat: row[26] === '生命' ? 'health' : 'internalAttack',
+    energyGain: Number(row[25]) || 0,
+    specialMechanic: Number(row[45]) || 0,
     element: Number(row[5]) || 0,
     powerPercent,
+    baseEffect: Number(row[16]),
+    effectGrowthPerTenLevels: Number(row[17]),
+    effectMultiplierPercent: Number(row[29]),
+    buffChanceGrowthPerTenLevels: Number(row[23]),
     energyCost: Number(row[19]) || 0,
     cooldownMs: (Number(row[19]) || 0) * 4000,
     hits: Math.max(1, Number(row[36]) || 1),
     rangeId: Number(row[37]) || 0,
     reach: mapping.reach,
     skillCategory: Number(row[4]) || 0,
+    skillTier: Number(row[6]) || 1,
+    nonBasicAttack: Boolean(row[27]),
     skillGroupId: Number(row[49]) || 0,
     selfBuffId: typeof row[18] === 'number' && row[18] > 0 ? row[18] : null,
     selfBuffStacks: typeof row[24] === 'number' && row[24] > 0 ? row[24] : 1,
@@ -123,9 +95,7 @@ for (const id of [...usedSkillIds].sort((a, b) => a - b)) {
     enhanceConsumeStacks: typeof row[43] === 'number' && row[43] > 0 ? row[43] : 0,
     reviveHpPercent: mapping.behavior === 'revive' ? Number(row[23]) || 0 : null,
     summonId: mapping.behavior === 'summon' ? Number(row[51]) || 0 : null,
-    passiveAttributes: mapping.behavior === 'passive'
-      ? [[row[8], row[9]], [row[10], row[11]]].filter(([sxId, value]) => typeof sxId === 'number' && sxId > 0 && typeof value === 'number' && value !== 0)
-      : [],
+    equippedAttributes: [[row[8], row[9]], [row[10], row[11]]].filter(([sxId, value]) => typeof sxId === 'number' && sxId > 0 && typeof value === 'number' && value !== 0),
   }
   skills.push(skill)
   if (skill.behavior === 'advance-gauge') advanceGaugeSamples.push(`${skill.name}: 16=${row[16]} 25=${row[25]} 29=${row[29]}`)
@@ -173,7 +143,7 @@ for (let x = 1; x < zh.length; x += 1) {
     name: String(row[1]),
     imageKey: String(row[3]),
     baseAttackId: Number(row[3]),
-    coeffs: [row[5], row[6], row[7], row[8], row[9], row[10]].map((value) => Number(value) || 100),
+    coeffs: [row[5], row[7], row[8], row[10], row[9], row[6]].map((value) => Number(value) || 100),
     durationMs: (Number(row[11]) || 30) * 1000,
     route: String(row[12]).includes('法') ? 'internal' : 'external',
   })
@@ -239,15 +209,24 @@ const skillLiteral = (skill) => {
     `behavior: ${quote(skill.behavior)}`,
     `targetSide: ${quote(skill.targetSide)}`,
     `route: ${quote(skill.route)}`,
+    ...(skill.behavior === 'heal' || [257, 258].includes(skill.id) ? [`healingStat: ${quote(skill.healingStat)}`] : []),
+    ...(skill.behavior === 'grant-energy' || skill.id === 256 ? [`energyGain: ${skill.energyGain}`] : []),
     `element: ${skill.element}`,
     `powerPercent: ${skill.powerPercent}`,
+    `baseEffect: ${skill.baseEffect}`,
+    `effectGrowthPerTenLevels: ${skill.effectGrowthPerTenLevels}`,
+    `effectMultiplierPercent: ${skill.effectMultiplierPercent}`,
+    ...(skill.appliedBuffId ? [`buffChanceGrowthPerTenLevels: ${skill.buffChanceGrowthPerTenLevels}`] : []),
     `energyCost: ${skill.energyCost}`,
     `cooldownMs: ${skill.cooldownMs}`,
     `hits: ${skill.hits}`,
     `rangeId: ${skill.rangeId}`,
     `reach: ${quote(skill.reach)}`,
     `skillCategory: ${skill.skillCategory}`,
+    `skillTier: ${skill.skillTier}`,
+    `nonBasicAttack: ${skill.nonBasicAttack}`,
     `skillGroupId: ${skill.skillGroupId}`,
+    ...(skill.specialMechanic ? [`specialMechanic: ${skill.specialMechanic}`] : []),
   ]
   if (skill.selfBuffId) parts.push(`selfBuffId: ${skill.selfBuffId}`, `selfBuffStacks: ${skill.selfBuffStacks}`)
   if (skill.appliedBuffId) {
@@ -263,8 +242,8 @@ const skillLiteral = (skill) => {
   }
   if (skill.reviveHpPercent) parts.push(`reviveHpPercent: ${skill.reviveHpPercent}`)
   if (skill.summonId) parts.push(`summonId: ${skill.summonId}`)
-  if (skill.passiveAttributes.length) {
-    parts.push(`passiveAttributes: [${skill.passiveAttributes.map(([sxId, value]) => `{ sxId: ${sxId}, value: ${value} }`).join(', ')}]`)
+  if (skill.equippedAttributes.length) {
+    parts.push(`equippedAttributes: [${skill.equippedAttributes.map(([sxId, value]) => `{ sxId: ${sxId}, coefficient: ${value} }`).join(', ')}]`)
   }
   return `  ${skill.id}: { ${parts.join(', ')} },`
 }
@@ -284,10 +263,19 @@ skillLines.push('  originalBehavior: string')
 skillLines.push('  behavior: SkillBehavior')
 skillLines.push("  targetSide: 'enemy' | 'ally'")
 skillLines.push("  route: 'external' | 'internal' | 'support'")
+skillLines.push("  healingStat?: 'health' | 'internalAttack'")
+skillLines.push('  /** 原版 jn[25] 能量技能回复量。 */')
+skillLines.push('  energyGain?: number')
 skillLines.push('  /** 元素 0 无 / 1 雷 / 2 水 / 3 火 / 4 木 / 5 土 / 6 精神 / 7 神圣 / 8 黑暗 */')
 skillLines.push('  element: number')
 skillLines.push('  /** 威力百分比（技能等级 1）；推条技能表示行动条推进百分比 */')
 skillLines.push('  powerPercent: number')
+skillLines.push('  /** 战斗中已合并装备技能等级加成的有效等级。 */')
+skillLines.push('  effectiveLevel?: number')
+skillLines.push('  baseEffect: number')
+skillLines.push('  effectGrowthPerTenLevels: number')
+skillLines.push('  effectMultiplierPercent: number')
+skillLines.push('  buffChanceGrowthPerTenLevels?: number')
 skillLines.push('  /** 能量档 0-5；冷却 = 能量档 × 4 秒 */')
 skillLines.push('  energyCost: number')
 skillLines.push('  cooldownMs: number')
@@ -298,8 +286,13 @@ skillLines.push('  rangeId: number')
 skillLines.push("  reach: 'melee' | 'ranged'")
 skillLines.push('  /** 技能系（专精乘区 60+cat-1） */')
 skillLines.push('  skillCategory: number')
+skillLines.push('  skillTier: number')
+skillLines.push('  /** 原版jn27：伤害计算的非普攻开关。 */')
+skillLines.push('  nonBasicAttack: boolean')
 skillLines.push('  /** 原版 jn[49] 技能组；威力属性 id = 152 + skillGroupId，0 表示无技能组。 */')
 skillLines.push('  skillGroupId: number')
+skillLines.push('  /** 原版 jn[45]：1清心、2复活、3召唤。 */')
+skillLines.push('  specialMechanic?: number')
 skillLines.push('  /** 原版 jn[18]/jn[24]：技能结算后给施法者附加的 buff 与层数。 */')
 skillLines.push('  selfBuffId?: number')
 skillLines.push('  selfBuffStacks?: number')
@@ -315,7 +308,7 @@ skillLines.push('  enhanceConsumeStacks?: number')
 skillLines.push('  /** 原版 jn[23]：复活后生命百分比。 */')
 skillLines.push('  reviveHpPercent?: number')
 skillLines.push('  summonId?: number')
-skillLines.push('  passiveAttributes?: ReadonlyArray<{ sxId: number; value: number }>')
+skillLines.push('  equippedAttributes?: ReadonlyArray<{ sxId: number; coefficient: number }>')
 skillLines.push('}')
 skillLines.push('')
 skillLines.push('export const COMBAT_SKILLS: Readonly<Record<number, CombatSkillContent>> = {')

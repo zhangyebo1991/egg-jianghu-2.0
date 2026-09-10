@@ -116,15 +116,16 @@ export const martialResourceCost = (
   : Math.round((10000 * Math.pow(1.025, (((difficulty - 1) * 20 + level) * 3)) - 9700) * percentage)
 
 export const martialEffectAtLevel = (martial: MartialDefinitionV10, level: number): number => {
-  const safeLevel = Math.min(martial.maxLevel, Math.max(1, Math.floor(level)))
+  // 传入有效等级；装备技能系加成可以超过学习上限。
+  const safeLevel = Math.max(1, level)
   if (martial.baseEffect === 0 && martial.effectGrowthPerTenLevels === 0) return martial.power * 100
   return Math.round((martial.baseEffect
     + martial.effectGrowthPerTenLevels * ((safeLevel - 1) / 10))
-    * martial.effectMultiplierPercent) / 100
+    * martial.effectMultiplierPercent / 100)
 }
 
 export const martialBuffChanceAtLevel = (martial: MartialDefinitionV10, level: number): number => {
-  const safeLevel = Math.min(martial.maxLevel, Math.max(1, Math.floor(level)))
+  const safeLevel = Math.max(1, level)
   return Math.round(100 * Math.min(100, Math.max(0,
     martial.buffBaseChance + Math.max(0, (safeLevel - 1) * (martial.buffChanceGrowthPerTenLevels / 10)),
   ))) / 100

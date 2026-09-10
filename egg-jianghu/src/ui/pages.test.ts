@@ -343,6 +343,7 @@ const inventoryFixture = (): InventoryPageViewModel => ({
 })
 
 const formationFixture = (): FormationPageViewModel => ({
+  locked: false,
   selectedHeroId: 'hero_test',
   filter: 'all',
   formation: [{ heroId: 'hero_test', row: 1, col: 0 }],

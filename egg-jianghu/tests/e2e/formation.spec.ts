@@ -109,3 +109,43 @@ test.describe('触屏视口', () => {
     expect(formation).toEqual([{ heroId: 'hero_player', row: 1, col: 0 }])
   })
 })
+
+
+test('战斗期间可查看阵容但不能点击或拖拽改阵，退出后恢复', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.recruitHero('hero_guo_jing')
+    window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 13)
+  })
+  const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
+  await page.getByTestId('tab-formation').click()
+  await expect(page.locator('.formation-field-head')).toContainText('战斗进行中')
+  for (const action of ['formation-remove', 'formation-auto-arrange', 'formation-clear']) {
+    const buttons = page.locator(`[data-action="${action}"]`)
+    for (const button of await buttons.all()) await expect(button).toBeDisabled()
+  }
+  await expect(page.locator('[data-testid="formation-page"] [draggable="true"]')).toHaveCount(0)
+  await page.getByTestId('formation-hero-hero_guo_jing').click()
+  await expect(page.getByTestId('formation-hero-card')).toContainText('郭靖')
+  await page.getByTestId('formation-slot-0-4').click()
+  await dragToSlot(page, '[data-testid="formation-hero-hero_guo_jing"]', '[data-testid="formation-slot-0-4"]')
+  await dragToSlot(page, '.formation-token', '.formation-roster')
+  // 即使DOM中移除disabled，处理器仍应保护战斗编队。
+  for (const action of ['formation-remove', 'formation-auto-arrange', 'formation-clear']) {
+    await page.locator(`[data-action="${action}"]`).first().evaluate(element => {
+      element.removeAttribute('disabled')
+      element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+  }
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)).toEqual(before)
+  await page.getByTestId('tab-heroes').click()
+  await page.getByTestId('tab-formation').click()
+  await page.screenshot({ path: testInfo.outputPath('formation-battle-locked.png'), fullPage: true, animations: 'disabled' })
+  await page.getByTestId('idle-combat-return').click()
+  await page.locator('[data-action="stop-combat"]').click()
+  await page.getByTestId('tab-formation').click()
+  await expect(page.locator('[data-action="formation-auto-arrange"]')).toBeEnabled()
+  await page.getByTestId('formation-hero-hero_guo_jing').click()
+  await page.getByTestId('formation-slot-0-4').click()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)).toContainEqual({ heroId: 'hero_guo_jing', row: 0, col: 4 })
+})

@@ -11,8 +11,8 @@ export type CombatSpeed = typeof ORIGINAL_COMBAT_SPEEDS[number]
 export const isCombatSpeed = (value: number): value is CombatSpeed =>
   ORIGINAL_COMBAT_SPEEDS.some((speed) => speed === value)
 
-/** 原版“战斗行动积攒”两处分支均以 0.1 秒为推进节点。 */
-export const ORIGINAL_ACCUMULATION_STEP_MS = 100
+/** 原版我方自动行动在回能与选技前等待0.1秒；敌方无此等待。 */
+export const ORIGINAL_PARTY_PREPARATION_MS = 100
 /** 原版“技能释放动作”分支 Wait 0.2 秒后结束起手动作。 */
 export const ORIGINAL_ACTION_EFFECT_MS = 200
 /** 原版“技能释放核心”常规弹道分支在生成弹道前 Wait 0.3 秒。 */
@@ -37,11 +37,22 @@ export const createCombatTimeline = (): CombatTimelineState => ({
   nextReadySeq: 0,
   readyQueue: [],
   activeAction: null,
-  accumulationCarryMs: 0,
-  statusPulseCarryMs: 0,
+  lastStatusPulseAtMs: 0,
   waveTransition: null,
   endingTransition: null,
 })
+
+/** C3 System.Every(1)：小于40ms的迟到保留原相位，否则以当前游戏时间重新计时。 */
+export const consumeStatusPulse = (timeline: CombatTimelineState, gameTimeMs: number): boolean => {
+  const lastTime = timeline.lastStatusPulseAtMs
+  if (gameTimeMs >= lastTime + 1000) {
+    timeline.lastStatusPulseAtMs = lastTime + 1000
+    if (gameTimeMs >= timeline.lastStatusPulseAtMs + 40) timeline.lastStatusPulseAtMs = gameTimeMs
+    return true
+  }
+  if (gameTimeMs < lastTime - 100) timeline.lastStatusPulseAtMs = gameTimeMs
+  return false
+}
 
 export const enqueueReadyActors = (
   timeline: CombatTimelineState,
@@ -51,7 +62,8 @@ export const enqueueReadyActors = (
   const queued = new Set(timeline.readyQueue.map((entry) => entry.actorId))
   if (timeline.activeAction) queued.add(timeline.activeAction.actorId)
   for (const unit of units) {
-    if (queued.has(unit.id) || unit.gauge < 1000 || !canQueue(unit)) continue
+    if (queued.has(unit.id) || unit.gauge < 1000 - 1e-8 || !canQueue(unit)) continue
+    unit.gauge = 0
     timeline.nextReadySeq += 1
     timeline.readyQueue.push({ actorId: unit.id, readySeq: timeline.nextReadySeq })
     queued.add(unit.id)
@@ -86,4 +98,6 @@ export const createActionPlan = (
   durationMs: ORIGINAL_ACTION_DURATION_MS,
   effectEmitted: false,
   hitResolved: false,
+  buffsAtMs: 1000,
+  buffsResolved: false,
 })

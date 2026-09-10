@@ -19,19 +19,8 @@ const loadC2 = (name) => JSON.parse(readFileSync(`${ORIGINAL_ANALYSIS_ROOT}/${na
 const sq = loadC2('sq')
 const dr = loadC2('dr')
 const drsx = loadC2('drsx')
-const js = loadC2('js')
-const zy = loadC2('zy')
+const jnz = loadC2('jnz')
 const zx = loadC2('zx')
-
-const jsByName = new Map()
-for (let x = 1; x < js.length; x += 1) jsByName.set(String(js[x][1]), js[x])
-
-// 职业（zy 行号）→ 普攻技能 id（zy 列 6）
-const baseSkillOfZy = (zyId) => {
-  const skillId = zy[zyId]?.[6]
-  if (typeof skillId !== 'number' || skillId <= 0) throw new Error(`zy#${zyId} 缺少普攻技能`)
-  return skillId
-}
 
 // ---------- 解析 data.json 角色形象动画帧 ----------
 const data = JSON.parse(readFileSync(`${PACKAGE_ROOT}/data.json`, 'utf8'))
@@ -89,36 +78,19 @@ const growthOf = (templateId) => {
   return [row[2], row[3], row[4], row[5], row[6], row[7]]
 }
 
-// 小怪：dr 列 3 模板（1-10）同时是 drsx 成长模板与 zy 基础职业，普攻取职业普攻
+// 原版刷新角色战斗属性：所有敌人技能取 jnz[dr[id,8],1..4]。
 const enemyOf = (drId) => {
   const row = dr[drId]
   if (!row) throw new Error(`dr#${drId} 不存在`)
+  const skillGroup = jnz[row[8]]
+  if (!skillGroup || !(skillGroup[1] > 0)) throw new Error(`dr#${drId} 缺少 jnz#${row[8]} 普攻`)
   return {
     drId,
     name: String(row[1]),
     imageKey: String(row[2]),
     growth: growthOf(row[3]),
-    attackSkillId: baseSkillOfZy(row[3]),
-    skillIds: [],
-  }
-}
-
-// 首领：js 表按名字匹配，普攻走职业（js 列 4），四技能取 js 列 28-31
-const bossOf = (drId) => {
-  const row = dr[drId]
-  if (!row) throw new Error(`dr#${drId} 不存在`)
-  const name = String(row[1])
-  const jsRow = jsByName.get(name)
-  if (!jsRow) throw new Error(`首领 ${name} 在 js 表无匹配`)
-  const skillIds = [jsRow[28], jsRow[29], jsRow[30], jsRow[31]]
-    .filter((id) => typeof id === 'number' && id > 0)
-  return {
-    drId,
-    name,
-    imageKey: String(row[2]),
-    growth: growthOf(row[3]),
-    attackSkillId: baseSkillOfZy(jsRow[4]),
-    skillIds,
+    attackSkillId: skillGroup[1],
+    skillIds: skillGroup.slice(2, 5).filter((id) => typeof id === 'number' && id > 0),
   }
 }
 
@@ -135,7 +107,7 @@ for (let x = 1; x < sq.length; x++) {
     stage,
     stageName: String(row[1]),
     mobs: [row[3], row[4], row[5], row[6], row[7]].map(enemyOf),
-    boss: bossOf(row[8]),
+    boss: enemyOf(row[8]),
   })
 }
 
@@ -210,7 +182,7 @@ const enemyLiteral = (enemy) =>
 
 const lines = []
 lines.push('// 本文件由 scripts/generate-zhutian-enemies.mjs 从《诸天刷宝录》解包数据生成，请勿手改。')
-lines.push('// 数据源：sq.json（地点 → 5 小怪 + 1 首领）、dr.json（怪物图鉴）、drsx.json（六维成长模板）、js.json（首领四技能）、zy.json（职业普攻）、zx.json（波次阵型）。')
+lines.push('// 数据源：sq.json（地点 → 5 小怪 + 1 首领）、dr.json（怪物图鉴）、drsx.json（六维成长模板）、jnz.json（敌人技能组）、zx.json（波次阵型）。')
 lines.push('')
 lines.push('export interface EnemyDefinition {')
 lines.push('  /** 原版 dr 图鉴 id，同时是立绘文件名 zt_{drId}.webp */')
@@ -218,9 +190,9 @@ lines.push('  drId: number')
 lines.push('  name: string')
 lines.push('  /** 六维成长系数（生命/速度/物攻/物防/法攻/法防，基准 100），对应 sx6..11 */')
 lines.push('  growth: readonly [number, number, number, number, number, number]')
-lines.push('  /** 普攻技能 id（jn 表）：小怪按 dr 模板职业、首领按 js 职业 */')
+lines.push('  /** 普攻技能 id（jn 表）：取 jnz[dr[id,8],1] */')
 lines.push('  attackSkillId: number')
-lines.push('  /** 主动技能栏（jn 表 id）：首领四技能，小怪为空 */')
+lines.push('  /** 主动技能栏（jn 表 id）：取 jnz[dr[id,8],2..4] */')
 lines.push('  skillIds: readonly number[]')
 lines.push('}')
 lines.push('')

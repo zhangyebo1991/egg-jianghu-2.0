@@ -1,0 +1,35 @@
+{
+  "sourcePackage": "D:\\Projects\\OpenProject\\花旦的各种小游戏\\挂机游戏\\诸天刷宝录\\.nw",
+  "files": [
+    {
+      "path": "data.json",
+      "packageSha256": "d4b0af7ec45d009c60afacbd7a52c9a2c1691c7e8a010f74f33177d184a2aad5",
+      "extractedSha256": "d4b0af7ec45d009c60afacbd7a52c9a2c1691c7e8a010f74f33177d184a2aad5",
+      "equal": true
+    },
+    {
+      "path": "scripts/c3runtime.js",
+      "packageSha256": "5e74701617b101c6755ae1c82796b386947f8b51d24d80cf4104cd573cd82cdf",
+      "extractedSha256": "5e74701617b101c6755ae1c82796b386947f8b51d24d80cf4104cd573cd82cdf",
+      "equal": true
+    },
+    {
+      "path": "scripts/main.js",
+      "packageSha256": "a7660e495d5dcbed209f1fdc5092e82483474f6150c43bf38cfebb0029541da5",
+      "extractedSha256": "a7660e495d5dcbed209f1fdc5092e82483474f6150c43bf38cfebb0029541da5",
+      "equal": true
+    }
+  ],
+  "host": "Edge headless, fresh browser context, original Worker runtime",
+  "adaptations": [
+    "main.js exportType nwjs -> html5 in intercepted response",
+    "c3runtime.js append read-only runtime reference capture around C3_InitRuntime"
+  ],
+  "network": "localhost only; external requests aborted",
+  "reached": "主界面内通过原版战斗开始函数创建16个战斗核心；可见页面仍有新手剧情覆盖",
+  "pageErrors": [],
+  "screenshot": "test-results/original-boot.png",
+  "collisionParityVerified": false,
+  "collisionCoverage": "12组双向距离/斜向原版Worker观测通过；连续预测位于最后未命中帧与消失帧之间，完整跨宿主帧级等价未宣称",
+  "energyCoverage": "12组原版通用耗能/回能小数及上下限边界通过；器魂与自然回能不在该探针内"
+}

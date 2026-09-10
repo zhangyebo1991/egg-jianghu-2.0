@@ -1,0 +1,6009 @@
+{
+  "sourceHashes": {
+    "jn.json": "c87981b1462c2befe762f73a3a6ae4a95f7b72d34729405078419762027140d0",
+    "sx.json": "3d7346a6d6c56b0c706c05c44b0d521a766500ae9d77738c74645933744201ce",
+    "jnz.json": "40303514dcc6e2c802a386f315a783faa167604ea20c32c57edd95a03107d15f",
+    "dr.json": "6cb4ba1591a9859e0daae2d426f58a2a4443218a38c4635265d866c48ef4e6dd",
+    "fw.json": "9036c132e86f8e3e680f368059965a39a3261636367560c275e2455bde086737",
+    "buff.json": "6c4d135502916eb5a10d889054805299d53b0b679cf5cd143ac17a690d629b29",
+    "zh.json": "8100999754b80dc758901a1cfa712da44f8f303d12655e82778aefb31feecb6c",
+    "data.json": "d4b0af7ec45d009c60afacbd7a52c9a2c1691c7e8a010f74f33177d184a2aad5",
+    "scripts/c3runtime.js": "5e74701617b101c6755ae1c82796b386947f8b51d24d80cf4104cd573cd82cdf"
+  },
+  "checked": 376,
+  "equippedAttributeSkillCount": 263,
+  "buffCount": 67,
+  "summonCount": 9,
+  "rangeCount": 36,
+  "scope": "技能基础数据、敌人技能组、全部buff数据、召唤模板与36范围矩阵；不代表战斗状态机完成",
+  "mismatch": [],
+  "enemySupportSkills": [
+    {
+      "id": 16,
+      "name": "治疗I",
+      "behavior": "生命治疗",
+      "rangeId": 1,
+      "enemies": [
+        5,
+        16,
+        35,
+        126,
+        45,
+        136,
+        55,
+        146,
+        65,
+        156,
+        75,
+        166,
+        85,
+        176,
+        95,
+        186,
+        105,
+        196,
+        115,
+        206,
+        295,
+        326,
+        336,
+        315,
+        346
+      ]
+    },
+    {
+      "id": 99,
+      "name": "治疗",
+      "behavior": "生命治疗",
+      "rangeId": 1,
+      "enemies": [
+        5,
+        16,
+        35,
+        126,
+        45,
+        136,
+        55,
+        146,
+        65,
+        156,
+        75,
+        166,
+        85,
+        176,
+        95,
+        186,
+        105,
+        196,
+        115,
+        206,
+        295,
+        326,
+        336,
+        315,
+        346
+      ]
+    }
+  ],
+  "rangeUsage": [
+    {
+      "rangeId": 1,
+      "targetMode": "目标",
+      "skills": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        42,
+        43,
+        44,
+        46,
+        48,
+        50,
+        52,
+        54,
+        55,
+        56,
+        58,
+        60,
+        61,
+        62,
+        63,
+        64,
+        68,
+        86,
+        89,
+        98,
+        99,
+        100,
+        103,
+        105,
+        106,
+        107,
+        109,
+        112,
+        115,
+        116,
+        117,
+        118,
+        121,
+        122,
+        124,
+        127,
+        128,
+        130,
+        133,
+        136,
+        139,
+        140,
+        142,
+        145,
+        146,
+        147,
+        148,
+        151,
+        152,
+        154,
+        157,
+        158,
+        160,
+        161,
+        163,
+        164,
+        166,
+        169,
+        170,
+        171,
+        172,
+        175,
+        176,
+        177,
+        181,
+        182,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        192,
+        193,
+        196,
+        197,
+        198,
+        202,
+        208,
+        209,
+        210,
+        211,
+        213,
+        214,
+        216,
+        217,
+        218,
+        220,
+        223,
+        224,
+        226,
+        229,
+        230,
+        232,
+        235,
+        236,
+        237,
+        238,
+        239,
+        242,
+        244,
+        246,
+        249,
+        250,
+        251,
+        253,
+        256,
+        259,
+        260,
+        262,
+        265,
+        268,
+        271,
+        274,
+        280,
+        283,
+        314,
+        317,
+        320,
+        323,
+        326,
+        329,
+        330,
+        331,
+        336,
+        339,
+        342,
+        347,
+        348,
+        351,
+        354,
+        357,
+        360,
+        363,
+        366,
+        369,
+        372,
+        375
+      ]
+    },
+    {
+      "rangeId": 2,
+      "targetMode": "目标",
+      "skills": [
+        113
+      ]
+    },
+    {
+      "rangeId": 3,
+      "targetMode": "目标",
+      "skills": [
+        37,
+        101,
+        199
+      ]
+    },
+    {
+      "rangeId": 4,
+      "targetMode": "目标",
+      "skills": [
+        85,
+        96,
+        137
+      ]
+    },
+    {
+      "rangeId": 5,
+      "targetMode": "目标",
+      "skills": []
+    },
+    {
+      "rangeId": 6,
+      "targetMode": "目标",
+      "skills": []
+    },
+    {
+      "rangeId": 7,
+      "targetMode": "目标",
+      "skills": [
+        149
+      ]
+    },
+    {
+      "rangeId": 8,
+      "targetMode": "目标",
+      "skills": []
+    },
+    {
+      "rangeId": 9,
+      "targetMode": "地面",
+      "skills": []
+    },
+    {
+      "rangeId": 10,
+      "targetMode": "地面",
+      "skills": []
+    },
+    {
+      "rangeId": 11,
+      "targetMode": "地面",
+      "skills": []
+    },
+    {
+      "rangeId": 12,
+      "targetMode": "地面",
+      "skills": [
+        57,
+        87,
+        97,
+        138,
+        212,
+        227,
+        241,
+        293,
+        358
+      ]
+    },
+    {
+      "rangeId": 13,
+      "targetMode": "目标",
+      "skills": [
+        41,
+        45,
+        88,
+        108,
+        110,
+        125,
+        173,
+        272,
+        345
+      ]
+    },
+    {
+      "rangeId": 14,
+      "targetMode": "地面",
+      "skills": []
+    },
+    {
+      "rangeId": 15,
+      "targetMode": "地面",
+      "skills": [
+        66,
+        81,
+        83,
+        84,
+        92,
+        203,
+        205,
+        245,
+        281,
+        292
+      ]
+    },
+    {
+      "rangeId": 16,
+      "targetMode": "目标",
+      "skills": [
+        38,
+        91,
+        134,
+        233,
+        352
+      ]
+    },
+    {
+      "rangeId": 17,
+      "targetMode": "目标",
+      "skills": [
+        39,
+        40,
+        49,
+        67,
+        75,
+        82,
+        90,
+        94,
+        119,
+        143,
+        155,
+        162,
+        174,
+        194,
+        206,
+        221,
+        240,
+        257,
+        263,
+        266,
+        269,
+        275,
+        277,
+        295,
+        306,
+        307,
+        308,
+        309,
+        310,
+        311,
+        312,
+        313,
+        315,
+        343,
+        349,
+        361,
+        364,
+        367
+      ]
+    },
+    {
+      "rangeId": 18,
+      "targetMode": "地面",
+      "skills": [
+        131,
+        167
+      ]
+    },
+    {
+      "rangeId": 19,
+      "targetMode": "地面",
+      "skills": [
+        204
+      ]
+    },
+    {
+      "rangeId": 20,
+      "targetMode": "目标",
+      "skills": [
+        93,
+        327
+      ]
+    },
+    {
+      "rangeId": 21,
+      "targetMode": "目标",
+      "skills": []
+    },
+    {
+      "rangeId": 22,
+      "targetMode": "目标",
+      "skills": [
+        150,
+        321,
+        376
+      ]
+    },
+    {
+      "rangeId": 23,
+      "targetMode": "目标",
+      "skills": [
+        53,
+        102,
+        284
+      ]
+    },
+    {
+      "rangeId": 24,
+      "targetMode": "地面",
+      "skills": [
+        111,
+        228
+      ]
+    },
+    {
+      "rangeId": 25,
+      "targetMode": "目标",
+      "skills": [
+        51,
+        95,
+        104,
+        129,
+        135,
+        141,
+        200,
+        234,
+        247,
+        273,
+        278,
+        296,
+        298,
+        299,
+        300,
+        301,
+        302,
+        303,
+        304,
+        305,
+        318,
+        337,
+        340,
+        355,
+        370,
+        373
+      ]
+    },
+    {
+      "rangeId": 26,
+      "targetMode": "地面",
+      "skills": []
+    },
+    {
+      "rangeId": 27,
+      "targetMode": "目标",
+      "skills": [
+        120,
+        144,
+        165,
+        195,
+        294
+      ]
+    },
+    {
+      "rangeId": 28,
+      "targetMode": "目标",
+      "skills": [
+        254
+      ]
+    },
+    {
+      "rangeId": 29,
+      "targetMode": "目标",
+      "skills": [
+        74,
+        126
+      ]
+    },
+    {
+      "rangeId": 30,
+      "targetMode": "地面",
+      "skills": []
+    },
+    {
+      "rangeId": 31,
+      "targetMode": "地面",
+      "skills": []
+    },
+    {
+      "rangeId": 32,
+      "targetMode": "地面",
+      "skills": []
+    },
+    {
+      "rangeId": 33,
+      "targetMode": "地面",
+      "skills": [
+        47,
+        59,
+        65,
+        114,
+        123,
+        132,
+        153,
+        156,
+        159,
+        168,
+        183,
+        191,
+        201,
+        207,
+        215,
+        219,
+        222,
+        225,
+        231,
+        243,
+        248,
+        252,
+        255,
+        258,
+        261,
+        264,
+        267,
+        270,
+        276,
+        279,
+        282,
+        285,
+        297,
+        316,
+        319,
+        322,
+        324,
+        325,
+        328,
+        338,
+        341,
+        344,
+        346,
+        350,
+        353,
+        356,
+        359,
+        362,
+        365,
+        368,
+        371,
+        374,
+        377
+      ]
+    },
+    {
+      "rangeId": 34,
+      "targetMode": "自身",
+      "skills": []
+    },
+    {
+      "rangeId": 35,
+      "targetMode": "随机",
+      "skills": []
+    },
+    {
+      "rangeId": 36,
+      "targetMode": "地面",
+      "skills": [
+        72,
+        178,
+        179,
+        180,
+        286,
+        287,
+        288,
+        289,
+        290,
+        291
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "id": 0,
+      "name": "防御",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 1,
+      "name": "攻击",
+      "behavior": "近战攻击",
+      "baseEffect": 85,
+      "growth": 17,
+      "powerPercent": 85
+    },
+    {
+      "id": 2,
+      "name": "钝击",
+      "behavior": "近战攻击",
+      "baseEffect": 90,
+      "growth": 18,
+      "powerPercent": 90
+    },
+    {
+      "id": 3,
+      "name": "铁拳",
+      "behavior": "近战攻击",
+      "baseEffect": 94,
+      "growth": 18.8,
+      "powerPercent": 94
+    },
+    {
+      "id": 4,
+      "name": "冰击",
+      "behavior": "远程攻击",
+      "baseEffect": 95,
+      "growth": 19,
+      "powerPercent": 95
+    },
+    {
+      "id": 5,
+      "name": "射击",
+      "behavior": "远程攻击",
+      "baseEffect": 96,
+      "growth": 19.2,
+      "powerPercent": 96
+    },
+    {
+      "id": 6,
+      "name": "包扎",
+      "behavior": "生命治疗",
+      "baseEffect": 51,
+      "growth": 10.2,
+      "powerPercent": 51
+    },
+    {
+      "id": 7,
+      "name": "猛击I",
+      "behavior": "近战攻击",
+      "baseEffect": 100,
+      "growth": 20,
+      "powerPercent": 100
+    },
+    {
+      "id": 8,
+      "name": "圣击I",
+      "behavior": "近战攻击",
+      "baseEffect": 112,
+      "growth": 22.4,
+      "powerPercent": 112
+    },
+    {
+      "id": 9,
+      "name": "劈砍I",
+      "behavior": "近战攻击",
+      "baseEffect": 114,
+      "growth": 22.8,
+      "powerPercent": 114
+    },
+    {
+      "id": 10,
+      "name": "突刺I",
+      "behavior": "近战攻击",
+      "baseEffect": 131,
+      "growth": 26.2,
+      "powerPercent": 131
+    },
+    {
+      "id": 11,
+      "name": "火符I",
+      "behavior": "远程攻击",
+      "baseEffect": 124,
+      "growth": 24.8,
+      "powerPercent": 124
+    },
+    {
+      "id": 12,
+      "name": "御雷I",
+      "behavior": "近战攻击",
+      "baseEffect": 121,
+      "growth": 24.2,
+      "powerPercent": 121
+    },
+    {
+      "id": 13,
+      "name": "射箭I",
+      "behavior": "远程攻击",
+      "baseEffect": 116,
+      "growth": 23.2,
+      "powerPercent": 116
+    },
+    {
+      "id": 14,
+      "name": "炮击I",
+      "behavior": "近战攻击",
+      "baseEffect": 113,
+      "growth": 22.6,
+      "powerPercent": 113
+    },
+    {
+      "id": 15,
+      "name": "抚慰I",
+      "behavior": "生命治疗",
+      "baseEffect": 66,
+      "growth": 13.2,
+      "powerPercent": 66
+    },
+    {
+      "id": 16,
+      "name": "治疗I",
+      "behavior": "生命治疗",
+      "baseEffect": 55,
+      "growth": 11,
+      "powerPercent": 55
+    },
+    {
+      "id": 17,
+      "name": "猛击II",
+      "behavior": "近战攻击",
+      "baseEffect": 107,
+      "growth": 21.4,
+      "powerPercent": 107
+    },
+    {
+      "id": 18,
+      "name": "圣击II",
+      "behavior": "近战攻击",
+      "baseEffect": 120,
+      "growth": 24,
+      "powerPercent": 120
+    },
+    {
+      "id": 19,
+      "name": "劈砍II",
+      "behavior": "近战攻击",
+      "baseEffect": 122,
+      "growth": 24.4,
+      "powerPercent": 122
+    },
+    {
+      "id": 20,
+      "name": "突刺II",
+      "behavior": "近战攻击",
+      "baseEffect": 140,
+      "growth": 28,
+      "powerPercent": 140
+    },
+    {
+      "id": 21,
+      "name": "火符II",
+      "behavior": "远程攻击",
+      "baseEffect": 132,
+      "growth": 26.4,
+      "powerPercent": 132
+    },
+    {
+      "id": 22,
+      "name": "御雷II",
+      "behavior": "近战攻击",
+      "baseEffect": 129,
+      "growth": 25.8,
+      "powerPercent": 129
+    },
+    {
+      "id": 23,
+      "name": "射箭II",
+      "behavior": "远程攻击",
+      "baseEffect": 125,
+      "growth": 25,
+      "powerPercent": 125
+    },
+    {
+      "id": 24,
+      "name": "炮击II",
+      "behavior": "近战攻击",
+      "baseEffect": 121,
+      "growth": 24.2,
+      "powerPercent": 121
+    },
+    {
+      "id": 25,
+      "name": "抚慰II",
+      "behavior": "生命治疗",
+      "baseEffect": 71,
+      "growth": 14.2,
+      "powerPercent": 71
+    },
+    {
+      "id": 26,
+      "name": "治疗II",
+      "behavior": "生命治疗",
+      "baseEffect": 59,
+      "growth": 11.8,
+      "powerPercent": 59
+    },
+    {
+      "id": 27,
+      "name": "猛击III",
+      "behavior": "近战攻击",
+      "baseEffect": 118,
+      "growth": 23.6,
+      "powerPercent": 118
+    },
+    {
+      "id": 28,
+      "name": "圣击III",
+      "behavior": "近战攻击",
+      "baseEffect": 132,
+      "growth": 26.4,
+      "powerPercent": 132
+    },
+    {
+      "id": 29,
+      "name": "劈砍III",
+      "behavior": "近战攻击",
+      "baseEffect": 134,
+      "growth": 26.8,
+      "powerPercent": 134
+    },
+    {
+      "id": 30,
+      "name": "突刺III",
+      "behavior": "近战攻击",
+      "baseEffect": 154,
+      "growth": 30.8,
+      "powerPercent": 154
+    },
+    {
+      "id": 31,
+      "name": "火符III",
+      "behavior": "远程攻击",
+      "baseEffect": 146,
+      "growth": 29.2,
+      "powerPercent": 146
+    },
+    {
+      "id": 32,
+      "name": "御雷III",
+      "behavior": "近战攻击",
+      "baseEffect": 142,
+      "growth": 28.4,
+      "powerPercent": 142
+    },
+    {
+      "id": 33,
+      "name": "射箭III",
+      "behavior": "远程攻击",
+      "baseEffect": 137,
+      "growth": 27.4,
+      "powerPercent": 137
+    },
+    {
+      "id": 34,
+      "name": "炮击III",
+      "behavior": "近战攻击",
+      "baseEffect": 133,
+      "growth": 26.6,
+      "powerPercent": 133
+    },
+    {
+      "id": 35,
+      "name": "抚慰III",
+      "behavior": "生命治疗",
+      "baseEffect": 78,
+      "growth": 15.6,
+      "powerPercent": 78
+    },
+    {
+      "id": 36,
+      "name": "治疗III",
+      "behavior": "生命治疗",
+      "baseEffect": 64,
+      "growth": 12.8,
+      "powerPercent": 64
+    },
+    {
+      "id": 37,
+      "name": "神之指",
+      "behavior": "近战攻击",
+      "baseEffect": 105,
+      "growth": 21,
+      "powerPercent": 105
+    },
+    {
+      "id": 38,
+      "name": "天帝斩",
+      "behavior": "近战攻击",
+      "baseEffect": 123,
+      "growth": 24.6,
+      "powerPercent": 123
+    },
+    {
+      "id": 39,
+      "name": "天雷破",
+      "behavior": "近战攻击",
+      "baseEffect": 97,
+      "growth": 19.4,
+      "powerPercent": 97
+    },
+    {
+      "id": 40,
+      "name": "人皇剑",
+      "behavior": "近战攻击",
+      "baseEffect": 95,
+      "growth": 19,
+      "powerPercent": 95
+    },
+    {
+      "id": 41,
+      "name": "粒子轰",
+      "behavior": "近战攻击",
+      "baseEffect": 108,
+      "growth": 21.6,
+      "powerPercent": 108
+    },
+    {
+      "id": 42,
+      "name": "野球拳",
+      "behavior": "近战攻击",
+      "baseEffect": 130,
+      "growth": 26,
+      "powerPercent": 130
+    },
+    {
+      "id": 43,
+      "name": "临战激励",
+      "behavior": "自身增加能量",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 44,
+      "name": "伤口包扎",
+      "behavior": "生命治疗",
+      "baseEffect": 109,
+      "growth": 21.8,
+      "powerPercent": 153
+    },
+    {
+      "id": 45,
+      "name": "竖斩",
+      "behavior": "近战攻击",
+      "baseEffect": 233,
+      "growth": 46.6,
+      "powerPercent": 233
+    },
+    {
+      "id": 46,
+      "name": "三连击",
+      "behavior": "近战攻击",
+      "baseEffect": 374,
+      "growth": 74.8,
+      "powerPercent": 374
+    },
+    {
+      "id": 47,
+      "name": "战场庇护",
+      "behavior": "我方状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 48,
+      "name": "虎盾击",
+      "behavior": "近战攻击",
+      "baseEffect": 138,
+      "growth": 27.6,
+      "powerPercent": 138
+    },
+    {
+      "id": 49,
+      "name": "十字突刺",
+      "behavior": "近战攻击",
+      "baseEffect": 126,
+      "growth": 25.2,
+      "powerPercent": 113
+    },
+    {
+      "id": 50,
+      "name": "自愈",
+      "behavior": "自身治疗",
+      "baseEffect": 20,
+      "growth": 5,
+      "powerPercent": 20
+    },
+    {
+      "id": 51,
+      "name": "魏武护卫",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 52,
+      "name": "啸龙锤",
+      "behavior": "近战攻击",
+      "baseEffect": 546,
+      "growth": 109.2,
+      "powerPercent": 491
+    },
+    {
+      "id": 53,
+      "name": "天下归心",
+      "behavior": "近战攻击",
+      "baseEffect": 540,
+      "growth": 108,
+      "powerPercent": 513
+    },
+    {
+      "id": 54,
+      "name": "凝神箭",
+      "behavior": "远程攻击",
+      "baseEffect": 141,
+      "growth": 28.2,
+      "powerPercent": 141
+    },
+    {
+      "id": 55,
+      "name": "迅捷步伐",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 56,
+      "name": "专注心神",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 57,
+      "name": "百步穿杨",
+      "behavior": "近战攻击",
+      "baseEffect": 217,
+      "growth": 43.4,
+      "powerPercent": 217
+    },
+    {
+      "id": 58,
+      "name": "辕门射",
+      "behavior": "远程攻击",
+      "baseEffect": 638,
+      "growth": 127.6,
+      "powerPercent": 638
+    },
+    {
+      "id": 59,
+      "name": "铁箭雨",
+      "behavior": "近战攻击",
+      "baseEffect": 402,
+      "growth": 80.4,
+      "powerPercent": 402
+    },
+    {
+      "id": 60,
+      "name": "疗伤",
+      "behavior": "生命治疗",
+      "baseEffect": 73,
+      "growth": 14.6,
+      "powerPercent": 73
+    },
+    {
+      "id": 61,
+      "name": "清心",
+      "behavior": "我方状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 62,
+      "name": "刮骨刀",
+      "behavior": "近战攻击",
+      "baseEffect": 219,
+      "growth": 43.8,
+      "powerPercent": 219
+    },
+    {
+      "id": 63,
+      "name": "青囊书",
+      "behavior": "生命治疗",
+      "baseEffect": 186,
+      "growth": 37.2,
+      "powerPercent": 186
+    },
+    {
+      "id": 64,
+      "name": "起死回生",
+      "behavior": "我方复活",
+      "baseEffect": 599,
+      "growth": 119.8,
+      "powerPercent": 599
+    },
+    {
+      "id": 65,
+      "name": "悬壶济世",
+      "behavior": "生命治疗",
+      "baseEffect": 208,
+      "growth": 41.6,
+      "powerPercent": 208
+    },
+    {
+      "id": 66,
+      "name": "鬼爪",
+      "behavior": "近战攻击",
+      "baseEffect": 84,
+      "growth": 16.8,
+      "powerPercent": 84
+    },
+    {
+      "id": 67,
+      "name": "勾魂",
+      "behavior": "近战攻击",
+      "baseEffect": 77,
+      "growth": 15.4,
+      "powerPercent": 77
+    },
+    {
+      "id": 68,
+      "name": "回魂",
+      "behavior": "生命治疗",
+      "baseEffect": 78,
+      "growth": 15.6,
+      "powerPercent": 78
+    },
+    {
+      "id": 71,
+      "name": "混沌太玄经",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 72,
+      "name": "召唤亡灵",
+      "behavior": "召唤",
+      "baseEffect": 189,
+      "growth": 37.8,
+      "powerPercent": 189
+    },
+    {
+      "id": 73,
+      "name": "鸿蒙太清录",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 74,
+      "name": "枯木缠绕",
+      "behavior": "近战攻击",
+      "baseEffect": 115,
+      "growth": 23,
+      "powerPercent": 115
+    },
+    {
+      "id": 75,
+      "name": "清泉回春",
+      "behavior": "生命治疗",
+      "baseEffect": 49,
+      "growth": 9.8,
+      "powerPercent": 49
+    },
+    {
+      "id": 76,
+      "name": "金刚伏魔功",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 77,
+      "name": "摩西的赐福",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 78,
+      "name": "玄天长生法",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 79,
+      "name": "九部天雷录",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 80,
+      "name": "无相显真决",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 81,
+      "name": "火灵扇袭",
+      "behavior": "近战攻击",
+      "baseEffect": 117,
+      "growth": 23.4,
+      "powerPercent": 117
+    },
+    {
+      "id": 82,
+      "name": "掌心雷动",
+      "behavior": "近战攻击",
+      "baseEffect": 98,
+      "growth": 19.6,
+      "powerPercent": 98
+    },
+    {
+      "id": 83,
+      "name": "左右互博",
+      "behavior": "近战攻击",
+      "baseEffect": 108,
+      "growth": 21.6,
+      "powerPercent": 108
+    },
+    {
+      "id": 84,
+      "name": "竖劈",
+      "behavior": "近战攻击",
+      "baseEffect": 268,
+      "growth": 53.6,
+      "powerPercent": 268
+    },
+    {
+      "id": 85,
+      "name": "火枪突",
+      "behavior": "近战攻击",
+      "baseEffect": 222,
+      "growth": 44.4,
+      "powerPercent": 222
+    },
+    {
+      "id": 86,
+      "name": "晕锤",
+      "behavior": "近战攻击",
+      "baseEffect": 337,
+      "growth": 67.4,
+      "powerPercent": 337
+    },
+    {
+      "id": 87,
+      "name": "穿甲",
+      "behavior": "近战攻击",
+      "baseEffect": 235,
+      "growth": 47,
+      "powerPercent": 235
+    },
+    {
+      "id": 88,
+      "name": "光剑",
+      "behavior": "近战攻击",
+      "baseEffect": 264,
+      "growth": 52.8,
+      "powerPercent": 264
+    },
+    {
+      "id": 89,
+      "name": "三连击",
+      "behavior": "近战攻击",
+      "baseEffect": 406,
+      "growth": 81.2,
+      "powerPercent": 406
+    },
+    {
+      "id": 90,
+      "name": "暗刃",
+      "behavior": "近战攻击",
+      "baseEffect": 265,
+      "growth": 53,
+      "powerPercent": 265
+    },
+    {
+      "id": 91,
+      "name": "刮骨",
+      "behavior": "近战攻击",
+      "baseEffect": 246,
+      "growth": 49.2,
+      "powerPercent": 246
+    },
+    {
+      "id": 92,
+      "name": "土轰",
+      "behavior": "近战攻击",
+      "baseEffect": 239,
+      "growth": 47.8,
+      "powerPercent": 239
+    },
+    {
+      "id": 93,
+      "name": "火扇",
+      "behavior": "近战攻击",
+      "baseEffect": 219,
+      "growth": 43.8,
+      "powerPercent": 219
+    },
+    {
+      "id": 94,
+      "name": "缠绕",
+      "behavior": "近战攻击",
+      "baseEffect": 245,
+      "growth": 49,
+      "powerPercent": 245
+    },
+    {
+      "id": 95,
+      "name": "碎冰",
+      "behavior": "近战攻击",
+      "baseEffect": 145,
+      "growth": 29,
+      "powerPercent": 145
+    },
+    {
+      "id": 96,
+      "name": "圣光",
+      "behavior": "生命治疗",
+      "baseEffect": 135,
+      "growth": 27,
+      "powerPercent": 135
+    },
+    {
+      "id": 97,
+      "name": "落雷",
+      "behavior": "近战攻击",
+      "baseEffect": 244,
+      "growth": 48.8,
+      "powerPercent": 244
+    },
+    {
+      "id": 98,
+      "name": "亵渎",
+      "behavior": "近战攻击",
+      "baseEffect": 441,
+      "growth": 88.2,
+      "powerPercent": 441
+    },
+    {
+      "id": 99,
+      "name": "治疗",
+      "behavior": "生命治疗",
+      "baseEffect": 184,
+      "growth": 36.8,
+      "powerPercent": 184
+    },
+    {
+      "id": 100,
+      "name": "神龙摆尾",
+      "behavior": "近战攻击",
+      "baseEffect": 147,
+      "growth": 29.4,
+      "powerPercent": 103
+    },
+    {
+      "id": 101,
+      "name": "飞龙在天",
+      "behavior": "近战攻击",
+      "baseEffect": 170,
+      "growth": 34,
+      "powerPercent": 119
+    },
+    {
+      "id": 102,
+      "name": "亢龙有悔",
+      "behavior": "近战攻击",
+      "baseEffect": 366,
+      "growth": 73.2,
+      "powerPercent": 256
+    },
+    {
+      "id": 103,
+      "name": "蟠龙击",
+      "behavior": "近战攻击",
+      "baseEffect": 147,
+      "growth": 29.4,
+      "powerPercent": 147
+    },
+    {
+      "id": 104,
+      "name": "打狗阵",
+      "behavior": "近战攻击",
+      "baseEffect": 173,
+      "growth": 34.6,
+      "powerPercent": 173
+    },
+    {
+      "id": 105,
+      "name": "擒龙心法",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 106,
+      "name": "铁布衫",
+      "behavior": "自身护盾",
+      "baseEffect": 135,
+      "growth": 27,
+      "powerPercent": 135
+    },
+    {
+      "id": 107,
+      "name": "金钟罩",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 108,
+      "name": "十八铜人阵",
+      "behavior": "自身护盾",
+      "baseEffect": 272,
+      "growth": 54.4,
+      "powerPercent": 272
+    },
+    {
+      "id": 109,
+      "name": "少林棍法",
+      "behavior": "近战攻击",
+      "baseEffect": 135,
+      "growth": 27,
+      "powerPercent": 135
+    },
+    {
+      "id": 110,
+      "name": "达摩杖法",
+      "behavior": "近战攻击",
+      "baseEffect": 156,
+      "growth": 31.2,
+      "powerPercent": 156
+    },
+    {
+      "id": 111,
+      "name": "混元般若功",
+      "behavior": "近战攻击",
+      "baseEffect": 281,
+      "growth": 56.2,
+      "powerPercent": 281
+    },
+    {
+      "id": 112,
+      "name": "起剑式",
+      "behavior": "近战攻击",
+      "baseEffect": 150,
+      "growth": 30,
+      "powerPercent": 135
+    },
+    {
+      "id": 113,
+      "name": "落剑式",
+      "behavior": "近战攻击",
+      "baseEffect": 198,
+      "growth": 39.6,
+      "powerPercent": 178
+    },
+    {
+      "id": 114,
+      "name": "华山九剑",
+      "behavior": "近战攻击",
+      "baseEffect": 427,
+      "growth": 85.4,
+      "powerPercent": 427
+    },
+    {
+      "id": 115,
+      "name": "迷踪步",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 116,
+      "name": "紫瑕心法",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 117,
+      "name": "辟邪剑气",
+      "behavior": "近战攻击",
+      "baseEffect": 677,
+      "growth": 135.4,
+      "powerPercent": 677
+    },
+    {
+      "id": 118,
+      "name": "武当掌法",
+      "behavior": "近战攻击",
+      "baseEffect": 135,
+      "growth": 27,
+      "powerPercent": 122
+    },
+    {
+      "id": 119,
+      "name": "太极拳",
+      "behavior": "近战攻击",
+      "baseEffect": 208,
+      "growth": 41.6,
+      "powerPercent": 187
+    },
+    {
+      "id": 120,
+      "name": "纯阳无极功",
+      "behavior": "近战攻击",
+      "baseEffect": 257,
+      "growth": 51.4,
+      "powerPercent": 231
+    },
+    {
+      "id": 121,
+      "name": "武当心法",
+      "behavior": "增加能量",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 122,
+      "name": "武当九阳功",
+      "behavior": "增加能量",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 123,
+      "name": "真武七星阵",
+      "behavior": "自身增加能量",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 124,
+      "name": "崩山拳",
+      "behavior": "近战攻击",
+      "baseEffect": 128,
+      "growth": 25.6,
+      "powerPercent": 115
+    },
+    {
+      "id": 125,
+      "name": "岩阳破煞",
+      "behavior": "近战攻击",
+      "baseEffect": 148,
+      "growth": 29.6,
+      "powerPercent": 133
+    },
+    {
+      "id": 126,
+      "name": "八卦锁魂拳",
+      "behavior": "近战攻击",
+      "baseEffect": 220,
+      "growth": 44,
+      "powerPercent": 198
+    },
+    {
+      "id": 127,
+      "name": "醒狮掌",
+      "behavior": "近战攻击",
+      "baseEffect": 194,
+      "growth": 38.8,
+      "powerPercent": 194
+    },
+    {
+      "id": 128,
+      "name": "回神诀",
+      "behavior": "自身治疗",
+      "baseEffect": 326,
+      "growth": 65.2,
+      "powerPercent": 326
+    },
+    {
+      "id": 129,
+      "name": "山河怒",
+      "behavior": "近战攻击",
+      "baseEffect": 266,
+      "growth": 53.2,
+      "powerPercent": 266
+    },
+    {
+      "id": 130,
+      "name": "雷击符",
+      "behavior": "近战攻击",
+      "baseEffect": 156,
+      "growth": 31.2,
+      "powerPercent": 148
+    },
+    {
+      "id": 131,
+      "name": "狂雷符",
+      "behavior": "近战攻击",
+      "baseEffect": 240,
+      "growth": 48,
+      "powerPercent": 228
+    },
+    {
+      "id": 132,
+      "name": "九天御雷符",
+      "behavior": "近战攻击",
+      "baseEffect": 445,
+      "growth": 89,
+      "powerPercent": 423
+    },
+    {
+      "id": 133,
+      "name": "破魔符",
+      "behavior": "远程攻击",
+      "baseEffect": 156,
+      "growth": 31.2,
+      "powerPercent": 140
+    },
+    {
+      "id": 134,
+      "name": "破魔阵",
+      "behavior": "远程攻击",
+      "baseEffect": 180,
+      "growth": 36,
+      "powerPercent": 162
+    },
+    {
+      "id": 135,
+      "name": "紫霄破魔阵",
+      "behavior": "远程攻击",
+      "baseEffect": 325,
+      "growth": 65,
+      "powerPercent": 293
+    },
+    {
+      "id": 136,
+      "name": "火箭",
+      "behavior": "远程攻击",
+      "baseEffect": 150,
+      "growth": 30,
+      "powerPercent": 150
+    },
+    {
+      "id": 137,
+      "name": "烈焰箭",
+      "behavior": "近战攻击",
+      "baseEffect": 161,
+      "growth": 32.2,
+      "powerPercent": 161
+    },
+    {
+      "id": 138,
+      "name": "爆裂箭",
+      "behavior": "近战攻击",
+      "baseEffect": 259,
+      "growth": 51.8,
+      "powerPercent": 259
+    },
+    {
+      "id": 139,
+      "name": "专注瞄准",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 140,
+      "name": "星火爆弩箭",
+      "behavior": "远程攻击",
+      "baseEffect": 383,
+      "growth": 76.6,
+      "powerPercent": 383
+    },
+    {
+      "id": 141,
+      "name": "烈焰机关弩",
+      "behavior": "远程攻击",
+      "baseEffect": 198,
+      "growth": 39.6,
+      "powerPercent": 198
+    },
+    {
+      "id": 142,
+      "name": "施毒术",
+      "behavior": "近战攻击",
+      "baseEffect": 150,
+      "growth": 30,
+      "powerPercent": 90
+    },
+    {
+      "id": 143,
+      "name": "青棘毒咒",
+      "behavior": "近战攻击",
+      "baseEffect": 230,
+      "growth": 46,
+      "powerPercent": 138
+    },
+    {
+      "id": 144,
+      "name": "荆棘毒雨",
+      "behavior": "近战攻击",
+      "baseEffect": 449,
+      "growth": 89.8,
+      "powerPercent": 269
+    },
+    {
+      "id": 145,
+      "name": "木毒刺",
+      "behavior": "远程攻击",
+      "baseEffect": 228,
+      "growth": 45.6,
+      "powerPercent": 137
+    },
+    {
+      "id": 146,
+      "name": "中毒加深",
+      "behavior": "远程攻击",
+      "baseEffect": 594,
+      "growth": 118.8,
+      "powerPercent": 356
+    },
+    {
+      "id": 147,
+      "name": "林木源聚爆",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 148,
+      "name": "追猎箭",
+      "behavior": "远程攻击",
+      "baseEffect": 163,
+      "growth": 32.6,
+      "powerPercent": 147
+    },
+    {
+      "id": 149,
+      "name": "穿心箭影",
+      "behavior": "近战攻击",
+      "baseEffect": 286,
+      "growth": 57.2,
+      "powerPercent": 257
+    },
+    {
+      "id": 150,
+      "name": "闪影猎袭",
+      "behavior": "近战攻击",
+      "baseEffect": 648,
+      "growth": 129.6,
+      "powerPercent": 583
+    },
+    {
+      "id": 151,
+      "name": "缚网箭",
+      "behavior": "远程攻击",
+      "baseEffect": 163,
+      "growth": 32.6,
+      "powerPercent": 147
+    },
+    {
+      "id": 152,
+      "name": "狩猎经验",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 153,
+      "name": "目标追击",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 154,
+      "name": "守护结界",
+      "behavior": "自身护盾",
+      "baseEffect": 173,
+      "growth": 34.6,
+      "powerPercent": 173
+    },
+    {
+      "id": 155,
+      "name": "神星护壁",
+      "behavior": "自身护盾",
+      "baseEffect": 280,
+      "growth": 56,
+      "powerPercent": 280
+    },
+    {
+      "id": 156,
+      "name": "星辰圣芒盾",
+      "behavior": "自身护盾",
+      "baseEffect": 551,
+      "growth": 110.2,
+      "powerPercent": 551
+    },
+    {
+      "id": 157,
+      "name": "神辉击",
+      "behavior": "近战攻击",
+      "baseEffect": 173,
+      "growth": 34.6,
+      "powerPercent": 173
+    },
+    {
+      "id": 158,
+      "name": "圣祈之光",
+      "behavior": "生命治疗",
+      "baseEffect": 163,
+      "growth": 32.6,
+      "powerPercent": 163
+    },
+    {
+      "id": 159,
+      "name": "圣辉庇佑盾",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 160,
+      "name": "点燃",
+      "behavior": "远程攻击",
+      "baseEffect": 191,
+      "growth": 38.2,
+      "powerPercent": 134
+    },
+    {
+      "id": 161,
+      "name": "火球连击",
+      "behavior": "远程攻击",
+      "baseEffect": 328,
+      "growth": 65.6,
+      "powerPercent": 230
+    },
+    {
+      "id": 162,
+      "name": "火陨术",
+      "behavior": "近战攻击",
+      "baseEffect": 357,
+      "growth": 71.4,
+      "powerPercent": 250
+    },
+    {
+      "id": 163,
+      "name": "引爆",
+      "behavior": "近战攻击",
+      "baseEffect": 296,
+      "growth": 59.2,
+      "powerPercent": 296
+    },
+    {
+      "id": 164,
+      "name": "归元决",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 165,
+      "name": "星火燎原",
+      "behavior": "近战攻击",
+      "baseEffect": 640,
+      "growth": 128,
+      "powerPercent": 640
+    },
+    {
+      "id": 166,
+      "name": "还春术",
+      "behavior": "生命治疗",
+      "baseEffect": 78,
+      "growth": 15.6,
+      "powerPercent": 55
+    },
+    {
+      "id": 167,
+      "name": "月辉养元",
+      "behavior": "生命治疗",
+      "baseEffect": 126,
+      "growth": 25.2,
+      "powerPercent": 88
+    },
+    {
+      "id": 168,
+      "name": "清泉沁心咒",
+      "behavior": "生命治疗",
+      "baseEffect": 247,
+      "growth": 49.4,
+      "powerPercent": 173
+    },
+    {
+      "id": 169,
+      "name": "幽泉血咒",
+      "behavior": "近战攻击",
+      "baseEffect": 141,
+      "growth": 28.2,
+      "powerPercent": 141
+    },
+    {
+      "id": 170,
+      "name": "仙脉灵注咒",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 171,
+      "name": "阎罗换生诀",
+      "behavior": "我方复活",
+      "baseEffect": 439,
+      "growth": 87.8,
+      "powerPercent": 439
+    },
+    {
+      "id": 172,
+      "name": "怒剑式",
+      "behavior": "近战攻击",
+      "baseEffect": 176,
+      "growth": 35.2,
+      "powerPercent": 167
+    },
+    {
+      "id": 173,
+      "name": "土灵剑罡",
+      "behavior": "近战攻击",
+      "baseEffect": 211,
+      "growth": 42.2,
+      "powerPercent": 200
+    },
+    {
+      "id": 174,
+      "name": "剑气斩妖",
+      "behavior": "近战攻击",
+      "baseEffect": 328,
+      "growth": 65.6,
+      "powerPercent": 312
+    },
+    {
+      "id": 175,
+      "name": "灵识洞察",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 176,
+      "name": "剑灵怒",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 177,
+      "name": "万剑归宗",
+      "behavior": "近战攻击",
+      "baseEffect": 1399,
+      "growth": 279.8,
+      "powerPercent": 1399
+    },
+    {
+      "id": 178,
+      "name": "孤魂敕令",
+      "behavior": "召唤",
+      "baseEffect": 287,
+      "growth": 57.4,
+      "powerPercent": 287
+    },
+    {
+      "id": 179,
+      "name": "幽鬼驱令",
+      "behavior": "召唤",
+      "baseEffect": 499,
+      "growth": 99.8,
+      "powerPercent": 499
+    },
+    {
+      "id": 180,
+      "name": "黄泉使令",
+      "behavior": "召唤",
+      "baseEffect": 920,
+      "growth": 184,
+      "powerPercent": 920
+    },
+    {
+      "id": 181,
+      "name": "灵源幽唤",
+      "behavior": "近战攻击",
+      "baseEffect": 185,
+      "growth": 37,
+      "powerPercent": 185
+    },
+    {
+      "id": 182,
+      "name": "往生咒",
+      "behavior": "生命治疗",
+      "baseEffect": 175,
+      "growth": 35,
+      "powerPercent": 175
+    },
+    {
+      "id": 183,
+      "name": "百鬼夜行",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 184,
+      "name": "镜念",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 185,
+      "name": "剑心",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 186,
+      "name": "拔刀",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 187,
+      "name": "居合",
+      "behavior": "近战攻击",
+      "baseEffect": 160,
+      "growth": 32,
+      "powerPercent": 160
+    },
+    {
+      "id": 188,
+      "name": "一闪",
+      "behavior": "近战攻击",
+      "baseEffect": 273,
+      "growth": 54.6,
+      "powerPercent": 273
+    },
+    {
+      "id": 189,
+      "name": "乱刀",
+      "behavior": "近战攻击",
+      "baseEffect": 793,
+      "growth": 158.6,
+      "powerPercent": 793
+    },
+    {
+      "id": 190,
+      "name": "隐匿",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 191,
+      "name": "烟雾玉",
+      "behavior": "近战攻击",
+      "baseEffect": 219,
+      "growth": 43.8,
+      "powerPercent": 110
+    },
+    {
+      "id": 192,
+      "name": "八岐血咒",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 193,
+      "name": "手里剑",
+      "behavior": "远程攻击",
+      "baseEffect": 203,
+      "growth": 40.6,
+      "powerPercent": 203
+    },
+    {
+      "id": 194,
+      "name": "潜影蛇手",
+      "behavior": "近战攻击",
+      "baseEffect": 208,
+      "growth": 41.6,
+      "powerPercent": 208
+    },
+    {
+      "id": 195,
+      "name": "万蛇之阵",
+      "behavior": "近战攻击",
+      "baseEffect": 265,
+      "growth": 53,
+      "powerPercent": 265
+    },
+    {
+      "id": 196,
+      "name": "火炮修理",
+      "behavior": "生命治疗",
+      "baseEffect": 96,
+      "growth": 19.2,
+      "powerPercent": 96
+    },
+    {
+      "id": 197,
+      "name": "护卫姿态",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 198,
+      "name": "射击姿态",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 199,
+      "name": "火铳贯穿",
+      "behavior": "近战攻击",
+      "baseEffect": 123,
+      "growth": 24.6,
+      "powerPercent": 123
+    },
+    {
+      "id": 200,
+      "name": "铁炮轰炸",
+      "behavior": "近战攻击",
+      "baseEffect": 138,
+      "growth": 27.6,
+      "powerPercent": 138
+    },
+    {
+      "id": 201,
+      "name": "天下布武",
+      "behavior": "近战攻击",
+      "baseEffect": 348,
+      "growth": 69.6,
+      "powerPercent": 348
+    },
+    {
+      "id": 202,
+      "name": "政委之凳",
+      "behavior": "近战攻击",
+      "baseEffect": 144,
+      "growth": 28.8,
+      "powerPercent": 144
+    },
+    {
+      "id": 203,
+      "name": "乌拉搏击",
+      "behavior": "近战攻击",
+      "baseEffect": 173,
+      "growth": 34.6,
+      "powerPercent": 173
+    },
+    {
+      "id": 204,
+      "name": "喀秋莎弹幕",
+      "behavior": "近战攻击",
+      "baseEffect": 246,
+      "growth": 49.2,
+      "powerPercent": 246
+    },
+    {
+      "id": 205,
+      "name": "战壕坚守",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 206,
+      "name": "冲锋号",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 207,
+      "name": "军人意志",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 208,
+      "name": "装弹",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 209,
+      "name": "弹夹",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 210,
+      "name": "弹药箱",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 211,
+      "name": "机枪射击",
+      "behavior": "近战攻击",
+      "baseEffect": 180,
+      "growth": 36,
+      "powerPercent": 180
+    },
+    {
+      "id": 212,
+      "name": "徐进弹幕",
+      "behavior": "近战攻击",
+      "baseEffect": 185,
+      "growth": 37,
+      "powerPercent": 185
+    },
+    {
+      "id": 213,
+      "name": "绝命狙击",
+      "behavior": "近战攻击",
+      "baseEffect": 896,
+      "growth": 179.2,
+      "powerPercent": 896
+    },
+    {
+      "id": 214,
+      "name": "外科手术",
+      "behavior": "生命治疗",
+      "baseEffect": 85,
+      "growth": 17,
+      "powerPercent": 102
+    },
+    {
+      "id": 215,
+      "name": "医疗小队",
+      "behavior": "生命治疗",
+      "baseEffect": 144,
+      "growth": 28.8,
+      "powerPercent": 144
+    },
+    {
+      "id": 216,
+      "name": "重返战场",
+      "behavior": "我方复活",
+      "baseEffect": 477,
+      "growth": 95.4,
+      "powerPercent": 477
+    },
+    {
+      "id": 217,
+      "name": "山姆梦",
+      "behavior": "我方进度",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 35
+    },
+    {
+      "id": 218,
+      "name": "灯塔辉光",
+      "behavior": "我方进度",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 100
+    },
+    {
+      "id": 219,
+      "name": "星条荣耀",
+      "behavior": "我方进度",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 80
+    },
+    {
+      "id": 220,
+      "name": "玄冰碎",
+      "behavior": "近战攻击",
+      "baseEffect": 154,
+      "growth": 30.8,
+      "powerPercent": 139
+    },
+    {
+      "id": 221,
+      "name": "寒星爆",
+      "behavior": "近战攻击",
+      "baseEffect": 158,
+      "growth": 31.6,
+      "powerPercent": 142
+    },
+    {
+      "id": 222,
+      "name": "霜刃风暴",
+      "behavior": "近战攻击",
+      "baseEffect": 306,
+      "growth": 61.2,
+      "powerPercent": 275
+    },
+    {
+      "id": 223,
+      "name": "玲珑心",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 224,
+      "name": "冰灵心法",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 225,
+      "name": "寒域疯魔阵",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 226,
+      "name": "紫霄雷击",
+      "behavior": "近战攻击",
+      "baseEffect": 187,
+      "growth": 37.4,
+      "powerPercent": 187
+    },
+    {
+      "id": 227,
+      "name": "天罡雷暴",
+      "behavior": "近战攻击",
+      "baseEffect": 192,
+      "growth": 38.4,
+      "powerPercent": 192
+    },
+    {
+      "id": 228,
+      "name": "雷狱天罚",
+      "behavior": "近战攻击",
+      "baseEffect": 267,
+      "growth": 53.4,
+      "powerPercent": 267
+    },
+    {
+      "id": 229,
+      "name": "九霄雷动",
+      "behavior": "近战攻击",
+      "baseEffect": 187,
+      "growth": 37.4,
+      "powerPercent": 187
+    },
+    {
+      "id": 230,
+      "name": "锐芒诀",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 231,
+      "name": "混沌雷劫爆",
+      "behavior": "近战攻击",
+      "baseEffect": 372,
+      "growth": 74.4,
+      "powerPercent": 372
+    },
+    {
+      "id": 232,
+      "name": "长生斩",
+      "behavior": "近战攻击",
+      "baseEffect": 155,
+      "growth": 31,
+      "powerPercent": 140
+    },
+    {
+      "id": 233,
+      "name": "穿星刺",
+      "behavior": "近战攻击",
+      "baseEffect": 186,
+      "growth": 37.2,
+      "powerPercent": 167
+    },
+    {
+      "id": 234,
+      "name": "万木破岳",
+      "behavior": "近战攻击",
+      "baseEffect": 222,
+      "growth": 44.4,
+      "powerPercent": 200
+    },
+    {
+      "id": 235,
+      "name": "灵木刀",
+      "behavior": "近战攻击",
+      "baseEffect": 240,
+      "growth": 48,
+      "powerPercent": 216
+    },
+    {
+      "id": 236,
+      "name": "汲血刃",
+      "behavior": "近战攻击",
+      "baseEffect": 418,
+      "growth": 83.6,
+      "powerPercent": 376
+    },
+    {
+      "id": 237,
+      "name": "苍生不朽功",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 238,
+      "name": "能量护盾充能",
+      "behavior": "自身护盾",
+      "baseEffect": 194,
+      "growth": 38.8,
+      "powerPercent": 194
+    },
+    {
+      "id": 239,
+      "name": "近战姿态",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 240,
+      "name": "震荡波冲击",
+      "behavior": "近战攻击",
+      "baseEffect": 396,
+      "growth": 79.2,
+      "powerPercent": 396
+    },
+    {
+      "id": 241,
+      "name": "热能导弹风暴",
+      "behavior": "近战攻击",
+      "baseEffect": 117,
+      "growth": 23.4,
+      "powerPercent": 117
+    },
+    {
+      "id": 242,
+      "name": "远程姿态",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 243,
+      "name": "离子炮齐射",
+      "behavior": "近战攻击",
+      "baseEffect": 264,
+      "growth": 52.8,
+      "powerPercent": 264
+    },
+    {
+      "id": 244,
+      "name": "原力突刺",
+      "behavior": "近战攻击",
+      "baseEffect": 172,
+      "growth": 34.4,
+      "powerPercent": 172
+    },
+    {
+      "id": 245,
+      "name": "光剑连击",
+      "behavior": "近战攻击",
+      "baseEffect": 215,
+      "growth": 43,
+      "powerPercent": 215
+    },
+    {
+      "id": 246,
+      "name": "原力激发",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 247,
+      "name": "光剑旋风斩",
+      "behavior": "近战攻击",
+      "baseEffect": 196,
+      "growth": 39.2,
+      "powerPercent": 196
+    },
+    {
+      "id": 248,
+      "name": "原力光刃波",
+      "behavior": "近战攻击",
+      "baseEffect": 315,
+      "growth": 63,
+      "powerPercent": 315
+    },
+    {
+      "id": 249,
+      "name": "激光乱舞",
+      "behavior": "近战攻击",
+      "baseEffect": 1545,
+      "growth": 309,
+      "powerPercent": 1545
+    },
+    {
+      "id": 250,
+      "name": "战术分析",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 251,
+      "name": "离子狙击",
+      "behavior": "近战攻击",
+      "baseEffect": 246,
+      "growth": 49.2,
+      "powerPercent": 246
+    },
+    {
+      "id": 252,
+      "name": "热能榴弹发射",
+      "behavior": "近战攻击",
+      "baseEffect": 488,
+      "growth": 97.6,
+      "powerPercent": 488
+    },
+    {
+      "id": 253,
+      "name": "爆能枪",
+      "behavior": "近战攻击",
+      "baseEffect": 347,
+      "growth": 69.4,
+      "powerPercent": 347
+    },
+    {
+      "id": 254,
+      "name": "震荡波散射",
+      "behavior": "近战攻击",
+      "baseEffect": 315,
+      "growth": 63,
+      "powerPercent": 315
+    },
+    {
+      "id": 255,
+      "name": "死星粒子炮",
+      "behavior": "近战攻击",
+      "baseEffect": 792,
+      "growth": 158.4,
+      "powerPercent": 792
+    },
+    {
+      "id": 256,
+      "name": "回源术",
+      "behavior": "生命治疗",
+      "baseEffect": 94,
+      "growth": 18.8,
+      "powerPercent": 94
+    },
+    {
+      "id": 257,
+      "name": "回春斗气诀",
+      "behavior": "增加能量",
+      "baseEffect": 292,
+      "growth": 58.4,
+      "powerPercent": 292
+    },
+    {
+      "id": 258,
+      "name": "斗气愈灵阵",
+      "behavior": "增加能量",
+      "baseEffect": 377,
+      "growth": 75.4,
+      "powerPercent": 377
+    },
+    {
+      "id": 259,
+      "name": "灵源诀",
+      "behavior": "增加能量",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 260,
+      "name": "共鸣诀",
+      "behavior": "增加能量",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 261,
+      "name": "落云回天阵",
+      "behavior": "自身增加能量",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 262,
+      "name": "蛊毒云",
+      "behavior": "近战攻击",
+      "baseEffect": 195,
+      "growth": 39,
+      "powerPercent": 156
+    },
+    {
+      "id": 263,
+      "name": "腐灵毒雾",
+      "behavior": "近战攻击",
+      "baseEffect": 210,
+      "growth": 42,
+      "powerPercent": 168
+    },
+    {
+      "id": 264,
+      "name": "毒瘴领域",
+      "behavior": "近战攻击",
+      "baseEffect": 266,
+      "growth": 53.2,
+      "powerPercent": 213
+    },
+    {
+      "id": 265,
+      "name": "毒蚀术",
+      "behavior": "近战攻击",
+      "baseEffect": 195,
+      "growth": 39,
+      "powerPercent": 195
+    },
+    {
+      "id": 266,
+      "name": "枯木噬心咒",
+      "behavior": "近战攻击",
+      "baseEffect": 210,
+      "growth": 42,
+      "powerPercent": 210
+    },
+    {
+      "id": 267,
+      "name": "万毒归宗",
+      "behavior": "近战攻击",
+      "baseEffect": 432,
+      "growth": 86.4,
+      "powerPercent": 432
+    },
+    {
+      "id": 268,
+      "name": "焚天掌",
+      "behavior": "近战攻击",
+      "baseEffect": 199,
+      "growth": 39.8,
+      "powerPercent": 239
+    },
+    {
+      "id": 269,
+      "name": "炎龙破空击",
+      "behavior": "近战攻击",
+      "baseEffect": 342,
+      "growth": 68.4,
+      "powerPercent": 410
+    },
+    {
+      "id": 270,
+      "name": "炽炎爆裂拳",
+      "behavior": "近战攻击",
+      "baseEffect": 716,
+      "growth": 143.2,
+      "powerPercent": 859
+    },
+    {
+      "id": 271,
+      "name": "炎狱斗气阵",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 272,
+      "name": "炎爆斗气波",
+      "behavior": "近战攻击",
+      "baseEffect": 249,
+      "growth": 49.8,
+      "powerPercent": 299
+    },
+    {
+      "id": 273,
+      "name": "火凤翔天击",
+      "behavior": "近战攻击",
+      "baseEffect": 507,
+      "growth": 101.4,
+      "powerPercent": 608
+    },
+    {
+      "id": 274,
+      "name": "烈焰爆燃",
+      "behavior": "近战攻击",
+      "baseEffect": 208,
+      "growth": 41.6,
+      "powerPercent": 208
+    },
+    {
+      "id": 275,
+      "name": "灰烬新星",
+      "behavior": "近战攻击",
+      "baseEffect": 223,
+      "growth": 44.6,
+      "powerPercent": 223
+    },
+    {
+      "id": 276,
+      "name": "炎魔之握",
+      "behavior": "近战攻击",
+      "baseEffect": 461,
+      "growth": 92.2,
+      "powerPercent": 461
+    },
+    {
+      "id": 277,
+      "name": "寒潮激流",
+      "behavior": "近战攻击",
+      "baseEffect": 118,
+      "growth": 23.6,
+      "powerPercent": 118
+    },
+    {
+      "id": 278,
+      "name": "深渊漩涡",
+      "behavior": "近战攻击",
+      "baseEffect": 161,
+      "growth": 32.2,
+      "powerPercent": 161
+    },
+    {
+      "id": 279,
+      "name": "海妖之怒",
+      "behavior": "近战攻击",
+      "baseEffect": 267,
+      "growth": 53.4,
+      "powerPercent": 267
+    },
+    {
+      "id": 280,
+      "name": "圣光之誓",
+      "behavior": "自身护盾",
+      "baseEffect": 188,
+      "growth": 37.6,
+      "powerPercent": 188
+    },
+    {
+      "id": 281,
+      "name": "神圣干涉",
+      "behavior": "自身护盾",
+      "baseEffect": 236,
+      "growth": 47.2,
+      "powerPercent": 236
+    },
+    {
+      "id": 282,
+      "name": "炽天使之拥",
+      "behavior": "自身护盾",
+      "baseEffect": 416,
+      "growth": 83.2,
+      "powerPercent": 416
+    },
+    {
+      "id": 283,
+      "name": "圣盾壁垒",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 284,
+      "name": "殉道者之佑",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 285,
+      "name": "天罚之壁",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 286,
+      "name": "白骨构造",
+      "behavior": "召唤",
+      "baseEffect": 201,
+      "growth": 40.2,
+      "powerPercent": 201
+    },
+    {
+      "id": 287,
+      "name": "怨灵聚合",
+      "behavior": "召唤",
+      "baseEffect": 360,
+      "growth": 72,
+      "powerPercent": 360
+    },
+    {
+      "id": 288,
+      "name": "憎恶召唤",
+      "behavior": "召唤",
+      "baseEffect": 1112,
+      "growth": 222.4,
+      "powerPercent": 1112
+    },
+    {
+      "id": 289,
+      "name": "森林之灵",
+      "behavior": "召唤",
+      "baseEffect": 187,
+      "growth": 37.4,
+      "powerPercent": 187
+    },
+    {
+      "id": 290,
+      "name": "荆棘古树",
+      "behavior": "召唤",
+      "baseEffect": 533,
+      "growth": 106.6,
+      "powerPercent": 533
+    },
+    {
+      "id": 291,
+      "name": "梦境觉醒",
+      "behavior": "召唤",
+      "baseEffect": 1674,
+      "growth": 334.8,
+      "powerPercent": 1674
+    },
+    {
+      "id": 292,
+      "name": "尸爪",
+      "behavior": "近战攻击",
+      "baseEffect": 90,
+      "growth": 18,
+      "powerPercent": 90
+    },
+    {
+      "id": 293,
+      "name": "操纵",
+      "behavior": "近战攻击",
+      "baseEffect": 85,
+      "growth": 17,
+      "powerPercent": 85
+    },
+    {
+      "id": 294,
+      "name": "锁链击",
+      "behavior": "近战攻击",
+      "baseEffect": 67,
+      "growth": 13.4,
+      "powerPercent": 67
+    },
+    {
+      "id": 295,
+      "name": "能量击",
+      "behavior": "近战攻击",
+      "baseEffect": 71,
+      "growth": 14.2,
+      "powerPercent": 71
+    },
+    {
+      "id": 296,
+      "name": "缠绕",
+      "behavior": "近战攻击",
+      "baseEffect": 60,
+      "growth": 12,
+      "powerPercent": 60
+    },
+    {
+      "id": 297,
+      "name": "翡翠龙炎",
+      "behavior": "近战攻击",
+      "baseEffect": 60,
+      "growth": 12,
+      "powerPercent": 60
+    },
+    {
+      "id": 298,
+      "name": "雷虎击",
+      "behavior": "近战攻击",
+      "baseEffect": 304,
+      "growth": 60.8,
+      "powerPercent": 304
+    },
+    {
+      "id": 299,
+      "name": "潮汐之力",
+      "behavior": "近战攻击",
+      "baseEffect": 280,
+      "growth": 56,
+      "powerPercent": 280
+    },
+    {
+      "id": 300,
+      "name": "欲火焚炎",
+      "behavior": "近战攻击",
+      "baseEffect": 298,
+      "growth": 59.6,
+      "powerPercent": 298
+    },
+    {
+      "id": 301,
+      "name": "自然之毒",
+      "behavior": "近战攻击",
+      "baseEffect": 292,
+      "growth": 58.4,
+      "powerPercent": 292
+    },
+    {
+      "id": 302,
+      "name": "山河崩",
+      "behavior": "近战攻击",
+      "baseEffect": 286,
+      "growth": 57.2,
+      "powerPercent": 286
+    },
+    {
+      "id": 303,
+      "name": "无限月读",
+      "behavior": "近战攻击",
+      "baseEffect": 274,
+      "growth": 54.8,
+      "powerPercent": 274
+    },
+    {
+      "id": 304,
+      "name": "龙息",
+      "behavior": "近战攻击",
+      "baseEffect": 309,
+      "growth": 61.8,
+      "powerPercent": 309
+    },
+    {
+      "id": 305,
+      "name": "暗夜冥击",
+      "behavior": "近战攻击",
+      "baseEffect": 315,
+      "growth": 63,
+      "powerPercent": 315
+    },
+    {
+      "id": 306,
+      "name": "虎爪",
+      "behavior": "近战攻击",
+      "baseEffect": 56,
+      "growth": 11.2,
+      "powerPercent": 56
+    },
+    {
+      "id": 307,
+      "name": "冰魄",
+      "behavior": "近战攻击",
+      "baseEffect": 52,
+      "growth": 10.4,
+      "powerPercent": 52
+    },
+    {
+      "id": 308,
+      "name": "火突",
+      "behavior": "近战攻击",
+      "baseEffect": 55,
+      "growth": 11,
+      "powerPercent": 55
+    },
+    {
+      "id": 309,
+      "name": "木袭",
+      "behavior": "近战攻击",
+      "baseEffect": 54,
+      "growth": 10.8,
+      "powerPercent": 54
+    },
+    {
+      "id": 310,
+      "name": "土崩",
+      "behavior": "近战攻击",
+      "baseEffect": 53,
+      "growth": 10.6,
+      "powerPercent": 53
+    },
+    {
+      "id": 311,
+      "name": "迷幻",
+      "behavior": "近战攻击",
+      "baseEffect": 51,
+      "growth": 10.2,
+      "powerPercent": 51
+    },
+    {
+      "id": 312,
+      "name": "龙击",
+      "behavior": "近战攻击",
+      "baseEffect": 57,
+      "growth": 11.4,
+      "powerPercent": 57
+    },
+    {
+      "id": 313,
+      "name": "暗灭",
+      "behavior": "近战攻击",
+      "baseEffect": 58,
+      "growth": 11.6,
+      "powerPercent": 58
+    },
+    {
+      "id": 314,
+      "name": "量子献祭",
+      "behavior": "近战攻击",
+      "baseEffect": 192,
+      "growth": 38.4,
+      "powerPercent": 192
+    },
+    {
+      "id": 315,
+      "name": "千瞬寂灭",
+      "behavior": "近战攻击",
+      "baseEffect": 206,
+      "growth": 41.2,
+      "powerPercent": 206
+    },
+    {
+      "id": 316,
+      "name": "阿戈摩托之叹",
+      "behavior": "近战攻击",
+      "baseEffect": 261,
+      "growth": 52.2,
+      "powerPercent": 261
+    },
+    {
+      "id": 317,
+      "name": "精神时蚀",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 318,
+      "name": "时溯悲鸣",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 319,
+      "name": "终焉预言",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 320,
+      "name": "奈落之吻",
+      "behavior": "近战攻击",
+      "baseEffect": 221,
+      "growth": 44.2,
+      "powerPercent": 199
+    },
+    {
+      "id": 321,
+      "name": "血樱缭乱",
+      "behavior": "近战攻击",
+      "baseEffect": 197,
+      "growth": 39.4,
+      "powerPercent": 167
+    },
+    {
+      "id": 322,
+      "name": "千夜血祭",
+      "behavior": "近战攻击",
+      "baseEffect": 300,
+      "growth": 60,
+      "powerPercent": 240
+    },
+    {
+      "id": 323,
+      "name": "血宴",
+      "behavior": "近战攻击",
+      "baseEffect": 546,
+      "growth": 109.2,
+      "powerPercent": 546
+    },
+    {
+      "id": 324,
+      "name": "黑月噬魂",
+      "behavior": "近战攻击",
+      "baseEffect": 645,
+      "growth": 129,
+      "powerPercent": 645
+    },
+    {
+      "id": 325,
+      "name": "血月",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 326,
+      "name": "狂战地刺",
+      "behavior": "近战攻击",
+      "baseEffect": 165,
+      "growth": 33,
+      "powerPercent": 165
+    },
+    {
+      "id": 327,
+      "name": "地核暴怒",
+      "behavior": "近战攻击",
+      "baseEffect": 163,
+      "growth": 32.6,
+      "powerPercent": 163
+    },
+    {
+      "id": 328,
+      "name": "大陆架崩解",
+      "behavior": "近战攻击",
+      "baseEffect": 366,
+      "growth": 73.2,
+      "powerPercent": 366
+    },
+    {
+      "id": 329,
+      "name": "悲恸地缚",
+      "behavior": "近战攻击",
+      "baseEffect": 165,
+      "growth": 33,
+      "powerPercent": 165
+    },
+    {
+      "id": 330,
+      "name": "熔岩血脉",
+      "behavior": "自身状态",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 331,
+      "name": "岩核复苏",
+      "behavior": "自身治疗",
+      "baseEffect": 100,
+      "growth": 0,
+      "powerPercent": 100
+    },
+    {
+      "id": 332,
+      "name": "战神冥法典",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 333,
+      "name": "混沌纵物书",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 334,
+      "name": "星陨铁壁录",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 335,
+      "name": "圣光壁垒咒",
+      "behavior": "被动技能",
+      "baseEffect": 0,
+      "growth": 0,
+      "powerPercent": 0
+    },
+    {
+      "id": 336,
+      "name": "金钵甘露",
+      "behavior": "生命治疗",
+      "baseEffect": 92,
+      "growth": 18.4,
+      "powerPercent": 92
+    },
+    {
+      "id": 337,
+      "name": "菩提净愈",
+      "behavior": "生命治疗",
+      "baseEffect": 76,
+      "growth": 15.2,
+      "powerPercent": 76
+    },
+    {
+      "id": 338,
+      "name": "八宝转轮",
+      "behavior": "生命治疗",
+      "baseEffect": 125,
+      "growth": 25,
+      "powerPercent": 125
+    },
+    {
+      "id": 339,
+      "name": "金刚醍醐",
+      "behavior": "生命治疗",
+      "baseEffect": 92,
+      "growth": 18.4,
+      "powerPercent": 92
+    },
+    {
+      "id": 340,
+      "name": "轮回梵唱",
+      "behavior": "生命治疗",
+      "baseEffect": 76,
+      "growth": 15.2,
+      "powerPercent": 76
+    },
+    {
+      "id": 341,
+      "name": "莲华渡厄",
+      "behavior": "生命治疗",
+      "baseEffect": 125,
+      "growth": 25,
+      "powerPercent": 125
+    },
+    {
+      "id": 342,
+      "name": "赤炼妖爪",
+      "behavior": "近战攻击",
+      "baseEffect": 199,
+      "growth": 39.8,
+      "powerPercent": 179
+    },
+    {
+      "id": 343,
+      "name": "炽魂怒斩",
+      "behavior": "近战攻击",
+      "baseEffect": 214,
+      "growth": 42.8,
+      "powerPercent": 193
+    },
+    {
+      "id": 344,
+      "name": "火煞狂袭",
+      "behavior": "近战攻击",
+      "baseEffect": 271,
+      "growth": 54.2,
+      "powerPercent": 244
+    },
+    {
+      "id": 345,
+      "name": "炼狱妖爆",
+      "behavior": "近战攻击",
+      "baseEffect": 140,
+      "growth": 28,
+      "powerPercent": 140
+    },
+    {
+      "id": 346,
+      "name": "横扫千军",
+      "behavior": "近战攻击",
+      "baseEffect": 228,
+      "growth": 45.6,
+      "powerPercent": 228
+    },
+    {
+      "id": 347,
+      "name": "最强一击",
+      "behavior": "近战攻击",
+      "baseEffect": 1788,
+      "growth": 357.6,
+      "powerPercent": 1788
+    },
+    {
+      "id": 348,
+      "name": "电光遁",
+      "behavior": "近战攻击",
+      "baseEffect": 203,
+      "growth": 40.6,
+      "powerPercent": 203
+    },
+    {
+      "id": 349,
+      "name": "雷池劫界",
+      "behavior": "近战攻击",
+      "baseEffect": 218,
+      "growth": 43.6,
+      "powerPercent": 218
+    },
+    {
+      "id": 350,
+      "name": "玉枢神雷咒",
+      "behavior": "近战攻击",
+      "baseEffect": 277,
+      "growth": 55.4,
+      "powerPercent": 277
+    },
+    {
+      "id": 351,
+      "name": "震天式",
+      "behavior": "近战攻击",
+      "baseEffect": 203,
+      "growth": 40.6,
+      "powerPercent": 203
+    },
+    {
+      "id": 352,
+      "name": "大罗雷劫",
+      "behavior": "近战攻击",
+      "baseEffect": 254,
+      "growth": 50.8,
+      "powerPercent": 254
+    },
+    {
+      "id": 353,
+      "name": "雷部诸神降",
+      "behavior": "近战攻击",
+      "baseEffect": 277,
+      "growth": 55.4,
+      "powerPercent": 277
+    },
+    {
+      "id": 354,
+      "name": "兽袭",
+      "behavior": "近战攻击",
+      "baseEffect": 80,
+      "growth": 16,
+      "powerPercent": 80
+    },
+    {
+      "id": 355,
+      "name": "深渊利爪",
+      "behavior": "近战攻击",
+      "baseEffect": 162,
+      "growth": 32.4,
+      "powerPercent": 162
+    },
+    {
+      "id": 356,
+      "name": "兽王咆哮",
+      "behavior": "近战攻击",
+      "baseEffect": 510,
+      "growth": 102,
+      "powerPercent": 510
+    },
+    {
+      "id": 357,
+      "name": "电击",
+      "behavior": "近战攻击",
+      "baseEffect": 89,
+      "growth": 17.8,
+      "powerPercent": 89
+    },
+    {
+      "id": 358,
+      "name": "雷霆之怒",
+      "behavior": "近战攻击",
+      "baseEffect": 234,
+      "growth": 46.8,
+      "powerPercent": 234
+    },
+    {
+      "id": 359,
+      "name": "天罚雷暴",
+      "behavior": "近战攻击",
+      "baseEffect": 564,
+      "growth": 112.8,
+      "powerPercent": 564
+    },
+    {
+      "id": 360,
+      "name": "冰击",
+      "behavior": "近战攻击",
+      "baseEffect": 82,
+      "growth": 16.4,
+      "powerPercent": 74
+    },
+    {
+      "id": 361,
+      "name": "寒冰之触",
+      "behavior": "近战攻击",
+      "baseEffect": 216,
+      "growth": 43.2,
+      "powerPercent": 194
+    },
+    {
+      "id": 362,
+      "name": "深海漩涡",
+      "behavior": "近战攻击",
+      "baseEffect": 521,
+      "growth": 104.2,
+      "powerPercent": 469
+    },
+    {
+      "id": 363,
+      "name": "怒爪",
+      "behavior": "近战攻击",
+      "baseEffect": 87,
+      "growth": 17.4,
+      "powerPercent": 78
+    },
+    {
+      "id": 364,
+      "name": "烈焰猛击",
+      "behavior": "近战攻击",
+      "baseEffect": 229,
+      "growth": 45.8,
+      "powerPercent": 206
+    },
+    {
+      "id": 365,
+      "name": "怒火天降",
+      "behavior": "近战攻击",
+      "baseEffect": 553,
+      "growth": 110.6,
+      "powerPercent": 498
+    },
+    {
+      "id": 366,
+      "name": "木暴",
+      "behavior": "近战攻击",
+      "baseEffect": 85,
+      "growth": 17,
+      "powerPercent": 85
+    },
+    {
+      "id": 367,
+      "name": "森之怒",
+      "behavior": "近战攻击",
+      "baseEffect": 225,
+      "growth": 45,
+      "powerPercent": 225
+    },
+    {
+      "id": 368,
+      "name": "自然绽放",
+      "behavior": "近战攻击",
+      "baseEffect": 542,
+      "growth": 108.4,
+      "powerPercent": 542
+    },
+    {
+      "id": 369,
+      "name": "震击",
+      "behavior": "近战攻击",
+      "baseEffect": 84,
+      "growth": 16.8,
+      "powerPercent": 84
+    },
+    {
+      "id": 370,
+      "name": "地裂冲击",
+      "behavior": "近战攻击",
+      "baseEffect": 169,
+      "growth": 33.8,
+      "powerPercent": 169
+    },
+    {
+      "id": 371,
+      "name": "天外陨落",
+      "behavior": "近战攻击",
+      "baseEffect": 531,
+      "growth": 106.2,
+      "powerPercent": 531
+    },
+    {
+      "id": 372,
+      "name": "圣击",
+      "behavior": "近战攻击",
+      "baseEffect": 91,
+      "growth": 18.2,
+      "powerPercent": 91
+    },
+    {
+      "id": 373,
+      "name": "神圣审判",
+      "behavior": "近战攻击",
+      "baseEffect": 183,
+      "growth": 36.6,
+      "powerPercent": 183
+    },
+    {
+      "id": 374,
+      "name": "天堂之光",
+      "behavior": "近战攻击",
+      "baseEffect": 575,
+      "growth": 115,
+      "powerPercent": 575
+    },
+    {
+      "id": 375,
+      "name": "影牙",
+      "behavior": "近战攻击",
+      "baseEffect": 92,
+      "growth": 18.4,
+      "powerPercent": 83
+    },
+    {
+      "id": 376,
+      "name": "灵魂吸取",
+      "behavior": "近战攻击",
+      "baseEffect": 202,
+      "growth": 40.4,
+      "powerPercent": 172
+    },
+    {
+      "id": 377,
+      "name": "黑暗恶灵",
+      "behavior": "近战攻击",
+      "baseEffect": 586,
+      "growth": 117.2,
+      "powerPercent": 469
+    }
+  ],
+  "enemies": [
+    {
+      "id": 1,
+      "name": "黄巾战士",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 2,
+      "name": "随军参谋",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 3,
+      "name": "护卫甲兵",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 4,
+      "name": "长弓手",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 5,
+      "name": "汉末中医",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 11,
+      "name": "张角",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 6,
+      "name": "土匪豪强",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 7,
+      "name": "奸佞乡官",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 8,
+      "name": "随军校尉",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 9,
+      "name": "江洋大盗",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 10,
+      "name": "黄巾信徒",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 12,
+      "name": "貂蝉",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 13,
+      "name": "吕布",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 14,
+      "name": "甄宓",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 15,
+      "name": "小乔",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 16,
+      "name": "华佗",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 17,
+      "name": "关羽",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 18,
+      "name": "孙尚香",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 19,
+      "name": "王异",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 20,
+      "name": "诸葛亮",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 31,
+      "name": "青城弟子",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 32,
+      "name": "武当弟子",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 33,
+      "name": "崆峒弟子",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 34,
+      "name": "狂刀弟子",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 35,
+      "name": "泰山弟子",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 121,
+      "name": "马夫人",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 36,
+      "name": "苍山弟子",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 37,
+      "name": "嵩山弟子",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 38,
+      "name": "雪山弟子",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 39,
+      "name": "唐门弟子",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 40,
+      "name": "逍遥弟子",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 122,
+      "name": "蓉儿",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 123,
+      "name": "扫地僧",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 124,
+      "name": "空竹",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 125,
+      "name": "龙姑娘",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 126,
+      "name": "令狐少侠",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 127,
+      "name": "萧帮主",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 128,
+      "name": "小师妹",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 129,
+      "name": "张三丰",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 130,
+      "name": "无极",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 41,
+      "name": "摸金劲敌",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 42,
+      "name": "护宝猛士",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 43,
+      "name": "防墓刚汉",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 44,
+      "name": "夺宝悍民",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 45,
+      "name": "守陵勇者",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 131,
+      "name": "秦宇",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 46,
+      "name": "阻盗强民",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 47,
+      "name": "护陵硬汉",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 48,
+      "name": "守墓勇夫",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 49,
+      "name": "拦盗猛者",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 50,
+      "name": "御贼刚民",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 132,
+      "name": "凌雪",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 133,
+      "name": "吴刚",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 134,
+      "name": "苏瑶瑶",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 135,
+      "name": "叶老",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 136,
+      "name": "林悦",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 137,
+      "name": "赵猛",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 138,
+      "name": "楚萱",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 139,
+      "name": "陈老九",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 140,
+      "name": "柳青青",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 51,
+      "name": "无畏骑士",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 52,
+      "name": "狂暴骑士",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 53,
+      "name": "忠诚卫兵",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 54,
+      "name": "铠甲刺客",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 55,
+      "name": "神秘教徒",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 141,
+      "name": "居伊",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 56,
+      "name": "暗影骑士",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 57,
+      "name": "钢铁骑士",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 58,
+      "name": "坚毅卫兵",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 59,
+      "name": "重装刺客",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 60,
+      "name": "狂热教徒",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 142,
+      "name": "艾莉丝",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 143,
+      "name": "阿丽克丝",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 144,
+      "name": "雷纳德",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 145,
+      "name": "戈弗雷",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 146,
+      "name": "克莱尔",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 147,
+      "name": "伊莎贝拉",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 148,
+      "name": "鲍德温四世",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 149,
+      "name": "萨拉丁",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 150,
+      "name": "狮心王理查",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 61,
+      "name": "噬魂鬼",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 62,
+      "name": "迷心鬼",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 63,
+      "name": "幻形鬼",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 64,
+      "name": "勾魂鬼",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 65,
+      "name": "摄魄鬼",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 151,
+      "name": "聂小倩",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 66,
+      "name": "恶念鬼",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 67,
+      "name": "魅人鬼",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 68,
+      "name": "阴灵鬼",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 69,
+      "name": "怨煞鬼",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 70,
+      "name": "邪祟鬼",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 152,
+      "name": "宁采臣",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 153,
+      "name": "燕赤霞",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 154,
+      "name": "辛十四娘",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 155,
+      "name": "冯生",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 156,
+      "name": "婴宁",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 157,
+      "name": "小翠",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 158,
+      "name": "王生",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 159,
+      "name": "画皮鬼",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 160,
+      "name": "孔雪笠",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 71,
+      "name": "萨摩武士",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 72,
+      "name": "长州武士",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 73,
+      "name": "足轻步兵",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 74,
+      "name": "铁炮步兵",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 75,
+      "name": "旗本步兵",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 161,
+      "name": "织田信长",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 76,
+      "name": "甲斐武士",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 77,
+      "name": "越后武士",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 78,
+      "name": "尾张武士",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 79,
+      "name": "弓取步兵",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 80,
+      "name": "薙刀步兵",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 162,
+      "name": "上杉谦信",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 163,
+      "name": "真田幸村",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 164,
+      "name": "服部半藏",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 165,
+      "name": "武田信玄",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 166,
+      "name": "丰臣秀吉",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 167,
+      "name": "明智光秀",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 168,
+      "name": "本多忠胜",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 169,
+      "name": "石田三成",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 170,
+      "name": "德川家康",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 81,
+      "name": "突击兵",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 82,
+      "name": "机枪兵",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 83,
+      "name": "宪卫兵",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 84,
+      "name": "狙击兵",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 85,
+      "name": "山地兵",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 171,
+      "name": "曼施坦因",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 86,
+      "name": "冲锋兵",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 87,
+      "name": "步枪兵",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 88,
+      "name": "侦察兵",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 89,
+      "name": "雪地兵",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 90,
+      "name": "特种兵",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 172,
+      "name": "隆美尔",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 173,
+      "name": "古德里安",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 174,
+      "name": "邓尼茨",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 175,
+      "name": "朱可夫",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 176,
+      "name": "科涅夫",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 177,
+      "name": "艾森豪威尔",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 178,
+      "name": "巴顿",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 179,
+      "name": "麦克阿瑟",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 180,
+      "name": "蒙哥马利",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 91,
+      "name": "毒修士",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 92,
+      "name": "邪刀客",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 93,
+      "name": "暗刃手",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 94,
+      "name": "邪灵者",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 95,
+      "name": "魔火徒",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 181,
+      "name": "洛尘羽",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 96,
+      "name": "毒蛊人",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 97,
+      "name": "血刀卫",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 98,
+      "name": "血影卫",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 99,
+      "name": "暗魔者",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 100,
+      "name": "邪火使",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 182,
+      "name": "沐雪瑶",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 183,
+      "name": "轩辕逸",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 184,
+      "name": "苏灵月",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 185,
+      "name": "萧逸云",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 186,
+      "name": "云霓裳",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 187,
+      "name": "墨羽轩",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 188,
+      "name": "凌紫嫣",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 189,
+      "name": "叶清婉",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 190,
+      "name": "风无痕",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 101,
+      "name": "暗星卫卒",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 102,
+      "name": "镭影战兵",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 103,
+      "name": "幽光锐士",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 104,
+      "name": "炽炎猛士",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 105,
+      "name": "寒霜锐兵",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 191,
+      "name": "亚历克斯雷顿",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 106,
+      "name": "风暴劲卒",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 107,
+      "name": "磁能卫士",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 108,
+      "name": "电浆锐士",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 109,
+      "name": "量子战兵",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 110,
+      "name": "星陨猛士",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 192,
+      "name": "凯斯哈特曼",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 193,
+      "name": "艾丽娅斯通",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 194,
+      "name": "琳恩帕克",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 195,
+      "name": "卓格克里克斯",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 196,
+      "name": "托克斯维恩",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 197,
+      "name": "米娅拉克斯",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 198,
+      "name": "妮拉索尔",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 199,
+      "name": "星语者",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 200,
+      "name": "影刃",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 111,
+      "name": "星陨门徒",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 112,
+      "name": "紫阳弟子",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 113,
+      "name": "灵云长老",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 114,
+      "name": "寒霜门徒",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 115,
+      "name": "清风弟子",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 201,
+      "name": "萧尘",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 116,
+      "name": "紫雷门徒",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 117,
+      "name": "焚天弟子",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 118,
+      "name": "皓月长老",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 119,
+      "name": "苍炎门徒",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 120,
+      "name": "燃月弟子",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 202,
+      "name": "言慕然",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 203,
+      "name": "雷震天",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 204,
+      "name": "岩峰",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 205,
+      "name": "林羽",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 206,
+      "name": "展灵儿",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 207,
+      "name": "苏雪",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 208,
+      "name": "语昕",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 209,
+      "name": "灵心月",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 210,
+      "name": "雷紫",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 291,
+      "name": "兽族战士",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 292,
+      "name": "人类法师",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 293,
+      "name": "牛头人护卫",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 294,
+      "name": "巨魔弓箭手",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 295,
+      "name": "人类牧师",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 321,
+      "name": "珍娜潮歌",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 296,
+      "name": "矮人战士",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 297,
+      "name": "德莱法师",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 298,
+      "name": "人类骑士",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 299,
+      "name": "精灵弓箭手",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 300,
+      "name": "萨满祭祀",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 322,
+      "name": "西尔维夜影",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 323,
+      "name": "乌瑟圣辉",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 324,
+      "name": "泰莉丝月瞳",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 325,
+      "name": "维里安预视",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 326,
+      "name": "萨恩裂地",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 327,
+      "name": "凯兰炽翼",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 328,
+      "name": "莫林铁须",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 329,
+      "name": "玛洛恩林语",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 330,
+      "name": "奥菲莉天翼",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 301,
+      "name": "机械异种",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 302,
+      "name": "鳄鱼人",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 303,
+      "name": "黑暗毒液",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 304,
+      "name": "血色蜘蛛",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 305,
+      "name": "章鱼怪",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 331,
+      "name": "猩红梦魇",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 306,
+      "name": "暗黑机甲",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 307,
+      "name": "变种狼人",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 308,
+      "name": "鲨鱼异形",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 309,
+      "name": "忍者猫侠",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 310,
+      "name": "通灵人",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 332,
+      "name": "暗夜裁决",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 333,
+      "name": "雷霆王托尔",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 334,
+      "name": "白凤凰",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 335,
+      "name": "狂怒巨人",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 336,
+      "name": "神射天眼",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 337,
+      "name": "神裔之女",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 338,
+      "name": "小丑女王",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 339,
+      "name": "磁控领主",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 340,
+      "name": "不朽战狼",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 311,
+      "name": "金狮鬃圣",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 312,
+      "name": "复眼蜈蚣",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 313,
+      "name": "皈依黑熊",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 314,
+      "name": "大鹏金雕",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 315,
+      "name": "白骨鬼女",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 341,
+      "name": "唐僧",
+      "skillGroupId": 2,
+      "skills": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 316,
+      "name": "土匪虎妖",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 317,
+      "name": "蜘蛛精后",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    },
+    {
+      "id": 318,
+      "name": "邪魄巨象",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 319,
+      "name": "恶毒蝎女",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 320,
+      "name": "月宫白兔",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 342,
+      "name": "熬烈",
+      "skillGroupId": 10,
+      "skills": [
+        11,
+        95
+      ]
+    },
+    {
+      "id": 343,
+      "name": "猪八戒",
+      "skillGroupId": 1,
+      "skills": [
+        7,
+        84
+      ]
+    },
+    {
+      "id": 344,
+      "name": "沙和尚",
+      "skillGroupId": 3,
+      "skills": [
+        8,
+        86
+      ]
+    },
+    {
+      "id": 345,
+      "name": "铁扇公主",
+      "skillGroupId": 9,
+      "skills": [
+        14,
+        90
+      ]
+    },
+    {
+      "id": 346,
+      "name": "牛魔王",
+      "skillGroupId": 5,
+      "skills": [
+        16,
+        99
+      ]
+    },
+    {
+      "id": 347,
+      "name": "嫦娥",
+      "skillGroupId": 6,
+      "skills": [
+        10,
+        89
+      ]
+    },
+    {
+      "id": 348,
+      "name": "红孩儿",
+      "skillGroupId": 4,
+      "skills": [
+        13,
+        87
+      ]
+    },
+    {
+      "id": 349,
+      "name": "紫霞",
+      "skillGroupId": 8,
+      "skills": [
+        9,
+        85
+      ]
+    },
+    {
+      "id": 350,
+      "name": "太上老君",
+      "skillGroupId": 7,
+      "skills": [
+        12,
+        97
+      ]
+    }
+  ]
+}

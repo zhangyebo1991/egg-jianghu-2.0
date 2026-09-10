@@ -1135,7 +1135,12 @@ const runtimeOperationsIn = (root) => {
     if (!Array.isArray(node)) return
     if (Number.isInteger(node[0]) && Number.isInteger(node[1]) && Number.isInteger(node[3])) {
       const reference = objectReferenceEntries[node[1]]
-      if (reference) {
+      // 表达式也包含数值元组，不能仅凭前几项整数把它误识别成事件操作。
+      const isCondition = reference?.includes('.Cnds.') && node.length >= 9
+        && typeof node[4] === 'boolean' && typeof node[5] === 'boolean' && typeof node[6] === 'boolean'
+      const isAction = reference?.includes('.Acts.') && node.length >= 6 && node[5] === null
+        && (node[4] === 0 || (node[4] === 2 && reference === 'C3.Plugins.System.Acts.Wait'))
+      if (isCondition || isAction) {
         const parameterList = Array.isArray(node[9]) ? node[9] : Array.isArray(node[6]) ? node[6] : []
         operations.push({
           path,
@@ -1143,7 +1148,8 @@ const runtimeOperationsIn = (root) => {
           objectName: node[0] === -1 ? 'System' : (objectClassById.get(node[0])?.[0] ?? `object_${node[0]}`),
           referenceIndex: node[1],
           reference,
-          sid: String(node[3]),
+          sid: String(isCondition ? node[7] : node[3]),
+          inverted: isCondition && node[5] === true,
           parameters: parameterList.map(parameterExpression),
         })
       }
@@ -1190,6 +1196,258 @@ const runtimeFunctionEvidence = (name) => {
     fieldUsages: fieldUsages.filter((usage) => usage.functionName === name),
   }
 }
+// 技能审计仅导出所需运行时证据，不重写城镇等业务生成文件。
+if (process.argv.includes('--skills-runtime')) {
+  const functionBlocks = new Map()
+  const visit = node => {
+    if (!Array.isArray(node)) return
+    if (node[0] === 4 && Array.isArray(node[1]) && typeof node[1][0] === 'string') {
+      functionBlocks.set(node[1][0], node)
+    }
+    node.forEach(visit)
+  }
+  visit(runtimeData.project)
+  const names = [
+    "技能主动系数",
+    "技能范围分摊系数",
+    "技能种类系数",
+    "技能属性系数",
+    "技能系数计算",
+    "buff几率计算",
+    "刷新召唤物战斗属性",
+    "刷新战斗核心数据",
+    "回合buff冷却function",
+    "冷却及状态时间计算function",
+    "核心阵亡",
+    "阵位交换function",
+    "人物下阵function",
+    "人物上阵点击",
+    "销毁阵位角色function",
+    "自动战斗技能选择",
+    "自动技能条件判断",
+    "召唤系数",
+    "技能释放核心function",
+    "特殊技能机制function",
+    "buff命中计算function",
+    "战斗行动积攒",
+    "伤害计算function",
+    "回复计算function",
+    "护盾计算function",
+    "技能等级",
+    "角色普攻编等",
+    "刷新角色战斗属性",
+    "角色行动function",
+    "结束战斗行动",
+    "结束战斗操作",
+    "关闭战斗操作菜单",
+    "战斗技能及buff冷却、生命恢复、燃烧、中毒等",
+    "召唤数量判定",
+    "替换召唤阵位",
+    "技能目标选择开始function",
+    "获得buff",
+    "失去指定buff",
+    "召唤时间",
+    "召唤数量",
+    "buff伤害计算function",
+    "生命恢复function",
+    "流血效果function",
+    "燃烧效果function",
+    "中毒效果function",
+    "恢复效果function",
+    "中毒效果",
+    "流血效果",
+    "燃烧效果",
+    "恢复效果",
+    "生命恢复",
+    "子弹碰撞",
+    "子弹动画",
+    "生成阵位",
+    "目标位置坐标X",
+    "目标位置坐标Y",
+    "技能释放动作",
+    "生成我方战斗角色",
+    "生成我方战斗阵容",
+    "生成召唤角色",
+    "创建敌方战斗核心",
+    "生成敌方战斗核心",
+    "治疗目标阵位号",
+    "能量目标阵位号",
+    "治疗目标存在判断",
+    "复活目标阵位号",
+    "技能范围阵位号",
+    "技能范围刷新function",
+    "刷新技能范围数据",
+    "目标数据阵位号",
+    "直接子弹生成",
+    "间接子弹生成",
+    "工事建筑加成",
+    "暴击计算",
+    "闪避计算",
+    "技能总属性function",
+    "通用单条属性function",
+    "通用属性等级转换",
+    "通用属性权重系数",
+    "特定属性统计function",
+    "战斗开始function",
+    "战斗数据生成",
+    "失去能量值",
+    "获得能量值",
+    "战斗获得能量",
+    "子弹消除",
+    "器魂生效",
+    "物品装备function"
+]
+  const evidence = names.map(name => {
+    const node = functionBlocks.get(name)
+      ?? functionBlocks.get(name.replace(/function$/, ''))
+      ?? namedEventNodes.get(name)?.[0]
+    assert(node, `原版技能证据缺少节点 ${name}`)
+    return {
+      name,
+      parameters: node[0] === 4 ? node[1][2].map(parameter => ({ name: parameter[1], type: parameter[2], default: parameter[3] })) : [],
+      operations: runtimeOperationsIn(node).map(({ path, sid, objectId, objectName, reference, inverted, parameters }) => ({
+        path, sid, objectId, objectName, reference, inverted, parameters: parameters.map(parameter => parameter.expression),
+      })),
+      calls: functionCallsIn(node),
+    }
+  })
+  assert(evidence.find(node => node.name === '角色行动function').operations.some(operation =>
+    operation.reference === 'C3.Plugins.System.Acts.Wait' && operation.parameters[0] === '1.2'),
+  '角色行动Wait 1.2必须进入证据，不能把异步动作标记2误当无效操作')
+  mkdirSync(OUT_DIR, { recursive: true })
+  writeFileSync(join(OUT_DIR, 'all-skills-runtime-audit.json'), JSON.stringify(evidence, null, 2) + '\n')
+  const statusArrayInstances = []
+  const findStatusArray = (node, path = [5]) => {
+    if (!Array.isArray(node)) return
+    if (node[0] === null && objectClassById.get(node[1])?.[0] === 'zdls' && Array.isArray(node[5])) {
+      statusArrayInstances.push({ path, instanceId: node[2], dimensions: node[5] })
+    }
+    node.forEach((child, index) => findStatusArray(child, [...path, index]))
+  }
+  findStatusArray(runtimeData.project[5])
+  assert(statusArrayInstances.length === 1, '原版zdls初始实例数量异常')
+  const projectileGeometryInstances = []
+  const findProjectileGeometry = (node, path = [5]) => {
+    if (!Array.isArray(node)) return
+    const name = objectClassById.get(node[1])?.[0]
+    if (Array.isArray(node[0]) && ['zidan', '战斗核心', '战争我方阵位点', '战争敌方阵位点'].includes(name)) {
+      projectileGeometryInstances.push({ name, path, size: node[0].slice(3, 5), origin: node[0].slice(8, 10), behaviors: node[4] })
+    }
+    node.forEach((child, index) => findProjectileGeometry(child, [...path, index]))
+  }
+  findProjectileGeometry(runtimeData.project[5])
+  assert(projectileGeometryInstances.length === 4, '原版弹体和核心初始几何数量异常')
+  const objectFamilies = runtimeData.project[4].map(([id, ...memberIds]) => ({
+    id, name: objectClassById.get(id)?.[0], memberIds,
+  }))
+  assert(objectFamilies.length === runtimeData.project[3].filter(objectClass => objectClass[2] === true).length,
+    '原版对象族表与对象类型标记不一致')
+  const combatGeometryFamilies = objectFamilies.filter(family => family.memberIds.some(id => [245, 255].includes(id)))
+  assert(combatGeometryFamilies.length === 0, '核心或弹体加入对象族，需重新审计间接几何动作')
+  const skillTableWrites = runtimeOperationsIn(runtimeData.project[6])
+    .filter(operation => operation.objectName === 'jn' && operation.reference.includes('.Acts.'))
+    .map(({ path, sid, reference, parameters }) => ({ path, sid, reference, parameters: parameters.map(p => p.expression) }))
+  const skillLoad = skillTableWrites.find(operation => operation.reference.endsWith('.JSONLoad'))
+  assert(skillLoad, '原版技能表载入节点缺失')
+  const skillLoadNode = skillLoad.path.slice(0, -2).reduce((node, index) => node[index], runtimeData.project[6])
+  const skillLoadOperations = runtimeOperationsIn(skillLoadNode)
+    .map(({ path, sid, reference, inverted, parameters }) => ({ path, sid, reference, inverted, parameters: parameters.map(p => p.expression) }))
+  const callsWithConditions = (name) => functionCallsIn(runtimeData.project[6])
+    .filter(call => call.name === name)
+    .map(call => ({
+      ...call,
+      ancestorConditions: call.path.flatMap((_, index) => {
+        const node = call.path.slice(0, index).reduce((node, key) => node[key], runtimeData.project[6])
+        if (!Array.isArray(node) || ![0, 3, 4].includes(node[0]) || !Array.isArray(node[6])) return []
+        return runtimeOperationsIn(node[6]).map(operation => ({
+          ...operation, path: [...call.path.slice(0, index), 6, ...operation.path],
+        }))
+      }),
+    }))
+  const deathCheckCalls = callsWithConditions('核心阵亡')
+  assert(deathCheckCalls.length === 1, '原版核心阵亡调用数量变化，需重新核对死亡时点')
+  assert(deathCheckCalls[0].ancestorConditions.some(operation => operation.inverted
+    && operation.reference.endsWith('.CompareBoolVar')
+    && operation.parameters.some(parameter => parameter.expression === '角色行动')),
+  '原版核心阵亡调用缺少非角色行动条件')
+  const topButtons = namedEventNodes.get('刷新顶部按钮function')?.[0]?.[8]?.[0]?.[8]?.[4]
+  assert(topButtons?.[8]?.[0]?.[2] === true, '原版战斗顶部按钮用途条件不再是OR，需重新核验编组入口')
+  const battleButtons = runtimeOperationsIn(topButtons[8][0])
+  const otherButtons = runtimeOperationsIn(topButtons[8][1])
+  const setsFormationButton = operation => operation.objectName === '主要按钮'
+    && operation.reference.endsWith('.SetInstanceVar')
+    && operation.parameters.some(parameter => parameter.expression === '"编组"')
+  assert(!battleButtons.some(setsFormationButton) && otherButtons.some(setsFormationButton),
+    '原版编组按钮生成分支变化，需重新核验战斗期间编辑可达性')
+  assert(otherButtons.some(operation => operation.path.join('.') === '6.0' && operation.reference.endsWith('.Else')),
+    '原版编组入口不再处于战斗用途的Else分支')
+  const battleEvents = runtimeData.project[6][5][1]
+  const actionGroupIndex = battleEvents.findIndex(node => node[0] === 3 && node[1]?.[1] === '战斗行动积攒')
+  const pulseGroupIndex = battleEvents.findIndex(node => node[0] === 3 && node[1]?.[1] === '战斗技能及buff冷却、生命恢复、燃烧、中毒等')
+  assert(actionGroupIndex >= 0 && pulseGroupIndex === actionGroupIndex + 1, '原版行动/持续效果事件组顺序已变化')
+  const sheetSourceStart = runtimeSource.indexOf('C3.EventSheet=class EventSheet')
+  const sheetRunStart = runtimeSource.indexOf('Run(){if(this._hasRun)', sheetSourceStart)
+  const sheetRunSource = runtimeSource.slice(sheetRunStart, runtimeSource.indexOf('*DebugRun()', sheetRunStart))
+  assert(sheetRunSource.includes('for(const e of this._events){e.Run(frame);'), '原版事件表不再按数组顺序执行')
+  writeFileSync(join(OUT_DIR, 'all-skills-runtime-sources.json'), JSON.stringify({
+    battleEventGroupOrder: { sheet: runtimeData.project[6][5][0], actionGroupIndex, pulseGroupIndex, sheetRunSource },
+    command: 'node scripts/generate-original-world-evidence.mjs --skills-runtime',
+    statusArrayInstances,
+    projectileGeometryInstances,
+    objectFamilies,
+    combatGeometryFamilies,
+    combatContainers: runtimeData.project[27].filter(memberIds => memberIds.some(id => [245, 255].includes(id)))
+      .map(memberIds => memberIds.map(id => ({ id, name: objectClassById.get(id)?.[0] }))),
+    familyLoadingSource: runtimeSource.slice(runtimeSource.indexOf('for(const familyData of projectData[4])'),
+      runtimeSource.indexOf('for(const containerData of projectData[27])')),
+    familyMembershipSource: runtimeSource.slice(runtimeSource.indexOf('_LoadFamily(familyData){'),
+      runtimeSource.indexOf('_SetContainer(container)')),
+    skillTableWrites,
+    everyConditionSource: runtimeSource.slice(runtimeSource.indexOf('Every(seconds){'), runtimeSource.indexOf('IsGroupActive(groupName){')),
+    battlePauseWrites: runtimeOperationsIn(runtimeData.project[6]).filter(operation =>
+      operation.reference.includes('.Acts.') && operation.parameters.some(parameter => parameter.expression === '战斗暂停')),
+    skillLoadOperations,
+    statusRefreshCalls: functionCallsIn(runtimeData.project[6])
+      .filter(call => call.name === '刷新战斗核心数据'),
+    buffRemovalCalls: functionCallsIn(runtimeData.project[6])
+      .filter(call => call.name === '失去指定buff'),
+    deathCheckCalls,
+    formationEditorCalls: callsWithConditions('打开阵型编组'),
+    formationButtonGeneration: {
+      battleConditionsAreOr: topButtons[8][0][2],
+      battleConditions: runtimeOperationsIn(topButtons[8][0][6]),
+      battleButtons: battleButtons.filter(operation => operation.objectName === '主要按钮'),
+      otherConditions: runtimeOperationsIn(topButtons[8][1][6]),
+      formationButton: otherButtons.filter(setsFormationButton),
+    },
+    coreAndProjectileGeometryActions: runtimeOperationsIn(runtimeData.project[6])
+      .filter(operation => [245, 255].includes(operation.objectId)
+        && /\.Acts\.(SetX|SetY|SetPos|SetSize|SetWidth|SetHeight|SetScale|SetAngle|Rotate|Move|SetAnim|SetCollisions|SetMirrored|SetFlipped|SetSpeed|SetAcceleration|SetGravity|SetEnabled|SetStepping)/.test(operation.reference))
+      .map(({ path, sid, objectId, objectName, reference, parameters }) => ({
+        path, sid, objectId, objectName, reference, parameters: parameters.map(parameter => parameter.expression),
+      })),
+    functionReturnActionSource: runtimeSource.slice(
+      runtimeSource.indexOf('SetFunctionReturnValue(v)', runtimeSource.indexOf('StopLoop()')),
+      runtimeSource.indexOf('MapFunction(name,str,functionBlock)', runtimeSource.indexOf('StopLoop()')),
+    ).trim(),
+    forEachSource: runtimeSource.slice(
+      runtimeSource.indexOf('ForEach(objectClass)'),
+      runtimeSource.indexOf('*_DebugForEach(objectClass)'),
+    ).trim(),
+    // 同值目标实际由C3实例选择器决定，保留引擎实现以避免仅凭事件名猜测。
+    pickInstVarHiLowSource: runtimeSource.slice(
+      runtimeSource.indexOf('PickInstVarHiLow(which,iv)'),
+      runtimeSource.indexOf('function PickByUID(', runtimeSource.indexOf('PickInstVarHiLow(which,iv)')),
+    ).trim(),
+    sources: ['data.json', 'scripts/c3runtime.js'].map(name => ({
+      name, sha256: createHash('sha256').update(readSource(name)).digest('hex'),
+    })),
+    functions: names,
+  }, null, 2) + '\n')
+  console.log(`已生成 ${evidence.length} 个技能运行时证据节点`)
+  process.exit(0)
+}
+
 const factionRuntimeFunctions = factionRuntimeFunctionNames.map(runtimeFunctionEvidence)
 const cityRuntimeFunctionNames = [
   '初始化',

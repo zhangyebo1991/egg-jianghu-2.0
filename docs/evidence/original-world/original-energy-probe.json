@@ -1,0 +1,132 @@
+{
+  "environment": "Edge headless; 原版Worker; nwjs转html5宿主适配; 原版弹体生成/移动/碰撞/清除代码未替换",
+  "scope": "直接调用原版敌方核心通用耗能/技能回能/自然回能函数；小数及上下限边界，不包含器魂免耗分支和选技入口",
+  "cases": [
+    {
+      "initial": 0,
+      "mode": "spend",
+      "amount": 4,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "initial": 0,
+      "mode": "gain",
+      "amount": 2,
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "initial": 0,
+      "mode": "natural",
+      "amount": 2,
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "initial": 2.49,
+      "mode": "spend",
+      "amount": 4,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "initial": 2.49,
+      "mode": "gain",
+      "amount": 2,
+      "actual": 4,
+      "expected": 4
+    },
+    {
+      "initial": 2.49,
+      "mode": "natural",
+      "amount": 2,
+      "actual": 4,
+      "expected": 4
+    },
+    {
+      "initial": 2.5,
+      "mode": "spend",
+      "amount": 4,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "initial": 2.5,
+      "mode": "gain",
+      "amount": 2,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "initial": 2.5,
+      "mode": "natural",
+      "amount": 2,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "initial": 4.49,
+      "mode": "spend",
+      "amount": 4,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "initial": 4.49,
+      "mode": "gain",
+      "amount": 2,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "initial": 4.49,
+      "mode": "natural",
+      "amount": 2,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "initial": 4.5,
+      "mode": "spend",
+      "amount": 4,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "initial": 4.5,
+      "mode": "gain",
+      "amount": 2,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "initial": 4.5,
+      "mode": "natural",
+      "amount": 2,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "initial": 7,
+      "mode": "spend",
+      "amount": 4,
+      "actual": 3,
+      "expected": 3
+    },
+    {
+      "initial": 7,
+      "mode": "gain",
+      "amount": 2,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "initial": 7,
+      "mode": "natural",
+      "amount": 2,
+      "actual": 5,
+      "expected": 5
+    }
+  ]
+}

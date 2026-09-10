@@ -1,0 +1,5029 @@
+{
+  "battleEventGroupOrder": {
+    "sheet": "战斗系统",
+    "actionGroupIndex": 40,
+    "pulseGroupIndex": 41,
+    "sheetRunSource": "Run(){if(this._hasRun)return;const runtime=this._runtime;const profile=runtime.IsCPUProfiling();const startTime=profile?performance.now():0;this._hasRun=true;const eventSheetManager=this.GetEventSheetManager();const frame=eventSheetManager.GetCurrentEventStackFrame();for(const e of this._events){e.Run(frame);\neventSheetManager.ClearSol(e.GetSolModifiers());eventSheetManager.ClearAsyncActionPromises();runtime.FlushPendingInstances()}frame.Reset(null);if(profile)this._perfRecord.totalTimeCounter+=performance.now()-startTime}"
+  },
+  "command": "node scripts/generate-original-world-evidence.mjs --skills-runtime",
+  "statusArrayInstances": [
+    {
+      "path": [
+        5,
+        0,
+        10,
+        27
+      ],
+      "instanceId": 325,
+      "dimensions": [
+        203,
+        31,
+        11
+      ]
+    }
+  ],
+  "projectileGeometryInstances": [
+    {
+      "name": "战争我方阵位点",
+      "path": [
+        5,
+        5,
+        9,
+        0,
+        14,
+        11
+      ],
+      "size": [
+        40,
+        80
+      ],
+      "origin": [
+        0.5,
+        0.5
+      ],
+      "behaviors": []
+    },
+    {
+      "name": "战争敌方阵位点",
+      "path": [
+        5,
+        5,
+        9,
+        0,
+        14,
+        12
+      ],
+      "size": [
+        40,
+        80
+      ],
+      "origin": [
+        0.5,
+        0.5
+      ],
+      "behaviors": []
+    },
+    {
+      "name": "战斗核心",
+      "path": [
+        5,
+        5,
+        9,
+        0,
+        14,
+        15
+      ],
+      "size": [
+        150,
+        150
+      ],
+      "origin": [
+        0.5,
+        0.5
+      ],
+      "behaviors": [
+        [
+          true
+        ]
+      ]
+    },
+    {
+      "name": "zidan",
+      "path": [
+        5,
+        5,
+        9,
+        0,
+        14,
+        24
+      ],
+      "size": [
+        100,
+        100
+      ],
+      "origin": [
+        0.5,
+        0.5
+      ],
+      "behaviors": [
+        [
+          2000,
+          0,
+          0,
+          false,
+          true,
+          true,
+          true
+        ],
+        [
+          1200,
+          300,
+          200,
+          360,
+          true,
+          false,
+          true
+        ],
+        [
+          200,
+          1000,
+          1000,
+          650,
+          300,
+          1000,
+          false,
+          0,
+          false,
+          false
+        ],
+        []
+      ]
+    }
+  ],
+  "objectFamilies": [
+    {
+      "id": 1402,
+      "name": "数字输入",
+      "memberIds": [
+        175,
+        174,
+        173,
+        172,
+        171,
+        170,
+        169,
+        168,
+        167,
+        166,
+        177,
+        181,
+        182,
+        183,
+        184
+      ]
+    },
+    {
+      "id": 1403,
+      "name": "全文本",
+      "memberIds": [
+        188,
+        160,
+        187,
+        140,
+        138,
+        135,
+        134,
+        158,
+        131,
+        130,
+        129,
+        176,
+        104,
+        122,
+        155,
+        153,
+        151,
+        149,
+        147,
+        145,
+        117,
+        195,
+        102,
+        179,
+        178,
+        119,
+        120,
+        198,
+        141,
+        159,
+        136,
+        137,
+        313,
+        327,
+        430,
+        428,
+        374,
+        397,
+        399,
+        398,
+        389,
+        391,
+        287,
+        288,
+        289,
+        291,
+        290,
+        270,
+        331,
+        380,
+        382,
+        376,
+        384,
+        377,
+        126,
+        423,
+        414,
+        409,
+        421,
+        420,
+        264,
+        361,
+        248,
+        250,
+        244,
+        243,
+        401,
+        408,
+        405,
+        357,
+        355,
+        344,
+        369,
+        337,
+        346,
+        308,
+        319,
+        303,
+        302,
+        300,
+        301,
+        306,
+        309,
+        310,
+        312,
+        311,
+        403,
+        277,
+        305,
+        304,
+        274,
+        272,
+        365,
+        340,
+        341,
+        280,
+        283,
+        323,
+        322,
+        353,
+        292,
+        109,
+        453,
+        484,
+        487,
+        488,
+        499,
+        502,
+        504,
+        506,
+        510,
+        547,
+        568,
+        570,
+        573,
+        574,
+        576,
+        596,
+        603,
+        604,
+        607,
+        612,
+        623,
+        625,
+        627,
+        633,
+        635,
+        640,
+        641,
+        644,
+        660,
+        674,
+        676,
+        682,
+        684,
+        687,
+        689,
+        690,
+        697,
+        699,
+        712,
+        714,
+        724,
+        726,
+        736,
+        741,
+        743,
+        757,
+        782,
+        795,
+        807,
+        817,
+        819,
+        821,
+        828,
+        831,
+        848,
+        864,
+        865,
+        867,
+        872,
+        875,
+        876,
+        879,
+        880,
+        881,
+        883,
+        887,
+        889,
+        890,
+        891,
+        896,
+        897,
+        901,
+        903,
+        219,
+        909,
+        911,
+        915,
+        917,
+        930,
+        948,
+        952,
+        956,
+        957,
+        959,
+        221,
+        222,
+        965,
+        968,
+        971,
+        973,
+        984,
+        991,
+        994,
+        1000,
+        1002,
+        1015,
+        1027,
+        1035,
+        1041,
+        1043,
+        1044,
+        1047,
+        1049,
+        1054,
+        1055,
+        1056,
+        1057,
+        1063,
+        1075,
+        1084,
+        1088,
+        227,
+        1093,
+        1094,
+        1099,
+        1101,
+        1102,
+        1103,
+        1104,
+        1107,
+        229,
+        1118,
+        1120,
+        1122,
+        1135,
+        1137,
+        1148,
+        1149,
+        1150,
+        1151,
+        1152,
+        231,
+        233,
+        1188,
+        1189,
+        1190,
+        1191,
+        1192,
+        1193,
+        1200,
+        1203,
+        1204,
+        1205,
+        1219,
+        1226,
+        1232,
+        1249,
+        1250,
+        1253,
+        1254,
+        1255,
+        1266,
+        1267,
+        1268,
+        1274,
+        1275,
+        1276,
+        1277,
+        1280,
+        1282,
+        1284,
+        1301,
+        1302,
+        1303,
+        1304,
+        1305,
+        1306,
+        1307,
+        1309,
+        1317,
+        1318,
+        1319,
+        1322,
+        1325,
+        1333,
+        1334,
+        1336,
+        1337,
+        1339,
+        238,
+        1349,
+        1350,
+        1351,
+        1355,
+        1375,
+        1376,
+        1386,
+        1388,
+        1400,
+        239
+      ]
+    },
+    {
+      "id": 1404,
+      "name": "全数量文本",
+      "memberIds": [
+        179,
+        178,
+        176,
+        158
+      ]
+    }
+  ],
+  "combatGeometryFamilies": [],
+  "combatContainers": [
+    [
+      {
+        "id": 443,
+        "name": "战斗atb敌方"
+      },
+      {
+        "id": 1032,
+        "name": "战斗召唤进度条"
+      },
+      {
+        "id": 492,
+        "name": "战斗护盾进度条"
+      },
+      {
+        "id": 245,
+        "name": "战斗核心"
+      },
+      {
+        "id": 250,
+        "name": "战斗生命值"
+      },
+      {
+        "id": 249,
+        "name": "战斗生命进度条"
+      },
+      {
+        "id": 251,
+        "name": "战斗生命进度条背景"
+      },
+      {
+        "id": 254,
+        "name": "战斗行动进度条"
+      },
+      {
+        "id": 248,
+        "name": "战斗角色名"
+      },
+      {
+        "id": 252,
+        "name": "战斗角色名背景"
+      }
+    ],
+    [
+      {
+        "id": 255,
+        "name": "zidan"
+      },
+      {
+        "id": 256,
+        "name": "zidan特效"
+      }
+    ]
+  ],
+  "familyLoadingSource": "for(const familyData of projectData[4]){const familyType=this._allObjectClasses[familyData[0]];familyType._LoadFamily(familyData)}",
+  "familyMembershipSource": "_LoadFamily(familyData){for(let i=\n1,len=familyData.length;i<len;++i){const memberType=this._runtime.GetObjectClassByIndex(familyData[i]);this._familyMembers.push(memberType);this._familyMembersSet.add(memberType);memberType._families.push(this);memberType._familiesSet.add(this)}}",
+  "skillTableWrites": [
+    {
+      "path": [
+        0,
+        1,
+        155,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "sid": "824264077027676",
+      "reference": "C3.Plugins.Arr.Acts.SetXY",
+      "parameters": [
+        "jn.CurX()",
+        "16",
+        "技能主动系数(jn.CurX())"
+      ]
+    },
+    {
+      "path": [
+        0,
+        1,
+        155,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        7,
+        1
+      ],
+      "sid": "247156584550997",
+      "reference": "C3.Plugins.Arr.Acts.SetXY",
+      "parameters": [
+        "jn.CurX()",
+        "17",
+        "multiply(10, divide(jn.At(jn.CurX(), 16), 50))"
+      ]
+    },
+    {
+      "path": [
+        0,
+        1,
+        155,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        8,
+        0,
+        8,
+        1,
+        7,
+        0
+      ],
+      "sid": "242735930498334",
+      "reference": "C3.Plugins.Arr.Acts.SetXY",
+      "parameters": [
+        "jn.CurX()",
+        "20",
+        "multiply(jn.At(jn.CurX(), 19), 4)"
+      ]
+    },
+    {
+      "path": [
+        2,
+        1,
+        4,
+        8,
+        45,
+        7,
+        0
+      ],
+      "sid": "123545154063775",
+      "reference": "C3.Plugins.Arr.Acts.JSONLoad",
+      "parameters": [
+        "AJAX.LastData()"
+      ]
+    },
+    {
+      "path": [
+        2,
+        1,
+        4,
+        8,
+        45,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "sid": "312983430123818",
+      "reference": "C3.Plugins.Arr.Acts.SetXY",
+      "parameters": [
+        "jn.CurX()",
+        "jn.CurY()",
+        "float(Math.round(jn.At(jn.CurX(), jn.CurY())))"
+      ]
+    }
+  ],
+  "everyConditionSource": "Every(seconds){const cnd=this._runtime.GetCurrentCondition();const cndSavedData=cnd.GetSavedDataMap();const lastTime=cndSavedData.get(\"Every_lastTime\")||0;const curTime=this._runtime.GetGameTime();if(!cndSavedData.has(\"Every_seconds\"))cndSavedData.set(\"Every_seconds\",\nseconds);const thisSeconds=cndSavedData.get(\"Every_seconds\");if(curTime>=lastTime+thisSeconds){cndSavedData.set(\"Every_lastTime\",lastTime+thisSeconds);if(curTime>=cndSavedData.get(\"Every_lastTime\")+.04)cndSavedData.set(\"Every_lastTime\",curTime);cndSavedData.set(\"Every_seconds\",seconds);return true}else if(curTime<lastTime-.1)cndSavedData.set(\"Every_lastTime\",curTime);return false},",
+  "battlePauseWrites": [
+    {
+      "path": [
+        5,
+        1,
+        23,
+        8,
+        0,
+        8,
+        2,
+        7,
+        3
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "709878004862706",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        23,
+        8,
+        0,
+        8,
+        3,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "594025553802835",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        24,
+        8,
+        0,
+        8,
+        2,
+        7,
+        3
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "854554249017033",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        24,
+        8,
+        0,
+        8,
+        3,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "260902865759360",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        25,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "623840922905083",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        26,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "784187681232107",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        27,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "355217291318312",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        28,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "967138096522598",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        29,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "290902113459835",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        30,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "595610229951223",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        31,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "234719894749213",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        32,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "519914921386816",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        33,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "866776748012409",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        40,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "114614780869529",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,1]",
+          "runtimeExpression": "[3,1]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        40,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        7,
+        0
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "322706975675403",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,1]",
+          "runtimeExpression": "[3,1]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        40,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        7,
+        0
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "142837191496072",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,1]",
+          "runtimeExpression": "[3,1]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        40,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        8,
+        1,
+        8,
+        0,
+        7,
+        0
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "920071795946140",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,1]",
+          "runtimeExpression": "[3,1]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        1,
+        8,
+        0,
+        8,
+        1,
+        7,
+        1
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "947456755257582",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        50,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        7,
+        5
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "420778543487733",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        52,
+        8,
+        0,
+        7,
+        5
+      ],
+      "objectId": -1,
+      "objectName": "System",
+      "referenceIndex": 56,
+      "reference": "C3.Plugins.System.Acts.SetBoolVar",
+      "sid": "496251037396111",
+      "inverted": false,
+      "parameters": [
+        {
+          "expressionId": null,
+          "expression": "战斗暂停",
+          "runtimeExpression": "[11,419596700017711]"
+        },
+        {
+          "expressionId": null,
+          "expression": "[3,0]",
+          "runtimeExpression": "[3,0]"
+        }
+      ]
+    }
+  ],
+  "skillLoadOperations": [
+    {
+      "path": [
+        6,
+        0
+      ],
+      "sid": "845293734426879",
+      "reference": "C3.Plugins.AJAX.Cnds.OnComplete",
+      "inverted": false,
+      "parameters": [
+        "\"jn\""
+      ]
+    },
+    {
+      "path": [
+        7,
+        0
+      ],
+      "sid": "123545154063775",
+      "reference": "C3.Plugins.Arr.Acts.JSONLoad",
+      "inverted": false,
+      "parameters": [
+        "AJAX.LastData()"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        6,
+        0
+      ],
+      "sid": "547237496501136",
+      "reference": "C3.Plugins.Arr.Cnds.ArrForEach",
+      "inverted": false,
+      "parameters": [
+        "[3,1]"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        0
+      ],
+      "sid": "871226728488293",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "1"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        1
+      ],
+      "sid": "989747695718325",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "2"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        2
+      ],
+      "sid": "829463989559244",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "14"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        3
+      ],
+      "sid": "661588492372456",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "15"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        4
+      ],
+      "sid": "440578872237933",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "18"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        5
+      ],
+      "sid": "669766993363035",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "26"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        6
+      ],
+      "sid": "815967499782583",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "28"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        7
+      ],
+      "sid": "394798659276012",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "30"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        8
+      ],
+      "sid": "121940687676168",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "32"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        9
+      ],
+      "sid": "414175276563188",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "34"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        10
+      ],
+      "sid": "178819235602875",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "39"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        11
+      ],
+      "sid": "561060608492065",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "40"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        6,
+        12
+      ],
+      "sid": "790176581697740",
+      "reference": "C3.Plugins.System.Cnds.Compare",
+      "inverted": false,
+      "parameters": [
+        "jn.CurY()",
+        "[8,1]",
+        "50"
+      ]
+    },
+    {
+      "path": [
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "sid": "312983430123818",
+      "reference": "C3.Plugins.Arr.Acts.SetXY",
+      "inverted": false,
+      "parameters": [
+        "jn.CurX()",
+        "jn.CurY()",
+        "float(Math.round(jn.At(jn.CurX(), jn.CurY())))"
+      ]
+    },
+    {
+      "path": [
+        8,
+        1,
+        7,
+        1
+      ],
+      "sid": "345808683855779",
+      "reference": "C3.Plugins.System.Acts.AddVar",
+      "inverted": false,
+      "parameters": [
+        "已完成载入文件数量",
+        "1"
+      ]
+    },
+    {
+      "path": [
+        8,
+        1,
+        7,
+        2
+      ],
+      "sid": "554959871750713",
+      "reference": "C3.Plugins.Text.Acts.SetText",
+      "inverted": false,
+      "parameters": [
+        "(and(\"游戏载入中（\", (Math.round(C3.clamp((已完成载入文件数量 / 需要载入文件数量), 0, 1)) * 100)) + \"%)\")"
+      ]
+    }
+  ],
+  "statusRefreshCalls": [
+    {
+      "path": [
+        5,
+        1,
+        34,
+        8,
+        0,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "name": "刷新战斗核心数据",
+      "sid": "931391457043719",
+      "parameters": [
+        {
+          "expressionId": 4423,
+          "expression": "save.At(save.CurX(), 5, 1)",
+          "runtimeExpression": "n0.ExpObject(n1.ExpObject(), 5, 1)"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        7,
+        1
+      ],
+      "name": "刷新战斗核心数据",
+      "sid": "685266416813883",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        7,
+        7,
+        1
+      ],
+      "name": "刷新战斗核心数据",
+      "sid": "233545740877465",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        3,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        7,
+        1
+      ],
+      "name": "刷新战斗核心数据",
+      "sid": "123792746493427",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        62,
+        8,
+        4,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        7,
+        1
+      ],
+      "name": "刷新战斗核心数据",
+      "sid": "633885539612640",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "Y次数",
+          "runtimeExpression": "v0.GetValue()"
+        }
+      ]
+    }
+  ],
+  "buffRemovalCalls": [
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        4,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        8,
+        0,
+        7,
+        0
+      ],
+      "name": "失去指定buff",
+      "sid": "396491124179126",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 135,
+          "expression": "目标序号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 57,
+          "expression": "99",
+          "runtimeExpression": "99"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        5,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "name": "失去指定buff",
+      "sid": "517066470135800",
+      "parameters": [
+        {
+          "expressionId": 438,
+          "expression": "战斗核心.数据阵位号",
+          "runtimeExpression": "n0.ExpInstVar()"
+        },
+        {
+          "expressionId": 1969,
+          "expression": "jn.At(技能编号, 41)",
+          "runtimeExpression": "n0.ExpObject(v1.GetValue(), 41)"
+        },
+        {
+          "expressionId": 10165,
+          "expression": "jn.At(技能编号, 43)",
+          "runtimeExpression": "n0.ExpObject(v1.GetValue(), 43)"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        5,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "name": "失去指定buff",
+      "sid": "713783533392623",
+      "parameters": [
+        {
+          "expressionId": 438,
+          "expression": "战斗核心.数据阵位号",
+          "runtimeExpression": "n0.ExpInstVar()"
+        },
+        {
+          "expressionId": 1969,
+          "expression": "jn.At(技能编号, 41)",
+          "runtimeExpression": "n0.ExpObject(v1.GetValue(), 41)"
+        },
+        {
+          "expressionId": 10165,
+          "expression": "jn.At(技能编号, 43)",
+          "runtimeExpression": "n0.ExpObject(v1.GetValue(), 43)"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "name": "失去指定buff",
+      "sid": "809129864954429",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 8,
+          "expression": "41",
+          "runtimeExpression": "41"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        7,
+        1
+      ],
+      "name": "失去指定buff",
+      "sid": "500674550171946",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 44,
+          "expression": "50",
+          "runtimeExpression": "50"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        7,
+        2
+      ],
+      "name": "失去指定buff",
+      "sid": "550807973031284",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 121,
+          "expression": "49",
+          "runtimeExpression": "49"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        1,
+        7,
+        0
+      ],
+      "name": "失去指定buff",
+      "sid": "373273074480882",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 120,
+          "expression": "40",
+          "runtimeExpression": "40"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        1,
+        7,
+        1
+      ],
+      "name": "失去指定buff",
+      "sid": "960072718457254",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 44,
+          "expression": "50",
+          "runtimeExpression": "50"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        1,
+        7,
+        2
+      ],
+      "name": "失去指定buff",
+      "sid": "417544478717810",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 121,
+          "expression": "49",
+          "runtimeExpression": "49"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        2,
+        7,
+        0
+      ],
+      "name": "失去指定buff",
+      "sid": "597486550733710",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 44,
+          "expression": "50",
+          "runtimeExpression": "50"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        2,
+        7,
+        1
+      ],
+      "name": "失去指定buff",
+      "sid": "181664931734484",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 8,
+          "expression": "41",
+          "runtimeExpression": "41"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "name": "失去指定buff",
+      "sid": "919142576023209",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 120,
+          "expression": "40",
+          "runtimeExpression": "40"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        3,
+        7,
+        0
+      ],
+      "name": "失去指定buff",
+      "sid": "657041914557523",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 121,
+          "expression": "49",
+          "runtimeExpression": "49"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        3,
+        7,
+        1
+      ],
+      "name": "失去指定buff",
+      "sid": "791880203112375",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 8,
+          "expression": "41",
+          "runtimeExpression": "41"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        44,
+        8,
+        2,
+        8,
+        0,
+        8,
+        3,
+        7,
+        2
+      ],
+      "name": "失去指定buff",
+      "sid": "472354867286928",
+      "parameters": [
+        {
+          "expressionId": 135,
+          "expression": "目标数据阵位号",
+          "runtimeExpression": "v0.GetValue()"
+        },
+        {
+          "expressionId": 120,
+          "expression": "40",
+          "runtimeExpression": "40"
+        },
+        {
+          "expressionId": 3,
+          "expression": "1",
+          "runtimeExpression": "1"
+        }
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        46,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        8,
+        4,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "name": "失去指定buff",
+      "sid": "943499551998929",
+      "parameters": [
+        {
+          "expressionId": 438,
+          "expression": "战斗核心.数据阵位号",
+          "runtimeExpression": "n0.ExpInstVar()"
+        },
+        {
+          "expressionId": 16,
+          "expression": "21",
+          "runtimeExpression": "21"
+        },
+        {
+          "expressionId": 57,
+          "expression": "99",
+          "runtimeExpression": "99"
+        }
+      ]
+    }
+  ],
+  "deathCheckCalls": [
+    {
+      "path": [
+        5,
+        1,
+        49,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "name": "核心阵亡",
+      "sid": "469027270790370",
+      "parameters": [
+        {
+          "expressionId": 2,
+          "expression": "0",
+          "runtimeExpression": "0"
+        },
+        {
+          "expressionId": 2,
+          "expression": "0",
+          "runtimeExpression": "0"
+        },
+        {
+          "expressionId": 2,
+          "expression": "0",
+          "runtimeExpression": "0"
+        }
+      ],
+      "ancestorConditions": [
+        {
+          "path": [
+            5,
+            1,
+            49,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 10321,
+              "expression": "\"核心阵亡\"",
+              "runtimeExpression": "\"核心阵亡\""
+            }
+          ]
+        },
+        {
+          "path": [
+            5,
+            1,
+            49,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 35,
+          "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+          "sid": "198385600256022",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "游戏暂停",
+              "runtimeExpression": "[11,530543827007591]"
+            }
+          ]
+        },
+        {
+          "path": [
+            5,
+            1,
+            49,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 35,
+          "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+          "sid": "110220854155633",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "战斗开关",
+              "runtimeExpression": "[11,887625847774102]"
+            }
+          ]
+        },
+        {
+          "path": [
+            5,
+            1,
+            49,
+            8,
+            0,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 35,
+          "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+          "sid": "808884170488920",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "地点战斗开关",
+              "runtimeExpression": "[11,614569090057341]"
+            }
+          ]
+        },
+        {
+          "path": [
+            5,
+            1,
+            49,
+            8,
+            0,
+            8,
+            0,
+            6,
+            2
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 35,
+          "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+          "sid": "255174863730943",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "角色行动",
+              "runtimeExpression": "[11,185186941703423]"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "formationEditorCalls": [
+    {
+      "path": [
+        0,
+        1,
+        157,
+        8,
+        2,
+        8,
+        7,
+        8,
+        0,
+        8,
+        0,
+        8,
+        4,
+        7,
+        1
+      ],
+      "name": "打开阵型编组",
+      "sid": "698471888519558",
+      "parameters": [
+        {
+          "expressionId": 31,
+          "expression": "12",
+          "runtimeExpression": "12"
+        },
+        {
+          "expressionId": 2,
+          "expression": "0",
+          "runtimeExpression": "0"
+        }
+      ],
+      "ancestorConditions": [
+        {
+          "path": [
+            0,
+            1,
+            157,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 958,
+              "expression": "\"主系统\"",
+              "runtimeExpression": "\"主系统\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1076,
+              "expression": "\"人物系统\"",
+              "runtimeExpression": "\"人物系统\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1079,
+              "expression": "\"打开人物界面点击\"",
+              "runtimeExpression": "\"打开人物界面点击\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 66,
+          "reference": "C3.Plugins.Touch.Cnds.OnTouchObject",
+          "sid": "276654420060181",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,266]",
+              "runtimeExpression": "[4,266]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "130346597159660",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "对话选择框.Count()",
+              "runtimeExpression": "n0.ExpObject()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            6,
+            2
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 68,
+          "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+          "sid": "418912313500872",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,190]",
+              "runtimeExpression": "[4,190]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            6,
+            3
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 68,
+          "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+          "sid": "274992692542645",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,200]",
+              "runtimeExpression": "[4,200]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            6,
+            4
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 68,
+          "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+          "sid": "169120584072040",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,334]",
+              "runtimeExpression": "[4,334]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            6,
+            5
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "317207874347150",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "转场.Count()",
+              "runtimeExpression": "n0.ExpObject()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,3]",
+              "runtimeExpression": "[8,3]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            6,
+            6
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "713130210598544",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "转场云.Count()",
+              "runtimeExpression": "n0.ExpObject()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,3]",
+              "runtimeExpression": "[8,3]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 266,
+          "objectName": "主要按钮",
+          "referenceIndex": 70,
+          "reference": "C3.Plugins.Sprite.Cnds.IsBoolInstanceVarSet",
+          "sid": "282589990274176",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,0]",
+              "runtimeExpression": "[10,0]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            2,
+            8,
+            7,
+            8,
+            0,
+            8,
+            0,
+            8,
+            4,
+            6,
+            0
+          ],
+          "objectId": 266,
+          "objectName": "主要按钮",
+          "referenceIndex": 74,
+          "reference": "C3.Plugins.Sprite.Cnds.CompareInstanceVar",
+          "sid": "512710496643112",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,1]",
+              "runtimeExpression": "[10,1]"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 866,
+              "expression": "\"编组\"",
+              "runtimeExpression": "\"编组\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": [
+        0,
+        1,
+        157,
+        8,
+        7,
+        8,
+        11,
+        8,
+        1,
+        8,
+        4,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        7,
+        3
+      ],
+      "name": "打开阵型编组",
+      "sid": "839774463533217",
+      "parameters": [
+        {
+          "expressionId": 31,
+          "expression": "12",
+          "runtimeExpression": "12"
+        },
+        {
+          "expressionId": 2,
+          "expression": "0",
+          "runtimeExpression": "0"
+        }
+      ],
+      "ancestorConditions": [
+        {
+          "path": [
+            0,
+            1,
+            157,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 958,
+              "expression": "\"主系统\"",
+              "runtimeExpression": "\"主系统\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 963,
+              "expression": "\"穿越系统\"",
+              "runtimeExpression": "\"穿越系统\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            11,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4373,
+              "expression": "\"二级功能\"",
+              "runtimeExpression": "\"二级功能\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            11,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1198,
+              "expression": "\"阵型编组\"",
+              "runtimeExpression": "\"阵型编组\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            11,
+            8,
+            1,
+            8,
+            4,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4388,
+              "expression": "\"位面选择编组点击\"",
+              "runtimeExpression": "\"位面选择编组点击\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            11,
+            8,
+            1,
+            8,
+            4,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 66,
+          "reference": "C3.Plugins.Touch.Cnds.OnTouchObject",
+          "sid": "294670078890383",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,320]",
+              "runtimeExpression": "[4,320]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            11,
+            8,
+            1,
+            8,
+            4,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 320,
+          "objectName": "二级页面按钮",
+          "referenceIndex": 70,
+          "reference": "C3.Plugins.Sprite.Cnds.IsBoolInstanceVarSet",
+          "sid": "603111197903963",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,1]",
+              "runtimeExpression": "[10,1]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            11,
+            8,
+            1,
+            8,
+            4,
+            8,
+            0,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": 320,
+          "objectName": "二级页面按钮",
+          "referenceIndex": 74,
+          "reference": "C3.Plugins.Sprite.Cnds.CompareInstanceVar",
+          "sid": "611603447682089",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,0]",
+              "runtimeExpression": "[10,0]"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 866,
+              "expression": "\"编组\"",
+              "runtimeExpression": "\"编组\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": [
+        0,
+        1,
+        157,
+        8,
+        7,
+        8,
+        23,
+        8,
+        0,
+        8,
+        0,
+        7,
+        2
+      ],
+      "name": "打开阵型编组",
+      "sid": "140707416638918",
+      "parameters": [
+        {
+          "expressionId": 31,
+          "expression": "12",
+          "runtimeExpression": "12"
+        },
+        {
+          "expressionId": 2,
+          "expression": "0",
+          "runtimeExpression": "0"
+        }
+      ],
+      "ancestorConditions": [
+        {
+          "path": [
+            0,
+            1,
+            157,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 958,
+              "expression": "\"主系统\"",
+              "runtimeExpression": "\"主系统\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 963,
+              "expression": "\"穿越系统\"",
+              "runtimeExpression": "\"穿越系统\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            23,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4714,
+              "expression": "\"位面穿越编组点击\"",
+              "runtimeExpression": "\"位面穿越编组点击\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            23,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 66,
+          "reference": "C3.Plugins.Touch.Cnds.OnTouchObject",
+          "sid": "902182990267003",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,205]",
+              "runtimeExpression": "[4,205]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            23,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 68,
+          "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+          "sid": "519935603641828",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,190]",
+              "runtimeExpression": "[4,190]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            23,
+            8,
+            0,
+            6,
+            2
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 68,
+          "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+          "sid": "809682803566399",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,200]",
+              "runtimeExpression": "[4,200]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            23,
+            8,
+            0,
+            6,
+            3
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "532943938481907",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "对话选择框.Count()",
+              "runtimeExpression": "n0.ExpObject()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            23,
+            8,
+            0,
+            6,
+            4
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "466877740294861",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "转场.Count()",
+              "runtimeExpression": "n0.ExpObject()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            23,
+            8,
+            0,
+            6,
+            5
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "140543960131812",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "转场云.Count()",
+              "runtimeExpression": "n0.ExpObject()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            7,
+            8,
+            23,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 205,
+          "objectName": "穿越编组按钮",
+          "referenceIndex": 70,
+          "reference": "C3.Plugins.Sprite.Cnds.IsBoolInstanceVarSet",
+          "sid": "947722736691740",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,1]",
+              "runtimeExpression": "[10,1]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": [
+        0,
+        1,
+        157,
+        8,
+        8,
+        8,
+        6,
+        8,
+        26,
+        8,
+        30,
+        8,
+        5,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "name": "打开阵型编组",
+      "sid": "747145751314341",
+      "parameters": [
+        {
+          "expressionId": 31,
+          "expression": "12",
+          "runtimeExpression": "12"
+        },
+        {
+          "expressionId": 438,
+          "expression": "场景按钮.队列序号",
+          "runtimeExpression": "n0.ExpInstVar()"
+        }
+      ],
+      "ancestorConditions": [
+        {
+          "path": [
+            0,
+            1,
+            157,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 958,
+              "expression": "\"主系统\"",
+              "runtimeExpression": "\"主系统\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4723,
+              "expression": "\"场景系统\"",
+              "runtimeExpression": "\"场景系统\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4757,
+              "expression": "\"场景功能\"",
+              "runtimeExpression": "\"场景功能\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 6768,
+              "expression": "\"现世功能\"",
+              "runtimeExpression": "\"现世功能\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4387,
+              "expression": "\"分队派遣\"",
+              "runtimeExpression": "\"分队派遣\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 28,
+          "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+          "sid": "0",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 8618,
+              "expression": "\"派遣编组点击\"",
+              "runtimeExpression": "\"派遣编组点击\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 66,
+          "reference": "C3.Plugins.Touch.Cnds.OnTouchObject",
+          "sid": "325361818550908",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,611]",
+              "runtimeExpression": "[4,611]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 68,
+          "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+          "sid": "232652578515733",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,190]",
+              "runtimeExpression": "[4,190]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            8,
+            0,
+            6,
+            2
+          ],
+          "objectId": 1,
+          "objectName": "Touch",
+          "referenceIndex": 68,
+          "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+          "sid": "171242192384324",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[4,200]",
+              "runtimeExpression": "[4,200]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            8,
+            0,
+            6,
+            3
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "948070453533129",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "转场.Count()",
+              "runtimeExpression": "n0.ExpObject()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            8,
+            0,
+            6,
+            4
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "896404966416730",
+          "inverted": true,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "转场云.Count()",
+              "runtimeExpression": "n0.ExpObject()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 611,
+          "objectName": "场景按钮",
+          "referenceIndex": 74,
+          "reference": "C3.Plugins.Sprite.Cnds.CompareInstanceVar",
+          "sid": "584324328911539",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,0]",
+              "runtimeExpression": "[10,0]"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]",
+              "runtimeExpression": "[8,0]"
+            },
+            {
+              "expressionId": 8527,
+              "expression": "\"派遣编组\"",
+              "runtimeExpression": "\"派遣编组\""
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": 611,
+          "objectName": "场景按钮",
+          "referenceIndex": 70,
+          "reference": "C3.Plugins.Sprite.Cnds.IsBoolInstanceVarSet",
+          "sid": "135698907875336",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,1]",
+              "runtimeExpression": "[10,1]"
+            }
+          ]
+        },
+        {
+          "path": [
+            0,
+            1,
+            157,
+            8,
+            8,
+            8,
+            6,
+            8,
+            26,
+            8,
+            30,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 611,
+          "objectName": "场景按钮",
+          "referenceIndex": 74,
+          "reference": "C3.Plugins.Sprite.Cnds.CompareInstanceVar",
+          "sid": "216275015881547",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,8]",
+              "runtimeExpression": "[10,8]"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]",
+              "runtimeExpression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0",
+              "runtimeExpression": "0"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "formationButtonGeneration": {
+    "battleConditionsAreOr": true,
+    "battleConditions": [
+      {
+        "path": [
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "512026822058427",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 533,
+            "expression": "\"狩猎\"",
+            "runtimeExpression": "\"狩猎\""
+          }
+        ]
+      },
+      {
+        "path": [
+          1
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "875315977207172",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 839,
+            "expression": "\"战斗\"",
+            "runtimeExpression": "\"战斗\""
+          }
+        ]
+      },
+      {
+        "path": [
+          2
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "944355927349682",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 840,
+            "expression": "\"训练场\"",
+            "runtimeExpression": "\"训练场\""
+          }
+        ]
+      },
+      {
+        "path": [
+          3
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "628290657029378",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 539,
+            "expression": "\"秘境\"",
+            "runtimeExpression": "\"秘境\""
+          }
+        ]
+      },
+      {
+        "path": [
+          4
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "732949608169135",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 543,
+            "expression": "\"幻塔\"",
+            "runtimeExpression": "\"幻塔\""
+          }
+        ]
+      },
+      {
+        "path": [
+          5
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "177709247735675",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 541,
+            "expression": "\"副本\"",
+            "runtimeExpression": "\"副本\""
+          }
+        ]
+      },
+      {
+        "path": [
+          6
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "220888444488614",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 546,
+            "expression": "\"兽潮\"",
+            "runtimeExpression": "\"兽潮\""
+          }
+        ]
+      },
+      {
+        "path": [
+          7
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "147635689020975",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 545,
+            "expression": "\"兽王\"",
+            "runtimeExpression": "\"兽王\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "837799732358372",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 548,
+            "expression": "\"镇兽\"",
+            "runtimeExpression": "\"镇兽\""
+          }
+        ]
+      },
+      {
+        "path": [
+          9
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "951767043448058",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 534,
+            "expression": "\"异界\"",
+            "runtimeExpression": "\"异界\""
+          }
+        ]
+      },
+      {
+        "path": [
+          10
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "250818589328692",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "用途",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 841,
+            "expression": "\"天梯\"",
+            "runtimeExpression": "\"天梯\""
+          }
+        ]
+      }
+    ],
+    "battleButtons": [
+      {
+        "path": [
+          7,
+          4
+        ],
+        "objectId": 266,
+        "objectName": "主要按钮",
+        "referenceIndex": 42,
+        "reference": "C3.Plugins.Sprite.Acts.SetInstanceVar",
+        "sid": "551278093328997",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[10,1]",
+            "runtimeExpression": "[10,1]"
+          },
+          {
+            "expressionId": 845,
+            "expression": "\"角色\"",
+            "runtimeExpression": "\"角色\""
+          }
+        ]
+      },
+      {
+        "path": [
+          7,
+          5
+        ],
+        "objectId": 266,
+        "objectName": "主要按钮",
+        "referenceIndex": 40,
+        "reference": "C3.Plugins.Sprite.Acts.SetAnim",
+        "sid": "302760636305234",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 410,
+            "expression": "save.At(16, 1, 0)",
+            "runtimeExpression": "n0.ExpObject(16, 1, 0)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[3,1]",
+            "runtimeExpression": "[3,1]"
+          }
+        ]
+      }
+    ],
+    "otherConditions": [
+      {
+        "path": [
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 52,
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "sid": "508485507450157",
+        "inverted": false,
+        "parameters": []
+      }
+    ],
+    "formationButton": [
+      {
+        "path": [
+          8,
+          4,
+          7,
+          2
+        ],
+        "objectId": 266,
+        "objectName": "主要按钮",
+        "referenceIndex": 42,
+        "reference": "C3.Plugins.Sprite.Acts.SetInstanceVar",
+        "sid": "426014953728749",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[10,1]",
+            "runtimeExpression": "[10,1]"
+          },
+          {
+            "expressionId": 866,
+            "expression": "\"编组\"",
+            "runtimeExpression": "\"编组\""
+          }
+        ]
+      }
+    ]
+  },
+  "coreAndProjectileGeometryActions": [
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        7,
+        0
+      ],
+      "sid": "516359254751843",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() + 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        2,
+        7,
+        2
+      ],
+      "sid": "922483859908532",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() - 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        3,
+        7,
+        0
+      ],
+      "sid": "591694060031654",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() - 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        1,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        3,
+        7,
+        2
+      ],
+      "sid": "360963134699707",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() + 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "sid": "132809529552775",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() + 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        7,
+        2
+      ],
+      "sid": "961092784710641",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() - 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        7,
+        0
+      ],
+      "sid": "814337794327141",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() - 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        2,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        7,
+        2
+      ],
+      "sid": "297086551148087",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() + 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        6,
+        8,
+        0,
+        8,
+        0,
+        7,
+        1
+      ],
+      "sid": "780237374879325",
+      "objectId": 255,
+      "objectName": "zidan",
+      "reference": "C3.Behaviors.Bullet.Acts.SetEnabled",
+      "parameters": [
+        "[3,0]"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        3,
+        8,
+        6,
+        8,
+        1,
+        8,
+        0,
+        7,
+        1
+      ],
+      "sid": "579476100611254",
+      "objectId": 255,
+      "objectName": "zidan",
+      "reference": "C3.Behaviors.Bullet.Acts.SetEnabled",
+      "parameters": [
+        "[3,1]"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        5,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        7,
+        1
+      ],
+      "sid": "478458840875591",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() - 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        5,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        7,
+        3
+      ],
+      "sid": "401062155848106",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() + 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        5,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        7,
+        1
+      ],
+      "sid": "200010895919911",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() + 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        42,
+        8,
+        5,
+        8,
+        0,
+        8,
+        0,
+        8,
+        1,
+        7,
+        3
+      ],
+      "sid": "125549716644831",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetX",
+      "parameters": [
+        "(战斗核心.X() - 10)"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        47,
+        8,
+        0,
+        8,
+        0,
+        7,
+        0
+      ],
+      "sid": "725702470035845",
+      "objectId": 255,
+      "objectName": "zidan",
+      "reference": "C3.Behaviors.Bullet.Acts.SetEnabled",
+      "parameters": [
+        "[3,0]"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        47,
+        8,
+        0,
+        8,
+        1,
+        7,
+        0
+      ],
+      "sid": "291429637850486",
+      "objectId": 255,
+      "objectName": "zidan",
+      "reference": "C3.Behaviors.Bullet.Acts.SetEnabled",
+      "parameters": [
+        "[3,1]"
+      ]
+    },
+    {
+      "path": [
+        5,
+        1,
+        62,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        8,
+        0,
+        7,
+        9
+      ],
+      "sid": "213306174600427",
+      "objectId": 245,
+      "objectName": "战斗核心",
+      "reference": "C3.Plugins.Sprite.Acts.SetMirrored",
+      "parameters": [
+        "[3,0]"
+      ]
+    }
+  ],
+  "functionReturnActionSource": "SetFunctionReturnValue(v){const frame=this._eventStack.GetCurrentExpFuncStackFrame();if(!frame)return;switch(frame.GetFunctionReturnType()){case 1:if(typeof v===\"number\")frame.SetFunctionReturnValue(v);\nbreak;case 2:if(typeof v===\"string\")frame.SetFunctionReturnValue(v);break;case 3:frame.SetFunctionReturnValue(v);break}},",
+  "forEachSource": "ForEach(objectClass){const eventSheetManager=this._runtime.GetEventSheetManager();const eventStack=eventSheetManager.GetEventStack();const oldFrame=eventStack.GetCurrentStackFrame();const currentEvent=oldFrame.GetCurrentEvent();const solModifiers=currentEvent.GetSolModifiers();const isSolModifierAfterCnds=\noldFrame.IsSolModifierAfterCnds();const newFrame=eventStack.Push(currentEvent);const loopStack=eventSheetManager.GetLoopStack();const loop=loopStack.Push();const isInContainer=objectClass.IsInContainer();const sol=objectClass.GetCurrentSol();const instances=forEachStack.Push();C3.shallowAssignArray(instances,sol.GetInstances());loop.SetEnd(instances.length);if(isSolModifierAfterCnds)for(let i=0,len=instances.length;i<len&&!loop.IsStopped();++i){eventSheetManager.PushCopySol(solModifiers);const inst=\ninstances[i];objectClass.GetCurrentSol().SetSinglePicked(inst);if(isInContainer)inst.SetSiblingsSinglePicked();loop.SetIndex(i);currentEvent.Retrigger(oldFrame,newFrame);eventSheetManager.PopSol(solModifiers)}else{sol._SetSelectAll(false);const solInstances=sol._GetOwnInstances();C3.clearArray(solInstances);solInstances.push(null);for(let i=0,len=instances.length;i<len&&!loop.IsStopped();++i){const inst=instances[i];solInstances[0]=inst;if(isInContainer)inst.SetSiblingsSinglePicked();loop.SetIndex(i);\ncurrentEvent.Retrigger(oldFrame,newFrame)}}eventStack.Pop();loopStack.Pop();C3.clearArray(instances);forEachStack.Pop();return false}",
+  "pickInstVarHiLowSource": "PickInstVarHiLow(which,iv){const sol=this.GetCurrentSol();const instances=sol.GetInstances();if(!instances.length)return false;const isFamily=this.IsFamily();let pickInst=null;let bestVal=0;for(let i=0,len=instances.length;i<len;++i){const inst=instances[i];const offset=isFamily?inst.GetObjectClass().GetFamilyInstanceVariableOffset(this.GetFamilyIndex()):0;const v=inst.GetInstanceVariableValue(offset+iv);if(pickInst===null||which===0&&v<bestVal||which===1&&v>bestVal){bestVal=v;pickInst=inst}}sol.PickOne(pickInst);\nreturn true}",
+  "sources": [
+    {
+      "name": "data.json",
+      "sha256": "d4b0af7ec45d009c60afacbd7a52c9a2c1691c7e8a010f74f33177d184a2aad5"
+    },
+    {
+      "name": "scripts/c3runtime.js",
+      "sha256": "5e74701617b101c6755ae1c82796b386947f8b51d24d80cf4104cd573cd82cdf"
+    }
+  ],
+  "functions": [
+    "技能主动系数",
+    "技能范围分摊系数",
+    "技能种类系数",
+    "技能属性系数",
+    "技能系数计算",
+    "buff几率计算",
+    "刷新召唤物战斗属性",
+    "刷新战斗核心数据",
+    "回合buff冷却function",
+    "冷却及状态时间计算function",
+    "核心阵亡",
+    "阵位交换function",
+    "人物下阵function",
+    "人物上阵点击",
+    "销毁阵位角色function",
+    "自动战斗技能选择",
+    "自动技能条件判断",
+    "召唤系数",
+    "技能释放核心function",
+    "特殊技能机制function",
+    "buff命中计算function",
+    "战斗行动积攒",
+    "伤害计算function",
+    "回复计算function",
+    "护盾计算function",
+    "技能等级",
+    "角色普攻编等",
+    "刷新角色战斗属性",
+    "角色行动function",
+    "结束战斗行动",
+    "结束战斗操作",
+    "关闭战斗操作菜单",
+    "战斗技能及buff冷却、生命恢复、燃烧、中毒等",
+    "召唤数量判定",
+    "替换召唤阵位",
+    "技能目标选择开始function",
+    "获得buff",
+    "失去指定buff",
+    "召唤时间",
+    "召唤数量",
+    "buff伤害计算function",
+    "生命恢复function",
+    "流血效果function",
+    "燃烧效果function",
+    "中毒效果function",
+    "恢复效果function",
+    "中毒效果",
+    "流血效果",
+    "燃烧效果",
+    "恢复效果",
+    "生命恢复",
+    "子弹碰撞",
+    "子弹动画",
+    "生成阵位",
+    "目标位置坐标X",
+    "目标位置坐标Y",
+    "技能释放动作",
+    "生成我方战斗角色",
+    "生成我方战斗阵容",
+    "生成召唤角色",
+    "创建敌方战斗核心",
+    "生成敌方战斗核心",
+    "治疗目标阵位号",
+    "能量目标阵位号",
+    "治疗目标存在判断",
+    "复活目标阵位号",
+    "技能范围阵位号",
+    "技能范围刷新function",
+    "刷新技能范围数据",
+    "目标数据阵位号",
+    "直接子弹生成",
+    "间接子弹生成",
+    "工事建筑加成",
+    "暴击计算",
+    "闪避计算",
+    "技能总属性function",
+    "通用单条属性function",
+    "通用属性等级转换",
+    "通用属性权重系数",
+    "特定属性统计function",
+    "战斗开始function",
+    "战斗数据生成",
+    "失去能量值",
+    "获得能量值",
+    "战斗获得能量",
+    "子弹消除",
+    "器魂生效",
+    "物品装备function"
+  ]
+}

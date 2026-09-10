@@ -1,6 +1,5 @@
 import { ENEMY_FORMATIONS, stageEnemyGroup, type EnemyDefinition, type StageEnemyGroup } from '../content/enemies'
 import type { FormationColumn, FormationRow } from '../domain/types'
-import { applyPassiveAttributes } from './skill-ai'
 import { createRng, type Rng } from './rng'
 import { panelToAttributeMap } from './stats'
 import type { CombatRank, CombatSnapshot, CombatUnit } from './types'
@@ -193,7 +192,6 @@ const createEnemy = (
     }),
   }
   applyOriginalEnemyAttributes(enemy, difficultyFactor)
-  applyPassiveAttributes(enemy)
   return enemy
 }
 

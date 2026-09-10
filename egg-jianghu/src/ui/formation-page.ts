@@ -24,6 +24,7 @@ export interface FormationHeroView {
 }
 
 export interface FormationPageViewModel {
+  locked: boolean
   selectedHeroId: string | null
   filter: FormationFilter
   formation: Array<{ heroId: string; row: FormationLane; col: FormationDepth }>
@@ -118,14 +119,14 @@ const renderRoster = (view: FormationPageViewModel): string => {
         ${filterOptions.map((filter) => `<button type="button" class="formation-filter-chip${view.filter === filter.id ? ' active' : ''}" data-action="formation-filter" data-filter="${escapeHtml(filter.id)}" aria-pressed="${view.filter === filter.id}">${filter.label}</button>`).join('')}
       </div>
       <div class="formation-roster-list">
-        ${heroes.map((hero) => `<button type="button" draggable="true" data-action="formation-select" data-hero-id="${escapeHtml(hero.id)}" data-testid="formation-hero-${escapeHtml(hero.id)}" class="formation-roster-row${hero.inFormation ? ' in-formation' : ''}${hero.id === view.selectedHeroId ? ' active' : ''}" aria-pressed="${hero.id === view.selectedHeroId}">
+        ${heroes.map((hero) => `<button type="button" draggable="${!view.locked}" data-action="formation-select" data-hero-id="${escapeHtml(hero.id)}" data-testid="formation-hero-${escapeHtml(hero.id)}" class="formation-roster-row${hero.inFormation ? ' in-formation' : ''}${hero.id === view.selectedHeroId ? ' active' : ''}" aria-pressed="${hero.id === view.selectedHeroId}">
           ${renderPortraitWithGrade(hero, 'formation-roster-portrait', true)}
           <span class="formation-roster-copy"><strong>${escapeHtml(hero.name)}</strong><small>${escapeHtml(categoryLabel(hero.category))} · ${escapeHtml(hero.careerName)} · ${escapeHtml(hero.source)}</small></span>
           <span class="formation-roster-level">Lv.${hero.level}</span>
           ${hero.inFormation ? '<em class="formation-roster-stamp">在阵</em>' : ''}
         </button>`).join('') || '<p class="formation-empty-roster">此类侠客尚未入册</p>'}
       </div>
-      <footer>点击选将 · 拖拽令牌亦可布阵</footer>
+      <footer>${view.locked ? '战斗中可查看侠客，退出战斗后可布阵' : '点击选将 · 拖拽令牌亦可布阵'}</footer>
     </div>
   </aside>`
 }
@@ -134,15 +135,15 @@ const renderFormationSlot = (view: FormationPageViewModel, row: FormationLane, c
   const slot = view.formation.find((item) => item.row === row && item.col === col)
   const hero = heroAt(view, slot?.heroId)
   const label = slotName(row, col)
-  return `<div class="formation-slot${hero ? ' filled' : ''}${hero?.id === view.selectedHeroId ? ' selected' : ''}" data-row="${row}" data-col="${col}" data-action="formation-slot-tap" ${hero ? `data-hero-id="${escapeHtml(hero.id)}" draggable="true"` : ''} data-testid="formation-slot-${row}-${col}" aria-label="${label}">
-    ${hero ? `<div class="formation-token" draggable="true" data-hero-id="${escapeHtml(hero.id)}">
+  return `<div class="formation-slot${hero ? ' filled' : ''}${hero?.id === view.selectedHeroId ? ' selected' : ''}" data-row="${row}" data-col="${col}" data-action="formation-slot-tap" ${hero ? `data-hero-id="${escapeHtml(hero.id)}" draggable="${!view.locked}"` : ''} data-testid="formation-slot-${row}-${col}" aria-label="${label}">
+    ${hero ? `<div class="formation-token" draggable="${!view.locked}" data-hero-id="${escapeHtml(hero.id)}">
       <span class="formation-token-hole" aria-hidden="true"></span>
       ${renderPortrait(hero, 'formation-token-portrait')}
       <span class="formation-token-cat"><i>${escapeHtml(categoryLabel(hero.category))}</i></span>
       <span class="formation-token-name">${escapeHtml(hero.name)}</span>
       <span class="formation-token-level">Lv.${hero.level}</span>
       ${renderGradeSeal(hero, true)}
-      <button type="button" class="formation-token-remove formation-slot-remove" data-action="formation-remove" data-hero-id="${escapeHtml(hero.id)}" aria-label="下阵 ${escapeHtml(hero.name)}">×</button>
+      <button type="button" class="formation-token-remove formation-slot-remove" data-action="formation-remove" ${view.locked ? 'disabled' : ''} data-hero-id="${escapeHtml(hero.id)}" aria-label="下阵 ${escapeHtml(hero.name)}">×</button>
     </div>` : '<div class="formation-token-ghost"><span>虚位</span></div>'}
     <div class="formation-slot-disc" aria-hidden="true"><span>${laneSigils[row]}</span></div>
     <div class="formation-slot-label">${label}</div>
@@ -165,8 +166,8 @@ const renderFormationField = (view: FormationPageViewModel): string => {
   const orderSlots = Array.from({ length: 6 }, (_, index) => order[index])
   return `<section class="formation-field panel" aria-label="演武场">
     <header class="formation-field-head">
-      <div><div class="formation-field-title"><h2>演武场</h2><span>三路五列 · <i>至多六将</i></span></div><p>令牌落位，阵势自成 · 拖拽可移动或交换</p></div>
-      <div class="formation-field-ops"><button type="button" class="formation-btn-gold" data-action="formation-auto-arrange">自动列阵</button><button type="button" class="formation-btn-ghost" data-action="formation-clear">悉数下阵</button></div>
+      <div><div class="formation-field-title"><h2>演武场</h2><span>三路五列 · <i>至多六将</i></span></div><p>${view.locked ? '战斗进行中 · 结束或退出战斗后可调整阵容' : '令牌落位，阵势自成 · 拖拽可移动或交换'}</p></div>
+      <div class="formation-field-ops"><button type="button" class="formation-btn-gold" data-action="formation-auto-arrange" ${view.locked ? 'disabled' : ''}>自动列阵</button><button type="button" class="formation-btn-ghost" data-action="formation-clear" ${view.locked ? 'disabled' : ''}>悉数下阵</button></div>
     </header>
     <div class="formation-field-body">
       <div class="formation-field-rows">${FORMATION_LANES.map((row) => renderFormationRow(view, row)).join('')}</div>
@@ -223,7 +224,7 @@ const renderHeroCard = (view: FormationPageViewModel): string => {
     ${renderRadar(hero)}
     <div class="formation-card-title">当前职业</div>
     ${renderCurrentCareer(hero)}
-    <div class="formation-card-foot"><span>现居 <b>${escapeHtml(slotText)}</b></span>${hero.slot ? `<button type="button" class="formation-btn-line" data-action="formation-remove" data-hero-id="${escapeHtml(hero.id)}">遣其下阵</button>` : ''}</div>
+    <div class="formation-card-foot"><span>现居 <b>${escapeHtml(slotText)}</b></span>${hero.slot ? `<button type="button" class="formation-btn-line" data-action="formation-remove" ${view.locked ? 'disabled' : ''} data-hero-id="${escapeHtml(hero.id)}">遣其下阵</button>` : ''}</div>
   </aside>`
 }
 

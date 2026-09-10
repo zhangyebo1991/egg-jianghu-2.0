@@ -1,0 +1,285 @@
+{
+  "sourceSha256": "5e74701617b101c6755ae1c82796b386947f8b51d24d80cf4104cd573cd82cdf",
+  "scope": "直接执行未改写的原版Every函数；验证条件求值和相位，不代表完整战斗事件调度已验收",
+  "source": "Every(seconds){const cnd=this._runtime.GetCurrentCondition();const cndSavedData=cnd.GetSavedDataMap();const lastTime=cndSavedData.get(\"Every_lastTime\")||0;const curTime=this._runtime.GetGameTime();if(!cndSavedData.has(\"Every_seconds\"))cndSavedData.set(\"Every_seconds\",\nseconds);const thisSeconds=cndSavedData.get(\"Every_seconds\");if(curTime>=lastTime+thisSeconds){cndSavedData.set(\"Every_lastTime\",lastTime+thisSeconds);if(curTime>=cndSavedData.get(\"Every_lastTime\")+.04)cndSavedData.set(\"Every_lastTime\",curTime);cndSavedData.set(\"Every_seconds\",seconds);return true}else if(curTime<lastTime-.1)cndSavedData.set(\"Every_lastTime\",curTime);return false},",
+  "cases": [
+    {
+      "name": "正常秒跳",
+      "samples": [
+        {
+          "atMs": 0,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 0,
+          "currentLastTimeMs": 0
+        },
+        {
+          "atMs": 900,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 0,
+          "currentLastTimeMs": 0
+        },
+        {
+          "atMs": 1000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 1000,
+          "currentLastTimeMs": 1000
+        },
+        {
+          "atMs": 1999,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 1000,
+          "currentLastTimeMs": 1000
+        },
+        {
+          "atMs": 2000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 2000,
+          "currentLastTimeMs": 2000
+        }
+      ]
+    },
+    {
+      "name": "暂停不求值，恢复仅跳一次",
+      "samples": [
+        {
+          "atMs": 0,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 0,
+          "currentLastTimeMs": 0
+        },
+        {
+          "atMs": 900,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 0,
+          "currentLastTimeMs": 0
+        },
+        {
+          "atMs": 1000,
+          "enabled": false,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 0,
+          "currentLastTimeMs": 0
+        },
+        {
+          "atMs": 2500,
+          "enabled": false,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 0,
+          "currentLastTimeMs": 0
+        },
+        {
+          "atMs": 2600,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 2600,
+          "currentLastTimeMs": 2600
+        },
+        {
+          "atMs": 2600,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 2600,
+          "currentLastTimeMs": 2600
+        },
+        {
+          "atMs": 3599,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 2600,
+          "currentLastTimeMs": 2600
+        },
+        {
+          "atMs": 3600,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 3600,
+          "currentLastTimeMs": 3600
+        }
+      ]
+    },
+    {
+      "name": "漏过多秒不逐秒追补",
+      "samples": [
+        {
+          "atMs": 1000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 1000,
+          "currentLastTimeMs": 1000
+        },
+        {
+          "atMs": 1500,
+          "enabled": false,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 1000,
+          "currentLastTimeMs": 1000
+        },
+        {
+          "atMs": 8000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 8000,
+          "currentLastTimeMs": 8000
+        },
+        {
+          "atMs": 8000,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 8000,
+          "currentLastTimeMs": 8000
+        },
+        {
+          "atMs": 8999,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 8000,
+          "currentLastTimeMs": 8000
+        },
+        {
+          "atMs": 9000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 9000,
+          "currentLastTimeMs": 9000
+        }
+      ]
+    },
+    {
+      "name": "迟到不足40ms保留原相位",
+      "samples": [
+        {
+          "atMs": 1000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 1000,
+          "currentLastTimeMs": 1000
+        },
+        {
+          "atMs": 2039,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 2000,
+          "currentLastTimeMs": 2000
+        },
+        {
+          "atMs": 2999,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 2000,
+          "currentLastTimeMs": 2000
+        },
+        {
+          "atMs": 3000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 3000,
+          "currentLastTimeMs": 3000
+        }
+      ]
+    },
+    {
+      "name": "迟到40ms重新计时",
+      "samples": [
+        {
+          "atMs": 1000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 1000,
+          "currentLastTimeMs": 1000
+        },
+        {
+          "atMs": 2040,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 2040,
+          "currentLastTimeMs": 2040
+        },
+        {
+          "atMs": 3000,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 2040,
+          "currentLastTimeMs": 2040
+        },
+        {
+          "atMs": 3040,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 3040,
+          "currentLastTimeMs": 3040
+        }
+      ]
+    },
+    {
+      "name": "游戏时钟回退重置",
+      "samples": [
+        {
+          "atMs": 2000,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 2000,
+          "currentLastTimeMs": 2000
+        },
+        {
+          "atMs": 1500,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 1500,
+          "currentLastTimeMs": 1500
+        },
+        {
+          "atMs": 2499,
+          "enabled": true,
+          "original": false,
+          "current": false,
+          "originalLastTimeMs": 1500,
+          "currentLastTimeMs": 1500
+        },
+        {
+          "atMs": 2500,
+          "enabled": true,
+          "original": true,
+          "current": true,
+          "originalLastTimeMs": 2500,
+          "currentLastTimeMs": 2500
+        }
+      ]
+    }
+  ]
+}

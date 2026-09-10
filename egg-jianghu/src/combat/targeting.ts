@@ -39,15 +39,18 @@ export const selectAttackPrimary = (actor: CombatUnit, candidates: CombatUnit[])
   return undefined
 }
 
-/** 原版治疗主目标：生命比例最低者优先，同值按阵位号稳定选择。 */
+const byInstanceOrder = (left: CombatUnit, right: CombatUnit): number =>
+  (left.instanceOrder ?? left.formationOrder) - (right.instanceOrder ?? right.formationOrder)
+
+/** 原版PickInstVarHiLow严格比较，同值保留先创建的战斗核心。 */
 export const selectLowestHealthPrimary = (candidates: CombatUnit[]): CombatUnit | undefined =>
   candidates
     .filter((unit) => unit.alive)
     .sort((left, right) =>
       (left.hp / left.maxHp - right.hp / right.maxHp)
-      || byFormationSlot(left, right))[0]
+      || byInstanceOrder(left, right))[0]
 
-/** 原版加能量/推进度主目标：排除召唤物后按“攻击”降序，同值按阵位号稳定选择。 */
+/** 原版加能量/推进度主目标：排除召唤物后按“攻击”降序，同值按实例顺序。 */
 export const selectHighestAttackPrimary = (
   candidates: CombatUnit[],
   attackValue: (unit: CombatUnit) => number,
@@ -55,11 +58,11 @@ export const selectHighestAttackPrimary = (
   .filter((unit) => unit.alive && !unit.id.startsWith('summon_'))
   .sort((left, right) =>
     (attackValue(right) - attackValue(left))
-    || byFormationSlot(left, right))[0]
+    || byInstanceOrder(left, right))[0]
 
-/** 原版复活目标：阵位号最小的阵亡单位。 */
-export const selectFirstFallenPrimary = (candidates: CombatUnit[]): CombatUnit | undefined =>
-  candidates.filter((unit) => !unit.alive).sort(byFormationSlot)[0]
+/** 原版升序遍历阵位网格，SetFunctionReturnValue不退出循环，最后一个阵亡阵位生效。 */
+export const selectRevivePrimary = (candidates: CombatUnit[]): CombatUnit | undefined =>
+  candidates.filter((unit) => !unit.alive).sort((left, right) => byFormationSlot(right, left))[0]
 
 /**
  * 原版范围查询：fw[尝试阵位 + 15 × (范围类型 - 1), 核心阵位]。

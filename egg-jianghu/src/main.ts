@@ -3,7 +3,7 @@ import { GameSession, SaveConflictError } from './app/game-session'
 import { RuntimeClock } from './app/runtime-clock'
 import { createRng } from './combat/rng'
 import { isCombatSpeed, type CombatSpeed } from './combat/scheduler'
-import { buildCombatStats } from './combat/stats'
+import { buildAttributeMap, buildCombatStats } from './combat/stats'
 import { COMBAT_TICK_MS } from './combat/timeline'
 import type { CombatEvent, CombatRank, CombatUnit } from './combat/types'
 import { createWave } from './combat/waves'
@@ -719,7 +719,7 @@ const idleViewModel = (): IdlePageViewModel => {
       } : null,
       timeline: {
         phase: combat.timeline.phase,
-        activeActorId: combat.timeline.activeAction?.actorId ?? null,
+        activeActorId: combat.timeline.activeAction?.actorId ?? combat.timeline.pendingAction?.actorId ?? null,
         readyQueue: combat.timeline.readyQueue.map((entry) => ({ ...entry })),
       },
     },
@@ -1003,6 +1003,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
     mainTab: heroMainTab,
     martials: selectedProgress ? {
       hero: selectedProgress,
+      attributes: buildAttributeMap(heroByIdV10(selectedId!)!, selectedProgress, session.state.inventory),
       query: heroMartialQuery,
       category: heroMartialCategory,
       selectedSlot: heroMartialSlot,
@@ -1035,7 +1036,10 @@ const formationSourceLabel = (definition: (typeof HEROES_V10)[number]): string =
   return `${FACTIONS.find((faction) => faction.id === definition.factionId)?.name ?? '势力'}门人`
 }
 
+const formationLocked = (): boolean => Boolean(session.combat || session.pendingCombatRestart)
+
 const formationViewModel = (): FormationPageViewModel => {
+  if (formationLocked()) formationSelectedHeroId = null
   const heroes = recruitedHeroes().map(({ definition, progress, name }) => {
     const currentCareer = careerById(progress.currentCareerId) ?? careerById(definition.baseCareerId)
     const careerRecord = progress.careers[progress.currentCareerId]
@@ -1066,7 +1070,7 @@ const formationViewModel = (): FormationPageViewModel => {
     ? formationDetailHeroId
     : session.state.formation[0]?.heroId ?? heroes[0]?.id ?? null
   formationDetailHeroId = selectedHeroId
-  return { formation: session.state.formation, selectedHeroId, filter: formationFilter, heroes }
+  return { formation: session.state.formation, selectedHeroId, filter: formationFilter, heroes, locked: formationLocked() }
 }
 
 const formationFilterOptions: FormationFilter[] = ['all', '剑', '刀', '拳', '暗', '医', '内家']
@@ -2286,6 +2290,7 @@ app.addEventListener('pointerdown', (event) => {
 })
 
 app.addEventListener('dragstart', (event) => {
+  if (formationLocked()) { event.preventDefault(); return }
   const source = (event.target as HTMLElement).closest<HTMLElement>('[data-hero-id]')
   if (!source) return
   dragHeroId = dragCandidateHeroId ?? source.dataset.heroId ?? null
@@ -2296,6 +2301,7 @@ app.addEventListener('dragstart', (event) => {
 })
 
 app.addEventListener('dragover', (event) => {
+  if (formationLocked()) return
   const target = event.target as HTMLElement
   const transferHeroId = dragHeroId ?? event.dataTransfer?.getData('text/plain') ?? null
   if (!transferHeroId || !target.closest('[data-testid="formation-page"]')) return
@@ -2310,6 +2316,12 @@ app.addEventListener('dragover', (event) => {
 })
 
 app.addEventListener('drop', (event) => {
+  if (formationLocked()) {
+    event.preventDefault()
+    dragHeroId = dragCandidateHeroId = null
+    clearDragOver()
+    return
+  }
   const droppedHeroId = dragHeroId ?? event.dataTransfer?.getData('text/plain') ?? null
   if (!droppedHeroId) return
   const target = event.target as HTMLElement
@@ -2342,10 +2354,14 @@ const performAction = (button: HTMLButtonElement): void => {
     notify('战斗进行中，结束或退出战斗后可调整武学', true)
     return
   }
+  if (['formation-remove', 'formation-auto-arrange', 'formation-clear'].includes(action ?? '') && formationLocked()) {
+    notify('战斗进行中，结束或退出战斗后可调整阵容', true)
+    return
+  }
   if (action === 'formation-remove') commitAction(removeFormation(session.state, heroId))
   else if (action === 'formation-select') {
     formationDetailHeroId = heroId
-    formationSelectedHeroId = heroId
+    formationSelectedHeroId = formationLocked() ? null : heroId
   } else if (action === 'formation-filter') {
     const nextFilter = button.dataset.filter as FormationFilter
     if (formationFilterOptions.includes(nextFilter)) formationFilter = nextFilter
@@ -2357,7 +2373,7 @@ const performAction = (button: HTMLButtonElement): void => {
     commitAction(clearFormation())
   } else if (action === 'formation-slot-tap') {
     const slotHeroId = button.dataset.heroId ?? null
-    if (formationSelectedHeroId) {
+    if (formationSelectedHeroId && !formationLocked()) {
       commitAction(placeFormation(session.state, formationSelectedHeroId, dataNumber(button, 'row') as FormationRow, dataNumber(button, 'col') as FormationColumn))
       formationDetailHeroId = formationSelectedHeroId
       formationSelectedHeroId = null

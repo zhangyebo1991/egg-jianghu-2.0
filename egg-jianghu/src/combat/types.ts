@@ -14,6 +14,8 @@ export interface CareerCombatCoefficients {
 
 /** 单位身上的 buff 实例：定义查 content/buffs.ts 的 COMBAT_BUFFS */
 export interface CombatStatus {
+  /** 原版zdls的状态槽1..202；删除后保留空位供新状态复用。 */
+  slot?: number
   buffId: number
   stacks: number
   /** time 型剩余毫秒；turn 型此值为大数兜底，按 remainingTurns 递减 */
@@ -35,6 +37,8 @@ export interface CombatUnit {
   row: FormationRow
   col: FormationColumn
   formationOrder: number
+  /** 战斗核心创建顺序：原版同值治疗/回能选先创建者，复活和召唤重新创建。 */
+  instanceOrder?: number
   rank: CombatRank
   alive: boolean
   hp: number
@@ -65,11 +69,17 @@ export interface CombatUnit {
   baseAttackId: number
   /** 人物主手 wp[7] 武器类型 1..10；敌人、召唤物或未装备主手时为空。 */
   mainhandWeaponType?: number
+  /** 原版器魂生效只检查save15副手槽；仅人物保存，召唤相关机制按原版条件读取主人。 */
+  offhandSoulId?: number
   /** 诸天模型统一属性面板（属性 id → 数值）；与上方散落字段并行，Phase 2 起战斗公式改读此字段 */
   attributes: AttributeMap
+  /** 我方核心阵亡后原版zdls仍保留当时已结算属性，供存活召唤物刷新读取。 */
+  defeatedAttributes?: AttributeMap
 }
 
 export interface CombatSummon extends CombatUnit {
+  /** 原版核心记录召唤技能编号，状态变化时据此重新读取主人战斗属性。 */
+  summonSkillId?: number
   /** 原版战斗核心字段 10：召唤物归属的施法者，用于逐施法者计算召唤上限。 */
   summonerId: string
   remainingMs: number
@@ -93,6 +103,11 @@ export interface CombatActionPlan {
   durationMs: number
   effectEmitted: boolean
   hitResolved: boolean
+  /** 300ms生成弹体时锁定暴击/闪避；各目标按飞行距离分别碰撞。 */
+  projectileHits?: { targetId: string; atMs: number; critical: boolean; evaded: boolean }[]
+  /** 原版buff命中计算 Wait 1秒后结算。 */
+  buffsAtMs: number
+  buffsResolved: boolean
 }
 
 export interface CombatWaveTransition {
@@ -113,14 +128,16 @@ export interface CombatEndingTransition {
 }
 
 export interface CombatTimelineState {
-  phase: 'accumulating' | 'acting' | 'wave-transition' | 'ending'
+  phase: 'accumulating' | 'preparing' | 'acting' | 'wave-transition' | 'ending'
+  /** 原版仅我方自动行动在回能及选技前Wait0.1。 */
+  pendingAction?: { actorId: string; remainingMs: number } | null
   nextReadySeq: number
   readyQueue: CombatReadyEntry[]
   activeAction: CombatActionPlan | null
-  /** 行动积攒按原版 0.1 秒节点推进；不足一节点的时间留到下次。 */
-  accumulationCarryMs: number
-  /** 原版全局 Every(1) 状态脉冲；只在行动积攒阶段推进。 */
-  statusPulseCarryMs: number
+  /** 1200ms行动结束后再暂停500ms，届时恢复积攒、冷却和下一次行动。 */
+  resumeAtMs?: number
+  /** 原版Every(1)上次触发的全局时点；暂停期间不求值，恢复不追补漏跳。 */
+  lastStatusPulseAtMs: number
   /** 普通换波的两段确定性等待；与尚未结束的行动锁并行推进。 */
   waveTransition: CombatWaveTransition | null
   /** 最终胜负的确定性等待；与尚未结束的行动锁并行推进。 */

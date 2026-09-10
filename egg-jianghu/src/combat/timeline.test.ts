@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import originalEvidenceText from '../../../docs/evidence/original-world/all-skills-runtime-audit.json?raw'
 import {
   advanceStatusDurations,
   applyBuff,
   buffAttributeBonus,
+  expireTurnBuffs,
   isControlled,
   pulseStatuses,
 } from './statuses'
@@ -48,6 +50,22 @@ const fixtureUnit = (overrides: Partial<CombatUnit> = {}): CombatUnit => ({
 })
 
 describe('战斗时间轴', () => {
+  it('按原版dt表达式积分，覆盖小数速度及基础速度修正，不先取整间隔', () => {
+    const evidence = JSON.parse(originalEvidenceText)
+    const expression = evidence.find((node: { name: string }) => node.name === '战斗行动积攒').operations
+      .find((operation: { reference: string; parameters: string[] }) => operation.reference.endsWith('.AddInstanceVar') && operation.parameters[0] === '[10,8]').parameters[1]
+    const original = Function('dt', 'zdls', '战斗核心', 'C3', 'multiply', 'add', 'divide', `return ${expression}`)
+    for (const speed of [0, 0.25, 1, 2, 100, 137.2]) for (const modifier of [-150, -100, -50, 0, 50]) {
+      const unit = fixtureUnit({ gauge: 0, effectiveAgility: speed, attributes: { 113: modifier } })
+      const elapsedMs = 1234.5
+      const expected = original(() => elapsedMs / 1000, { At: (id: number) => id === 7 ? speed : modifier }, { 数据阵位号: 1 },
+        { clamp: (value: number, min: number, max: number) => Math.min(max, Math.max(min, value)) },
+        (a: number, b: number) => a * b, (a: number, b: number) => a + b, (a: number, b: number) => a / b) * 10
+      advanceGaugeAndCooldowns(unit, elapsedMs)
+      expect(unit.gauge).toBeCloseTo(expected, 10)
+    }
+  })
+
   it('身法 100 的行动间隔为 5 秒', () => {
     expect(actionIntervalMs(100)).toBe(5000)
   })
@@ -147,5 +165,44 @@ describe('实时状态', () => {
     expect(buffAttributeBonus(unit, 116)).toBe(4)
     expect(pulseStatuses(unit).map((tick) => tick.amount)).toEqual([-6])
     expect(unit.hp).toBe(56)
+  })
+})
+
+
+describe('原版状态槽复用', () => {
+  it('持续伤害和持续治疗覆盖第13个及后续状态槽', () => {
+    const unit = fixtureUnit({ hp: 100, maxHp: 200, statuses: [
+      { buffId: 5, slot: 12, stacks: 1, remainingMs: 1000, tickValue: 10 },
+      { buffId: 3, slot: 13, stacks: 1, remainingMs: 1000, tickValue: 50 },
+      { buffId: 6, slot: 14, stacks: 1, remainingMs: 1000, tickValue: 100 },
+    ] })
+    expect(pulseStatuses(unit).map(tick => tick.amount)).toEqual([10, 50, -100])
+    expect(unit.hp).toBe(140)
+  })
+
+  it('所有时间型状态正常到期，回合状态仍按回合清除', () => {
+    const unit = fixtureUnit({ statuses: [
+      { buffId: 7, slot: 12, stacks: 1, remainingMs: 100 },
+      { buffId: 8, slot: 13, stacks: 1, remainingMs: 100 },
+      { buffId: 1, slot: 14, stacks: 1, remainingMs: Number.MAX_SAFE_INTEGER, remainingTurns: 1 },
+    ] })
+    advanceStatusDurations(unit, 1000)
+    expect(unit.statuses.map(status => status.slot)).toEqual([14])
+    expireTurnBuffs(unit)
+    expect(unit.statuses).toEqual([])
+  })
+
+  it('过期状态的槽位被优先复用，恢复在较后槽的流血之前结算', () => {
+    const unit = fixtureUnit({ hp: 100, maxHp: 100 })
+    applyBuff(unit, 7, 1, 'self', { durationScale: 0.005 })
+    applyBuff(unit, 5, 1, 'enemy', { tickValue: 30 })
+    advanceStatusDurations(unit, 100)
+    applyBuff(unit, 6, 1, 'self', { tickValue: 20 })
+    expect(unit.statuses.map(status => [status.buffId, status.slot])).toEqual([[6, 1], [5, 2]])
+    // 满血先恢复无收益，再流血30；如果错误追加到末尾，则先流血再恢复成90。
+    expect(pulseStatuses(unit).map(tick => tick.amount)).toEqual([30])
+    expect(unit.hp).toBe(70)
+    applyBuff(unit, 5, 1, 'enemy', { tickValue: 30 })
+    expect(unit.statuses.find(status => status.buffId === 5)?.slot).toBe(2)
   })
 })

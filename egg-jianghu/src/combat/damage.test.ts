@@ -7,6 +7,17 @@ import { calculateDamage, evadeRate, hitChance, rollCritical } from './damage'
 import { buildCareerCombatCoefficients, buildCombatStats } from './stats'
 
 describe('诸天 18 乘区伤害公式', () => {
+  it('受伤害正向修正超过 95% 仍完整参与原版乘区', () => {
+    expect(calculateDamage({
+      attack: 100, defense: 0, skillCoeff: 1,
+      factionPower: 0, elementPower: 0,
+      damageType: 0, basicAttack: 0, elementDamage: 0, specialization: 0, mastery: 0,
+      typeReduction: 0, elementResist: 0,
+      receivedType: 200, receivedElement: 0, receivedAll: 0,
+      finalDamage: 0, finalReduction: 0, critical: 1, buffMultiplier: 0,
+    })).toBe(300)
+  })
+
   it('逐项复算 runtime expr#10718/10719，技能组与元素组相加而非相乘', () => {
     expect(calculateDamage({
       attack: 200, defense: 100, skillCoeff: 1.5,
@@ -34,7 +45,7 @@ describe('诸天 18 乘区伤害公式', () => {
     })).toBe(150) // core 50 × skill 2 × 加法池(1+0.5)
   })
 
-  it('减伤/元素抗性/最终减伤均受 cap 80 保护', () => {
+  it('三层 80% 减伤相乘后保留最低 1 点伤害', () => {
     const invincible = calculateDamage({
       attack: 100, defense: 100, skillCoeff: 1,
       factionPower: 0, elementPower: 0,
@@ -76,6 +87,7 @@ describe('诸天闪避与暴击判定', () => {
     expect(rollCritical(5, 150, 0.03).coefficient).toBeCloseTo(1.5) // 150/100
     expect(rollCritical(5, 150, 0.5).isCritical).toBe(false)
     expect(rollCritical(5, 150, 0.5).coefficient).toBe(1)
+    expect(rollCritical(100, -50, 0).coefficient).toBe(0)
   })
 })
 
@@ -133,7 +145,7 @@ describe('战斗面板派生（诸天源码公式）', () => {
     })
   })
 
-  it('主角五维全 10 的 Lv1 白丁源码面板为 559/151/112/56', () => {
+  it('主角核心面板在乘职业系数前取整，保留乘积小数', () => {
     const definition: HeroDefinitionV10 = {
       id: 'fixture', name: '白板号', grade: '乙', baseCareerId: 'job_1', worldId: 'world_01',
       source: 'tavern', cost: 0, factionId: null,
@@ -141,12 +153,12 @@ describe('战斗面板派生（诸天源码公式）', () => {
     }
     const stats = buildCombatStats(definition, createHeroProgress('job_1'))
 
-    expect(stats.maxHp).toBe(559)
-    expect(stats.effectiveAgility).toBe(151)
-    expect(stats.externalAttack).toBe(112)
-    expect(stats.externalDefense).toBe(56)
-    expect(stats.internalAttack).toBe(112)
-    expect(stats.internalDefense).toBe(56)
+    expect(stats.maxHp).toBeCloseTo(558.9)
+    expect(stats.effectiveAgility).toBeCloseTo(151.2)
+    expect(stats.externalAttack).toBeCloseTo(111.6)
+    expect(stats.externalDefense).toBeCloseTo(55.8)
+    expect(stats.internalAttack).toBeCloseTo(111.6)
+    expect(stats.internalDefense).toBeCloseTo(55.8)
   })
 
   it('装备核心属性先加到基础值，再乘天资与职业核心系数', () => {
@@ -163,7 +175,7 @@ describe('战斗面板派生（诸天源码公式）', () => {
     }
     const equipmentAttack = equipmentAttributeValue(8, equipment.level, 10_000, 100)
     const baseAttack = 100 + Math.pow(1.0095, 100) * 5
-    const expected = Math.round((baseAttack + equipmentAttack) * 1.1 * 0.9)
+    const expected = Math.round((baseAttack + equipmentAttack) * 1.1) * 0.9
 
     expect(buildCombatStats(definition, progress, [equipment]).externalAttack).toBe(expected)
   })

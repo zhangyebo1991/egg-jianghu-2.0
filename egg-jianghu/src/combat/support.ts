@@ -1,5 +1,5 @@
 /**
- * 原版回复/护盾公式（data.json 表达式 10729、10733；c3runtime 58037、58075）。
+ * 原版回复公式：表达式 10728 为生命分支，10729 为法术分支。
  *
  * 所有加成参数均为面板百分比，函数内部转换为倍率。attack 已包含对应的
  * 攻击修正与职业编码 6。原版最终统一 floor，并保底 1。
@@ -17,6 +17,8 @@ interface SharedSupportMultipliers {
 }
 
 export interface HealingMultipliers extends SharedSupportMultipliers {
+  /** 原版 jn[26] 为“生命”时，治疗加成独立相乘；法术治疗合并到加法池。 */
+  healingStat?: 'health' | 'internalAttack'
   healingBonus: number
   receivedHealing: number
   healingReduction: number
@@ -38,19 +40,21 @@ export const calculateModifiedSupportStat = (
   displayedStat: number,
   statModifier: number,
   careerCoefficient: number,
-): number => displayedStat * supportBonusFactor(statModifier) * careerCoefficient
+): number => Math.max(0, displayedStat) * supportBonusFactor(statModifier) * careerCoefficient
 
-/** 回复计算function：治疗加成是独立乘区，元素/专精/熟练为同一加法池。 */
+/** 回复计算function：生命治疗独立乘治疗加成，法术治疗合并加法池。 */
 export const calculateHealing = (m: HealingMultipliers): number => {
   const groupPower = supportBonusFactor(m.factionPower) + supportBonusFactor(m.elementPower) - 1
   const additivePower = [m.elementDamage, m.specialization, m.mastery]
     .reduce((sum, value) => sum + supportBonusFactor(value), -2)
   const enhance = Math.max(1, supportBonusFactor(m.buffMultiplier))
+  const healingPower = m.healingStat === 'health'
+    ? supportBonusFactor(m.healingBonus) * additivePower
+    : additivePower + supportBonusFactor(m.healingBonus) - 1
   const amount = m.attack
     * m.skillCoeff
     * groupPower
-    * supportBonusFactor(m.healingBonus)
-    * additivePower
+    * healingPower
     * supportBonusFactor(m.receivedHealing)
     * supportReductionFactor(m.healingReduction)
     * enhance

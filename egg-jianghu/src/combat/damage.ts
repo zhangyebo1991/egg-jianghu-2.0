@@ -7,14 +7,15 @@
  *   D = 防御面板 × 防御修正 × 职业防御系数
  *   技能层 = 技能系数 × ((1+技能组威力) + (1+元素组威力) − 1)
  *   加法池 = (1+物法增伤) + (1+普攻增伤) + (1+元素增伤) + (1+专精增伤) + (1+熟练增伤) − 4
- *   减伤   = (1−物法减伤) × (1−元素抗性)                                  ← 两独立乘区，cap 80
- *   受伤害 = (1+受物法) × (1+受元素) × (1+受所有)                         ← 三层独立，cap 95
- *   最终层 = 1 + 最终增伤 − 最终减伤                                       ← 同括号，终减 cap 80
+ *   减伤   = (1−物法减伤) × (1−元素抗性)                                  ← 两独立乘区
+ *   受伤害 = (1+受物法) × (1+受元素) × (1+受所有)                         ← 三层独立
+ *   最终层 = 1 + 最终增伤 − 最终减伤                                       ← 同括号
  *   暴击   = 裸系数（1 或 暴伤/100；sx13 为总量百分比，白板 150 → 1.5）
  *   增效buff = max(1, 1 + 增效buff系数)
  *   工事建筑加成在本项目没有对应系统，固定为原版无加成值 1。
  *
- * 乘区形态除暴击外均 (1 + 词条/100)；cap 来自 sx.json 第 9 字段（Agent 1 源码确认）。
+ * 各倍率按原版限制为非负。属性限制由 unitAttr 按角色刷新分支应用：
+ * 我方角色减伤最高 80%，受伤害修正最低 -95%；敌方与召唤物不套用该限制。
  */
 
 /** 18 乘区输入。除 attack/defense/skillCoeff/critical 外，均为面板百分比（公式内部 /100）。 */
@@ -35,14 +36,14 @@ export interface DamageMultipliers {
   elementDamage: number // 元素增伤（按技能元素）
   specialization: number // 技能专精增伤（按技能类别）
   mastery: number // 武器熟练增伤（按武器类型）
-  /** 减伤（%，两独立乘区，cap 80） */
+  /** 减伤（%，两独立乘区） */
   typeReduction: number // 物法减伤
   elementResist: number // 元素抗性
-  /** 受伤害（%，三层独立，cap 95） */
+  /** 受伤害（%，三层独立） */
   receivedType: number // 受物法伤害
   receivedElement: number // 受元素伤害
   receivedAll: number // 受所有伤害
-  /** 最终层（%，同括号：终增 − 终减，终减 cap 80） */
+  /** 最终层（%，同括号：终增 − 终减） */
   finalDamage: number
   finalReduction: number
   /** 暴击裸系数（未暴击=1，暴击=暴伤/100；sx13 为总量百分比，白板 150 → 1.5） */
@@ -51,11 +52,9 @@ export interface DamageMultipliers {
   buffMultiplier: number
 }
 
-const cappedAttribute = (value: number, max: number): number => Math.min(max, value)
-const bonusFactor = (value: number, max = Infinity): number =>
-  Math.max(0, 1 + cappedAttribute(value, max) / 100)
-const reductionFactor = (value: number, max: number): number =>
-  Math.max(0, 1 - cappedAttribute(value, max) / 100)
+// 属性上下限由unitAttr按原版角色刷新分支处理；公式不再次截断。
+const bonusFactor = (value: number): number => Math.max(0, 1 + value / 100)
+const reductionFactor = (value: number): number => Math.max(0, 1 - value / 100)
 
 /** 诸天伤害结算（表达式 10718 + 10719）。最低保底 1。 */
 export const calculateDamage = (m: DamageMultipliers): number => {
@@ -64,12 +63,12 @@ export const calculateDamage = (m: DamageMultipliers): number => {
   const skillLayer = m.skillCoeff * (bonusFactor(m.factionPower) + bonusFactor(m.elementPower) - 1)
   const additivePool = [m.damageType, m.basicAttack, m.elementDamage, m.specialization, m.mastery]
     .reduce((sum, value) => sum + bonusFactor(value), -4)
-  const typeRed = reductionFactor(m.typeReduction, 80)
-  const elementResist = reductionFactor(m.elementResist, 80)
-  const receivedType = bonusFactor(m.receivedType, 95)
-  const receivedElement = bonusFactor(m.receivedElement, 95)
-  const receivedAll = bonusFactor(m.receivedAll, 95)
-  const finalLayer = bonusFactor(m.finalDamage) + reductionFactor(m.finalReduction, 80) - 1
+  const typeRed = reductionFactor(m.typeReduction)
+  const elementResist = reductionFactor(m.elementResist)
+  const receivedType = bonusFactor(m.receivedType)
+  const receivedElement = bonusFactor(m.receivedElement)
+  const receivedAll = bonusFactor(m.receivedAll)
+  const finalLayer = bonusFactor(m.finalDamage) + reductionFactor(m.finalReduction) - 1
   const buff = Math.max(1, 1 + m.buffMultiplier / 100)
 
   const damage =
@@ -110,5 +109,5 @@ export const evadeRate = (evadeMod: number, hitMod: number, lowerBound = 30): nu
  */
 export const rollCritical = (critRate: number, critDamage: number, roll: number): { isCritical: boolean; coefficient: number } => {
   const isCritical = roll < critRate / 100
-  return { isCritical, coefficient: isCritical ? critDamage / 100 : 1 }
+  return { isCritical, coefficient: isCritical ? Math.max(0, critDamage / 100) : 1 }
 }

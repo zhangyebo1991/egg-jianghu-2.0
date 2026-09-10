@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { equipMartial } from '../domain/martial-training'
 import { recruitFromTavern } from '../domain/recruitment'
 import { SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
 import { createNewGameStateV10 } from '../domain/state'
-import { GameSession } from './game-session'
+import { buildCombatParty, GameSession } from './game-session'
+import { selectLowestHealthPrimary } from '../combat/targeting'
 import { panelToAttributeMap } from '../combat/stats'
 
 const memoryStorage = (): StorageLike & { values: Map<string, string> } => {
@@ -49,6 +51,17 @@ const makePartyOverwhelming = (session: GameSession): void => {
 }
 
 describe('GameSession', () => {
+  it('主角在后排仍按原版角色编号创建，治疗同值不被前排自创角色抢先', () => {
+    const state = createNewGameStateV10('燕七', 1000)
+    recruitFromTavern(state, 'hero_mu_nianci')
+    state.formation = [
+      { heroId: 'hero_mu_nianci', row: 0, col: 0 },
+      { heroId: 'hero_player', row: 2, col: 4 },
+    ]
+    const party = buildCombatParty(state)
+    expect(party).toHaveLength(2)
+    expect(selectLowestHealthPrimary(party)?.id).toBe('hero_player')
+  })
   it.each(['create', 'continue'] as const)('%s 载入旧档时补齐基础难度已达到的势力且可以保存', (entry) => {
     const storage = memoryStorage()
     const state = createNewGameStateV10('燕七', 1000)
@@ -223,7 +236,12 @@ describe('GameSession', () => {
     expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 11 }).ok).toBe(true)
     makePartyOverwhelming(session)
 
-    session.advanceRealtimeTicks(5_000)
+    // 首战强化仅修改战斗快照；聚焦跨胜利边界，避免重开后普通队伍的强弱干扰此测试。
+    for (let tick = 0; tick < 5_000 && session.combat?.state.result === 'fighting'; tick += 1) {
+      session.advanceRealtimeTicks(1)
+    }
+    expect(session.combat?.state.result).toBe('victory')
+    session.advanceRealtimeTicks(40)
 
     expect(session.state.clearedStageByWorldDifficulty['world_01:1']).toBeGreaterThanOrEqual(1)
     expect(session.selection).toEqual({ worldId: 'world_01', difficulty: 1, stage: 1, mode: 'guard' })
@@ -327,7 +345,17 @@ describe('GameSession', () => {
     expect(largeStep.state.clearedStageByWorldDifficulty).toEqual(smallSteps.state.clearedStageByWorldDifficulty)
     expect(largeStep.selection).toEqual(smallSteps.selection)
     expect(largeStep.pendingCombatRestart).toEqual(smallSteps.pendingCombatRestart)
-    expect(largeStep.combat?.state).toEqual(smallSteps.combat?.state)
+    const largeCombat = structuredClone(largeStep.combat?.state)
+    const smallCombat = structuredClone(smallSteps.combat?.state)
+    // 连续dt积分的浮点加法顺序可能有末位误差；只容许行动条数值误差，其余状态仍精确比较。
+    if (largeCombat && smallCombat) for (const side of ['party', 'enemies', 'summons'] as const) {
+      expect(largeCombat[side]).toHaveLength(smallCombat[side].length)
+      largeCombat[side].forEach((unit, index) => {
+        expect(unit.gauge).toBeCloseTo(smallCombat[side][index].gauge, 10)
+        unit.gauge = smallCombat[side][index].gauge
+      })
+    }
+    expect(largeCombat).toEqual(smallCombat)
     expect(largeStep.state.inventory).toEqual(smallSteps.state.inventory)
   })
 
@@ -425,5 +453,66 @@ describe('GameSession', () => {
     const session = sessionWithParty()
     expect(session.startStage({ worldId: 'world_01', difficulty: 2, stage: 1, mode: 'guard', seed: 1 }))
       .toEqual({ ok: false, message: '难度尚未解锁' })
+  })
+})
+
+
+describe('复活刷新永久属性', () => {
+  it('战斗中升级后召唤重读永久生命，但不刷新主人本场战斗属性', () => {
+    const session = GameSession.createNew(memoryStorage(), '召唤测试', 1000)
+    session.state.formation = [{ heroId: 'hero_player', row: 0, col: 0 }]
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 19 }).ok).toBe(true)
+    const engine = session.combat!
+    engine.advance(1500)
+    const actor = engine.state.party[0]
+    const originalHp = actor.maxHp
+    const progress = session.state.heroes.hero_player
+    progress.careers[progress.currentCareerId].level = 10
+    const current = buildCombatParty(session.state)[0]
+    actor.skillIds = [72]
+    actor.energy = 5
+    actor.gauge = 1000
+    engine.state.enemies.forEach(enemy => { enemy.gauge = 0 })
+    engine.advance(100)
+    const summon = engine.state.summons[0]
+    expect(summon.maxHp).toBe(Math.round(current.maxHp * 1.3))
+    expect(summon.attributes[6]).toBeCloseTo(originalHp * 1.3, 8)
+    expect(actor.maxHp).toBe(originalHp)
+    expect(current.maxHp).toBeGreaterThan(originalHp)
+  })
+
+  it('战斗中升级并装配武学后，复活按当前面板恢复并携带新技能', () => {
+    const session = GameSession.createNew(memoryStorage(), '复活测试', 1000)
+    recruitFromTavern(session.state, 'hero_mu_nianci')
+    session.state.formation = [
+      { heroId: 'hero_player', row: 0, col: 0 },
+      { heroId: 'hero_mu_nianci', row: 1, col: 0 },
+    ]
+    expect(session.startStage({ worldId: 'world_01', stage: 1, mode: 'guard', seed: 19 }).ok).toBe(true)
+    const engine = session.combat!
+    engine.advance(1500)
+    const fallen = engine.state.party.find(unit => unit.id === 'hero_player')!
+    const healer = engine.state.party.find(unit => unit.id === 'hero_mu_nianci')!
+    const previousAttack = fallen.externalAttack
+    fallen.alive = false
+    fallen.hp = 0
+    healer.gauge = 1000
+    healer.energy = 5
+    healer.skillIds = [64]
+    engine.state.enemies.forEach(enemy => { enemy.gauge = 0 })
+    const progress = session.state.heroes.hero_player
+    progress.level = 10
+    progress.learnedMartials.original_skill_42 = { level: 10, investedSp: 0, invested: { worldCurrency: {}, contribution: {} } }
+    expect(equipMartial(session.state, 'hero_player', 'original_skill_42', 0).ok).toBe(true)
+    const current = buildCombatParty(session.state).find(unit => unit.id === fallen.id)!
+    expect(fallen.externalAttack).toBe(previousAttack)
+    const events = engine.advance(400)
+    expect(events).toContainEqual(expect.objectContaining({ type: 'unit-revived', targetId: fallen.id }))
+    expect(fallen.hp).toBe(Math.round(current.maxHp * 0.2))
+    expect(fallen.externalAttack).toBe(current.externalAttack)
+    expect(fallen.externalAttack).toBeGreaterThan(previousAttack)
+    expect(fallen.skillIds).toEqual(current.skillIds)
+    expect(fallen.skillLevels?.[42]).toBe(10)
+    expect(fallen.attributes).toEqual(current.attributes)
   })
 })

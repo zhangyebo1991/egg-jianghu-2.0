@@ -1,14 +1,12 @@
 import { createCombatEngine, type CombatEngine } from '../combat/engine'
 import { createRng, type Rng } from '../combat/rng'
-import { buildAttributeMap, buildCareerCombatCoefficients, buildCombatStats, equippedMainhandWeaponType } from '../combat/stats'
+import { buildAttributeMap, buildCareerCombatCoefficients, buildCombatStats, equippedMainhandWeaponType, equippedBaseAttack, equippedOffhandSoulId } from '../combat/stats'
 import type { CombatEvent, CombatStartInput, CombatUnit, StageSelectionInput } from '../combat/types'
-import { careerById } from '../content/careers'
 import { FACTIONS } from '../content/factions'
 import { heroByIdV10, heroDisplayNameV10 } from '../content/heroes'
 import { WORLDS } from '../content/worlds'
 import { martialByIdV10 } from '../content/martials'
 import { skillById } from '../content/skills'
-import { applyPassiveAttributes } from '../combat/skill-ai'
 import {
   clearedStageOf,
   isDifficultyUnlocked,
@@ -39,6 +37,7 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
     const definition = heroByIdV10(slot.heroId)
     if (!progress?.recruited || !definition) return []
     const stats = buildCombatStats(definition, progress, state.inventory)
+    const baseAttack = equippedBaseAttack(progress, state.inventory)
     const carried = progress.equippedMartialIds.flatMap((id) => {
       const martial = id ? martialByIdV10(id) : undefined
       return martial && progress.learnedMartials[martial.id] && skillById(martial.originalSkillId) ? [martial] : []
@@ -52,6 +51,8 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       row: slot.row,
       col: slot.col,
       formationOrder: formationOrder(slot.row, slot.col),
+      // 原版按save角色编号升序创建；无原版编号的自创角色排在原版角色之后。
+      instanceOrder: definition.sourceId ?? 100000 + formationOrder(slot.row, slot.col),
       rank: 'normal' as const,
       alive: true,
       hp: stats.maxHp,
@@ -73,19 +74,25 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       cooldowns: {},
       statuses: [],
       skillIds: [...new Set(carried.map((martial) => martial.originalSkillId))],
-      skillLevels: Object.fromEntries(carried.map((martial) => [martial.originalSkillId, progress.learnedMartials[martial.id].level])),
-      baseAttackId: careerById(progress.currentCareerId)?.basicAttackSkillId ?? 1,
+      skillLevels: Object.fromEntries([
+        [baseAttack.id, baseAttack.level],
+        ...carried.map((martial) => [martial.originalSkillId, progress.learnedMartials[martial.id].level]),
+      ]),
+      baseAttackId: baseAttack.id,
       mainhandWeaponType: equippedMainhandWeaponType(progress, state.inventory),
+      offhandSoulId: equippedOffhandSoulId(progress, state.inventory),
       attributes: buildAttributeMap(definition, progress, state.inventory),
     }
-    applyPassiveAttributes(unit)
     return [unit]
   })
 
 export const buildCombatStartInput = (
   state: GameStateV10,
   input: StageSelectionInput,
-): CombatStartInput => ({ ...input, party: buildCombatParty(state) })
+): CombatStartInput => ({
+  ...input,
+  party: buildCombatParty(state),
+})
 
 export class SaveConflictError extends Error {
   readonly actualSnapshot: string | null
@@ -172,7 +179,7 @@ export class GameSession {
     if (combatInput.party.length === 0) return { ok: false, message: '请先配置出战阵容' }
 
     this.selection = { worldId: input.worldId, difficulty, stage: input.stage, mode: input.mode }
-    this.combat = createCombatEngine(combatInput)
+    this.combat = createCombatEngine(combatInput, unit => this.currentPartyUnit(unit))
     this.pendingCombatRestart = null
     return { ok: true, message: '战斗开始' }
   }
@@ -279,6 +286,11 @@ export class GameSession {
     }
   }
 
+  private currentPartyUnit(unit: CombatUnit): CombatUnit | undefined {
+    // 复活和召唤核心读取当前永久属性；复活位置规则仍单独由战斗实例处理。
+    return buildCombatParty({ ...this.state, formation: [{ heroId: unit.id, row: unit.row, col: unit.col }] })[0]
+  }
+
   private restartSelection(selection: CampaignSelection): void {
     this.selection = selection
     this.combat = createCombatEngine(buildCombatStartInput(this.state, {
@@ -287,7 +299,7 @@ export class GameSession {
       stage: selection.stage,
       mode: selection.mode,
       seed: this.combatRng.nextInt(1, 2_147_483_647),
-    }))
+    }), unit => this.currentPartyUnit(unit))
   }
 
   private handleResult(): boolean {

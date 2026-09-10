@@ -1,0 +1,278 @@
+{
+  "environment": "Edge headless; 原版Worker; nwjs转html5宿主适配; 原版战斗代码未替换",
+  "scope": "我方普通角色及同编号敌人调用完整角色行动261，冷却缩减100；我方副手器魂123有无对照，敌方数据编号为显式注入",
+  "cases": [
+    {
+      "kind": "action-pause",
+      "side": "party",
+      "equipped": false,
+      "pauseSamples": [
+        {
+          "elapsedMs": 0,
+          "acting": 1,
+          "paused": 1
+        },
+        {
+          "elapsedMs": 1199.9999999999993,
+          "acting": 0,
+          "paused": 1
+        },
+        {
+          "elapsedMs": 1699.9999999999993,
+          "acting": 0,
+          "paused": 0
+        }
+      ]
+    },
+    {
+      "side": "party",
+      "actorSlot": 7,
+      "previousEnemyRole": 0,
+      "injectedEnemyRole": 1,
+      "equipped": false,
+      "itemId": 1691,
+      "role": 1,
+      "initialCooldown": 0,
+      "elapsedMs": 1916.7000000000005,
+      "cooldownSeconds": 0.8,
+      "finalRole": 1,
+      "cooldownSlots": [
+        0,
+        0.8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": [
+        [
+          "角色行动",
+          0
+        ],
+        [
+          "选中技能编号",
+          0
+        ],
+        [
+          "选中技能等级",
+          0
+        ],
+        [
+          "选中技能槽编号",
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "action-pause",
+      "side": "party",
+      "equipped": true,
+      "pauseSamples": [
+        {
+          "elapsedMs": 0,
+          "acting": 1,
+          "paused": 1
+        },
+        {
+          "elapsedMs": 1216.5,
+          "acting": 0,
+          "paused": 1
+        },
+        {
+          "elapsedMs": 1716.5,
+          "acting": 0,
+          "paused": 0
+        }
+      ]
+    },
+    {
+      "side": "party",
+      "actorSlot": 7,
+      "previousEnemyRole": 0,
+      "injectedEnemyRole": 1,
+      "equipped": true,
+      "itemId": 1691,
+      "role": 1,
+      "initialCooldown": 0,
+      "elapsedMs": 1916.499999999999,
+      "cooldownSeconds": 0,
+      "finalRole": 1,
+      "cooldownSlots": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": [
+        [
+          "角色行动",
+          0
+        ],
+        [
+          "选中技能编号",
+          0
+        ],
+        [
+          "选中技能等级",
+          0
+        ],
+        [
+          "选中技能槽编号",
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "action-pause",
+      "side": "enemy",
+      "equipped": false,
+      "pauseSamples": [
+        {
+          "elapsedMs": 0,
+          "acting": 1,
+          "paused": 1
+        },
+        {
+          "elapsedMs": 1199.9999999999993,
+          "acting": 0,
+          "paused": 1
+        },
+        {
+          "elapsedMs": 1699.9999999999993,
+          "acting": 0,
+          "paused": 0
+        }
+      ]
+    },
+    {
+      "side": "enemy",
+      "actorSlot": 22,
+      "previousEnemyRole": 0,
+      "injectedEnemyRole": 1,
+      "equipped": false,
+      "itemId": 1691,
+      "role": 1,
+      "initialCooldown": 0,
+      "elapsedMs": 1900.000000000002,
+      "cooldownSeconds": 0.8,
+      "finalRole": 1,
+      "cooldownSlots": [
+        0,
+        0.8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": [
+        [
+          "角色行动",
+          0
+        ],
+        [
+          "选中技能编号",
+          0
+        ],
+        [
+          "选中技能等级",
+          0
+        ],
+        [
+          "选中技能槽编号",
+          0
+        ]
+      ]
+    },
+    {
+      "kind": "action-pause",
+      "side": "enemy",
+      "equipped": true,
+      "pauseSamples": [
+        {
+          "elapsedMs": 0,
+          "acting": 1,
+          "paused": 1
+        },
+        {
+          "elapsedMs": 1199.9999999999993,
+          "acting": 0,
+          "paused": 1
+        },
+        {
+          "elapsedMs": 1699.9999999999993,
+          "acting": 0,
+          "paused": 0
+        }
+      ]
+    },
+    {
+      "side": "enemy",
+      "actorSlot": 22,
+      "previousEnemyRole": 0,
+      "injectedEnemyRole": 1,
+      "equipped": true,
+      "itemId": 1691,
+      "role": 1,
+      "initialCooldown": 0,
+      "elapsedMs": 1916.5999999999954,
+      "cooldownSeconds": 0,
+      "finalRole": 1,
+      "cooldownSlots": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "selected": [
+        [
+          "角色行动",
+          0
+        ],
+        [
+          "选中技能编号",
+          0
+        ],
+        [
+          "选中技能等级",
+          0
+        ],
+        [
+          "选中技能槽编号",
+          0
+        ]
+      ]
+    }
+  ]
+}

@@ -1,6 +1,9 @@
 import { careerById, careerCoefficientAtLevel } from '../content/careers'
-import { heartMethodByIdV10 } from '../content/martials'
-import { artifactSoulById, equipmentAttributeValue, equipmentDefinitionById } from '../content/equipment'
+import { heartMethodByIdV10, martialByIdV10 } from '../content/martials'
+import { skillById } from '../content/skills'
+import { ATTRIBUTE_BY_ID } from '../content/attributes'
+import { isMartialCareerCompatible } from '../domain/martial-training'
+import { artifactSoulById, equipmentAttributeValue, equipmentDefinitionById, EQUIPMENT_SLOTS } from '../content/equipment'
 import type { HeroDefinitionV10 } from '../content/heroes'
 import type { EquipmentInstance, HeroProgressV10 } from '../domain/types'
 import type { AttributeMap } from '../content/attributes'
@@ -30,6 +33,32 @@ export interface CombatStats {
 }
 
 const COMBAT_STAT_ATTRIBUTE_IDS = new Set([6, 7, 8, 9, 10, 11, 12, 13, 14, 18, 19, 28, 29, 37])
+
+/** 原版通用单条属性的技能分支；当前技能表只使用六项增幅与经验加成。 */
+export const skillAttributeValue = (sxId: number, coefficient: number, level: number, tier: number): number => {
+  const attribute = ATTRIBUTE_BY_ID[sxId]
+  if (!attribute || level <= 0) return 0
+  const scale = attribute.calcType === '增幅' ? 100 : 1000
+  return Math.round(scale * level * 0.35 * Math.pow(1.4, tier - 1)
+    * (attribute.default / 100) * (coefficient / 100)) / 100
+}
+
+export const equippedSkillAttributes = (progress: HeroProgressV10, attributes: AttributeMap = {}): AttributeMap => {
+  const bonuses: AttributeMap = {}
+  for (const id of progress.equippedMartialIds) {
+    const martial = id ? martialByIdV10(id) : undefined
+    if (!martial || !isMartialCareerCompatible(progress.currentCareerId, martial)) continue
+    const learned = progress.learnedMartials[martial.id]
+    const skill = skillById(martial.originalSkillId)
+    if (!skill || !learned || learned.level <= 0) continue
+    const level = learned.level + Math.max(0, attributes[75 + skill.skillCategory] ?? 0)
+    for (const modifier of skill.equippedAttributes ?? []) {
+      bonuses[modifier.sxId] = (bonuses[modifier.sxId] ?? 0)
+        + skillAttributeValue(modifier.sxId, modifier.coefficient, level, skill.skillTier)
+    }
+  }
+  return bonuses
+}
 
 const DEFAULT_CAREER_COMBAT_COEFFICIENTS: CareerCombatCoefficients = {
   physicalAttack: 1,
@@ -81,16 +110,17 @@ export const buildCombatStats = (
     }
     for (const effect of equipmentDefinition.fixedEffects ?? []) addEquipmentBonus(effect.attributeId, effect.value)
     const artifactSoul = artifactSoulById(equipmentDefinition.artifactSoulId)
-    if (artifactSoul) addEquipmentBonus(artifactSoul.attributeId, artifactSoul.value)
+    if (artifactSoul?.kind === '特殊词条') addEquipmentBonus(artifactSoul.attributeId, artifactSoul.value)
   }
 
-  // expr#1026..1029：六项基础核心都读取「体」；装备核心值在天资与职业系数之前相加。
+  const skillBonuses = equippedSkillAttributes(progress, equipmentBonuses)
+  // 原版先将技能增幅与天资相加，取整后再乘职业核心系数。
   const sharedCoreBase = 100 + Math.pow(1.0095, aptitude.constitution * 10) * 5
   const coreStat = (base: number, equipmentAttributeId: number, aptitudeBonus: number): number => Math.round(
     (base + (equipmentBonuses[equipmentAttributeId] ?? 0))
-    * (100 + aptitudeBonus) / 100
-    * coreCoefficient,
-  )
+    * (100 + aptitudeBonus + (equipmentBonuses[125 + equipmentAttributeId] ?? 0)
+      + (skillBonuses[125 + equipmentAttributeId] ?? 0)) / 100,
+  ) * coreCoefficient
 
   const stats: CombatStats = {
     // expr#1030..1035 天资加成：生命=(体+精)/2、速度=敏、物攻=勇、物防=体、法攻=智、法防=精。
@@ -291,17 +321,39 @@ export const buildAttributeMap = (
     const artifactSoul = artifactSoulById(definition?.artifactSoulId)
     const fixedBonuses = [
       ...(definition?.fixedEffects ?? []),
-      ...(artifactSoul ? [{ attributeId: artifactSoul.attributeId, value: artifactSoul.value }] : []),
+      ...(artifactSoul?.kind === '特殊词条' ? [{ attributeId: artifactSoul.attributeId, value: artifactSoul.value }] : []),
     ]
     for (const bonus of fixedBonuses) {
       if (COMBAT_STAT_ATTRIBUTE_IDS.has(bonus.attributeId)) continue
       map[bonus.attributeId] = (map[bonus.attributeId] ?? 0) + bonus.value
     }
   }
+  for (const [id, value] of Object.entries(equippedSkillAttributes(progress, map))) {
+    const sxId = Number(id)
+    if (!COMBAT_STAT_ATTRIBUTE_IDS.has(sxId)) map[sxId] = (map[sxId] ?? 0) + value
+  }
   return map
 }
 
 /** 取得当前装备方案的主手 wp[7] 武器类型，供战斗熟练增伤乘区使用。 */
+/** 原版角色普攻编等：按部位顺序取最后一个器魂替换，替换技能基础等级为1。 */
+export const equippedBaseAttack = (
+  progress: HeroProgressV10,
+  equipment: EquipmentInstance[],
+): { id: number; level: number } => {
+  let result = {
+    id: careerById(progress.currentCareerId)?.basicAttackSkillId ?? 1,
+    level: progress.careers[progress.currentCareerId]?.level ?? 1,
+  }
+  for (const slot of EQUIPMENT_SLOTS) {
+    const instance = equipment.find((item) => item.uid === progress.equipmentBySlot[slot])
+    const definition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
+    const soul = artifactSoulById(definition?.artifactSoulId)
+    if (soul?.kind === '普攻替换') result = { id: soul.attributeId, level: 1 }
+  }
+  return result
+}
+
 export const equippedMainhandWeaponType = (
   progress: HeroProgressV10,
   equipment: EquipmentInstance[] = [],
@@ -311,4 +363,12 @@ export const equippedMainhandWeaponType = (
   const instance = equipment.find((item) => item.uid === uid)
   const definition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
   return definition?.slot === 'weapon' ? definition.weaponType : undefined
+}
+
+
+/** 原版物品装备写save[13+wp6]，器魂生效读取save15，即副手槽。 */
+export const equippedOffhandSoulId = (progress: HeroProgressV10, equipment: EquipmentInstance[]): number | undefined => {
+  const instance = equipment.find(item => item.uid === progress.equipmentBySlot.offhand)
+  const definition = instance ? equipmentDefinitionById(instance.definitionId) : undefined
+  return definition?.slot === 'offhand' ? definition.artifactSoulId : undefined
 }

@@ -1,0 +1,106 @@
+{
+  "environment": "Edge headless; 原版Worker; nwjs转html5宿主适配; 原版弹体生成/移动/碰撞/清除代码未替换",
+  "scope": "直接调用原版持续效果生成函数，观察zidan1生成至碰撞；不包含1000ms调度入口",
+  "cases": [
+    {
+      "name": "生命恢复",
+      "initialHp": 5000,
+      "amount": 101,
+      "expectedHp": 5101,
+      "samples": [
+        {
+          "tick": 1994,
+          "elapsedMs": 0,
+          "hp": 5000,
+          "bullets": 0
+        },
+        {
+          "tick": 1995,
+          "elapsedMs": 16.70000000000016,
+          "hp": 5101,
+          "bullets": 0
+        }
+      ]
+    },
+    {
+      "name": "恢复效果",
+      "initialHp": 5000,
+      "amount": 101,
+      "expectedHp": 5101,
+      "samples": [
+        {
+          "tick": 2061,
+          "elapsedMs": 0,
+          "hp": 5000,
+          "bullets": 0
+        },
+        {
+          "tick": 2062,
+          "elapsedMs": 16.600000000003945,
+          "hp": 5101,
+          "bullets": 0
+        }
+      ]
+    },
+    {
+      "name": "流血效果",
+      "initialHp": 5000,
+      "amount": 101,
+      "expectedHp": 4899,
+      "samples": [
+        {
+          "tick": 2129,
+          "elapsedMs": 0,
+          "hp": 5000,
+          "bullets": 0
+        },
+        {
+          "tick": 2130,
+          "elapsedMs": 16.500000000000625,
+          "hp": 4899,
+          "bullets": 0
+        }
+      ]
+    },
+    {
+      "name": "燃烧效果",
+      "initialHp": 5000,
+      "amount": 101,
+      "expectedHp": 4899,
+      "samples": [
+        {
+          "tick": 2197,
+          "elapsedMs": 0,
+          "hp": 5000,
+          "bullets": 0
+        },
+        {
+          "tick": 2198,
+          "elapsedMs": 16.70000000000016,
+          "hp": 4899,
+          "bullets": 0
+        }
+      ]
+    },
+    {
+      "name": "中毒效果",
+      "initialHp": 5000,
+      "amount": 101,
+      "expectedHp": 4899,
+      "samples": [
+        {
+          "tick": 2265,
+          "elapsedMs": 0,
+          "hp": 5000,
+          "bullets": 0
+        },
+        {
+          "tick": 2266,
+          "elapsedMs": 16.500000000000625,
+          "hp": 4899,
+          "bullets": 0
+        }
+      ]
+    }
+  ]
+}

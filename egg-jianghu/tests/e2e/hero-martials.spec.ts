@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
-import { FACTION_MARTIALS, martialByIdV10 } from '../../src/content/martials'
+import { FACTION_MARTIALS, martialByIdV10, martialEffectAtLevel } from '../../src/content/martials'
+import { EQUIPMENT_DEFINITIONS } from '../../src/content/equipment'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
 test.beforeEach(async ({ page }) => {
@@ -55,6 +56,7 @@ test('武学装配替换卸下、筛选记忆、保存和战斗快照', async ({
   await expect(page.locator('.hm-slot')).toHaveCount(4)
   await expect(page.locator('.hm-card')).toHaveCount(12)
   await expect(page.getByTestId('martial-library')).not.toContainText('[color=')
+  await expect(page.getByTestId('martial-library')).not.toContainText('buff几率')
   await page.getByTestId('martial-slot-0').getByRole('button', { name: '装配', exact: true }).click()
   await page.getByTestId('learned-original_skill_42').getByRole('button').click()
   await expect(page.getByTestId('martial-slot-0')).toContainText('野球拳')
@@ -103,6 +105,50 @@ test('武学装配替换卸下、筛选记忆、保存和战斗快照', async ({
   await expect(page.getByTestId('martial-slot-2').getByRole('button', { name: '卸下' })).toBeDisabled()
   await expect(page.getByTestId('idle-combat-return')).toBeVisible()
   expect(errors).toEqual([])
+})
+
+test('器魂增加技能等级后，武学说明显示超过学习上限的实际效果', async ({ page }, testInfo) => {
+  const martial = martialByIdV10('original_skill_42')!
+  const equipment = EQUIPMENT_DEFINITIONS.find(item => item.artifactSoulId === 26)!
+  expect(equipment).toBeDefined()
+  await page.evaluate(({ key, equipment, maxLevel }) => {
+    window.__EGG_JIANGHU__.seedLearnedMartial('hero_player', 'original_skill_42', maxLevel, 0)
+    const state = window.__EGG_JIANGHU__.getState()
+    const hero = state.heroes.hero_player
+    state.inventory.push({ uid: 'skill-level-soul', definitionId: equipment.id, level: 1, quality: 1, coreStats: [], affixes: [], locked: false })
+    hero.equipmentBySlot[equipment.slot] = 'skill-level-soul'
+    hero.equipmentSets[hero.activeEquipmentSetIndex][equipment.slot] = 'skill-level-soul'
+    window.localStorage.setItem(key, JSON.stringify(state))
+  }, { key: SAVE_KEY_V10, equipment, maxLevel: martial.maxLevel })
+  await page.reload()
+  await page.getByRole('button', { name: '继续游戏' }).click()
+  await page.getByTestId('tab-heroes').click()
+  await page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]').click()
+  const card = page.getByTestId('learned-original_skill_42')
+  await expect(card).toContainText(`技能等级加成 +5 · 生效 Lv.${martial.maxLevel + 5}`)
+  await expect(card.locator('p')).toContainText(`${martialEffectAtLevel(martial, martial.maxLevel + 5)}%`)
+  await card.screenshot({ path: testInfo.outputPath('martial-effective-level.png'), animations: 'disabled' })
+})
+
+test('武学装配属性在实际基础面板生效，卸下恢复', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.evaluate(() => window.__EGG_JIANGHU__.seedLearnedMartial('hero_player', 'original_skill_42', 10))
+  await page.getByTestId('tab-heroes').click()
+  const basicTab = page.locator('[data-action="hero-main-tab"][data-main-tab="basic"]')
+  const martialTab = page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]')
+  const attack = page.locator('.attr2[data-stat-label="物攻"] .av')
+  await basicTab.click()
+  await expect(attack).toBeVisible()
+  const baseline = Number(await attack.innerText())
+  await martialTab.click()
+  await page.getByTestId('martial-slot-0').getByRole('button', { name: '装配', exact: true }).click()
+  await page.getByTestId('learned-original_skill_42').getByRole('button').click()
+  await basicTab.click()
+  expect(Number(await attack.innerText())).toBeGreaterThan(baseline)
+  await martialTab.click()
+  await page.getByTestId('martial-slot-0').getByRole('button', { name: '卸下' }).click()
+  await basicTab.click()
+  await expect(attack).toHaveText(String(baseline))
 })
 
 test('世界与势力往返保留位置，已学武学可直达装配', async ({ page }, testInfo) => {

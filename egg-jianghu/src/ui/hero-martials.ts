@@ -1,6 +1,7 @@
-import { heartMethodByIdV10, martialByIdV10, martialEffectAtLevel, type MartialDefinitionV10 } from '../content/martials'
+import { heartMethodByIdV10, martialByIdV10, martialEffectAtLevel, martialBuffChanceAtLevel, type MartialDefinitionV10 } from '../content/martials'
 import { skillById, summonById } from '../content/skills'
 import { buffById } from '../content/buffs'
+import type { AttributeMap } from '../content/attributes'
 import type { HeroProgressV10 } from '../domain/types'
 import { escapeHtml } from './html'
 import { martialIconAsset } from './career-icon-assets'
@@ -12,6 +13,7 @@ export interface HeroMartialsView {
   selectedSlot: number | null
   highlightedId: string | null
   locked: boolean
+  attributes?: AttributeMap
 }
 
 const martialCategory = (martial: MartialDefinitionV10): string => martial.skillCategory === 1 ? '通用' : martial.category
@@ -20,6 +22,7 @@ const martialDescription = (martial: MartialDefinitionV10, level: number): strin
   const skill = skillById(martial.originalSkillId)
   return martial.description
     .replace(/\[\/?color(?:=[^\]]+)?\]/gi, '')
+    .replace(/buff几率/g, String(martialBuffChanceAtLevel(martial, level)))
     .replace(/百分比数值/g, String(martialEffectAtLevel(martial, level)))
     .replace(/buff名/g, buffById(martial.buffId ?? skill?.appliedBuffId ?? 0)?.name ?? '状态')
     .replace(/召唤物名/g, summonById(skill?.summonId ?? 0)?.name ?? '召唤物')
@@ -28,6 +31,8 @@ const martialDescription = (martial: MartialDefinitionV10, level: number): strin
 
 export const renderHeroMartials = (view: HeroMartialsView): string => {
   const { hero, selectedSlot, locked } = view
+  const levelBonus = (martial: MartialDefinitionV10): number => Math.max(0, view.attributes?.[75 + martial.skillCategory] ?? 0)
+  const effectiveLevel = (martial: MartialDefinitionV10, level: number): number => level + levelBonus(martial)
   const learned = Object.entries(hero.learnedMartials).flatMap(([id, record]) => {
     const definition = martialByIdV10(id)
     return definition ? [{ definition, record }] : []
@@ -35,7 +40,7 @@ export const renderHeroMartials = (view: HeroMartialsView): string => {
   const categories = [...new Set(learned.map(({ definition }) => martialCategory(definition)))]
   const filtered = learned.filter(({ definition, record }) =>
     (view.category === 'all' || martialCategory(definition) === view.category)
-    && `${definition.name} ${martialDescription(definition, record.level)}`.includes(view.query.trim()))
+    && `${definition.name} ${martialDescription(definition, effectiveLevel(definition, record.level))}`.includes(view.query.trim()))
   const method = hero.heartMethodId ? heartMethodByIdV10(hero.heartMethodId) : undefined
   return `<section class="hero-martials" data-testid="hero-martials">
     <header class="hm-heading"><strong>随身武学</strong><span>按槽位顺序尝试施放 · 未携带不参与战斗</span></header>
@@ -60,7 +65,8 @@ export const renderHeroMartials = (view: HeroMartialsView): string => {
       const reason = !skill ? '暂无可用战斗效果' : locked ? '战斗中不可调整' : equippedSlot >= 0 ? `已携带 · 第 ${equippedSlot + 1} 槽` : selectedSlot === null ? '请先选择槽位' : null
       return `<article class="hm-card${view.highlightedId === martial.id ? ' highlighted' : ''}" data-testid="learned-${martial.id}">
         <header><img src="${escapeHtml(martialIconAsset(martial.id))}" alt=""><div><strong>${escapeHtml(martial.name)}</strong><small>${martialCategory(martial)} · Lv.${record.level} / ${martial.maxLevel}${skill?.behavior === 'passive' ? ' · 携带后被动生效' : ''}</small></div>${view.highlightedId === martial.id ? '<b class="hm-new">本次选中</b>' : ''}</header>
-        <p>${escapeHtml(martialDescription(martial, record.level))}</p><div class="hm-meta"><span>耗气 ${martial.energyCost}</span><span>冷却 ${martial.cooldownMs / 1000}秒</span></div>
+        ${levelBonus(martial) > 0 ? `<small>技能等级加成 +${levelBonus(martial)} · 生效 Lv.${effectiveLevel(martial, record.level)}</small>` : ''}
+        <p>${escapeHtml(martialDescription(martial, effectiveLevel(martial, record.level)))}</p><div class="hm-meta"><span>耗气 ${martial.energyCost}</span><span>冷却 ${martial.cooldownMs / 1000}秒</span></div>
         <button type="button" data-action="martial-equip" data-martial-id="${martial.id}" data-slot="${selectedSlot ?? -1}"${reason ? ' disabled' : ''}>${reason ?? `装入第 ${selectedSlot! + 1} 槽`}</button>
       </article>`
     }).join('') || `<p class="hm-empty">${learned.length ? '没有符合筛选条件的武学。' : '尚未学习武学，请前往世界内的势力研习。'}</p>`}</div>
