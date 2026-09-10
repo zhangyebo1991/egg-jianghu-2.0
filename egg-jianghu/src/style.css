@@ -3949,9 +3949,9 @@ body {
 .heroes-page .equipment-tooltip-columns section > small { display: block; margin-bottom: 7px; color: var(--gold); font-size: 13.5px; letter-spacing: .2em; }
 .heroes-page .equipment-properties { display: grid; gap: 5px; margin: 0; }
 .heroes-page .equipment-properties > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 16px; line-height: 1.75; }
-.heroes-page .equipment-properties dt { color: var(--paper-dim); }
-.heroes-page .equipment-properties dd { margin: 0; color: var(--gold-bright); font-weight: 700; font-variant-numeric: tabular-nums; }
-.heroes-page .equipment-properties i { color: var(--affix-grade, var(--paper-mute)); font-style: normal; font-size: 12.5px; }
+.heroes-page .equipment-properties dt { min-width: 0; color: var(--heroes-paper); font-size: 16px; }
+.heroes-page .equipment-properties dd { flex-shrink: 0; margin: 0; color: var(--gold-bright); font-size: 16px; font-weight: 700; line-height: inherit; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.heroes-page .equipment-properties i { color: var(--affix-grade, var(--paper-dim)); font-style: normal; font-size: 14px; }
 .heroes-page .equipment-properties [data-affix-grade] dd { color: var(--affix-grade); }
 .heroes-page .tt-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .heroes-page .tt-compare > .tt-col { min-width: 0; padding: 12px 18px 14px; }
