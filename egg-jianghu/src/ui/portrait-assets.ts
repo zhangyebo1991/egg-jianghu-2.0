@@ -1,3 +1,4 @@
+import { heroByIdV10 } from '../content/heroes'
 import heroABi from '../assets/heroes/hero_a_bi.png'
 import heroAZhu from '../assets/heroes/hero_a_zhu.png'
 import heroBaoXiruo from '../assets/heroes/hero_bao_xiruo.png'
@@ -94,8 +95,11 @@ export interface PortraitAsset {
   source: 'unique' | 'generic'
 }
 
+const originalHeroes = import.meta.glob<string>('../assets/heroes/original/hero_*.webp', { eager: true, import: 'default' })
+
 export const heroPortraitAsset = (heroId: string, category = '剑'): PortraitAsset => {
-  const unique = heroPortraits[heroId]
+  const sourceId = heroByIdV10(heroId)?.sourceId
+  const unique = originalHeroes[`../assets/heroes/original/hero_${sourceId}.webp`] ?? heroPortraits[heroId]
   return unique
     ? { url: unique, source: 'unique' }
     : { url: genericPortraits[category] ?? genericPortraits['剑'], source: 'generic' }

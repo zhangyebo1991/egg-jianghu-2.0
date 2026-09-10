@@ -1,3 +1,4 @@
+import { ownedSkinAttributes } from '../content/hero-skins'
 import { careerById, careerCoefficientAtLevel } from '../content/careers'
 import { heartMethodByIdV10, martialByIdV10 } from '../content/martials'
 import { skillById } from '../content/skills'
@@ -85,6 +86,7 @@ export const buildCombatStats = (
   definition: HeroDefinitionV10,
   progress: HeroProgressV10,
   equipment: EquipmentInstance[] = [],
+  unlockedSkinIds: readonly number[] = [],
 ): CombatStats => {
   const aptitude = definition.aptitudes
   const career = careerById(progress.currentCareerId)
@@ -113,13 +115,15 @@ export const buildCombatStats = (
     if (artifactSoul?.kind === '特殊词条') addEquipmentBonus(artifactSoul.attributeId, artifactSoul.value)
   }
 
+  const skinBonuses = ownedSkinAttributes(definition, progress, unlockedSkinIds)
   const skillBonuses = equippedSkillAttributes(progress, equipmentBonuses)
   // 原版先将技能增幅与天资相加，取整后再乘职业核心系数。
   const sharedCoreBase = 100 + Math.pow(1.0095, aptitude.constitution * 10) * 5
   const coreStat = (base: number, equipmentAttributeId: number, aptitudeBonus: number): number => Math.round(
     (base + (equipmentBonuses[equipmentAttributeId] ?? 0))
     * (100 + aptitudeBonus + (equipmentBonuses[125 + equipmentAttributeId] ?? 0)
-      + (skillBonuses[125 + equipmentAttributeId] ?? 0)) / 100,
+      + (skillBonuses[125 + equipmentAttributeId] ?? 0)
+      + (skinBonuses[125 + equipmentAttributeId] ?? 0)) / 100,
   ) * coreCoefficient
 
   const stats: CombatStats = {
@@ -300,8 +304,9 @@ export const buildAttributeMap = (
   definition: HeroDefinitionV10,
   progress: HeroProgressV10,
   equipment: EquipmentInstance[] = [],
+  unlockedSkinIds: readonly number[] = [],
 ): AttributeMap => {
-  const stats = buildCombatStats(definition, progress, equipment)
+  const stats = buildCombatStats(definition, progress, equipment, unlockedSkinIds)
   const map = panelToAttributeMap(stats, definition.aptitudes)
   // 已进入 CombatStats 的属性不再重复累加；其余核心/附词条在 AttributeMap 中直接生效。
   for (const uid of Object.values(progress.equipmentBySlot)) {

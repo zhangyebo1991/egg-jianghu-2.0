@@ -14,7 +14,7 @@ import type { HeroAptitudes } from '../content/heroes'
 import { careerIconAsset } from './career-icon-assets'
 import { equipmentIconAsset } from './equipment-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
-import heroStandFigure from '../assets/heroes/hero_stand.webp'
+import { heroAppearanceAsset } from './hero-appearance-assets'
 import type { InventoryItemView } from './inventory-page'
 import { renderHeroMartials, type HeroMartialsView } from './hero-martials'
 
@@ -65,9 +65,10 @@ export interface CareerTreeDetailView {
   actionDisabled: boolean
 }
 
-export type HeroesMainTab = 'basic' | 'equipment' | 'martials' | 'career'
+export type HeroesMainTab = 'basic' | 'equipment' | 'martials' | 'career' | 'skins'
 
 export interface HeroesHeroView {
+  appearanceUrl?: string
   id: string
   name: string
   grade: string
@@ -115,6 +116,7 @@ export interface HeroesPackView {
 }
 
 export interface HeroesPageViewModel {
+  skinsHtml?: string
   selectedHeroId: string | null
   mainTab: HeroesMainTab
   martials?: HeroMartialsView
@@ -149,6 +151,7 @@ const HERO_MAIN_TABS: Array<{ tab: HeroesMainTab; label: string }> = [
   { tab: 'equipment', label: '装备' },
   { tab: 'martials', label: '武学' },
   { tab: 'career', label: '职业' },
+  { tab: 'skins', label: '皮肤' },
 ]
 
 // 装备页槽位左右分列（对齐原版）：左 武器/头部/护腕/项链/至宝，右 副手/身体/足部/戒指
@@ -263,7 +266,7 @@ const renderAccessibleHeroStats = (hero: HeroesHeroView): string => {
 
 const renderHeroPortrait = (hero: HeroesHeroView, className: string): string => {
   const portrait = heroPortraitAsset(hero.id, hero.category ?? '剑')
-  return `<img class="${className}" src="${escapeHtml(portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">`
+  return `<img class="${className}" src="${escapeHtml(hero.appearanceUrl ?? portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">`
 }
 
 const renderXpBar = (value: number, required: number, maxed: boolean, extraClass = ''): string => {
@@ -469,7 +472,7 @@ const renderEquipmentTab = (hero: HeroesHeroView, equipment: HeroesEquipmentView
     <div class="eq-wrap">
       <div class="eq-col">${column(EQUIP_LEFT_SLOTS)}</div>
       <div class="eq-stand">
-        <img class="eq-figure-img" src="${escapeHtml(heroStandFigure)}" alt="" aria-hidden="true" draggable="false">
+        <img class="eq-figure-img" data-testid="hero-appearance" src="${escapeHtml(hero.appearanceUrl ?? heroAppearanceAsset(hero.id))}" alt="" aria-hidden="true" draggable="false">
         <div class="eq-disc" aria-hidden="true"></div>
       </div>
       <div class="eq-col">${column(EQUIP_RIGHT_SLOTS)}</div>
@@ -480,6 +483,7 @@ const renderEquipmentTab = (hero: HeroesHeroView, equipment: HeroesEquipmentView
           data-action="equipment-set-switch" data-hero-id="${escapeHtml(hero.id)}" data-set-index="${index}"
           data-testid="equipment-set-${index}">第${index + 1}套</button>`).join('')}
       </div>
+      <button type="button" class="eq-set-btn" data-action="hero-main-tab" data-main-tab="skins">更换皮肤</button>
       <span class="eq-hint">双击行囊物品直接换装 · 悬停槽位看详情</span>
     </footer>
   </div>`
@@ -493,7 +497,8 @@ const renderMainTabs = (view: HeroesPageViewModel, hero: HeroesHeroView): string
   <div class="hero-tab-panel" data-main-tab="basic"${view.mainTab === 'basic' ? '' : ' hidden'}>${renderBasicTab(hero)}</div>
   <div class="hero-tab-panel" data-main-tab="equipment"${view.mainTab === 'equipment' ? '' : ' hidden'}>${view.equipment ? renderEquipmentTab(hero, view.equipment) : ''}</div>
   <div class="hero-tab-panel" data-main-tab="martials"${view.mainTab === 'martials' ? '' : ' hidden'}>${view.martials ? renderHeroMartials(view.martials) : ''}</div>
-  <div class="hero-tab-panel" data-main-tab="career"${view.mainTab === 'career' ? '' : ' hidden'}>${renderCareerTab(hero)}</div>`
+  <div class="hero-tab-panel" data-main-tab="career"${view.mainTab === 'career' ? '' : ' hidden'}>${renderCareerTab(hero)}</div>
+  <div class="hero-tab-panel" data-main-tab="skins"${view.mainTab === 'skins' ? '' : ' hidden'}>${view.skinsHtml ?? ''}</div>`
 
 export type PackPaginationItem =
   | { type: 'page'; page: number; isCurrent: boolean }

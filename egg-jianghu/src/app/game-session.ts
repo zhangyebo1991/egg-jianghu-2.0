@@ -36,7 +36,7 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
     const progress = state.heroes[slot.heroId]
     const definition = heroByIdV10(slot.heroId)
     if (!progress?.recruited || !definition) return []
-    const stats = buildCombatStats(definition, progress, state.inventory)
+    const stats = buildCombatStats(definition, progress, state.inventory, state.unlockedSkinIds)
     const baseAttack = equippedBaseAttack(progress, state.inventory)
     const carried = progress.equippedMartialIds.flatMap((id) => {
       const martial = id ? martialByIdV10(id) : undefined
@@ -81,7 +81,7 @@ export const buildCombatParty = (state: GameStateV10): CombatUnit[] => state.for
       baseAttackId: baseAttack.id,
       mainhandWeaponType: equippedMainhandWeaponType(progress, state.inventory),
       offhandSoulId: equippedOffhandSoulId(progress, state.inventory),
-      attributes: buildAttributeMap(definition, progress, state.inventory),
+      attributes: buildAttributeMap(definition, progress, state.inventory, state.unlockedSkinIds),
     }
     return [unit]
   })

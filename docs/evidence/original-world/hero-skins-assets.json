@@ -1,0 +1,21 @@
+{
+  "sources": {
+    "js": "4de8811212f0b644e16da2f8fea4887610006b1d4afb8bed54d168e4345bcfd4",
+    "hh": "73213ffdfc001fbf2aaf4efc1e5e09973a40a2a5b00566099d9d8624e348d9a3",
+    "data": "d4b0af7ec45d009c60afacbd7a52c9a2c1691c7e8a010f74f33177d184a2aad5"
+  },
+  "heroCount": 193,
+  "skinCount": 267,
+  "imageCount": 460,
+  "mapping": {
+    "base": "js[id][3] -> 角色形象 animation name -> frame 0",
+    "skin": "hh[id][1] -> 角色形象 animation name -> frame 0"
+  },
+  "skinAttributes": "hh[6,8,10,12,14,16]；当前全部是 131..136 核心属性增幅",
+  "rules": {
+    "maxStars": 10,
+    "bonus": "皮肤品质 * 0.25 * 星级；已拥有累计，同品质外观不重复加成",
+    "upgradeCost": "当前星级 * 皮肤品质 ** 2，消耗物品 10 幻化石",
+    "acquisition": "本次不新增兑换，免费幻型开放，现有 unlockedSkinIds 保留并生效"
+  }
+}

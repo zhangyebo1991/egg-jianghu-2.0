@@ -77,7 +77,7 @@ export const campaignDropBonus = (state: GameStateV10): number => {
   for (const heroId of new Set(state.formation.map(slot => slot.heroId))) {
     const progress = state.heroes[heroId]
     const definition = heroByIdV10(heroId)
-    if (progress?.recruited && definition) bonus += buildAttributeMap(definition, progress, state.inventory)[42] ?? 0
+    if (progress?.recruited && definition) bonus += buildAttributeMap(definition, progress, state.inventory, state.unlockedSkinIds)[42] ?? 0
   }
   return Math.round(bonus * 100) / 100
 }

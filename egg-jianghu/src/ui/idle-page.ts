@@ -6,6 +6,7 @@ import { ORIGINAL_COMBAT_SPEEDS, type CombatSpeed } from '../combat/scheduler'
 import partyDeathImageUrl from '../assets/combat/zt-party-death.webp'
 
 export interface IdleCombatUnitView {
+  appearanceUrl?: string
   id: string
   name: string
   rank: 'normal' | 'elite' | 'captain' | 'boss'
@@ -137,7 +138,7 @@ const renderUnitPortrait = (unit: IdleCombatUnitView, side: 'party' | 'enemy'): 
   const fallback = side === 'party' ? category.slice(0, 1) : unit.name.slice(0, 1)
   return `<span class="unit-portrait">
     <span class="portrait-char" aria-hidden="true">${escapeHtml(fallback)}</span>
-    <img src="${escapeHtml(portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">
+    <img src="${escapeHtml(unit.appearanceUrl ?? portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">
     <span class="portrait-ring" aria-hidden="true"></span>
   </span>`
 }

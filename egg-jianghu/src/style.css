@@ -3800,9 +3800,9 @@ body {
 .heroes-page .eq-stand { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-height: 0; }
 .heroes-page .eq-figure-img { position: relative; z-index: 1; flex: 1; width: min(100%, 430px); min-height: 0; object-fit: contain; object-position: bottom; filter: drop-shadow(0 10px 18px rgb(0 0 0 / 55%)); }
 .heroes-page .eq-disc { width: 230px; max-width: 80%; height: 34px; margin-top: -18px; border: 1px solid #54492c; border-radius: 50%; background: radial-gradient(ellipse at 50% 40%, #4a4230, #221d12 70%); box-shadow: 0 0 18px rgb(196 155 86 / 20%); }
-.heroes-page .eq-foot { display: flex; align-items: center; justify-content: center; gap: 18px; }
+.heroes-page .eq-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
 .heroes-page .eq-sets { display: flex; gap: 8px; }
-.heroes-page .eq-set-btn { padding: 6px 18px; border: 1px solid #54492c; border-radius: 6px; color: #cbb27a; background: #221d12; font-size: 12.5px; letter-spacing: .2em; text-indent: .2em; transition: all .2s; }
+.heroes-page .eq-set-btn { white-space: nowrap; padding: 6px 18px; border: 1px solid #54492c; border-radius: 6px; color: #cbb27a; background: #221d12; font-size: 12.5px; letter-spacing: .2em; text-indent: .2em; transition: all .2s; }
 .heroes-page .eq-set-btn:hover { border-color: var(--gold); color: #f0dcae; }
 .heroes-page .eq-set-btn.active { border-color: var(--gold); color: #f0dcae; background: linear-gradient(170deg, #4a3a1c, #332812); box-shadow: 0 0 8px rgb(196 155 86 / 25%); }
 .heroes-page .eq-hint { color: var(--paper-mute); font-size: 11px; letter-spacing: .1em; }
@@ -4000,7 +4000,8 @@ body {
   .heroes-page .attr-tab-label { padding: 6px 10px; letter-spacing: .1em; writing-mode: horizontal-tb; }
   .heroes-page .attr2-grid, .heroes-page .ability-grid { grid-template-columns: 1fr; }
   .heroes-page .eq-wrap { grid-template-columns: repeat(2, auto); justify-content: center; }
-  .heroes-page .eq-stand { display: none; }
+  .heroes-page .eq-stand { display: grid; grid-column: 1 / -1; grid-row: 1; min-height: 200px; }
+  .heroes-page .eq-figure-img { height: 200px; }
   .heroes-page .hc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .heroes-page .cg-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .heroes-page .page-foot { align-items: flex-start; flex-direction: column; gap: 8px; letter-spacing: .12em; }
@@ -5348,3 +5349,21 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
   .heroes-page .hero-martials { padding: 12px; }
   .heroes-page .hm-slots, .heroes-page .hm-library { grid-template-columns: 1fr; }
 }
+
+/* 侠客皮肤：沿用资料页宽度，窄屏改为上下排列。 */
+.hero-skins { padding: 18px; min-width: 0; min-height: 0; overflow: auto; scrollbar-width: thin; }
+.hero-skins > header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.hero-skins h2 { margin: 0; color: var(--gold, #c8a76a); }
+.hero-skins > p { color: #aaa58c; font-size: 12px; line-height: 1.8; }
+.hero-skin-card { display: flex; gap: 16px; padding: 12px; margin: 12px 0; border: 1px solid #55472b; border-radius: 8px; background: #171c17; }
+.hero-skin-card.selected { border-color: #b49451; }
+.hero-skin-card > img { width: 100px; height: 150px; object-fit: contain; flex-shrink: 0; }
+.hero-skin-info { min-width: 0; align-self: center; }
+.hero-skin-info h3 { color: #d6bc83; margin: 0 0 10px; }
+.hero-skin-info small { font-size: 12px; font-weight: normal; }
+.hero-skin-info p { font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.hero-skin-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.hero-skins button { color: #dcc18a; background: #252b20; border: 1px solid #685936; border-radius: 4px; padding: 7px 10px; cursor: pointer; }
+.hero-skins button:disabled { opacity: .45; cursor: default; }
+.skin-source { color: #999480; font-size: 12px; }
+@media (max-width: 480px) { .hero-skin-card { flex-direction: column; align-items: center; } .hero-skin-info { width: 100%; } .hero-skins { padding: 12px; } }

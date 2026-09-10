@@ -1,3 +1,6 @@
+import { renderHeroSkins } from './ui/hero-skins'
+import { heroAppearanceAsset } from './ui/hero-appearance-assets'
+import { selectHeroSkin, upgradeHeroSkin } from './domain/hero-skins'
 import './style.css'
 import { GameSession, SaveConflictError } from './app/game-session'
 import { RuntimeClock } from './app/runtime-clock'
@@ -663,6 +666,7 @@ const unitView = (unit: CombatUnit): IdleCombatUnitView => {
     .find((candidate) => candidate && candidate.behavior !== 'passive')
   const base = skillById(unit.baseAttackId)
   return {
+    appearanceUrl: unit.side === 'party' && session.state.heroes[unit.id] ? heroAppearanceAsset(unit.id, session.state.heroes[unit.id], session.state.unlockedSkinIds) : undefined,
     id: unit.id,
     name: unit.name,
     rank: unit.rank,
@@ -898,7 +902,8 @@ const heroesViewModel = (): HeroesPageViewModel => {
         current: id === progress.currentCareerId,
       })),
       aptitudes: definition.aptitudes,
-      combatStats: buildCombatStats(definition, progress, session.state.inventory),
+      appearanceUrl: heroAppearanceAsset(definition.id, progress, session.state.unlockedSkinIds),
+      combatStats: buildCombatStats(definition, progress, session.state.inventory, session.state.unlockedSkinIds),
       category: heroMeridianCategory(definition),
       source,
       inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
@@ -999,11 +1004,12 @@ const heroesViewModel = (): HeroesPageViewModel => {
   }
 
   return {
+    skinsHtml: selectedId ? renderHeroSkins(session.state, selectedId, Boolean(session.combat || session.pendingCombatRestart)) : '',
     selectedHeroId: selectedId,
     mainTab: heroMainTab,
     martials: selectedProgress ? {
       hero: selectedProgress,
-      attributes: buildAttributeMap(heroByIdV10(selectedId!)!, selectedProgress, session.state.inventory),
+      attributes: buildAttributeMap(heroByIdV10(selectedId!)!, selectedProgress, session.state.inventory, session.state.unlockedSkinIds),
       query: heroMartialQuery,
       category: heroMartialCategory,
       selectedSlot: heroMartialSlot,
@@ -1043,7 +1049,7 @@ const formationViewModel = (): FormationPageViewModel => {
   const heroes = recruitedHeroes().map(({ definition, progress, name }) => {
     const currentCareer = careerById(progress.currentCareerId) ?? careerById(definition.baseCareerId)
     const careerRecord = progress.careers[progress.currentCareerId]
-    const combatStats = buildCombatStats(definition, progress, session.state.inventory)
+    const combatStats = buildCombatStats(definition, progress, session.state.inventory, session.state.unlockedSkinIds)
     return {
       id: definition.id,
       name,
@@ -2502,6 +2508,10 @@ const performAction = (button: HTMLButtonElement): void => {
   } else if (action === 'hero-pack-page') {
     heroPackPage = Math.max(1, dataNumber(button, 'page'))
   }
+  else if (action === 'skin-select' || action === 'skin-upgrade') {
+    if (session.combat || session.pendingCombatRestart) { notify('战斗期间不能更换或升级皮肤', true); return }
+    commitAction((action === 'skin-select' ? selectHeroSkin : upgradeHeroSkin)(session.state, heroId, dataNumber(button, 'skinId')))
+  }
   else if (action === 'equipment-equip') commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
   else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
   else if (action === 'equipment-set-switch') commitAction(switchEquipmentSet(session.state, heroId, dataNumber(button, 'setIndex')))
@@ -2509,7 +2519,7 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
   else if (action === 'hero-main-tab') {
     const tab = button.dataset.mainTab
-    if (tab === 'basic' || tab === 'equipment' || tab === 'martials' || tab === 'career') heroMainTab = tab
+    if (tab === 'basic' || tab === 'equipment' || tab === 'martials' || tab === 'career' || tab === 'skins') heroMainTab = tab
   }
   else if (action === 'hero-martial-slot') {
     const slot = dataNumber(button, 'slot')

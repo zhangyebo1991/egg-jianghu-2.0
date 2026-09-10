@@ -1,0 +1,1108 @@
+[
+  {
+    "name": "幻化总属性function",
+    "operations": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 28,
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "sid": "0",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 994,
+            "expression": "\"幻化总属性function\"",
+            "runtimeExpression": "\"幻化总属性function\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          7,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 53,
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "sid": "219522743952128",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "幻化编号",
+            "runtimeExpression": "[11,923794651304969]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 64,
+        "reference": "C3.Plugins.System.Cnds.Repeat",
+        "sid": "686889936440389",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "版本幻型数",
+            "runtimeExpression": "v0.GetValue()"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 63,
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "sid": "803610736080978",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "幻化编号",
+            "runtimeExpression": "[11,923794651304969]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "966047019025505",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 563,
+            "expression": "hh.At(幻化编号, 2)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), 2)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 135,
+            "expression": "人物编号",
+            "runtimeExpression": "v0.GetValue()"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          1
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "570873912174716",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 995,
+            "expression": "save.At(人物编号, subtract(hh.At(幻化编号, 4), 1), 19)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), subtract(n2.ExpObject(v3.GetValue(), 4), 1), 19)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 53,
+        "reference": "C3.Plugins.System.Acts.SetVar",
+        "sid": "879859628561970",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "词条次数",
+            "runtimeExpression": "[11,179454201325000]"
+          },
+          {
+            "expressionId": 2,
+            "expression": "0",
+            "runtimeExpression": "0"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 64,
+        "reference": "C3.Plugins.System.Cnds.Repeat",
+        "sid": "130169211593318",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 55,
+            "expression": "6",
+            "runtimeExpression": "6"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "563335602338512",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 996,
+            "expression": "hh.At(幻化编号, (6 + (2 * 词条次数)))",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), (6 + (2 * v2.GetValue())))"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 135,
+            "expression": "词条编号",
+            "runtimeExpression": "v0.GetValue()"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 63,
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "sid": "673398270407230",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "计数",
+            "runtimeExpression": "[11,294501465664207]"
+          },
+          {
+            "expressionId": 997,
+            "expression": "幻化词条属性(幻化编号, save.At(人物编号, subtract(add(hh.At(幻化编号, 4), 8), 1), 19))",
+            "runtimeExpression": "f0(v1.GetValue(), n2.ExpObject(v3.GetValue(), subtract(add(n4.ExpObject(v5.GetValue(), 4), 8), 1), 19))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 63,
+        "reference": "C3.Plugins.System.Acts.AddVar",
+        "sid": "884726911222537",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "词条次数",
+            "runtimeExpression": "[11,179454201325000]"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 65,
+        "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+        "sid": "593053963556967",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "计数",
+            "runtimeExpression": "v0.GetValue()"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "幻化点击",
+    "operations": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 28,
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "sid": "0",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 1619,
+            "expression": "\"幻化点击\"",
+            "runtimeExpression": "\"幻化点击\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": 1,
+        "objectName": "Touch",
+        "referenceIndex": 66,
+        "reference": "C3.Plugins.Touch.Cnds.OnTouchObject",
+        "sid": "782345605250173",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[4,1212]",
+            "runtimeExpression": "[4,1212]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          6,
+          1
+        ],
+        "objectId": 1,
+        "objectName": "Touch",
+        "referenceIndex": 68,
+        "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+        "sid": "191879043697605",
+        "inverted": true,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[4,375]",
+            "runtimeExpression": "[4,375]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          6,
+          2
+        ],
+        "objectId": 1,
+        "objectName": "Touch",
+        "referenceIndex": 68,
+        "reference": "C3.Plugins.Touch.Cnds.IsTouchingObject",
+        "sid": "495672784329045",
+        "inverted": true,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[4,320]",
+            "runtimeExpression": "[4,320]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": 1212,
+        "objectName": "幻化背景",
+        "referenceIndex": 70,
+        "reference": "C3.Plugins.Sprite.Cnds.IsBoolInstanceVarSet",
+        "sid": "833041265316930",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[10,3]",
+            "runtimeExpression": "[10,3]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          0
+        ],
+        "objectId": 1212,
+        "objectName": "幻化背景",
+        "referenceIndex": 71,
+        "reference": "C3.Plugins.Sprite.Acts.SetBoolInstanceVar",
+        "sid": "106310621120517",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[10,3]",
+            "runtimeExpression": "[10,3]"
+          },
+          {
+            "expressionId": null,
+            "expression": "[3,0]",
+            "runtimeExpression": "[3,0]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          1
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 45,
+        "reference": "C3.Plugins.System.Acts.Wait",
+        "sid": "161631098840569",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 460,
+            "expression": "0.2",
+            "runtimeExpression": "0.2"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 35,
+        "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+        "sid": "530611365515888",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "地点战斗开关",
+            "runtimeExpression": "[11,614569090057341]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          1
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 35,
+        "reference": "C3.Plugins.System.Cnds.CompareBoolVar",
+        "sid": "822897179051432",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "战斗开关",
+            "runtimeExpression": "[11,887625847774102]"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 79,
+        "reference": "C3.Plugins.System.Cnds.CompareVar",
+        "sid": "428831947886761",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "语言",
+            "runtimeExpression": "[11,659199636751412]"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 378,
+            "expression": "\"简体中文\"",
+            "runtimeExpression": "\"简体中文\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 52,
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "sid": "498535881081007",
+        "inverted": false,
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 52,
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "sid": "218667677121676",
+        "inverted": false,
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          7,
+          0
+        ],
+        "objectId": 12,
+        "objectName": "save",
+        "referenceIndex": 34,
+        "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+        "sid": "282351873976026",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "当前人物编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": 29,
+            "expression": "61",
+            "runtimeExpression": "61"
+          },
+          {
+            "expressionId": 3,
+            "expression": "1",
+            "runtimeExpression": "1"
+          },
+          {
+            "expressionId": 438,
+            "expression": "幻化背景.幻化编号",
+            "runtimeExpression": "n0.ExpInstVar()"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          2,
+          7,
+          1
+        ],
+        "objectId": 1212,
+        "objectName": "幻化背景",
+        "referenceIndex": 71,
+        "reference": "C3.Plugins.Sprite.Acts.SetBoolInstanceVar",
+        "sid": "629016956983697",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "[10,3]",
+            "runtimeExpression": "[10,3]"
+          },
+          {
+            "expressionId": null,
+            "expression": "[3,1]",
+            "runtimeExpression": "[3,1]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "幻化词条属性function",
+    "operations": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 28,
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "sid": "0",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 1625,
+            "expression": "\"幻化词条属性function\"",
+            "runtimeExpression": "\"幻化词条属性function\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          7,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 65,
+        "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+        "sid": "532984638908892",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 1626,
+            "expression": "multiply(multiply(hh.At(幻化编号, 4), 0.25), C3.clamp(幻化等级, 1, Infinity))",
+            "runtimeExpression": "multiply(multiply(n0.ExpObject(v1.GetValue(), 4), 0.25), C3.clamp(v2.GetValue(), 1, Infinity))"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "幻化升星材料function",
+    "operations": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 28,
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "sid": "0",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 1627,
+            "expression": "\"幻化升星材料function\"",
+            "runtimeExpression": "\"幻化升星材料function\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          7,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 65,
+        "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+        "sid": "522679233004352",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 1628,
+            "expression": "multiply(C3.clamp(幻化等级, 1, Infinity), pow(hh.At(幻化编号, 4), 2))",
+            "runtimeExpression": "multiply(C3.clamp(v0.GetValue(), 1, Infinity), pow(n1.ExpObject(v2.GetValue(), 4), 2))"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "幻化升星function",
+    "operations": [
+      {
+        "path": [
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 28,
+        "reference": "C3.Plugins.System.Cnds.IsGroupActive",
+        "sid": "0",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 1629,
+            "expression": "\"幻化升星function\"",
+            "runtimeExpression": "\"幻化升星function\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "937092964505181",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 1630,
+            "expression": "save.At(角色编号, subtract(add(hh.At(幻化编号, 4), 8), 1), 19)",
+            "runtimeExpression": "n0.ExpObject(v1.GetValue(), subtract(add(n2.ExpObject(v3.GetValue(), 4), 8), 1), 19)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,2]",
+            "runtimeExpression": "[8,2]"
+          },
+          {
+            "expressionId": 33,
+            "expression": "10",
+            "runtimeExpression": "10"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 49,
+        "reference": "C3.Plugins.System.Cnds.Compare",
+        "sid": "413475256421163",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 1631,
+            "expression": "指定物品数量(10, 0, 1, 0)",
+            "runtimeExpression": "f0(10, 0, 1, 0)"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,5]",
+            "runtimeExpression": "[8,5]"
+          },
+          {
+            "expressionId": 1632,
+            "expression": "幻化升星材料(幻化编号, save.At(角色编号, add(subtract(hh.At(幻化编号, 4), 1), 8), 19))",
+            "runtimeExpression": "f0(v1.GetValue(), n2.ExpObject(v3.GetValue(), add(subtract(n4.ExpObject(v5.GetValue(), 4), 1), 8), 19))"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          7,
+          3
+        ],
+        "objectId": 12,
+        "objectName": "save",
+        "referenceIndex": 34,
+        "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+        "sid": "444467400705948",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": 135,
+            "expression": "角色编号",
+            "runtimeExpression": "v0.GetValue()"
+          },
+          {
+            "expressionId": 1634,
+            "expression": "add(subtract(hh.At(幻化编号, 4), 1), 8)",
+            "runtimeExpression": "add(subtract(n0.ExpObject(v1.GetValue(), 4), 1), 8)"
+          },
+          {
+            "expressionId": 26,
+            "expression": "19",
+            "runtimeExpression": "19"
+          },
+          {
+            "expressionId": 1635,
+            "expression": "(C3.clamp(save.At(角色编号, add(subtract(hh.At(幻化编号, 4), 1), 8), 19), 1, 9) + 1)",
+            "runtimeExpression": "(C3.clamp(n0.ExpObject(v1.GetValue(), add(subtract(n2.ExpObject(v3.GetValue(), 4), 1), 8), 19), 1, 9) + 1)"
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 52,
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "sid": "985699742139415",
+        "inverted": false,
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 79,
+        "reference": "C3.Plugins.System.Cnds.CompareVar",
+        "sid": "368413478184940",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "语言",
+            "runtimeExpression": "[11,659199636751412]"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 378,
+            "expression": "\"简体中文\"",
+            "runtimeExpression": "\"简体中文\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          0,
+          8,
+          1,
+          8,
+          1,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 52,
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "sid": "914639805541717",
+        "inverted": false,
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 52,
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "sid": "283617513015779",
+        "inverted": false,
+        "parameters": []
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          0,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 79,
+        "reference": "C3.Plugins.System.Cnds.CompareVar",
+        "sid": "718222050118349",
+        "inverted": false,
+        "parameters": [
+          {
+            "expressionId": null,
+            "expression": "语言",
+            "runtimeExpression": "[11,659199636751412]"
+          },
+          {
+            "expressionId": null,
+            "expression": "[8,0]",
+            "runtimeExpression": "[8,0]"
+          },
+          {
+            "expressionId": 378,
+            "expression": "\"简体中文\"",
+            "runtimeExpression": "\"简体中文\""
+          }
+        ]
+      },
+      {
+        "path": [
+          8,
+          0,
+          8,
+          1,
+          8,
+          1,
+          6,
+          0
+        ],
+        "objectId": -1,
+        "objectName": "System",
+        "referenceIndex": 52,
+        "reference": "C3.Plugins.System.Cnds.Else",
+        "sid": "515803085178538",
+        "inverted": false,
+        "parameters": []
+      }
+    ]
+  }
+]

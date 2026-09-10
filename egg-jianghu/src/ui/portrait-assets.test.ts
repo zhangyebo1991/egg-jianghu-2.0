@@ -7,7 +7,7 @@ describe('侠客与敌人头像资源', () => {
     for (const hero of [...TAVERN_HEROES.map((item) => item.id), 'hero_player']) {
       const portrait = heroPortraitAsset(hero)
       expect(portrait.source).toBe('unique')
-      expect(portrait.url.endsWith('.png')).toBe(true)
+      expect(portrait.url).toMatch(/\.(png|webp)$/)
     }
   })
 

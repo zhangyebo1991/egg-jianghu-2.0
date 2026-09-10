@@ -130,6 +130,8 @@ const isHeroProgress = (value: unknown): boolean => {
     && value.equippedMartialIds.every((id) => id === null || typeof id === 'string')
     && (value.heartMethodId === null || typeof value.heartMethodId === 'string')
     && (setIndex === undefined || setIndex === 0 || setIndex === 1 || setIndex === 2)
+    && (value.selectedSkinId === undefined || (Number.isInteger(value.selectedSkinId) && Number(value.selectedSkinId) >= 0))
+    && (value.skinStars === undefined || (isRecord(value.skinStars) && Object.entries(value.skinStars).every(([key, stars]) => /^[2-8]$/.test(key) && Number.isInteger(stars) && Number(stars) >= 1 && Number(stars) <= 10)))
     && (value.customName === undefined || typeof value.customName === 'string')
     && (value.abilityTraining === undefined || isAbilityTraining(value.abilityTraining))
 }

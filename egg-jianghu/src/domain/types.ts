@@ -40,6 +40,9 @@ export interface CareerRecord {
 }
 
 export interface HeroProgressV10 {
+  /** 0 或缺省使用本体；同品质幻型共享星级，缺省为 1 星。 */
+  selectedSkinId?: number
+  skinStars?: Record<string, number>
   recruited: boolean
   customName?: string
   level: number
