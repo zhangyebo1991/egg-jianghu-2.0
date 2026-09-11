@@ -1,3 +1,4 @@
+import { HERO_LIFECYCLE_LABELS, heroLifecycleById } from './content/hero-lifecycle'
 import { createCloudAccess } from './cloud/bridge'
 import { renderHeroSkins } from './ui/hero-skins'
 import { heroAppearanceAsset } from './ui/hero-appearance-assets'
@@ -208,6 +209,7 @@ let renderedLocationKey = ''
 const pageScrollMemory = new Map<string, Array<{ selector: string; top: number; left: number }>>()
 let heroSellOpen = false
 let heroRosterQuery = ''
+let heroRosterLifecycleFilter = 'all'
 let heroRosterGradeFilter = 'all'
 let heroRosterCategoryFilter = 'all'
 let heroRosterLocatePending = false
@@ -611,6 +613,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   renderedLocationKey = ''
   heroSellOpen = false
   heroRosterQuery = ''
+  heroRosterLifecycleFilter = 'all'
   heroRosterGradeFilter = 'all'
   heroRosterCategoryFilter = 'all'
   heroRosterLocatePending = false
@@ -983,10 +986,15 @@ const heroesViewModel = (): HeroesPageViewModel => {
 
   const heroes = recruitedHeroes().map(buildHero)
   const query = heroRosterQuery.trim().toLocaleLowerCase()
-  const rosterHeroes = heroes.filter((hero) =>
-    (!query || hero.name.toLocaleLowerCase().includes(query))
-    && (heroRosterGradeFilter === 'all' || hero.grade === heroRosterGradeFilter)
-    && (heroRosterCategoryFilter === 'all' || hero.category === heroRosterCategoryFilter))
+  const rosterHeroes = heroes.filter((hero) => {
+    const lifecycle = heroLifecycleById(hero.id)
+    const matchesLifecycle = heroRosterLifecycleFilter === 'all'
+      || (heroRosterLifecycleFilter === 'utility' ? Boolean(lifecycle?.jobs.length) : lifecycle?.layer === heroRosterLifecycleFilter)
+    return (!query || hero.name.toLocaleLowerCase().includes(query))
+      && matchesLifecycle
+      && (heroRosterGradeFilter === 'all' || hero.grade === heroRosterGradeFilter)
+      && (heroRosterCategoryFilter === 'all' || hero.category === heroRosterCategoryFilter)
+  })
 
   const treeCareerId = selectedTreeCareerId && CAREERS.some((career) => career.id === selectedTreeCareerId)
     ? selectedTreeCareerId
@@ -1094,6 +1102,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
     heroes,
     rosterHeroes,
     rosterQuery: heroRosterQuery,
+    rosterLifecycleFilter: heroRosterLifecycleFilter,
     rosterGradeFilter: heroRosterGradeFilter,
     rosterCategoryFilter: heroRosterCategoryFilter,
     careerTreeOpen,
@@ -3162,11 +3171,13 @@ app.addEventListener('click', (event) => {
   else if (action === 'hero-roster-filter') {
     const kind = button.dataset.filterKind
     const value = button.dataset.filterValue ?? 'all'
+    if (kind === 'lifecycle' && ['all', ...Object.keys(HERO_LIFECYCLE_LABELS), 'utility'].includes(value)) heroRosterLifecycleFilter = value
     if (kind === 'grade' && ['all', '丙', '乙', '甲', '地', '天'].includes(value)) heroRosterGradeFilter = value
     if (kind === 'category' && ['all', '剑', '刀', '拳', '暗', '医', '内家'].includes(value)) heroRosterCategoryFilter = value
   } else if (action === 'locate-hero') {
     normalizeSelectedHero()
     heroRosterQuery = ''
+    heroRosterLifecycleFilter = 'all'
     heroRosterGradeFilter = 'all'
     heroRosterCategoryFilter = 'all'
     heroRosterLocatePending = Boolean(selectedHeroId)

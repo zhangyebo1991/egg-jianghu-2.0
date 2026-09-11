@@ -25,10 +25,14 @@ const compatible = (current: Node, next: Node): boolean => {
 }
 
 const syncAttributes = (current: Element, next: Element): void => {
+  // 培养建议由用户展开；后台刷新资源时保留阅读状态。
+  const preserveOpen = current instanceof HTMLDetailsElement && current.hasAttribute('data-preserve-open')
   for (const { name } of [...current.attributes]) {
+    if (preserveOpen && name === 'open') continue
     if (!next.hasAttribute(name)) current.removeAttribute(name)
   }
   for (const { name, value } of [...next.attributes]) {
+    if (preserveOpen && name === 'open') continue
     if (current.getAttribute(name) !== value) current.setAttribute(name, value)
   }
 }

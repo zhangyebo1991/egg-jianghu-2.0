@@ -3669,7 +3669,7 @@ body {
 .heroes-page .hero-empty span { display: block; margin-top: 10px; color: var(--paper-mute); font-size: 12px; letter-spacing: .18em; }
 
 /* 基础分页 · 三行：身份行 / 成长行 / 属性区 */
-.heroes-page .hero-basic { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.heroes-page .hero-basic { display: flex; flex-direction: column; gap: 12px; min-height: 0; container-type: inline-size; }
 .heroes-page .hb-idrow, .heroes-page .hb-growrow, .heroes-page .hb-attrs,
 .heroes-page .hero-equip, .heroes-page .hc-now, .heroes-page .hc-learned, .heroes-page .hc-foot { border: 1px solid #3a3222; border-radius: 9px; background: linear-gradient(170deg, var(--heroes-ink-850), var(--heroes-ink-900) 75%); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 35%); }
 .heroes-page .hb-idrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 14px 18px; }
@@ -5651,4 +5651,27 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
 @media (max-width: 600px) {
   .welfare-form > div { flex-direction: column; }
   .welfare-dialog { padding: 22px; }
+}
+/* 角色阶段与长期用途：独立于旧品级显示。 */
+.hero-lifecycle { min-width: 0; margin: 10px 0; padding: 10px; border: 1px solid #70604355; border-radius: 6px; color: #b5ad98; font-size: 12px; line-height: 1.65; }
+.hero-lifecycle-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.hero-lifecycle-tags strong { color: #d4b777; font-weight: 600; }
+.hero-lifecycle summary { cursor: pointer; margin-top: 6px; width: fit-content; }
+.hero-lifecycle summary:focus-visible { outline: 2px solid #d4b777; outline-offset: 3px; }
+.hero-lifecycle p, .faction-recruitment-copy .hero-lifecycle p { margin: 6px 0 0; font-size: 12px; line-height: 1.65; color: inherit; overflow-wrap: anywhere; }
+.heroes-page .hero-lifecycle { margin: 0; }
+.heroes-page .lifecycle-filters { flex-wrap: wrap; }
+.heroes-page .lifecycle-filters .fchip { flex: 0 0 auto; padding: 0 7px; }
+.city-page .hero-lifecycle { color: #61523d; border-color: #8d744b55; }
+.city-page .hero-lifecycle-tags strong { color: #794c29; }
+@media (max-width: 600px) {
+  .faction-recruitment-card { grid-template-columns: minmax(0, 1fr); }
+  .faction-recruitment-seal { display: none; }
+}
+@container (max-width: 620px) {
+  .heroes-page .hb-idrow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .heroes-page .hb-idcard { grid-column: 1 / -1; justify-self: center; }
+}
+@container (max-width: 380px) {
+  .heroes-page .hb-idrow { grid-template-columns: minmax(0, 1fr); justify-items: center; }
 }

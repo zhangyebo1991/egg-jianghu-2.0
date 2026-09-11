@@ -1,4 +1,6 @@
 import { escapeHtml } from './html'
+import { HERO_LIFECYCLE_LABELS, heroLifecycleById } from '../content/hero-lifecycle'
+import { renderHeroLifecycle } from './hero-lifecycle'
 import { panelToAttributeMap, type CombatStats } from '../combat/stats'
 import { ATTRIBUTES, type AttributeMap } from '../content/attributes'
 import {
@@ -126,6 +128,7 @@ export interface HeroesPageViewModel {
   heroes: HeroesHeroView[]
   rosterHeroes?: HeroesHeroView[]
   rosterQuery?: string
+  rosterLifecycleFilter?: string
   rosterGradeFilter?: string
   rosterCategoryFilter?: string
   careerTreeOpen: boolean
@@ -306,6 +309,7 @@ const renderBasicTab = (hero: HeroesHeroView): string => {
       <div class="hb-radar"><div class="radar-box">${renderAptitudeRadar(aptitudes)}<div class="radar-total"><b>${aptitudeTotal}</b><span>天资总和</span></div></div></div>
       <div class="hb-aptlist">${aptitudeRows}</div>
     </div>
+    ${renderHeroLifecycle(hero.id, true)}
     <div class="hb-growrow">
       <div class="hb-growline"><span class="gl-label">等级</span><b>Lv.${hero.level}</b>${renderXpBar(hero.experience, hero.experienceRequired, false)}<span class="gl-num">${formatExp(hero.experience)} / ${formatExp(hero.experienceRequired)}</span></div>
       <div class="hb-growline"><span class="gl-label">职业</span><b>${escapeHtml(hero.careerName)} Lv.${hero.careerLevel}</b>${renderXpBar(hero.careerExperience, hero.careerExperienceRequired, hero.careerMaxed, ' xp')}<span class="gl-num">${escapeHtml(careerXpText)}</span></div>
@@ -401,11 +405,13 @@ const renderCareerTreeOverlay = (hero: HeroesHeroView, view: HeroesPageViewModel
 }
 
 const renderPrototypeRosterFilters = (view: HeroesPageViewModel): string => {
+  const lifecycle = view.rosterLifecycleFilter ?? 'all'
+  const layers = [['all', '全部'], ...Object.entries(HERO_LIFECYCLE_LABELS), ['utility', '经营用途']].map(([value, label]) => `<button type="button" class="fchip${lifecycle === value ? ' active' : ''}" data-action="hero-roster-filter" data-filter-kind="lifecycle" data-filter-value="${value}" aria-pressed="${lifecycle === value}">${label}</button>`).join('')
   const grade = view.rosterGradeFilter ?? 'all'
   const category = view.rosterCategoryFilter ?? 'all'
   const grades = ROSTER_GRADES.map((value) => `<button type="button" class="fchip seal${value !== 'all' ? ' g-' + value : ''}${grade === value ? ' active' : ''}" data-action="hero-roster-filter" data-filter-kind="grade" data-filter-value="${value}" aria-pressed="${grade === value}">${value === 'all' ? '全' : value}</button>`).join('')
   const categories = ROSTER_CATEGORIES.map((value) => `<button type="button" class="fchip${category === value ? ' active' : ''}" data-action="hero-roster-filter" data-filter-kind="category" data-filter-value="${value}" aria-pressed="${category === value}" title="${value === 'all' ? '全部脉系' : escapeHtml(CATEGORY_LABELS[value])}">${value === 'all' ? '全' : value === '内家' ? '内' : value}</button>`).join('')
-  return '<div class="chip-row"><span class="chip-label">品级</span>' + grades + '</div><div class="chip-row"><span class="chip-label">脉系</span>' + categories + '</div>'
+  return '<div class="chip-row lifecycle-filters"><span class="chip-label">定位</span>' + layers + '</div><div class="chip-row"><span class="chip-label" title="原有品级，不代表长期价值或抽取稀有度">品级</span>' + grades + '</div><div class="chip-row"><span class="chip-label">脉系</span>' + categories + '</div>'
 }
 
 const renderPrototypeRoster = (view: HeroesPageViewModel): string => {
@@ -420,8 +426,8 @@ const renderPrototypeRoster = (view: HeroesPageViewModel): string => {
   let rowIndex = 0
   const rows = groups.map((group) => `<div class="roster-ghead"><b>${escapeHtml(group.label)}</b><span class="gcount">${group.heroes.length} 人</span></div>${group.heroes.map((hero) => {
     const index = rowIndex++
-    const source = hero.source ?? (hero.inFormation ? '在阵' : '江湖行走')
-    return `<button type="button" class="roster-row${hero.id === view.selectedHeroId ? ' active' : ''}" data-action="select-hero" data-hero-id="${escapeHtml(hero.id)}" data-testid="hero-${escapeHtml(hero.id)}" style="--row-delay:${Math.min(index, 12) * 35}ms"><span class="r-face">${renderHeroPortrait(hero, 'r-portrait')}<span class="r-seal g-${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span></span><span class="r-body"><span class="r-name">${escapeHtml(hero.name)}</span><span class="r-meta">${escapeHtml(hero.careerName)} · Lv.${hero.level} · ${escapeHtml(source)}</span></span>${hero.id === view.selectedHeroId ? '<span class="r-flag">列传中</span>' : ''}</button>`
+    const source = heroLifecycleById(hero.id)?.label ?? hero.source ?? (hero.inFormation ? '在阵' : '江湖行走')
+    return `<button type="button" class="roster-row${hero.id === view.selectedHeroId ? ' active' : ''}" data-action="select-hero" data-hero-id="${escapeHtml(hero.id)}" data-testid="hero-${escapeHtml(hero.id)}" style="--row-delay:${Math.min(index, 12) * 35}ms"><span class="r-face">${renderHeroPortrait(hero, 'r-portrait')}<span class="r-seal g-${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span></span><span class="r-body"><span class="r-name">${escapeHtml(hero.name)}</span><span class="r-meta">${escapeHtml(source)} · Lv.${hero.level} · ${escapeHtml(hero.careerName)}</span></span>${hero.id === view.selectedHeroId ? '<span class="r-flag">列传中</span>' : ''}</button>`
   }).join('')}`).join('')
   return rows || '<div class="roster-none">查无此侠</div>'
 }
