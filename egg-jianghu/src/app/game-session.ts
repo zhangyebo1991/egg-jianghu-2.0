@@ -23,8 +23,10 @@ import {
   runFactionAgentAutomation,
 } from '../domain/faction-agent-automation'
 import { settleCombatEvent } from '../domain/rewards'
+import { purchasePremiumCard } from '../domain/premium-cards'
 import { loadExistingGameV10, loadGameV10, SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
 import { createNewGameStateV10 } from '../domain/state'
+import { settleIdleVouchers, setVoucherActivity } from '../domain/idle-vouchers'
 import type { ActionResult, CampaignMode, GameStateV10 } from '../domain/types'
 
 // 阵位号：row * 5 + col（0-14），与诸天「(排-1)*5+列」对齐
@@ -126,6 +128,7 @@ export class GameSession {
   private readonly storage: StorageLike
   private expectedSaveSnapshot: string | null
   private agentAutomationElapsedMs = 0
+  offlineVoucherReward = 0
 
   private constructor(state: GameStateV10, storage: StorageLike, expectedSaveSnapshot: string | null) {
     this.state = state
@@ -139,7 +142,9 @@ export class GameSession {
 
   static create(storage: StorageLike, now = Date.now()): GameSession {
     const loaded = loadGameV10(storage, now)
-    return new GameSession(loaded.state, storage, loaded.serialized)
+    const session = new GameSession(loaded.state, storage, loaded.serialized)
+    if (!loaded.recoveredFromError) session.settleOfflineVouchers(now)
+    return session
   }
 
   static createNew(storage: StorageLike, playerName: string, now = Date.now(), expectedSnapshot?: string | null): GameSession {
@@ -153,16 +158,48 @@ export class GameSession {
     const loaded = loadExistingGameV10(storage, now)
     if (!loaded) throw new Error('没有可继续的存档')
     if (loaded.recoveredFromError) throw new Error('存档无法读取')
-    return new GameSession(loaded.state, storage, loaded.serialized)
+    const session = new GameSession(loaded.state, storage, loaded.serialized)
+    session.settleOfflineVouchers(now)
+    return session
+  }
+
+  private settleOfflineVouchers(now: number): void {
+    const wasActive = this.state.idleVouchers.activeMode !== null
+    this.offlineVoucherReward = setVoucherActivity(this.state, null, now)
+    // 载入后没有自动重放战斗；先兑现并停止离线标记，再等待玩家重新驻守/闯荡。
+    if (wasActive || this.offlineVoucherReward > 0) this.save(now)
+  }
+
+  settleVoucherTime(now = Date.now()): number {
+    const gained = settleIdleVouchers(this.state, now)
+    if (gained > 0 || now - this.state.lastSavedAt >= 30_000) this.save(now)
+    return gained
+  }
+
+  buyPremiumCard(id: string, now = Date.now()): ActionResult {
+    // 先检查其他窗口的存档并结算蛋蛋，再原子保存扣款和有效期。
+    this.save(now)
+    const balance = this.state.idleVouchers.balance
+    const cards = structuredClone(this.state.premiumCards)
+    const result = purchasePremiumCard(this.state, id, now)
+    if (result.ok) {
+      try { this.save(now) } catch (error) {
+        this.state.idleVouchers.balance = balance
+        this.state.premiumCards = cards
+        throw error
+      }
+    }
+    return result
   }
 
   save(now = Date.now()): void {
     const currentSnapshot = this.storage.getItem(SAVE_KEY_V10)
     if (currentSnapshot !== this.expectedSaveSnapshot) throw new SaveConflictError(currentSnapshot)
+    settleIdleVouchers(this.state, now)
     this.expectedSaveSnapshot = saveGameV10(this.storage, this.state, now)
   }
 
-  startStage(input: StageSelectionInput): ActionResult {
+  startStage(input: StageSelectionInput, now = Date.now()): ActionResult {
     const world = WORLDS.find((item) => item.id === input.worldId)
     const difficulty = input.difficulty ?? 1
     if (!world?.released) return { ok: false, message: '该位面尚未开放' }
@@ -182,6 +219,7 @@ export class GameSession {
     this.selection = { worldId: input.worldId, difficulty, stage: input.stage, mode: input.mode }
     this.combat = createCombatEngine(combatInput, unit => this.currentPartyUnit(unit))
     this.pendingCombatRestart = null
+    setVoucherActivity(this.state, input.mode, now)
     return { ok: true, message: '战斗开始' }
   }
 
@@ -259,7 +297,7 @@ export class GameSession {
     if (changed) this.save()
   }
 
-  setCombatMode(mode: CampaignMode): ActionResult {
+  setCombatMode(mode: CampaignMode, now = Date.now()): ActionResult {
     if (!this.combat
       || !this.selection
       || this.combat.state.result !== 'fighting'
@@ -268,10 +306,12 @@ export class GameSession {
     }
     this.selection = { ...this.selection, mode }
     this.combat.setMode(mode)
+    setVoucherActivity(this.state, mode, now)
     return { ok: true, message: mode === 'guard' ? '已切换为驻守' : '已切换为闯荡' }
   }
 
-  stopCombat(): void {
+  stopCombat(now = Date.now()): void {
+    setVoucherActivity(this.state, null, now)
     this.combat?.stop()
     this.combat = null
     this.selection = null

@@ -35,12 +35,18 @@ test('邮箱验证注册、登录、账号隔离、覆盖修订号及密码找�
   assert.equal((await f.call('save/meta')).status,401)
   assert.equal((await f.call('save/meta','GET',undefined,a)).body.save,null)
   const data = createNewGameStateV10('云中少侠', Date.now())
+  data.idleVouchers.balance = 123
+  data.idleVouchers.activeMode = 'guard'
+  data.premiumCards.expiresAt.monthly = Date.now() + 30 * 86_400_000
+  data.premiumCards.remainders.hero_player = { experience: 80, skillPoints: 10 }
   const upload = await f.call('save','PUT',{data,revision:0},a)
   assert.equal(upload.status,200); assert.equal(upload.body.save.revision,1)
   assert.equal((await f.call('save/meta','GET',undefined,b)).body.save,null)
   assert.equal((await f.call('save','GET',undefined,b)).status,404)
   assert.equal((await f.call('save','PUT',{data,revision:0},a)).status,409)
   assert.equal((await f.call('save','GET',undefined,a)).body.data.heroes.hero_player.customName,'云中少侠')
+  assert.deepEqual((await f.call('save','GET',undefined,a)).body.data.idleVouchers, data.idleVouchers)
+  assert.deepEqual((await f.call('save','GET',undefined,a)).body.data.premiumCards, data.premiumCards)
   const race = await Promise.all([f.call('save','PUT',{data,revision:1},a),f.call('save','PUT',{data,revision:1},a)])
   assert.deepEqual(race.map(r=>r.status).sort(),[200,409])
   assert.equal((await f.call('save','PUT',{data:{...data,version:18},revision:2},a)).status,400)

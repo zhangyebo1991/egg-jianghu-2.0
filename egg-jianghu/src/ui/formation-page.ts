@@ -268,6 +268,7 @@ export const renderFormationPage = (view: FormationPageViewModel): string => {
   return `<section class="formation-page" data-testid="formation-page">
     <span class="formation-ghost formation-ghost-array" aria-hidden="true">陣</span><span class="formation-ghost formation-ghost-muster" aria-hidden="true">將</span>
     <header class="formation-page-head"><div><p class="formation-crumb">蛋蛋江湖 2.0 <b>/</b> 阵容 · 演武点将</p><h1>阵容</h1><span>FORMATION · MUSTER AT THE ARENA</span></div><div class="formation-stats" aria-label="队伍概览"><div><b>${formatNumber(displayPower(heroesInFormation))}</b><small>队伍战力</small></div><div><b><i>${heroesInFormation.length}</i>/6</b><small>上阵侠客</small></div><div class="accent"><b>${synergies.filter((synergy) => synergy.active).length}</b><small>阵势激发</small></div></div></header>
+    <div class="formation-bonus-entry"><button type="button" class="formation-btn-line" data-action="open-formation-bonuses">查看加成</button></div>
     <div class="formation-muster-layout">${renderRoster(view)}${renderFormationField(view)}${renderHeroCard(view)}</div>
     ${renderSynergy(view)}
     <footer class="formation-page-foot"><span><b>阵容页高保真重设计</b> · 蛋蛋江湖 2.0 · 演武点将</span><span>阵势仅作队伍搭配预览，不改变战斗数值</span></footer>

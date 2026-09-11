@@ -5533,4 +5533,67 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
 .cloud-confirm button { margin-right: 10px; }
 .cloud-message { padding: 12px; background: #303526; border-radius: 6px; color: #eed79e; }
 .cloud-backup { margin-top: 20px; border-top: 1px solid #454535; padding-top: 16px; }
+.voucher-wallet { min-width: 0; color: #e9d8ad; }
+.voucher-wallet-summary { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 5px 8px; padding: 10px; border: 1px solid #625234; border-radius: 7px; color: #e9d8ad; background: #25271c; text-align: left; }
+.voucher-wallet-summary strong { text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.voucher-wallet-summary small { grid-column: 1 / -1; font-size: 11px; color: #c8c3ad; }
+.voucher-wallet-label { display: flex; align-items: center; justify-content: center; gap: 3px; }
+.voucher-help { display: inline-grid; place-items: center; width: 20px; min-width: 20px; height: 20px; padding: 0; border: 1px solid #85754f; border-radius: 50%; background: transparent; color: #d6b66e; font: 13px Georgia, serif; cursor: help; }
+.voucher-help:focus-visible { outline: 2px solid #d6b66e; outline-offset: 1px; }
+.voucher-details { position: fixed; z-index: 90; width: min(310px, calc(100vw - 80px)); max-height: calc(100dvh - 16px); overflow: auto; padding: 14px; border: 1px solid #625234; border-radius: 7px; background: #1c2119; box-shadow: 0 8px 30px #0009; font-size: 12px; line-height: 1.65; }
+.voucher-details p { margin: 7px 0; }
+.voucher-details progress { width: 100%; height: 8px; accent-color: #d6b66e; }
+.shop-page { max-width: 1200px; margin: 0 auto; color: #e9d8ad; }
+.shop-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+.shop-head h1 { margin: 4px 0 0; font-size: 36px; letter-spacing: .15em; }
+.shop-head p, .shop-section-head p { margin: 0; color: #aca38b; font-size: 12px; line-height: 1.8; }
+.shop-wallet { display: grid; gap: 4px; padding: 12px 20px; border: 1px solid #625234; border-radius: 7px; text-align: right; background: #25271c; }
+.shop-wallet span { font-size: 12px; color: #aca38b; }
+.shop-wallet strong { font-size: 24px; font-variant-numeric: tabular-nums; }
+.shop-section { padding: 24px; border: 1px solid #625234; border-radius: 8px; background: #1c2119; }
+.shop-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid #454535; }
+.shop-section-head h2 { margin: 0 0 6px; font-size: 22px; }
+.shop-section-head > span { color: #aca38b; font-size: 12px; white-space: nowrap; }
+.shop-section .premium-card { padding: 20px; min-height: 200px; }
+.shop-section .premium-card button { min-height: 40px; }
+@media (max-width: 850px) {
+  .shop-head { margin-bottom: 18px; }
+  .shop-head h1 { font-size: 28px; }
+  .shop-wallet { padding: 10px; }
+  .shop-wallet strong { font-size: 20px; }
+  .shop-section { padding: 14px; }
+  .shop-section .premium-cards { grid-template-columns: minmax(0, 1fr); }
+  .shop-section .premium-card { padding: 14px; min-height: 180px; }
+}
+.formation-bonus-entry { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.premium-overlay { position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; padding: 16px; background: #000a; }
+.premium-panel { width: min(690px, 100%); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; padding: 24px; border: 1px solid #85754f; border-radius: 10px; background: #1c2119; color: #e9d8ad; box-shadow: 0 16px 60px #0009; }
+.premium-head, .premium-card header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.premium-head h2, .premium-card h3 { margin: 0; }
+.premium-head button { padding: 4px 12px; font-size: 24px; }
+.premium-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
+.premium-card { min-width: 0; padding: 14px; border: 1px solid #625234; border-radius: 6px; background: #25271c; display: flex; flex-direction: column; gap: 10px; }
+.premium-card header { flex-wrap: wrap; gap: 4px; }
+.premium-card h3 { font-size: 16px; }
+.premium-card header span, .premium-card small { font-size: 12px; color: #c3baa5; }
+.premium-card header .active { color: #9ec99a; }
+.premium-card p { margin: 0; line-height: 1.6; font-size: 13px; }
+.premium-card button { margin-top: auto; padding: 8px; font-size: 12px; }
+.premium-totals { margin: 12px 0; }
+.premium-totals > div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #454535; }
+.premium-totals dd { margin: 0; text-align: right; white-space: nowrap; color: #f1cf86; }
+.premium-source, .premium-rules { font-size: 12px; line-height: 1.7; color: #c3baa5; }
+@media (max-width: 600px) {
+  .premium-panel { padding: 16px; }
+  .premium-cards { grid-template-columns: minmax(0, 1fr); }
+  .premium-card { gap: 6px; padding: 12px; }
+  .premium-totals { font-size: 12px; }
+}
+@media (max-width: 1100px) {
+  .voucher-wallet-summary { grid-template-columns: minmax(0, 1fr); gap: 3px; padding: 7px 2px; font-size: 11px; text-align: center; }
+  .voucher-wallet-summary strong { text-align: center; font-size: 11px; }
+  .voucher-wallet-label { gap: 0; white-space: nowrap; }
+  .voucher-help { width: 20px; min-width: 20px; }
+  .voucher-wallet-summary small { font-size: 9px; line-height: 1.4; }
+}
 @media(max-width: 600px) { .cloud-dialog { padding: 16px; } .cloud-saves { grid-template-columns: minmax(0,1fr); } .cloud-head { flex-wrap: wrap; } .cloud-head > button { margin-left: auto; } }

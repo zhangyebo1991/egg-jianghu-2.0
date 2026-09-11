@@ -1,4 +1,6 @@
 import { createInitialStateV10 } from './state'
+import { isIdleVouchers } from './idle-vouchers'
+import { isPremiumCards } from './premium-cards'
 import { equipmentDefinitionById } from '../content/equipment'
 import { HEROES_V10 } from '../content/heroes'
 import {
@@ -387,6 +389,8 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
   settings: structuredClone(state.settings),
   version: 19,
+  idleVouchers: structuredClone(state.idleVouchers),
+  premiumCards: structuredClone(state.premiumCards),
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
   worldReputation: structuredClone(state.worldReputation),
@@ -433,6 +437,8 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
     || raw.version !== 19
+    || (raw.idleVouchers !== undefined && !isIdleVouchers(raw.idleVouchers))
+    || (raw.premiumCards !== undefined && !isPremiumCards(raw.premiumCards))
     || (raw.settings !== undefined && (!isRecord(raw.settings)
       || (raw.settings.autoDiscardBelowQuality !== null
         && !(typeof raw.settings.autoDiscardBelowQuality === 'number'
@@ -480,6 +486,8 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
   const state = createInitialStateV10(now)
   const loaded = pruneUnknownHeroes(persistentState({
     ...state,
+    idleVouchers: raw.idleVouchers === undefined ? state.idleVouchers : structuredClone(raw.idleVouchers) as GameStateV10['idleVouchers'],
+    premiumCards: raw.premiumCards === undefined ? state.premiumCards : structuredClone(raw.premiumCards) as GameStateV10['premiumCards'],
     settings: raw.settings === undefined ? state.settings : {
       autoDiscardBelowQuality: (raw.settings as GameStateV10['settings']).autoDiscardBelowQuality,
     },

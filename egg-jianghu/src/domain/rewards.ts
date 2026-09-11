@@ -2,6 +2,7 @@ import type { CombatEvent } from '../combat/types'
 import { canonicalEnemyId } from '../content/enemy-names'
 import { addCareerExperience } from './careers'
 import { grantKillLoot } from './loot'
+import { premiumBonuses, premiumProgressReward } from './premium-cards'
 import { applyKillToQuests } from './quests'
 import type { GameStateV10 } from './types'
 
@@ -17,6 +18,7 @@ export const skillPointsForEnemyLevel = (enemyLevel: number): number =>
 const grantKillProgress = (
   state: GameStateV10,
   event: Extract<CombatEvent, { type: 'enemy-defeated' }>,
+  now: number,
 ): void => {
   const rankMultiplier = event.rank === 'boss' ? 5 : event.rank === 'elite' ? 2 : 1
   const currency = (5 + event.stage * 2) * rankMultiplier
@@ -27,28 +29,30 @@ const grantKillProgress = (
 
   const participatingHeroIds = new Set(state.formation.map((slot) => slot.heroId))
   const skillPoints = skillPointsForEnemyLevel(event.enemyLevel)
+  const bonus = premiumBonuses(state, now)
   for (const heroId of participatingHeroIds) {
     const hero = state.heroes[heroId]
     if (!hero?.recruited) continue
-    const experience = 8 * rankMultiplier
+    const experience = premiumProgressReward(state, heroId, 'experience', 8 * rankMultiplier, bonus.experience)
     hero.experience += experience
     while (hero.experience >= hero.level * 100) {
       hero.experience -= hero.level * 100
       hero.level += 1
     }
     addCareerExperience(hero, experience)
-    hero.skillPoints += skillPoints
+    hero.skillPoints += premiumProgressReward(state, heroId, 'skillPoints', skillPoints, bonus.skillPoints)
   }
 }
 
 export const settleCombatEvent = (
   state: GameStateV10,
   event: CombatEvent,
+  now = Date.now(),
 ): CombatSettlementResult => {
   if (event.type !== 'enemy-defeated') return { needsSave: false, addedEquipmentUids: [] }
 
   const settledEvent = { ...event, enemyId: canonicalEnemyId(event.enemyId) }
-  grantKillProgress(state, settledEvent)
+  grantKillProgress(state, settledEvent, now)
   applyKillToQuests(state, {
     enemyId: settledEvent.enemyId,
     rank: settledEvent.rank,
@@ -61,6 +65,6 @@ export const settleCombatEvent = (
     rank: settledEvent.rank,
     seed: settledEvent.seed,
     enemyId: settledEvent.enemyId,
-  })
+  }, now)
   return { needsSave: true, addedEquipmentUids }
 }

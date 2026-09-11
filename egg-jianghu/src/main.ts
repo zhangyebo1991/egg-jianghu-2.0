@@ -133,6 +133,7 @@ import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPa
 import type { FactionExchangeViewModel } from './ui/faction-exchange'
 import type { FactionRecruitmentViewModel } from './ui/faction-recruitment'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
+import { renderPremiumPanel, renderShopPage, type PremiumPanel } from './ui/premium-panel'
 import { renderHeroesPage, type HeroesHeroView, type HeroesMainTab, type HeroesPageViewModel } from './ui/heroes-page'
 import {
   renderIdlePage,
@@ -668,6 +669,25 @@ const saveSession = (silent = false): boolean => {
 }
 
 const CLOUD_BACKUP_KEY = 'egg-jianghu-before-cloud-download'
+let voucherDetailsOpen = false
+let premiumPanel: PremiumPanel | null = null
+let premiumReturnFocus: HTMLElement | null = null
+const closePremiumPanel = (): void => {
+  premiumPanel = null
+  render()
+  premiumReturnFocus?.focus()
+}
+let voucherHovered = false
+let voucherHoverTimer: ReturnType<typeof setTimeout> | undefined
+
+const positionVoucherDetails = (): void => {
+  const panel = app.querySelector<HTMLElement>('#voucher-details')
+  const anchor = app.querySelector<HTMLElement>('.voucher-wallet-summary')
+  if (!panel || !anchor) return
+  const rect = anchor.getBoundingClientRect()
+  panel.style.left = `clamp(8px, ${rect.right + 10}px, calc(100vw - ${panel.offsetWidth + 8}px))`
+  panel.style.top = `clamp(8px, ${rect.top}px, calc(100dvh - ${panel.offsetHeight + 8}px))`
+}
 const installCloudSave = (json: string): void => {
   const validated = importSaveV10(json).state
   if (appScreen === 'playing' && !saveSession()) throw new Error('当前进度未能保存，请先解决本地存档问题')
@@ -2033,10 +2053,16 @@ const render = (): void => {
       ? renderFormationPage(formationViewModel())
       : activeTab === 'inventory'
         ? renderInventoryPage(inventoryViewModel())
+        : activeTab === 'shop'
+          ? renderShopPage(session.state)
         : activeTab === 'settings'
           ? renderSettingsPage(session.state.settings)
           : renderProgressionPage(progressionViewModel())
   patchApp(renderShell({
+    premiumPanel: premiumPanel ? renderPremiumPanel(session.state, premiumPanel) : '',
+    idleVouchers: session.state.idleVouchers,
+    voucherDetailsOpen: voucherDetailsOpen || voucherHovered,
+    offlineVoucherReward: session.offlineVoucherReward,
     activeTab,
     worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
       ? { worldName: world.name, activeSection: jianghuSection }
@@ -2047,6 +2073,7 @@ const render = (): void => {
     content,
   }))
   renderedLocationKey = locationKey
+  positionVoucherDetails()
   if (locationChanged) {
     restorePageScroll(locationKey)
     window.requestAnimationFrame(() => {
@@ -2152,6 +2179,7 @@ const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => 
   notify(result.message, !result.ok)
   if (result.ok) {
     beginCombatPresentation()
+    if (!saveSession()) return
     jianghuView = 'combat'
     jianghuSection = 'stages'
   }
@@ -2846,6 +2874,7 @@ const handleStartOrResetAction = (action: string | undefined): boolean => {
       const nextSession = GameSession.continue(window.localStorage)
       startBusy = false
       enterPlaying(nextSession)
+      if (nextSession.offlineVoucherReward > 0) notify(`离线挂机获得 ${nextSession.offlineVoucherReward} 蛋蛋`)
     } catch (error) {
       appScreen = 'title'
       startBusy = false
@@ -2921,8 +2950,61 @@ const handleStartOrResetAction = (action: string | undefined): boolean => {
   return false
 }
 
+app.addEventListener('pointerover', (event) => {
+  if (event.pointerType !== 'mouse' || !(event.target instanceof Element) || !event.target.closest('.voucher-wallet')) return
+  clearTimeout(voucherHoverTimer)
+  if (!voucherHovered) { voucherHovered = true; render() }
+})
+app.addEventListener('pointerout', (event) => {
+  if (event.pointerType !== 'mouse' || !(event.target instanceof Element) || !event.target.closest('.voucher-wallet')) return
+  if (event.relatedTarget instanceof Element && event.relatedTarget.closest('.voucher-wallet')) return
+  clearTimeout(voucherHoverTimer)
+  voucherHoverTimer = setTimeout(() => { voucherHovered = false; render() }, 150)
+})
+document.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element) || event.target.closest('.voucher-wallet')) return
+  if (voucherDetailsOpen || voucherHovered) {
+    clearTimeout(voucherHoverTimer)
+    voucherDetailsOpen = false; voucherHovered = false; render()
+  }
+})
+document.addEventListener('keydown', (event) => {
+  if (premiumPanel && event.key === 'Escape') { closePremiumPanel(); return }
+  if (premiumPanel && event.key === 'Tab') {
+    const buttons = [...app.querySelectorAll<HTMLButtonElement>('.premium-panel button:not(:disabled)')]
+    const first = buttons[0], last = buttons.at(-1)
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+  }
+  if (event.key === 'Escape' && (voucherDetailsOpen || voucherHovered)) {
+    clearTimeout(voucherHoverTimer)
+    voucherDetailsOpen = false; voucherHovered = false; render()
+  }
+})
+window.addEventListener('resize', positionVoucherDetails)
+app.addEventListener('scroll', positionVoucherDetails, true)
+
 app.addEventListener('click', (event) => {
   const target = event.target as HTMLElement
+  if (target.closest('.premium-overlay')) {
+    const action = target.closest<HTMLButtonElement>('button[data-action]')?.dataset.action
+    if (target.classList.contains('premium-overlay') || action === 'close-premium-panel') closePremiumPanel()
+    else if (action === 'open-premium-shop') {
+      premiumPanel = null
+      activeTab = 'shop'
+      render()
+      app.querySelector<HTMLButtonElement>('[data-testid="tab-shop"]')?.focus()
+    }
+    return
+  }
+  if (target.closest('[data-action="open-formation-bonuses"]')) {
+    premiumReturnFocus = target.closest<HTMLElement>('button')
+    premiumPanel = 'bonuses'
+    voucherDetailsOpen = false; voucherHovered = false
+    render()
+    app.querySelector<HTMLButtonElement>('.premium-panel button')?.focus()
+    return
+  }
   if (factionRosterOpen && !target.closest('.faction-disciple')) {
     factionRosterOpen = false
     factionRosterQuery = ''
@@ -2953,6 +3035,19 @@ app.addEventListener('click', (event) => {
   const button = target.closest<HTMLButtonElement>('[data-action]')
   if (!button || button.disabled) return
   const { action } = button.dataset
+  if (action === 'buy-premium-card' && activeTab === 'shop') {
+    try {
+      const result = session.buyPremiumCard(button.dataset.cardId ?? '')
+      notify(result.message, !result.ok)
+    } catch (error) { handleSessionSaveError(error) }
+    render()
+    return
+  }
+  if (action === 'toggle-voucher-details') {
+    voucherDetailsOpen = !voucherDetailsOpen
+    if (!voucherDetailsOpen) voucherHovered = false
+    render(); return
+  }
   if (action === 'open-cloud-account') { cloudAccount.open(); return }
   if (action?.startsWith('progression-')) return
   if (action?.startsWith('select-town-') || action === 'tavern-recruit' || action === 'city-to-towns') return
@@ -3148,10 +3243,12 @@ app.addEventListener('click', (event) => {
   else if (action === 'set-mode-guard' || action === 'set-mode-roam') {
     const mode = action === 'set-mode-guard' ? 'guard' : 'roam'
     const result = session.setCombatMode(mode)
+    if (result.ok && !saveSession()) return
     notify(result.message, !result.ok)
     if (result.ok) addCombatLog('system', mode === 'guard' ? '守' : '闯', mode === 'guard' ? '转为驻守：原地迎敌，败退自动重整。' : '转为闯荡：破阵后自动深入。')
   } else if (action === 'stop-combat') {
     session.stopCombat()
+    if (!saveSession()) return
     notify('已停止战斗')
     jianghuView = 'world'
     jianghuSection = 'stages'
@@ -3213,6 +3310,7 @@ const runGameLoop = (): void => {
   if (runtimePulse.tickCount === 0 && combatElapsedMs === 0) return
   try {
     if (combatElapsedMs > 0) {
+      session.settleVoucherTime()
       const inventoryBefore = new Set(session.state.inventory.map((item) => item.uid))
       cacheCombatUnits()
       const events = session.advanceCombatTime(combatElapsedMs)
@@ -3224,6 +3322,7 @@ const runGameLoop = (): void => {
       trackedCombat = session.combat
     }
     session.advanceRuntime(runtimePulse.elapsedMs, selectedWorldId || null)
+    if (!session.combat) session.settleVoucherTime()
   } catch (error) {
     handleSessionSaveError(error)
     return
@@ -3243,6 +3342,10 @@ window.addEventListener('beforeunload', () => {
   } catch {
     // 页面关闭时仅阻止旧会话覆盖外部存档，不再打扰用户。
   }
+})
+
+window.addEventListener('pagehide', () => {
+  if (appScreen === 'playing') saveSession(true)
 })
 
 const debugRecruit = (heroId: string): void => {

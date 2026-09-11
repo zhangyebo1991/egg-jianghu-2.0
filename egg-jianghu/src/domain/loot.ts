@@ -14,6 +14,7 @@ import {
 } from '../content/equipment'
 import type { EquipmentInstance, EquipmentQuality, GameStateV10 } from './types'
 import { addEquipment } from './inventory'
+import { premiumBonuses } from './premium-cards'
 
 export interface LootDropInput {
   worldId: string
@@ -68,8 +69,8 @@ export const materialExtraQuality = (rank: CombatRank, roll: number): number => 
   return 3
 }
 
-export const campaignDropChance = (baseChance: number, bonus: number): number =>
-  Math.min(1, Math.max(0, baseChance * (100 + bonus) / 100))
+export const campaignDropChance = (baseChance: number, bonus: number, premiumPercent = 0): number =>
+  Math.min(1, Math.max(0, baseChance * (100 + bonus) / 100) * (1 + premiumPercent / 100))
 
 /** 原版总掉落率加成：当前队伍 sx42 合计 + 科技 65 的百分比效果。 */
 export const campaignDropBonus = (state: GameStateV10): number => {
@@ -82,12 +83,13 @@ export const campaignDropBonus = (state: GameStateV10): number => {
   return Math.round(bonus * 100) / 100
 }
 
-export const grantKillLoot = (state: GameStateV10, input: LootDropInput): string[] => {
+export const grantKillLoot = (state: GameStateV10, input: LootDropInput, now = Date.now()): string[] => {
   const stage = CAMPAIGN_LOOT_STAGES.find(s => s.worldId === input.worldId && s.stage === input.stage)
   const enemy = enemyDefinitionById(input.enemyId)
   if (!stage || !enemy || !(stage.enemyIds as readonly number[]).includes(enemy.drId)) return []
   const rng = createRng(input.seed)
   const bonus = campaignDropBonus(state)
+  const premium = premiumBonuses(state, now)
   const added: string[] = []
   const addMaterial = (id: number): void => {
     const key = String(id)
@@ -95,7 +97,8 @@ export const grantKillLoot = (state: GameStateV10, input: LootDropInput): string
   }
   for (const [index, id] of (CAMPAIGN_ENEMY_DROPS[enemy.drId] ?? []).entries()) {
     const item = CAMPAIGN_DROP_ITEMS[id]
-    if (rng.nextFloat() >= campaignDropChance(item.chance, bonus)) continue
+    const premiumPercent = item.kind === 'equipment' ? premium.equipment : CAMPAIGN_MATERIALS.some(material => material.id === id) ? premium.material : 0
+    if (rng.nextFloat() >= campaignDropChance(item.chance, bonus, premiumPercent)) continue
     if (item.kind === 'material') {
       addMaterial(id)
       continue
@@ -120,7 +123,7 @@ export const grantKillLoot = (state: GameStateV10, input: LootDropInput): string
   }
   // 材料是独立堆叠库存；装备背包满不能截断后续物品与材料结算。
   for (const slot of stage.materials) {
-    if (rng.nextFloat() >= campaignDropChance(slot.baseChance, bonus)) continue
+    if (rng.nextFloat() >= campaignDropChance(slot.baseChance, bonus, premium.material)) continue
     const quality = slot.baseQuality + materialExtraQuality(input.rank, rng.nextFloat())
     const material = CAMPAIGN_MATERIALS.find(m => m.family === slot.family && m.quality === quality)
     if (material) addMaterial(material.id)
