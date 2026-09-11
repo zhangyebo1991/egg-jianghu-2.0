@@ -86,7 +86,7 @@ const AGENT_TASK_FILTER_NAMES = ['消灭', '筹措', '收集', '挑战', '寻宝
 import { exchangeFactionItem, factionExchangeItemOwned, factionExchangeItemQuantity } from './domain/faction-exchange'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
 import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
-import { settleCombatEvent } from './domain/rewards'
+import { heroExperienceForNextLevel, settleCombatEvent } from './domain/rewards'
 import {
   advanceSacredEquipment,
   BROKEN_DIVINITY_ITEM_ID,
@@ -950,7 +950,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
       recruited: progress.recruited,
       level: progress.level,
       experience: progress.experience,
-      experienceRequired: progress.level * 100,
+      experienceRequired: heroExperienceForNextLevel(progress.level),
       careerId: progress.currentCareerId,
       careerName: career?.name ?? progress.currentCareerId,
       careerLevel: record?.level ?? 1,

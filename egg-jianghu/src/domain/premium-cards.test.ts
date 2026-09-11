@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import { createNewGameStateV10 } from './state'
-import { purchasePremiumCard, premiumBonuses, isPremiumCards } from './premium-cards'
+import { purchasePremiumCard, premiumBonuses, isPremiumCards, premiumProgressReward } from './premium-cards'
 import { campaignDropChance, grantKillLoot } from './loot'
 import { settleCombatEvent } from './rewards'
 import { exportSaveV10, importSaveV10 } from './save-v10'
@@ -49,16 +49,31 @@ it('实战经验与 SP 加成保留尾数，旧档兼容，重新载入及到期
   for (let i = 0; i < 5; i++) settleCombatEvent(state, { ...event, seed: i }, now)
   state = importSaveV10(exportSaveV10(state, now), now).state
   for (let i = 5; i < 10; i++) settleCombatEvent(state, { ...event, seed: i }, now)
-  expect(state.heroes.hero_player.experience).toBe(88)
-  expect(state.heroes.hero_player.careers[career].experience - baseCareer).toBe(88)
+  expect(state.heroes.hero_player.experience).toBe(682)
+  expect(state.heroes.hero_player.careers[career].experience - baseCareer).toBe(55)
   expect(state.heroes.hero_player.skillPoints).toBe(121)
   settleCombatEvent(state, { ...event, seed: 10 }, now + 7 * day)
-  expect(state.heroes.hero_player.experience).toBe(96)
+  expect(state.heroes.hero_player.experience).toBe(744)
+  expect(state.heroes.hero_player.careers[career].experience - baseCareer).toBe(60)
   expect(state.heroes.hero_player.skillPoints).toBe(132)
   const legacy = JSON.parse(exportSaveV10(state, now))
   delete legacy.premiumCards
   expect(importSaveV10(JSON.stringify(legacy), now).state.premiumCards.expiresAt.training).toBe(0)
   expect(isPremiumCards({ expiresAt: { monthly: -1 }, remainders: {} })).toBe(false)
+})
+
+it('旧档共用经验尾数拆分后独立累计，并拒绝非法职业经验尾数', () => {
+  const state = funded()
+  state.premiumCards.remainders.hero_player = { experience: 80, skillPoints: 0 }
+  const loaded = importSaveV10(exportSaveV10(state, now), now).state
+  expect(premiumProgressReward(loaded, 'hero_player', 'experience', 62, 10)).toBe(69)
+  expect(premiumProgressReward(loaded, 'hero_player', 'careerExperience', 5, 10)).toBe(6)
+  expect(loaded.premiumCards.remainders.hero_player).toEqual({ experience: 0, careerExperience: 30, skillPoints: 0 })
+  for (const invalid of [-1, 100, 0.5, NaN, '30']) {
+    const cards = structuredClone(loaded.premiumCards)
+    Object.assign(cards.remainders.hero_player, { careerExperience: invalid })
+    expect(isPremiumCards(cards)).toBe(false)
+  }
 })
 
 it('收益卡实际提高普通材料和装备掉落，到期恢复原始掉落', () => {

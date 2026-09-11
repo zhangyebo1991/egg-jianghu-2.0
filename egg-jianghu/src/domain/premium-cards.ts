@@ -8,7 +8,7 @@ export const PREMIUM_CARDS = [
 export type PremiumCardId = typeof PREMIUM_CARDS[number]['id']
 export interface PremiumCards {
   expiresAt: Record<PremiumCardId, number>
-  remainders: Record<string, { experience: number; skillPoints: number }>
+  remainders: Record<string, { experience: number; careerExperience?: number; skillPoints: number }>
 }
 export const createPremiumCards = (): PremiumCards => ({ expiresAt: { monthly: 0, treasure: 0, training: 0 }, remainders: {} })
 export const premiumBonuses = (state: GameStateV10, now = Date.now()) => {
@@ -32,10 +32,12 @@ export const purchasePremiumCard = (state: GameStateV10, id: string, now = Date.
 }
 
 /** 百分比尾数按侠客保存，低额奖励也能完整获得加成，不逐次四舍五入。 */
-export const premiumProgressReward = (state: GameStateV10, heroId: string, kind: 'experience' | 'skillPoints', base: number, percent: number): number => {
+export const premiumProgressReward = (state: GameStateV10, heroId: string, kind: 'experience' | 'careerExperience' | 'skillPoints', base: number, percent: number): number => {
   if (percent === 0) return base
   const remainder = state.premiumCards.remainders[heroId] ??= { experience: 0, skillPoints: 0 }
-  const total = base * percent + remainder[kind]
+  // 旧档两类经验共用同一笔奖励，拆分前先保留两者已有的加成尾数。
+  remainder.careerExperience ??= remainder.experience
+  const total = base * percent + (remainder[kind] ?? 0)
   remainder[kind] = total % 100
   return base + Math.floor(total / 100)
 }
@@ -46,8 +48,9 @@ export const isPremiumCards = (value: unknown): value is PremiumCards => {
   return !!expiresAt && typeof expiresAt === 'object' && !Array.isArray(expiresAt)
     && PREMIUM_CARDS.every(card => Number.isSafeInteger(expiresAt[card.id]) && expiresAt[card.id] >= 0 && expiresAt[card.id] <= 8.64e15)
     && !!remainders && typeof remainders === 'object' && !Array.isArray(remainders)
-    && Object.values(remainders).every(item => item && ['experience', 'skillPoints'].every(key => {
+    && Object.values(remainders).every(item => item && ['experience', 'skillPoints', 'careerExperience'].every(key => {
       const amount = item[key as keyof typeof item]
-      return Number.isInteger(amount) && amount >= 0 && amount < 100
+      if (key === 'careerExperience' && amount === undefined) return true
+      return typeof amount === 'number' && Number.isInteger(amount) && amount >= 0 && amount < 100
     }))
 }

@@ -11,6 +11,19 @@ export interface CombatSettlementResult {
   addedEquipmentUids: string[]
 }
 
+/** 原版「人物升级经验」：当前等级升至下一级的单级门槛。 */
+export const heroExperienceForNextLevel = (level: number): number =>
+  Math.round(10000 * Math.pow(1.129, Math.max(1, level) - 1) - 9000)
+
+/** enemyLevel 对应原版战斗核心的「难度系数」。 */
+export const heroExperienceForEnemyLevel = (enemyLevel: number): number => {
+  const difficulty = Math.max(0, enemyLevel)
+  return Math.round(50 + 10 * Math.pow(1.01, difficulty) + 2 * difficulty)
+}
+
+export const careerExperienceForEnemyLevel = (enemyLevel: number): number =>
+  Math.round(10 * ((100 + Math.max(0, enemyLevel)) / 200))
+
 /** 原版 c3runtime.js「敌人技能经验量function」。 */
 export const skillPointsForEnemyLevel = (enemyLevel: number): number =>
   Math.round(10 + 10 * ((100 + Math.max(0, enemyLevel)) / 1000))
@@ -33,13 +46,14 @@ const grantKillProgress = (
   for (const heroId of participatingHeroIds) {
     const hero = state.heroes[heroId]
     if (!hero?.recruited) continue
-    const experience = premiumProgressReward(state, heroId, 'experience', 8 * rankMultiplier, bonus.experience)
+    const experience = premiumProgressReward(state, heroId, 'experience', heroExperienceForEnemyLevel(event.enemyLevel), bonus.experience)
     hero.experience += experience
-    while (hero.experience >= hero.level * 100) {
-      hero.experience -= hero.level * 100
+    while (hero.experience >= heroExperienceForNextLevel(hero.level)) {
+      hero.experience -= heroExperienceForNextLevel(hero.level)
       hero.level += 1
     }
-    addCareerExperience(hero, experience)
+    const careerExperience = premiumProgressReward(state, heroId, 'careerExperience', careerExperienceForEnemyLevel(event.enemyLevel), bonus.experience)
+    addCareerExperience(hero, careerExperience)
     hero.skillPoints += premiumProgressReward(state, heroId, 'skillPoints', skillPoints, bonus.skillPoints)
   }
 }
