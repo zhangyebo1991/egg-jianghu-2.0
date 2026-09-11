@@ -1,5 +1,4 @@
 import { escapeHtml, formatNumber } from './html'
-import { renderHeroLifecycle } from './hero-lifecycle'
 import { renderFactionAgent, type FactionAgentViewModel } from './faction-agent'
 import { renderFactionExchange, type FactionExchangeViewModel } from './faction-exchange'
 import { renderFactionRecruitment, type FactionRecruitmentViewModel } from './faction-recruitment'
@@ -110,7 +109,7 @@ const renderTavern = (view: TownsPageViewModel): string => {
   return `<section class="shop shop-tavern towns-tavern" data-testid="town-tavern">
     <header class="shop-head">
       <span class="shop-sigil sigil-wine" aria-hidden="true">酒</span>
-      <div><h2>${escapeHtml(tavern.name)}</h2><span class="sub">侠客名录 · <i>明码相邀</i> · 酒馆补位</span></div>
+      <div><h2>${escapeHtml(tavern.name)}</h2><span class="sub">侠客名录 · <i>明码相邀</i></span></div>
       <div class="head-note">候邀 <b>${waiting}</b> 人<br>每卷${view.tavernHeroes.length}名</div>
     </header>
     <div class="shop-body">
@@ -121,7 +120,6 @@ const renderTavern = (view: TownsPageViewModel): string => {
           <div class="hn-rail"><span class="hn-name">${escapeHtml(hero.name)}</span><span class="hn-grade">${escapeHtml(hero.grade)}</span></div>
           <div class="hn-body">
             <div class="hn-tags"><span class="hn-cat">${escapeHtml(hero.category)}脉</span><span class="hn-role">${escapeHtml(hero.careerName)} · 坐馆相候</span></div>
-            ${renderHeroLifecycle(hero.id)}
             ${hero.line ? `<p class="hn-line">${escapeHtml(hero.line)}</p>` : ''}
             <div class="hn-foot">
               <span class="hn-cost">聘资 <b>${formatNumber(hero.cost)}</b> 本卷货币</span>

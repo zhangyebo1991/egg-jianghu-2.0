@@ -1,5 +1,4 @@
 import { escapeHtml, formatNumber } from './html'
-import { renderHeroLifecycle } from './hero-lifecycle'
 
 export interface FactionRecruitmentHeroView {
   heroSourceId: number
@@ -30,7 +29,6 @@ const renderRecruitmentHero = (
   <div class="faction-recruitment-copy">
     <header><h3>${escapeHtml(hero.name)}</h3><span>${escapeHtml(hero.requiredReputationName)}可邀</span></header>
     <p>声望等级 ${hero.requiredReputationLevel} / 5 · 聘资 ${formatNumber(hero.price)} ${escapeHtml(view.resourceName)}</p>
-    ${renderHeroLifecycle(hero.heroId)}
     <p>勇${hero.aptitudes.strength} · 智${hero.aptitudes.insight} · 体${hero.aptitudes.constitution} · 敏${hero.aptitudes.agility} · 精${hero.aptitudes.resolve}</p>
   </div>
   ${hero.actionReason === null
@@ -44,7 +42,7 @@ export const renderFactionRecruitment = (view: FactionRecruitmentViewModel): str
       <div><span>ORIGINAL RECRUITMENT</span><h2>势力招募</h2><p>${escapeHtml(view.factionName)} · 原版完整名录</p></div>
       <div class="faction-recruitment-wallet"><strong>${formatNumber(view.balance)}</strong><span>${escapeHtml(view.resourceName)}</span><small>${escapeHtml(view.reputationLevelName)}声望</small></div>
     </header>
-    <div class="faction-recruitment-notice">达到对应声望，并备齐${escapeHtml(view.resourceName)}后即可确定邀请。定位用于培养取舍，取得更晚不代表更强；高级池暂未开放。</div>
+    <div class="faction-recruitment-notice">达到对应声望，并备齐${escapeHtml(view.resourceName)}后即可确定邀请。</div>
     <div class="faction-recruitment-grid">
       ${view.heroes.map((hero) => renderRecruitmentHero(view, hero)).join('')}
     </div>
