@@ -18,7 +18,7 @@ export interface HeroDefinitionV10 {
   grade: HeroGrade
   baseCareerId: string
   worldId: string
-  source: 'starter' | 'tavern' | 'faction' | 'welfare'
+  source: 'starter' | 'tavern' | 'faction'
   cost: number
   factionId: string | null
   aptitudes: HeroAptitudes
@@ -170,14 +170,7 @@ export const FACTION_HEROES: HeroDefinitionV10[] = ORIGINAL_FACTION_RECRUITMENT.
   }]
 })
 
-// 原版 js.json ID165：赵云，白丁，勇/智/体/敏/精为71/33/47/73/27。
-export const ZHAO_YUN: HeroDefinitionV10 = {
-  id: 'hero_orig_165', sourceId: 165, name: '赵云', grade: '乙',
-  baseCareerId: STARTER_CAREER_ID, worldId: 'world_01', source: 'welfare',
-  factionId: null, cost: 0,
-  aptitudes: { strength: 71, insight: 33, constitution: 47, agility: 73, resolve: 27 },
-}
-export const HEROES_V10: HeroDefinitionV10[] = [PLAYER_HERO_V10, ...TAVERN_HEROES, ...FACTION_HEROES, ZHAO_YUN]
+export const HEROES_V10: HeroDefinitionV10[] = [PLAYER_HERO_V10, ...TAVERN_HEROES, ...FACTION_HEROES]
 
 export const heroMeridianCategory = (hero: HeroDefinitionV10): CareerCategory => {
   if (hero.source === 'faction' && hero.factionId) {

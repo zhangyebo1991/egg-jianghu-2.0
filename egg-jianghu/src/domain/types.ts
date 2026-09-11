@@ -209,8 +209,6 @@ export interface GameStateV10 {
   version: 19
   idleVouchers: import('./idle-vouchers').IdleVouchers
   premiumCards: import('./premium-cards').PremiumCards
-  heroSummoning: import('./hero-summoning').HeroSummoning
-  redeemedWelfareCodes: string[]
   settings: { autoDiscardBelowQuality: EquipmentQuality | null }
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet

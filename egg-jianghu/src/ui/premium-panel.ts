@@ -44,10 +44,9 @@ export const renderPremiumPanel = (state: GameStateV10, panel: PremiumPanel, now
     </section>
   </div>`
 
-export const renderShopPage = (state: GameStateV10, now = Date.now(), summoning = ''): string =>
+export const renderShopPage = (state: GameStateV10, now = Date.now()): string =>
   `<section class="shop-page" data-testid="shop-page">
     <header class="shop-head"><div><p>江湖百货 · 蛋蛋兑换</p><h1>商城</h1></div><div class="shop-wallet"><span>持有蛋蛋</span><strong>${state.idleVouchers.balance.toLocaleString('zh-CN')}</strong></div></header>
-    ${summoning}
     <section class="shop-section" aria-labelledby="shop-premium-title">
       <header class="shop-section-head"><div><h2 id="shop-premium-title">收益特权</h2><p>周卡与月卡 · 购买即生效，续购延长有效期</p></div><span>共 ${PREMIUM_CARDS.length} 款</span></header>
       ${renderPremiumContent(state, 'shop', now)}

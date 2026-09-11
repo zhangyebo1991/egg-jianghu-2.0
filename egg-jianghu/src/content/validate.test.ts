@@ -52,7 +52,7 @@ describe('首发内容目录', () => {
   })
 
   it('酒馆侠客仍按前十个位面 id 各 3 名，势力门人为原版名录 131 人', () => {
-    expect(HEROES_V10).toHaveLength(163)
+    expect(HEROES_V10).toHaveLength(162)
     const tavernByWorld = new Map<string, number>()
     const factionHeroCounts = new Map<string, number>()
     for (const hero of HEROES_V10) {
