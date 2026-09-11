@@ -391,6 +391,7 @@ const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10
   version: 19,
   idleVouchers: structuredClone(state.idleVouchers),
   premiumCards: structuredClone(state.premiumCards),
+  redeemedWelfareCodes: [...state.redeemedWelfareCodes],
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
   worldReputation: structuredClone(state.worldReputation),
@@ -439,6 +440,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     || raw.version !== 19
     || (raw.idleVouchers !== undefined && !isIdleVouchers(raw.idleVouchers))
     || (raw.premiumCards !== undefined && !isPremiumCards(raw.premiumCards))
+    || (raw.redeemedWelfareCodes !== undefined && (!isStringArray(raw.redeemedWelfareCodes) || new Set(raw.redeemedWelfareCodes).size !== raw.redeemedWelfareCodes.length))
     || (raw.settings !== undefined && (!isRecord(raw.settings)
       || (raw.settings.autoDiscardBelowQuality !== null
         && !(typeof raw.settings.autoDiscardBelowQuality === 'number'
@@ -488,6 +490,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     ...state,
     idleVouchers: raw.idleVouchers === undefined ? state.idleVouchers : structuredClone(raw.idleVouchers) as GameStateV10['idleVouchers'],
     premiumCards: raw.premiumCards === undefined ? state.premiumCards : structuredClone(raw.premiumCards) as GameStateV10['premiumCards'],
+    redeemedWelfareCodes: raw.redeemedWelfareCodes === undefined ? [] : [...raw.redeemedWelfareCodes as string[]],
     settings: raw.settings === undefined ? state.settings : {
       autoDiscardBelowQuality: (raw.settings as GameStateV10['settings']).autoDiscardBelowQuality,
     },

@@ -23,6 +23,7 @@ import {
   runFactionAgentAutomation,
 } from '../domain/faction-agent-automation'
 import { settleCombatEvent } from '../domain/rewards'
+import { redeemWelfareCode, type WelfareResult } from '../domain/welfare-codes'
 import { purchasePremiumCard } from '../domain/premium-cards'
 import { loadExistingGameV10, loadGameV10, SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
 import { createNewGameStateV10 } from '../domain/state'
@@ -186,6 +187,22 @@ export class GameSession {
       try { this.save(now) } catch (error) {
         this.state.idleVouchers.balance = balance
         this.state.premiumCards = cards
+        throw error
+      }
+    }
+    return result
+  }
+
+  redeemWelfareCode(code: string, now = Date.now()): WelfareResult {
+    // 发奖前确认存档未被其它窗口修改；角色与领取记录一起保存。
+    this.save(now)
+    const heroes = structuredClone(this.state.heroes)
+    const redeemedCodes = [...this.state.redeemedWelfareCodes]
+    const result = redeemWelfareCode(this.state, code)
+    if (result.ok) {
+      try { this.save(now) } catch (error) {
+        this.state.heroes = heroes
+        this.state.redeemedWelfareCodes = redeemedCodes
         throw error
       }
     }

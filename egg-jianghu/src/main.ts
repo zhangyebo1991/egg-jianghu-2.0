@@ -149,6 +149,8 @@ import { STACK_ITEM_DEFINITIONS } from './content/campaign-loot.generated'
 import { renderProgressionPage, type ProgressionPageViewModel, type ProgressionSection } from './ui/progression-page'
 import { renderStageList, renderWorldOverview, type PlaneSelectViewModel, type StageListViewModel } from './ui/jianghu-page'
 import { createDomPatcher } from './ui/dom-patch'
+import { renderWelfareRewards } from './ui/welfare-rewards'
+import { WELFARE_CODE_ID } from './domain/welfare-codes'
 import { renderSettingsPage } from './ui/settings-page'
 import { isJianghuSectionAvailable, isTabAvailable, renderShell, type JianghuSection, type TabId } from './ui/shell'
 import { renderStartPage } from './ui/start-page'
@@ -588,6 +590,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   careerTreeOpen = false
   selectedTreeCareerId = null
   inventorySlotFilter = 'all'
+  welfareInput = ''
   inventoryCategory = 'all'
   inventoryQuery = ''
   selectedStackId = null
@@ -670,6 +673,7 @@ const saveSession = (silent = false): boolean => {
 
 const CLOUD_BACKUP_KEY = 'egg-jianghu-before-cloud-download'
 let voucherDetailsOpen = false
+let welfareInput = ''
 let premiumPanel: PremiumPanel | null = null
 let premiumReturnFocus: HTMLElement | null = null
 const closePremiumPanel = (): void => {
@@ -939,6 +943,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
       ? '本队主角'
       : definition.source === 'tavern'
         ? '酒馆相逢'
+        : definition.source === 'welfare' ? '福利码结缘'
         : `${FACTIONS.find((faction) => faction.id === definition.factionId)?.name ?? '势力'}门人`
     const required = career
       ? careerExperienceForNextLevel(career.rank, record?.level ?? 1)
@@ -2056,7 +2061,7 @@ const render = (): void => {
         : activeTab === 'shop'
           ? renderShopPage(session.state)
         : activeTab === 'settings'
-          ? renderSettingsPage(session.state.settings)
+          ? renderSettingsPage(session.state.settings, welfareInput, session.state.redeemedWelfareCodes.includes(WELFARE_CODE_ID))
           : renderProgressionPage(progressionViewModel())
   patchApp(renderShell({
     premiumPanel: premiumPanel ? renderPremiumPanel(session.state, premiumPanel) : '',
@@ -3593,3 +3598,30 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
 
 render()
 if (startError) notify(startError, true)
+
+app.addEventListener('input', event => {
+  const input = event.target as HTMLInputElement
+  if (input.dataset.action === 'welfare-code-input') welfareInput = input.value
+})
+app.addEventListener('submit', event => {
+  const form = event.target as HTMLFormElement
+  if (form.dataset.action !== 'redeem-welfare-code') return
+  event.preventDefault()
+  if (appScreen !== 'playing' || activeTab !== 'settings') return
+  try {
+    const result = session.redeemWelfareCode(String(new FormData(form).get('code') ?? ''))
+    if (!result.ok) { notify(result.message, true); return }
+    welfareInput = ''
+    toast.hidden = true
+    render()
+    const host = document.createElement('div')
+    host.innerHTML = renderWelfareRewards(result.rewards)
+    const dialog = host.firstElementChild as HTMLDialogElement
+    document.body.append(dialog)
+    dialog.addEventListener('click', event => {
+      if ((event.target as HTMLElement).closest('[data-action="close-welfare-rewards"]')) dialog.close()
+    })
+    dialog.addEventListener('close', () => { dialog.remove(); app.querySelector<HTMLInputElement>('#welfare-code')?.focus() }, { once: true })
+    dialog.showModal()
+  } catch (error) { handleSessionSaveError(error) }
+})

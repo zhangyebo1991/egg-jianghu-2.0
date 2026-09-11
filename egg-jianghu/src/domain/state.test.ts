@@ -5,6 +5,7 @@ import {
   PLAYER_HERO_ID,
   PLAYER_HERO_V10,
   TAVERN_HEROES,
+  ZHAO_YUN,
 } from '../content/heroes'
 import { createInitialStateV10, createNewGameStateV10, normalizePlayerName } from './state'
 
@@ -63,7 +64,7 @@ describe('新建玩家角色', () => {
       aptitudes: { strength: 10, insight: 10, constitution: 10, agility: 10, resolve: 10 },
     })
     expect(HEROES_V10[0]).toBe(PLAYER_HERO_V10)
-    expect(HEROES_V10).toEqual([PLAYER_HERO_V10, ...TAVERN_HEROES, ...FACTION_HEROES])
+    expect(HEROES_V10).toEqual([PLAYER_HERO_V10, ...TAVERN_HEROES, ...FACTION_HEROES, ZHAO_YUN])
     expect(TAVERN_HEROES.map((hero) => hero.id)).not.toContain(PLAYER_HERO_ID)
     expect(FACTION_HEROES.map((hero) => hero.id)).not.toContain(PLAYER_HERO_ID)
   })
