@@ -23,6 +23,8 @@ import {
   runFactionAgentAutomation,
 } from '../domain/faction-agent-automation'
 import { settleCombatEvent } from '../domain/rewards'
+import { summonHeroes, setSummoningTarget, type SummonResult } from '../domain/hero-summoning'
+import { redeemWelfareCode, type WelfareResult } from '../domain/welfare-codes'
 import { purchasePremiumCard } from '../domain/premium-cards'
 import { loadExistingGameV10, loadGameV10, SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
 import { createNewGameStateV10 } from '../domain/state'
@@ -190,6 +192,36 @@ export class GameSession {
       }
     }
     return result
+  }
+
+  private saveRecruitmentAction<T extends { ok: boolean }>(action: () => T, now: number): T {
+    this.save(now)
+    const before = structuredClone({
+      heroes: this.state.heroes, materials: this.state.materials,
+      heroSummoning: this.state.heroSummoning, redeemedWelfareCodes: this.state.redeemedWelfareCodes,
+    })
+    const balance = this.state.idleVouchers.balance
+    try {
+      const result = action()
+      if (result.ok) this.save(now)
+      return result
+    } catch (error) {
+      Object.assign(this.state, before)
+      this.state.idleVouchers.balance = balance
+      throw error
+    }
+  }
+
+  summonHeroes(worldId: string, count: number, now = Date.now(), random = Math.random): SummonResult {
+    return this.saveRecruitmentAction(() => summonHeroes(this.state, worldId, count, random), now)
+  }
+
+  setSummoningTarget(worldId: string, heroId: string, now = Date.now()): ActionResult {
+    return this.saveRecruitmentAction(() => setSummoningTarget(this.state, worldId, heroId), now)
+  }
+
+  redeemWelfareCode(code: string, now = Date.now()): WelfareResult {
+    return this.saveRecruitmentAction(() => redeemWelfareCode(this.state, code), now)
   }
 
   save(now = Date.now()): void {

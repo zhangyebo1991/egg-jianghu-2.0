@@ -72,6 +72,7 @@ export interface HeroesHeroView {
   id: string
   name: string
   grade: string
+  tier?: string
   recruited: boolean
   level: number
   experience: number
@@ -126,6 +127,7 @@ export interface HeroesPageViewModel {
   heroes: HeroesHeroView[]
   rosterHeroes?: HeroesHeroView[]
   rosterQuery?: string
+  rosterTierFilter?: string
   rosterGradeFilter?: string
   rosterCategoryFilter?: string
   careerTreeOpen: boolean
@@ -300,7 +302,7 @@ const renderBasicTab = (hero: HeroesHeroView): string => {
         ${renderHeroPortrait(hero, 'hb-portrait')}
         <div class="hb-idmain">
           <b class="hb-name">${escapeHtml(hero.name)}</b>
-          <div class="hb-idtags"><span class="hero-medallion" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span><span class="hb-cat">${escapeHtml(hero.category ?? '侠')}之脉系</span></div>
+          <div class="hb-idtags"><span class="hero-medallion" data-grade="${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span>${hero.tier && hero.tier !== '主角' ? `<span class="hero-tier" data-tier="${hero.tier}">${hero.tier}</span>` : ''}<span class="hb-cat">${escapeHtml(hero.category ?? '侠')}之脉系</span></div>
         </div>
       </div>
       <div class="hb-radar"><div class="radar-box">${renderAptitudeRadar(aptitudes)}<div class="radar-total"><b>${aptitudeTotal}</b><span>天资总和</span></div></div></div>
@@ -405,7 +407,8 @@ const renderPrototypeRosterFilters = (view: HeroesPageViewModel): string => {
   const category = view.rosterCategoryFilter ?? 'all'
   const grades = ROSTER_GRADES.map((value) => `<button type="button" class="fchip seal${value !== 'all' ? ' g-' + value : ''}${grade === value ? ' active' : ''}" data-action="hero-roster-filter" data-filter-kind="grade" data-filter-value="${value}" aria-pressed="${grade === value}">${value === 'all' ? '全' : value}</button>`).join('')
   const categories = ROSTER_CATEGORIES.map((value) => `<button type="button" class="fchip${category === value ? ' active' : ''}" data-action="hero-roster-filter" data-filter-kind="category" data-filter-value="${value}" aria-pressed="${category === value}" title="${value === 'all' ? '全部脉系' : escapeHtml(CATEGORY_LABELS[value])}">${value === 'all' ? '全' : value === '内家' ? '内' : value}</button>`).join('')
-  return '<div class="chip-row"><span class="chip-label">品级</span>' + grades + '</div><div class="chip-row"><span class="chip-label">脉系</span>' + categories + '</div>'
+  const tiers = ['all', '基础', '精英', '名侠', '传奇'].map(tier => `<button type="button" class="fchip${(view.rosterTierFilter ?? 'all') === tier ? ' active' : ''}" data-action="hero-roster-filter" data-filter-kind="tier" data-filter-value="${tier}" aria-pressed="${(view.rosterTierFilter ?? 'all') === tier}">${tier === 'all' ? '全' : tier}</button>`).join('')
+  return '<div class="chip-row"><span class="chip-label">层次</span>' + tiers + '</div><div class="chip-row"><span class="chip-label">品级</span>' + grades + '</div><div class="chip-row"><span class="chip-label">脉系</span>' + categories + '</div>'
 }
 
 const renderPrototypeRoster = (view: HeroesPageViewModel): string => {
@@ -421,7 +424,7 @@ const renderPrototypeRoster = (view: HeroesPageViewModel): string => {
   const rows = groups.map((group) => `<div class="roster-ghead"><b>${escapeHtml(group.label)}</b><span class="gcount">${group.heroes.length} 人</span></div>${group.heroes.map((hero) => {
     const index = rowIndex++
     const source = hero.source ?? (hero.inFormation ? '在阵' : '江湖行走')
-    return `<button type="button" class="roster-row${hero.id === view.selectedHeroId ? ' active' : ''}" data-action="select-hero" data-hero-id="${escapeHtml(hero.id)}" data-testid="hero-${escapeHtml(hero.id)}" style="--row-delay:${Math.min(index, 12) * 35}ms"><span class="r-face">${renderHeroPortrait(hero, 'r-portrait')}<span class="r-seal g-${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span></span><span class="r-body"><span class="r-name">${escapeHtml(hero.name)}</span><span class="r-meta">${escapeHtml(hero.careerName)} · Lv.${hero.level} · ${escapeHtml(source)}</span></span>${hero.id === view.selectedHeroId ? '<span class="r-flag">列传中</span>' : ''}</button>`
+    return `<button type="button" class="roster-row${hero.id === view.selectedHeroId ? ' active' : ''}" data-action="select-hero" data-hero-id="${escapeHtml(hero.id)}" data-testid="hero-${escapeHtml(hero.id)}" style="--row-delay:${Math.min(index, 12) * 35}ms"><span class="r-face">${renderHeroPortrait(hero, 'r-portrait')}<span class="r-seal g-${escapeHtml(hero.grade)}">${escapeHtml(hero.grade)}</span></span><span class="r-body"><span class="r-name">${escapeHtml(hero.name)} ${hero.tier && hero.tier !== '主角' ? `<small class="hero-tier" data-tier="${hero.tier}">${hero.tier}</small>` : ''}</span><span class="r-meta">${escapeHtml(hero.careerName)} · Lv.${hero.level} · ${escapeHtml(source)}</span></span>${hero.id === view.selectedHeroId ? '<span class="r-flag">列传中</span>' : ''}</button>`
   }).join('')}`).join('')
   return rows || '<div class="roster-none">查无此侠</div>'
 }

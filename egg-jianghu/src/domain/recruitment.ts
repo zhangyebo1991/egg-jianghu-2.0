@@ -1,3 +1,4 @@
+import { heroPlacement } from '../content/hero-placement'
 import { factionById } from '../content/factions'
 import { heroByIdV10 } from '../content/heroes'
 import { originalWorldReputationLevel, originalWorldReputationLevelName } from '../content/original-faction-rules.generated'
@@ -31,6 +32,8 @@ export const recruitFromFaction = (
   }
   if (!state.unlockedWorldIds.includes(definition.worldId)) return { ok: false, message: '尚未解锁所在江湖卷' }
   if (state.heroes[heroId]?.recruited) return { ok: false, message: '侠客已经加入' }
+
+  if (heroPlacement(heroId)?.route === '章节池') return { ok: false, message: '该侠客通过商城章节招募获得' }
 
   const faction = factionById(factionId)
   if (!faction) return { ok: false, message: '该势力没有这名侠客' }
