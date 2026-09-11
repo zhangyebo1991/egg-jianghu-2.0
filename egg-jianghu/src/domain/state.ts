@@ -7,7 +7,7 @@ import {
   ORIGINAL_CITY_INITIAL_TILES,
 } from '../content/original-city.generated'
 import { ORIGINAL_DEITIES, ORIGINAL_SACRED_BEASTS } from '../content/original-progression.generated'
-import type { CityFinanceLedger, CityState, GameStateV10, HeroProgressV10 } from './types'
+import type { CityFinanceLedger, CityShopState, CityState, GameStateV10, HeroProgressV10 } from './types'
 
 export const createHeroEquipmentSets = (): HeroProgressV10['equipmentSets'] => [{}, {}, {}]
 
@@ -45,10 +45,25 @@ export const createEmptyCityFinanceLedger = (): CityFinanceLedger => ({
   其他支出: 0,
 })
 
+export const createInitialCityShop = (): CityShopState => ({
+  tileId: ORIGINAL_CITY_INITIAL_TILES.find(tile => tile.owned && tile.buildingId === 15)!.tileId,
+  enabled: true,
+  stock: [],
+  staff: Array.from({ length: 6 }, () => ({ heroId: null, progress: 0, serving: false })),
+  customers: 0,
+  elapsedMs: 0,
+  experience: 0,
+  soldCount: 0,
+  revenue: 0,
+  receipts: [],
+  introStep: 0,
+})
+
 export const createInitialCityState = (): CityState => ({
   level: 0,
   tiles: ORIGINAL_CITY_INITIAL_TILES.map((tile) => ({ ...tile })),
   technologyLevels: { ...ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS },
+  shop: createInitialCityShop(),
   company: {
     name: null,
     cash: ORIGINAL_CITY_CONSTANTS.initialCash,
@@ -60,7 +75,8 @@ export const createInitialCityState = (): CityState => ({
 })
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
-  version: 18,
+  version: 19,
+  settings: { autoDiscardBelowQuality: null },
   worldCurrency: { world_01: 1000 },
   contribution: {},
   worldReputation: { world_01: 0 },

@@ -5387,3 +5387,120 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
 .faction-skill-icon { display: block; width: 32px; height: 32px; object-fit: contain; border-radius: 4px; }
 .faction-detail-skill-icon { width: 28px; height: 28px; object-fit: contain; vertical-align: middle; margin-right: 8px; border-radius: 4px; }
 .combat-skill-icon { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; margin-right: 3px; border-radius: 2px; }
+
+/* 城市起步经营：旧契、柜台与账簿，主操作保持可读。 */
+.city-core-page { --business-paper: #e7ddc8; --business-dim: #b7ab92; --business-line: #51432b; --business-gold: #dfbf7c; }
+.city-core-page:has(.city-business-layout) { overflow-y: auto; padding-right: 8px; scrollbar-width: thin; }
+.city-core-page:has(.city-business-layout) > * { flex-shrink: 0; }
+.city-core-page .city-core-tabs button { font-size: 14px; }
+.city-story, .city-guide { position: relative; display: flex; gap: 22px; align-items: flex-start; margin: 14px 0; padding: 22px 26px; border: 1px solid #75603a; border-radius: 8px; color: #362b1c; background: linear-gradient(115deg, #e7d9b9, #cdbb93); box-shadow: 0 8px 24px #0003; }
+.city-story-seal { flex: 0 0 54px; padding: 8px; border: 2px solid #9e4934; color: #9e4934; font: 32px var(--font-brush, serif); text-align: center; transform: rotate(-4deg); }
+.city-story h2 { margin: 4px 0 10px; color: #3a2a17; font: 28px var(--font-brush, serif); }
+.city-story p, .city-guide p { margin: 6px 0 0; max-width: 85ch; font-size: 15px; line-height: 1.9; }
+.city-story small { font-size: 13px; color: #725c37; }
+.city-story-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+.city-core-page .city-story button { background: #443721; color: #f2e5c6; border: 1px solid #75603a; padding: 9px 18px; font-size: 14px; }
+.city-core-page .city-story button + button { color: #58452a; background: transparent; }
+.city-guide { align-items: center; padding: 14px 20px; }
+.city-guide > div { flex: 1; min-width: 0; }
+.city-guide strong { font-size: 17px; }
+.city-guide button { flex-shrink: 0; color: #5a4525; border: 1px solid #8c764d; padding: 8px 12px; background: transparent; }
+.city-business-ribbon { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 18px; border-block: 1px solid var(--business-line); }
+.city-business-ribbon > span { display: flex; flex-direction: column; gap: 7px; padding: 16px 18px; color: var(--business-dim); font-size: 13px; }
+.city-business-ribbon strong { color: var(--business-gold); font-size: 22px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.city-business-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); align-items: start; gap: 20px; color: var(--business-paper); padding-bottom: 14px; }
+.city-shop-book, .city-receipts { min-width: 0; border: 1px solid var(--business-line); border-radius: 8px; background: linear-gradient(145deg, #262218, #17170f); }
+.city-shop-head { display: flex; justify-content: space-between; gap: 16px; padding: 22px; border-bottom: 1px solid var(--business-line); }
+.city-shop-head h2, .city-receipts h2 { margin: 6px 0; font: 28px var(--font-brush, serif); color: var(--business-paper); }
+.city-shop-head h2 span { font: 14px var(--font-serif, serif); color: var(--business-dim); }
+.city-shop-head small, .city-shop-head p { color: var(--business-dim); font-size: 13px; margin: 0; line-height: 1.7; }
+.city-shop-controls { display: flex; flex-direction: column; justify-content: center; gap: 9px; }
+.city-business-layout button { min-height: 36px; padding: 7px 12px; border: 1px solid #776039; border-radius: 4px; background: #382e1d; color: var(--business-gold); font-size: 14px; cursor: pointer; }
+.city-business-layout button:hover:not(:disabled) { background: #514127; border-color: var(--business-gold); }
+.city-business-layout button:disabled { opacity: .4; cursor: not-allowed; }
+.city-business-layout button:focus-visible, .city-story button:focus-visible, .city-guide button:focus-visible { outline: 2px solid #ebcf8e; outline-offset: 3px; }
+.city-staff-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 18px 22px; }
+.city-worker { padding: 14px; border: 1px solid #534932; background: #1a1a12; border-radius: 4px; }
+.city-worker header { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+.city-worker header span, .city-worker small { color: var(--business-dim); font-size: 12px; }
+.city-worker strong { font-size: 17px; }
+.city-worker p { color: var(--business-dim); font-size: 13px; line-height: 1.6; }
+.city-worker progress { display: block; width: 100%; height: 7px; margin: 10px 0 6px; accent-color: var(--business-gold); }
+.city-worker > button { display: block; margin-top: 10px; }
+.city-hiring { margin: 0 22px 18px; padding: 16px; border: 1px solid #8f7040; border-radius: 5px; background: #211e14; }
+.city-hiring header, .city-hiring > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 8px; }
+.city-hiring > div { border-bottom: 1px solid #443b28; }
+.city-hiring small { display: block; color: var(--business-dim); font-size: 12px; margin: 5px 0; line-height: 1.6; }
+.city-hiring p { color: var(--business-dim); font-size: 13px; line-height: 1.7; }
+.city-hiring > button { margin-top: 14px; }
+.city-goods { padding: 0 22px 20px; }
+.city-goods > header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-top: 16px; border-top: 1px solid var(--business-line); }
+.city-goods h3 { margin: 0; color: var(--business-gold); font-size: 18px; font-weight: 500; }
+.city-goods > header span, .city-goods > p { color: var(--business-dim); font-size: 13px; line-height: 1.8; }
+.city-goods-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; padding: 11px 0; border-bottom: 1px solid #443b28; }
+.city-goods-row strong { display: block; color: var(--rarity, var(--business-paper)); font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+.city-goods-row small { display: block; margin-top: 4px; font-size: 12px; color: var(--business-dim); }
+.city-goods-price { color: var(--business-gold); font-size: 16px; text-align: right; font-variant-numeric: tabular-nums; }
+.city-goods footer { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 15px; font-size: 13px; }
+.city-goods footer > span { margin-left: auto; }
+.city-empty-note { padding: 18px 0; color: var(--business-dim); font-size: 14px; line-height: 1.8; }
+.city-receipts { padding: 22px; background: repeating-linear-gradient(transparent, transparent 35px, #ab8d5110 35px, #ab8d5110 36px), #211d14; }
+.city-receipts header small { color: var(--business-gold); font-size: 13px; letter-spacing: .16em; }
+.city-receipt-total { display: flex; flex-direction: column; gap: 8px; padding: 18px 0; border-block: 1px solid #665333; margin-top: 16px; }
+.city-receipt-total span, .city-receipt-total small { color: var(--business-dim); font-size: 13px; line-height: 1.6; }
+.city-receipt-total strong { color: var(--business-gold); font-size: 28px; overflow-wrap: anywhere; }
+.city-receipts article { display: grid; gap: 6px; border-bottom: 1px solid #4a3c28; padding: 15px 0; }
+.city-receipts article span { color: var(--business-dim); font-size: 12px; }
+.city-receipts article strong { font-size: 15px; font-weight: 400; }
+.city-receipts article b { color: #abc28c; font-size: 16px; }
+.city-receipts footer { margin-top: 20px; color: var(--business-dim); font-size: 12px; line-height: 1.8; }
+@media (max-width: 1080px) { .city-business-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .city-core-page:has(.city-business-layout) { padding-right: 0; }
+  .city-story, .city-guide { padding: 16px; gap: 12px; }
+  .city-story-seal { display: none; }
+  .city-story p { font-size: 14px; }
+  .city-guide { flex-direction: column; align-items: flex-start; }
+  .city-business-ribbon { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .city-business-ribbon > span { padding: 12px 8px; }
+  .city-business-ribbon strong { font-size: 20px; }
+  .city-shop-head { padding: 16px; }
+  .city-shop-controls button { padding-inline: 8px; white-space: nowrap; }
+  .city-staff-grid { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .city-hiring { margin-inline: 16px; }
+  .city-goods { padding-inline: 16px; }
+  .city-goods-row { gap: 9px; }
+  .city-goods-row strong, .city-goods-price { font-size: 14px; }
+  .city-receipts { padding: 16px; }
+}
+
+/* 战斗进度横排置顶，避免竖排数字挤占双方阵位。 */
+.idle-page .battlefield { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
+.idle-page .battle-divider { grid-column: 1 / -1; grid-row: 1; flex-direction: row; justify-content: center; gap: 24px; padding: 10px 12px; border-bottom: 1px solid var(--idle-line-soft); background: rgb(13 16 12 / 65%); }
+.idle-page .battle-divider .divider-status { display: inline-flex; align-items: baseline; gap: 6px; width: auto; height: auto; border: 0; background: none; writing-mode: horizontal-tb; color: #c8c2b4; font-size: 14px; line-height: 1.5; letter-spacing: normal; }
+.idle-page .divider-status em { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.idle-page .battle-half { grid-row: 2; }
+.idle-page .combat-action-timeline { grid-row: 3; }
+.settings-page { width: min(100%, 1080px); margin-inline: auto; padding: 28px; color: #e8dfcf; }
+.settings-page h1 { margin: 0; font-size: 28px; }
+.settings-page header > p { margin: 10px 0 26px; color: #b6b0a4; }
+.settings-layout { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 24px; }
+.settings-layout nav a { display: block; padding: 12px 16px; border-radius: 6px; color: #e6c67f; background: #252820; text-decoration: none; }
+.settings-group { padding: 24px; border: 1px solid #454535; border-radius: 10px; background: #191d17; }
+.settings-group h2 { margin: 0 0 24px; font-size: 20px; }
+.settings-field { display: flex; align-items: flex-start; gap: 24px; }
+.settings-field > div { flex: 1; min-width: 0; }
+.settings-field label { font-size: 16px; font-weight: 600; }
+.settings-field p { color: #b6b0a4; font-size: 14px; line-height: 1.8; }
+.settings-field select { max-width: 100%; min-height: 44px; padding: 10px; border: 1px solid #797052; border-radius: 6px; color: #eee5d1; background: #252820; font-size: 15px; }
+.settings-status { margin: 18px 0 0; padding-top: 18px; border-top: 1px solid #393e30; color: #e6c67f; font-size: 14px; }
+@media (max-width: 700px) {
+  .settings-page { padding: 18px 12px; }
+  .settings-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .settings-group { padding: 16px; }
+  .settings-field { flex-direction: column; gap: 8px; }
+  .settings-field select { width: 100%; }
+  .idle-page .battle-divider { gap: 20px; padding: 7px 8px; }
+  .idle-page .battle-divider .divider-status { font-size: 13px; }
+  .idle-page .divider-status em { font-size: 18px; }
+}

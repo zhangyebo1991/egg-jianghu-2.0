@@ -210,6 +210,7 @@ const factionsFixture = (): FactionsPageViewModel => ({
 })
 
 const cityFixture = (section: CityPageViewModel['section'] = 'map'): CityPageViewModel => ({
+  shop: { tileId: 172, level: 1, enabled: true, status: '等待店员', introStep: 0, cash: 0, revenue: 0, soldCount: 0, experience: 0, customers: 0, capacity: 20, stock: [], availableItems: [], availableCount: 0, page: 1, pageCount: 1, staff: [], hiringSlot: null, candidates: [], receipts: [] },
   section,
   gridColumns: 18,
   gridRows: 18,
@@ -618,7 +619,7 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('<strong>25</strong>类建筑')
     expect(html).toContain('10 行 · 10 列')
     expect(html).toContain('<button type="button" disabled>出售土地</button>')
-    expect(html).toContain('未核验操作保持关闭')
+    expect(html).toContain('土地买卖、建设与迁移暂未开放')
     expect(html).not.toContain('本卷货币')
   })
 
@@ -626,10 +627,10 @@ describe('version 10 长期循环页面', () => {
     const html = renderCityPage(cityFixture('company'))
     expect(html).toContain('data-testid="city-company"')
     expect(html).toContain('<button type="button" disabled>注册公司</button>')
-    expect(html).toContain('原版公司名称完整校验尚未解码')
+    expect(html).toContain('古玩店可独立营业积攒现金')
     expect(html.match(/class="(?:income|expense)"/g)).toHaveLength(7)
-    expect(html).toContain('原版七类收支')
-    expect(html).toContain('职位能力待接入')
+    expect(html).toContain('古玩店销售实时入账')
+    expect(html).toContain('古玩店店员可在经营总览中任命')
   })
 
   it('背包页按原型输出原版装备图标、详情器影和品质件数', () => {

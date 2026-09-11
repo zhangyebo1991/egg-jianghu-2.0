@@ -1,7 +1,11 @@
 import { escapeHtml } from './html'
 
-export type TabId = 'idle' | 'heroes' | 'formation' | 'inventory' | 'progression'
+export type TabId = 'idle' | 'heroes' | 'formation' | 'inventory' | 'progression' | 'settings'
+// 秘境与神界暂未接入真实挑战流程，入口和动作同时关闭。
+export const isTabAvailable = (tab: TabId): boolean => tab !== 'progression'
 export type JianghuSection = 'stages' | 'factions' | 'towns' | 'city'
+export const isJianghuSectionAvailable = (section: JianghuSection): boolean =>
+  section === 'stages' || section === 'factions' || section === 'city'
 
 export interface ShellViewModel {
   activeTab: TabId
@@ -17,13 +21,12 @@ const tabs: Array<{ id: TabId; label: string; mark: string }> = [
   { id: 'heroes', label: '侠客', mark: '侠' },
   { id: 'formation', label: '阵容', mark: '阵' },
   { id: 'inventory', label: '背包', mark: '匣' },
-  { id: 'progression', label: '秘境', mark: '界' },
+  { id: 'settings', label: '设置', mark: '设' },
 ]
 
 const jianghuSections: ReadonlyArray<{ id: JianghuSection; label: string; mark: string }> = [
   { id: 'stages', label: '关卡', mark: '关' },
   { id: 'factions', label: '势力', mark: '势' },
-  { id: 'towns', label: '城镇', mark: '镇' },
   { id: 'city', label: '城市', mark: '城' },
 ]
 

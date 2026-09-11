@@ -16,6 +16,7 @@ export const placeFormation = (
   col: FormationColumn,
 ): ActionResult => {
   if (!state.heroes[heroId]?.recruited) return { ok: false, message: '请先选择已加入的侠客' }
+  if (state.city.shop.staff.some(worker => worker.heroId === heroId)) return { ok: false, message: '侠客正在古玩店任职，请先卸任' }
   const current = state.formation.find((slot) => slot.heroId === heroId)
   if (current?.row === row && current?.col === col) return { ok: false, message: '侠客已在该位' }
   const target = state.formation.find((slot) => slot.row === row && slot.col === col)

@@ -353,7 +353,7 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
             <header class="half-heading party"><strong>我方</strong><span>三路五列 · 前列临阵</span><span class="half-hint">六侠成阵</span></header>
             <div class="battle-grid party">${renderLanes(view.combat.party, 'party', view.effects)}</div>
           </section>
-          <div class="battle-divider" aria-hidden="true"><span class="divider-line"></span><span class="divider-status">第 <em>${view.combat.wave}</em> 波</span><span class="divider-seal">战</span><span class="divider-status">斩敌 <em>${view.stats.kills}</em></span><span class="divider-line"></span></div>
+          <div class="battle-divider" aria-label="战斗进度"><span class="divider-status">第 <em>${view.combat.wave}</em> / 10 波</span><span class="divider-status">斩敌 <em>${view.stats.kills}</em></span></div>
           <section class="battle-half enemy" aria-label="敌方阵容">
             <header class="half-heading enemy"><strong>敌方</strong><span>自右来犯 · 前列临阵</span><span class="half-hint">${enemyVisible ? `余敌 ${enemyCount}` : '敌阵未现'}</span></header>
             <div class="battle-grid enemy">${renderLanes(visibleEnemies, 'enemy', view.effects)}</div>

@@ -1196,6 +1196,37 @@ const runtimeFunctionEvidence = (name) => {
     fieldUsages: fieldUsages.filter((usage) => usage.functionName === name),
   }
 }
+// 起步经营审计仅导出对应事件，不重写其他业务生成文件。
+if (process.argv.includes('--city-startup-runtime')) {
+  const names = [...namedEventNodes.keys()].filter(name => /店铺|货架|货物|上架|下架|补货|销售|商品|古玩|设施|公司结算|公司财务|物品买卖价格|商业总监|刷新公司临时|建筑主管加速|角色强制空闲|初始化|建筑状态|建筑升级经验/.test(name))
+  const evidence = names.map(name => ({ name, paths: [...(namedPaths.get(name) ?? [])], nodes: namedEventNodes.get(name).map(node => ({ eventId: node[5], operations: runtimeOperationsIn(node), calls: functionCallsIn(node), expressions: parameterExpressionsIn(node) })) }))
+  const variables = []
+  const visitStartup = node => {
+    if (!Array.isArray(node)) return
+    if (node[0] === 1 && ['现世货币比', '物价品质指数'].includes(node[1])) variables.push({ name: node[1], value: node[3] })
+    if (node[0] === 4 && Array.isArray(node[1]) && ['主角公司加成', '店铺空闲顾客数'].includes(node[1][0])) {
+      evidence.push({ name: node[1][0], nodes: [{ eventId: node[5], operations: runtimeOperationsIn(node), calls: functionCallsIn(node), expressions: parameterExpressionsIn(node) }] })
+    }
+    for (const child of node) visitStartup(child)
+  }
+  visitStartup(runtimeData.project)
+  assert(variables.some(value => value.name === '现世货币比' && value.value === 40), '现世货币比已变化')
+  assert(variables.some(value => value.name === '物价品质指数' && value.value === 2.5), '物价品质指数已变化')
+  for (const name of ['店铺执行function', '店铺职员进度function', '店铺执行销售function', '物品买卖价格function', '单物品补货function']) {
+    assert(evidence.some(entry => entry.name === name), `起步经营证据缺少 ${name}`)
+  }
+  const output = JSON.stringify({ fingerprints, variables, evidence }, null, 2) + '\n'
+  const target = join(OUT_DIR, 'city-startup-runtime.json')
+  if (process.argv.includes('--check')) {
+    assert(readFileSync(target, 'utf8') === output, '城市起步经营证据与原版源文件不一致')
+    console.log('城市起步经营证据核验通过')
+    process.exit(0)
+  }
+  mkdirSync(OUT_DIR, { recursive: true })
+  writeFileSync(target, output)
+  console.log(`已提取 ${names.length} 个城市经营事件`)
+  process.exit(0)
+}
 // 技能审计仅导出所需运行时证据，不重写城镇等业务生成文件。
 if (process.argv.includes('--skills-runtime')) {
   const functionBlocks = new Map()
@@ -3574,6 +3605,8 @@ const readme = `# 原版势力、城镇与城市经营真值包
 - \`faction-runtime-evidence.md\`：上述函数的人工审阅版索引。
 - \`city-runtime-evidence.json\`：城市、土地、公司、财务、项目、升级与迁移核心函数的逐表达式证据。
 - \`city-runtime-evidence.md\`：上述城市与公司核心函数的人工审阅版索引。
+- \`city-startup-runtime.json\`：古玩店起步经营的事件、分支与公式，使用 \`--city-startup-runtime\` 单独提取。
+- \`city-startup-rules.md\`：第一批经营规则、剧情、v19 存档及验证边界。
 - \`faction-exchange-catalog.json\`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
 - \`faction-exchange-catalog.md\`：上述 396 条兑换商品的人工审阅表。
 - \`faction-recruitment-catalog.json\`：完整势力招募角色、声望门槛、基础价格和最终价格。

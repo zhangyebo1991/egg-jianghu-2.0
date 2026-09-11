@@ -113,6 +113,9 @@ export const grantKillLoot = (state: GameStateV10, input: LootDropInput): string
       ...rollEquipmentStats(definition, quality, rng),
       locked: false,
     }
+    // 完成随机属性生成后再过滤，保持后续装备与材料的随机序列不变。
+    const threshold = state.settings.autoDiscardBelowQuality
+    if (threshold !== null && equipment.quality < threshold) continue
     if (addEquipment(state, equipment).ok) added.push(equipment.uid)
   }
   // 材料是独立堆叠库存；装备背包满不能截断后续物品与材料结算。

@@ -1,5 +1,6 @@
 import { createCombatEngine, type CombatEngine } from '../combat/engine'
 import { createRng, type Rng } from '../combat/rng'
+import { advanceCityShop } from '../domain/city-shop'
 import { buildAttributeMap, buildCareerCombatCoefficients, buildCombatStats, equippedMainhandWeaponType, equippedBaseAttack, equippedOffhandSoulId } from '../combat/stats'
 import type { CombatEvent, CombatStartInput, CombatUnit, StageSelectionInput } from '../combat/types'
 import { FACTIONS } from '../content/factions'
@@ -239,9 +240,11 @@ export class GameSession {
   }
 
   advanceRuntime(elapsedMs: number, currentWorldId: string | null = null): void {
+    if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return
     const before = JSON.stringify(this.state.factionBoards)
     advanceQuestBoards(this.state, elapsedMs, this.runtimeRng)
     let changed = JSON.stringify(this.state.factionBoards) !== before
+    if (advanceCityShop(this.state, elapsedMs, this.runtimeRng)) changed = true
 
     // 代理人自动化：原版 Event 11713 是 System.Every(1 秒)，按累计时长补齐整数个 tick。
     // 原版门禁还包含「未打开任何功能面板」「不在狩猎中」，那是为避免 UI 冲突的措施，

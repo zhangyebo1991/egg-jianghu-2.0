@@ -289,36 +289,45 @@ test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) 
   expect(after.inventory).toBeGreaterThanOrEqual(before.inventory)
 })
 
-test('江湖位面侧栏显示四个分离入口并可切换城镇与城市', async ({ page }) => {
-  await page.evaluate(() => window.__EGG_JIANGHU__.unlockFaction('tieyi_school'))
+test('江湖侧栏隐藏城镇且直接路由与旧按钮不可进入，势力和城市可用', async ({ page }, testInfo) => {
   await enterWorld(page)
+  await expect(page.locator('[data-jianghu-section]')).toHaveCount(3)
+  await expect(page.getByTestId('world-section-towns')).toHaveCount(0)
+  await openWorldSection(page, 'towns')
   await expect(page.getByTestId('stage-overview')).toBeVisible()
-  await expect(page.locator('[data-jianghu-section]')).toHaveCount(4)
-  await expect(page.getByTestId('world-section-stages')).toHaveAttribute('aria-current', 'page')
-
-  await page.getByTestId('world-section-towns').click()
-  await expect(page.getByTestId('towns-page')).toBeVisible()
-  await expect(page.getByTestId('town-public-locations').locator('.town-place-card')).toHaveCount(5)
-  await expect(page.getByTestId('faction-towns').locator('.faction-town-card')).toHaveCount(3)
-  const factionTownButton = page.getByTestId('faction-town-tieyi_school').getByRole('button', { name: '查看势力总览' })
-  await factionTownButton.scrollIntoViewIfNeeded()
-  await factionTownButton.click()
-  await expect(page.getByTestId('faction-plaque-tieyi_school')).toHaveAttribute('aria-pressed', 'true')
-
+  const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
+  await page.evaluate(() => {
+    for (const attributes of [
+      { 'data-jianghu-section': 'towns' },
+      { 'data-action': 'city-to-towns' },
+      { 'data-action': 'tavern-recruit', 'data-hero-id': 'hero_guo_jing' },
+    ]) {
+      const button = document.createElement('button')
+      for (const [key, value] of Object.entries(attributes)) button.setAttribute(key, value!)
+      document.querySelector('#app')!.append(button)
+      button.click()
+      button.remove()
+    }
+  })
+  await expect(page.getByTestId('towns-page')).toHaveCount(0)
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState())).toEqual(before)
+  await page.getByTestId('world-section-factions').click()
+  await expect(page.getByTestId('faction-page-title')).toBeVisible()
   await page.getByTestId('world-section-city').click()
   await expect(page.getByTestId('city-page')).toContainText('跨位面经营')
-  await expect(page.getByTestId('city-page')).not.toContainText('本卷货币')
-
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.getByTestId('world-section-towns').click()
-  await expect(page.getByTestId('towns-page')).toBeVisible()
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 960 })
+    await expect(page.getByTestId('world-section-towns')).toHaveCount(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: testInfo.outputPath(`town-hidden-${width}.png`) })
+  }
 })
 
 test('城市地图可选择 324 块地块并切换公司总览，未核验操作保持关闭', async ({ page }) => {
   await enterWorld(page)
   await page.getByTestId('world-section-city').click()
 
+  await page.locator('button[data-city-section="map"]').click()
   const map = page.getByTestId('city-map')
   const tileDetail = page.getByTestId('city-tile-detail')
   await expect(map.locator('[data-city-tile-id]')).toHaveCount(324)
@@ -335,7 +344,7 @@ test('城市地图可选择 324 块地块并切换公司总览，未核验操作
   await expect(page.getByTestId('city-company')).toBeVisible()
   await expect(page.locator('.city-finance-lines > div')).toHaveCount(7)
   await expect(page.getByRole('button', { name: '注册公司' })).toBeDisabled()
-  await expect(page.getByTestId('city-company')).toContainText('职位能力待接入')
+  await expect(page.getByTestId('city-company')).toContainText('古玩店店员可在经营总览中任命')
 
   await page.locator('button[data-city-section="map"]').click()
   await page.setViewportSize({ width: 390, height: 844 })
@@ -483,10 +492,11 @@ test('侠客页打开转职树可查看职业节点与转职书', async ({ page 
 
 })
 
-test('从酒馆邀请侠客后在阵容页拖拽上阵', async ({ page }) => {
-  await openWorldSection(page, 'towns')
-  await page.getByTestId('tavern-hero_mu_nianci').getByRole('button', { name: '直接邀请' }).click()
-  await page.getByTestId('tavern-hero_yang_tiexin').getByRole('button', { name: '直接邀请' }).click()
+test('已招募侠客可在阵容页拖拽上阵', async ({ page }) => {
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
+    window.__EGG_JIANGHU__.recruitHero('hero_yang_tiexin')
+  })
 
   await page.getByTestId('tab-formation').click()
   await expect(page.getByTestId('formation-page')).toBeVisible()
@@ -659,7 +669,7 @@ test('势力页支持切换匾额和原版招募名录', async ({ page }) => {
   await expect(page.getByTestId('faction-meridian')).toBeVisible()
 })
 
-test('势力声望、贡献兑换与招募在势力页和城镇页共享同一状态', async ({ page }, testInfo) => {
+test('势力页支持声望、连续贡献兑换与招募', async ({ page }, testInfo) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
     window.__EGG_JIANGHU__.grantContribution('tieyi_school', 100_000)
@@ -682,17 +692,13 @@ test('势力声望、贡献兑换与招募在势力页和城镇页共享同一�
   await exchange.scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('faction-exchange.png'), fullPage: true })
 
-  await openWorldSection(page, 'towns')
-  const town = page.getByTestId('faction-town-tieyi_school')
-  await town.getByRole('button', { name: '贡献兑换' }).click()
   await expect(page.getByTestId('faction-exchange')).toHaveAttribute('data-faction-id', 'tieyi_school')
   await page.getByTestId('faction-exchange-item-1').getByRole('button', { name: '兑换' }).click()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().jobBooks.job_2)).toBe(1)
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school)).toBe(73_828)
   await page.getByTestId('faction-exchange').scrollIntoViewIfNeeded()
-  await page.screenshot({ path: testInfo.outputPath('town-exchange.png'), fullPage: true })
+  await page.screenshot({ path: testInfo.outputPath('faction-second-exchange.png'), fullPage: true })
 
-  await town.getByRole('button', { name: '势力招募' }).click()
   const recruitment = page.getByTestId('faction-recruitment')
   await expect(recruitment).toHaveAttribute('data-faction-id', 'tieyi_school')
   await expect(recruitment.locator('[data-testid^="faction-recruitment-hero-"]'))
@@ -708,62 +714,7 @@ test('势力声望、贡献兑换与招募在势力页和城镇页共享同一�
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school)).toBe(53_828)
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_orig_6.recruited)).toBe(true)
   await recruitment.scrollIntoViewIfNeeded()
-  await page.screenshot({ path: testInfo.outputPath('town-recruitment.png'), fullPage: true })
-})
-
-test('城镇代理人支持任命、替换、卸任和启停且不虚构能力加成', async ({ page }, testInfo) => {
-  await page.evaluate(() => {
-    window.__EGG_JIANGHU__.recruitHero('hero_guo_jing')
-    window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
-  })
-  await openWorldSection(page, 'towns')
-  await page.getByRole('button', { name: '管理代理人' }).click()
-
-  const agent = page.getByTestId('faction-agent')
-  await expect(agent).toHaveAttribute('data-world-id', 'world_01')
-  await expect(agent).toContainText('计略 Lv.0')
-  await expect(agent).toContainText('贡献 +0%')
-  // 尚未任命时自动化不可用。
-  await expect(agent).toContainText('需先任命代理人')
-
-  await page.getByTestId('faction-agent-candidate-hero_guo_jing').getByRole('button', { name: '任命' }).click()
-  // 原版任命后把开关列写为 1（= 关闭），自动化需玩家手动开启。
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
-    .toEqual({ heroId: 'hero_guo_jing', enabled: false })
-  await expect(agent).toContainText('当前代理人郭靖')
-  await expect(agent).toContainText('已接 0/12')
-
-  await agent.getByRole('button', { name: '关闭中' }).click()
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01.enabled)).toBe(true)
-
-  // 筛选矩阵：点击「收集」把该任务类型排除，再点一次恢复。
-  const collectFilter = page.getByTestId('agent-task-filter-3')
-  await expect(collectFilter).toContainText('已启用')
-  await collectFilter.getByRole('button', { name: '收集' }).click()
-  await expect(collectFilter).toContainText('已排除')
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgentFilters['world_01:3']))
-    .toEqual([1])
-  await collectFilter.getByRole('button', { name: '收集' }).click()
-  await expect(collectFilter).toContainText('已启用')
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgentFilters['world_01:3']))
-    .toBeUndefined()
-
-  await page.getByTestId('faction-agent-candidate-hero_mu_nianci').getByRole('button', { name: '替换' }).click()
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
-    .toEqual({ heroId: 'hero_mu_nianci', enabled: false })
-  await expect(agent).toContainText('当前代理人穆念慈')
-  await agent.scrollIntoViewIfNeeded()
-  await page.screenshot({ path: testInfo.outputPath('town-agent.png') })
-
-  await agent.getByRole('button', { name: '卸任' }).click()
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionAgents.world_01))
-    .toEqual({ heroId: null, enabled: false })
-  await expect(agent).toContainText('无代理人')
-
-  await page.setViewportSize({ width: 390, height: 844 })
-  await agent.scrollIntoViewIfNeeded()
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.screenshot({ path: testInfo.outputPath('town-agent-mobile.png') })
+  await page.screenshot({ path: testInfo.outputPath('faction-recruitment.png'), fullPage: true })
 })
 
 test('势力页主区可滚动查看悬榜与原版招募名录', async ({ page }) => {

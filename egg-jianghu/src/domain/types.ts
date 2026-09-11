@@ -182,16 +182,32 @@ export interface CityCompanyState {
   previousNetIncome: number
 }
 
+export interface CityShopState {
+  tileId: number
+  enabled: boolean
+  stock: EquipmentInstance[]
+  staff: { heroId: string | null; progress: number; serving: boolean }[]
+  customers: number
+  elapsedMs: number
+  experience: number
+  soldCount: number
+  revenue: number
+  receipts: { sequence: number; definitionId: string; level: number; quality: EquipmentQuality; amount: number }[]
+  introStep: number
+}
+
 export interface CityState {
   level: number
   tiles: CityTileState[]
   /** 原版 kj 科技编号 -> 已完成等级；未出现的科技视为 0 级。 */
   technologyLevels: Record<string, number>
   company: CityCompanyState
+  shop: CityShopState
 }
 
 export interface GameStateV10 {
-  version: 18
+  version: 19
+  settings: { autoDiscardBelowQuality: EquipmentQuality | null }
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
   worldReputation: Record<string, number>

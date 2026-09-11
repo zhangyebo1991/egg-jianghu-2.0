@@ -1,4 +1,5 @@
 import { createInitialStateV10 } from './state'
+import { equipmentDefinitionById } from '../content/equipment'
 import { HEROES_V10 } from '../content/heroes'
 import {
   ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS,
@@ -8,8 +9,9 @@ import { ORIGINAL_FACTION_RULES } from '../content/original-faction-rules.genera
 import { normalizeHeroEquipment, normalizeInventoryInstances } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
 
-// v18：原版势力、城镇与城市经营共享状态。v17 不迁移、不覆盖。
-export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v18'
+// v19：城市起步经营与剧情引导；旧档不迁移、不覆盖。
+export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v19'
+export const LEGACY_SAVE_KEY_V18 = 'egg-jianghu-2-save-v18'
 export const LEGACY_SAVE_KEY_V17 = 'egg-jianghu-2-save-v17'
 
 export interface StorageLike {
@@ -27,8 +29,8 @@ export interface LoadResultV10 {
 export const hasSaveV10 = (storage: StorageLike): boolean =>
   storage.getItem(SAVE_KEY_V10) !== null
 
-export const hasLegacySaveV17 = (storage: StorageLike): boolean =>
-  storage.getItem(LEGACY_SAVE_KEY_V17) !== null
+export const hasLegacySave = (storage: StorageLike): boolean =>
+  storage.getItem(LEGACY_SAVE_KEY_V18) !== null || storage.getItem(LEGACY_SAVE_KEY_V17) !== null
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -322,6 +324,32 @@ const isCityTile = (value: unknown): boolean =>
   && isFiniteNumber(value.industry)
   && Number(value.industry) >= 0
 
+const isShopNumber = (value: unknown, max = Number.MAX_SAFE_INTEGER): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max
+
+const isCityShop = (value: unknown): boolean => {
+  if (!isRecord(value) || value.tileId !== 172 || typeof value.enabled !== 'boolean'
+    || !Array.isArray(value.stock) || value.stock.length > 20
+    || !value.stock.every(item => isEquipmentInstance(item) && isRecord(item) && item.locked === false && equipmentDefinitionById(String(item.definitionId)))
+    || !Array.isArray(value.staff) || value.staff.length !== 6
+    || !value.staff.every(worker => isRecord(worker) && (worker.heroId === null || typeof worker.heroId === 'string')
+      && isShopNumber(worker.progress, 1000) && typeof worker.serving === 'boolean'
+      && (worker.heroId !== null || (worker.progress === 0 && !worker.serving)))
+    || !isShopNumber(value.customers, 5) || !isShopNumber(value.elapsedMs, 999.999999)
+    || !isShopNumber(value.experience) || !isShopNumber(value.soldCount) || !Number.isInteger(value.soldCount)
+    || !isShopNumber(value.revenue) || !Number.isInteger(value.revenue)
+    || !isShopNumber(value.introStep, 3) || !Number.isInteger(value.introStep)
+    || !Array.isArray(value.receipts) || value.receipts.length > 10
+    || !value.receipts.every(receipt => isRecord(receipt)
+      && typeof receipt.definitionId === 'string' && equipmentDefinitionById(receipt.definitionId)
+      && isShopNumber(receipt.sequence, Number(value.soldCount)) && Number.isInteger(receipt.sequence) && receipt.sequence > 0
+      && isShopNumber(receipt.amount) && Number.isInteger(receipt.amount)
+      && isShopNumber(receipt.quality, 9) && Number.isInteger(receipt.quality)
+      && isShopNumber(receipt.level) && Number.isInteger(receipt.level))) return false
+  const ids = value.staff.map(worker => (worker as Record<string, unknown>).heroId).filter(id => id !== null)
+  return new Set(ids).size === ids.length
+}
+
 const isCityState = (value: unknown): boolean => {
   if (!isRecord(value)
     || !Number.isInteger(Number(value.level))
@@ -331,7 +359,7 @@ const isCityState = (value: unknown): boolean => {
     || value.tiles.length !== 324
     || !value.tiles.every(isCityTile)
     || !isCityTechnologyLevels(value.technologyLevels)
-    || !isRecord(value.company)) return false
+    || !isRecord(value.company) || !isCityShop(value.shop)) return false
   const tileIds = new Set(value.tiles.map((tile) => Number((tile as Record<string, unknown>).tileId)))
   const coordinates = new Set(value.tiles.map((tile) => {
     const record = tile as Record<string, unknown>
@@ -357,7 +385,8 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 }
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
-  version: 18,
+  settings: structuredClone(state.settings),
+  version: 19,
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
   worldReputation: structuredClone(state.worldReputation),
@@ -403,7 +432,12 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
-    || raw.version !== 18
+    || raw.version !== 19
+    || (raw.settings !== undefined && (!isRecord(raw.settings)
+      || (raw.settings.autoDiscardBelowQuality !== null
+        && !(typeof raw.settings.autoDiscardBelowQuality === 'number'
+          && Number.isInteger(raw.settings.autoDiscardBelowQuality)
+          && raw.settings.autoDiscardBelowQuality >= 0 && raw.settings.autoDiscardBelowQuality <= 9))))
     || !Array.isArray(raw.inventory)
     || !raw.inventory.every(isEquipmentInstance)
     || !Array.isArray(raw.formation)
@@ -446,6 +480,9 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
   const state = createInitialStateV10(now)
   const loaded = pruneUnknownHeroes(persistentState({
     ...state,
+    settings: raw.settings === undefined ? state.settings : {
+      autoDiscardBelowQuality: (raw.settings as GameStateV10['settings']).autoDiscardBelowQuality,
+    },
     worldCurrency: isRecord(raw.worldCurrency) ? structuredClone(raw.worldCurrency) as GameStateV10['worldCurrency'] : state.worldCurrency,
     contribution: isRecord(raw.contribution) ? structuredClone(raw.contribution) as GameStateV10['contribution'] : state.contribution,
     worldReputation: structuredClone(raw.worldReputation) as GameStateV10['worldReputation'],
@@ -482,7 +519,21 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     city: structuredClone(raw.city) as GameStateV10['city'],
     statistics: isRecord(raw.statistics) ? structuredClone(raw.statistics) as GameStateV10['statistics'] : state.statistics,
   }, Math.min(now, Number(raw.lastSavedAt) || now)))
+  const allItems = [...loaded.inventory, ...loaded.city.shop.stock]
+  if (new Set(allItems.map(item => item.uid)).size !== allItems.length) throw new Error('存档装备归属重复')
+  const stockedIds = new Set(loaded.city.shop.stock.map(item => item.uid))
+  if (Object.values(loaded.heroes).some(hero => hero.equipmentSets.some(set => Object.values(set).some(uid => uid && stockedIds.has(uid))))) {
+    throw new Error('货架装备不能同时穿戴')
+  }
+  if (loaded.city.shop.staff.some(worker => worker.heroId !== null && (!loaded.heroes[worker.heroId]?.recruited
+    || loaded.formation.some(slot => slot.heroId === worker.heroId)
+    || Object.values(loaded.factionAgents).some(agent => agent.heroId === worker.heroId)
+    || Object.values(loaded.city.company.appointments).includes(worker.heroId)))) throw new Error('店员任职状态冲突')
+  const shopTile = loaded.city.tiles.find(tile => tile.tileId === loaded.city.shop.tileId)
+  if (!shopTile?.owned || shopTile.buildingId !== 15
+    || loaded.city.shop.staff.some((worker, index) => worker.heroId && index >= Math.min(6, shopTile.buildingLevel + 1))) throw new Error('古玩店地块或席位状态无效')
   normalizeLoadedHeroes(loaded.heroes, loaded.inventory)
+  normalizeInventoryInstances(loaded.city.shop.stock)
   return loaded
 }
 

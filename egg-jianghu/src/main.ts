@@ -28,6 +28,7 @@ import {
   type EquipmentSlot,
 } from './content/equipment'
 import { ATTRIBUTE_BY_ID } from './content/attributes'
+import { advanceCityIntro, replayCityIntro, appointCityShopWorker, CITY_SHOP_CAPACITY, cityShopAbility, cityShopProgressPerSecond, cityShopSalePrice, cityShopStaffCount, cityShopStatus, cityShopTile, cityShopWorkerReason, stockCityShop, unstockCityShop, toggleCityShop } from './domain/city-shop'
 import { FACTIONS, factionById, factionByOriginalId } from './content/factions'
 import { HEROES_V10, PLAYER_HERO_ID, TAVERN_HEROES, heroByIdV10, heroDisplayNameV10, heroMeridianCategory } from './content/heroes'
 import { FACTION_MARTIALS, martialBuffChanceAtLevel, martialByIdV10, martialByOriginalId, martialEffectAtLevel, martialResourceCost, martialSpCost } from './content/martials'
@@ -112,7 +113,7 @@ import {
   upgradeDeity,
   WORLD_TREE_LEAF_ITEM_ID,
 } from './domain/original-progression'
-import { clearSaveV10, hasLegacySaveV17, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
+import { clearSaveV10, hasLegacySave, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
 import {
@@ -146,7 +147,8 @@ import { STACK_ITEM_DEFINITIONS } from './content/campaign-loot.generated'
 import { renderProgressionPage, type ProgressionPageViewModel, type ProgressionSection } from './ui/progression-page'
 import { renderStageList, renderWorldOverview, type PlaneSelectViewModel, type StageListViewModel } from './ui/jianghu-page'
 import { createDomPatcher } from './ui/dom-patch'
-import { renderShell, type JianghuSection, type TabId } from './ui/shell'
+import { renderSettingsPage } from './ui/settings-page'
+import { isJianghuSectionAvailable, isTabAvailable, renderShell, type JianghuSection, type TabId } from './ui/shell'
 import { renderStartPage } from './ui/start-page'
 import { renderTownsPage, type TownsPageViewModel } from './ui/towns-page'
 
@@ -213,7 +215,9 @@ let dragCandidateHeroId: string | null = null
 let selectedFactionId = ''
 let selectedFactionMartialId: string | null = null
 let townFactionFunction: 'exchange' | 'recruitment' | 'agent' = 'exchange'
-let cityPageSection: CityPageSection = 'map'
+let cityPageSection: CityPageSection = 'overview'
+let cityStockPage = 1
+let cityHiringSlot: number | null = null
 let selectedCityTileId = 172
 let careerTreeOpen = false
 let selectedTreeCareerId: string | null = null
@@ -549,8 +553,8 @@ let toastTimer = 0
 
 try {
   hasSave = hasSaveV10(window.localStorage)
-  if (!hasSave && hasLegacySaveV17(window.localStorage)) {
-    startError = '检测到 version 17 旧版存档；完整新系统需要新建存档，旧档不会迁移或覆写'
+  if (!hasSave && hasLegacySave(window.localStorage)) {
+    startError = '检测到旧版存档；当前版本需要新建游戏，旧档保留但不可继续'
   }
 } catch {
   startError = '无法访问本地存储，请检查浏览器设置'
@@ -1516,8 +1520,35 @@ const cityViewModel = (): CityPageViewModel => {
   const specialPricePending = selectedTile.tileId === 48
   const finance = session.state.city.company.currentFinance
   const cleanOriginalText = (value: string): string => value.replace(/\[\/?color(?:=[^\]]+)?\]/gi, '')
+  const shop = session.state.city.shop
+  const available = backpackEquipment(session.state).filter(item => !item.locked)
+  const pageCount = Math.max(1, Math.ceil(available.length / 6))
+  cityStockPage = Math.min(pageCount, Math.max(1, cityStockPage))
+  const itemView = (item: typeof session.state.inventory[number]) => ({
+    uid: item.uid, name: equipmentDisplayName(equipmentDefinitionById(item.definitionId)!, item.affixes),
+    level: item.level, quality: item.quality, price: cityShopSalePrice(session.state, item),
+  })
   return {
     section: cityPageSection,
+    shop: {
+      tileId: shop.tileId, level: cityShopTile(session.state)?.buildingLevel ?? 1,
+      enabled: shop.enabled, status: cityShopStatus(session.state), introStep: shop.introStep,
+      cash: session.state.city.company.cash, revenue: shop.revenue, soldCount: shop.soldCount,
+      experience: shop.experience, customers: shop.customers, capacity: CITY_SHOP_CAPACITY,
+      stock: shop.stock.map(itemView), availableItems: available.slice((cityStockPage - 1) * 6, cityStockPage * 6).map(itemView),
+      availableCount: available.length, page: cityStockPage, pageCount, hiringSlot: cityHiringSlot,
+      staff: shop.staff.slice(0, cityShopStaffCount(session.state)).map((worker, slot) => ({
+        slot, heroId: worker.heroId, name: worker.heroId ? heroDisplayNameV10(heroByIdV10(worker.heroId)!, session.state.heroes[worker.heroId]) : '虚位以待',
+        ability: worker.heroId ? cityShopAbility(session.state, worker.heroId) : 0,
+        progress: worker.progress / 10, serving: worker.serving,
+        seconds: worker.heroId ? Math.ceil(1000 / cityShopProgressPerSecond(session.state, worker.heroId)) : 0,
+      })),
+      candidates: HEROES_V10.filter(hero => session.state.heroes[hero.id]?.recruited).map(hero => ({
+        id: hero.id, name: heroDisplayNameV10(hero, session.state.heroes[hero.id]), ability: cityShopAbility(session.state, hero.id),
+        reason: shop.staff.some(worker => worker.heroId === hero.id) ? '已在店中任职' : cityShopWorkerReason(session.state, hero.id, activeCombatHeroIds()),
+      })),
+      receipts: shop.receipts.map(receipt => ({ sequence: receipt.sequence, name: equipmentDefinitionById(receipt.definitionId)?.name ?? '装备', amount: receipt.amount })),
+    },
     gridColumns: ORIGINAL_CITY_FOUNDATION.gridColumns,
     gridRows: ORIGINAL_CITY_FOUNDATION.gridRows,
     effectiveColumns: effectiveGrid.columns,
@@ -1936,6 +1967,8 @@ const restorePageScroll = (key: string): void => {
 }
 
 const render = (): void => {
+  if (!isTabAvailable(activeTab)) activeTab = 'idle'
+  if (!isJianghuSectionAvailable(jianghuSection)) jianghuSection = 'stages'
   if (appScreen !== 'playing') {
     toast.classList.remove('inventory-toast')
     patchApp(renderStartPage({
@@ -1967,7 +2000,9 @@ const render = (): void => {
       ? renderFormationPage(formationViewModel())
       : activeTab === 'inventory'
         ? renderInventoryPage(inventoryViewModel())
-        : renderProgressionPage(progressionViewModel())
+        : activeTab === 'settings'
+          ? renderSettingsPage(session.state.settings)
+          : renderProgressionPage(progressionViewModel())
   patchApp(renderShell({
     activeTab,
     worldContext: activeTab === 'idle' && jianghuView !== 'worlds'
@@ -2671,6 +2706,15 @@ app.addEventListener('submit', (event) => {
 
 app.addEventListener('change', (event) => {
   const target = event.target as HTMLElement
+  const discardSelect = target.closest<HTMLSelectElement>('[data-action="auto-discard-quality"]')
+  if (discardSelect && appScreen === 'playing') {
+    const value = discardSelect.value === 'off' ? null : Number(discardSelect.value)
+    if (value !== null && (!Number.isInteger(value) || value < 0 || value > 9)) return
+    session.state.settings.autoDiscardBelowQuality = value as EquipmentQuality | null
+    saveSession()
+    render()
+    return
+  }
   const category = target.closest<HTMLSelectElement>('[data-action="hero-martial-category"]')
   if (category) {
     heroMartialCategory = category.value
@@ -2856,6 +2900,7 @@ app.addEventListener('click', (event) => {
   }
   const tab = target.closest<HTMLElement>('[data-tab]')?.dataset.tab as TabId | undefined
   if (tab) {
+    if (!isTabAvailable(tab)) return
     activeTab = tab
     if (tab !== 'inventory') inventoryDetailOpen = false
     render()
@@ -2864,6 +2909,7 @@ app.addEventListener('click', (event) => {
   const worldSection = target.closest<HTMLElement>('[data-jianghu-section]')
     ?.dataset.jianghuSection as JianghuSection | undefined
   if (worldSection) {
+    if (!isJianghuSectionAvailable(worldSection)) return
     activeTab = 'idle'
     jianghuView = 'world'
     jianghuSection = worldSection
@@ -2874,11 +2920,38 @@ app.addEventListener('click', (event) => {
   const button = target.closest<HTMLButtonElement>('[data-action]')
   if (!button || button.disabled) return
   const { action } = button.dataset
+  if (action?.startsWith('progression-')) return
+  if (action?.startsWith('select-town-') || action === 'tavern-recruit' || action === 'city-to-towns') return
   if (handleStartOrResetAction(action)) return
   if (appScreen !== 'playing') return
   if (action === 'select-city-section') {
     const section = button.dataset.citySection
-    if (section === 'map' || section === 'company') cityPageSection = section
+    if (section === 'overview' || section === 'map' || section === 'company') cityPageSection = section
+  } else if (action === 'city-intro-next' || action === 'city-intro-skip') {
+    commitAction(advanceCityIntro(session.state, action === 'city-intro-skip'))
+  } else if (action === 'city-intro-replay') {
+    commitAction(replayCityIntro(session.state))
+  } else if (action === 'city-stock' || action === 'city-unstock') {
+    const uid = button.dataset.equipmentUid ?? ''
+    commitAction(action === 'city-stock' ? stockCityShop(session.state, uid) : unstockCityShop(session.state, uid))
+  } else if (action === 'city-toggle') {
+    commitAction(toggleCityShop(session.state))
+  } else if (action === 'city-hire-open') {
+    cityHiringSlot = Number(button.dataset.slot)
+  } else if (action === 'city-hire-close') {
+    cityHiringSlot = null
+  } else if (action === 'city-hire' || action === 'city-dismiss') {
+    const result = appointCityShopWorker(session.state, Number(button.dataset.slot), action === 'city-dismiss' ? null : button.dataset.heroId ?? null, activeCombatHeroIds())
+    commitAction(result)
+    if (result.ok) cityHiringSlot = null
+  } else if (action === 'city-stock-prev' || action === 'city-stock-next') {
+    cityStockPage += action === 'city-stock-prev' ? -1 : 1
+  } else if (action === 'city-locate') {
+    selectedCityTileId = session.state.city.shop.tileId
+    cityPageSection = 'map'
+  } else if (action === 'city-to-stages' || action === 'city-to-factions') {
+    jianghuSection = action === 'city-to-stages' ? 'stages' : 'factions'
+    jianghuView = 'world'
   } else if (action === 'select-city-tile') {
     const tileId = Number(button.dataset.cityTileId)
     const tile = cityTileById(session.state, tileId)

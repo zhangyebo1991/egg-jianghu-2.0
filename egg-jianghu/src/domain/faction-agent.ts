@@ -101,6 +101,7 @@ export const appointFactionAgent = (
   const progress = state.heroes[heroId]
   if (!definition || !progress?.recruited) return { ok: false, message: '该侠客尚未加入' }
   if (heroId === PLAYER_HERO_ID) return { ok: false, message: '主角不能担任位面代理人' }
+  if (state.city.shop.staff.some(worker => worker.heroId === heroId)) return { ok: false, message: '侠客正在古玩店任职，请先卸任' }
   if (fightingHeroIds.has(heroId)) return { ok: false, message: '该侠客正在战斗中，暂不能任命' }
 
   // 原版「代理人任命function」(Event 11656) 写角色列后把开关列写为 1，而开关列 1 = 关闭，

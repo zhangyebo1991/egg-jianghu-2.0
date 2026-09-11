@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderShell } from './shell'
 
 describe('应用 Shell', () => {
-  it('显示江湖、侠客、阵容、背包、秘境五个全局入口且不显示顶部资源和自动存档', () => {
+  it('显示江湖、侠客、阵容、背包和设置入口并隐藏秘境且不显示顶部资源和自动存档', () => {
     const html = renderShell({
       activeTab: 'idle',
       worldContext: null,
@@ -16,17 +16,18 @@ describe('应用 Shell', () => {
     expect(html).toContain('data-testid="tab-heroes"')
     expect(html).toContain('data-testid="tab-formation"')
     expect(html).toContain('data-testid="tab-inventory"')
-    expect(html).toContain('data-testid="tab-progression"')
+    expect(html).toContain('data-testid="tab-settings"')
+    expect(html).not.toContain('data-testid="tab-progression"')
     expect(html).toContain('class="nav-mark"')
     expect(html).toContain('class="sidebar-landscape"')
     expect(html).toContain('十万里一剑 · 不负侠者行')
     expect(html).not.toMatch(/tab-factions|tab-city|势力贡献|装备背包|自动存档|resource-strip/)
   })
 
-  it('进入位面后侧栏显示返回江湖与四个分离入口', () => {
+  it('进入位面后侧栏显示返回江湖与三个分离入口并隐藏城镇', () => {
     const html = renderShell({
       activeTab: 'idle',
-      worldContext: { worldName: '东汉三国', activeSection: 'towns' },
+      worldContext: { worldName: '东汉三国', activeSection: 'factions' },
       hasCombatReturn: true,
       showResetConfirmation: false,
       content: '<p>内容</p>',
@@ -36,9 +37,9 @@ describe('应用 Shell', () => {
     expect(html).toContain('data-action="resume-combat"')
     expect(html).toContain('data-jianghu-section="stages"')
     expect(html).toContain('data-jianghu-section="factions"')
-    expect(html).toContain('data-jianghu-section="towns"')
+    expect(html).not.toContain('data-jianghu-section="towns"')
     expect(html).toContain('data-jianghu-section="city"')
-    expect(html).toMatch(/class="world-section active"[^>]*data-jianghu-section="towns"/)
+    expect(html).toMatch(/class="world-section active"[^>]*data-jianghu-section="factions"/)
   })
 
   it('江湖页面不额外创建第二套导航，统一复用阵容式左侧栏', () => {

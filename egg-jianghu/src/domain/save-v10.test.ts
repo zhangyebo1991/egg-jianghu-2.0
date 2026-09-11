@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialStateV10, createNewGameStateV10 } from './state'
-import { clearSaveV10, hasLegacySaveV17, hasSaveV10, hydrateStateV10, LEGACY_SAVE_KEY_V17, loadGameV10, SAVE_KEY_V10, saveGameV10 } from './save-v10'
+import { clearSaveV10, hasLegacySave, hasSaveV10, hydrateStateV10, LEGACY_SAVE_KEY_V17, loadGameV10, SAVE_KEY_V10, saveGameV10 } from './save-v10'
 
 const memoryStorage = () => {
   const values = new Map<string, string>()
@@ -12,8 +12,8 @@ const memoryStorage = () => {
   }
 }
 
-describe('version 18 存档', () => {
-  it('通过 version 18 专用 key 检测存档是否存在', () => {
+describe('version 19 存档', () => {
+  it('通过 version 19 专用 key 检测存档是否存在', () => {
     const storage = memoryStorage()
 
     expect(hasSaveV10(storage)).toBe(false)
@@ -21,10 +21,10 @@ describe('version 18 存档', () => {
     storage.setItem(SAVE_KEY_V10, '{}')
 
     expect(hasSaveV10(storage)).toBe(true)
-    expect(SAVE_KEY_V10).toBe('egg-jianghu-2-save-v18')
+    expect(SAVE_KEY_V10).toBe('egg-jianghu-2-save-v19')
   })
 
-  it('清除时只移除 version 18 存档并保留 version 17 旧档', () => {
+  it('清除时只移除 version 19 存档并保留 version 17 旧档', () => {
     const storage = memoryStorage()
     storage.setItem(SAVE_KEY_V10, '{}')
     storage.setItem(LEGACY_SAVE_KEY_V17, '旧档')
@@ -34,7 +34,7 @@ describe('version 18 存档', () => {
 
     expect(storage.getItem(SAVE_KEY_V10)).toBeNull()
     expect(storage.getItem(LEGACY_SAVE_KEY_V17)).toBe('旧档')
-    expect(hasLegacySaveV17(storage)).toBe(true)
+    expect(hasLegacySave(storage)).toBe(true)
     expect(storage.getItem('other-key')).toBe('保留')
   })
 
@@ -64,7 +64,7 @@ describe('version 18 存档', () => {
     saveGameV10(storage, state, 2000)
 
     const raw = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
-    expect(raw.version).toBe(18)
+    expect(raw.version).toBe(19)
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })
@@ -152,7 +152,7 @@ describe('version 18 存档', () => {
     expect(() => hydrateStateV10(withDuplicateColumn, 2000)).toThrow('存档版本不受支持或格式无效')
   })
 
-  it('缺少筛选矩阵的旧 v18 存档按全部放行载入', () => {
+  it('缺少筛选矩阵的v19 存档按全部放行载入', () => {
     const storage = memoryStorage()
     const state = createNewGameStateV10('燕七', 1000)
     saveGameV10(storage, state, 1000)
@@ -221,7 +221,7 @@ describe('version 18 存档', () => {
       const city = raw.city as { technologyLevels: Record<string, unknown> }
       delete city.technologyLevels['2']
     }],
-  ])('拒绝 v18 关键状态损坏：%s', (_name, mutate) => {
+  ])('拒绝 v19 关键状态损坏：%s', (_name, mutate) => {
     const raw = createNewGameStateV10('燕七', 1000) as unknown as Record<string, unknown>
     mutate(raw)
     expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
@@ -338,5 +338,23 @@ describe('version 18 存档', () => {
     ]
 
     expect(() => hydrateStateV10(raw, 2000)).toThrow('存档版本不受支持或格式无效')
+  })
+})
+
+
+describe('自动丢弃设置存档', () => {
+  it('既有 v19 缺少设置时默认关闭，配置后保存并恢复', () => {
+    const state = createInitialStateV10(0)
+    const raw = JSON.parse(JSON.stringify(state))
+    delete raw.settings
+    expect(hydrateStateV10(raw, 0).settings.autoDiscardBelowQuality).toBeNull()
+    state.settings.autoDiscardBelowQuality = 3
+    const storage = memoryStorage()
+    saveGameV10(storage, state, 0)
+    expect(hydrateStateV10(JSON.parse(storage.getItem(SAVE_KEY_V10)!), 0).settings.autoDiscardBelowQuality).toBe(3)
+  })
+  it.each([-1, 10, 2.5, '3', undefined])('拒绝无效品质 %s', value => {
+    const state = createInitialStateV10(0)
+    expect(() => hydrateStateV10({ ...state, settings: { autoDiscardBelowQuality: value } }, 0)).toThrow()
   })
 })

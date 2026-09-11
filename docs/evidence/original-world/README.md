@@ -26,6 +26,8 @@
 - `faction-runtime-evidence.md`：上述函数的人工审阅版索引。
 - `city-runtime-evidence.json`：城市、土地、公司、财务、项目、升级与迁移核心函数的逐表达式证据。
 - `city-runtime-evidence.md`：上述城市与公司核心函数的人工审阅版索引。
+- `city-startup-runtime.json`：古玩店起步经营的事件、分支与公式，使用 `--city-startup-runtime` 单独提取。
+- `city-startup-rules.md`：第一批经营规则、剧情、v19 存档及验证边界。
 - `faction-exchange-catalog.json`：完整贡献兑换商品、名称、价格输入、声望门槛和目标映射。
 - `faction-exchange-catalog.md`：上述 396 条兑换商品的人工审阅表。
 - `faction-recruitment-catalog.json`：完整势力招募角色、声望门槛、基础价格和最终价格。
