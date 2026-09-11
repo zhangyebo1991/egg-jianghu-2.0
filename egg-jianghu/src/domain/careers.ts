@@ -6,14 +6,14 @@ export const CAREER_MAX_LEVEL = 10
 export const careerExperienceForNextLevel = (
   rank: number,
   careerLevel: number,
-  heroLevel: number,
 ): number => {
   const jobLevel = Math.max(1, careerLevel)
-  const personLevel = Math.max(1, heroLevel)
+  // 原版「职业升级经验」只接收职业等级与等阶，不使用侠客等级。
+  const progressionLevel = (10 * (rank - 1)) + jobLevel
   return Math.round(
     0.7
     * Math.pow((2 * (rank - 1)) + jobLevel, 2)
-    * Math.pow(1.0035, (personLevel * 40) + 100)
+    * Math.pow(1.0035, (progressionLevel * 40) + 100)
     * 100,
   )
 }
@@ -26,7 +26,7 @@ export const addCareerExperience = (hero: HeroProgressV10, gained: number): void
 
   record.experience += Math.max(0, Math.floor(gained))
   while (record.level < CAREER_MAX_LEVEL) {
-    const required = careerExperienceForNextLevel(rank, record.level, hero.level)
+    const required = careerExperienceForNextLevel(rank, record.level)
     if (record.experience < required) break
     record.experience -= required
     record.level += 1

@@ -26,12 +26,46 @@ describe('职业修习', () => {
     }
   })
   it('白丁 1 级升 2 级经验为 114，且职业等级不修改侠客等级', () => {
-    expect(careerExperienceForNextLevel(1, 1, 1)).toBe(114)
+    expect(careerExperienceForNextLevel(1, 1)).toBe(114)
     const hero = createHeroProgress(STARTER_CAREER_ID)
     addCareerExperience(hero, 114)
     expect(hero.level).toBe(1)
     expect(hero.careers[STARTER_CAREER_ID].level).toBe(2)
     expect(Object.keys(hero.careers)).toEqual([STARTER_CAREER_ID])
+  })
+
+  it('白丁各级升级门槛符合原版经验表', () => {
+    expect(Array.from({ length: 9 }, (_, index) => careerExperienceForNextLevel(1, index + 1)))
+      .toEqual([114, 525, 1359, 2778, 4992, 8266, 12939, 19435, 28286])
+  })
+
+  it.each([[2, 1, 4156], [2, 5, 39578], [3, 1, 46706], [6, 10, 174020371]])(
+    '职业等阶 %i、等级 %i 的门槛为 %i，包含原版等阶偏移', (rank, level, required) => {
+      expect(careerExperienceForNextLevel(rank, level)).toBe(required)
+    },
+  )
+
+  it.each([1, 10, 20, 44, 100])('侠客升至 %i 级不改变白丁 4→5 的职业门槛', (heroLevel) => {
+    const hero = createHeroProgress(STARTER_CAREER_ID)
+    const record = hero.careers[STARTER_CAREER_ID]
+    record.level = 4
+    addCareerExperience(hero, 1000)
+
+    hero.level = heroLevel
+    addCareerExperience(hero, 1777)
+    expect(record).toEqual({ level: 4, experience: 2777 })
+    addCareerExperience(hero, 1)
+    expect(record).toEqual({ level: 5, experience: 0 })
+    expect(hero.level).toBe(heroLevel)
+  })
+
+  it('保留已有职业经验，并按新门槛连续升级后保留余量', () => {
+    const hero = createHeroProgress(STARTER_CAREER_ID)
+    hero.level = 44
+    hero.careers[STARTER_CAREER_ID] = { level: 4, experience: 8000 }
+    addCareerExperience(hero, 8)
+    expect(hero.careers[STARTER_CAREER_ID]).toEqual({ level: 6, experience: 238 })
+    expect(hero.level).toBe(44)
   })
 
   it('白丁 Lv.5 且持有弓手转职书时可转入弓手', () => {

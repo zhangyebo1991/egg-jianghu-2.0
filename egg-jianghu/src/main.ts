@@ -941,7 +941,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
         ? '酒馆相逢'
         : `${FACTIONS.find((faction) => faction.id === definition.factionId)?.name ?? '势力'}门人`
     const required = career
-      ? careerExperienceForNextLevel(career.rank, record?.level ?? 1, progress.level)
+      ? careerExperienceForNextLevel(career.rank, record?.level ?? 1)
       : 1
     return {
       id: definition.id,
