@@ -5,7 +5,7 @@ export const renderSettingsPage = (settings: GameStateV10['settings']): string =
   <section class="settings-page" data-testid="settings-page">
     <header><h1>设置</h1><p>调整游戏偏好，修改后自动保存。</p></header>
     <div class="settings-layout">
-      <nav aria-label="设置分类"><a href="#settings-loot" aria-current="page">战利品</a></nav>
+      <nav aria-label="设置分类"><a href="#settings-loot" aria-current="page">战利品</a><button type="button" data-action="open-cloud-account">账号与云存档</button></nav>
       <section class="settings-group" id="settings-loot" aria-labelledby="settings-loot-title">
         <h2 id="settings-loot-title">战利品</h2>
         <div class="settings-field">

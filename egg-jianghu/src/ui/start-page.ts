@@ -25,6 +25,7 @@ const renderTitlePage = (view: StartPageViewModel): string => `
       <div class="start-actions">
         <button type="button" class="primary" data-action="new-game"${disabled(view.busy)}>新建游戏</button>
         <button type="button" data-action="continue-game"${disabled(!view.hasSave || view.busy)}>继续游戏</button>
+        <button type="button" data-action="open-cloud-account">账号与云存档</button>
       </div>
     </section>
     <footer class="start-foot" aria-hidden="true">闭关挂机 · 亦可问鼎江湖</footer>

@@ -111,3 +111,8 @@ docs/brainstorms/.visual/
 
 # 根目录本机 UI 调整截图，保留本地、不纳入源码
 /heroes-*.png
+/docs/qq邮箱授权码.txt
+/egg-jianghu/cloud/data/
+/egg-jianghu/cloud/validator.mjs
+
+/egg-jianghu/cloud/fixtures.mjs

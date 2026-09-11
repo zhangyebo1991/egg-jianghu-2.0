@@ -1,0 +1,8 @@
+[Unit]
+Description=每日备份蛋蛋江湖云存档数据库
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=300
+[Install]
+WantedBy=timers.target

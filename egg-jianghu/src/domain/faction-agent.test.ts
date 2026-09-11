@@ -11,6 +11,7 @@ import {
   dismissFactionAgent,
   factionAgentAbilityLevel,
   factionAgentCandidateIds,
+  heroAbilityAttributes,
   originalAbilityAttributeBonus,
   originalFinalAbilityLevel,
   toggleFactionAgent,
@@ -22,6 +23,16 @@ const recruitedState = () => {
   state.heroes.hero_mu_nianci = createHeroProgress('job_1')
   return state
 }
+
+it('十项面板能力保留原版白板、培养和五级上限', () => {
+  const progress = createHeroProgress('job_1')
+  expect(Object.values(heroAbilityAttributes(2, progress, []))).toEqual([1, 0, 2, 0, 0, 3, 0, 0, 0, 0])
+  expect(Object.values(heroAbilityAttributes(1, progress, []))).toEqual(Array(10).fill(0))
+  progress.abilityTraining = { 1: 2, 3: 4 }
+  const attrs = heroAbilityAttributes(2, progress, [])
+  expect(attrs[102]).toBe(3)
+  expect(attrs[104]).toBe(5)
+})
 
 describe('位面代理人', () => {
   it('候选只包含已招募的非主角侠客', () => {

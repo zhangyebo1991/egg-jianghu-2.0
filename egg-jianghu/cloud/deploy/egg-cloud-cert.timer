@@ -1,0 +1,8 @@
+[Unit]
+Description=定时检查蛋蛋江湖短期证书续期
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:00:00
+RandomizedDelaySec=600
+Persistent=true
+[Install]
+WantedBy=timers.target

@@ -1,3 +1,4 @@
+import { createCloudAccess } from './cloud/bridge'
 import { renderHeroSkins } from './ui/hero-skins'
 import { heroAppearanceAsset } from './ui/hero-appearance-assets'
 import { selectHeroSkin, upgradeHeroSkin } from './domain/hero-skins'
@@ -70,7 +71,7 @@ import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEq
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, isMartialCareerCompatible, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
-import { appointFactionAgent, dismissFactionAgent, factionAgentAbilityLevel, factionAgentCandidateIds, toggleFactionAgent } from './domain/faction-agent'
+import { appointFactionAgent, dismissFactionAgent, factionAgentAbilityLevel, factionAgentCandidateIds, heroAbilityAttributes, toggleFactionAgent } from './domain/faction-agent'
 import {
   AGENT_CONCURRENT_TASK_LIMIT,
   factionAgentAutomationAvailable,
@@ -113,7 +114,7 @@ import {
   upgradeDeity,
   WORLD_TREE_LEAF_ITEM_ID,
 } from './domain/original-progression'
-import { clearSaveV10, hasLegacySave, hasSaveV10, SAVE_KEY_V10 } from './domain/save-v10'
+import { clearSaveV10, hasLegacySave, hasSaveV10, SAVE_KEY_V10, importSaveV10, exportSaveV10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
 import { normalizePlayerName } from './domain/state'
 import {
@@ -666,6 +667,37 @@ const saveSession = (silent = false): boolean => {
   }
 }
 
+const CLOUD_BACKUP_KEY = 'egg-jianghu-before-cloud-download'
+const installCloudSave = (json: string): void => {
+  const validated = importSaveV10(json).state
+  if (appScreen === 'playing' && !saveSession()) throw new Error('当前进度未能保存，请先解决本地存档问题')
+  const previous = window.localStorage.getItem(SAVE_KEY_V10)
+  if (previous !== null) window.localStorage.setItem(CLOUD_BACKUP_KEY, previous)
+  window.localStorage.setItem(SAVE_KEY_V10, exportSaveV10(validated))
+  if (appScreen === 'playing') session.stopCombat()
+  appScreen = 'title'
+  hasSave = true
+  startError = null
+  confirmOverwrite = false
+  overwriteSaveSnapshot = null
+  showResetConfirmation = false
+  render()
+}
+const cloudAccount = createCloudAccess({
+  localSave: () => {
+    if (appScreen === 'playing' && !saveSession()) throw new Error('本地存档未能保存')
+    const raw = window.localStorage.getItem(SAVE_KEY_V10)
+    return raw ? JSON.parse(raw) : null
+  },
+  install: installCloudSave,
+  hasBackup: () => { try { return window.localStorage.getItem(CLOUD_BACKUP_KEY) !== null } catch { return false } },
+  restore: () => {
+    const backup = window.localStorage.getItem(CLOUD_BACKUP_KEY)
+    if (!backup) throw new Error('没有本地恢复备份')
+    installCloudSave(backup)
+  },
+})
+
 const commitAction = (result: ActionResult, successMessage?: string): void => {
   notify(result.ok ? successMessage ?? result.message : result.message, !result.ok)
   if (result.ok) saveSession()
@@ -917,6 +949,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
       aptitudes: definition.aptitudes,
       appearanceUrl: heroAppearanceAsset(definition.id, progress, session.state.unlockedSkinIds),
       combatStats: buildCombatStats(definition, progress, session.state.inventory, session.state.unlockedSkinIds),
+      abilityAttributes: heroAbilityAttributes(definition.sourceId, progress, session.state.inventory),
       category: heroMeridianCategory(definition),
       source,
       inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
@@ -2920,6 +2953,7 @@ app.addEventListener('click', (event) => {
   const button = target.closest<HTMLButtonElement>('[data-action]')
   if (!button || button.disabled) return
   const { action } = button.dataset
+  if (action === 'open-cloud-account') { cloudAccount.open(); return }
   if (action?.startsWith('progression-')) return
   if (action?.startsWith('select-town-') || action === 'tavern-recruit' || action === 'city-to-towns') return
   if (handleStartOrResetAction(action)) return

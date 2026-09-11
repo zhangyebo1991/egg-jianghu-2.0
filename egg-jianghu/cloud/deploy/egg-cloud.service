@@ -1,0 +1,23 @@
+[Unit]
+Description=蛋蛋江湖云账号与存档
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+User=egg-cloud
+Group=egg-cloud
+WorkingDirectory=/opt/egg-jianghu-cloud/current
+EnvironmentFile=/etc/egg-jianghu-cloud/environment
+ExecStart=/opt/egg-cloud-runtime/node-v24.18.0-linux-x64/bin/node server.mjs
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/egg-jianghu-cloud
+MemoryMax=512M
+TasksMax=64
+[Install]
+WantedBy=multi-user.target

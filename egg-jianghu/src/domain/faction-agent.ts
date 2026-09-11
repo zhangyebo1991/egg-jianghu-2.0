@@ -7,12 +7,24 @@ import {
 } from '../content/original-faction-rules.generated'
 import {
   ORIGINAL_ABILITY_ID_STRATEGY,
+  ORIGINAL_ABILITY_NAMES,
   ORIGINAL_ABILITY_MAX_LEVEL,
   originalHeroAbilityBase,
 } from '../content/original-hero-abilities.generated'
 import type { ActionResult, EquipmentInstance, GameStateV10, HeroProgressV10 } from './types'
 
 const AGENT_ABILITY_ID = ORIGINAL_ABILITY_ID_STRATEGY
+
+/** 侠客基础面板的十项最终能力，属性编号 102..111。 */
+export const heroAbilityAttributes = (sourceId: number | undefined, progress: HeroProgressV10, equipment: readonly EquipmentInstance[]) =>
+  Object.fromEntries(ORIGINAL_ABILITY_NAMES.map((_, index) => {
+    const id = index + 1
+    return [101 + id, originalFinalAbilityLevel(
+      originalHeroAbilityBase(sourceId, id),
+      progress.abilityTraining?.[String(id)] ?? 0,
+      originalAbilityAttributeBonus(progress, equipment, id),
+    )]
+  }))
 
 /** 原版「能力」组属性 id = 101 + 能力编号（能力 1..10 对应 sx 102..111）。 */
 const abilityAttributeId = (abilityId: number): number => 101 + abilityId

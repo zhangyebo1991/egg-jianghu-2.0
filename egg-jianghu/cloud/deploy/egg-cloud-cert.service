@@ -1,0 +1,5 @@
+[Unit]
+Description=续期蛋蛋江湖公网 IP HTTPS 证书
+[Service]
+Type=oneshot
+ExecStart=/opt/egg-certbot/bin/certbot renew --quiet --cert-name egg-cloud-ip --deploy-hook "systemctl reload nginx"

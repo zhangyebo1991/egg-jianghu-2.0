@@ -1,0 +1,5 @@
+[Unit]
+Description=备份蛋蛋江湖云账号与存档数据库
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/egg-jianghu-cloud/current/deploy/backup.py

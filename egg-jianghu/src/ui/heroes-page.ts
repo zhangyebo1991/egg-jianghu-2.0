@@ -88,6 +88,7 @@ export interface HeroesHeroView {
   learnedCareers: LearnedCareerView[]
   aptitudes: HeroAptitudes
   combatStats: CombatStats
+  abilityAttributes?: AttributeMap
   category?: string
   source?: string
   inFormation?: boolean
@@ -277,7 +278,7 @@ const renderXpBar = (value: number, required: number, maxed: boolean, extraClass
 
 const renderBasicTab = (hero: HeroesHeroView): string => {
   const aptitudes = hero.aptitudes
-  const attrs = panelToAttributeMap(hero.combatStats, aptitudes)
+  const attrs = { ...panelToAttributeMap(hero.combatStats, aptitudes), ...hero.abilityAttributes }
   const aptitudeTotal = aptitudeKeys.reduce((total, { key }) => total + aptitudes[key], 0)
   const uid = hero.id
   const radios = ATTR_TABS.map((tab, index) =>

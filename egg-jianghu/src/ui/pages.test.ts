@@ -7,6 +7,17 @@ import { buildPackPaginationItems, renderHeroesPage, type HeroesPageViewModel } 
 import { renderInventoryPage, type InventoryPageViewModel } from './inventory-page'
 import { renderFormationPage, type FormationPageViewModel } from './formation-page'
 import { renderTownsPage, type TownsPageViewModel } from './towns-page'
+import { heroAbilityAttributes } from '../domain/faction-agent'
+import { createHeroProgress } from '../domain/state'
+
+it('侠客基础页显示邢道荣的原版能力，不再从战斗面板丢失等级', () => {
+  const view = heroesFixture()
+  view.heroes[0].abilityAttributes = heroAbilityAttributes(2, createHeroProgress('job_1'), [])
+  const html = renderHeroesPage(view)
+  for (const [name, level] of [['驯兽', 1], ['锻造', 2], ['建造', 3]] as const) {
+    expect(html).toContain(`<span class="ab-name">${name}</span><span class="ab-lv">Lv.${level}</span>`)
+  }
+})
 
 const heroesFixture = (): HeroesPageViewModel => ({
   selectedHeroId: 'hero_test',
