@@ -12381,5 +12381,7 @@
       "category": "doctor",
       "world": "world_10"
     }
-  ]
+  ],
+  "proposedTierStatus": "历史声望获取成本初筛；不代表强度、最终稀有度或最终入池名单",
+  "fateAnalysis": "hero-fate-stone-analysis.json"
 }
