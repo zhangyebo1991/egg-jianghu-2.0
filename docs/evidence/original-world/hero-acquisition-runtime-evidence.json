@@ -1,0 +1,5370 @@
+{
+  "source": "_analysis/data.json + scripts/c3runtime.js",
+  "method": "Reuse generate-original-world-evidence.mjs expression decoder; keep acquisition and fate evidence only; paths identify source nodes",
+  "functions": [
+    {
+      "name": "刷新招募角色列表function",
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "769720203966583",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "835137881478953",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "768698595644641",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 48,
+              "expression": "5"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 135,
+              "expression": "当前位面编号"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "480505755682117",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 130,
+              "expression": "25"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 3192,
+              "expression": "cj.At(当前场景编号, 20)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            7,
+            12
+          ],
+          "objectId": 635,
+          "objectName": "招募角色列表角色名",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "275095479268016",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5277,
+              "expression": "文本(角色名(js.CurX()), 0)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 47,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+          "sid": "389874179189591",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,1]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            7,
+            1
+          ],
+          "objectId": 635,
+          "objectName": "招募角色列表角色名",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "988827976520542",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5280,
+              "expression": "(((((\"[size=14]\" + 文本(\"声望\", 0)) + \" \") + 文本(mc.At(js.At(js.CurX(), 22), 13), 0)) + \" [/color]\") + 文本(\"可招募\", 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            7,
+            1
+          ],
+          "objectId": 635,
+          "objectName": "招募角色列表角色名",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "716583051241332",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5282,
+              "expression": "((\"[size=14]\" + 文本(\"需要\", 0)) + 文本(mc.At(wm.At(当前位面编号, 23), 11), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            7,
+            8
+          ],
+          "objectId": 340,
+          "objectName": "二级页面通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "979247880044276",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5283,
+              "expression": "(\"[size=14]\" + 数值显示(角色招募价格(js.CurX(), 当前位面编号, \"货币\")))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            2,
+            7,
+            5
+          ],
+          "objectId": 340,
+          "objectName": "二级页面通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "534189569416812",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5286,
+              "expression": "(\"[size=14]\" + 数值显示(角色招募价格(js.CurX(), 当前位面编号, \"贡献\")))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            7,
+            7
+          ],
+          "objectId": 340,
+          "objectName": "二级页面通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "647833960975736",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4889,
+              "expression": "and(((((\"[size=16]\" + 文本(\"拥有\", 0)) + \"[color=yellow] \") + 文本(wp.At(add(54, fb.At(cj.At(当前场景编号, 22), 16)), 1), 0)) + \"[/color] x \"), 指定物品数量(add(54, fb.At(cj.At(当前场景编号, 22), 16)), 0, 1, 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "978728324009156",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "658651556129976",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "767291618393895",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 137,
+              "expression": "35"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 3233,
+              "expression": "cj.At(当前场景编号, 22)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            7,
+            12
+          ],
+          "objectId": 635,
+          "objectName": "招募角色列表角色名",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "243696275055542",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5277,
+              "expression": "文本(角色名(js.CurX()), 0)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 47,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+          "sid": "217747951987959",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,1]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "759456203485093",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4896,
+              "expression": "指定物品数量(add(54, fb.At(cj.At(当前场景编号, 22), 16)), 0, 1, 0)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]"
+            },
+            {
+              "expressionId": 4119,
+              "expression": "js.At(js.CurX(), 26)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": 340,
+          "objectName": "二级页面通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "426884411105356",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5292,
+              "expression": "and(((\"[size=14][color=yellow]\" + 文本(wp.At(add(54, fb.At(cj.At(当前场景编号, 22), 16)), 1), 0)) + \"[/color] x \"), js.At(js.CurX(), 26))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            5,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            8,
+            1,
+            7,
+            0
+          ],
+          "objectId": 340,
+          "objectName": "二级页面通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "288598311008581",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5293,
+              "expression": "and(((\"[size=14][color=yellow]\" + 文本(wp.At(add(54, fb.At(cj.At(当前场景编号, 22), 16)), 1), 0)) + \"[/color][color=red] x \"), js.At(js.CurX(), 26))"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "刷新招募角色详情function",
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            7,
+            14
+          ],
+          "objectId": 660,
+          "objectName": "角色详情角色名",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "358487276725481",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5297,
+              "expression": "(\"[size=32]\" + 文本(角色名(角色编号), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            7,
+            23
+          ],
+          "objectId": 644,
+          "objectName": "角色详情通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "173449517671650",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5300,
+              "expression": "(((\"[size=14][color=lightgreen]\" + 文本(\"位面\", 0)) + \" [color=white]\") + 文本(wm.At(js.At(角色编号, 5), 1), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            7,
+            29
+          ],
+          "objectId": 644,
+          "objectName": "角色详情通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "378240326760686",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5302,
+              "expression": "(((\"[size=14][color=lightgreen]\" + 文本(\"位阶\", 0)) + \" [color=white]\") + 文本(mc.At(js.At(角色编号, 33), 15), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            7,
+            35
+          ],
+          "objectId": 644,
+          "objectName": "角色详情通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "674177076079390",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5304,
+              "expression": "(((\"[size=14][color=lightgreen]\" + 文本(\"种族\", 0)) + \" [color=white]\") + 文本(js.At(角色编号, 2), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            7,
+            41
+          ],
+          "objectId": 644,
+          "objectName": "角色详情通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "779130609648046",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5305,
+              "expression": "(((\"[size=14][color=lightgreen]\" + 文本(\"性别\", 0)) + \" [color=white]\") + 文本(js.At(角色编号, 24), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            7,
+            47
+          ],
+          "objectId": 644,
+          "objectName": "角色详情通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "908130755275151",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5307,
+              "expression": "(((\"[size=14][color=lightgreen]\" + 文本(\"初始职业\", 0)) + \" [color=white]\") + 文本(zy.At(js.At(角色编号, 4), 1), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            7,
+            53
+          ],
+          "objectId": 644,
+          "objectName": "角色详情通用文字左",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "448308223780717",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5308,
+              "expression": "(((\"[size=14][color=lightgreen]\" + 文本(\"所属势力\", 0)) + \" [color=white]\") + 文本(shili.At(js.At(角色编号, 25), 21), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            7,
+            58
+          ],
+          "objectId": 641,
+          "objectName": "角色详情介绍文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "412866331264211",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5309,
+              "expression": "(\"[size=14] \" + 文本(js.At(角色编号, 23), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            0,
+            7,
+            1
+          ],
+          "objectId": 641,
+          "objectName": "角色详情介绍文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "885825434834835",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5310,
+              "expression": "(\"[size=12] \" + 文本(js.At(角色编号, 34), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            1,
+            8,
+            0,
+            7,
+            14
+          ],
+          "objectId": 640,
+          "objectName": "角色详情通用文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "750415970946214",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5317,
+              "expression": "(and((and(\"[size=14][color=white]\", 角色初始天资(角色编号, 1)) + \"[color=lightgreen][size=12] (\"), 角色成长天资(角色编号, 1, 1, 0)) + \")\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            1,
+            8,
+            0,
+            7,
+            33
+          ],
+          "objectId": 640,
+          "objectName": "角色详情通用文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "596603763436505",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5322,
+              "expression": "(and((and(\"[size=14][color=white]\", 角色初始天资(角色编号, 2)) + \"[color=lightgreen][size=12] (\"), 角色成长天资(角色编号, 2, 1, 0)) + \")\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            1,
+            8,
+            0,
+            7,
+            52
+          ],
+          "objectId": 640,
+          "objectName": "角色详情通用文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "597264196615339",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5327,
+              "expression": "(and((and(\"[size=14][color=white]\", 角色初始天资(角色编号, 3)) + \"[color=lightgreen][size=12] (\"), 角色成长天资(角色编号, 3, 1, 0)) + \")\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            1,
+            8,
+            0,
+            7,
+            71
+          ],
+          "objectId": 640,
+          "objectName": "角色详情通用文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "724516369490690",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5332,
+              "expression": "(and((and(\"[size=14][color=white]\", 角色初始天资(角色编号, 4)) + \"[color=lightgreen][size=12] (\"), 角色成长天资(角色编号, 4, 1, 0)) + \")\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            1,
+            8,
+            0,
+            7,
+            90
+          ],
+          "objectId": 640,
+          "objectName": "角色详情通用文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "919740945422228",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5337,
+              "expression": "(and((and(\"[size=14][color=white]\", 角色初始天资(角色编号, 5)) + \"[color=lightgreen][size=12] (\"), 角色成长天资(角色编号, 5, 1, 0)) + \")\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            6,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 47,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+          "sid": "248062764538905",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,1]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "851333785324507",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5342,
+              "expression": "js.At(角色编号, 35)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "730927876247005",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4896,
+              "expression": "指定物品数量(add(54, fb.At(cj.At(当前场景编号, 22), 16)), 0, 1, 0)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]"
+            },
+            {
+              "expressionId": 1838,
+              "expression": "js.At(角色编号, 26)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            0,
+            8,
+            1,
+            7,
+            2
+          ],
+          "objectId": 612,
+          "objectName": "场景按钮文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "185348878807333",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5343,
+              "expression": "(((\"[color=yellow]\" + 文本(wp.At(add(54, fb.At(cj.At(当前场景编号, 22), 16)), 1), 0)) + \"[/color] \") + 文本(\"不足\", 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "115330215679300",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 565,
+              "expression": "指定位面声望等级(当前位面编号)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]"
+            },
+            {
+              "expressionId": 3233,
+              "expression": "js.At(角色编号, 22)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "146725853217280",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5344,
+              "expression": "shili.At(js.At(角色编号, 25), 4)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 4397,
+              "expression": "\"货币\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "526972367202421",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5345,
+              "expression": "save.At(wm.At(js.At(角色编号, 5), 23), 3, 0)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]"
+            },
+            {
+              "expressionId": 5346,
+              "expression": "角色招募价格(角色编号, 当前位面编号, \"货币\")"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            7,
+            2
+          ],
+          "objectId": 612,
+          "objectName": "场景按钮文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "216787598447409",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5347,
+              "expression": "((文本(mc.At(wm.At(js.At(角色编号, 5), 23), 11), 0) + \" \") + 文本(\"不足\", 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "554291558116300",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5344,
+              "expression": "shili.At(js.At(角色编号, 25), 4)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 37,
+              "expression": "\"贡献\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            17,
+            8,
+            3,
+            8,
+            1,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "836123184605497",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5348,
+              "expression": "save.At(js.At(角色编号, 25), 4, 0)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]"
+            },
+            {
+              "expressionId": 5349,
+              "expression": "角色招募价格(角色编号, 当前位面编号, \"贡献\")"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "招募角色function",
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 47,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+          "sid": "515680649531299",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,1]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "428211284111118",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 5361,
+              "expression": "js.At(角色编号, 0)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            1
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "978096556775678",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            2
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "742616386770949",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 12,
+              "expression": "2"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 566,
+              "expression": "js.At(角色编号, 1)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            3
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "962862500864091",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 14,
+              "expression": "3"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            4
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "602262899395082",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 66,
+              "expression": "4"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            5
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "536557272105864",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 48,
+              "expression": "5"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            6
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "352285159244418",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 55,
+              "expression": "6"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 313,
+              "expression": "js.At(角色编号, 4)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            7
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "846402896454802",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 83,
+              "expression": "7"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            8
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "347594311144780",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 85,
+              "expression": "8"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            9
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "618456887044693",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 36,
+              "expression": "9"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            10
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "232211487759005",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 33,
+              "expression": "10"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            11
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "215468127112348",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 35,
+              "expression": "11"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            12
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "832340694103315",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 31,
+              "expression": "12"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 5362,
+              "expression": "js.At(角色编号, 33)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            13
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "804168637094045",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 41,
+              "expression": "13"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            14
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "449453906594738",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 42,
+              "expression": "14"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            15
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "781435919857746",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 43,
+              "expression": "15"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            16
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "281174972250601",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 91,
+              "expression": "16"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            17
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "615284189964000",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 92,
+              "expression": "17"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            18
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "276040112733463",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 93,
+              "expression": "18"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            19
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "498272546745812",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 26,
+              "expression": "19"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            20
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "371683107915700",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 59,
+              "expression": "20"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            21
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "916454895712945",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 16,
+              "expression": "21"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            22
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "417150928005221",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 94,
+              "expression": "22"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            23
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "157376456205363",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 95,
+              "expression": "23"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            24
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "548325450487663",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 96,
+              "expression": "24"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            25
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "350066347441911",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 130,
+              "expression": "25"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            26
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "959035602097589",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 34,
+              "expression": "26"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            27
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "916787946295145",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 7,
+              "expression": "27"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            28
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "215213516219069",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 6,
+              "expression": "28"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            29
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "628584675647263",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 1742,
+              "expression": "29"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            30
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "393243273308945",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 108,
+              "expression": "30"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            31
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "680998438912352",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 136,
+              "expression": "31"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            32
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "646407102146260",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 110,
+              "expression": "32"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            33
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "376299692938349",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 64,
+              "expression": "33"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 1185,
+              "expression": "\"空闲中\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            34
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "444580159402055",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 60,
+              "expression": "34"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            35
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "142231508546482",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 137,
+              "expression": "35"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 1813,
+              "expression": "js.At(角色编号, 28)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            36
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "201837791291684",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 129,
+              "expression": "36"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 1851,
+              "expression": "js.At(角色编号, 29)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            37
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "264875668039034",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 131,
+              "expression": "37"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 1854,
+              "expression": "js.At(角色编号, 30)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            38
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "558134278432554",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 138,
+              "expression": "38"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 1855,
+              "expression": "js.At(角色编号, 31)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            39
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "584518745620416",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 139,
+              "expression": "39"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            40
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "826557883108239",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 120,
+              "expression": "40"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            41
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "429824654268731",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 8,
+              "expression": "41"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            42
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "686976541541155",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 62,
+              "expression": "42"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            43
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "426515323716001",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 140,
+              "expression": "43"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            44
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "471248327601509",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 141,
+              "expression": "44"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            45
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "766348544608066",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 142,
+              "expression": "45"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            46
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "396504427804264",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 10,
+              "expression": "46"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            47
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "786193598530330",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 143,
+              "expression": "47"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            48
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "308934180062515",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 117,
+              "expression": "48"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            49
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "643382961664443",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 121,
+              "expression": "49"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            50
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "374907088211611",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 44,
+              "expression": "50"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 409,
+              "expression": "Date.Now()"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            2,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "825999919361272",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5342,
+              "expression": "js.At(角色编号, 35)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            3,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "991227928431203",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]"
+            },
+            {
+              "expressionId": 127,
+              "expression": "166"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            3,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "569679217286185",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,3]"
+            },
+            {
+              "expressionId": 5365,
+              "expression": "193"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            3,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "677679237787346",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5344,
+              "expression": "shili.At(js.At(角色编号, 25), 4)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 4397,
+              "expression": "\"货币\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            3,
+            8,
+            1,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "333043063362296",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 5344,
+              "expression": "shili.At(js.At(角色编号, 25), 4)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 37,
+              "expression": "\"贡献\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            4,
+            7,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "507926974131275",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 30,
+              "expression": "save.CurY()"
+            },
+            {
+              "expressionId": 66,
+              "expression": "4"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            4,
+            7,
+            1
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "624806395370613",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 30,
+              "expression": "save.CurY()"
+            },
+            {
+              "expressionId": 48,
+              "expression": "5"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            4,
+            7,
+            2
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "285137743799544",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 30,
+              "expression": "save.CurY()"
+            },
+            {
+              "expressionId": 55,
+              "expression": "6"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            4,
+            7,
+            3
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "745802232854017",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 30,
+              "expression": "save.CurY()"
+            },
+            {
+              "expressionId": 83,
+              "expression": "7"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            4,
+            7,
+            4
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "298032968765163",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 30,
+              "expression": "save.CurY()"
+            },
+            {
+              "expressionId": 85,
+              "expression": "8"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            7,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "946031493517233",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 313,
+              "expression": "js.At(角色编号, 4)"
+            },
+            {
+              "expressionId": 66,
+              "expression": "4"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "795239599766997",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "save.CurX()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 47,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+          "sid": "488594268073734",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "save.CurX()"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "269053645372458",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 218,
+              "expression": "save.At(save.CurX(), 6, 1)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "148183169154234",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 219,
+              "expression": "zy.At(save.At(save.CurX(), 6, 1), 28)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "225388855951557",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 220,
+              "expression": "save.At(save.CurX(), zy.At(save.At(save.CurX(), 6, 1), 28), 4)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,2]"
+            },
+            {
+              "expressionId": 221,
+              "expression": "zy.At(save.At(save.CurX(), 6, 1), 29)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "575411278988608",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "save.CurX()"
+            },
+            {
+              "expressionId": 219,
+              "expression": "zy.At(save.At(save.CurX(), 6, 1), 28)"
+            },
+            {
+              "expressionId": 66,
+              "expression": "4"
+            },
+            {
+              "expressionId": 221,
+              "expression": "zy.At(save.At(save.CurX(), 6, 1), 29)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "200047528877176",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 222,
+              "expression": "zy.At(save.At(save.CurX(), 6, 1), 30)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "530400156297396",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 223,
+              "expression": "save.At(save.CurX(), zy.At(save.At(save.CurX(), 6, 1), 30), 4)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,2]"
+            },
+            {
+              "expressionId": 224,
+              "expression": "zy.At(save.At(save.CurX(), 6, 1), 31)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            5,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            7,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "686929104747941",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "save.CurX()"
+            },
+            {
+              "expressionId": 222,
+              "expression": "zy.At(save.At(save.CurX(), 6, 1), 30)"
+            },
+            {
+              "expressionId": 66,
+              "expression": "4"
+            },
+            {
+              "expressionId": 224,
+              "expression": "zy.At(save.At(save.CurX(), 6, 1), 31)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            6,
+            6,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 47,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+          "sid": "163251552999635",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 92,
+              "expression": "17"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,1]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            6,
+            7,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 34,
+          "reference": "C3.Plugins.Arr.Acts.SetXYZ",
+          "sid": "262768245722087",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 92,
+              "expression": "17"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        }
+      ],
+      "calls": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            2,
+            7,
+            0
+          ],
+          "name": "失去物品",
+          "sid": "630125952730424",
+          "parameters": [
+            {
+              "expressionId": 4953,
+              "expression": "可堆叠物品序号(add(54, fb.At(cj.At(当前场景编号, 22), 16)), 0, 1, 2)"
+            },
+            {
+              "expressionId": 1838,
+              "expression": "js.At(角色编号, 26)"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            3,
+            8,
+            0,
+            7,
+            0
+          ],
+          "name": "失去物品",
+          "sid": "355508703594411",
+          "parameters": [
+            {
+              "expressionId": 5366,
+              "expression": "可堆叠物品序号(78, 0, 1, 0)"
+            },
+            {
+              "expressionId": 1838,
+              "expression": "js.At(角色编号, 26)"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            3,
+            8,
+            1,
+            8,
+            0,
+            7,
+            0
+          ],
+          "name": "失去货币",
+          "sid": "694958881225937",
+          "parameters": [
+            {
+              "expressionId": 5367,
+              "expression": "wm.At(js.At(角色编号, 5), 23)"
+            },
+            {
+              "expressionId": 5346,
+              "expression": "角色招募价格(角色编号, 当前位面编号, \"货币\")"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            3,
+            8,
+            1,
+            8,
+            1,
+            7,
+            0
+          ],
+          "name": "失去贡献",
+          "sid": "950990764633639",
+          "parameters": [
+            {
+              "expressionId": 1835,
+              "expression": "js.At(角色编号, 25)"
+            },
+            {
+              "expressionId": 5349,
+              "expression": "角色招募价格(角色编号, 当前位面编号, \"贡献\")"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "招募角色打开编号function",
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "696471914967672",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "用途"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 4762,
+              "expression": "\"角色召唤\""
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "853478773026319",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "786604015415374",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "855919455490362",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 137,
+              "expression": "35"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 3233,
+              "expression": "cj.At(当前场景编号, 22)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            7,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "685648584647474",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "230606815365733",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "709627868772786",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "978933412660424",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 48,
+              "expression": "5"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 135,
+              "expression": "当前位面编号"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            1
+          ],
+          "objectId": 28,
+          "objectName": "js",
+          "referenceIndex": 60,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXY",
+          "sid": "351355397212067",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            },
+            {
+              "expressionId": 130,
+              "expression": "25"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 3192,
+              "expression": "cj.At(当前场景编号, 20)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            7,
+            1
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 65,
+          "reference": "C3.Plugins.System.Acts.SetFunctionReturnValue",
+          "sid": "289488835883858",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 30,
+              "expression": "js.CurX()"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "招募角色点击",
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "446945545862620",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 4928,
+              "expression": "js.At(场景按钮.编号, 35)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,4]"
+            },
+            {
+              "expressionId": 2,
+              "expression": "0"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            6,
+            0
+          ],
+          "objectId": 611,
+          "objectName": "场景按钮",
+          "referenceIndex": 74,
+          "reference": "C3.Plugins.Sprite.Cnds.CompareInstanceVar",
+          "sid": "601235923089984",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": null,
+              "expression": "[10,0]"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 5358,
+              "expression": "\"圣魂重塑\""
+            }
+          ]
+        }
+      ],
+      "calls": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            7,
+            0
+          ],
+          "name": "招募角色",
+          "sid": "711351212778591",
+          "parameters": [
+            {
+              "expressionId": 438,
+              "expression": "场景按钮.编号"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            7,
+            2
+          ],
+          "name": "招募角色",
+          "sid": "107293708123185",
+          "parameters": [
+            {
+              "expressionId": 438,
+              "expression": "场景按钮.编号"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "命格总属性function",
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": -1,
+          "objectName": "System",
+          "referenceIndex": 49,
+          "reference": "C3.Plugins.System.Cnds.Compare",
+          "sid": "480921219896525",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1016,
+              "expression": "mg.At(save.At(角色编号, (34 + 部位次数), 1), 3)"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,0]"
+            },
+            {
+              "expressionId": 135,
+              "expression": "词条编号"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            6,
+            0
+          ],
+          "objectId": 12,
+          "objectName": "save",
+          "referenceIndex": 47,
+          "reference": "C3.Plugins.Arr.Cnds.CompareXYZ",
+          "sid": "863118699339793",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 31,
+              "expression": "12"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": null,
+              "expression": "[8,5]"
+            },
+            {
+              "expressionId": 135,
+              "expression": "部位次数"
+            }
+          ]
+        }
+      ],
+      "calls": []
+    },
+    {
+      "name": "创建天命显示function",
+      "operations": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            8
+          ],
+          "objectId": 661,
+          "objectName": "天命名称",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "969800304465538",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2149,
+              "expression": "(天命文字颜色转换(save.At(角色编号, 12, 1)) + 文本(js.At(角色编号, 27), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            14
+          ],
+          "objectId": 665,
+          "objectName": "天命等阶",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "244080589616618",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1123,
+              "expression": "and(天命等阶(save.At(天命等阶.角色编号, 32, 1)), 文本(\"阶\", 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            7,
+            24
+          ],
+          "objectId": 666,
+          "objectName": "天命经验",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "822883772786884",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 1124,
+              "expression": "and((and((文本(\"总等级\", 0) + \" \"), save.At(天命经验.角色编号, 32, 1)) + \" / \"), 天命升阶等级((天命等阶(save.At(天命经验.角色编号, 32, 1)) + 1)))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            0,
+            7,
+            1
+          ],
+          "objectId": 661,
+          "objectName": "天命名称",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "392976443217563",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2152,
+              "expression": "文本(角色名(角色编号), 0)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            7,
+            8
+          ],
+          "objectId": 661,
+          "objectName": "天命名称",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "162734774949166",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2149,
+              "expression": "(天命文字颜色转换(save.At(角色编号, 12, 1)) + 文本(js.At(角色编号, 27), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            2,
+            7,
+            8
+          ],
+          "objectId": 661,
+          "objectName": "天命名称",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "302760512234891",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2162,
+              "expression": "文本(js.At(角色编号, 27), 0)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            3,
+            7,
+            8
+          ],
+          "objectId": 661,
+          "objectName": "天命名称",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "946144463874225",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2149,
+              "expression": "(天命文字颜色转换(save.At(角色编号, 12, 1)) + 文本(js.At(角色编号, 27), 0))"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            3,
+            8,
+            0,
+            7,
+            1
+          ],
+          "objectId": 661,
+          "objectName": "天命名称",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "729704649600041",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 2152,
+              "expression": "文本(角色名(角色编号), 0)"
+            }
+          ]
+        }
+      ],
+      "calls": [
+        {
+          "path": [
+            8,
+            0,
+            8,
+            0,
+            8,
+            1,
+            7,
+            0
+          ],
+          "name": "建立命格图标方",
+          "sid": "522469652112377",
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "图层"
+            },
+            {
+              "expressionId": 2153,
+              "expression": "(((天赋图标.X() + (次数 * 90)) + 125) - 10)"
+            },
+            {
+              "expressionId": 30,
+              "expression": "天赋图标.Y()"
+            },
+            {
+              "expressionId": 135,
+              "expression": "用途"
+            },
+            {
+              "expressionId": 2154,
+              "expression": "save.At(角色编号, (35 + 次数), 1)"
+            },
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 1374,
+              "expression": "(次数 + 1)"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            1,
+            8,
+            0,
+            7,
+            0
+          ],
+          "name": "建立命格图标方",
+          "sid": "332024474369890",
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "图层"
+            },
+            {
+              "expressionId": 2158,
+              "expression": "(((天赋图标.X() + (次数 * 90)) + 125) - 30)"
+            },
+            {
+              "expressionId": 615,
+              "expression": "(天赋图标.Y() + 20)"
+            },
+            {
+              "expressionId": 135,
+              "expression": "用途"
+            },
+            {
+              "expressionId": 2154,
+              "expression": "save.At(角色编号, (35 + 次数), 1)"
+            },
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 1374,
+              "expression": "(次数 + 1)"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            2,
+            7,
+            11
+          ],
+          "name": "建立命格图标方",
+          "sid": "903558537958967",
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "图层"
+            },
+            {
+              "expressionId": 2163,
+              "expression": "(((天赋图标.X() + (0 * 90)) + 125) - 30)"
+            },
+            {
+              "expressionId": 615,
+              "expression": "(天赋图标.Y() + 20)"
+            },
+            {
+              "expressionId": 135,
+              "expression": "用途"
+            },
+            {
+              "expressionId": 135,
+              "expression": "创角命格编号1"
+            },
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 3,
+              "expression": "1"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            2,
+            7,
+            12
+          ],
+          "name": "建立命格图标方",
+          "sid": "103795943170756",
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "图层"
+            },
+            {
+              "expressionId": 2164,
+              "expression": "(((天赋图标.X() + (1 * 90)) + 125) - 30)"
+            },
+            {
+              "expressionId": 615,
+              "expression": "(天赋图标.Y() + 20)"
+            },
+            {
+              "expressionId": 135,
+              "expression": "用途"
+            },
+            {
+              "expressionId": 135,
+              "expression": "创角命格编号2"
+            },
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 12,
+              "expression": "2"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            2,
+            7,
+            13
+          ],
+          "name": "建立命格图标方",
+          "sid": "962181757467107",
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "图层"
+            },
+            {
+              "expressionId": 2165,
+              "expression": "(((天赋图标.X() + (2 * 90)) + 125) - 30)"
+            },
+            {
+              "expressionId": 615,
+              "expression": "(天赋图标.Y() + 20)"
+            },
+            {
+              "expressionId": 135,
+              "expression": "用途"
+            },
+            {
+              "expressionId": 135,
+              "expression": "创角命格编号3"
+            },
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 14,
+              "expression": "3"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            2,
+            7,
+            14
+          ],
+          "name": "建立命格图标方",
+          "sid": "240551250662884",
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "图层"
+            },
+            {
+              "expressionId": 2166,
+              "expression": "(((天赋图标.X() + (3 * 90)) + 125) - 30)"
+            },
+            {
+              "expressionId": 615,
+              "expression": "(天赋图标.Y() + 20)"
+            },
+            {
+              "expressionId": 135,
+              "expression": "用途"
+            },
+            {
+              "expressionId": 135,
+              "expression": "创角命格编号4"
+            },
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 66,
+              "expression": "4"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            0,
+            8,
+            3,
+            8,
+            1,
+            7,
+            0
+          ],
+          "name": "建立命格图标方",
+          "sid": "305567255614986",
+          "parameters": [
+            {
+              "expressionId": 135,
+              "expression": "图层"
+            },
+            {
+              "expressionId": 2158,
+              "expression": "(((天赋图标.X() + (次数 * 90)) + 125) - 30)"
+            },
+            {
+              "expressionId": 615,
+              "expression": "(天赋图标.Y() + 20)"
+            },
+            {
+              "expressionId": 135,
+              "expression": "用途"
+            },
+            {
+              "expressionId": 2168,
+              "expression": "js.At(角色编号, (28 + 次数))"
+            },
+            {
+              "expressionId": 135,
+              "expression": "角色编号"
+            },
+            {
+              "expressionId": 1374,
+              "expression": "(次数 + 1)"
+            },
+            {
+              "expressionId": null,
+              "expression": "false"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "新手套装",
+      "calls": [
+        {
+          "path": [
+            8,
+            1,
+            7,
+            14
+          ],
+          "name": "招募角色",
+          "sid": "946404761160331",
+          "parameters": [
+            {
+              "expressionId": 39,
+              "expression": "165"
+            }
+          ]
+        }
+      ],
+      "operations": [
+        {
+          "path": [
+            8,
+            1,
+            7,
+            3
+          ],
+          "objectId": 126,
+          "objectName": "提示信息文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "688395678732115",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 497,
+              "expression": "文本(\"[size=18]成功招募[color=yellow]赵云[/color]！\", 0)"
+            }
+          ]
+        },
+        {
+          "path": [
+            8,
+            2,
+            7,
+            7
+          ],
+          "objectId": 126,
+          "objectName": "提示信息文字",
+          "referenceIndex": 57,
+          "reference": "C3.Plugins.Text.Acts.SetText",
+          "sid": "959044277256986",
+          "inverted": false,
+          "parameters": [
+            {
+              "expressionId": 506,
+              "expression": "((and(((((((文本(\"[color=yellow][size=14]未检测到steam链接验证！\", 0) + \"\\n\") + 文本(\"如确为正版游戏玩家，请加QQ群私聊领取！\", 0)) + \"\\n\") + 文本(\"(可能因steam网络，敬请谅解)\", 0)) + \"\\n\") + 文本(\"或截图steam购买记录及识别ID：\", 0)), int(C3.clamp(save.At(0, 1, 0), 10000000, 99999999))) + \"\\n\") + 文本(\"发送至9789208@qq.com\", 0))"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
