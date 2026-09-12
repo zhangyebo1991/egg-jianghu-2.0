@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('商城栏目分开展示，商城背包阵容共享宽屏与手机内容边界', async ({ page }, testInfo) => {
+test('商城栏目分开展示，商城背包阵容设置共享宽屏与手机内容边界', async ({ page }, testInfo) => {
   await page.goto('/')
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').fill('页面布局核验')
@@ -16,7 +16,7 @@ test('商城栏目分开展示，商城背包阵容共享宽屏与手机内容�
   for (const width of [2560, 1440, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 })
     const edges: Array<{ x: number; width: number }> = []
-    for (const tab of ['shop', 'inventory', 'formation']) {
+    for (const tab of ['shop', 'inventory', 'formation', 'settings']) {
       await page.getByTestId(`tab-${tab}`).click()
       const bounds = await page.locator(`.${tab}-page`).boundingBox()
       expect(bounds).not.toBeNull()
