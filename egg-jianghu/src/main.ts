@@ -594,6 +594,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedTreeCareerId = null
   inventorySlotFilter = 'all'
   welfareInput = ''
+  shopSection = 'recruit'
   ordinaryPoolRulesOpen = false
   ordinaryPoolSelectedId = null
   ordinaryPoolRewards = []
@@ -679,6 +680,7 @@ const saveSession = (silent = false): boolean => {
 
 const CLOUD_BACKUP_KEY = 'egg-jianghu-before-cloud-download'
 let voucherDetailsOpen = false
+let shopSection: 'recruit' | 'premium' = 'recruit'
 let ordinaryPoolRulesOpen = false
 let ordinaryPoolSelectedId: string | null = null
 let ordinaryPoolRewards: OrdinaryPoolReward[] = []
@@ -2085,7 +2087,7 @@ const render = (): void => {
       : activeTab === 'inventory'
         ? renderInventoryPage(inventoryViewModel())
         : activeTab === 'shop'
-          ? renderShopPage(session.state, Date.now(), renderOrdinaryHeroPool(ordinaryPoolViewModel()))
+          ? renderShopPage(session.state, Date.now(), renderOrdinaryHeroPool(ordinaryPoolViewModel()), shopSection)
         : activeTab === 'settings'
           ? renderSettingsPage(session.state.settings, welfareInput, session.state.redeemedWelfareCodes.includes(WELFARE_CODE_ID))
           : renderProgressionPage(progressionViewModel())
@@ -2569,7 +2571,9 @@ const performAction = (button: HTMLButtonElement): void => {
     if (result.ok) startFactionContributionAnimation(session.state.contribution[factionId] ?? 0)
     commitAction(result)
   }
-  else if (action === 'ordinary-pool-rules') {
+  else if (action === 'shop-section') {
+    shopSection = button.dataset.section === 'premium' ? 'premium' : 'recruit'
+  } else if (action === 'ordinary-pool-rules') {
     ordinaryPoolRulesOpen = !ordinaryPoolRulesOpen
   } else if (action === 'ordinary-pool-preview') {
     if (availableOrdinaryPoolHeroes(session.state).some(hero => hero.id === heroId)) ordinaryPoolSelectedId = heroId
@@ -2581,6 +2585,7 @@ const performAction = (button: HTMLButtonElement): void => {
       notify(result.message, !result.ok)
     } catch (error) { handleSessionSaveError(error) }
   } else if (action === 'open-ordinary-pool') {
+    shopSection = 'recruit'
     activeTab = 'shop'
   }
   else if (action === 'tavern-recruit') {
@@ -3035,6 +3040,7 @@ app.addEventListener('click', (event) => {
     const action = target.closest<HTMLButtonElement>('button[data-action]')?.dataset.action
     if (target.classList.contains('premium-overlay') || action === 'close-premium-panel') closePremiumPanel()
     else if (action === 'open-premium-shop') {
+      shopSection = 'premium'
       premiumPanel = null
       activeTab = 'shop'
       render()
