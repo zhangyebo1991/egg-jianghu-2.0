@@ -1,4 +1,5 @@
 import { factionById } from '../content/factions'
+import { isOrdinaryPoolHero } from '../content/ordinary-hero-pool'
 import { heroByIdV10 } from '../content/heroes'
 import { originalWorldReputationLevel, originalWorldReputationLevelName } from '../content/original-faction-rules.generated'
 import { createHeroProgress } from './state'
@@ -32,6 +33,7 @@ export const recruitFromFaction = (
   if (!state.unlockedWorldIds.includes(definition.worldId)) return { ok: false, message: '尚未解锁所在江湖卷' }
   if (state.heroes[heroId]?.recruited) return { ok: false, message: '侠客已经加入' }
 
+  if (isOrdinaryPoolHero(heroId)) return { ok: false, message: '该侠客由商城普通池招募' }
   const faction = factionById(factionId)
   if (!faction) return { ok: false, message: '该势力没有这名侠客' }
   const worldIndex = Number(faction.worldId.slice(-2))

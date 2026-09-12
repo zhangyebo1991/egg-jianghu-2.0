@@ -1,3 +1,6 @@
+import { ORDINARY_POOL_HEROES, ORDINARY_POOL_RULES, isOrdinaryPoolHero } from './content/ordinary-hero-pool'
+import { availableOrdinaryPoolHeroes, type OrdinaryPoolReward } from './domain/ordinary-hero-pool'
+import { renderOrdinaryHeroPool, type OrdinaryPoolView } from './ui/ordinary-hero-pool'
 import { createCloudAccess } from './cloud/bridge'
 import { renderHeroSkins } from './ui/hero-skins'
 import { heroAppearanceAsset } from './ui/hero-appearance-assets'
@@ -591,6 +594,8 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedTreeCareerId = null
   inventorySlotFilter = 'all'
   welfareInput = ''
+  ordinaryPoolSelectedId = null
+  ordinaryPoolRewards = []
   inventoryCategory = 'all'
   inventoryQuery = ''
   selectedStackId = null
@@ -673,6 +678,8 @@ const saveSession = (silent = false): boolean => {
 
 const CLOUD_BACKUP_KEY = 'egg-jianghu-before-cloud-download'
 let voucherDetailsOpen = false
+let ordinaryPoolSelectedId: string | null = null
+let ordinaryPoolRewards: OrdinaryPoolReward[] = []
 let welfareInput = ''
 let premiumPanel: PremiumPanel | null = null
 let premiumReturnFocus: HTMLElement | null = null
@@ -929,6 +936,20 @@ const computeHeroPackPageSize = (): number => {
   }
   // 离开侠客页时没有网格，沿用上次容量，避免返回时暂用估算值挤掉末页。
   return heroPackDynamicPageSize
+}
+
+const ordinaryPoolViewModel = (): OrdinaryPoolView => {
+  const heroes = availableOrdinaryPoolHeroes(session.state)
+  const { cost, heroRate, heroPity, materialIds } = ORDINARY_POOL_RULES
+  const pityRemaining = heroPity - session.state.ordinaryPoolMisses
+  return {
+    heroes: heroes.map(hero => ({ hero, baseProbability: heroRate / heroes.length, nextProbability: (pityRemaining === 1 ? 1 : heroRate) / heroes.length })),
+    selectedId: ordinaryPoolSelectedId, balance: session.state.idleVouchers.balance,
+    cost, heroRate, pityRemaining,
+    hasLockedHeroes: ORDINARY_POOL_HEROES.some(hero => !session.state.unlockedWorldIds.includes(hero.worldId) && !session.state.heroes[hero.id]?.recruited),
+    results: ordinaryPoolRewards.map(reward => ({ name: reward.name, amount: reward.amount, hero: reward.kind === 'hero' })),
+    materialNames: materialIds.map(id => STACK_ITEM_DEFINITIONS[id].name),
+  }
 }
 
 const heroesViewModel = (): HeroesPageViewModel => {
@@ -1276,12 +1297,14 @@ const factionRecruitmentViewModel = (factionId: string): FactionRecruitmentViewM
       const recruited = Boolean(session.state.heroes[heroId]?.recruited)
       let actionReason: string | null = null
       if (recruited) actionReason = '已邀请'
+      else if (isOrdinaryPoolHero(heroId)) actionReason = '普通池招募'
       else if (reputationLevel < hero.requiredReputationLevel) {
         actionReason = `需${hero.requiredReputationName}声望`
       } else if (balance < hero.price) {
         actionReason = `${resourceName}不足`
       }
       return {
+        ordinaryPool: isOrdinaryPoolHero(heroId),
         heroSourceId: hero.heroSourceId,
         heroId,
         name: hero.name,
@@ -2060,7 +2083,7 @@ const render = (): void => {
       : activeTab === 'inventory'
         ? renderInventoryPage(inventoryViewModel())
         : activeTab === 'shop'
-          ? renderShopPage(session.state)
+          ? renderShopPage(session.state, Date.now(), renderOrdinaryHeroPool(ordinaryPoolViewModel()))
         : activeTab === 'settings'
           ? renderSettingsPage(session.state.settings, welfareInput, session.state.redeemedWelfareCodes.includes(WELFARE_CODE_ID))
           : renderProgressionPage(progressionViewModel())
@@ -2543,6 +2566,18 @@ const performAction = (button: HTMLButtonElement): void => {
     const result = exchangeFactionItem(session.state, factionId, dataNumber(button, 'slot'))
     if (result.ok) startFactionContributionAnimation(session.state.contribution[factionId] ?? 0)
     commitAction(result)
+  }
+  else if (action === 'ordinary-pool-preview') {
+    if (availableOrdinaryPoolHeroes(session.state).some(hero => hero.id === heroId)) ordinaryPoolSelectedId = heroId
+  } else if (action === 'ordinary-pool-draw') {
+    ordinaryPoolRewards = []
+    try {
+      const result = session.drawOrdinaryPool(dataNumber(button, 'count'))
+      if (result.ok) ordinaryPoolRewards = result.rewards
+      notify(result.message, !result.ok)
+    } catch (error) { handleSessionSaveError(error) }
+  } else if (action === 'open-ordinary-pool') {
+    activeTab = 'shop'
   }
   else if (action === 'tavern-recruit') {
     const result = recruitFromTavern(session.state, heroId)

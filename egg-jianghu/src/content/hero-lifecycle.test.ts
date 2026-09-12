@@ -1,3 +1,4 @@
+import { isOrdinaryPoolHero } from './ordinary-hero-pool'
 import { describe, expect, it } from 'vitest'
 import { FACTION_HEROES, HEROES_V10, heroByIdV10 } from './heroes'
 import { heroLifecycle } from './hero-lifecycle'
@@ -23,8 +24,8 @@ describe('阶段定位与原版确定兑换', () => {
     expect(heroLifecycle(HEROES_V10.find(hero => hero.name === '张三丰')!).jobs).toEqual([])
   })
 
-  it('131名章节角色逐人保留章节、声望和足额资源门槛，失败不写档，成功只扣对应资源', () => {
-    for (const hero of FACTION_HEROES) {
+  it('非池章节角色逐人保留章节、声望和足额资源门槛，失败不写档，成功只扣对应资源', () => {
+    for (const hero of FACTION_HEROES.filter(hero => !isOrdinaryPoolHero(hero.id))) {
       const state = createInitialStateV10(0)
       const faction = factionById(hero.factionId!)!
       const worldIndex = Number(hero.worldId.slice(-2))

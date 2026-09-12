@@ -703,8 +703,8 @@ test('势力页支持声望、连续贡献兑换与招募', async ({ page }, tes
   await expect(recruitment).toHaveAttribute('data-faction-id', 'tieyi_school')
   await expect(recruitment.locator('[data-testid^="faction-recruitment-hero-"]'))
     .toHaveCount(originalFactionRecruitmentByFaction(2).length)
-  // 王异需「尊敬」（等级 3）声望，当前友好不可邀。
-  await expect(page.getByTestId('faction-recruitment-hero-11').getByRole('button')).toBeDisabled()
+  // 魏国最高门槛的王异已转普通池，名录提供商城入口。
+  await expect(page.getByTestId('faction-recruitment-hero-11').getByRole('button', { name: '前往普通池' })).toBeEnabled()
   // 甄宓需「友好」（等级 2）声望，贡献充足可直接邀请。
   const zhenMi = page.getByTestId('faction-recruitment-hero-6')
   await expect(zhenMi).toContainText('甄宓')

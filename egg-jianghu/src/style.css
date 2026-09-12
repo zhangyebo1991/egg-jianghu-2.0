@@ -5659,3 +5659,45 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
 @container (max-width: 380px) {
   .heroes-page .hb-idrow { grid-template-columns: minmax(0, 1fr); justify-items: center; }
 }
+/* 普通池：单一入口与逐人概率，窄屏纵向浏览。 */
+.ordinary-pool { min-width: 0; margin-bottom: 20px; }
+.ordinary-pool-rules { color: #b5ad98; font-size: 13px; line-height: 1.7; margin: 12px 0; }
+.ordinary-pool-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
+.ordinary-pool-roster { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; max-height: 560px; overflow-y: auto; padding: 3px; }
+.ordinary-pool-roster button { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px; text-align: left; color: #d9c9a5; background: #171e17; border: 1px solid #66532d; border-radius: 7px; cursor: pointer; }
+.ordinary-pool-roster button[aria-pressed="true"] { border-color: #e5ba65; background: #302a1b; }
+.ordinary-pool-roster button > span { display: grid; gap: 5px; min-width: 0; overflow-wrap: anywhere; }
+.ordinary-pool-roster img { flex: none; width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
+.ordinary-pool-roster small { color: #a89c83; }
+.ordinary-pool-preview { min-width: 0; padding: 16px; border: 1px solid #66532d; border-radius: 7px; background: #171e17; color: #cfb984; }
+.ordinary-pool-preview header { display: flex; align-items: center; gap: 16px; }
+.ordinary-pool-preview header img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
+.ordinary-pool-preview h3 { margin: 0 0 8px; color: #f0dfb6; }
+.ordinary-pool-preview header p { color: #a89c83; font-size: 12px; }
+.ordinary-pool-preview h4 { margin: 16px 0 8px; font-size: 13px; }
+.ordinary-pool-preview dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; gap: 8px 16px; }
+.ordinary-pool-preview dl > div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid #66532d55; padding-bottom: 4px; font-size: 13px; }
+.ordinary-pool-preview dd { margin: 0; color: #eed196; }
+.ordinary-pool-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.ordinary-pool-actions button { padding: 10px 16px; border: 1px solid #a88c50; border-radius: 6px; background: #574321; color: #fff0c9; cursor: pointer; }
+.ordinary-pool-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.ordinary-pool button:focus-visible { outline: 2px solid #e5ba65; outline-offset: 2px; }
+.ordinary-pool-empty { padding: 24px 12px; text-align: center; color: #eed196; line-height: 2; }
+.ordinary-pool-empty small { color: #a89c83; }
+.ordinary-pool-results { margin-top: 14px; border-top: 1px solid #66532d; padding-top: 10px; color: #b5ad98; }
+.ordinary-pool-results ul { display: flex; gap: 8px; flex-wrap: wrap; padding: 0; list-style: none; }
+.ordinary-pool-results li { padding: 6px 10px; border: 1px solid #66532d; border-radius: 5px; }
+.ordinary-pool-results .hero-result { color: #f2d390; }
+@media (max-width: 800px) {
+  .ordinary-pool-layout { grid-template-columns: minmax(0, 1fr); }
+  .ordinary-pool-roster { max-height: 320px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .ordinary-pool-actions button { flex: 1 1 auto; }
+  .ordinary-pool-preview { padding: 12px; }
+}
+
+@media (max-width: 400px) {
+  .ordinary-pool-roster button { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 8px; padding: 8px; }
+  .ordinary-pool-roster img { width: 40px; height: 40px; }
+  .ordinary-pool-roster button strong { font-size: 14px; }
+  .ordinary-pool-roster button span span, .ordinary-pool-roster small { font-size: 12px; line-height: 1.4; }
+}

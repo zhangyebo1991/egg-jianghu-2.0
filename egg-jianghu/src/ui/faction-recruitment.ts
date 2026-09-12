@@ -9,6 +9,7 @@ export interface FactionRecruitmentHeroView {
   price: number
   aptitudes: { strength: number; insight: number; constitution: number; agility: number; resolve: number }
   actionReason: string | null
+  ordinaryPool?: boolean
 }
 
 export interface FactionRecruitmentViewModel {
@@ -27,11 +28,11 @@ const renderRecruitmentHero = (
 ): string => `<article class="faction-recruitment-card${hero.actionReason === '已邀请' ? ' recruited' : ''}" data-testid="faction-recruitment-hero-${hero.heroSourceId}">
   <span class="faction-recruitment-seal" aria-hidden="true">侠</span>
   <div class="faction-recruitment-copy">
-    <header><h3>${escapeHtml(hero.name)}</h3><span>${escapeHtml(hero.requiredReputationName)}可邀</span></header>
-    <p>声望等级 ${hero.requiredReputationLevel} / 5 · 聘资 ${formatNumber(hero.price)} ${escapeHtml(view.resourceName)}</p>
+    <header><h3>${escapeHtml(hero.name)}</h3><span>${hero.ordinaryPool ? '普通池' : `${escapeHtml(hero.requiredReputationName)}可邀`}</span></header>
+    ${hero.ordinaryPool ? '<p>商城 · 普通池招募</p>' : `<p>声望等级 ${hero.requiredReputationLevel} / 5 · 聘资 ${formatNumber(hero.price)} ${escapeHtml(view.resourceName)}</p>`}
     <p>勇${hero.aptitudes.strength} · 智${hero.aptitudes.insight} · 体${hero.aptitudes.constitution} · 敏${hero.aptitudes.agility} · 精${hero.aptitudes.resolve}</p>
   </div>
-  ${hero.actionReason === null
+  ${hero.ordinaryPool && hero.actionReason !== '已邀请' ? '<button type="button" data-action="open-ordinary-pool">前往普通池</button>' : hero.actionReason === null
     ? `<button type="button" data-action="faction-recruit" data-faction-id="${escapeHtml(view.factionId)}" data-hero-id="${escapeHtml(hero.heroId)}">邀请入队</button>`
     : `<button type="button" disabled>${escapeHtml(hero.actionReason)}</button>`}
 </article>`
@@ -42,7 +43,7 @@ export const renderFactionRecruitment = (view: FactionRecruitmentViewModel): str
       <div><span>ORIGINAL RECRUITMENT</span><h2>势力招募</h2><p>${escapeHtml(view.factionName)} · 原版完整名录</p></div>
       <div class="faction-recruitment-wallet"><strong>${formatNumber(view.balance)}</strong><span>${escapeHtml(view.resourceName)}</span><small>${escapeHtml(view.reputationLevelName)}声望</small></div>
     </header>
-    <div class="faction-recruitment-notice">达到对应声望，并备齐${escapeHtml(view.resourceName)}后即可确定邀请。</div>
+    <div class="faction-recruitment-notice">普通池侠客可前往商城招募；其余侠客达到声望并备齐${escapeHtml(view.resourceName)}后即可邀请。</div>
     <div class="faction-recruitment-grid">
       ${view.heroes.map((hero) => renderRecruitmentHero(view, hero)).join('')}
     </div>

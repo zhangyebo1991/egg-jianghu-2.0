@@ -24,6 +24,7 @@ import {
 } from '../domain/faction-agent-automation'
 import { settleCombatEvent } from '../domain/rewards'
 import { redeemWelfareCode, type WelfareResult } from '../domain/welfare-codes'
+import { drawOrdinaryPool, type OrdinaryPoolResult } from '../domain/ordinary-hero-pool'
 import { purchasePremiumCard } from '../domain/premium-cards'
 import { loadExistingGameV10, loadGameV10, SAVE_KEY_V10, saveGameV10, type StorageLike } from '../domain/save-v10'
 import { createNewGameStateV10 } from '../domain/state'
@@ -187,6 +188,27 @@ export class GameSession {
       try { this.save(now) } catch (error) {
         this.state.idleVouchers.balance = balance
         this.state.premiumCards = cards
+        throw error
+      }
+    }
+    return result
+  }
+
+  drawOrdinaryPool(count: number, now = Date.now(), random = Math.random): OrdinaryPoolResult {
+    this.save(now)
+    const before = {
+      heroes: this.state.heroes, materials: this.state.materials,
+      balance: this.state.idleVouchers.balance, misses: this.state.ordinaryPoolMisses,
+      lastSavedAt: this.state.lastSavedAt,
+    }
+    const result = drawOrdinaryPool(this.state, count, random)
+    if (result.ok) {
+      try { this.save(now) } catch (error) {
+        this.state.heroes = before.heroes
+        this.state.materials = before.materials
+        this.state.idleVouchers.balance = before.balance
+        this.state.ordinaryPoolMisses = before.misses
+        this.state.lastSavedAt = before.lastSavedAt
         throw error
       }
     }

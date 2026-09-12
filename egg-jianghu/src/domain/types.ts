@@ -209,6 +209,7 @@ export interface GameStateV10 {
   version: 19
   idleVouchers: import('./idle-vouchers').IdleVouchers
   premiumCards: import('./premium-cards').PremiumCards
+  ordinaryPoolMisses: number
   redeemedWelfareCodes: string[]
   settings: { autoDiscardBelowQuality: EquipmentQuality | null }
   worldCurrency: CurrencyWallet

@@ -1,4 +1,5 @@
 import { createInitialStateV10 } from './state'
+import { ORDINARY_POOL_RULES } from '../content/ordinary-hero-pool'
 import { isIdleVouchers } from './idle-vouchers'
 import { isPremiumCards } from './premium-cards'
 import { equipmentDefinitionById } from '../content/equipment'
@@ -391,6 +392,7 @@ const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10
   version: 19,
   idleVouchers: structuredClone(state.idleVouchers),
   premiumCards: structuredClone(state.premiumCards),
+  ordinaryPoolMisses: state.ordinaryPoolMisses,
   redeemedWelfareCodes: [...state.redeemedWelfareCodes],
   worldCurrency: structuredClone(state.worldCurrency),
   contribution: structuredClone(state.contribution),
@@ -438,6 +440,7 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
     || raw.version !== 19
+    || (raw.ordinaryPoolMisses !== undefined && (typeof raw.ordinaryPoolMisses !== 'number' || !Number.isInteger(raw.ordinaryPoolMisses) || raw.ordinaryPoolMisses < 0 || raw.ordinaryPoolMisses >= ORDINARY_POOL_RULES.heroPity))
     || (raw.idleVouchers !== undefined && !isIdleVouchers(raw.idleVouchers))
     || (raw.premiumCards !== undefined && !isPremiumCards(raw.premiumCards))
     || (raw.redeemedWelfareCodes !== undefined && (!isStringArray(raw.redeemedWelfareCodes) || new Set(raw.redeemedWelfareCodes).size !== raw.redeemedWelfareCodes.length))
@@ -490,6 +493,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     ...state,
     idleVouchers: raw.idleVouchers === undefined ? state.idleVouchers : structuredClone(raw.idleVouchers) as GameStateV10['idleVouchers'],
     premiumCards: raw.premiumCards === undefined ? state.premiumCards : structuredClone(raw.premiumCards) as GameStateV10['premiumCards'],
+    ordinaryPoolMisses: raw.ordinaryPoolMisses === undefined ? 0 : raw.ordinaryPoolMisses as number,
     redeemedWelfareCodes: raw.redeemedWelfareCodes === undefined ? [] : [...raw.redeemedWelfareCodes as string[]],
     settings: raw.settings === undefined ? state.settings : {
       autoDiscardBelowQuality: (raw.settings as GameStateV10['settings']).autoDiscardBelowQuality,
