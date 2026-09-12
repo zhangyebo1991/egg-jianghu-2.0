@@ -594,6 +594,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedTreeCareerId = null
   inventorySlotFilter = 'all'
   welfareInput = ''
+  ordinaryPoolRulesOpen = false
   ordinaryPoolSelectedId = null
   ordinaryPoolRewards = []
   inventoryCategory = 'all'
@@ -678,6 +679,7 @@ const saveSession = (silent = false): boolean => {
 
 const CLOUD_BACKUP_KEY = 'egg-jianghu-before-cloud-download'
 let voucherDetailsOpen = false
+let ordinaryPoolRulesOpen = false
 let ordinaryPoolSelectedId: string | null = null
 let ordinaryPoolRewards: OrdinaryPoolReward[] = []
 let welfareInput = ''
@@ -944,7 +946,7 @@ const ordinaryPoolViewModel = (): OrdinaryPoolView => {
   const pityRemaining = heroPity - session.state.ordinaryPoolMisses
   return {
     heroes: heroes.map(hero => ({ hero, baseProbability: heroRate / heroes.length, nextProbability: (pityRemaining === 1 ? 1 : heroRate) / heroes.length })),
-    selectedId: ordinaryPoolSelectedId, balance: session.state.idleVouchers.balance,
+    rulesOpen: ordinaryPoolRulesOpen, selectedId: ordinaryPoolSelectedId, balance: session.state.idleVouchers.balance,
     cost, heroRate, pityRemaining,
     hasLockedHeroes: ORDINARY_POOL_HEROES.some(hero => !session.state.unlockedWorldIds.includes(hero.worldId) && !session.state.heroes[hero.id]?.recruited),
     results: ordinaryPoolRewards.map(reward => ({ name: reward.name, amount: reward.amount, hero: reward.kind === 'hero' })),
@@ -2567,7 +2569,9 @@ const performAction = (button: HTMLButtonElement): void => {
     if (result.ok) startFactionContributionAnimation(session.state.contribution[factionId] ?? 0)
     commitAction(result)
   }
-  else if (action === 'ordinary-pool-preview') {
+  else if (action === 'ordinary-pool-rules') {
+    ordinaryPoolRulesOpen = !ordinaryPoolRulesOpen
+  } else if (action === 'ordinary-pool-preview') {
     if (availableOrdinaryPoolHeroes(session.state).some(hero => hero.id === heroId)) ordinaryPoolSelectedId = heroId
   } else if (action === 'ordinary-pool-draw') {
     ordinaryPoolRewards = []

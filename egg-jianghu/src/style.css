@@ -5659,45 +5659,103 @@ body:has(.jianghu-shell) > .toast { border-color: rgb(201 163 92 / 45%); border-
 @container (max-width: 380px) {
   .heroes-page .hb-idrow { grid-template-columns: minmax(0, 1fr); justify-items: center; }
 }
-/* 普通池：单一入口与逐人概率，窄屏纵向浏览。 */
-.ordinary-pool { min-width: 0; margin-bottom: 20px; }
-.ordinary-pool-rules { color: #b5ad98; font-size: 13px; line-height: 1.7; margin: 12px 0; }
-.ordinary-pool-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
-.ordinary-pool-roster { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; max-height: 560px; overflow-y: auto; padding: 3px; }
-.ordinary-pool-roster button { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px; text-align: left; color: #d9c9a5; background: #171e17; border: 1px solid #66532d; border-radius: 7px; cursor: pointer; }
-.ordinary-pool-roster button[aria-pressed="true"] { border-color: #e5ba65; background: #302a1b; }
-.ordinary-pool-roster button > span { display: grid; gap: 5px; min-width: 0; overflow-wrap: anywhere; }
-.ordinary-pool-roster img { flex: none; width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
-.ordinary-pool-roster small { color: #a89c83; }
-.ordinary-pool-preview { min-width: 0; padding: 16px; border: 1px solid #66532d; border-radius: 7px; background: #171e17; color: #cfb984; }
-.ordinary-pool-preview header { display: flex; align-items: center; gap: 16px; }
-.ordinary-pool-preview header img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
-.ordinary-pool-preview h3 { margin: 0 0 8px; color: #f0dfb6; }
-.ordinary-pool-preview header p { color: #a89c83; font-size: 12px; }
-.ordinary-pool-preview h4 { margin: 16px 0 8px; font-size: 13px; }
-.ordinary-pool-preview dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; gap: 8px 16px; }
-.ordinary-pool-preview dl > div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid #66532d55; padding-bottom: 4px; font-size: 13px; }
-.ordinary-pool-preview dd { margin: 0; color: #eed196; }
-.ordinary-pool-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-.ordinary-pool-actions button { padding: 10px 16px; border: 1px solid #a88c50; border-radius: 6px; background: #574321; color: #fff0c9; cursor: pointer; }
-.ordinary-pool-actions button:disabled { opacity: .45; cursor: not-allowed; }
-.ordinary-pool button:focus-visible { outline: 2px solid #e5ba65; outline-offset: 2px; }
-.ordinary-pool-empty { padding: 24px 12px; text-align: center; color: #eed196; line-height: 2; }
-.ordinary-pool-empty small { color: #a89c83; }
-.ordinary-pool-results { margin-top: 14px; border-top: 1px solid #66532d; padding-top: 10px; color: #b5ad98; }
-.ordinary-pool-results ul { display: flex; gap: 8px; flex-wrap: wrap; padding: 0; list-style: none; }
-.ordinary-pool-results li { padding: 6px 10px; border: 1px solid #66532d; border-radius: 5px; }
-.ordinary-pool-results .hero-result { color: #f2d390; }
-@media (max-width: 800px) {
-  .ordinary-pool-layout { grid-template-columns: minmax(0, 1fr); }
-  .ordinary-pool-roster { max-height: 320px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-  .ordinary-pool-actions button { flex: 1 1 auto; }
-  .ordinary-pool-preview { padding: 12px; }
+/* 普通池：招募操作与人物档案分区，复用江湖墨绿与旧金主题。 */
+.ordinary-pool { --pool-gold: #dec18a; --pool-text: #e7e2d3; --pool-muted: #a9af9c; --pool-line: #c6a56730; min-width: 0; margin-bottom: 24px; color: var(--pool-text); }
+.ordinary-pool-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 24px; border-bottom: 1px solid var(--pool-line); }
+.ordinary-pool-eyebrow { color: var(--pool-gold); font-size: 11px; letter-spacing: .18em; }
+.ordinary-pool-head h2 { margin: 8px 0; font: 34px/1.2 var(--font-brush); color: var(--pool-gold); letter-spacing: .14em; }
+.ordinary-pool-head p { margin: 0; color: var(--pool-muted); font-size: 13px; line-height: 1.7; }
+.ordinary-pool-count { flex-shrink: 0; text-align: center; color: var(--pool-muted); font-size: 12px; }
+.ordinary-pool-count strong { display: block; color: var(--pool-gold); font: 36px/1.2 Georgia, serif; }
+.ordinary-pool-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding-top: 24px; align-items: start; }
+.ordinary-pool-recruit { min-width: 0; }
+.ordinary-pool-roster-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ordinary-pool-roster-heading h3 { margin: 0; font-size: 14px; font-weight: 500; }
+.ordinary-pool-roster-heading > span { color: var(--pool-muted); font-size: 11px; }
+.ordinary-pool-roster { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-height: 340px; overflow-y: auto; padding: 3px; scrollbar-width: thin; scrollbar-color: #77623e #151a14; }
+.ordinary-pool-roster button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; padding: 15px 4px 12px; color: var(--pool-text); background: linear-gradient(160deg, #252e23, #151c16); border: 1px solid var(--pool-line); border-radius: 8px; cursor: pointer; transition: background 160ms, border-color 160ms; }
+.ordinary-pool-roster button:hover { border-color: var(--pool-gold); background: #2e3426; }
+.ordinary-pool-roster button[aria-pressed="true"] { border-color: var(--pool-gold); background: radial-gradient(ellipse at 50% 30%, #5b5431, #282c20 80%); box-shadow: inset 0 -3px var(--pool-gold); }
+.ordinary-pool-roster button > span { display: grid; text-align: center; gap: 5px; min-width: 0; }
+.ordinary-pool-roster button strong { font-size: 16px; font-weight: 500; }
+.ordinary-pool-roster button span span { font-size: 12px; color: var(--pool-gold); }
+.ordinary-pool-roster small { font-size: 11px; color: var(--pool-muted); }
+.ordinary-pool-roster img { flex: none; width: 64px; height: 64px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 5px 6px #0008); }
+.ordinary-pool-preview { min-width: 0; padding: 0 0 4px 28px; border-left: 1px solid var(--pool-line); }
+.ordinary-pool-preview header { display: flex; align-items: center; gap: 20px; min-height: 142px; }
+.ordinary-pool-portrait { display: grid; place-items: center; flex-shrink: 0; width: 128px; height: 142px; background: radial-gradient(ellipse, #a4924933, transparent 70%); }
+.ordinary-pool-preview header img { width: 112px; height: 112px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 10px 10px #0009); }
+.ordinary-pool-preview h3 { margin: 8px 0; font: 30px/1.3 var(--font-brush); color: var(--pool-text); }
+.ordinary-pool-preview header p { margin: 0 0 8px; color: var(--pool-gold); font-size: 12px; }
+.ordinary-pool-preview header small { color: var(--pool-muted); font-size: 11px; line-height: 1.6; }
+.ordinary-pool-preview h4 { margin: 18px 0 10px; color: var(--pool-muted); font-size: 12px; font-weight: 400; letter-spacing: .12em; }
+.ordinary-pool-preview dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; gap: 8px 24px; }
+.ordinary-pool-preview dl > div { display: flex; justify-content: space-between; gap: 6px; border-bottom: 1px solid #c6a56718; padding-bottom: 6px; font-size: 13px; }
+.ordinary-pool-preview dt { color: var(--pool-muted); }
+.ordinary-pool-preview dd { margin: 0; color: var(--pool-text); font-variant-numeric: tabular-nums; }
+.ordinary-pool-preview .ordinary-pool-aptitudes { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.ordinary-pool-aptitudes > div { flex-direction: column; align-items: center; background: #c6a56709; padding: 8px 0; border-radius: 4px; }
+.ordinary-pool-aptitudes dd { font-size: 19px; color: var(--pool-gold); }
+.ordinary-pool-draw-panel { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--pool-line); }
+.ordinary-pool-guarantee { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; line-height: 1.8; color: var(--pool-muted); }
+.ordinary-pool-guarantee b { color: var(--pool-text); font-weight: 500; }
+.ordinary-pool-guarantee > strong { color: var(--pool-gold); font-weight: 500; }
+.ordinary-pool-wallet { display: flex; justify-content: space-between; margin-top: 18px; font-size: 12px; color: var(--pool-muted); }
+.ordinary-pool-wallet strong { font-size: 16px; color: var(--pool-text); font-variant-numeric: tabular-nums; }
+.ordinary-pool-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.ordinary-pool-actions button { display: grid; justify-items: center; gap: 6px; min-height: 68px; padding: 12px 8px; border: 1px solid #b89b60; border-radius: 6px; background: #c6a56712; color: var(--pool-gold); cursor: pointer; }
+.ordinary-pool-actions button[data-count="10"] { background: linear-gradient(135deg, #e3c78f, #ac884b); color: #252215; }
+.ordinary-pool-actions button strong { font-size: 16px; letter-spacing: .08em; font-weight: 600; }
+.ordinary-pool-actions button span { font-size: 12px; }
+.ordinary-pool-actions button:hover:not(:disabled) { filter: brightness(1.15); }
+.ordinary-pool-actions button:disabled { color: #969989; background: #252b21; border-color: #62684b; cursor: not-allowed; }
+.ordinary-pool button:focus-visible, .ordinary-pool-rules button:focus-visible { outline: 2px solid var(--pool-gold); outline-offset: 2px; }
+.ordinary-pool-hint { margin: 10px 0 0; color: var(--pool-muted); font-size: 11px; text-align: center; line-height: 1.7; }
+.ordinary-pool-rules { margin-top: 24px; border-top: 1px solid var(--pool-line); font-size: 12px; color: var(--pool-muted); line-height: 1.8; }
+.ordinary-pool-rules > button { width: 100%; text-align: left; background: none; border: 0; font: inherit; cursor: pointer; padding: 16px 0 0; color: var(--pool-text); min-height: 44px; }
+.ordinary-pool-rules > button span { float: right; color: var(--pool-muted); font-size: 11px; }
+.ordinary-pool-rules p { margin: 10px 0; }
+.ordinary-pool-empty { padding: 24px 12px; text-align: center; color: var(--pool-gold); }
+.ordinary-pool-empty > span { display: block; font: 60px/1.2 var(--font-brush); opacity: .5; }
+.ordinary-pool-empty h3 { font-size: 18px; font-weight: 500; }
+.ordinary-pool-empty p { color: var(--pool-muted); font-size: 12px; }
+.ordinary-pool-results:empty { display: none; }
+.ordinary-pool-results { margin-top: 20px; }
+.ordinary-pool-results h3 { font-size: 12px; color: var(--pool-muted); font-weight: 400; }
+.ordinary-pool-results ul { display: flex; gap: 8px; flex-wrap: wrap; padding: 0; list-style: none; margin: 0; }
+.ordinary-pool-results li { display: grid; gap: 6px; padding: 10px 14px; border: 1px solid var(--pool-line); border-radius: 5px; background: #c6a56708; }
+.ordinary-pool-results li span { font-size: 10px; color: var(--pool-muted); }
+.ordinary-pool-results li strong { font-size: 13px; font-weight: 500; }
+.ordinary-pool-results .hero-result { color: var(--pool-gold); border-color: #c6a56780; background: #c6a56718; }
+@media (max-width: 1000px) {
+  .ordinary-pool-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .ordinary-pool-preview { padding: 20px 0 0; border-left: 0; border-top: 1px solid var(--pool-line); }
+  .ordinary-pool-roster { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); max-height: 340px; }
 }
+@media (max-width: 600px) {
+  .ordinary-pool.shop-section { padding: 18px 14px; }
+  .ordinary-pool-head { gap: 8px; padding-bottom: 18px; }
+  .ordinary-pool-head h2 { font-size: 28px; }
+  .ordinary-pool-head p { font-size: 12px; }
+  .ordinary-pool-count { font-size: 10px; }
+  .ordinary-pool-count strong { font-size: 28px; }
+  .ordinary-pool-roster { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .ordinary-pool-roster img { width: 48px; height: 56px; }
+  .ordinary-pool-roster button strong { font-size: 14px; }
+  .ordinary-pool-roster button { padding: 10px 2px; }
+  .ordinary-pool-roster button span span, .ordinary-pool-roster small { font-size: 10px; }
+  .ordinary-pool-portrait { width: 88px; height: 120px; }
+  .ordinary-pool-preview header img { width: 88px; height: 104px; }
+  .ordinary-pool-preview header { gap: 12px; min-height: 120px; }
+  .ordinary-pool-preview dl { gap: 8px 16px; }
+  .ordinary-pool-preview h3 { font-size: 26px; }
+  .ordinary-pool-guarantee { font-size: 11px; }
+  .ordinary-pool-actions { gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .ordinary-pool-roster button { transition: none; } }
 
 @media (max-width: 400px) {
-  .ordinary-pool-roster button { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 8px; padding: 8px; }
-  .ordinary-pool-roster img { width: 40px; height: 40px; }
-  .ordinary-pool-roster button strong { font-size: 14px; }
-  .ordinary-pool-roster button span span, .ordinary-pool-roster small { font-size: 12px; line-height: 1.4; }
+  .ordinary-pool-roster { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ordinary-pool-roster button span span, .ordinary-pool-roster small { font-size: 11px; }
 }
+.ordinary-pool-layout:not(:has(.ordinary-pool-preview)) { grid-template-columns: minmax(0, 560px); justify-content: center; }
