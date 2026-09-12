@@ -4,7 +4,7 @@
 
 ## 接入与部署
 
-- 服务端：`egg-jianghu/cloud`，Node 24、SQLite、Nodemailer。复用 `src/cloud/validator.ts` 导出的本地 v19 校验；不接受旧版本。
+- 服务端：`egg-jianghu/cloud`，Node 24、SQLite、Nodemailer。复用 `src/cloud/validator.ts` 导出的本地校验；当前保存 v20，接受 v19 并按[迁移规则](save-v20-migration.md)换算，更早版本仍不支持。
 - 账号密码用 scrypt（N=32768/r=8/p=3）加盐哈希；登录令牌仅内存保存，服务端保存令牌哈希，24 小时有效。刷新/关闭页面需重新登录。
 - 注册/找回验证码：6 位，10 分钟，单次使用，5 次错误失效；邮箱 60 秒冷却、每小时最多 5 次；IP 与登录频率限流。重置密码注销所有旧会话。
 - 云档按账号 ID 唯一；修订号比较和写入在同一数据库事务完成。账号归属由会话确定。

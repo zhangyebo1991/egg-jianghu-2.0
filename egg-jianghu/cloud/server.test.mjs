@@ -88,3 +88,22 @@ test('邮件发送失败不会留下可用验证码', async t => {
   assert.equal((await f.call('auth/code','POST',{email:'fail@example.com',purpose:'register'})).status,503)
   assert.equal((await f.call('auth/register','POST',{email:'fail@example.com',password:f.password,code})).status,400)
 })
+
+test('旧 v19 云档上传迁移为 v20，下载后再次上传保持换算结果', async t => {
+  const f = await fixture(t)
+  const token = await f.register('migration@example.com')
+  const data = { ...createNewGameStateV10('旧档少侠'), version: 19 }
+  data.heroes.hero_player.level = 99
+  data.heroes.hero_player.experience = 25522
+  data.heroes.hero_player.careers.job_1 = { level: 4, experience: 486857 }
+  data.worldCurrency.world_01 = 765432
+  assert.equal((await f.call('save', 'PUT', { data, revision: 0 }, token)).status, 200)
+  const migrated = (await f.call('save', 'GET', undefined, token)).body.data
+  assert.equal(migrated.version, 20)
+  assert.equal(migrated.heroes.hero_player.level, 19)
+  assert.equal(migrated.heroes.hero_player.experience, 61645)
+  assert.deepEqual(migrated.heroes.hero_player.careers.job_1, { level: 10, experience: 0 })
+  assert.equal(migrated.worldCurrency.world_01, 765432)
+  assert.equal((await f.call('save', 'PUT', { data: migrated, revision: 1 }, token)).status, 200)
+  assert.deepEqual((await f.call('save', 'GET', undefined, token)).body.data, migrated)
+})

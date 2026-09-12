@@ -12,7 +12,7 @@ const memoryStorage = () => {
   }
 }
 
-describe('version 19 存档', () => {
+describe('version 20 存档', () => {
   it('通过 version 19 专用 key 检测存档是否存在', () => {
     const storage = memoryStorage()
 
@@ -64,7 +64,7 @@ describe('version 19 存档', () => {
     saveGameV10(storage, state, 2000)
 
     const raw = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
-    expect(raw.version).toBe(19)
+    expect(raw.version).toBe(20)
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })

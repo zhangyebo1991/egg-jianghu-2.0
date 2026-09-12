@@ -206,7 +206,7 @@ export interface CityState {
 }
 
 export interface GameStateV10 {
-  version: 19
+  version: 20
   idleVouchers: import('./idle-vouchers').IdleVouchers
   premiumCards: import('./premium-cards').PremiumCards
   ordinaryPoolMisses: number

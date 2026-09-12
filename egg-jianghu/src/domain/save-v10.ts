@@ -11,9 +11,11 @@ import {
 import { ORIGINAL_FACTION_RULES } from '../content/original-faction-rules.generated'
 import { normalizeHeroEquipment, normalizeInventoryInstances } from './inventory'
 import type { GameStateV10, HeroProgressV10 } from './types'
+import { migrateLegacyProgression } from './save-progression-migration'
 
-// v19：城市起步经营与剧情引导；旧档不迁移、不覆盖。
+// v20 仍使用现有槽位，让旧页面的快照冲突检查及时阻止覆盖；版本以内容字段为准。
 export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v19'
+export const PRE_V20_SAVE_BACKUP_KEY = 'egg-jianghu-before-v20-migration'
 export const LEGACY_SAVE_KEY_V18 = 'egg-jianghu-2-save-v18'
 export const LEGACY_SAVE_KEY_V17 = 'egg-jianghu-2-save-v17'
 
@@ -27,6 +29,7 @@ export interface LoadResultV10 {
   state: GameStateV10
   recoveredFromError: boolean
   serialized: string | null
+  needsMigration?: boolean
 }
 
 export const hasSaveV10 = (storage: StorageLike): boolean =>
@@ -389,7 +392,7 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
   settings: structuredClone(state.settings),
-  version: 19,
+  version: 20,
   idleVouchers: structuredClone(state.idleVouchers),
   premiumCards: structuredClone(state.premiumCards),
   ordinaryPoolMisses: state.ordinaryPoolMisses,
@@ -439,7 +442,7 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
   if (!isRecord(raw)
-    || raw.version !== 19
+    || (raw.version !== 19 && raw.version !== 20)
     || (raw.ordinaryPoolMisses !== undefined && (typeof raw.ordinaryPoolMisses !== 'number' || !Number.isInteger(raw.ordinaryPoolMisses) || raw.ordinaryPoolMisses < 0 || raw.ordinaryPoolMisses >= ORDINARY_POOL_RULES.heroPity))
     || (raw.idleVouchers !== undefined && !isIdleVouchers(raw.idleVouchers))
     || (raw.premiumCards !== undefined && !isPremiumCards(raw.premiumCards))
@@ -549,6 +552,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     || loaded.city.shop.staff.some((worker, index) => worker.heroId && index >= Math.min(6, shopTile.buildingLevel + 1))) throw new Error('古玩店地块或席位状态无效')
   normalizeLoadedHeroes(loaded.heroes, loaded.inventory)
   normalizeInventoryInstances(loaded.city.shop.stock)
+  if (raw.version === 19) migrateLegacyProgression(loaded)
   return loaded
 }
 
@@ -557,7 +561,9 @@ export const loadExistingGameV10 = (storage: StorageLike, now = Date.now()): Loa
   if (serialized === null) return null
 
   try {
-    return { state: hydrateStateV10(JSON.parse(serialized) as unknown, now), recoveredFromError: false, serialized }
+    const raw = JSON.parse(serialized) as unknown
+    return { state: hydrateStateV10(raw, now), recoveredFromError: false, serialized,
+      needsMigration: isRecord(raw) && raw.version === 19 }
   } catch {
     return { state: createInitialStateV10(now), recoveredFromError: true, serialized }
   }
@@ -572,6 +578,13 @@ export const saveGameV10 = (
   now = Date.now(),
 ): string => {
   const serialized = JSON.stringify(persistentState(state, now))
+  const previous = storage.getItem(SAVE_KEY_V10)
+  // 备份失败就中止写入，不能在空间不足时覆盖唯一的旧档。
+  if (previous !== null && storage.getItem(PRE_V20_SAVE_BACKUP_KEY) === null) {
+    let oldVersion: unknown
+    try { oldVersion = (JSON.parse(previous) as { version?: unknown })?.version } catch { /* 损坏档由既有确认流程处理。 */ }
+    if (oldVersion === 19) storage.setItem(PRE_V20_SAVE_BACKUP_KEY, previous)
+  }
   storage.setItem(SAVE_KEY_V10, serialized)
   state.lastSavedAt = now
   return serialized

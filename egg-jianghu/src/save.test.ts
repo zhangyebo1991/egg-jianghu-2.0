@@ -23,7 +23,7 @@ const quest = (): FactionQuestBoardEntry => ({
   acceptedRecordId: 1,
 })
 
-describe('version 19 公开存档入口', () => {
+describe('version 20 公开存档入口', () => {
   it('保存并恢复全部长期状态', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(100)
@@ -62,11 +62,11 @@ describe('version 19 公开存档入口', () => {
     expect(loaded.state).toEqual(createInitialStateV10(500))
   })
 
-  it('导出与导入只接受 version 19', () => {
+  it('导出 version 20 并拒绝不支持的旧版结构', () => {
     const state = createInitialStateV10(100)
     state.worldCurrency.world_01 = 987
     const serialized = exportSave(state, 200)
-    expect(JSON.parse(serialized).version).toBe(19)
+    expect(JSON.parse(serialized).version).toBe(20)
     expect(importSave(serialized, 300).state.worldCurrency.world_01).toBe(987)
     expect(() => importSave(JSON.stringify({ version: 15 }), 300)).toThrow('存档版本不受支持')
   })

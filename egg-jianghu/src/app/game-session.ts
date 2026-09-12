@@ -146,6 +146,7 @@ export class GameSession {
     const loaded = loadGameV10(storage, now)
     const session = new GameSession(loaded.state, storage, loaded.serialized)
     if (!loaded.recoveredFromError) session.settleOfflineVouchers(now)
+    if (loaded.needsMigration) session.save(now)
     return session
   }
 
@@ -162,6 +163,7 @@ export class GameSession {
     if (loaded.recoveredFromError) throw new Error('存档无法读取')
     const session = new GameSession(loaded.state, storage, loaded.serialized)
     session.settleOfflineVouchers(now)
+    if (loaded.needsMigration) session.save(now)
     return session
   }
 
