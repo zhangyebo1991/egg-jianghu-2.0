@@ -21,6 +21,12 @@ test('商城栏目分开展示，商城背包阵容设置共享宽屏与手机�
       const bounds = await page.locator(`.${tab}-page`).boundingBox()
       expect(bounds).not.toBeNull()
       edges.push(bounds!)
+      if (tab === 'settings') {
+        for (const group of await page.locator('.settings-group').all()) {
+          const groupBounds = await group.boundingBox()
+          expect(groupBounds!.x + groupBounds!.width).toBeLessThanOrEqual(width)
+        }
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
       await page.screenshot({ path: testInfo.outputPath(`${tab}-${width}.png`) })
     }
