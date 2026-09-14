@@ -154,7 +154,7 @@ export const equipHeartMethod = (
   const heartMethod = heartMethodByIdV10(heartMethodId)
   if (!hero?.recruited) return { ok: false, message: '侠客尚未加入' }
   if (!heartMethod) return { ok: false, message: '心法不存在' }
-  if (!heartMethod.careerIds.includes(hero.currentCareerId)) return { ok: false, message: '当前职业不符' }
+  if (!isHeartMethodCareerCompatible(hero.currentCareerId, heartMethod)) return { ok: false, message: '当前职业不符' }
 
   hero.heartMethodId = heartMethodId
   return { ok: true, message: '已主修心法' }

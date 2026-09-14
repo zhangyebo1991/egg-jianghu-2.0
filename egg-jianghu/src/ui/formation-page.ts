@@ -54,7 +54,7 @@ const gradeClass = (grade: string): string => `g-${grade}`
 const categoryLabel = (category: string): string => category === '内家' ? '内' : category
 
 const fitText: Record<string, string> = {
-  拳: '拳师根骨沉厚，宜居前列，为队友遮拦锋镝。',
+  拳: '拳系武者根骨沉厚，宜居前列，为队友遮拦锋镝。',
   刀: '刀势沉猛，宜居前列以先手破敌，势不可挡。',
   剑: '剑走轻灵，前列可抢先手，后列可保其锋。',
   暗: '淬毒暗器，藏于帷幄之中，出手最难提防。',

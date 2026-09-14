@@ -58,7 +58,7 @@ const renderNewGamePage = (view: StartPageViewModel): string => `
       <form class="start-form" data-action="create-game">
         <label for="player-name">玩家姓名</label>
         <input id="player-name" name="playerName" type="text" value="${escapeHtml(view.playerName)}" autocomplete="off" autofocus${disabled(view.busy)}>
-        <p class="start-hint">1～8 个字符，初始身份为丙级剑客。</p>
+        <p class="start-hint">1～8 个字符，初始身份为白丁。</p>
         ${view.error ? `<p class="start-error" role="alert">${escapeHtml(view.error)}</p>` : ''}
         <div class="start-actions">
           <button type="button" data-action="back-title"${disabled(view.busy)}>返回</button>

@@ -1,6 +1,6 @@
 import { FACTIONS, factionByOriginalId } from './factions'
 import { ORIGINAL_PLAYER_SKILLS, ORIGINAL_TREASURES } from './original-progression.generated'
-import type { CareerCategory } from './careers'
+import { CAREERS, type CareerCategory } from './careers'
 import type { Rarity } from '../domain/types'
 
 export type DamageRoute = 'external' | 'internal' | 'healing'
@@ -61,28 +61,28 @@ export interface HeartMethodDefinitionV10 {
   survivalBonus: number
 }
 
-const categoryCareerIds: Record<CareerCategory, [string, string, string]> = {
-  剑: ['sword', 'sword_swift', 'sword_heavy'],
-  刀: ['blade', 'blade_swift', 'blade_fury'],
-  拳: ['fist', 'fist_hard', 'fist_soft'],
-  暗: ['shadow', 'shadow_assassin', 'shadow_poison'],
-  医: ['doctor', 'doctor_heal', 'doctor_medicine'],
-  内家: ['inner', 'inner_flow', 'inner_guard'],
-}
-
 const categoryByOriginalSkillCategory: Record<number, CareerCategory> = {
   1: '内家', 2: '拳', 3: '剑', 4: '内家', 5: '暗', 6: '医', 7: '刀', 8: '内家',
   9: '刀', 10: '剑', 11: '内家', 12: '内家', 13: '暗', 14: '暗', 15: '内家', 16: '医',
 }
 
-const careersForCategory = (category: CareerCategory): string[] => {
-  const [base, first, second] = categoryCareerIds[category]
-  return [
-    base,
-    `${first}_mid`, `${first}_high`, `${first}_top`,
-    `${second}_mid`, `${second}_high`, `${second}_top`,
-  ]
+// 原版机制：诸天职业以 skillTypeIds（1~16 技能类别）决定可修技能；
+// 类别 1 为通用，不限职业。
+const careersForSkillCategory = (skillCategory: number): string[] =>
+  CAREERS.filter((career) => career.skillTypeIds.includes(skillCategory)).map((career) => career.id)
+
+const skillCategoryById = new Map<number, number>()
+for (const skill of ORIGINAL_PLAYER_SKILLS) {
+  skillCategoryById.set(skill.id, skill.skillCategory)
 }
+
+// 势力心法面向该势力传承涉及的技能类别对应的职业开放。
+const careersForFactionHeartMethod = (skillIds: readonly number[]): string[] => [
+  ...new Set(skillIds.flatMap((skillId) => {
+    const skillCategory = skillCategoryById.get(skillId) ?? 1
+    return skillCategory === 1 ? [] : careersForSkillCategory(skillCategory)
+  })),
+]
 
 const routeFor = (route: string): DamageRoute => {
   if (route === '生命') return 'healing'
@@ -180,7 +180,7 @@ const buildMartial = (original: typeof ORIGINAL_PLAYER_SKILLS[number]): MartialD
     buffBaseChance: original.buffBaseChance,
     buffChanceGrowthPerTenLevels: original.buffChanceGrowthPerTenLevels,
     previousId: original.previousSkillId ? martialIdFromOriginal(original.previousSkillId) : null,
-    careerIds: original.skillCategory === 1 ? ['universal'] : careersForCategory(category),
+    careerIds: original.skillCategory === 1 ? ['universal'] : careersForSkillCategory(original.skillCategory),
     currencySource: {
       kind: currencyKind,
       id: currencyId,
@@ -200,7 +200,7 @@ export const FACTION_HEART_METHODS: HeartMethodDefinitionV10[] = FACTIONS.map((f
   source: 'faction',
   factionId: faction.id,
   worldId: faction.worldId,
-  careerIds: careersForCategory(faction.category),
+  careerIds: careersForFactionHeartMethod(faction.skillIds),
   energyRecovery: 1,
   gaugeRate: 0.02,
   cooldownRate: 0.02,
@@ -217,7 +217,7 @@ export const CITY_HEART_METHODS: HeartMethodDefinitionV10[] = Array.from({ lengt
     source: 'city',
     factionId: null,
     worldId,
-    careerIds: Object.keys(categoryCareerIds).flatMap((category) => careersForCategory(category as CareerCategory)),
+    careerIds: CAREERS.map((career) => career.id),
     energyRecovery: 1 + worldIndex * 0.1,
     gaugeRate: worldIndex * 0.005,
     cooldownRate: worldIndex * 0.004,

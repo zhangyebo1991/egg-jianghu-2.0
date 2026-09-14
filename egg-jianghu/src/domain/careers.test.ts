@@ -5,14 +5,8 @@ import { addCareerExperience, careerExperienceForNextLevel, changeCareer } from 
 import { createHeroProgress } from './state'
 
 describe('职业修习', () => {
-  it('careerNameById 能将所有传承职业 ID 及诸天职业正确解析为全中文', () => {
+  it('careerNameById 能将旧档残留职业 ID 及诸天职业正确解析为全中文', () => {
     expect(careerNameById('inner')).toBe('内家')
-    expect(careerNameById('inner_flow_mid')).toBe('运气士')
-    expect(careerNameById('inner_flow_high')).toBe('周天师')
-    expect(careerNameById('inner_flow_top')).toBe('气宗')
-    expect(careerNameById('inner_guard_mid')).toBe('护气士')
-    expect(careerNameById('inner_guard_high')).toBe('铁衣护法')
-    expect(careerNameById('inner_guard_top')).toBe('金刚宗师')
     expect(careerNameById('sword_swift_mid')).toBe('游剑客')
     expect(careerNameById('job_1')).toBe('白丁')
     expect(careerNameById('job_3')).toBe('武夫')
@@ -22,6 +16,22 @@ describe('职业修习', () => {
       const chineseNames = martial.careerIds.map((id) => careerNameById(id))
       for (const name of chineseNames) {
         expect(name).toMatch(/^[\u4e00-\u9fa5]+$/)
+      }
+    }
+  })
+
+  it('武学职业限制全部对接诸天职业体系', () => {
+    for (const martial of FACTION_MARTIALS) {
+      if (martial.skillCategory === 1) {
+        expect(martial.careerIds).toEqual(['universal'])
+        continue
+      }
+      // 非通用技能按技能类别匹配 1~4 个诸天职业，不再出现旧六派境界 ID
+      expect(martial.careerIds.length).toBeGreaterThanOrEqual(1)
+      expect(martial.careerIds.length).toBeLessThanOrEqual(4)
+      for (const careerId of martial.careerIds) {
+        expect(careerId).toMatch(/^job_\d+$/)
+        expect(careerById(careerId)?.skillTypeIds).toContain(martial.skillCategory)
       }
     }
   })

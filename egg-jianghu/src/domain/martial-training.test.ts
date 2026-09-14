@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STARTER_CAREER_ID } from '../content/careers'
 import { FACTION_MARTIALS, martialByIdV10, martialResourceCost, martialSpCost } from '../content/martials'
 import { createInitialStateV10, createHeroProgress, createNewGameStateV10 } from './state'
 import {
@@ -18,7 +19,7 @@ const seededState = (
   const state = createInitialStateV10(1000)
   state.worldCurrency = { ...state.worldCurrency, ...worldCurrency }
   state.contribution = { ...contribution }
-  state.heroes.hero_mu_nianci = createHeroProgress('inner')
+  state.heroes.hero_mu_nianci = createHeroProgress(STARTER_CAREER_ID)
   state.heroes.hero_mu_nianci.skillPoints = 1_000_000_000
   return state
 }
