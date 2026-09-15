@@ -185,7 +185,7 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .leaf-foot{padding:10px 22px 14px 26px;border-top:1px solid var(--night-line);font-size:10px;color:var(--pn-faint);letter-spacing:.14em}
 
 /* 居中册页模式（宽屏默认 · 可切回右侧停靠） */
-.leaf.modal{left:50%;right:auto;top:3.5vh;bottom:3.5vh;width:min(1120px,94vw);
+.leaf.modal{left:50%;right:auto;top:3.5vh;bottom:3.5vh;width:min(1560px,94vw);
   transform:translate(-50%,110%);border:1px solid var(--night-line-2);
   box-shadow:0 40px 120px rgba(13,17,12,.55)}
 .leaf.modal.open{transform:translate(-50%,0)}
@@ -223,7 +223,7 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .pbar.red i{background:var(--crimson)}
 
 /* 关卡面板 · 位面带 */
-.planestrip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin}
+.planestrip{display:flex;flex-wrap:wrap;gap:8px;padding:4px 2px 10px}
 .plane{flex:0 0 auto;width:88px;padding:9px 6px;border:1.5px solid var(--night-line-2);text-align:center;transition:all .2s}
 .plane .no{font-family:var(--latin);font-size:9px;letter-spacing:.14em;color:var(--pn-faint)}
 .plane .nm{font-family:var(--kai);font-size:14px;letter-spacing:.1em;margin-top:2px}
@@ -352,10 +352,23 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
   position:sticky;top:0;max-height:calc(100vh - 265px);display:flex;flex-direction:column}
 .fright .froster{overflow-y:auto;min-height:0;margin-top:2px;padding-right:4px}
 .frighthint{font-size:10.5px;color:var(--pn-dim);line-height:1.75;margin-bottom:8px}
+/* 行囊三栏：侠客 | 物品 | 装备详情 */
+.baglayout3{display:grid;grid-template-columns:280px minmax(0,1fr) 300px;gap:18px;align-items:start}
+.bagheroes{position:sticky;top:0}
+.bagheroes .herolist{grid-template-columns:1fr;max-height:calc(100vh - 330px)}
+.pager{display:flex;align-items:center;gap:8px;justify-content:center;padding:8px 0 2px;font-size:10.5px;color:var(--pn-dim);border-top:1px solid var(--night-line);margin-top:4px}
+.pager .chip[disabled]{opacity:.35;pointer-events:none}
+@media (max-width:1500px){
+  .baglayout3{grid-template-columns:260px minmax(0,1fr)}
+  .bagside{grid-column:1/-1;position:static}
+}
 @media (max-width:1100px){
   .fmain{grid-template-columns:1fr}
   .fright{position:static;max-height:none}
   .fright .froster{overflow:visible}
+  .baglayout3{grid-template-columns:1fr}
+  .bagheroes{position:static}
+  .bagheroes .herolist{max-height:208px}
 }
 .ffield{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:12px 10px 10px;margin-bottom:4px}
 .flane{display:flex;align-items:center;gap:5px;margin-bottom:6px}
@@ -402,7 +415,7 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .bagside{position:sticky;top:0}
 .bagside .equipzone{grid-template-columns:repeat(3,1fr)}
 .bagside .eslot{height:58px}
-.catlist{display:grid;grid-template-columns:1fr 1fr;column-gap:22px}
+.catlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));column-gap:22px}
 .kindhead{display:flex;align-items:baseline;gap:8px;width:100%;padding:8px 2px;margin-top:8px;
   border-bottom:1px solid var(--night-line-2);font-family:var(--kai);font-size:13px;letter-spacing:.18em;color:var(--pn)}
 .kindhead .cnt{font-family:var(--latin);font-size:10px;color:var(--pn-faint);letter-spacing:.1em}
@@ -418,7 +431,10 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 }
 /* 右侧停靠模式统一单列，宽布局仅居中模式启用 */
 .leaf:not(.modal) .baglayout{grid-template-columns:1fr}
-.leaf:not(.modal) .bagside{position:static}
+.leaf:not(.modal) .baglayout3{grid-template-columns:1fr}
+.leaf:not(.modal) .bagheroes{position:static}
+.leaf:not(.modal) .bagheroes .herolist{max-height:208px}
+.leaf:not(.modal) .bagside{position:static;grid-column:auto}
 .leaf:not(.modal) .catlist{grid-template-columns:1fr}
 .leaf:not(.modal) .fmain{grid-template-columns:1fr}
 .leaf:not(.modal) .fright{position:static;max-height:none}
@@ -624,7 +640,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   <div class="ni"><b>⑪</b><span>危险操作（删档）收进设置页深处，需二次确认；侧栏不再常驻。</span></div>
   <div class="ni"><b>⑫</b><span>视觉新方向：昼卷（陈纸苔绿山水手卷 + 纯墨 + 单点绛红）/ 夜册（近墨面板）。若不认可可整体回退深色金印方向。</span></div>
   <div class="ni"><b>⑬</b><span>面板双形态：宽屏默认居中册页（⇄ 一键切回右侧停靠），手机端恒全屏。大列表不堆长滚动——行囊两栏（左物品右详情）+ 展开更多；兑换目录按类折叠 + 检索；招募按位面分组折叠；顶部锚点直达分区。</span></div>
-  <div class="ni"><b>⑭</b><span>规模预留（侠客/物品破百时不崩盘）：换装侠客选择器 = 搜索 + 双列限高滚动列表（在阵优先），弃用横滑 chips；行囊筛选条吸顶、物品分页加载（12 起 +24 展开）；阵容名册、兑换目录、招募名录均有检索；设置中已隐藏列表限高滚动。</span></div>
+  <div class="ni"><b>⑭</b><span>规模预留（侠客/物品破百时不崩盘）：换装侠客选择器 = 稳定排序（在阵→品级→等级）+ 每页 10 人翻页浏览 + 检索辅助，不依赖记名字；行囊三栏横排（侠客 | 物品 | 装备详情）吃满宽屏，筛选条吸顶、物品分页加载；名册/目录/名录均有检索；隐藏列表限高滚动。</span></div>
 </div>
 <script>
 /* ============================================================
@@ -682,7 +698,7 @@ const S = {
     {uid:'b13',slot:'ring',n:'玛瑙扳指',q:1,lv:16,a:['法攻 +26']},
     {uid:'b14',slot:'boots',n:'麻布鞋',q:0,lv:8,a:['身法 +5']},
   ],
-  bagFilter: {slot:'all', q:'all', sel:null, hero:'h1', show:12, sort:'lv', heroQ:'', heroShow:8},
+  bagFilter: {slot:'all', q:'all', sel:null, hero:'h1', show:12, sort:'lv', heroQ:'', heroPage:1},
   faction: {
     contrib: 8640, reputation: 342, sp: 120, hidden: [], hideMode: false, hideSel: [],
     search: '', closedKinds: [], closedWorlds: [1,2,3,4,5,6,7,8,9,10,11,12],
@@ -728,6 +744,13 @@ const S = {
   },
   settings: {autoSellBelow:1, hiddenFromCatalog:[], welfare:'', resetArm:false},
 };
+/* 规模压测：追加 12 名模拟侠客（均在后备），用于验证 200 侠级别的浏览/检索/翻页 */
+[['沈孤鸿','天',36,'流云剑客','剑'],['叶知秋','地',34,'摘星手','暗'],['花满楼','甲',30,'听风医者','医'],
+ ['陆小凤','天',38,'灵犀指','拳'],['西门吹雪','地',37,'吹雪剑侍','剑'],['李寻欢','天',39,'飞刀客','暗'],
+ ['上官金虹','地',35,'龙凤双环','拳'],['天机老人','天',41,'机枢内宗','内家'],['孙小红','乙',24,'红衣剑童','剑'],
+ ['阿飞','甲',29,'快剑无名','剑'],['荆无命','地',33,'无命杀手','暗'],['林仙儿','乙',22,'素手医仙','医'],
+].forEach((x,i)=>S.heroes.push({id:'x'+i,name:x[0],grade:x[1],lv:x[2],career:x[3],cat:x[4],
+  row:null,col:null,inForm:false,equip:{},hp:3000+x[2]*80,maxHp:3000+x[2]*80,en:0}));
 
 /* ============================================================
    工具
@@ -1138,25 +1161,35 @@ function renderBagPanel(){
   const f = S.bagFilter;
   const hq = (f.heroQ||'').trim();
   const inForm = h => h.inForm!==false && h.row!=null;
+  const GR = {主:0,天:1,地:2,甲:3,乙:4,丙:5};
+  /* 稳定排序：在阵 → 品级 → 等级，保证翻页顺序可预期 */
   const hpool = S.heroes
     .filter(h=>!hq || (h.name+h.career+h.cat).includes(hq))
-    .sort((a,b)=>((inForm(b)?1:0)-(inForm(a)?1:0)) || b.lv-a.lv);
-  const hshown = hpool.slice(0, f.heroShow);
+    .sort((a,b)=>((inForm(b)?1:0)-(inForm(a)?1:0)) || ((GR[a.grade]??9)-(GR[b.grade]??9)) || b.lv-a.lv);
+  const HPZ = 10;
+  const hpages = Math.max(1, Math.ceil(hpool.length/HPZ));
+  const hpage = Math.min(f.heroPage||1, hpages);
+  const hshown = hpool.slice((hpage-1)*HPZ, hpage*HPZ);
   const sorted = [...S.bag].sort(f.sort==='q' ? (a,b)=>b.q-a.q||b.lv-a.lv : (a,b)=>b.lv-a.lv);
   const items = sorted.filter(it => (f.slot==='all'||it.slot===f.slot) && (f.q==='all'||it.q===+f.q));
   const shown = items.slice(0, f.show);
   $('#leafBody').innerHTML = `
-    <div class="nsec"><div class="nsec-head"><h3>为谁换装</h3><span class="en">Hero</span><span class="right">${S.heroes.length} 侠 · 在阵优先</span></div>
-      <input type="search" id="heroSearch" placeholder="搜索侠客 · 名称 / 职业 / 脉系" value="${esc(f.heroQ||'')}" style="width:100%;margin-bottom:6px">
-      <div class="herolist">${hshown.map(h=>`
-        <button class="hrow ${h.id===hero.id?'on':''}" data-h="${h.id}">
-          <span class="face">${esc(h.name[0])}</span><span class="hn">${esc(h.name)}</span>
-          <small>${h.grade}品 Lv.${h.lv} · ${inForm(h)?'在阵':'后备'}</small></button>`).join('')
-        || '<p style="grid-column:1/-1;color:var(--pn-faint);font-size:11px;padding:10px 0">无匹配侠客</p>'}
-        ${hpool.length>hshown.length?`<button class="btn xs" id="heroMore" style="grid-column:1/-1;margin-top:6px">还有 ${hpool.length-hshown.length} 侠 · 展开</button>`:''}
-      </div>
-    </div>
-    <div class="baglayout">
+    <div class="baglayout3">
+      <aside class="bagheroes">
+        <div class="nsec-head" style="margin-bottom:6px"><h3>为谁换装</h3><span class="en">Hero</span><span class="right">${S.heroes.length} 侠 · 在阵优先</span></div>
+        <input type="search" id="heroSearch" placeholder="搜索侠客 · 名称 / 职业 / 脉系" value="${esc(f.heroQ||'')}" style="width:100%;margin-bottom:6px">
+        <div class="herolist">${hshown.map(h=>`
+          <button class="hrow ${h.id===hero.id?'on':''}" data-h="${h.id}">
+            <span class="face">${esc(h.name[0])}</span><span class="hn">${esc(h.name)}</span>
+            <small>${h.grade}品 Lv.${h.lv} · ${inForm(h)?'在阵':'后备'}</small></button>`).join('')
+          || '<p style="grid-column:1/-1;color:var(--pn-faint);font-size:11px;padding:10px 0">无匹配侠客</p>'}
+        </div>
+        <div class="pager">
+          <button class="chip" id="heroPrev" ${hpage<=1?'disabled':''}>‹ 上一页</button>
+          <span>第 ${hpage} / ${hpages} 页</span>
+          <button class="chip" id="heroNext" ${hpage>=hpages?'disabled':''}>下一页 ›</button>
+        </div>
+      </aside>
       <div class="nsec" style="margin-bottom:0"><div class="nsec-head"><h3>囊中物</h3><span class="en">Pack</span>
         <span class="right">${items.length} 件${items.length!==S.bag.length?` / 共 ${S.bag.length}`:''}</span></div>
         <div class="stickybar">
@@ -1197,14 +1230,14 @@ function renderBagPanel(){
         <p style="font-size:10px;color:var(--pn-faint);margin:6px 0 0;letter-spacing:.08em">点格子可卸下装备 · 与行囊互换</p>
         <div id="bagDetail"></div>
       </aside>
-    </div>`;
-  $('#leafBody').querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{ S.bagFilter.hero=b.dataset.h; S.bagFilter.sel=null; renderBagPanel(); });
+    </div>`;  $('#leafBody').querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{ S.bagFilter.hero=b.dataset.h; S.bagFilter.sel=null; renderBagPanel(); });
   const hs = $('#heroSearch');
   if(hs) hs.oninput = ()=>{
-    S.bagFilter.heroQ = hs.value; S.bagFilter.heroShow = 8; renderBagPanel();
+    S.bagFilter.heroQ = hs.value; S.bagFilter.heroPage = 1; renderBagPanel();
     const n = $('#heroSearch'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
   };
-  const hm = $('#heroMore'); if(hm) hm.onclick=()=>{ S.bagFilter.heroShow+=16; renderBagPanel(); };
+  const hp2 = $('#heroPrev'); if(hp2) hp2.onclick=()=>{ S.bagFilter.heroPage=Math.max(1,hpage-1); renderBagPanel(); };
+  const hn2 = $('#heroNext'); if(hn2) hn2.onclick=()=>{ S.bagFilter.heroPage=Math.min(hpages,hpage+1); renderBagPanel(); };
   $('#leafBody').querySelectorAll('[data-fslot]').forEach(b=>b.onclick=()=>{ S.bagFilter.slot=b.dataset.fslot; S.bagFilter.show=12; renderBagPanel(); });
   $('#leafBody').querySelectorAll('[data-fq]').forEach(b=>b.onclick=()=>{ S.bagFilter.q=b.dataset.fq==='all'?'all':+b.dataset.fq; S.bagFilter.show=12; renderBagPanel(); });
   $('#leafBody').querySelectorAll('[data-fsort]').forEach(b=>b.onclick=()=>{ S.bagFilter.sort=b.dataset.fsort; renderBagPanel(); });
