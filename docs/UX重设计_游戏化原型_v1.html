@@ -82,6 +82,9 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .u-en{display:flex;gap:3px}
 .u-en b{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ink-45)}
 .u-en b.on{background:var(--crimson);border-color:var(--crimson)}
+#party .unit{cursor:pointer}
+#party .unit.picked .token{border-color:var(--crimson);box-shadow:0 0 0 3px var(--crimson-soft)}
+#party .unit.picked{cursor:crosshair}
 #midline{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--ink-70)}
 #midline .vs{font-family:var(--kai);font-size:22px;letter-spacing:.2em}
 #midline .waveinfo{font-size:12px;letter-spacing:.2em;text-align:center;line-height:1.7}
@@ -755,6 +758,7 @@ function renderField(){
   $('#waveinfo').innerHTML = `<span>第 <b>${S.wave}</b> / 10 波</span><br><span style="letter-spacing:.3em">${esc(w.name)} · 第${S.stage}关</span><br><span style="font-size:10px;letter-spacing:.2em">${S.fighting?'自动战斗中':'已停驻'}</span>`;
   $('#wavebeads').innerHTML = Array.from({length:10},(_,i)=>
     `<span class="wbead ${i+1<S.wave?'done':''} ${i+1===S.wave?'cur':''}"></span>`).join('');
+  if(typeof markFieldPick==='function') markFieldPick();
 }
 function floatText(text, side, cls=''){
   const field = $('#field'); const d = document.createElement('span');
@@ -826,21 +830,27 @@ document.querySelectorAll('#speedgroup .ctl').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#speedgroup .ctl').forEach(x=>x.classList.toggle('on', x===b));
 });
 $('#btnStop').onclick = ()=>{ S.fighting=false; toast('已停驻 · 点击「关卡」选择新的目的地'); renderField(); };
+/* 战场快捷布阵：与阵容册同一套「选槽换人」逻辑 */
+let formPickId = null;
+function markFieldPick(){ document.querySelectorAll('#party .unit').forEach(el=>el.classList.toggle('picked', S.forming && el.dataset.hero===formPickId)); }
 $('#btnForm').onclick = ()=>{
   S.forming = !S.forming;
+  if(!S.forming) formPickId = null;
   $('#btnForm').classList.toggle('on', S.forming);
   document.querySelectorAll('#party .unit').forEach(el=>el.draggable = S.forming);
-  toast(S.forming ? '布阵态 · 拖拽令牌换位，或点选两枚互换' : '布阵已收起 · 阵势即时生效');
+  markFieldPick();
+  toast(S.forming ? '布阵态 · 点令牌选槽，再点另一枚即互换（选中留槽可连续调整）' : '布阵已收起 · 阵势即时生效');
 };
-/* 布阵：点选互换 */
-let formPick = null;
 $('#party').addEventListener('click', e=>{
   const u = e.target.closest('.unit'); if(!u) return;
   if(S.forming){
-    if(!formPick){ formPick = u; u.style.transform='translateY(-8px)'; return; }
-    const a = S.heroes.find(h=>h.id===formPick.dataset.hero), b = S.heroes.find(h=>h.id===u.dataset.hero);
+    const id = u.dataset.hero;
+    if(!formPickId){ formPickId = id; markFieldPick(); return; }
+    if(formPickId===id){ formPickId = null; markFieldPick(); return; }
+    const a = S.heroes.find(h=>h.id===formPickId), b = S.heroes.find(h=>h.id===id);
     [a.row,b.row] = [b.row,a.row]; [a.col,b.col] = [b.col,a.col];
-    formPick = null; renderField(); toast('阵位已互换'); return;
+    renderField(); formPickId = id; markFieldPick();
+    toast(`${b.name} 已与 ${a.name} 互换 · 选中留槽可继续`); return;
   }
   openHeroSheet(u.dataset.hero);
 });
@@ -853,7 +863,7 @@ $('#party').addEventListener('drop', e=>{
   const u = e.target.closest('.unit'); if(!u || u.dataset.hero===dragHero) return;
   const a = S.heroes.find(h=>h.id===dragHero), b = S.heroes.find(h=>h.id===u.dataset.hero);
   [a.row,b.row]=[b.row,a.row]; [a.col,b.col]=[b.col,a.col];
-  dragHero=null; renderField(); toast('阵位已调整');
+  dragHero=null; formPickId=null; renderField(); markFieldPick(); toast('阵位已调整');
 });
 
 /* 备注 */
