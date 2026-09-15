@@ -342,7 +342,7 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .radar{display:flex;justify-content:center;padding:6px 0 2px}
 
 /* 阵容 · 演武场 */
-.fstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.fstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:16px}
 .fstat{border:1.5px solid var(--night-line-2);padding:9px 10px;background:var(--night-2)}
 .fstat b{font-family:var(--latin);font-size:17px;display:block}
 .fstat span{font-size:10px;color:var(--pn-dim);letter-spacing:.15em}
@@ -389,9 +389,6 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .fbench .hint{font-size:10px;color:var(--pn-faint);letter-spacing:.12em}
 .fbench .ftoken{width:46px;height:54px;cursor:grab;border:1px solid var(--night-line)}
 .fbench.over{border-color:var(--crimson);background:var(--crimson-soft)}
-.orderbar{display:flex;gap:6px;flex-wrap:wrap}
-.obead{display:flex;align-items:center;gap:5px;border:1.5px solid var(--night-line-2);padding:4px 9px;font-size:11px;color:var(--pn)}
-.obead .no{font-family:var(--kai);color:var(--crimson);font-size:12px}
 .froster{display:grid;grid-template-columns:1fr}
 .froster .rrow{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--night-line);cursor:pointer;transition:background .15s}
 .froster .rrow:hover{background:rgba(176,198,179,.06)}
@@ -402,13 +399,6 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .froster .rrow .state.on{color:var(--crimson);border:1px solid var(--crimson);padding:1px 6px;transform:rotate(6deg)}
 .froster .rrow.picked{background:var(--crimson-soft)}
 .froster .rrow.picked .face{border-color:var(--crimson)}
-.syngrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.syncard{border:1.5px solid var(--night-line-2);padding:10px 12px;opacity:.5;transition:all .2s}
-.syncard.on{opacity:1;border-color:var(--crimson);background:var(--crimson-soft)}
-.syncard h5{font-family:var(--kai);font-size:14px;letter-spacing:.12em;display:flex;justify-content:space-between;align-items:baseline}
-.syncard h5 .ok{color:var(--crimson);font-size:10px;font-family:var(--sans)}
-.syncard .req{font-size:10px;color:var(--pn-dim);margin-top:3px;letter-spacing:.08em}
-.syncard .desc{font-size:11px;color:var(--pn);margin-top:5px}
 
 /* 大列表 · 两栏 / 分组折叠 / 检索 */
 .baglayout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:20px;align-items:start}
@@ -439,7 +429,6 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .leaf:not(.modal) .fmain{grid-template-columns:1fr}
 .leaf:not(.modal) .fright{position:static;max-height:none}
 .leaf:not(.modal) .fright .froster{overflow:visible}
-@media (max-width:900px){ .syngrid{grid-template-columns:1fr} }
 
 /* 商城 / 城市 / 设置 */
 .poolbox{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:16px;text-align:center}
@@ -635,7 +624,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   <div class="ni"><b>⑥</b><span>已解锁的物品/武学/侠客全局可购可学；声望、贡献或世界货币不足时，提供「前往该世界挂机」直达按钮。</span></div>
   <div class="ni"><b>⑦</b><span>一次性物品购买后从目录消失；非一次性物品支持多选隐藏，可在设置中恢复。</span></div>
   <div class="ni"><b>⑧</b><span>未开放功能全部隐藏：城市地图/公司、秘境、土地买卖等不再出现死按钮。</span></div>
-  <div class="ni"><b>⑨</b><span>阵容单屏双栏：左演武场+出手次第+阵势，右点将名册常驻（独立滚动）。名册即后备，无独立后备区。交互：点阵位令牌选槽 → 右册点侠客即换防（选中留槽可连续换人）；未选槽时名册点后备一键入阵，满员则与出手末位互换并提示；点「在阵」即下阵。战场保留「布阵」快捷模式。</span></div>
+  <div class="ni"><b>⑨</b><span>阵容单屏双栏：左演武场，右点将名册常驻（独立滚动）。名册即后备，无独立后备区。交互：点阵位令牌选槽 → 右册点侠客即换防（选中留槽可连续换人）；未选槽时名册点后备一键入阵，满员则与后排末位互换并提示；点「在阵」即下阵。战场保留「布阵」快捷模式。出手次序由侠客速度属性决定（战斗内可见），面板不再展示；阵势（羁绊）功能已取消，不做。</span></div>
   <div class="ni"><b>⑩</b><span>城市仅保留古玩店经营（开关门/店员/上下架/账簿）。</span></div>
   <div class="ni"><b>⑪</b><span>危险操作（删档）收进设置页深处，需二次确认；侧栏不再常驻。</span></div>
   <div class="ni"><b>⑫</b><span>视觉新方向：昼卷（陈纸苔绿山水手卷 + 纯墨 + 单点绛红）/ 夜册（近墨面板）。若不认可可整体回退深色金印方向。</span></div>
@@ -876,7 +865,7 @@ $('#btnForm').onclick = ()=>{
   $('#btnForm').classList.toggle('on', S.forming);
   document.querySelectorAll('#party .unit').forEach(el=>el.draggable = S.forming);
   markFieldPick();
-  toast(S.forming ? '布阵态 · 点令牌选槽，再点另一枚即互换（选中留槽可连续调整）' : '布阵已收起 · 阵势即时生效');
+  toast(S.forming ? '布阵态 · 点令牌选槽，再点另一枚即互换（选中留槽可连续调整）' : '布阵已收起');
 };
 $('#party').addEventListener('click', e=>{
   const u = e.target.closest('.unit'); if(!u) return;
@@ -947,16 +936,8 @@ function renderPanel(name){
 }
 
 /* ============================================================
-   阵容 · 演武场
+   阵容 · 演武场（无阵势系统；出手次序由速度属性决定）
    ============================================================ */
-const SYNS = [
-  {name:'双拳镇岳', req:'拳 × 2',      desc:'全队气血 +10%',      on:f=>f.filter(h=>h.cat==='拳').length>=2},
-  {name:'三剑齐鸣', req:'剑 × 3',      desc:'全队会心 +8%',       on:f=>f.filter(h=>h.cat==='剑').length>=3},
-  {name:'医武相济', req:'医 × 1 · 拳 × 1', desc:'每回合回复 2% 气血', on:f=>f.some(h=>h.cat==='医')&&f.some(h=>h.cat==='拳')},
-  {name:'刀暗双绝', req:'刀 × 1 · 暗 × 1', desc:'全队破甲 +6%',    on:f=>f.some(h=>h.cat==='刀')&&f.some(h=>h.cat==='暗')},
-  {name:'内家护脉', req:'内家 × 2',    desc:'内力回复 +12%',      on:f=>f.filter(h=>h.cat==='内家').length>=2},
-  {name:'六侠成阵', req:'满员六侠',    desc:'全属性 +3%',         on:f=>f.length>=6},
-];
 const inFormHeroes = () => S.heroes.filter(h=>h.inForm!==false && h.row!=null);
 const heroPower = h => h.lv*620 + (h.grade==='天'?1800:h.grade==='地'?1200:0);
 const teamPower = () => inFormHeroes().reduce((s,h)=>s+heroPower(h),0);
@@ -965,24 +946,21 @@ function syncPower(){ const p=$('#powerNum'); if(p) p.textContent = fmt(teamPowe
 let fPick = null, fCat = '全部', fDrag = null, fSearch = '';
 function renderFormationPanel(){
   const F = inFormHeroes();
-  const synOn = SYNS.map(s=>s.on(F));
-  const onCnt = synOn.filter(Boolean).length;
   const cols = [4,3,2,1,0]; /* 右起第一列为前列（贴敌） */
   const slotHero = (r,c) => F.find(h=>h.row===r&&h.col===c);
   const tokenHTML = h => `<div class="ftoken ${fPick===h.id?'sel':''}" draggable="true" data-fhero="${h.id}">
       <span class="face">${esc(h.name[0])}<span class="seal">${h.grade}</span></span><span class="nm">${esc(h.name)}</span></div>`;
   const laneTxt = h => `${['上路','中路','下路'][h.row]}${h.col===0?'前列':'第'+(h.col+1)+'列'}`;
-  leafMeta('LINEUP · 演武布阵', '阵容', `上阵 ${F.length} / 6 · 阵势激发 ${onCnt} / 6 ${NOTE_MARK(9)}`, '点阵位选槽 → 右册点将即换防 · 拖令牌亦可');
+  leafMeta('LINEUP · 演武布阵', '阵容', `上阵 ${F.length} / 6 ${NOTE_MARK(9)}`, '点阵位选槽 → 右册点将即换防 · 拖令牌亦可');
   $('#leafBody').innerHTML = `
     <div class="fstats">
       <div class="fstat"><b>${fmt(teamPower())}</b><span>队伍战力</span></div>
       <div class="fstat"><b>${F.length} / 6</b><span>在阵侠客</span></div>
-      <div class="fstat"><b style="color:var(--crimson)">${onCnt} / 6</b><span>阵势激发</span></div>
     </div>
 
     <div class="fmain">
       <div class="fleft">
-        <div class="nsec" style="margin-bottom:14px"><div class="nsec-head"><h3>演武场</h3><span class="en">Drill Ground</span><span class="right">点令牌选槽 · 拖拽换位</span></div>
+        <div class="nsec" style="margin-bottom:0"><div class="nsec-head"><h3>演武场</h3><span class="en">Drill Ground</span><span class="right">点令牌选槽 · 拖拽换位</span></div>
           <div class="ffield">
             ${[0,1,2].map(r=>`<div class="flane"><span class="flane-tag">${['上路','中路','下路'][r]}</span>
               ${cols.map(c=>{ const h=slotHero(r,c);
@@ -991,19 +969,6 @@ function renderFormationPanel(){
           </div>
           <div class="ffield-axis"><span>← 后列</span><span>前列贴敌 →</span></div>
           <div class="fops"><button class="btn solid xs" id="fAuto">自动列阵 · 按脉系推荐</button></div>
-        </div>
-
-        <div class="nsec" style="margin-bottom:14px"><div class="nsec-head"><h3>出手次第</h3><span class="en">Initiative</span><span class="right">按阵位自前而后</span></div>
-          <div class="orderbar">${[...F].sort((a,b)=>a.row*5+a.col-b.row*5-b.col).map((h,i)=>
-            `<span class="obead"><span class="no">${'壹贰叁肆伍陆柒捌玖拾'[i]}</span>${esc(h.name)}</span>`).join('')
-            ||'<span style="font-size:11px;color:var(--pn-faint)">阵上无人 · 从右册点将</span>'}</div>
-        </div>
-
-        <div class="nsec" style="margin-bottom:0"><div class="nsec-head"><h3>阵势</h3><span class="en">Synergy</span><span class="right">激发 ${onCnt} / 6</span></div>
-          <div class="syngrid">${SYNS.map((s,i)=>`<div class="syncard ${synOn[i]?'on':''}">
-            <h5>${s.name}<span class="ok">${synOn[i]?'已激发':'未激发'}</span></h5>
-            <div class="req">${s.req}</div><div class="desc">${s.desc}</div></div>`).join('')}
-          </div>
         </div>
       </div>
 
@@ -1077,7 +1042,7 @@ function renderFormationPanel(){
     if(cur.length>=6){
       const last = [...cur].sort((a,b)=>b.row*5+b.col-a.row*5-a.col)[0];
       [h.row,last.row]=[last.row,h.row]; [h.col,last.col]=[last.col,h.col]; h.inForm=true;
-      fPick=h.id; toast(`未选阵位 · ${h.name} 已与末位 ${last.name} 互换（点阵位可指定）`); refresh(); return;
+      fPick=h.id; toast(`未选阵位 · ${h.name} 已与后排末位 ${last.name} 互换（点阵位可指定）`); refresh(); return;
     }
     /* 一键入阵：按脉系推荐空位 */
     const pref = (h.cat==='拳'||h.cat==='刀')?0 : h.cat==='剑'?1 : 2;
