@@ -413,7 +413,6 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .kindhead.closed .arr{transform:rotate(-90deg)}
 .kindgroup.closed .catlist,.kindgroup.closed .recruitrows{display:none}
 .recruitrows .catrow:last-child{border-bottom:none}
-.secbarnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 @media (max-width:1100px){
   .baglayout{grid-template-columns:1fr}
   .bagside{position:static}
@@ -557,9 +556,17 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
     <svg viewBox="0 0 24 24"><path d="M6 4.5h.01M12 4.5h.01M18 4.5h.01M6 12h.01M12 12h.01M18 12h.01M4 19.5h16"/></svg>
     <span class="cn">阵容</span><span class="en">Lineup</span>
   </button>
-  <button class="iconbtn" data-panel="faction" aria-label="势力">
-    <svg viewBox="0 0 24 24"><path d="M12 3v18M5 7l7-4 7 4M5 7v10l7 4 7-4V7"/></svg>
-    <span class="cn">势力</span><span class="en">Order</span>
+  <button class="iconbtn" data-panel="quest" aria-label="悬榜">
+    <svg viewBox="0 0 24 24"><path d="M7 3h10v18l-5-3-5 3V3zM9.5 8h5M9.5 12h5"/></svg>
+    <span class="cn">悬榜</span><span class="en">Bounty</span>
+  </button>
+  <button class="iconbtn" data-panel="exchange" aria-label="兑换">
+    <svg viewBox="0 0 24 24"><path d="M7 8h11m0 0-3-3m3 3-3 3M17 16H6m0 0 3-3m-3 3 3 3"/></svg>
+    <span class="cn">兑换</span><span class="en">Trade</span>
+  </button>
+  <button class="iconbtn" data-panel="recruit" aria-label="招募">
+    <svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.5"/><path d="M4 20c0-3.5 2.7-6 6-6s6 2.5 6 6M18 8v6M15 11h6"/></svg>
+    <span class="cn">招募</span><span class="en">Recruit</span>
   </button>
   <button class="iconbtn" data-panel="shop" aria-label="商城">
     <svg viewBox="0 0 24 24"><path d="M4 9 6 4h12l2 5M4 9h16M4 9v11h16V9m-10 0v11m4-11v11"/></svg>
@@ -619,7 +626,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   <div class="ni"><b>①</b><span>主界面即挂机战场：队伍常驻画卷，不再切页；所有功能收进右上角方形墨钮。</span></div>
   <div class="ni"><b>②</b><span>行囊 = 换装 + 出售 + 仓储的唯一入口（已按你的要求去掉「上架」）。</span></div>
   <div class="ni"><b>③</b><span>原「自动丢弃低品质」改名为「自动出售」，并注明：会在当前挂机世界自动出售（行囊页同步展示该备注）。</span></div>
-  <div class="ni"><b>④</b><span>势力已合并：跨世界共享任务、贡献与声望；兑换目录、招募名录合并为一个面板。</span></div>
+  <div class="ni"><b>④</b><span>势力已合并：跨世界共享任务、贡献与声望；悬榜 / 兑换 / 招募拆为右上三枚独立图标，各开一个专注面板。</span></div>
   <div class="ni"><b>⑤</b><span>悬榜支持自动接取/完成，可按任务类型（消灭/筹措/收集/挑战/寻宝）与难度勾选。</span></div>
   <div class="ni"><b>⑥</b><span>已解锁的物品/武学/侠客全局可购可学；声望、贡献或世界货币不足时，提供「前往该世界挂机」直达按钮。</span></div>
   <div class="ni"><b>⑦</b><span>一次性物品购买后从目录消失；非一次性物品支持多选隐藏，可在设置中恢复。</span></div>
@@ -930,7 +937,8 @@ function leafMeta(crumb, title, sub, foot){
   $('#leafSub').innerHTML = sub||''; $('#leafFoot').textContent = foot||'';
 }
 function renderPanel(name){
-  ({stage:renderStagePanel, bag:renderBagPanel, formation:renderFormationPanel, faction:renderFactionPanel,
+  ({stage:renderStagePanel, bag:renderBagPanel, formation:renderFormationPanel,
+    quest:renderQuestPanel, exchange:renderExchangePanel, recruit:renderRecruitPanel,
     shop:renderShopPanel, city:renderCityPanel, settings:renderSettingsPanel})[name]();
   $('#leafBody').scrollTop = 0;
 }
@@ -1293,7 +1301,7 @@ function renderSheet(){
     <div class="nrow"><span class="k">第 2 槽</span><span class="v">流云身法 · Lv.3</span></div>
     <div class="nrow"><span class="k">第 3 槽</span><span class="v" style="color:var(--pn-faint)">空槽位</span></div>
     <div class="nrow"><span class="k">主修心法</span><span class="v">混元功 · 回气 +2</span></div>
-    <p style="font-size:11px;color:var(--pn-faint);margin-top:10px;line-height:1.8">新武学在势力「传承」研习后全局可装配（${NOTE_MARK(4)}${NOTE_MARK(6)}）。</p>`;
+    <p style="font-size:11px;color:var(--pn-faint);margin-top:10px;line-height:1.8">新武学在「兑换」研习后全局可装配（${NOTE_MARK(4)}${NOTE_MARK(6)}）。</p>`;
   } else {
     body = `<div class="nrow"><span class="k">当前职业</span><span class="v">${esc(h.career)}</span></div>
     <div class="nrow"><span class="k">职业等级</span><span class="v">Lv.${Math.max(1,h.lv-6)}</span></div>
@@ -1313,31 +1321,42 @@ function renderSheet(){
 </script>
 <script>
 /* ============================================================
-   势力 · 合并后的大枢纽（核心需求所在）
+   势力三入口 · 悬榜 / 兑换 / 招募（右上各一枚图标，独立面板）
    ============================================================ */
 const QCATS = ['消灭','筹措','收集','挑战','寻宝'];
 const QDIFFS = ['凡','良','甲','地','天'];
-function renderFactionPanel(){
+
+/* 贡献 / 声望条：悬榜与兑换共用 */
+function factionStrip(){
   const F = S.faction;
-  leafMeta('ORDER · 天下势力合一', '势力', `跨世界共享任务 · 贡献 · 声望 ${NOTE_MARK(4)}`, '悬榜办差 · 以功易赏 · 目录全局通用');
   const repPct = Math.min(100, F.reputation/500*100);
-  const kw = (F.search||'').trim();
-  const searching = kw.length>0;
-  $('#leafBody').innerHTML = `
+  return `
     <div class="nrow" style="border:1.5px solid var(--night-line-2);padding:12px;background:var(--night-2)">
       <span class="k">势力贡献</span><span class="v crimson">${fmt(F.contrib)}</span>
       <span class="k" style="margin-left:14px">声望</span><span class="v">${fmt(F.reputation)} · 小有名气</span>
     </div>
     <div style="margin:8px 0 16px"><div class="pbar red"><i style="width:${repPct}%"></i></div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--pn-faint);margin-top:4px"><span>声望进度</span><span>距「闻名」还需 ${fmt(Math.max(0,500-F.reputation))}</span></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--pn-faint);margin-top:4px"><span>声望进度</span><span>距「闻名」还需 ${fmt(Math.max(0,500-F.reputation))}</span></div></div>`;
+}
 
-    <div class="secbarnav">
-      <button class="chip" data-fjump="fq-quests">悬榜 · 任务</button>
-      <button class="chip" data-fjump="fq-catalog">贡献兑换</button>
-      <button class="chip" data-fjump="fq-recruit">招募</button>
-    </div>
+/* 条件未足 → 一键前往对应世界挂机（兑换 / 招募共用） */
+function bindGoto(){
+  $('#leafBody').querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{
+    const w = +b.dataset.goto;
+    S.world=w; S.stage=Math.min(WORLDS[w].cleared+1,10); S.wave=1; S.modeRoam=true; S.fighting=true;
+    $('#coinGlyph').textContent=WORLDS[w].coin[0]; $('#coinName').textContent=WORLDS[w].coin+' · 本卷';
+    $('#modeRoam').classList.add('on'); $('#modeGuard').classList.remove('on');
+    closePanel(); renderField(); banner('奔赴 · '+WORLDS[w].name);
+    toast(`已前往 ${WORLDS[w].name} 开始闯荡挂机 · 条件备齐后回「兑换」领取`);
+  });
+}
 
-    <div class="nsec" id="fq-quests">
+/* —— 悬榜：任务榜 + 自动办差 —— */
+function renderQuestPanel(){
+  const F = S.faction;
+  leafMeta('BOUNTY · 悬榜办差', '悬榜', `跨世界共享任务 ${NOTE_MARK(4)}${NOTE_MARK(5)}`, '一炷香换榜 · 可勾选自动接取 / 完成');
+  $('#leafBody').innerHTML = factionStrip() + `
+    <div class="nsec">
       <div class="nsec-head"><h3>悬榜</h3><span class="en">Quest Board</span><span class="right">一炷香后换榜 · 23 分钟</span></div>
       <div class="autobox">
         <div class="ahead"><span class="switch ${F.auto.on?'on':''}" id="autoSwitch"></span>自动接取 / 完成任务 ${NOTE_MARK(5)}
@@ -1358,58 +1377,118 @@ function renderFactionPanel(){
           <button class="btn xs ${q.state==='open'?'solid':''}" data-qact="${q.id}">${label}</button></div>
         </div>`;}).join('')}
       </div>
-    </div>
+    </div>`;
 
-    <div class="nsec" id="fq-catalog">
+  $('#autoSwitch').onclick = ()=>{ F.auto.on=!F.auto.on; renderQuestPanel(); toast(F.auto.on?'已开启自动办差':'已关闭自动办差'); };
+  $('#leafBody').querySelectorAll('[data-acat]').forEach(b=>b.onclick=()=>{
+    const c=b.dataset.acat, i=F.auto.cats.indexOf(c);
+    i>=0?F.auto.cats.splice(i,1):F.auto.cats.push(c); renderQuestPanel();
+  });
+  $('#leafBody').querySelectorAll('[data-adiff]').forEach(b=>b.onclick=()=>{
+    const d=b.dataset.adiff, i=F.auto.diffs.indexOf(d);
+    i>=0?F.auto.diffs.splice(i,1):F.auto.diffs.push(d); renderQuestPanel();
+  });
+  $('#leafBody').querySelectorAll('[data-qact]').forEach(b=>b.onclick=()=>{
+    const q = F.quests.find(x=>x.id===+b.dataset.qact);
+    if(q.state==='open'){ q.state='accepted'; toast(`已揭榜 · ${q.name}`); }
+    else if(q.state==='accepted'){ q.state='open'; q.prog=0; toast(`已放弃 · ${q.name}`); }
+    else { F.contrib+=q.reward; F.reputation+=q.rep; F.quests = F.quests.filter(x=>x.id!==q.id); toast(`领赏 +${q.reward} 贡献 · +${q.rep} 声望`); }
+    renderQuestPanel();
+  });
+}
+
+/* —— 兑换：贡献兑换目录（全局通用） —— */
+function renderExchangePanel(){
+  const F = S.faction;
+  const kw = (F.search||'').trim();
+  const searching = kw.length>0;
+  leafMeta('EXCHANGE · 以功易赏', '兑换', `目录全局通用 ${NOTE_MARK(6)}${NOTE_MARK(7)}`, '解锁后任何世界可兑换 / 研习 · 条件未足可一键前往挂机');
+  const catalogHTML = (()=>{
+    const match = c => !searching || (c.name+c.kind+c.meta).includes(kw);
+    const html = ['武学','转职书','图纸','幻型','侠客','材料'].map(kind=>{
+      const list = F.catalog.filter(c=>c.kind===kind && !F.hidden.includes(c.id) && !(c.once && c.owned) && match(c));
+      if(!list.length) return '';
+      const closed = !searching && F.closedKinds.includes(kind);
+      return `<div class="kindgroup ${closed?'closed':''}">
+        <button class="kindhead ${closed?'closed':''}" data-kind="${kind}">${kind}<span class="cnt">${list.length} 项</span><span class="arr">▾</span></button>
+        <div class="catlist">` +
+        list.map(c=>{
+          const lackWorld = c.need.world!==undefined && c.need.world!==S.world;
+          const lackContrib = (c.need.contrib||0) > F.contrib;
+          const lackRep = (c.need.rep||0) > F.reputation;
+          const blocked = lackWorld || lackContrib || lackRep;
+          let btn;
+          if(c.owned && c.once) btn = `<button class="btn xs" disabled>已入藏</button>`;
+          else if(F.hideMode && !c.once) btn = `<span class="hcheck ${F.hideSel.includes(c.id)?'on':''}" data-hsel="${c.id}">${F.hideSel.includes(c.id)?'✓':''}</span>`;
+          else if(lackWorld) btn = `<button class="btn crimson xs" data-goto="${c.need.world}">前往${WORLDS[c.need.world].name}挂机</button>`;
+          else if(blocked) btn = `<button class="btn xs" disabled>条件未足</button>`;
+          else btn = `<button class="btn solid xs" data-buy="${c.id}">${c.buyable?'兑换':'研习'}</button>`;
+          const needTxt = [c.need.contrib?`${fmt(c.need.contrib)} 贡献`:null, c.need.rep?`声望 ${fmt(c.need.rep)}`:null, c.need.world!==undefined?`货币 · ${WORLDS[c.need.world].coin}`:null].filter(Boolean).join(' · ');
+          return `<div class="catrow">
+            <span class="ic">${c.kind[0]}</span>
+            <span class="nm">${esc(c.name)}${c.once?` <span class="tag" style="margin-left:4px">一次</span>`:''}${c.buyable?` <span class="tag red" style="margin-left:4px">限购</span>`:''}<small>${esc(c.meta)}</small></span>
+            <span class="cost">${needTxt}<br>${lackContrib?'<b style="color:var(--crimson)">贡献不足</b>':lackRep?'<b style="color:var(--crimson)">声望不足</b>':'&nbsp;'}</span>
+            ${btn}</div>`;
+        }).join('') +
+        `</div></div>`;
+    }).join('');
+    return html || (searching?`<p style="font-size:11px;color:var(--pn-faint);padding:10px 0">无匹配「${esc(kw)}」的兑换项</p>`:'<p style="font-size:11px;color:var(--pn-faint);padding:10px 0">目录暂空</p>');
+  })();
+  $('#leafBody').innerHTML = factionStrip() + `
+    <div class="nsec">
       <div class="nsec-head"><h3>贡献兑换</h3><span class="en">Exchange</span>
         <span class="right">${NOTE_MARK(6)}${NOTE_MARK(7)} <button class="chip ${F.hideMode?'on':''}" id="hideModeBtn" style="margin-left:6px">${F.hideMode?'完成':'多选隐藏'}</button></span></div>
       <p style="font-size:11px;color:var(--pn-dim);margin-bottom:8px;line-height:1.7">目录已合并各世界势力。解锁后<b style="color:var(--pn)">在任何世界都可兑换/研习</b>；声望、贡献或世界货币不足时，可一键前往对应世界挂机获取。</p>
       <input type="search" id="catSearch" placeholder="检索目录 · 名称 / 类型 / 说明" value="${esc(F.search||'')}" style="width:100%;margin-bottom:2px">
-      ${(()=>{
-        const kw2 = kw;
-        const match = c => !searching || (c.name+c.kind+c.meta).includes(kw2);
-        const html = ['武学','转职书','图纸','幻型','侠客','材料'].map(kind=>{
-          const list = F.catalog.filter(c=>c.kind===kind && !F.hidden.includes(c.id) && !(c.once && c.owned) && match(c));
-          if(!list.length) return '';
-          const closed = !searching && F.closedKinds.includes(kind);
-          return `<div class="kindgroup ${closed?'closed':''}">
-            <button class="kindhead ${closed?'closed':''}" data-kind="${kind}">${kind}<span class="cnt">${list.length} 项</span><span class="arr">▾</span></button>
-            <div class="catlist">` +
-            list.map(c=>{
-              const lackWorld = c.need.world!==undefined && c.need.world!==S.world;
-              const lackContrib = (c.need.contrib||0) > F.contrib;
-              const lackRep = (c.need.rep||0) > F.reputation;
-              const blocked = lackWorld || lackContrib || lackRep;
-              let btn;
-              if(c.owned && c.once) btn = `<button class="btn xs" disabled>已入藏</button>`;
-              else if(F.hideMode && !c.once) btn = `<span class="hcheck ${F.hideSel.includes(c.id)?'on':''}" data-hsel="${c.id}">${F.hideSel.includes(c.id)?'✓':''}</span>`;
-              else if(lackWorld) btn = `<button class="btn crimson xs" data-goto="${c.need.world}">前往${WORLDS[c.need.world].name}挂机</button>`;
-              else if(blocked) btn = `<button class="btn xs" disabled>条件未足</button>`;
-              else btn = `<button class="btn solid xs" data-buy="${c.id}">${c.buyable?'兑换':'研习'}</button>`;
-              const needTxt = [c.need.contrib?`${fmt(c.need.contrib)} 贡献`:null, c.need.rep?`声望 ${fmt(c.need.rep)}`:null, c.need.world!==undefined?`货币 · ${WORLDS[c.need.world].coin}`:null].filter(Boolean).join(' · ');
-              return `<div class="catrow">
-                <span class="ic">${c.kind[0]}</span>
-                <span class="nm">${esc(c.name)}${c.once?` <span class="tag" style="margin-left:4px">一次</span>`:''}${c.buyable?` <span class="tag red" style="margin-left:4px">限购</span>`:''}<small>${esc(c.meta)}</small></span>
-                <span class="cost">${needTxt}<br>${lackContrib?'<b style="color:var(--crimson)">贡献不足</b>':lackRep?'<b style="color:var(--crimson)">声望不足</b>':'&nbsp;'}</span>
-                ${btn}</div>`;
-            }).join('') +
-            `</div></div>`;
-        }).join('');
-        return html || (searching?`<p style="font-size:11px;color:var(--pn-faint);padding:10px 0">无匹配「${esc(kw)}」的兑换项</p>`:'<p style="font-size:11px;color:var(--pn-faint);padding:10px 0">目录暂空</p>');
-      })()}
+      ${catalogHTML}
       ${F.hideMode?`<div style="margin-top:10px;display:flex;gap:8px"><button class="btn crimson xs" id="doHide">隐藏所选（${F.hideSel.length}）</button><button class="btn xs" id="cancelHide">取消</button></div>`:''}
-    </div>
+    </div>`;
 
-    <div class="nsec" id="fq-recruit">
+  $('#leafBody').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
+    const c = F.catalog.find(x=>x.id===b.dataset.buy);
+    F.contrib -= c.need.contrib||0;
+    if(c.once){ c.owned=true; toast(`${c.name} 已入藏 · 一次性物品不再显示`); }
+    else toast(`${c.name} 已${c.buyable?'兑换':'研习'} · 全局可用`);
+    renderExchangePanel();
+  });
+  const hm = $('#hideModeBtn');
+  if(hm) hm.onclick = ()=>{ F.hideMode=!F.hideMode; if(!F.hideMode)F.hideSel=[]; renderExchangePanel(); };
+  $('#leafBody').querySelectorAll('[data-hsel]').forEach(el=>el.onclick=()=>{
+    const id=el.dataset.hsel, i=F.hideSel.indexOf(id);
+    i>=0?F.hideSel.splice(i,1):F.hideSel.push(id); renderExchangePanel();
+  });
+  const dh = $('#doHide');
+  if(dh) dh.onclick = ()=>{
+    F.hidden.push(...F.hideSel); F.hideMode=false;
+    toast(`已隐藏 ${F.hideSel.length} 项 · 可在设置中恢复`); F.hideSel=[]; renderExchangePanel();
+  };
+  const ch = $('#cancelHide'); if(ch) ch.onclick=()=>{ F.hideMode=false; F.hideSel=[]; renderExchangePanel(); };
+  $('#leafBody').querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.kind, i=F.closedKinds.indexOf(k);
+    i>=0?F.closedKinds.splice(i,1):F.closedKinds.push(k); renderExchangePanel();
+  });
+  const cs = $('#catSearch');
+  if(cs) cs.oninput = ()=>{
+    F.search = cs.value; renderExchangePanel();
+    const n = $('#catSearch'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+  };
+  bindGoto();
+}
+
+/* —— 招募：各世界名录（合并展示，按位面分组） —— */
+function renderRecruitPanel(){
+  const F = S.faction;
+  leafMeta('RECRUIT · 广纳贤才', '招募', '名录合并各世界势力 · 按位面分组', '条件未足可先前往该位面挂机积攒');
+  $('#leafBody').innerHTML = `
+    <div class="nsec">
       <div class="nsec-head"><h3>招募</h3><span class="en">Recruit</span><span class="right">名录已合并各世界势力 · 按位面分组</span></div>
       ${(()=>{
-        const list = F.recruits.filter(r=>!searching || r.name.includes(kw) || WORLDS[r.world].name.includes(kw));
         const groups = {};
-        list.forEach(r=>{ (groups[r.world]=groups[r.world]||[]).push(r); });
+        F.recruits.forEach(r=>{ (groups[r.world]=groups[r.world]||[]).push(r); });
         const keys = Object.keys(groups).sort((a,b)=>a-b);
-        if(!keys.length) return searching?`<p style="font-size:11px;color:var(--pn-faint)">无匹配「${esc(kw)}」的招募对象</p>`:'<p style="font-size:11px;color:var(--pn-faint)">名录暂空 · 通关位面与提升声望后可遇更多侠客</p>';
+        if(!keys.length) return '<p style="font-size:11px;color:var(--pn-faint)">名录暂空 · 通关位面与提升声望后可遇更多侠客</p>';
         return keys.map(wid=>{
-          const closed = !searching && F.closedWorlds.includes(+wid);
+          const closed = F.closedWorlds.includes(+wid);
           return `<div class="kindgroup ${closed?'closed':''}">
             <button class="kindhead ${closed?'closed':''}" data-wgroup="${wid}">${WORLDS[wid].name}<span class="cnt">${groups[wid].length} 位</span><span class="arr">▾</span></button>
             <div class="recruitrows">${groups[wid].map(r=>{
@@ -1425,72 +1504,15 @@ function renderFactionPanel(){
       <p style="font-size:11px;color:var(--pn-faint);margin-top:8px">商城「普通池」为另一招募途径，保留在商城图标内。</p>
     </div>`;
 
-  // 交互
-  $('#autoSwitch').onclick = ()=>{ F.auto.on=!F.auto.on; renderFactionPanel(); toast(F.auto.on?'已开启自动办差':'已关闭自动办差'); };
-  $('#leafBody').querySelectorAll('[data-acat]').forEach(b=>b.onclick=()=>{
-    const c=b.dataset.acat, i=F.auto.cats.indexOf(c);
-    i>=0?F.auto.cats.splice(i,1):F.auto.cats.push(c); renderFactionPanel();
-  });
-  $('#leafBody').querySelectorAll('[data-adiff]').forEach(b=>b.onclick=()=>{
-    const d=b.dataset.adiff, i=F.auto.diffs.indexOf(d);
-    i>=0?F.auto.diffs.splice(i,1):F.auto.diffs.push(d); renderFactionPanel();
-  });
-  $('#leafBody').querySelectorAll('[data-qact]').forEach(b=>b.onclick=()=>{
-    const q = F.quests.find(x=>x.id===+b.dataset.qact);
-    if(q.state==='open'){ q.state='accepted'; toast(`已揭榜 · ${q.name}`); }
-    else if(q.state==='accepted'){ q.state='open'; q.prog=0; toast(`已放弃 · ${q.name}`); }
-    else { F.contrib+=q.reward; F.reputation+=q.rep; F.quests = F.quests.filter(x=>x.id!==q.id); toast(`领赏 +${q.reward} 贡献 · +${q.rep} 声望`); }
-    renderFactionPanel();
-  });
-  $('#leafBody').querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{
-    const w = +b.dataset.goto;
-    S.world=w; S.stage=Math.min(WORLDS[w].cleared+1,10); S.wave=1; S.modeRoam=true; S.fighting=true;
-    $('#coinGlyph').textContent=WORLDS[w].coin[0]; $('#coinName').textContent=WORLDS[w].coin+' · 本卷';
-    $('#modeRoam').classList.add('on'); $('#modeGuard').classList.remove('on');
-    closePanel(); renderField(); banner('奔赴 · '+WORLDS[w].name);
-    toast(`已前往 ${WORLDS[w].name} 开始闯荡挂机 · 条件备齐后请回势力兑换`);
-  });
-  $('#leafBody').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
-    const c = F.catalog.find(x=>x.id===b.dataset.buy);
-    F.contrib -= c.need.contrib||0;
-    if(c.once){ c.owned=true; toast(`${c.name} 已入藏 · 一次性物品不再显示`); }
-    else toast(`${c.name} 已${c.buyable?'兑换':'研习'} · 全局可用`);
-    renderFactionPanel();
-  });
-  const hm = $('#hideModeBtn');
-  if(hm) hm.onclick = ()=>{ F.hideMode=!F.hideMode; if(!F.hideMode)F.hideSel=[]; renderFactionPanel(); };
-  $('#leafBody').querySelectorAll('[data-hsel]').forEach(el=>el.onclick=()=>{
-    const id=el.dataset.hsel, i=F.hideSel.indexOf(id);
-    i>=0?F.hideSel.splice(i,1):F.hideSel.push(id); renderFactionPanel();
-  });
-  const dh = $('#doHide');
-  if(dh) dh.onclick = ()=>{
-    F.hidden.push(...F.hideSel); F.hideMode=false;
-    toast(`已隐藏 ${F.hideSel.length} 项 · 可在设置中恢复`); F.hideSel=[]; renderFactionPanel();
-  };
-  const ch = $('#cancelHide'); if(ch) ch.onclick=()=>{ F.hideMode=false; F.hideSel=[]; renderFactionPanel(); };
   $('#leafBody').querySelectorAll('[data-recruit]').forEach(b=>b.onclick=()=>{
     toast(`${b.dataset.recruit} 已入麾下 · 点战场令牌查看`); S.faction.recruits = S.faction.recruits.filter(r=>r.name!==b.dataset.recruit);
-    renderFactionPanel();
-  });
-  /* 分区锚点 / 检索 / 分组折叠 */
-  $('#leafBody').querySelectorAll('[data-fjump]').forEach(b=>b.onclick=()=>{
-    const el = document.getElementById(b.dataset.fjump);
-    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-  });
-  $('#leafBody').querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{
-    const k=b.dataset.kind, i=F.closedKinds.indexOf(k);
-    i>=0?F.closedKinds.splice(i,1):F.closedKinds.push(k); renderFactionPanel();
+    renderRecruitPanel();
   });
   $('#leafBody').querySelectorAll('[data-wgroup]').forEach(b=>b.onclick=()=>{
     const w=+b.dataset.wgroup, i=F.closedWorlds.indexOf(w);
-    i>=0?F.closedWorlds.splice(i,1):F.closedWorlds.push(w); renderFactionPanel();
+    i>=0?F.closedWorlds.splice(i,1):F.closedWorlds.push(w); renderRecruitPanel();
   });
-  const cs = $('#catSearch');
-  if(cs) cs.oninput = ()=>{
-    F.search = cs.value; renderFactionPanel();
-    const n = $('#catSearch'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
-  };
+  bindGoto();
 }
 
 /* ============================================================
@@ -1599,13 +1621,13 @@ function renderSettingsPanel(){
           ${[0,1,2,3,4,5].map(q=>`<option value="${q}" ${st.autoSellBelow===q?'selected':''}>低于 ${q} 品</option>`).join('')}
         </select></div>
     </div>
-    <div class="nsec"><div class="nsec-head"><h3>势力目录</h3><span class="en">Order</span></div>
+    <div class="nsec"><div class="nsec-head"><h3>隐藏目录</h3><span class="en">Hidden</span></div>
       <p style="font-size:11px;color:var(--pn-dim);margin-bottom:8px;line-height:1.7">被隐藏的兑换项在此恢复显示（${NOTE_MARK(7)}）。</p>
       ${F.hidden.length?`<div class="vscroll">${F.hidden.map(id=>{
         const c=F.catalog.find(x=>x.id===id);
         return `<div class="nrow"><span class="k">${c.kind} · ${esc(c.name)}</span>
           <button class="btn xs" style="margin-left:auto" data-unhide="${id}">恢复显示</button></div>`;
-      }).join('')}</div>`:'<p style="font-size:11px;color:var(--pn-faint)">暂无隐藏项 · 在势力「贡献兑换」中多选隐藏</p>'}
+      }).join('')}</div>`:'<p style="font-size:11px;color:var(--pn-faint)">暂无隐藏项 · 在「兑换」面板多选隐藏</p>'}
     </div>
     <div class="nsec"><div class="nsec-head"><h3>福利与云存档</h3><span class="en">Welfare & Cloud</span></div>
       <div class="setrow"><div class="t">福利码<small>每存档限领一次，领取记录随存档保存。</small></div>
