@@ -318,6 +318,51 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .sheet-body{padding:16px 22px 22px}
 .radar{display:flex;justify-content:center;padding:6px 0 2px}
 
+/* 阵容 · 演武场 */
+.fstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.fstat{border:1.5px solid var(--night-line-2);padding:9px 10px;background:var(--night-2)}
+.fstat b{font-family:var(--latin);font-size:17px;display:block}
+.fstat span{font-size:10px;color:var(--pn-dim);letter-spacing:.15em}
+.ffield{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:12px 10px 10px;margin-bottom:4px}
+.flane{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.flane:last-child{margin-bottom:0}
+.flane-tag{flex:0 0 auto;width:26px;font-family:var(--kai);font-size:10px;color:var(--pn-faint);text-align:center}
+.fslot{flex:1;max-width:66px;aspect-ratio:1/1.12;border:1.5px dashed var(--night-line-2);display:flex;align-items:center;justify-content:center;position:relative;transition:all .18s}
+.fslot .void{font-size:9px;color:var(--pn-faint);letter-spacing:.2em}
+.fslot.filled{border-style:solid;background:var(--night);cursor:pointer}
+.fslot.over{border-color:var(--crimson);background:var(--crimson-soft)}
+.ftoken{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:var(--kai);width:100%;height:100%;padding:4px 0}
+.ftoken .face{width:30px;height:30px;border-radius:50%;border:2px solid var(--pn-dim);background:var(--night-2);display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;flex:0 0 auto}
+.ftoken .seal{position:absolute;top:-7px;right:-9px;font-size:8px;color:var(--crimson);border:1px solid var(--crimson);background:var(--night);padding:0 2px;border-radius:2px;line-height:1.4}
+.ftoken .nm{font-size:9px;color:var(--pn-dim);letter-spacing:.02em;white-space:nowrap}
+.ftoken.sel .face{border-color:var(--crimson);box-shadow:0 0 0 2px var(--crimson-soft)}
+.ffield-axis{display:flex;justify-content:space-between;font-size:9px;color:var(--pn-faint);letter-spacing:.2em;margin:2px 2px 10px}
+.fops{display:flex;gap:8px;margin:2px 0 10px}
+.fbench{min-height:58px;border:1.5px dashed var(--night-line-2);padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fbench .hint{font-size:10px;color:var(--pn-faint);letter-spacing:.12em}
+.fbench .ftoken{width:46px;height:54px;cursor:grab;border:1px solid var(--night-line)}
+.fbench.over{border-color:var(--crimson);background:var(--crimson-soft)}
+.orderbar{display:flex;gap:6px;flex-wrap:wrap}
+.obead{display:flex;align-items:center;gap:5px;border:1.5px solid var(--night-line-2);padding:4px 9px;font-size:11px;color:var(--pn)}
+.obead .no{font-family:var(--kai);color:var(--crimson);font-size:12px}
+.froster .rrow{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--night-line);cursor:pointer;transition:background .15s}
+.froster .rrow:hover{background:rgba(176,198,179,.06)}
+.froster .rrow .face{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--pn-dim);display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:13px;flex:0 0 auto}
+.froster .rrow .nm{font-size:13px}
+.froster .rrow .nm small{display:block;font-size:10px;color:var(--pn-dim);margin-top:1px}
+.froster .rrow .state{margin-left:auto;font-size:10px;letter-spacing:.12em;color:var(--pn-faint);flex:0 0 auto}
+.froster .rrow .state.on{color:var(--crimson);border:1px solid var(--crimson);padding:1px 6px;transform:rotate(6deg)}
+.froster .rrow.picked{background:var(--crimson-soft)}
+.froster .rrow.picked .face{border-color:var(--crimson)}
+.syngrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.syncard{border:1.5px solid var(--night-line-2);padding:10px 12px;opacity:.5;transition:all .2s}
+.syncard.on{opacity:1;border-color:var(--crimson);background:var(--crimson-soft)}
+.syncard h5{font-family:var(--kai);font-size:14px;letter-spacing:.12em;display:flex;justify-content:space-between;align-items:baseline}
+.syncard h5 .ok{color:var(--crimson);font-size:10px;font-family:var(--sans)}
+.syncard .req{font-size:10px;color:var(--pn-dim);margin-top:3px;letter-spacing:.08em}
+.syncard .desc{font-size:11px;color:var(--pn);margin-top:5px}
+@media (max-width:900px){ .syngrid{grid-template-columns:1fr} }
+
 /* 商城 / 城市 / 设置 */
 .poolbox{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:16px;text-align:center}
 .poolbox .drawface{width:54px;height:54px;margin:8px auto;border-radius:50%;border:2.5px solid var(--crimson);
@@ -370,7 +415,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   #field{padding-top:96px}
   #wavebanner{top:15vh}
   #ctlbar{bottom:10px;gap:6px;padding:6px 8px;max-width:96vw;flex-wrap:wrap;justify-content:center}
-  #notebtn{bottom:auto;top:112px;right:8px;padding:5px 9px;font-size:11px;letter-spacing:.08em}
+  #notebtn{bottom:auto;top:158px;right:8px;padding:5px 9px;font-size:11px;letter-spacing:.08em}
   #lootfeed{display:none}
   .questgrid{grid-template-columns:1fr}
   .equipzone{grid-template-columns:repeat(5,1fr)}
@@ -434,6 +479,10 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   <button class="iconbtn" data-panel="bag" aria-label="行囊">
     <svg viewBox="0 0 24 24"><path d="M5 8h14l-1.5 12h-11L5 8zm4 0a3 3 0 0 1 6 0"/></svg>
     <span class="cn">行囊</span><span class="en">Bag</span>
+  </button>
+  <button class="iconbtn" data-panel="formation" aria-label="阵容">
+    <svg viewBox="0 0 24 24"><path d="M6 4.5h.01M12 4.5h.01M18 4.5h.01M6 12h.01M12 12h.01M18 12h.01M4 19.5h16"/></svg>
+    <span class="cn">阵容</span><span class="en">Lineup</span>
   </button>
   <button class="iconbtn" data-panel="faction" aria-label="势力">
     <svg viewBox="0 0 24 24"><path d="M12 3v18M5 7l7-4 7 4M5 7v10l7 4 7-4V7"/></svg>
@@ -501,7 +550,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   <div class="ni"><b>⑥</b><span>已解锁的物品/武学/侠客全局可购可学；声望、贡献或世界货币不足时，提供「前往该世界挂机」直达按钮。</span></div>
   <div class="ni"><b>⑦</b><span>一次性物品购买后从目录消失；非一次性物品支持多选隐藏，可在设置中恢复。</span></div>
   <div class="ni"><b>⑧</b><span>未开放功能全部隐藏：城市地图/公司、秘境、土地买卖等不再出现死按钮。</span></div>
-  <div class="ni"><b>⑨</b><span>布阵：点「布阵」进入布阵态，战场令牌可拖拽换位或点选两枚互换，六侠成阵即时生效。</span></div>
+  <div class="ni"><b>⑨</b><span>阵容独立成册：右上角「阵容」打开演武场——三路五列布阵格、后备区、点将名册、出手次第、阵势激发一屏尽览；令牌拖拽/点选皆可。战场保留「布阵」快捷模式作临场微调。</span></div>
   <div class="ni"><b>⑩</b><span>城市仅保留古玩店经营（开关门/店员/上下架/账簿）。</span></div>
   <div class="ni"><b>⑪</b><span>危险操作（删档）收进设置页深处，需二次确认；侧栏不再常驻。</span></div>
   <div class="ni"><b>⑫</b><span>视觉新方向：昼卷（陈纸苔绿山水手卷 + 纯墨 + 单点绛红）/ 夜册（近墨面板）。若不认可可整体回退深色金印方向。</span></div>
@@ -542,6 +591,9 @@ const S = {
     {id:'h4',name:'铁中棠',grade:'甲',lv:31,career:'铁衣卫',cat:'拳',row:1,col:1,hp:8600,maxHp:8600,en:2,equip:{weapon:{n:'铁掌套',q:3,lv:29,a:['物攻 +310']},armor:{n:'铁布衣',q:3,lv:30,a:['气血 +780']},head:{n:'护额',q:1,lv:24,a:['物防 +45']},offhand:null,boots:null,wrist:null,necklace:null,ring:null,treasure:null}},
     {id:'h5',name:'苏樱',grade:'甲',lv:30,career:'医师',cat:'医',row:2,col:1,hp:3800,maxHp:3800,en:4,equip:{weapon:{n:'银针囊',q:3,lv:28,a:['法攻 +288','治疗 +8%']},necklace:{n:'回春坠',q:4,lv:30,a:['法攻 +150','能量回复 +2']},head:null,armor:null,boots:null,offhand:null,wrist:null,ring:null,treasure:null}},
     {id:'h6',name:'司空摘星',grade:'乙',lv:28,career:'妙手空空',cat:'暗',row:2,col:0,hp:3600,maxHp:3600,en:2,equip:{weapon:{n:'柳叶飞刀',q:2,lv:26,a:['物攻 +205']},boots:{n:'轻烟履',q:2,lv:25,a:['身法 +31']},head:null,armor:null,offhand:null,wrist:null,necklace:null,ring:null,treasure:null}},
+    {id:'h7',name:'阿青',grade:'甲',lv:26,career:'越女剑侍',cat:'剑',row:null,col:null,inForm:false,equip:{}},
+    {id:'h8',name:'扫地僧',grade:'天',lv:40,career:'藏经阁隐者',cat:'内家',row:null,col:null,inForm:false,equip:{}},
+    {id:'h9',name:'楚留香',grade:'地',lv:32,career:'踏月留香',cat:'暗',row:null,col:null,inForm:false,equip:{}},
   ],
   bag: [
     {uid:'b1',slot:'weapon',n:'百炼环首刀',q:3,lv:33,a:['物攻 +455','物攻增伤 +5%']},
@@ -636,7 +688,7 @@ function enemyAt(row, idx){
 }
 function renderField(){
   const lanes = [[],[],[]];
-  S.heroes.forEach(h => lanes[h.row].push(h));
+  S.heroes.filter(h=>h.inForm!==false && h.row!=null).forEach(h => lanes[h.row].push(h));
   $('#party').innerHTML = lanes.map((ls,i)=>
     `<div class="lane">${ls.sort((a,b)=>a.col-b.col).map(h=>unitHTML(h,'party')).join('')}<span class="lane-tag">${['上路','中路','下路'][i]}</span></div>`).join('');
   const elanes = [[],[],[]];
@@ -677,7 +729,7 @@ setInterval(()=>{
   if(Math.random()<.12) floatText('+'+fmt(60+Math.random()*300|0), 'party','heal');
   if(Math.random()<.18){ const g = 30+Math.random()*220|0; S.coins += g; floatText('+'+g+' 通宝','party','gold'); feed(`拾得 <b>${fmt(g)}</b> 通宝`); }
   // 气血波动
-  S.heroes.forEach(h=>{ h.hp = Math.max(h.maxHp*.35, Math.min(h.maxHp, h.hp + (Math.random()-.42)*300)); h.en = Math.min(5, Math.max(0, h.en + (Math.random()<.3?1:0) - (Math.random()<.25?1:0))); });
+  S.heroes.filter(h=>h.inForm!==false && h.row!=null).forEach(h=>{ h.hp = Math.max(h.maxHp*.35, Math.min(h.maxHp, h.hp + (Math.random()-.42)*300)); h.en = Math.min(5, Math.max(0, h.en + (Math.random()<.3?1:0) - (Math.random()<.25?1:0))); });
   // 蛋蛋积累
   S.vouchers.today = Math.min(700, S.vouchers.today + S.speed*0.05);
   if(Math.random()<.02*S.speed){ S.vouchers.balance += 10; }
@@ -778,9 +830,146 @@ function leafMeta(crumb, title, sub, foot){
   $('#leafSub').innerHTML = sub||''; $('#leafFoot').textContent = foot||'';
 }
 function renderPanel(name){
-  ({stage:renderStagePanel, bag:renderBagPanel, faction:renderFactionPanel,
+  ({stage:renderStagePanel, bag:renderBagPanel, formation:renderFormationPanel, faction:renderFactionPanel,
     shop:renderShopPanel, city:renderCityPanel, settings:renderSettingsPanel})[name]();
   $('#leafBody').scrollTop = 0;
+}
+
+/* ============================================================
+   阵容 · 演武场
+   ============================================================ */
+const SYNS = [
+  {name:'双拳镇岳', req:'拳 × 2',      desc:'全队气血 +10%',      on:f=>f.filter(h=>h.cat==='拳').length>=2},
+  {name:'三剑齐鸣', req:'剑 × 3',      desc:'全队会心 +8%',       on:f=>f.filter(h=>h.cat==='剑').length>=3},
+  {name:'医武相济', req:'医 × 1 · 拳 × 1', desc:'每回合回复 2% 气血', on:f=>f.some(h=>h.cat==='医')&&f.some(h=>h.cat==='拳')},
+  {name:'刀暗双绝', req:'刀 × 1 · 暗 × 1', desc:'全队破甲 +6%',    on:f=>f.some(h=>h.cat==='刀')&&f.some(h=>h.cat==='暗')},
+  {name:'内家护脉', req:'内家 × 2',    desc:'内力回复 +12%',      on:f=>f.filter(h=>h.cat==='内家').length>=2},
+  {name:'六侠成阵', req:'满员六侠',    desc:'全属性 +3%',         on:f=>f.length>=6},
+];
+const inFormHeroes = () => S.heroes.filter(h=>h.inForm!==false && h.row!=null);
+const heroPower = h => h.lv*620 + (h.grade==='天'?1800:h.grade==='地'?1200:0);
+const teamPower = () => inFormHeroes().reduce((s,h)=>s+heroPower(h),0);
+function syncPower(){ const p=$('#powerNum'); if(p) p.textContent = fmt(teamPower()); }
+
+let fPick = null, fCat = '全部', fDrag = null;
+function renderFormationPanel(){
+  const F = inFormHeroes();
+  const synOn = SYNS.map(s=>s.on(F));
+  const onCnt = synOn.filter(Boolean).length;
+  const cols = [4,3,2,1,0]; /* 右起第一列为前列（贴敌） */
+  const slotHero = (r,c) => F.find(h=>h.row===r&&h.col===c);
+  const tokenHTML = h => `<div class="ftoken ${fPick===h.id?'sel':''}" draggable="true" data-fhero="${h.id}">
+      <span class="face">${esc(h.name[0])}<span class="seal">${h.grade}</span></span><span class="nm">${esc(h.name)}</span></div>`;
+  leafMeta('LINEUP · 演武布阵', '阵容', `上阵 ${F.length} / 6 · 阵势激发 ${onCnt} / 6 ${NOTE_MARK(9)}`, '拖令牌换位 · 点虚位落子 · 名册点将');
+  $('#leafBody').innerHTML = `
+    <div class="fstats">
+      <div class="fstat"><b>${fmt(teamPower())}</b><span>队伍战力</span></div>
+      <div class="fstat"><b>${F.length} / 6</b><span>在阵侠客</span></div>
+      <div class="fstat"><b style="color:var(--crimson)">${onCnt} / 6</b><span>阵势激发</span></div>
+    </div>
+
+    <div class="nsec"><div class="nsec-head"><h3>演武场</h3><span class="en">Drill Ground</span><span class="right">令牌拖拽 · 点选亦可</span></div>
+      <div class="ffield">
+        ${[0,1,2].map(r=>`<div class="flane"><span class="flane-tag">${['上路','中路','下路'][r]}</span>
+          ${cols.map(c=>{ const h=slotHero(r,c);
+            return `<div class="fslot ${h?'filled':''}" data-fslot="${r},${c}">${h?tokenHTML(h):'<span class="void">虚位</span>'}</div>`; }).join('')}
+        </div>`).join('')}
+      </div>
+      <div class="ffield-axis"><span>← 后列</span><span>前列贴敌 →</span></div>
+      <div class="fops">
+        <button class="btn solid xs" id="fAuto">自动列阵</button>
+        <button class="btn xs" id="fClear">悉数下阵</button>
+      </div>
+      <div class="fbench" id="fbench">
+        <span class="hint">后备 · 点选后置于虚位，或拖至此处下阵</span>
+        ${S.heroes.filter(h=>h.inForm===false).map(tokenHTML).join('')}
+      </div>
+    </div>
+
+    <div class="nsec"><div class="nsec-head"><h3>出手次第</h3><span class="en">Initiative</span><span class="right">按阵位自前而后</span></div>
+      <div class="orderbar">${[...F].sort((a,b)=>a.row*5+a.col-b.row*5-b.col).map((h,i)=>
+        `<span class="obead"><span class="no">${'壹贰叁肆伍陆柒捌玖拾'[i]}</span>${esc(h.name)}</span>`).join('')
+        ||'<span style="font-size:11px;color:var(--pn-faint)">阵上无人 · 从名册点将</span>'}</div>
+    </div>
+
+    <div class="nsec"><div class="nsec-head"><h3>点将名册</h3><span class="en">Roster</span><span class="right">在阵者点之即下阵 · 后备者点之即选</span></div>
+      <div class="chiprow" style="margin-bottom:8px">${['全部','拳','剑','刀','暗','医','内家'].map(c=>`<button class="chip ${fCat===c?'on':''}" data-fcat="${c}">${c}</button>`).join('')}</div>
+      <div class="froster">${S.heroes.filter(h=>fCat==='全部'||h.cat===fCat).map(h=>{
+        const on = h.inForm!==false && h.row!=null;
+        return `<div class="rrow ${fPick===h.id?'picked':''}" data-fpick="${h.id}">
+          <span class="face">${esc(h.name[0])}</span>
+          <span class="nm">${esc(h.name)}<small>${h.grade} 品 · ${esc(h.cat)}之脉 · Lv.${h.lv} · ${esc(h.career)}</small></span>
+          <span class="state ${on?'on':''}">${on?'在阵':'后备'}</span></div>`; }).join('')}
+      </div>
+    </div>
+
+    <div class="nsec"><div class="nsec-head"><h3>阵势</h3><span class="en">Synergy</span><span class="right">激发 ${onCnt} / 6</span></div>
+      <div class="syngrid">${SYNS.map((s,i)=>`<div class="syncard ${synOn[i]?'on':''}">
+        <h5>${s.name}<span class="ok">${synOn[i]?'已激发':'未激发'}</span></h5>
+        <div class="req">${s.req}</div><div class="desc">${s.desc}</div></div>`).join('')}
+      </div>
+    </div>`;
+
+  const body = $('#leafBody');
+  const refresh = ()=>{ renderFormationPanel(); renderField(); syncPower(); };
+  const placeAt = (id, r, c)=>{
+    const h = S.heroes.find(x=>x.id===id); if(!h) return false;
+    const occ = inFormHeroes().find(x=>x.row===r&&x.col===c);
+    if(occ && occ.id!==h.id){ [h.row,occ.row]=[occ.row,h.row]; [h.col,occ.col]=[occ.col,h.col]; h.inForm=true; toast('阵位已互换'); }
+    else if(!occ){
+      const wasOut = h.inForm===false || h.row==null;
+      if(wasOut && inFormHeroes().length>=6){ toast('阵上已满 · 六侠为限，请先下阵一人'); return false; }
+      h.row=r; h.col=c; h.inForm=true; toast(`${h.name} 已入阵`);
+    }
+    else return false;
+    return true;
+  };
+  body.querySelectorAll('[data-fcat]').forEach(b=>b.onclick=()=>{ fCat=b.dataset.fcat; renderFormationPanel(); });
+  body.querySelectorAll('[data-fhero]').forEach(el=>{
+    el.onclick = ()=>{ fPick = fPick===el.dataset.fhero?null:el.dataset.fhero; renderFormationPanel(); };
+    el.addEventListener('dragstart', e=>{ fDrag=el.dataset.fhero; e.dataTransfer.effectAllowed='move'; });
+  });
+  body.querySelectorAll('.fslot').forEach(el=>{
+    el.onclick = ()=>{
+      const [r,c] = el.dataset.fslot.split(',').map(Number);
+      const occ = inFormHeroes().find(h=>h.row===r&&h.col===c);
+      if(fPick){ if(placeAt(fPick,r,c)) fPick=null; refresh(); }
+      else if(occ){ fPick = occ.id; renderFormationPanel(); }
+    };
+    el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('over'); });
+    el.addEventListener('dragleave', ()=>el.classList.remove('over'));
+    el.addEventListener('drop', e=>{ e.preventDefault(); el.classList.remove('over'); if(!fDrag) return;
+      const [r,c] = el.dataset.fslot.split(',').map(Number);
+      if(placeAt(fDrag,r,c)){ fDrag=null; fPick=null; refresh(); } });
+  });
+  body.querySelectorAll('[data-fpick]').forEach(el=>el.onclick=()=>{
+    const h = S.heroes.find(x=>x.id===el.dataset.fpick);
+    const on = h.inForm!==false && h.row!=null;
+    if(on){ h.inForm=false; h.row=null; h.col=null; if(fPick===h.id) fPick=null; toast(`${h.name} 已下阵 · 置于后备`); refresh(); }
+    else { fPick = fPick===h.id?null:h.id; renderFormationPanel(); }
+  });
+  const bench = $('#fbench');
+  bench.addEventListener('dragover', e=>{ e.preventDefault(); bench.classList.add('over'); });
+  bench.addEventListener('dragleave', ()=>bench.classList.remove('over'));
+  bench.addEventListener('drop', e=>{ e.preventDefault(); bench.classList.remove('over'); if(!fDrag) return;
+    const h = S.heroes.find(x=>x.id===fDrag); fDrag=null;
+    if(h && h.inForm!==false){ h.inForm=false; h.row=null; h.col=null; toast(`${h.name} 已下阵 · 置于后备`); refresh(); } });
+  $('#fAuto').onclick = ()=>{
+    inFormHeroes().forEach(h=>{ h.inForm=false; h.row=null; h.col=null; });
+    const rowOf = h => (h.cat==='拳'||h.cat==='刀')?0 : h.cat==='剑'?1 : 2;
+    const lane = [0,0,0]; let n = 0;
+    for(const h of [...S.heroes].sort((a,b)=>b.lv-a.lv)){
+      if(n>=6) break;
+      let r = rowOf(h);
+      if(lane[r]>=2){ r = [0,1,2].find(x=>lane[x]<2); if(r===undefined) break; }
+      h.row=r; h.col=lane[r]++; h.inForm=true; n++;
+    }
+    fPick=null; toast('已按脉系自动列阵 · 前拳刀 / 中剑 / 后暗医内'); refresh();
+  };
+  $('#fClear').onclick = ()=>{
+    inFormHeroes().forEach(h=>{ h.inForm=false; h.row=null; h.col=null; });
+    fPick=null; toast('已悉数下阵 · 侠客暂驻后备'); refresh();
+  };
 }
 
 /* ============================================================
@@ -1262,6 +1451,7 @@ function renderSettingsPanel(){
 
 /* 初始化 */
 renderField();
+syncPower();
 banner('第 4 波 · 敌至');
 setTimeout(()=>feed('驻守中 · 汉末通宝持续入账'), 800);
 setTimeout(()=>feed('悬榜「剿灭黄巾残部」进度 +1'), 2000);
