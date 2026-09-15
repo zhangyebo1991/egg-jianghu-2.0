@@ -591,7 +591,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   <div class="ni"><b>⑥</b><span>已解锁的物品/武学/侠客全局可购可学；声望、贡献或世界货币不足时，提供「前往该世界挂机」直达按钮。</span></div>
   <div class="ni"><b>⑦</b><span>一次性物品购买后从目录消失；非一次性物品支持多选隐藏，可在设置中恢复。</span></div>
   <div class="ni"><b>⑧</b><span>未开放功能全部隐藏：城市地图/公司、秘境、土地买卖等不再出现死按钮。</span></div>
-  <div class="ni"><b>⑨</b><span>阵容独立成册：右上角「阵容」打开演武场——三路五列布阵格、后备区、点将名册、出手次第、阵势激发一屏尽览；令牌拖拽/点选皆可。战场保留「布阵」快捷模式作临场微调。</span></div>
+  <div class="ni"><b>⑨</b><span>阵容独立成册：右上角「阵容」打开演武场——三路五列布阵格、后备区、点将名册、出手次第、阵势激发一屏尽览；令牌拖拽/点选皆可。名册后备者点之直接入阵（按脉系推荐空位，一键免滚动），在阵者点之即下阵。战场保留「布阵」快捷模式作临场微调。</span></div>
   <div class="ni"><b>⑩</b><span>城市仅保留古玩店经营（开关门/店员/上下架/账簿）。</span></div>
   <div class="ni"><b>⑪</b><span>危险操作（删档）收进设置页深处，需二次确认；侧栏不再常驻。</span></div>
   <div class="ni"><b>⑫</b><span>视觉新方向：昼卷（陈纸苔绿山水手卷 + 纯墨 + 单点绛红）/ 夜册（近墨面板）。若不认可可整体回退深色金印方向。</span></div>
@@ -920,7 +920,7 @@ function renderFormationPanel(){
       <div class="fstat"><b style="color:var(--crimson)">${onCnt} / 6</b><span>阵势激发</span></div>
     </div>
 
-    <div class="nsec"><div class="nsec-head"><h3>演武场</h3><span class="en">Drill Ground</span><span class="right">令牌拖拽 · 点选亦可</span></div>
+    <div class="nsec" id="f-drill"><div class="nsec-head"><h3>演武场</h3><span class="en">Drill Ground</span><span class="right">令牌拖拽 · 点选亦可</span></div>
       <div class="ffield">
         ${[0,1,2].map(r=>`<div class="flane"><span class="flane-tag">${['上路','中路','下路'][r]}</span>
           ${cols.map(c=>{ const h=slotHero(r,c);
@@ -944,7 +944,7 @@ function renderFormationPanel(){
         ||'<span style="font-size:11px;color:var(--pn-faint)">阵上无人 · 从名册点将</span>'}</div>
     </div>
 
-    <div class="nsec"><div class="nsec-head"><h3>点将名册</h3><span class="en">Roster</span><span class="right">在阵者点之即下阵 · 后备者点之即选</span></div>
+    <div class="nsec"><div class="nsec-head"><h3>点将名册</h3><span class="en">Roster</span><span class="right">后备者点之直接入阵 · 在阵者点之即下阵</span></div>
       <div class="chiprow" style="margin-bottom:8px">${['全部','拳','剑','刀','暗','医','内家'].map(c=>`<button class="chip ${fCat===c?'on':''}" data-fcat="${c}">${c}</button>`).join('')}</div>
       <div class="froster">${S.heroes.filter(h=>fCat==='全部'||h.cat===fCat).map(h=>{
         const on = h.inForm!==false && h.row!=null;
@@ -997,8 +997,21 @@ function renderFormationPanel(){
   body.querySelectorAll('[data-fpick]').forEach(el=>el.onclick=()=>{
     const h = S.heroes.find(x=>x.id===el.dataset.fpick);
     const on = h.inForm!==false && h.row!=null;
-    if(on){ h.inForm=false; h.row=null; h.col=null; if(fPick===h.id) fPick=null; toast(`${h.name} 已下阵 · 置于后备`); refresh(); }
-    else { fPick = fPick===h.id?null:h.id; renderFormationPanel(); }
+    if(on){ h.inForm=false; h.row=null; h.col=null; if(fPick===h.id) fPick=null; toast(`${h.name} 已下阵 · 置于后备`); refresh(); const d=document.getElementById('f-drill'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}); }
+    else {
+      /* 一键入阵：按脉系推荐空位，免滚动免二次点击 */
+      const cur = inFormHeroes();
+      if(cur.length>=6){ toast('阵上已满 · 六侠为限，先点一位在阵者下阵'); return; }
+      const pref = (h.cat==='拳'||h.cat==='刀')?0 : h.cat==='剑'?1 : 2;
+      const freeIn = r => [0,1,2,3,4].find(c=>!cur.some(x=>x.row===r&&x.col===c));
+      let spot = null;
+      const c0 = freeIn(pref); if(c0!==undefined) spot=[pref,c0];
+      else for(const r of [0,1,2]){ const c=freeIn(r); if(c!==undefined){ spot=[r,c]; break; } }
+      if(!spot){ toast('演武场无虚位'); return; }
+      h.row=spot[0]; h.col=spot[1]; h.inForm=true;
+      fPick=null; toast(`${h.name} 已入阵 · ${['上路','中路','下路'][spot[0]]}${spot[1]===0?'前列':'第'+(spot[1]+1)+'列'}`); refresh();
+      const d=document.getElementById('f-drill'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'});
+    }
   });
   const bench = $('#fbench');
   bench.addEventListener('dragover', e=>{ e.preventDefault(); bench.classList.add('over'); });
