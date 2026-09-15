@@ -330,6 +330,17 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .fstat{border:1.5px solid var(--night-line-2);padding:9px 10px;background:var(--night-2)}
 .fstat b{font-family:var(--latin);font-size:17px;display:block}
 .fstat span{font-size:10px;color:var(--pn-dim);letter-spacing:.15em}
+/* 单屏双栏：左演武场 · 右名册（独立滚动） */
+.fmain{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr);gap:20px;align-items:start}
+.fright{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:12px 12px 10px;
+  position:sticky;top:0;max-height:calc(100vh - 265px);display:flex;flex-direction:column}
+.fright .froster{overflow-y:auto;min-height:0;margin-top:2px;padding-right:4px}
+.frighthint{font-size:10.5px;color:var(--pn-dim);line-height:1.75;margin-bottom:8px}
+@media (max-width:1100px){
+  .fmain{grid-template-columns:1fr}
+  .fright{position:static;max-height:none}
+  .fright .froster{overflow:visible}
+}
 .ffield{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:12px 10px 10px;margin-bottom:4px}
 .flane{display:flex;align-items:center;gap:5px;margin-bottom:6px}
 .flane:last-child{margin-bottom:0}
@@ -352,7 +363,7 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .orderbar{display:flex;gap:6px;flex-wrap:wrap}
 .obead{display:flex;align-items:center;gap:5px;border:1.5px solid var(--night-line-2);padding:4px 9px;font-size:11px;color:var(--pn)}
 .obead .no{font-family:var(--kai);color:var(--crimson);font-size:12px}
-.froster{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.froster{display:grid;grid-template-columns:1fr}
 .froster .rrow{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--night-line);cursor:pointer;transition:background .15s}
 .froster .rrow:hover{background:rgba(176,198,179,.06)}
 .froster .rrow .face{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--pn-dim);display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:13px;flex:0 0 auto}
@@ -388,13 +399,14 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
   .baglayout{grid-template-columns:1fr}
   .bagside{position:static}
   .catlist{grid-template-columns:1fr}
-  .froster{grid-template-columns:1fr}
 }
 /* 右侧停靠模式统一单列，宽布局仅居中模式启用 */
 .leaf:not(.modal) .baglayout{grid-template-columns:1fr}
 .leaf:not(.modal) .bagside{position:static}
 .leaf:not(.modal) .catlist{grid-template-columns:1fr}
-.leaf:not(.modal) .froster{grid-template-columns:1fr}
+.leaf:not(.modal) .fmain{grid-template-columns:1fr}
+.leaf:not(.modal) .fright{position:static;max-height:none}
+.leaf:not(.modal) .fright .froster{overflow:visible}
 @media (max-width:900px){ .syngrid{grid-template-columns:1fr} }
 
 /* 商城 / 城市 / 设置 */
@@ -591,7 +603,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   <div class="ni"><b>⑥</b><span>已解锁的物品/武学/侠客全局可购可学；声望、贡献或世界货币不足时，提供「前往该世界挂机」直达按钮。</span></div>
   <div class="ni"><b>⑦</b><span>一次性物品购买后从目录消失；非一次性物品支持多选隐藏，可在设置中恢复。</span></div>
   <div class="ni"><b>⑧</b><span>未开放功能全部隐藏：城市地图/公司、秘境、土地买卖等不再出现死按钮。</span></div>
-  <div class="ni"><b>⑨</b><span>阵容独立成册：右上角「阵容」打开演武场——三路五列布阵格、后备区、点将名册、出手次第、阵势激发一屏尽览；令牌拖拽/点选皆可。名册后备者点之直接入阵（按脉系推荐空位，一键免滚动），在阵者点之即下阵。战场保留「布阵」快捷模式作临场微调。</span></div>
+  <div class="ni"><b>⑨</b><span>阵容单屏双栏：左演武场+出手次第+阵势，右点将名册常驻（独立滚动）。名册即后备，无独立后备区。交互：点阵位令牌选槽 → 右册点侠客即换防（选中留槽可连续换人）；未选槽时名册点后备一键入阵，满员则与出手末位互换并提示；点「在阵」即下阵。战场保留「布阵」快捷模式。</span></div>
   <div class="ni"><b>⑩</b><span>城市仅保留古玩店经营（开关门/店员/上下架/账簿）。</span></div>
   <div class="ni"><b>⑪</b><span>危险操作（删档）收进设置页深处，需二次确认；侧栏不再常驻。</span></div>
   <div class="ni"><b>⑫</b><span>视觉新方向：昼卷（陈纸苔绿山水手卷 + 纯墨 + 单点绛红）/ 夜册（近墨面板）。若不认可可整体回退深色金印方向。</span></div>
@@ -912,7 +924,8 @@ function renderFormationPanel(){
   const slotHero = (r,c) => F.find(h=>h.row===r&&h.col===c);
   const tokenHTML = h => `<div class="ftoken ${fPick===h.id?'sel':''}" draggable="true" data-fhero="${h.id}">
       <span class="face">${esc(h.name[0])}<span class="seal">${h.grade}</span></span><span class="nm">${esc(h.name)}</span></div>`;
-  leafMeta('LINEUP · 演武布阵', '阵容', `上阵 ${F.length} / 6 · 阵势激发 ${onCnt} / 6 ${NOTE_MARK(9)}`, '拖令牌换位 · 点虚位落子 · 名册点将');
+  const laneTxt = h => `${['上路','中路','下路'][h.row]}${h.col===0?'前列':'第'+(h.col+1)+'列'}`;
+  leafMeta('LINEUP · 演武布阵', '阵容', `上阵 ${F.length} / 6 · 阵势激发 ${onCnt} / 6 ${NOTE_MARK(9)}`, '点阵位选槽 → 右册点将即换防 · 拖令牌亦可');
   $('#leafBody').innerHTML = `
     <div class="fstats">
       <div class="fstat"><b>${fmt(teamPower())}</b><span>队伍战力</span></div>
@@ -920,46 +933,45 @@ function renderFormationPanel(){
       <div class="fstat"><b style="color:var(--crimson)">${onCnt} / 6</b><span>阵势激发</span></div>
     </div>
 
-    <div class="nsec" id="f-drill"><div class="nsec-head"><h3>演武场</h3><span class="en">Drill Ground</span><span class="right">令牌拖拽 · 点选亦可</span></div>
-      <div class="ffield">
-        ${[0,1,2].map(r=>`<div class="flane"><span class="flane-tag">${['上路','中路','下路'][r]}</span>
-          ${cols.map(c=>{ const h=slotHero(r,c);
-            return `<div class="fslot ${h?'filled':''}" data-fslot="${r},${c}">${h?tokenHTML(h):'<span class="void">虚位</span>'}</div>`; }).join('')}
-        </div>`).join('')}
-      </div>
-      <div class="ffield-axis"><span>← 后列</span><span>前列贴敌 →</span></div>
-      <div class="fops">
-        <button class="btn solid xs" id="fAuto">自动列阵</button>
-        <button class="btn xs" id="fClear">悉数下阵</button>
-      </div>
-      <div class="fbench" id="fbench">
-        <span class="hint">后备 · 点选后置于虚位，或拖至此处下阵</span>
-        ${S.heroes.filter(h=>h.inForm===false).map(tokenHTML).join('')}
-      </div>
-    </div>
+    <div class="fmain">
+      <div class="fleft">
+        <div class="nsec" style="margin-bottom:14px"><div class="nsec-head"><h3>演武场</h3><span class="en">Drill Ground</span><span class="right">点令牌选槽 · 拖拽换位</span></div>
+          <div class="ffield">
+            ${[0,1,2].map(r=>`<div class="flane"><span class="flane-tag">${['上路','中路','下路'][r]}</span>
+              ${cols.map(c=>{ const h=slotHero(r,c);
+                return `<div class="fslot ${h?'filled':''}" data-fslot="${r},${c}">${h?tokenHTML(h):'<span class="void">虚位</span>'}</div>`; }).join('')}
+            </div>`).join('')}
+          </div>
+          <div class="ffield-axis"><span>← 后列</span><span>前列贴敌 →</span></div>
+          <div class="fops"><button class="btn solid xs" id="fAuto">自动列阵 · 按脉系推荐</button></div>
+        </div>
 
-    <div class="nsec"><div class="nsec-head"><h3>出手次第</h3><span class="en">Initiative</span><span class="right">按阵位自前而后</span></div>
-      <div class="orderbar">${[...F].sort((a,b)=>a.row*5+a.col-b.row*5-b.col).map((h,i)=>
-        `<span class="obead"><span class="no">${'壹贰叁肆伍陆柒捌玖拾'[i]}</span>${esc(h.name)}</span>`).join('')
-        ||'<span style="font-size:11px;color:var(--pn-faint)">阵上无人 · 从名册点将</span>'}</div>
-    </div>
+        <div class="nsec" style="margin-bottom:14px"><div class="nsec-head"><h3>出手次第</h3><span class="en">Initiative</span><span class="right">按阵位自前而后</span></div>
+          <div class="orderbar">${[...F].sort((a,b)=>a.row*5+a.col-b.row*5-b.col).map((h,i)=>
+            `<span class="obead"><span class="no">${'壹贰叁肆伍陆柒捌玖拾'[i]}</span>${esc(h.name)}</span>`).join('')
+            ||'<span style="font-size:11px;color:var(--pn-faint)">阵上无人 · 从右册点将</span>'}</div>
+        </div>
 
-    <div class="nsec"><div class="nsec-head"><h3>点将名册</h3><span class="en">Roster</span><span class="right">后备者点之直接入阵 · 在阵者点之即下阵</span></div>
-      <div class="chiprow" style="margin-bottom:8px">${['全部','拳','剑','刀','暗','医','内家'].map(c=>`<button class="chip ${fCat===c?'on':''}" data-fcat="${c}">${c}</button>`).join('')}</div>
-      <div class="froster">${S.heroes.filter(h=>fCat==='全部'||h.cat===fCat).map(h=>{
-        const on = h.inForm!==false && h.row!=null;
-        return `<div class="rrow ${fPick===h.id?'picked':''}" data-fpick="${h.id}">
-          <span class="face">${esc(h.name[0])}</span>
-          <span class="nm">${esc(h.name)}<small>${h.grade} 品 · ${esc(h.cat)}之脉 · Lv.${h.lv} · ${esc(h.career)}</small></span>
-          <span class="state ${on?'on':''}">${on?'在阵':'后备'}</span></div>`; }).join('')}
+        <div class="nsec" style="margin-bottom:0"><div class="nsec-head"><h3>阵势</h3><span class="en">Synergy</span><span class="right">激发 ${onCnt} / 6</span></div>
+          <div class="syngrid">${SYNS.map((s,i)=>`<div class="syncard ${synOn[i]?'on':''}">
+            <h5>${s.name}<span class="ok">${synOn[i]?'已激发':'未激发'}</span></h5>
+            <div class="req">${s.req}</div><div class="desc">${s.desc}</div></div>`).join('')}
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="nsec"><div class="nsec-head"><h3>阵势</h3><span class="en">Synergy</span><span class="right">激发 ${onCnt} / 6</span></div>
-      <div class="syngrid">${SYNS.map((s,i)=>`<div class="syncard ${synOn[i]?'on':''}">
-        <h5>${s.name}<span class="ok">${synOn[i]?'已激发':'未激发'}</span></h5>
-        <div class="req">${s.req}</div><div class="desc">${s.desc}</div></div>`).join('')}
-      </div>
+      <aside class="fright">
+        <div class="nsec-head" style="margin-bottom:6px"><h3>点将名册</h3><span class="en">Roster</span><span class="right">${S.heroes.length} 侠</span></div>
+        <p class="frighthint">名册即后备，无需拖动。<b style="color:var(--pn)">点阵上任一令牌选槽，再点此处侠客即换防</b>（选中留在槽上，可连续换人）；未选槽时，点后备直接入阵；点「在阵」即下阵。</p>
+        <div class="chiprow" style="margin-bottom:6px">${['全部','拳','剑','刀','暗','医','内家'].map(c=>`<button class="chip ${fCat===c?'on':''}" data-fcat="${c}">${c}</button>`).join('')}</div>
+        <div class="froster">${S.heroes.filter(h=>fCat==='全部'||h.cat===fCat).map(h=>{
+          const on = h.inForm!==false && h.row!=null;
+          return `<div class="rrow ${fPick===h.id?'picked':''}" data-fpick="${h.id}">
+            <span class="face">${esc(h.name[0])}</span>
+            <span class="nm">${esc(h.name)}<small>${h.grade} 品 · ${esc(h.cat)}之脉 · Lv.${h.lv} · ${esc(h.career)}</small></span>
+            <span class="state ${on?'on':''}">${on?'在阵':'后备'}</span></div>`; }).join('')}
+        </div>
+      </aside>
     </div>`;
 
   const body = $('#leafBody');
@@ -970,7 +982,7 @@ function renderFormationPanel(){
     if(occ && occ.id!==h.id){ [h.row,occ.row]=[occ.row,h.row]; [h.col,occ.col]=[occ.col,h.col]; h.inForm=true; toast('阵位已互换'); }
     else if(!occ){
       const wasOut = h.inForm===false || h.row==null;
-      if(wasOut && inFormHeroes().length>=6){ toast('阵上已满 · 六侠为限，请先下阵一人'); return false; }
+      if(wasOut && inFormHeroes().length>=6){ toast('阵上已满 · 六侠为限，先点一位在阵者下阵'); return false; }
       h.row=r; h.col=c; h.inForm=true; toast(`${h.name} 已入阵`);
     }
     else return false;
@@ -985,7 +997,11 @@ function renderFormationPanel(){
     el.onclick = ()=>{
       const [r,c] = el.dataset.fslot.split(',').map(Number);
       const occ = inFormHeroes().find(h=>h.row===r&&h.col===c);
-      if(fPick){ if(placeAt(fPick,r,c)) fPick=null; refresh(); }
+      if(fPick){
+        const sel = S.heroes.find(x=>x.id===fPick);
+        if(sel && sel.inForm!==false && sel.row!=null && !occ){ /* 在阵者点空位=移动，选槽保留 */ if(placeAt(fPick,r,c)){ fPick=sel.id; refresh(); return; } }
+        else if(placeAt(fPick,r,c)){ fPick=null; refresh(); return; }
+      }
       else if(occ){ fPick = occ.id; renderFormationPanel(); }
     };
     el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('over'); });
@@ -997,28 +1013,29 @@ function renderFormationPanel(){
   body.querySelectorAll('[data-fpick]').forEach(el=>el.onclick=()=>{
     const h = S.heroes.find(x=>x.id===el.dataset.fpick);
     const on = h.inForm!==false && h.row!=null;
-    if(on){ h.inForm=false; h.row=null; h.col=null; if(fPick===h.id) fPick=null; toast(`${h.name} 已下阵 · 置于后备`); refresh(); const d=document.getElementById('f-drill'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}); }
-    else {
-      /* 一键入阵：按脉系推荐空位，免滚动免二次点击 */
-      const cur = inFormHeroes();
-      if(cur.length>=6){ toast('阵上已满 · 六侠为限，先点一位在阵者下阵'); return; }
-      const pref = (h.cat==='拳'||h.cat==='刀')?0 : h.cat==='剑'?1 : 2;
-      const freeIn = r => [0,1,2,3,4].find(c=>!cur.some(x=>x.row===r&&x.col===c));
-      let spot = null;
-      const c0 = freeIn(pref); if(c0!==undefined) spot=[pref,c0];
-      else for(const r of [0,1,2]){ const c=freeIn(r); if(c!==undefined){ spot=[r,c]; break; } }
-      if(!spot){ toast('演武场无虚位'); return; }
-      h.row=spot[0]; h.col=spot[1]; h.inForm=true;
-      fPick=null; toast(`${h.name} 已入阵 · ${['上路','中路','下路'][spot[0]]}${spot[1]===0?'前列':'第'+(spot[1]+1)+'列'}`); refresh();
-      const d=document.getElementById('f-drill'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'});
+    if(on){ h.inForm=false; h.row=null; h.col=null; if(fPick===h.id) fPick=null; toast(`${h.name} 已下阵`); refresh(); return; }
+    /* 后备：优先与选中槽换防，选中留在槽上可连续换人 */
+    const sel = fPick ? S.heroes.find(x=>x.id===fPick) : null;
+    if(sel && sel.inForm!==false && sel.row!=null){
+      [h.row,sel.row]=[sel.row,h.row]; [h.col,sel.col]=[sel.col,h.col]; h.inForm=true;
+      fPick=h.id; toast(`${h.name} 已换防至 ${laneTxt(h)} · 选中留槽可继续换人`); refresh(); return;
     }
+    const cur = inFormHeroes();
+    if(cur.length>=6){
+      const last = [...cur].sort((a,b)=>b.row*5+b.col-a.row*5-a.col)[0];
+      [h.row,last.row]=[last.row,h.row]; [h.col,last.col]=[last.col,h.col]; h.inForm=true;
+      fPick=h.id; toast(`未选阵位 · ${h.name} 已与末位 ${last.name} 互换（点阵位可指定）`); refresh(); return;
+    }
+    /* 一键入阵：按脉系推荐空位 */
+    const pref = (h.cat==='拳'||h.cat==='刀')?0 : h.cat==='剑'?1 : 2;
+    const freeIn = r => [0,1,2,3,4].find(c=>!cur.some(x=>x.row===r&&x.col===c));
+    let spot = null;
+    const c0 = freeIn(pref); if(c0!==undefined) spot=[pref,c0];
+    else for(const r of [0,1,2]){ const c=freeIn(r); if(c!==undefined){ spot=[r,c]; break; } }
+    if(!spot){ toast('演武场无虚位'); return; }
+    h.row=spot[0]; h.col=spot[1]; h.inForm=true;
+    fPick=h.id; toast(`${h.name} 已入阵 · ${laneTxt(h)}`); refresh();
   });
-  const bench = $('#fbench');
-  bench.addEventListener('dragover', e=>{ e.preventDefault(); bench.classList.add('over'); });
-  bench.addEventListener('dragleave', ()=>bench.classList.remove('over'));
-  bench.addEventListener('drop', e=>{ e.preventDefault(); bench.classList.remove('over'); if(!fDrag) return;
-    const h = S.heroes.find(x=>x.id===fDrag); fDrag=null;
-    if(h && h.inForm!==false){ h.inForm=false; h.row=null; h.col=null; toast(`${h.name} 已下阵 · 置于后备`); refresh(); } });
   $('#fAuto').onclick = ()=>{
     inFormHeroes().forEach(h=>{ h.inForm=false; h.row=null; h.col=null; });
     const rowOf = h => (h.cat==='拳'||h.cat==='刀')?0 : h.cat==='剑'?1 : 2;
@@ -1030,10 +1047,6 @@ function renderFormationPanel(){
       h.row=r; h.col=lane[r]++; h.inForm=true; n++;
     }
     fPick=null; toast('已按脉系自动列阵 · 前拳刀 / 中剑 / 后暗医内'); refresh();
-  };
-  $('#fClear').onclick = ()=>{
-    inFormHeroes().forEach(h=>{ h.inForm=false; h.row=null; h.col=null; });
-    fPick=null; toast('已悉数下阵 · 侠客暂驻后备'); refresh();
   };
 }
 
