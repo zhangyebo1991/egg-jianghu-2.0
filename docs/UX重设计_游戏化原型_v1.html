@@ -248,6 +248,19 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 
 /* 行囊 · 装备 */
 .herochips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
+/* 规模适配：侠客选择器 = 搜索 + 双列滚动列表（替代横滑 chips） */
+.herolist{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;max-height:208px;overflow-y:auto;padding-right:4px}
+.herolist .hrow{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--night-line);cursor:pointer;font-size:12px;transition:background .15s}
+.herolist .hrow:hover{background:rgba(176,198,179,.06)}
+.herolist .hrow.on{background:var(--crimson-soft)}
+.herolist .hrow .face{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--pn-dim);display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:11px;flex:0 0 auto}
+.herolist .hrow.on .face{border-color:var(--crimson);background:var(--crimson);color:#fff}
+.herolist .hrow .hn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.herolist .hrow small{color:var(--pn-dim);font-size:10px;margin-left:auto;white-space:nowrap;flex:0 0 auto}
+/* 筛选条吸顶：长列表滚动时不丢筛选 */
+.stickybar{position:sticky;top:-17px;background:var(--night);z-index:3;padding:8px 0 6px;margin-bottom:8px}
+/* 限高滚动容器 */
+.vscroll{max-height:220px;overflow-y:auto}
 .hchip{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:5px 11px;border:1.5px solid var(--night-line-2);font-size:12px}
 .hchip .face{width:20px;height:20px;border-radius:50%;background:var(--pn-dim);color:var(--night);
   display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:11px}
@@ -611,6 +624,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   <div class="ni"><b>⑪</b><span>危险操作（删档）收进设置页深处，需二次确认；侧栏不再常驻。</span></div>
   <div class="ni"><b>⑫</b><span>视觉新方向：昼卷（陈纸苔绿山水手卷 + 纯墨 + 单点绛红）/ 夜册（近墨面板）。若不认可可整体回退深色金印方向。</span></div>
   <div class="ni"><b>⑬</b><span>面板双形态：宽屏默认居中册页（⇄ 一键切回右侧停靠），手机端恒全屏。大列表不堆长滚动——行囊两栏（左物品右详情）+ 展开更多；兑换目录按类折叠 + 检索；招募按位面分组折叠；顶部锚点直达分区。</span></div>
+  <div class="ni"><b>⑭</b><span>规模预留（侠客/物品破百时不崩盘）：换装侠客选择器 = 搜索 + 双列限高滚动列表（在阵优先），弃用横滑 chips；行囊筛选条吸顶、物品分页加载（12 起 +24 展开）；阵容名册、兑换目录、招募名录均有检索；设置中已隐藏列表限高滚动。</span></div>
 </div>
 <script>
 /* ============================================================
@@ -668,7 +682,7 @@ const S = {
     {uid:'b13',slot:'ring',n:'玛瑙扳指',q:1,lv:16,a:['法攻 +26']},
     {uid:'b14',slot:'boots',n:'麻布鞋',q:0,lv:8,a:['身法 +5']},
   ],
-  bagFilter: {slot:'all', q:'all', sel:null, hero:'h1', show:12, sort:'lv'},
+  bagFilter: {slot:'all', q:'all', sel:null, hero:'h1', show:12, sort:'lv', heroQ:'', heroShow:8},
   faction: {
     contrib: 8640, reputation: 342, sp: 120, hidden: [], hideMode: false, hideSel: [],
     search: '', closedKinds: [], closedWorlds: [1,2,3,4,5,6,7,8,9,10,11,12],
@@ -925,7 +939,7 @@ const heroPower = h => h.lv*620 + (h.grade==='天'?1800:h.grade==='地'?1200:0);
 const teamPower = () => inFormHeroes().reduce((s,h)=>s+heroPower(h),0);
 function syncPower(){ const p=$('#powerNum'); if(p) p.textContent = fmt(teamPower()); }
 
-let fPick = null, fCat = '全部', fDrag = null;
+let fPick = null, fCat = '全部', fDrag = null, fSearch = '';
 function renderFormationPanel(){
   const F = inFormHeroes();
   const synOn = SYNS.map(s=>s.on(F));
@@ -973,8 +987,9 @@ function renderFormationPanel(){
       <aside class="fright">
         <div class="nsec-head" style="margin-bottom:6px"><h3>点将名册</h3><span class="en">Roster</span><span class="right">${S.heroes.length} 侠</span></div>
         <p class="frighthint">名册即后备，无需拖动。<b style="color:var(--pn)">点阵上任一令牌选槽，再点此处侠客即换防</b>（选中留在槽上，可连续换人）；未选槽时，点后备直接入阵；点「在阵」即下阵。</p>
+        <input type="search" id="fSearch" placeholder="搜索侠客 · 名称 / 职业 / 脉系" value="${esc(fSearch)}" style="width:100%;margin-bottom:6px">
         <div class="chiprow" style="margin-bottom:6px">${['全部','拳','剑','刀','暗','医','内家'].map(c=>`<button class="chip ${fCat===c?'on':''}" data-fcat="${c}">${c}</button>`).join('')}</div>
-        <div class="froster">${S.heroes.filter(h=>fCat==='全部'||h.cat===fCat).map(h=>{
+        <div class="froster">${S.heroes.filter(h=>(fCat==='全部'||h.cat===fCat) && (!fSearch.trim() || (h.name+h.career+h.cat).includes(fSearch.trim()))).map(h=>{
           const on = h.inForm!==false && h.row!=null;
           return `<div class="rrow ${fPick===h.id?'picked':''}" data-fpick="${h.id}">
             <span class="face">${esc(h.name[0])}</span>
@@ -999,6 +1014,11 @@ function renderFormationPanel(){
     return true;
   };
   body.querySelectorAll('[data-fcat]').forEach(b=>b.onclick=()=>{ fCat=b.dataset.fcat; renderFormationPanel(); });
+  const fs = $('#fSearch');
+  if(fs) fs.oninput = ()=>{
+    fSearch = fs.value; renderFormationPanel();
+    const n = $('#fSearch'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+  };
   body.querySelectorAll('[data-fhero]').forEach(el=>{
     el.onclick = ()=>{ fPick = fPick===el.dataset.fhero?null:el.dataset.fhero; renderFormationPanel(); };
     el.addEventListener('dragstart', e=>{ fDrag=el.dataset.fhero; e.dataTransfer.effectAllowed='move'; });
@@ -1116,18 +1136,30 @@ function renderBagPanel(){
   const hero = S.heroes.find(h=>h.id===S.bagFilter.hero) || S.heroes[0];
   leafMeta('INVENTORY · 行囊', '行囊', `换装 · 出售 · 仓储 ${NOTE_MARK(2)}`, '双击与悬停对比已省略 · 评审后可补');
   const f = S.bagFilter;
+  const hq = (f.heroQ||'').trim();
+  const inForm = h => h.inForm!==false && h.row!=null;
+  const hpool = S.heroes
+    .filter(h=>!hq || (h.name+h.career+h.cat).includes(hq))
+    .sort((a,b)=>((inForm(b)?1:0)-(inForm(a)?1:0)) || b.lv-a.lv);
+  const hshown = hpool.slice(0, f.heroShow);
   const sorted = [...S.bag].sort(f.sort==='q' ? (a,b)=>b.q-a.q||b.lv-a.lv : (a,b)=>b.lv-a.lv);
   const items = sorted.filter(it => (f.slot==='all'||it.slot===f.slot) && (f.q==='all'||it.q===+f.q));
   const shown = items.slice(0, f.show);
   $('#leafBody').innerHTML = `
-    <div class="nsec"><div class="nsec-head"><h3>为谁换装</h3><span class="en">Hero</span></div>
-      <div class="herochips">${S.heroes.map(h=>`
-        <button class="hchip ${h.id===hero.id?'on':''}" data-h="${h.id}"><span class="face">${esc(h.name[0])}</span>${esc(h.name)}<span style="color:var(--pn-faint);font-size:10px">Lv.${h.lv}</span></button>`).join('')}
+    <div class="nsec"><div class="nsec-head"><h3>为谁换装</h3><span class="en">Hero</span><span class="right">${S.heroes.length} 侠 · 在阵优先</span></div>
+      <input type="search" id="heroSearch" placeholder="搜索侠客 · 名称 / 职业 / 脉系" value="${esc(f.heroQ||'')}" style="width:100%;margin-bottom:6px">
+      <div class="herolist">${hshown.map(h=>`
+        <button class="hrow ${h.id===hero.id?'on':''}" data-h="${h.id}">
+          <span class="face">${esc(h.name[0])}</span><span class="hn">${esc(h.name)}</span>
+          <small>${h.grade}品 Lv.${h.lv} · ${inForm(h)?'在阵':'后备'}</small></button>`).join('')
+        || '<p style="grid-column:1/-1;color:var(--pn-faint);font-size:11px;padding:10px 0">无匹配侠客</p>'}
+        ${hpool.length>hshown.length?`<button class="btn xs" id="heroMore" style="grid-column:1/-1;margin-top:6px">还有 ${hpool.length-hshown.length} 侠 · 展开</button>`:''}
       </div>
     </div>
     <div class="baglayout">
       <div class="nsec" style="margin-bottom:0"><div class="nsec-head"><h3>囊中物</h3><span class="en">Pack</span>
         <span class="right">${items.length} 件${items.length!==S.bag.length?` / 共 ${S.bag.length}`:''}</span></div>
+        <div class="stickybar">
         <div class="chiprow" style="margin-bottom:8px">
           <button class="chip ${f.slot==='all'?'on':''}" data-fslot="all">全部位</button>
           ${SLOTS.map(sl=>`<button class="chip ${f.slot===sl?'on':''}" data-fslot="${sl}">${SLOT_CN[sl]}</button>`).join('')}
@@ -1138,6 +1170,7 @@ function renderBagPanel(){
           <span style="width:8px"></span>
           <button class="chip ${f.sort==='lv'?'on':''}" data-fsort="lv">等级↓</button>
           <button class="chip ${f.sort==='q'?'on':''}" data-fsort="q">品质↓</button>
+        </div>
         </div>
         <div class="baggrid">${shown.map(it=>`
           <button class="bcell q${it.q} ${f.sel===it.uid?'sel':''}" data-item="${it.uid}" title="${esc(it.n)}">
@@ -1166,6 +1199,12 @@ function renderBagPanel(){
       </aside>
     </div>`;
   $('#leafBody').querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{ S.bagFilter.hero=b.dataset.h; S.bagFilter.sel=null; renderBagPanel(); });
+  const hs = $('#heroSearch');
+  if(hs) hs.oninput = ()=>{
+    S.bagFilter.heroQ = hs.value; S.bagFilter.heroShow = 8; renderBagPanel();
+    const n = $('#heroSearch'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+  };
+  const hm = $('#heroMore'); if(hm) hm.onclick=()=>{ S.bagFilter.heroShow+=16; renderBagPanel(); };
   $('#leafBody').querySelectorAll('[data-fslot]').forEach(b=>b.onclick=()=>{ S.bagFilter.slot=b.dataset.fslot; S.bagFilter.show=12; renderBagPanel(); });
   $('#leafBody').querySelectorAll('[data-fq]').forEach(b=>b.onclick=()=>{ S.bagFilter.q=b.dataset.fq==='all'?'all':+b.dataset.fq; S.bagFilter.show=12; renderBagPanel(); });
   $('#leafBody').querySelectorAll('[data-fsort]').forEach(b=>b.onclick=()=>{ S.bagFilter.sort=b.dataset.fsort; renderBagPanel(); });
@@ -1564,11 +1603,11 @@ function renderSettingsPanel(){
     </div>
     <div class="nsec"><div class="nsec-head"><h3>势力目录</h3><span class="en">Order</span></div>
       <p style="font-size:11px;color:var(--pn-dim);margin-bottom:8px;line-height:1.7">被隐藏的兑换项在此恢复显示（${NOTE_MARK(7)}）。</p>
-      ${F.hidden.length?F.hidden.map(id=>{
+      ${F.hidden.length?`<div class="vscroll">${F.hidden.map(id=>{
         const c=F.catalog.find(x=>x.id===id);
         return `<div class="nrow"><span class="k">${c.kind} · ${esc(c.name)}</span>
           <button class="btn xs" style="margin-left:auto" data-unhide="${id}">恢复显示</button></div>`;
-      }).join(''):'<p style="font-size:11px;color:var(--pn-faint)">暂无隐藏项 · 在势力「贡献兑换」中多选隐藏</p>'}
+      }).join('')}</div>`:'<p style="font-size:11px;color:var(--pn-faint)">暂无隐藏项 · 在势力「贡献兑换」中多选隐藏</p>'}
     </div>
     <div class="nsec"><div class="nsec-head"><h3>福利与云存档</h3><span class="en">Welfare & Cloud</span></div>
       <div class="setrow"><div class="t">福利码<small>每存档限领一次，领取记录随存档保存。</small></div>
