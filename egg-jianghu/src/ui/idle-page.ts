@@ -354,12 +354,12 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
         <section class="battlefield${scene ? ' has-scene' : ''}" data-testid="battlefield" aria-label="挂机战场"${scene ? ` style="--battle-scene:url('${escapeHtml(scene)}')"` : ''}>
           <section class="battle-half party" aria-label="我方阵容">
             <header class="half-heading party"><strong>我方</strong><span>三路五列 · 前列临阵</span><span class="half-hint">六侠成阵</span></header>
-            <div class="battle-grid party">${renderLanes(view.combat.party, 'party', view.effects)}</div>
+            <div class="ink-battle-grid party">${renderLanes(view.combat.party, 'party', view.effects)}</div>
           </section>
           <div class="battle-divider" aria-label="战斗进度"><strong>对 阵</strong><i></i><span class="divider-status">第 <em>${view.combat.wave}</em> / 10 波</span><span class="divider-status">${escapeHtml(view.worldName)}<br>第 ${view.selectedStage} 关 · ${modeLabel}</span></div>
           <section class="battle-half enemy" aria-label="敌方阵容">
             <header class="half-heading enemy"><strong>敌方</strong><span>自右来犯 · 前列临阵</span><span class="half-hint">${enemyVisible ? `余敌 ${enemyCount}` : '敌阵未现'}</span></header>
-            <div class="battle-grid enemy">${renderLanes(visibleEnemies, 'enemy', view.effects)}</div>
+            <div class="ink-battle-grid enemy">${renderLanes(visibleEnemies, 'enemy', view.effects)}</div>
             ${enemyVisible ? '' : '<div class="enemy-arrival" data-testid="enemy-arrival"><span>敌</span><strong>敌阵正在逼近</strong></div>'}
           </section>
           ${renderActionTimeline(view.combat)}
