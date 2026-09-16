@@ -21,6 +21,7 @@
   --latin:Georgia,"Songti SC",serif;
   --ease:cubic-bezier(.22,1,.36,1);
   --leaf-w:min(580px,96vw);
+  --us:86px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
@@ -67,8 +68,9 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 #field{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 2vw}
 #lanes{width:min(1180px,94vw);display:grid;grid-template-columns:1fr auto 1fr;gap:2.4vw;align-items:center}
 .army{display:flex;flex-direction:column;gap:1.6vh}
-.lane{display:flex;gap:1vw;align-items:center;justify-content:center}
-.lane.enemy{justify-content:center}
+.lane{display:grid;grid-template-columns:repeat(5,var(--us)) auto;gap:1vw;align-items:center;justify-content:end}
+.lane.enemy{grid-template-columns:auto repeat(5,var(--us));justify-content:start}
+.slot-empty{width:var(--us);height:1px}
 .lane-tag{font-family:var(--kai);font-size:12px;writing-mode:vertical-rl;letter-spacing:.35em;color:var(--ink-45)}
 .unit{position:relative;width:86px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform .35s var(--ease)}
 .unit.party{cursor:pointer}
@@ -497,6 +499,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
 @media (max-width:900px){
   #lanes{grid-template-columns:1fr auto 1fr;gap:1vw}
   .unit{width:60px}
+  :root{--us:60px}
   .token{width:44px;height:44px;font-size:19px;border-width:2.5px}
   .u-hp{width:46px}
   .iconbtn{width:44px;height:44px;border-width:2.5px}
@@ -793,15 +796,24 @@ function enemyAt(row, idx){
   return {id:'e'+row+'_'+idx, name, key:ENEMY_KEYS[name], grade:'卒', hp:2800+Math.random()*2200, maxHp:5000, en:0, row, col:idx, spd:+(8.2+Math.random()*4).toFixed(2)};
 }
 function renderField(){
+  const NCOLS = 5;
   const lanes = [[],[],[]];
   S.heroes.filter(h=>h.inForm!==false && h.row!=null).forEach(h => lanes[h.row].push(h));
-  $('#party').innerHTML = lanes.map((ls,i)=>
-    `<div class="lane">${ls.sort((a,b)=>a.col-b.col).map(h=>unitHTML(h,'party')).join('')}<span class="lane-tag">${['上路','中路','下路'][i]}</span></div>`).join('');
+  $('#party').innerHTML = lanes.map((ls,i)=>{
+    const byCol={}; ls.forEach(h=>byCol[h.col]=h);
+    const cells=[];
+    for(let c=NCOLS-1; c>=0; c--) cells.push(byCol[c]?unitHTML(byCol[c],'party'):'<span class="slot-empty"></span>');
+    return `<div class="lane">${cells.join('')}<span class="lane-tag">${['上路','中路','下路'][i]}</span></div>`;
+  }).join('');
   const elanes = [[],[],[]];
-  const per = [2,2,1];
-  for(let r=0;r<3;r++) for(let i=0;i<per[r];i++) elanes[r].push(enemyAt(r,i));
-  $('#enemies').innerHTML = elanes.map((ls,i)=>
-    `<div class="lane enemy"><span class="lane-tag">${['上路','中路','下路'][i]}</span>${ls.map(h=>unitHTML(h,'enemy')).join('')}</div>`).join('');
+  const per = [2,2,1], colStart = [0,0,1]; /* 下路仅1人时对齐到第2列，与中路右侧同列 */
+  for(let r=0;r<3;r++) for(let i=0;i<per[r];i++) elanes[r].push(enemyAt(r, colStart[r]+i));
+  $('#enemies').innerHTML = elanes.map((ls,i)=>{
+    const byCol={}; ls.forEach(h=>byCol[h.col]=h);
+    const cells=[];
+    for(let c=0; c<NCOLS; c++) cells.push(byCol[c]?unitHTML(byCol[c],'enemy'):'<span class="slot-empty"></span>');
+    return `<div class="lane enemy"><span class="lane-tag">${['上路','中路','下路'][i]}</span>${cells.join('')}</div>`;
+  }).join('');
   const w = WORLDS[S.world];
   $('#waveinfo').innerHTML = `<span>第 <b>${S.wave}</b> / 10 波</span><br><span style="letter-spacing:.3em">${esc(w.name)} · 第${S.stage}关</span><br><span style="font-size:10px;letter-spacing:.2em">${S.fighting?'自动战斗中':'已停驻'}</span>`;
   $('#wavebeads').innerHTML = Array.from({length:10},(_,i)=>
