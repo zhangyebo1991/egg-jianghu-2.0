@@ -17,7 +17,7 @@ test.afterEach(() => {
   expect(pageErrors).toEqual([])
 })
 
-test('侠客页提供行囊与按等阶售出', async ({ page }) => {
+test('侠客页提供行囊与按等阶售出', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(60))
   await openPanel(page, 'heroes')
@@ -31,7 +31,33 @@ test('侠客页提供行囊与按等阶售出', async ({ page }) => {
     await q3Cell.hover()
   }
 
-  await page.getByTestId('hero-inventory-panel').screenshot({ path: 'verification-q3-blue.png' })
+  await page.getByTestId('hero-inventory-panel').screenshot({ path: testInfo.outputPath('hero-pack-q3.png') })
+})
+
+test('行囊页按等阶出售下拉按当前世界结算铜钱', async ({ page }) => {
+  await page.setViewportSize({ width: 1536, height: 960 })
+  await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(30))
+  await openPanel(page, 'inventory')
+
+  await page.getByRole('button', { name: '按等阶出售' }).click()
+  await expect(page.locator('.inventory-sellpop')).toBeVisible()
+  await expect(page.locator('.inventory-sellpop .sp-opt')).toHaveCount(10)
+  await expect(page.locator('.inventory-sellpop .sp-opt').first()).toContainText('粗糙及以下')
+
+  // fillInventory 按品质 0-9 循环填充，粗糙（0）恰有 3 件，等级均为 1，单件售价 44。
+  await page.locator('[data-action="inventory-sell-quality"][data-quality="0"]').click()
+  await expect(page.locator('.inventory-sellpop')).toHaveCount(0)
+  const after = await page.evaluate(() => {
+    const state = window.__EGG_JIANGHU__.getState()
+    return { currency: state.worldCurrency.world_01, count: state.inventory.length }
+  })
+  expect(after.count).toBe(27)
+  expect(after.currency).toBe(1132)
+
+  await page.getByRole('button', { name: '按等阶出售' }).click()
+  await expect(page.locator('.inventory-sellpop')).toBeVisible()
+  await page.getByRole('button', { name: '整理囊袋' }).click()
+  await expect(page.locator('.inventory-sellpop')).toHaveCount(0)
 })
 
 test('侠客册行囊独立滚动且分页完整覆盖装备', async ({ page }, testInfo) => {

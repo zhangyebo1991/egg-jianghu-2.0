@@ -72,6 +72,7 @@ export interface InventoryShopView {
 
 export interface InventoryPageViewModel {
   shopOpen?: boolean
+  sellOpen?: boolean
   heroSidebar?: string
   heroEquipment?: string
   selectedHeroName?: string
@@ -208,7 +209,7 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
         data-equipment-uid="${escapeHtml(item.uid)}">丢 弃</button>
     </div>
     <div class="inventory-appraise-note">
-      ${item.locked ? '<b>已锁定</b> · 不参与批量丢弃，亦不误手。' : '锁定后可免于「批量丢弃」误伤。'}
+      ${item.locked ? '<b>已锁定</b> · 不参与批量出售，亦不误手。' : '锁定后可免于「按等阶出售」误伤。'}
       <span>物品等级决定属性与词条系数；人物等级达到穿戴等级 Lv.${item.equipmentLevel} 方可穿戴。</span>
     </div>
   </div>`
@@ -281,7 +282,13 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
             </div>
             <div class="inventory-actions">
               <button type="button" class="inventory-ink-button" data-action="inventory-organize">整理囊袋</button>
-              <button type="button" class="inventory-ink-button danger" data-action="inventory-discard-common">丢弃粗糙</button>
+              <span class="inventory-sell-wrap">
+                <button type="button" class="inventory-ink-button danger${view.sellOpen ? ' active' : ''}" data-action="inventory-sell-toggle" aria-haspopup="true" aria-expanded="${view.sellOpen ? 'true' : 'false'}">按等阶出售</button>
+                ${view.sellOpen ? `<div class="sellpop inventory-sellpop" role="menu" aria-label="按等阶出售">
+                  <div class="sp-title">按等阶出售<small>点档位立即售出 ≤ 该档的未装备物品 · 收入当前世界铜钱</small></div>
+                  ${EQUIPMENT_QUALITIES.map((quality) => `<button type="button" class="sp-opt" role="menuitem" data-action="inventory-sell-quality" data-quality="${quality}" style="color:var(--q-${quality})">${EQUIPMENT_QUALITY_NAMES[quality]}及以下</button>`).join('')}
+                </div>` : ''}
+              </span>
             </div>
           </div>
         </header>

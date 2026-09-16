@@ -71,7 +71,7 @@ import { WORLDS, planeRecommendedPower } from './content/worlds'
 import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
-import { backpackEquipment, discardEquipment, discardEquipmentByQuality, equipEquipment, equipBestEquipment, type EquipmentBuild, INVENTORY_CAPACITY, organizeInventory, sellEquipmentByQuality, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, bindActiveEquipmentLoadout } from './domain/inventory'
+import { backpackEquipment, discardEquipment, equipEquipment, equipBestEquipment, type EquipmentBuild, INVENTORY_CAPACITY, organizeInventory, sellEquipmentByQuality, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, bindActiveEquipmentLoadout } from './domain/inventory'
 import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, isMartialCareerCompatible, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
@@ -222,6 +222,7 @@ let highlightedHeroMartialId: string | null = null
 let renderedLocationKey = ''
 const pageScrollMemory = new Map<string, Array<{ selector: string; top: number; left: number }>>()
 let heroSellOpen = false
+let inventorySellOpen = false
 let heroRosterQuery = ''
 let heroRosterGradeFilter = 'all'
 let heroRosterCategoryFilter = 'all'
@@ -632,6 +633,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   pageScrollMemory.clear()
   renderedLocationKey = ''
   heroSellOpen = false
+  inventorySellOpen = false
   heroRosterQuery = ''
   heroRosterGradeFilter = 'all'
   heroRosterCategoryFilter = 'all'
@@ -2110,7 +2112,7 @@ const render = (): void => {
     : activeTab === 'formation'
       ? renderFormationPage(formation)
       : activeTab === 'inventory'
-        ? renderInventoryPage({ ...inventoryViewModel(), shopOpen: inkBookShopOpen, heroSidebar: renderInkInventoryHeroes(heroes!), heroEquipment: renderInkInventoryEquipment(heroes!), selectedHeroName: heroes!.heroes.find(hero => hero.id === selectedHeroId)?.name })
+        ? renderInventoryPage({ ...inventoryViewModel(), shopOpen: inkBookShopOpen, sellOpen: inventorySellOpen, heroSidebar: renderInkInventoryHeroes(heroes!), heroEquipment: renderInkInventoryEquipment(heroes!), selectedHeroName: heroes!.heroes.find(hero => hero.id === selectedHeroId)?.name })
         : activeTab === 'shop'
           ? renderShopPage(session.state, Date.now(), renderOrdinaryHeroPool(ordinaryPoolViewModel()), shopSection)
         : activeTab === 'settings'
@@ -2681,13 +2683,20 @@ const performAction = (button: HTMLButtonElement): void => {
     inventorySort = 'quality'
     commitAction(organizeInventory(session.state))
   }
-  else if (action === 'inventory-discard-common') {
-    const result = discardEquipmentByQuality(session.state, 0)
-    if (selectedInventoryUid && !session.state.inventory.some((item) => item.uid === selectedInventoryUid)) {
-      selectedInventoryUid = null
-      inventoryDetailOpen = false
+  else if (action === 'inventory-sell-toggle') {
+    inventorySellOpen = !inventorySellOpen
+  }
+  else if (action === 'inventory-sell-quality') {
+    const quality = Number(button.dataset.quality)
+    if (isEquipmentQuality(quality)) {
+      const result = sellEquipmentByQuality(session.state, quality, selectedWorldId || selectedPlaneId)
+      if (selectedInventoryUid && !session.state.inventory.some((item) => item.uid === selectedInventoryUid)) {
+        selectedInventoryUid = null
+        inventoryDetailOpen = false
+      }
+      commitAction(result)
     }
-    commitAction(result)
+    inventorySellOpen = false
   } else if (action === 'inventory-toggle-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
   else if (action === 'inventory-discard') {
     const result = discardEquipment(session.state, button.dataset.equipmentUid ?? '')
@@ -3196,6 +3205,10 @@ app.addEventListener('click', (event) => {
   // 按等阶售出下拉：点弹窗与触发按钮以外的区域即收起
   if (heroSellOpen && !target.closest('.sellpop') && !target.closest('[data-action="hero-sell-toggle"]')) {
     heroSellOpen = false
+  }
+  // 行囊按等阶出售下拉：点弹窗与触发按钮以外的区域即收起
+  if (inventorySellOpen && !target.closest('.inventory-sellpop') && !target.closest('[data-action="inventory-sell-toggle"]')) {
+    inventorySellOpen = false
   }
   const tab = target.closest<HTMLElement>('[data-tab]')?.dataset.tab as TabId | undefined
   if (tab) {

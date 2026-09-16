@@ -3,7 +3,6 @@ import {
   addEquipment,
   backpackEquipment,
   discardEquipment,
-  discardEquipmentByQuality,
   equipEquipment,
   equipmentSellPrice,
   INVENTORY_CAPACITY,
@@ -164,72 +163,6 @@ describe('装备背包', () => {
       expect(discardEquipment(state, 'locked')).toEqual({ ok: false, message: '此物已上锁，先解锁再丢弃' })
       expect(discardEquipment(state, 'worn')).toEqual({ ok: false, message: '已穿戴装备请先到侠客页卸下' })
       expect(state.inventory).toHaveLength(2)
-    })
-  })
-
-  describe('按稀有度批量丢弃', () => {
-    it('丢弃低于等于阈值的装备并保留更高品质', () => {
-      const state = createInitialStateV10()
-      state.inventory = [
-        equipment('a', 0),
-        equipment('b', 1),
-        equipment('c', 2),
-        equipment('d', 3),
-      ]
-
-      const result = discardEquipmentByQuality(state, 1)
-
-      expect(result).toEqual({ ok: true, message: '已丢弃 2 件普通及以下装备' })
-      expect(state.inventory.map((item) => item.uid)).toEqual(['c', 'd'])
-    })
-
-    it('跳过已锁定装备', () => {
-      const state = createInitialStateV10()
-      state.inventory = [
-        { ...equipment('locked', 0), locked: true },
-        { ...equipment('free', 0) },
-      ]
-
-      discardEquipmentByQuality(state, 0)
-
-      expect(state.inventory.map((item) => item.uid)).toEqual(['locked'])
-    })
-
-    it('跳过已被侠客穿戴的装备', () => {
-      const state = createNewGameStateV10('测试')
-      state.inventory = [
-        { ...equipment('worn', 0) },
-        { ...equipment('loose', 0) },
-      ]
-      state.heroes.hero_player.equipmentBySlot.weapon = 'worn'
-
-      discardEquipmentByQuality(state, 0)
-
-      expect(state.inventory.map((item) => item.uid)).toEqual(['worn'])
-    })
-
-    it('无可丢弃装备时返回失败提示且不改变库存', () => {
-      const state = createInitialStateV10()
-      state.inventory = [
-        { ...equipment('locked', 0), locked: true },
-        equipment('high', 3),
-      ]
-
-      const result = discardEquipmentByQuality(state, 1)
-
-      expect(result).toEqual({ ok: false, message: '没有可丢弃的装备' })
-      expect(state.inventory.map((item) => item.uid)).toEqual(['locked', 'high'])
-    })
-
-    it('阈值品质 9 清空全部未锁定未穿戴装备', () => {
-      const state = createInitialStateV10()
-      state.inventory = Array.from({ length: 10 }, (_, quality) =>
-        equipment(`e${quality}`, quality as EquipmentQuality))
-
-      const result = discardEquipmentByQuality(state, 9)
-
-      expect(result.ok).toBe(true)
-      expect(state.inventory).toHaveLength(0)
     })
   })
 

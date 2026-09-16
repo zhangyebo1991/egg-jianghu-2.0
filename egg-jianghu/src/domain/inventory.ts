@@ -1,6 +1,5 @@
 import type { ActionResult, EquipmentInstance, EquipmentQuality, GameStateV10, HeroProgressV10 } from './types'
 import {
-  EQUIPMENT_QUALITY_NAMES,
   EQUIPMENT_SET_COUNT,
   EQUIPMENT_SLOTS,
   canonicalEquipmentDefinitionId,
@@ -254,20 +253,6 @@ export const equipmentOwnerId = (state: GameStateV10, uid: string): string | nul
 // 判断装备是否正被某位侠客穿戴
 const isEquipmentEquipped = (state: GameStateV10, uid: string): boolean =>
   equipmentOwnerId(state, uid) !== null
-
-export const discardEquipmentByQuality = (
-  state: GameStateV10,
-  maxQuality: EquipmentQuality,
-): ActionResult => {
-  const discarded = state.inventory.filter((item) =>
-    item.quality <= maxQuality
-    && !item.locked
-    && !isEquipmentEquipped(state, item.uid))
-  if (discarded.length === 0) return { ok: false, message: '没有可丢弃的装备' }
-  const removed = new Set(discarded.map((item) => item.uid))
-  state.inventory = state.inventory.filter((item) => !removed.has(item.uid))
-  return { ok: true, message: `已丢弃 ${discarded.length} 件${EQUIPMENT_QUALITY_NAMES[maxQuality]}及以下装备` }
-}
 
 // 原版「物品买卖价格function」：买价 max(round((修正系数×10)×(10+物品等级)×2.5^品质), 1)，售价为买价 × 0.4。
 // 装备的修正系数按 1 处理。
