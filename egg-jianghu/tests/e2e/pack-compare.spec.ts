@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { equipmentDefinitionById } from '../../src/content/equipment'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
-test('行囊属性笺并排对比身上装备，宽窄屏均可读', async ({ page }, testInfo) => {
+test('行囊页悬停对比身上装备，宽窄屏均可读，并可一键穿戴', async ({ page }, testInfo) => {
   await page.goto('/')
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').fill('对比少侠')
@@ -24,10 +24,9 @@ test('行囊属性笺并排对比身上装备，宽窄屏均可读', async ({ pa
   }, { key: SAVE_KEY_V10, items: [makeItem('equipped', 10), makeItem('candidate', 20)] })
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
-  await openPanel(page, 'heroes')
-  await page.locator('[data-action="hero-main-tab"][data-main-tab="equipment"]').click()
+  await openPanel(page, 'inventory')
 
-  const anchor = page.getByTestId('hero-pack-candidate')
+  const anchor = page.getByTestId('equipment-candidate')
   const tooltip = page.locator('.equipment-tooltip.has-compare')
   await anchor.hover()
   await expect(tooltip).toBeVisible()
@@ -44,4 +43,12 @@ test('行囊属性笺并排对比身上装备，宽窄屏均可读', async ({ pa
     expect(await tooltip.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
     await page.screenshot({ path: testInfo.outputPath(`pack-compare-${width}.png`) })
   }
+
+  // 行囊页一键穿戴：物理方向换上更强的 candidate
+  await page.locator('[data-action="equipment-auto-equip"][data-hero-id="hero_player"]').click()
+  const loadout = await page.evaluate(() => {
+    const hero = window.__EGG_JIANGHU__.getState().heroes.hero_player
+    return hero.equipmentSets[hero.activeEquipmentSetIndex ?? 0].weapon
+  })
+  expect(loadout).toBe('candidate')
 })

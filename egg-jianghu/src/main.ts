@@ -209,10 +209,6 @@ let shopRank: 2 | 3 | 4 | 5 | 6 = 2
 let progressionSection: ProgressionSection = 'dungeons'
 let progressionDungeonDifficulty = 1
 let selectedProgressionEquipmentUid: string | null = null
-let heroPackSlotFilter: EquipmentSlot | 'all' = 'all'
-let heroPackQualityFilter: EquipmentQuality | 'all' = 'all'
-let heroPackPage = 1
-let heroPackDynamicPageSize = 48
 let heroMainTab: HeroesMainTab = 'basic'
 let heroAutoEquipBuild: EquipmentBuild = 'physical'
 let heroMartialSlot: number | null = null
@@ -221,7 +217,6 @@ let heroMartialCategory = 'all'
 let highlightedHeroMartialId: string | null = null
 let renderedLocationKey = ''
 const pageScrollMemory = new Map<string, Array<{ selector: string; top: number; left: number }>>()
-let heroSellOpen = false
 let inventorySellOpen = false
 let heroRosterQuery = ''
 let heroRosterGradeFilter = 'all'
@@ -280,7 +275,7 @@ let factionAgentFocusPending = false
 let factionContributionAnimation: FactionContributionAnimation | null = null
 let factionMotionTimer: number | null = null
 
-const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .hero-inventory-item, .pack-row, .pd-slot, .pack-cell'
+const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .inventory-cell'
 const EQUIPMENT_TOOLTIP_GAP = 10
 const EQUIPMENT_TOOLTIP_VIEWPORT_PADDING = 12
 
@@ -621,10 +616,6 @@ const enterPlaying = (nextSession: GameSession): void => {
   inventoryDetailOpen = false
   pendingInventoryDropUids = []
   shopRank = 2
-  heroPackSlotFilter = 'all'
-  heroPackQualityFilter = 'all'
-  heroPackPage = 1
-  heroPackDynamicPageSize = 48
   heroMainTab = 'basic'
   heroMartialSlot = null
   heroMartialQuery = ''
@@ -632,7 +623,6 @@ const enterPlaying = (nextSession: GameSession): void => {
   highlightedHeroMartialId = null
   pageScrollMemory.clear()
   renderedLocationKey = ''
-  heroSellOpen = false
   inventorySellOpen = false
   heroRosterQuery = ''
   heroRosterGradeFilter = 'all'
@@ -942,23 +932,6 @@ const careerGrowthView = (career: NonNullable<ReturnType<typeof careerById>>) =>
     coeff: formatGrowthCoeff(career.growth[field.id]),
   }))
 
-const computeHeroPackPageSize = (): number => {
-  const grid = app.querySelector<HTMLElement>('.heroes-page .pack-grid')
-  if (grid && grid.clientHeight > 0 && grid.clientWidth > 0) {
-    const width = grid.clientWidth
-    const height = grid.clientHeight
-    const style = window.getComputedStyle(grid)
-    const columns = style.gridTemplateColumns.split(/\s+/).length
-    const columnGap = Number.parseFloat(style.columnGap) || 0
-    const rowGap = Number.parseFloat(style.rowGap) || 0
-    const cellWidth = (width - (columns - 1) * columnGap) / columns
-    const rows = Math.max(1, Math.floor((height + rowGap) / (cellWidth + rowGap)))
-    return rows * columns
-  }
-  // 离开侠客页时没有网格，沿用上次容量，避免返回时暂用估算值挤掉末页。
-  return heroPackDynamicPageSize
-}
-
 const ordinaryPoolViewModel = (): OrdinaryPoolView => {
   const heroes = availableOrdinaryPoolHeroes(session.state)
   const { cost, heroRate, heroPity, materialIds } = ORDINARY_POOL_RULES
@@ -1094,30 +1067,6 @@ const heroesViewModel = (): HeroesPageViewModel => {
     }
     : null
 
-  // 行囊只陈列未穿戴装备（对齐原版：已装备不入行囊）
-  const backpackAll = backpackEquipment(session.state)
-  const packSource = backpackAll.filter((item) => {
-    const view = inventoryItemView(item)
-    if (heroPackSlotFilter !== 'all' && view.slot !== heroPackSlotFilter) return false
-    if (heroPackQualityFilter !== 'all' && item.quality !== heroPackQualityFilter) return false
-    return true
-  })
-  const packPageSize = computeHeroPackPageSize()
-  heroPackDynamicPageSize = packPageSize
-  const packPageCount = Math.max(1, Math.ceil(packSource.length / packPageSize))
-  heroPackPage = Math.min(packPageCount, Math.max(1, heroPackPage))
-  const packPageItems = packSource.slice((heroPackPage - 1) * packPageSize, heroPackPage * packPageSize)
-  const pack = {
-    capacity: INVENTORY_CAPACITY,
-    itemCount: backpackAll.length,
-    slotFilter: heroPackSlotFilter,
-    qualityFilter: heroPackQualityFilter,
-    page: heroPackPage,
-    pageCount: packPageCount,
-    items: packPageItems.map((item) => inventoryItemView(item)),
-    sellOpen: heroSellOpen,
-  }
-
   return {
     skinsHtml: selectedId ? renderHeroSkins(session.state, selectedId, Boolean(session.combat || session.pendingCombatRestart)) : '',
     selectedHeroId: selectedId,
@@ -1147,7 +1096,6 @@ const heroesViewModel = (): HeroesPageViewModel => {
     }))),
     treeDetail,
     equipment,
-    pack,
   }
 }
 
@@ -1817,6 +1765,17 @@ const inventoryViewModel = (): InventoryPageViewModel => {
   }, {} as Record<EquipmentQuality, number>)
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
   const currency = session.state.worldCurrency[world.id] ?? 0
+  // 悬停对比需要选中侠客身上各部位的装备（无选中侠客则不对比）。
+  const equippedHero = selectedHeroId ? session.state.heroes[selectedHeroId] : undefined
+  const equippedLoadout = equippedHero?.recruited ? bindActiveEquipmentLoadout(equippedHero) : null
+  const equippedBySlot: InventoryPageViewModel['equippedBySlot'] = {}
+  if (equippedLoadout) {
+    for (const slot of EQUIPMENT_SLOTS) {
+      const uid = equippedLoadout[slot]
+      const instance = uid ? session.state.inventory.find((item) => item.uid === uid) : undefined
+      if (instance) equippedBySlot[slot] = inventoryItemView(instance)
+    }
+  }
   return {
     worldName: world.name,
     category: inventoryCategory,
@@ -1838,6 +1797,7 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     detailOpen: inventoryDetailOpen,
     items: visibleItems,
     selectedItem,
+    equippedBySlot,
     shop: {
       worldName: world.name,
       currencyName: world.currencyName,
@@ -2204,13 +2164,6 @@ const render = (): void => {
   toast.classList.toggle('inventory-toast', activeTab === 'inventory')
   syncInventoryDetailScrollLock()
   playInventoryDropMotion()
-  if (activeTab === 'heroes') {
-    const nextPageSize = computeHeroPackPageSize()
-    if (nextPageSize !== heroPackDynamicPageSize) {
-      heroPackDynamicPageSize = nextPageSize
-      window.requestAnimationFrame(() => render())
-    }
-  }
 }
 
 const createAndEnter = (playerName: string, expectedSnapshot: string | null): void => {
@@ -2711,19 +2664,6 @@ const performAction = (button: HTMLButtonElement): void => {
     if (rank === 2 || rank === 3 || rank === 4 || rank === 5 || rank === 6) shopRank = rank
   } else if (action === 'shop-buy') {
     commitAction(buyJobBook(session.state, button.dataset.careerId ?? '', selectedWorldId || selectedPlaneId))
-  } else if (action === 'hero-pack-slot') {
-    const nextFilter = button.dataset.inventorySlot ?? 'all'
-    heroPackSlotFilter = nextFilter === 'all' || EQUIPMENT_SLOTS.includes(nextFilter as EquipmentSlot)
-      ? nextFilter as EquipmentSlot | 'all'
-      : 'all'
-    heroPackPage = 1
-  } else if (action === 'hero-pack-quality') {
-    const value = button.dataset.filterValue ?? 'all'
-    const quality = Number(value)
-    heroPackQualityFilter = value === 'all' ? 'all' : isEquipmentQuality(quality) ? quality : 'all'
-    heroPackPage = 1
-  } else if (action === 'hero-pack-page') {
-    heroPackPage = Math.max(1, dataNumber(button, 'page'))
   }
   else if (action === 'skin-select' || action === 'skin-upgrade') {
     if (session.combat || session.pendingCombatRestart) { notify('战斗期间不能更换或升级皮肤', true); return }
@@ -2735,7 +2675,6 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'equipment-unequip') commitAction(unequipEquipment(session.state, heroId, button.dataset.slot ?? ''))
   else if (action === 'equipment-set-switch') commitAction(switchEquipmentSet(session.state, heroId, dataNumber(button, 'setIndex')))
   else if (action === 'equipment-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
-  else if (action === 'organize-hero-inventory') commitAction(organizeInventory(session.state))
   else if (action === 'hero-main-tab') {
     const tab = button.dataset.mainTab
     if (tab === 'basic' || tab === 'equipment' || tab === 'martials' || tab === 'career' || tab === 'skins') heroMainTab = tab
@@ -2758,16 +2697,7 @@ const performAction = (button: HTMLButtonElement): void => {
     heroMartialSlot = emptySlot >= 0 ? emptySlot : null
     activeTab = 'heroes'
   }
-  else if (action === 'hero-sell-toggle') {
-    heroSellOpen = !heroSellOpen
-  }
-  else if (action === 'hero-sell-quality') {
-    const quality = Number(button.dataset.quality)
-    if (isEquipmentQuality(quality)) {
-      commitAction(sellEquipmentByQuality(session.state, quality, selectedWorldId || selectedPlaneId))
-    }
-    heroSellOpen = false
-  } else if (action === 'progression-section') {
+  else if (action === 'progression-section') {
     const section = button.dataset.section as ProgressionSection
     if (['dungeons', 'beasts', 'divine', 'forge', 'interworld'].includes(section)) progressionSection = section
   } else if (action === 'progression-complete-dungeon') {
@@ -2941,28 +2871,6 @@ app.addEventListener('keydown', (event) => {
   factionRosterOpen = false
   factionRosterQuery = ''
   render()
-})
-
-const equipHeroInventoryItem = (target: HTMLElement): boolean => {
-  const item = target.closest<HTMLElement>('[data-testid="hero-inventory-panel"] [data-equipment-uid]')
-  if (!item || appScreen !== 'playing') return false
-  const heroId = normalizeSelectedHero()
-  if (!heroId) {
-    notify('请先选择侠客', true)
-    return true
-  }
-  commitAction(equipEquipment(session.state, heroId, item.dataset.equipmentUid ?? ''))
-  render()
-  return true
-}
-
-app.addEventListener('dblclick', (event) => {
-  equipHeroInventoryItem(event.target as HTMLElement)
-})
-
-app.addEventListener('contextmenu', (event) => {
-  if (!equipHeroInventoryItem(event.target as HTMLElement)) return
-  event.preventDefault()
 })
 
 const handleStartOrResetAction = (action: string | undefined): boolean => {
@@ -3201,10 +3109,6 @@ app.addEventListener('click', (event) => {
   if (factionRosterOpen && !target.closest('.faction-disciple')) {
     factionRosterOpen = false
     factionRosterQuery = ''
-  }
-  // 按等阶售出下拉：点弹窗与触发按钮以外的区域即收起
-  if (heroSellOpen && !target.closest('.sellpop') && !target.closest('[data-action="hero-sell-toggle"]')) {
-    heroSellOpen = false
   }
   // 行囊按等阶出售下拉：点弹窗与触发按钮以外的区域即收起
   if (inventorySellOpen && !target.closest('.inventory-sellpop') && !target.closest('[data-action="inventory-sell-toggle"]')) {

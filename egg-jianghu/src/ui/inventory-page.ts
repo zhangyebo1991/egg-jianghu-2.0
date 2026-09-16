@@ -76,6 +76,7 @@ export interface InventoryPageViewModel {
   heroSidebar?: string
   heroEquipment?: string
   selectedHeroName?: string
+  equippedBySlot?: Partial<Record<EquipmentSlot, InventoryItemView>>
   qualityFilter?: EquipmentQuality | 'all'
   sort?: 'level' | 'quality'
   category?: 'all' | 'equipment' | 'material' | 'special'
@@ -127,6 +128,81 @@ const renderEquipmentIcon = (item: InventoryItemView): string => {
   return `<img src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}">`
 }
 
+type TooltipStat = InventoryCoreStatView | InventoryAffixView
+
+// 与身上同部位装备逐词条对比，标注 ▲/▼ 差值，便于扫一眼定优劣。
+const tooltipDeltaMark = (stat: TooltipStat, reference: Map<number, number>): string => {
+  const against = reference.get(stat.attributeId)
+  if (against === undefined) return ''
+  const difference = stat.value - against
+  const percent = stat.formattedValue.endsWith('%')
+  if (Math.abs(difference) < (percent ? 0.05 : 0.5)) return ''
+  const text = percent
+    ? `${difference > 0 ? '+' : ''}${Number(difference.toFixed(1))}%`
+    : `${difference > 0 ? '+' : ''}${Math.round(difference).toLocaleString('zh-CN')}`
+  return `<i class="tt-delta ${difference > 0 ? 'up' : 'down'}">${difference > 0 ? '▲' : '▼'}${text}</i>`
+}
+
+const renderTooltipStats = (stats: TooltipStat[], reference: Map<number, number> | null): string =>
+  `<dl class="equipment-properties">${stats.map((stat) => {
+    const grade = 'grade' in stat ? stat.grade : null
+    const roll = 'rollPercent' in stat ? stat.rollPercent : null
+    const delta = reference ? tooltipDeltaMark(stat, reference) : ''
+    const label = roll !== null ? ` <i>(${roll}%)</i>` : grade ? ` <i>[${grade}]</i>` : ''
+    return `<div${grade ? ` data-affix-grade="${grade}"` : ''}><dt>${escapeHtml(stat.name)}${label}</dt><dd>+${escapeHtml(stat.formattedValue)}${delta}</dd></div>`
+  }).join('')}</dl>`
+
+const renderTooltipStatGroups = (item: InventoryItemView, reference: Map<number, number> | null): string =>
+  `<div class="tt-stat-group"><h4>核心词条</h4>${renderTooltipStats(item.coreStats, reference)}</div>
+  ${item.affixes.length ? `<div class="tt-stat-group"><h4>附加词条</h4>${renderTooltipStats(item.affixes, reference)}</div>` : ''}`
+
+const renderEquipmentTooltipHeader = (item: InventoryItemView): string => `
+    <header>
+      <span>${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</span>
+      <strong>${escapeHtml(item.name)}</strong>
+      <em>品质 <b class="tt-q">${escapeHtml(EQUIPMENT_QUALITY_NAMES[item.quality])}</b> · 物品等级 Lv.${item.level} · 穿戴等级 Lv.${item.equipmentLevel}</em>
+    </header>`
+
+export const renderEquipmentTooltip = (item: InventoryItemView, footer: string, comparison?: InventoryItemView | null): string => {
+  if (!comparison) {
+    return `
+  <div class="equipment-tooltip" popover="manual" data-rarity="${item.quality}">
+    ${renderEquipmentTooltipHeader(item)}
+    <div class="equipment-tooltip-columns">
+      <section>
+        <small>核心词条</small>
+        ${renderTooltipStats(item.coreStats, null)}
+      </section>
+      ${item.affixes.length ? `<section>
+        <small>附加词条</small>
+        ${renderTooltipStats(item.affixes, null)}
+      </section>` : ''}
+    </div>
+    <footer>${escapeHtml(footer)}</footer>
+  </div>`
+  }
+  const reference = new Map<number, number>()
+  comparison.coreStats.forEach((stat) => reference.set(stat.attributeId, stat.value))
+  comparison.affixes.forEach((stat) => reference.set(stat.attributeId, stat.value))
+  return `
+  <div class="equipment-tooltip has-compare" popover="manual" data-rarity="${item.quality}">
+    ${renderEquipmentTooltipHeader(item)}
+    <div class="tt-compare">
+      <section class="tt-col">
+        <small>行囊物品</small>
+        <strong class="tt-compare-name" data-rarity="${item.quality}">${escapeHtml(item.name)}</strong>
+        ${renderTooltipStatGroups(item, reference)}
+      </section>
+      <section class="tt-col">
+        <small>身上装备</small>
+        <strong class="tt-compare-name" data-rarity="${comparison.quality}">${escapeHtml(comparison.name)}</strong>
+        ${renderTooltipStatGroups(comparison, null)}
+      </section>
+    </div>
+    <footer>${escapeHtml(footer)}</footer>
+  </div>`
+}
+
 const renderSlotTabs = (view: InventoryPageViewModel): string => view.slotTabs.map((tab) => `
   <button type="button" class="inventory-slot-tab${view.slotFilter === tab.id ? ' active' : ''}"
     data-action="inventory-filter" data-inventory-slot="${tab.id}"
@@ -134,7 +210,9 @@ const renderSlotTabs = (view: InventoryPageViewModel): string => view.slotTabs.m
     <span>${escapeHtml(tab.name)}</span><small>${tab.count}</small>
   </button>`).join('')
 
-const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null): string => `
+const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null, equippedBySlot?: InventoryPageViewModel['equippedBySlot']): string => {
+  const equipped = equippedBySlot?.[item.slot] ?? null
+  return `
   <button type="button" class="inventory-cell${item.uid === selectedUid ? ' selected' : ''}" data-rarity="${item.quality}"
     data-equipment-uid="${escapeHtml(item.uid)}" data-testid="equipment-${escapeHtml(item.uid)}"
     data-action="inventory-select" aria-pressed="${item.uid === selectedUid}"
@@ -144,10 +222,12 @@ const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null
     <span class="inventory-cell-icon" aria-hidden="true">${renderEquipmentIcon(item)}</span>
     <span class="inventory-cell-name">${escapeHtml(item.name)}</span>
     <span class="inventory-cell-slot">${escapeHtml(item.slotName)}</span>
+    ${renderEquipmentTooltip(item, '点击鉴定 · 详情页可为选中侠客穿戴', equipped?.uid === item.uid ? null : equipped)}
   </button>`
+}
 
 const renderInventoryGrid = (view: InventoryPageViewModel): string => view.items.length || view.stacks?.length
-  ? view.items.map((item) => renderInventoryCell(item, view.selectedUid)).join('') + (view.stacks ?? []).map(item => renderStack(item, view.selectedStack?.id)).join('')
+  ? view.items.map((item) => renderInventoryCell(item, view.selectedUid, view.equippedBySlot)).join('') + (view.stacks ?? []).map(item => renderStack(item, view.selectedStack?.id)).join('')
   : `<div class="inventory-empty">
       <span class="inventory-empty-seal" aria-hidden="true">空</span>
       <strong>囊 中 无 物</strong>

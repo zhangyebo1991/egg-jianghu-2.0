@@ -3,7 +3,7 @@ import { EQUIPMENT_SLOTS } from '../content/equipment'
 import { renderCityPage, type CityPageViewModel } from './city-page'
 import { renderFactionsPage, type FactionsPageViewModel } from './factions-page'
 import type { FactionExchangeViewModel } from './faction-exchange'
-import { buildPackPaginationItems, renderHeroesPage, type HeroesPageViewModel } from './heroes-page'
+import { renderHeroesPage, type HeroesPageViewModel } from './heroes-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './inventory-page'
 import { renderFormationPage, type FormationPageViewModel } from './formation-page'
 import { renderTownsPage, type TownsPageViewModel } from './towns-page'
@@ -66,16 +66,6 @@ const heroesFixture = (): HeroesPageViewModel => ({
     heroId: 'hero_test',
     setIndex: 0,
     slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: null })),
-  },
-  pack: {
-    capacity: 300,
-    itemCount: 0,
-    slotFilter: 'all',
-    qualityFilter: 'all',
-    page: 1,
-    pageCount: 1,
-    items: [],
-    sellOpen: false,
   },
 })
 
@@ -414,7 +404,7 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="hero-medallion"')
     expect(html).toContain('class="roster-search"')
     expect(html).toContain('data-testid="hero-equipment-slots"')
-    expect(html).toContain('data-testid="hero-inventory-panel"')
+    expect(html).not.toContain('data-testid="hero-inventory-panel"')
     expect(html).not.toContain('四槽武功')
     const open = renderHeroesPage({ ...heroesFixture(), careerTreeOpen: true })
     expect(open).toContain('data-testid="career-tree"')
@@ -422,7 +412,7 @@ describe('version 10 长期循环页面', () => {
     expect(open).toContain('当前职业')
   })
 
-  it('侠客已装备槽和行囊都使用原版装备图标', () => {
+  it('侠客已装备槽使用原版装备图标', () => {
     const view = heroesFixture()
     const item = inventoryFixture().items[0]
     view.equipment = {
@@ -430,20 +420,14 @@ describe('version 10 长期循环页面', () => {
       setIndex: 0,
       slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: slot === item.slot ? item : null })),
     }
-    view.pack = {
-      ...view.pack!,
-      itemCount: 1,
-      items: [{ ...item }],
-    }
 
     const html = renderHeroesPage(view)
-    expect(html.match(/data-equipment-icon-source="unique"/g)).toHaveLength(2)
+    expect(html.match(/data-equipment-icon-source="unique"/g)).toHaveLength(1)
     expect(html).toContain('class="equipment-art"')
-    expect(html).toContain('class="pack-cell"')
+    expect(html).not.toContain('class="pack-cell"')
   })
 
-  it('行囊属性笺并排对比身上同部位装备并标注词条增减', () => {
-    const view = heroesFixture()
+  it('行囊页格子悬停对比身上同部位装备并标注词条增减', () => {
     const backpackItem = inventoryFixture().items[0]
     const equippedItem = {
       ...backpackItem,
@@ -456,14 +440,9 @@ describe('version 10 长期循环页面', () => {
       ],
       affixes: [{ attributeId: 41, name: '火系增伤', value: 0.06, formattedValue: '6%', grade: 'B' }],
     }
-    view.equipment = {
-      heroId: 'hero_test',
-      setIndex: 0,
-      slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: slot === 'weapon' ? equippedItem : null })),
-    }
-    view.pack = { ...view.pack!, itemCount: 1, items: [backpackItem] }
+    const view = { ...inventoryFixture(), equippedBySlot: { weapon: equippedItem } }
 
-    const html = renderHeroesPage(view)
+    const html = renderInventoryPage(view)
     expect(html).toContain('class="equipment-tooltip has-compare"')
     expect(html).toContain('行囊物品')
     expect(html).toContain('身上装备')
@@ -474,70 +453,8 @@ describe('version 10 长期循环页面', () => {
     // 身上装备没有的词条不标注箭头
     expect(html).toContain('<dd>+4%</dd>')
     // 行囊物品与身上物品为同一件时不进入对比
-    const same = heroesFixture()
-    same.equipment = {
-      heroId: 'hero_test',
-      setIndex: 0,
-      slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: slot === backpackItem.slot ? backpackItem : null })),
-    }
-    same.pack = { ...same.pack!, itemCount: 1, items: [{ ...backpackItem }] }
-    expect(renderHeroesPage(same)).toContain('class="equipment-tooltip"')
-  })
-
-  it('行囊分页智能生成窗口页码与省略号，避免页数过多时数字挤压重叠', () => {
-    // 少于等于 5 页：全部显示
-    expect(buildPackPaginationItems(1, 4)).toEqual([
-      { type: 'page', page: 1, isCurrent: true },
-      { type: 'page', page: 2, isCurrent: false },
-      { type: 'page', page: 3, isCurrent: false },
-      { type: 'page', page: 4, isCurrent: false },
-    ])
-
-    // 多页（例如 17 页）在第 1 页：显示 1, 2, 3, 4, 省略号(+5), 17
-    const startItems = buildPackPaginationItems(1, 17)
-    expect(startItems).toEqual([
-      { type: 'page', page: 1, isCurrent: true },
-      { type: 'page', page: 2, isCurrent: false },
-      { type: 'page', page: 3, isCurrent: false },
-      { type: 'page', page: 4, isCurrent: false },
-      { type: 'ellipsis', jumpTo: 6, label: '向后翻 5 页' },
-      { type: 'page', page: 17, isCurrent: false },
-    ])
-
-    // 多页在中间页（例如第 10 页）：显示 1, 省略号(-5), 9, 10, 11, 省略号(+5), 17
-    const midItems = buildPackPaginationItems(10, 17)
-    expect(midItems).toEqual([
-      { type: 'page', page: 1, isCurrent: false },
-      { type: 'ellipsis', jumpTo: 5, label: '向前翻 5 页' },
-      { type: 'page', page: 9, isCurrent: false },
-      { type: 'page', page: 10, isCurrent: true },
-      { type: 'page', page: 11, isCurrent: false },
-      { type: 'ellipsis', jumpTo: 15, label: '向后翻 5 页' },
-      { type: 'page', page: 17, isCurrent: false },
-    ])
-
-    // 多页在尾页（例如第 17 页）：显示 1, 省略号(-5), 14, 15, 16, 17
-    const endItems = buildPackPaginationItems(17, 17)
-    expect(endItems).toEqual([
-      { type: 'page', page: 1, isCurrent: false },
-      { type: 'ellipsis', jumpTo: 12, label: '向前翻 5 页' },
-      { type: 'page', page: 14, isCurrent: false },
-      { type: 'page', page: 15, isCurrent: false },
-      { type: 'page', page: 16, isCurrent: false },
-      { type: 'page', page: 17, isCurrent: true },
-    ])
-
-    // 验证 renderHeroesPage 渲染出带省略号跳转和页数状态的紧凑分页
-    const view = heroesFixture()
-    view.pack = {
-      ...view.pack!,
-      page: 1,
-      pageCount: 17,
-    }
-    const html = renderHeroesPage(view)
-    expect(html).toContain('class="pg-num pg-ellipsis"')
-    expect(html).toContain('data-page="6"')
-    expect(html).toContain('第 1 / 17 页')
+    const same = { ...inventoryFixture(), equippedBySlot: { weapon: { ...backpackItem } } }
+    expect(renderInventoryPage(same)).toContain('class="equipment-tooltip"')
   })
 
   it('势力页显示五格悬榜、两线三门传承和原版招募名录', () => {

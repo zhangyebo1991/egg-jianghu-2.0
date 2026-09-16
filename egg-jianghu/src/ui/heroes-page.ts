@@ -2,20 +2,17 @@ import { escapeHtml } from './html'
 import { panelToAttributeMap, type CombatStats } from '../combat/stats'
 import { ATTRIBUTES, type AttributeMap } from '../content/attributes'
 import {
-  EQUIPMENT_QUALITIES,
-  EQUIPMENT_QUALITY_NAMES,
-  EQUIPMENT_SLOTS,
   EQUIPMENT_SLOT_MARKS,
   EQUIPMENT_SLOT_NAMES,
   type EquipmentSlot,
 } from '../content/equipment'
-import type { EquipmentQuality } from '../domain/types'
 import type { HeroAptitudes } from '../content/heroes'
 import { careerIconAsset } from './career-icon-assets'
 import { equipmentIconAsset } from './equipment-icon-assets'
 import { heroPortraitAsset } from './portrait-assets'
 import { heroAppearanceAsset, heroFigureStyle } from './hero-appearance-assets'
-import type { InventoryAffixView, InventoryCoreStatView, InventoryItemView } from './inventory-page'
+import type { InventoryItemView } from './inventory-page'
+import { renderEquipmentTooltip } from './inventory-page'
 import { renderHeroMartials, type HeroMartialsView } from './hero-martials'
 
 export interface CareerGrowthView {
@@ -106,17 +103,6 @@ export interface HeroesEquipmentView {
   slots: HeroEquipmentSlotView[]
 }
 
-export interface HeroesPackView {
-  capacity: number
-  itemCount: number
-  slotFilter: 'all' | EquipmentSlot
-  qualityFilter: 'all' | EquipmentQuality
-  page: number
-  pageCount: number
-  items: InventoryItemView[]
-  sellOpen: boolean
-}
-
 export interface HeroesPageViewModel {
   skinsHtml?: string
   selectedHeroId: string | null
@@ -133,7 +119,6 @@ export interface HeroesPageViewModel {
   treeLinks: CareerTreeLinkView[]
   treeDetail: CareerTreeDetailView | null
   equipment: HeroesEquipmentView | null
-  pack: HeroesPackView | null
 }
 
 const ROSTER_GRADES = ['all', '丙', '乙', '甲', '地', '天'] as const
@@ -159,9 +144,6 @@ const HERO_MAIN_TABS: Array<{ tab: HeroesMainTab; label: string }> = [
 // 装备页槽位左右分列（对齐原版）：左 武器/头部/护腕/项链/至宝，右 副手/身体/足部/戒指
 const EQUIP_LEFT_SLOTS: EquipmentSlot[] = ['weapon', 'head', 'wrist', 'necklace', 'treasure']
 const EQUIP_RIGHT_SLOTS: EquipmentSlot[] = ['offhand', 'armor', 'boots', 'ring']
-
-// 行囊右缘竖排部位筛选的显示字（对齐原版）
-const PACK_STRIP_MARKS: Record<EquipmentSlot, string> = { ...EQUIPMENT_SLOT_MARKS, necklace: '链' }
 
 const formatNumber = (value: number): string => Number.isInteger(value) ? String(value) : value.toFixed(1)
 const formatExp = (value: number): string => Math.floor(value).toLocaleString('zh-CN')
@@ -428,81 +410,6 @@ const renderPrototypeRoster = (view: HeroesPageViewModel): string => {
   return rows || '<div class="roster-none">查无此侠</div>'
 }
 
-type TooltipStat = InventoryCoreStatView | InventoryAffixView
-
-// 与身上同部位装备逐词条对比，标注 ▲/▼ 差值，便于扫一眼定优劣。
-const tooltipDeltaMark = (stat: TooltipStat, reference: Map<number, number>): string => {
-  const against = reference.get(stat.attributeId)
-  if (against === undefined) return ''
-  const difference = stat.value - against
-  const percent = stat.formattedValue.endsWith('%')
-  if (Math.abs(difference) < (percent ? 0.05 : 0.5)) return ''
-  const text = percent
-    ? `${difference > 0 ? '+' : ''}${Number(difference.toFixed(1))}%`
-    : `${difference > 0 ? '+' : ''}${Math.round(difference).toLocaleString('zh-CN')}`
-  return `<i class="tt-delta ${difference > 0 ? 'up' : 'down'}">${difference > 0 ? '▲' : '▼'}${text}</i>`
-}
-
-const renderTooltipStats = (stats: TooltipStat[], reference: Map<number, number> | null): string =>
-  `<dl class="equipment-properties">${stats.map((stat) => {
-    const grade = 'grade' in stat ? stat.grade : null
-    const roll = 'rollPercent' in stat ? stat.rollPercent : null
-    const delta = reference ? tooltipDeltaMark(stat, reference) : ''
-    const label = roll !== null ? ` <i>(${roll}%)</i>` : grade ? ` <i>[${grade}]</i>` : ''
-    return `<div${grade ? ` data-affix-grade="${grade}"` : ''}><dt>${escapeHtml(stat.name)}${label}</dt><dd>+${escapeHtml(stat.formattedValue)}${delta}</dd></div>`
-  }).join('')}</dl>`
-
-const renderTooltipStatGroups = (item: InventoryItemView, reference: Map<number, number> | null): string =>
-  `<div class="tt-stat-group"><h4>核心词条</h4>${renderTooltipStats(item.coreStats, reference)}</div>
-  ${item.affixes.length ? `<div class="tt-stat-group"><h4>附加词条</h4>${renderTooltipStats(item.affixes, reference)}</div>` : ''}`
-
-const renderEquipmentTooltipHeader = (item: InventoryItemView): string => `
-    <header>
-      <span>${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''}</span>
-      <strong>${escapeHtml(item.name)}</strong>
-      <em>品质 <b class="tt-q">${escapeHtml(EQUIPMENT_QUALITY_NAMES[item.quality])}</b> · 物品等级 Lv.${item.level} · 穿戴等级 Lv.${item.equipmentLevel}</em>
-    </header>`
-
-const renderEquipmentTooltip = (item: InventoryItemView, footer: string, comparison?: InventoryItemView | null): string => {
-  if (!comparison) {
-    return `
-  <div class="equipment-tooltip" popover="manual" data-rarity="${item.quality}">
-    ${renderEquipmentTooltipHeader(item)}
-    <div class="equipment-tooltip-columns">
-      <section>
-        <small>核心词条</small>
-        ${renderTooltipStats(item.coreStats, null)}
-      </section>
-      ${item.affixes.length ? `<section>
-        <small>附加词条</small>
-        ${renderTooltipStats(item.affixes, null)}
-      </section>` : ''}
-    </div>
-    <footer>${escapeHtml(footer)}</footer>
-  </div>`
-  }
-  const reference = new Map<number, number>()
-  comparison.coreStats.forEach((stat) => reference.set(stat.attributeId, stat.value))
-  comparison.affixes.forEach((stat) => reference.set(stat.attributeId, stat.value))
-  return `
-  <div class="equipment-tooltip has-compare" popover="manual" data-rarity="${item.quality}">
-    ${renderEquipmentTooltipHeader(item)}
-    <div class="tt-compare">
-      <section class="tt-col">
-        <small>行囊物品</small>
-        <strong class="tt-compare-name" data-rarity="${item.quality}">${escapeHtml(item.name)}</strong>
-        ${renderTooltipStatGroups(item, reference)}
-      </section>
-      <section class="tt-col">
-        <small>身上装备</small>
-        <strong class="tt-compare-name" data-rarity="${comparison.quality}">${escapeHtml(comparison.name)}</strong>
-        ${renderTooltipStatGroups(comparison, null)}
-      </section>
-    </div>
-    <footer>${escapeHtml(footer)}</footer>
-  </div>`
-}
-
 const renderEquipmentSlot = (hero: HeroesHeroView, entry: HeroEquipmentSlotView): string => {
   const item = entry.item
   const icon = equipmentIconAsset(entry.slot, item?.definitionId)
@@ -513,7 +420,7 @@ const renderEquipmentSlot = (hero: HeroesHeroView, entry: HeroEquipmentSlotView)
       : `<span class="eq-mark" aria-hidden="true">${EQUIPMENT_SLOT_MARKS[entry.slot]}</span>`}</span>
     <span class="eq-slot-name">${EQUIPMENT_SLOT_NAMES[entry.slot]}</span>
     ${item ? `<button type="button" class="eq-unequip" data-action="equipment-unequip" data-hero-id="${escapeHtml(hero.id)}" data-slot="${entry.slot}" aria-label="卸下${escapeHtml(item.name)}">卸</button>` : ''}
-    ${item ? renderEquipmentTooltip(item, hero.level < item.equipmentLevel ? `需人物 Lv.${item.equipmentLevel} 方可穿戴` : '双击行囊中物品，可替换此位') : ''}
+    ${item ? renderEquipmentTooltip(item, hero.level < item.equipmentLevel ? `需人物 Lv.${item.equipmentLevel} 方可穿戴` : '换装请往行囊页点选物品') : ''}
   </article>`
 }
 
@@ -546,7 +453,7 @@ const renderEquipmentTab = (hero: HeroesHeroView, equipment: HeroesEquipmentView
         <button type="button" class="eq-set-btn" data-action="equipment-build-toggle" aria-label="切换一键穿戴方向" title="点击切换物理 / 法术">${equipment.autoEquipBuild === 'magical' ? '法术' : '物理'} ↔</button>
         <button type="button" class="eq-set-btn" data-action="equipment-auto-equip" data-hero-id="${escapeHtml(hero.id)}" title="核心词条优先，附加词条次之；仅更新当前套装，不更换至宝">一键穿戴</button>
       </div>
-      <span class="eq-hint">双击行囊物品直接换装 · 悬停槽位看详情</span>
+      <span class="eq-hint">行囊页可穿戴与卸下 · 悬停槽位看详情</span>
     </footer>
   </div>`
 }
@@ -562,127 +469,6 @@ const renderMainTabs = (view: HeroesPageViewModel, hero: HeroesHeroView): string
   <div class="hero-tab-panel" data-main-tab="career"${view.mainTab === 'career' ? '' : ' hidden'}>${renderCareerTab(hero)}</div>
   <div class="hero-tab-panel" data-main-tab="skins"${view.mainTab === 'skins' ? '' : ' hidden'}>${view.skinsHtml ?? ''}</div>`
 
-export type PackPaginationItem =
-  | { type: 'page'; page: number; isCurrent: boolean }
-  | { type: 'ellipsis'; jumpTo: number; label: string }
-
-export const buildPackPaginationItems = (currentPage: number, pageCount: number): PackPaginationItem[] => {
-  if (pageCount <= 1) {
-    return [{ type: 'page', page: 1, isCurrent: true }]
-  }
-  if (pageCount <= 5) {
-    return Array.from({ length: pageCount }, (_, i) => ({
-      type: 'page',
-      page: i + 1,
-      isCurrent: i + 1 === currentPage,
-    }))
-  }
-
-  const items: PackPaginationItem[] = []
-  items.push({ type: 'page', page: 1, isCurrent: currentPage === 1 })
-
-  if (currentPage <= 3) {
-    for (let p = 2; p <= Math.min(4, pageCount - 1); p++) {
-      items.push({ type: 'page', page: p, isCurrent: p === currentPage })
-    }
-    if (pageCount > 5) {
-      items.push({
-        type: 'ellipsis',
-        jumpTo: Math.min(pageCount, currentPage + 5),
-        label: '向后翻 5 页',
-      })
-    }
-  } else if (currentPage >= pageCount - 2) {
-    items.push({
-      type: 'ellipsis',
-      jumpTo: Math.max(1, currentPage - 5),
-      label: '向前翻 5 页',
-    })
-    for (let p = Math.max(2, pageCount - 3); p < pageCount; p++) {
-      items.push({ type: 'page', page: p, isCurrent: p === currentPage })
-    }
-  } else {
-    items.push({
-      type: 'ellipsis',
-      jumpTo: Math.max(1, currentPage - 5),
-      label: '向前翻 5 页',
-    })
-    items.push({ type: 'page', page: currentPage - 1, isCurrent: false })
-    items.push({ type: 'page', page: currentPage, isCurrent: true })
-    items.push({ type: 'page', page: currentPage + 1, isCurrent: false })
-    items.push({
-      type: 'ellipsis',
-      jumpTo: Math.min(pageCount, currentPage + 5),
-      label: '向后翻 5 页',
-    })
-  }
-
-  items.push({ type: 'page', page: pageCount, isCurrent: currentPage === pageCount })
-  return items
-}
-
-const renderPackRail = (view: HeroesPageViewModel): string => {
-  const pack = view.pack
-  if (!pack) return ''
-  const slotIds: Array<'all' | EquipmentSlot> = ['all', ...EQUIPMENT_SLOTS]
-  const strip = slotIds.map((id) => id === 'all'
-    ? `<button type="button" class="strip-btn${pack.slotFilter === 'all' ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="all" title="全部">全</button>`
-    : `<button type="button" class="strip-btn${pack.slotFilter === id ? ' active' : ''}" data-action="hero-pack-slot" data-inventory-slot="${id}" title="${EQUIPMENT_SLOT_NAMES[id]}">${PACK_STRIP_MARKS[id]}</button>`).join('')
-  const qualityChips = (['all', ...EQUIPMENT_QUALITIES] as const).map((quality) => quality === 'all'
-    ? `<button type="button" class="qchip${pack.qualityFilter === 'all' ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="all">全部</button>`
-    : `<button type="button" class="qchip${pack.qualityFilter === quality ? ' active' : ''}" data-action="hero-pack-quality" data-filter-value="${quality}" style="--qc:var(--q-${quality})"><i></i>${EQUIPMENT_QUALITY_NAMES[quality]}</button>`).join('')
-  const sellPanel = pack.sellOpen ? `<div class="sellpop">
-      <div class="sp-title">按等阶售出<small>点档位立即售出 ≤ 该档的未装备物品</small></div>
-      ${EQUIPMENT_QUALITIES.map((quality) => `<button type="button" class="sp-opt" data-action="hero-sell-quality" data-quality="${quality}" style="color:var(--q-${quality})">${EQUIPMENT_QUALITY_NAMES[quality]}及以下</button>`).join('')}
-    </div>` : ''
-  const equippedBySlot = new Map((view.equipment?.slots ?? []).map((entry) => [entry.slot, entry.item]))
-  const cells = pack.items.map((item) => {
-    const icon = equipmentIconAsset(item.slot, item.definitionId)
-    const equipped = equippedBySlot.get(item.slot) ?? null
-    return `
-      <button type="button" class="pack-cell" data-quality="${item.quality}" style="--qc:var(--q-${item.quality})"
-        data-equipment-uid="${escapeHtml(item.uid)}" data-testid="hero-pack-${escapeHtml(item.uid)}"
-        aria-label="${escapeHtml(item.name)}">
-        ${item.locked ? '<span class="pk-lock">锁</span>' : ''}
-        <img src="${escapeHtml(icon.url)}" alt="" aria-hidden="true" draggable="false" data-equipment-icon-source="${icon.source}">
-        <span class="pk-lv">Lv.${item.level}</span>
-        ${renderEquipmentTooltip(item, '双击左键，为当前侠客装备', equipped?.uid === item.uid ? null : equipped)}
-      </button>`
-  }).join('')
-  const pageItems = buildPackPaginationItems(pack.page, pack.pageCount)
-  const pageButtons = pageItems.map((item) => {
-    if (item.type === 'ellipsis') {
-      return `<button type="button" class="pg-num pg-ellipsis" data-action="hero-pack-page" data-page="${item.jumpTo}" title="${escapeHtml(item.label)}" aria-label="${escapeHtml(item.label)}">…</button>`
-    }
-    return `<button type="button" class="pg-num${item.isCurrent ? ' active' : ''}" data-action="hero-pack-page" data-page="${item.page}" aria-label="第 ${item.page} 页" ${item.isCurrent ? 'aria-current="page"' : ''}>${item.page}</button>`
-  }).join('')
-
-  return `<aside class="pack-rail hero-inventory-panel" data-testid="hero-inventory-panel">
-    <div class="pack-inner">
-      <header class="pack-head">
-        <div class="sec-title"><h2>行囊</h2><span class="sub">仅未装备</span></div>
-        <div class="pack-cap"><b>${pack.itemCount}</b><span> / ${pack.capacity}</span></div>
-      </header>
-      <div class="pack-tool-btns">
-        <button type="button" class="pk-btn" data-action="organize-hero-inventory">整理</button>
-        <button type="button" class="pk-btn danger${pack.sellOpen ? ' active' : ''}" data-action="hero-sell-toggle">按等阶售出</button>
-      </div>
-      <div class="qchips">${qualityChips}</div>
-      <div class="packbody">
-        <div class="pack-grid">${cells || '<div class="pack-empty"><strong>行囊空空</strong><span>调整筛选，或往江湖战斗获取</span></div>'}</div>
-        <div class="slotstrip">${strip}</div>
-      </div>
-      ${sellPanel}
-      <nav class="pack-page" aria-label="行囊分页">
-        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page - 1}" ${pack.page <= 1 ? 'disabled' : ''} title="上一页" aria-label="上一页">‹</button>
-        <div class="pg-nums">${pageButtons}</div>
-        <button type="button" class="pg-btn" data-action="hero-pack-page" data-page="${pack.page + 1}" ${pack.page >= pack.pageCount ? 'disabled' : ''} title="下一页" aria-label="下一页">›</button>
-        <span class="pack-page-status">第 ${pack.page} / ${pack.pageCount} 页</span>
-      </nav>
-      <footer class="pack-foot">悬停对比身上装备 · 双击为当前侠客装备</footer>
-    </div>
-  </aside>`
-}
 
 export const renderHeroesPage = (view: HeroesPageViewModel): string => {
   const selected = view.heroes.find((hero) => hero.id === view.selectedHeroId) ?? view.heroes[0]
@@ -690,7 +476,6 @@ export const renderHeroesPage = (view: HeroesPageViewModel): string => {
   const total = view.heroes.length
   return `<section class="heroes-page" data-testid="heroes-page">
     <span class="ghost-char ghost-roster" aria-hidden="true">侠</span>
-    <span class="ghost-char ghost-pack" aria-hidden="true">囊</span>
     <div class="heroes-stage">
       <aside class="roster-rail hero-roster" data-testid="hero-roster-panel"><div class="roster-inner"><header class="roster-head"><div class="sec-title"><h2>点将谱</h2></div><div class="roster-head-right"><button type="button" class="btn-locate" data-action="locate-hero">定位</button><div class="roster-count"><span>${rosterCount === total ? '在队' : '筛中'}</span><b>${rosterCount === total ? total : `${rosterCount} / ${total}`}</b></div></div></header>
         <div class="roster-search-row"><input type="search" class="roster-search" data-action="hero-roster-search" value="${escapeHtml(view.rosterQuery ?? '')}" placeholder="以名相寻…" autocomplete="off" aria-label="搜索侠客">${renderPrototypeRosterFilters(view)}</div>
@@ -699,7 +484,6 @@ export const renderHeroesPage = (view: HeroesPageViewModel): string => {
       <section class="dossier hero-workbench" data-testid="selected-hero">${selected
         ? renderMainTabs(view, selected)
         : '<section class="dossier-sec hero-empty"><strong>尚无侠客</strong><span>前往城市酒馆直接邀请。</span></section>'}</section>
-      ${renderPackRail(view)}
     </div>
     ${selected ? renderCareerTreeOverlay(selected, view) : ''}
     <footer class="page-foot heroes-page-foot"><span><b>侠客页</b> · 蛋蛋江湖 2.0 · 装备、武学与职业</span><span>获取侠客请前往城市或势力</span></footer>

@@ -92,10 +92,10 @@ button:disabled { opacity: .35; }
 .ink-shell .ink-leaf input, .ink-shell .ink-leaf select { max-width: 100%; border: 1px solid var(--night-line-2); background: var(--night-2); color: var(--pn); }
 .ink-shell .ink-leaf :is(button, a) { -webkit-tap-highlight-color: transparent; }
 .ink-shell .ink-leaf :is(button:hover:not(:disabled), a:hover) { border-color: var(--pn-dim); color: var(--pn); }
-.ink-shell .ink-leaf :is(.panel, .roster-rail, .dossier, .pack-rail, .inventory-board, .inventory-appraise, .inventory-shop, .formation-field, .formation-roster, .formation-hero-card, .faction-board, .faction-meridian, .faction-exchange, .faction-recruitment, .city-shop-book, .city-receipts, .settings-group) { border: 1px solid var(--night-line-2); border-radius: 0; background: var(--night-2); box-shadow: none; }
-.ink-shell .ink-leaf :is(.roster-inner, .pack-inner, .inventory-board-inner, .inventory-appraise-paper, .formation-roster-inner, .faction-board-inner) { background: transparent; box-shadow: none; }
-.ink-shell .ink-leaf :is(.roster-rail, .pack-rail, .inventory-board, .inventory-appraise, .formation-field, .formation-roster, .faction-board, .faction-meridian)::before,
-.ink-shell .ink-leaf :is(.roster-rail, .pack-rail, .inventory-board, .inventory-appraise, .formation-field, .formation-roster, .faction-board, .faction-meridian)::after { content: none; }
+.ink-shell .ink-leaf :is(.panel, .roster-rail, .dossier, .inventory-board, .inventory-appraise, .inventory-shop, .formation-field, .formation-roster, .formation-hero-card, .faction-board, .faction-meridian, .faction-exchange, .faction-recruitment, .city-shop-book, .city-receipts, .settings-group) { border: 1px solid var(--night-line-2); border-radius: 0; background: var(--night-2); box-shadow: none; }
+.ink-shell .ink-leaf :is(.roster-inner, .inventory-board-inner, .inventory-appraise-paper, .formation-roster-inner, .faction-board-inner) { background: transparent; box-shadow: none; }
+.ink-shell .ink-leaf :is(.roster-rail, .inventory-board, .inventory-appraise, .formation-field, .formation-roster, .faction-board, .faction-meridian)::before,
+.ink-shell .ink-leaf :is(.roster-rail, .inventory-board, .inventory-appraise, .formation-field, .formation-roster, .faction-board, .faction-meridian)::after { content: none; }
 .ink-shell .ink-leaf :is(.r-row, .formation-roster-row, .faction-plaque, .catrow, .city-goods-row) { box-shadow: none; border-color: var(--night-line); }
 .ink-shell .ink-leaf :is(.active, .selected, .on)[aria-pressed="true"] { border-color: var(--crimson); }
 .ink-shell img:not([data-ink-asset]) { filter: grayscale(1) sepia(.15); }
@@ -126,19 +126,16 @@ button:disabled { opacity: .35; }
 .ink-stage-actions .ink-crimson { color: var(--crimson); border: 1px solid var(--crimson); background: transparent; }
 
 /* 行囊 / 侠客：检索名册、物品网格、装备详情均留在夜册。 */
-.ink-shell .ink-leaf .heroes-stage { display: grid; height: auto; min-height: 0; grid-template-columns: 240px minmax(0, 1fr) 290px; gap: 18px; align-items: start; }
-.ink-shell .ink-leaf :is(.roster-rail, .pack-rail, .dossier) { position: relative; top: 0; height: auto; min-height: 0; }
+.ink-shell .ink-leaf .heroes-stage { display: grid; height: auto; min-height: 0; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: start; }
+.ink-shell .ink-leaf :is(.roster-rail, .dossier) { position: relative; top: 0; height: auto; min-height: 0; }
 .ink-shell .ink-leaf .roster-list { grid-template-columns: minmax(0, 1fr); max-height: 54vh; overflow-y: auto; }
 .ink-shell .ink-leaf :is(.hb-idcard, .hb-growrow, .hb-attrs, .hero-martials, .hc-wrap, .hero-equip, .hero-basic, .dossier-sec, .attr-tab-content, .hm-card, .hm-slot, .hc-card, .learned-card) { background: var(--night-2); border-color: var(--night-line-2); border-radius: 0; box-shadow: none; }
-.ink-shell .ink-leaf :is(.roster-head, .pack-head, .dossier-head, .htabs, .hb-idrow, .hb-growrow, .attr-tab-bar, .pack-tool-btns, .qchips, .slotstrip, .pack-page, .pack-foot) { border-color: var(--night-line); background: transparent; }
-.ink-shell .ink-leaf .roster-inner, .ink-shell .ink-leaf .pack-inner { height: auto; padding: 12px; }
+.ink-shell .ink-leaf :is(.roster-head, .dossier-head, .htabs, .hb-idrow, .hb-growrow, .attr-tab-bar) { border-color: var(--night-line); background: transparent; }
+.ink-shell .ink-leaf .roster-inner { height: auto; padding: 12px; }
 .ink-shell .ink-leaf .r-row { background: transparent; color: var(--pn); }
 .ink-shell .ink-leaf .r-row.active { background: var(--crimson-soft); }
 .ink-shell .ink-leaf :is(.r-seal, .formation-grade-seal, .hb-grade) { background: var(--crimson); color: var(--pn); border-color: var(--crimson); }
-.ink-shell .ink-leaf .packbody { flex: none; height: min(440px, 50vh); min-height: 280px; grid-template-rows: minmax(0, 1fr); }
-.ink-shell .ink-leaf .pack-grid { scrollbar-gutter: stable; }
-.ink-shell .ink-leaf .pack-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.ink-shell .ink-leaf :is(.pack-cell, .inventory-cell) { background: var(--night-2); border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf :is(.inventory-cell) { background: var(--night-2); border-radius: 0; box-shadow: none; }
 .ink-shell .ink-leaf .inventory-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
 .ink-shell .ink-leaf .inventory-board-inner { padding: 14px; }
 .ink-shell .ink-leaf .inventory-appraise { position: sticky; top: 0; }
@@ -364,14 +361,14 @@ button:disabled { opacity: .35; }
 .ink-shell .idle-page .wave-bead.boss-bead { width: 10px; height: 10px; border-color: var(--ink-45); }
 .ink-shell .ink-leaf :is(.heroes-page, .formation-page, .inventory-page, .city-page, .shop-page) * { text-shadow: none; }
 .ink-shell .ink-leaf :is(.heroes-page, .formation-page, .inventory-page, .city-page, .shop-page) :is(b, strong) { color: var(--pn); }
-.ink-shell .ink-leaf :is(.heroes-page, .formation-page, .inventory-page, .city-page, .shop-page) :is(article, section, header, footer, nav, aside, dl, .roster-inner, .pack-inner) { border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf :is(.heroes-page, .formation-page, .inventory-page, .city-page, .shop-page) :is(article, section, header, footer, nav, aside, dl, .roster-inner) { border-radius: 0; box-shadow: none; }
 .ink-shell .ink-leaf :is(.roster-head, .roster-search-row, .roster-list) { padding: 10px 0; }
 .ink-shell .ink-leaf .roster-head { flex-wrap: wrap; gap: 10px; }
 .ink-shell .ink-leaf .roster-head-right { flex: 1; }
 .ink-shell .ink-leaf .roster-row { min-width: 0; gap: 8px; padding: 8px 3px; background: none; }
 .ink-shell .ink-leaf .roster-row.active { background: var(--crimson-soft); box-shadow: none; border-color: var(--crimson); }
 .ink-shell .ink-leaf .r-flag { padding: 2px 3px; letter-spacing: 0; border-color: var(--night-line-2); border-radius: 0; }
-.ink-shell .ink-leaf :is(.roster-ghead, .hb-idcard, .hb-idrow, .hb-base, .hb-growrow, .pack-inner, .roster-inner, .attr2-cell, .ability-cell) { background: var(--night-2); }
+.ink-shell .ink-leaf :is(.roster-ghead, .hb-idcard, .hb-idrow, .hb-base, .hb-growrow, .roster-inner, .attr2-cell, .ability-cell) { background: var(--night-2); }
 .ink-shell .ink-leaf .heroes-page .fchip.active { color: var(--night); background: var(--pn); border-color: var(--pn); }
 .ink-shell .ink-leaf .heroes-page :is(.htab, .hb-grade, .attr-tab-label, .ability-node, .attr2-ic, .pg-btn, .pg-num) { border-radius: 0; box-shadow: none; background: transparent; border-color: var(--night-line-2); color: var(--pn); }
 .ink-shell .ink-leaf .heroes-page :is(.htab.active, .attr-tab-label.active, .pg-num.active) { background: var(--crimson-soft); border-color: var(--crimson); }
@@ -446,6 +443,10 @@ button:disabled { opacity: .35; }
 .ink-shell .ink-bag-equipped .ink-equipped { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .ink-shell .ink-equipped button { min-height: 58px; }
 .ink-shell .ink-equipped button:disabled { opacity: .6; }
+.ink-bag-tools { display: flex; gap: 6px; margin: 0 0 8px; }
+.ink-bag-tools .ink-tool-btn { flex: 1; min-width: 0; padding: 8px 6px; border: 1px solid var(--night-line-2); background: transparent; color: var(--pn-dim); font-size: 12px; letter-spacing: .12em; white-space: nowrap; }
+.ink-bag-tools .ink-tool-btn:hover:not(:disabled) { border-color: var(--pn-dim); color: var(--pn); }
+.ink-bag-tools .ink-tool-btn.primary { border-color: var(--crimson); background: var(--crimson-soft); color: var(--pn); }
 .ink-shell .ink-leaf .ink-bag-side .inventory-appraise { position: static; }
 .ink-shell .ink-leaf .ink-bag-side .inventory-appraise-paper { padding: 12px; }
 .ink-bag-filters { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
@@ -506,7 +507,6 @@ button:disabled { opacity: .35; }
   .ink-shell .ink-leaf .inventory-layout { grid-template-columns: 220px minmax(0, 1fr); }
   .ink-shell .ink-leaf .inventory-appraise { grid-column: 1 / -1; position: static; }
   .ink-shell .ink-leaf .heroes-stage { grid-template-columns: 230px minmax(0, 1fr); }
-  .ink-shell .ink-leaf .pack-rail { grid-column: 1 / -1; }
   .ink-shell .ink-leaf .formation-muster-layout { grid-template-columns: 1fr; }
   .ink-shell .ink-leaf .formation-roster, .ink-shell .ink-leaf .formation-field, .ink-shell .ink-leaf .formation-hero-card { grid-column: auto; grid-row: auto; position: static; }
 }
@@ -514,7 +514,7 @@ button:disabled { opacity: .35; }
   .ink-iconbar { width: 280px; flex-wrap: wrap; justify-content: flex-end; }
 }
 .ink-shell .ink-leaf.docked .heroes-stage, .ink-shell .ink-leaf.docked .inventory-layout, .ink-shell .ink-leaf.docked .formation-muster-layout, .ink-shell .ink-leaf.docked .ink-bag-side { display: grid; grid-template-columns: minmax(0, 1fr); }
-.ink-shell .ink-leaf.docked :is(.formation-roster, .formation-field, .formation-hero-card, .pack-rail) { grid-column: auto; grid-row: auto; position: static; }
+.ink-shell .ink-leaf.docked :is(.formation-roster, .formation-field, .formation-hero-card) { grid-column: auto; grid-row: auto; position: static; }
 .ink-shell .ink-leaf.docked .roster-list { max-height: 208px; }
 .ink-leaf.docked .ink-worlds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 700px) {

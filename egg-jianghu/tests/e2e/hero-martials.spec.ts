@@ -186,26 +186,16 @@ test('世界与势力往返保留位置，已学武学可直达装配', async ({
   await expect(page.getByTestId('world-overview')).toBeVisible()
 })
 
-test('行囊末页与侠客选择在离页后保留', async ({ page }) => {
+test('侠客选择与资料页签在离页后保留', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 700 })
   await page.evaluate(() => {
-    window.__EGG_JIANGHU__.fillInventory(300)
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
   })
   await openPanel(page, 'heroes')
   await page.getByTestId('hero-hero_mu_nianci').click()
   await page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]').click()
-  for (let index = 0; index < 30; index++) {
-    const next = page.locator('.pack-page .pg-btn').last()
-    if (await next.isDisabled()) break
-    await next.click()
-  }
-  const status = await page.locator('.pack-page-status').innerText()
-  const firstUid = await page.locator('.pack-cell').first().getAttribute('data-equipment-uid')
   await openPanel(page, 'inventory')
   await openPanel(page, 'heroes')
-  await expect(page.locator('.pack-page-status')).toHaveText(status)
-  await expect(page.locator('.pack-cell').first()).toHaveAttribute('data-equipment-uid', firstUid!)
   await expect(page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('hero-hero_mu_nianci')).toHaveClass(/active/)
 })

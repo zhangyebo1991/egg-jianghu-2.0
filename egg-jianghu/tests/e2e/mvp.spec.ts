@@ -415,12 +415,12 @@ test('侠客页展示当前职业与诸天属性', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('侠客页展示八槽装备栏与行囊', async ({ page }) => {
+test('侠客页展示八槽装备栏', async ({ page }) => {
   await page.setViewportSize({ width: 1676, height: 941 })
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(2))
   await openPanel(page, 'heroes')
 
-  await expect(page.getByTestId('hero-inventory-panel')).toBeVisible()
+  await expect(page.getByTestId('hero-inventory-panel')).toHaveCount(0)
   await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="equipment"]').click()
   await expect(page.getByTestId('hero-equipment-slots')).toBeVisible()
   await expect(page.getByTestId('hero-equipment-slots').locator('.pd-slot, .eq-slot')).toHaveCount(9)
