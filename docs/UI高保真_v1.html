@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蛋蛋江湖 2.0 · UI 高保真原型 v1 — 水墨</title>
+<style>
+/* ============================================================
+   水墨 · 设计系统
+   纸 = 宣纸暖白  墨 = 松烟墨（深浅阶梯）  朱 = 朱砂印泥（唯一强调色）
+   卷上为昼（主界面） · 册内为夜（功能面板）
+   ============================================================ */
+:root{
+  --paper:#ece5d3; --paper-2:#e3dac5; --paper-3:#d3c8ae; --paper-sky:#f3edde;
+  --ink:#1d1a15; --ink-70:rgba(29,26,21,.72); --ink-45:rgba(29,26,21,.45); --ink-18:rgba(29,26,21,.16);
+  --night:#191611; --night-2:#211d16; --night-line:rgba(236,229,211,.14); --night-line-2:rgba(236,229,211,.26);
+  --pn:#e9e2cf; --pn-dim:#a99f88; --pn-faint:#7c7461;
+  --crimson:#c2402a; --crimson-deep:#93301f; --crimson-soft:rgba(194,64,42,.15);
+  --kai:"Kaiti SC","STKaiti","KaiTi","TW-Kai","楷体",serif;
+  --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC",sans-serif;
+  --latin:Georgia,"Songti SC",serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --leaf-w:min(580px,96vw);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:var(--sans); color:var(--ink); background:var(--paper);
+  -webkit-font-smoothing:antialiased; user-select:none;
+}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:rgba(236,229,211,.22);border-radius:10px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------------- 场景 · 昼卷 ---------------- */
+#scene{position:fixed;inset:0;overflow:hidden;
+  background:linear-gradient(180deg,var(--paper-sky) 0%,var(--paper) 52%,var(--paper-2) 100%)}
+#scene::before{content:"";position:absolute;inset:0;z-index:0;opacity:0;transition:opacity 1.2s var(--ease);
+  background:url("../assets/ui/bg-battlefield.png") center bottom/cover no-repeat;pointer-events:none}
+#scene.hasbg::before{opacity:1}
+#scene.hasbg svg.mountains{display:none}
+#scene::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;mix-blend-mode:multiply;opacity:.55;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 0.11 0 0 0 0 0.10 0 0 0 0 0.08 0 0 0 0.06 0"/></filter><rect width="260" height="260" filter="url(%23n)"/></svg>')}
+#scene svg.mountains{position:absolute;left:-4%;width:108%;bottom:14vh;pointer-events:none}
+.ridge{animation:drift linear infinite}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-3.2%)}}
+.mist{position:absolute;left:-20%;width:140%;height:16vh;border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(255,255,255,.55),rgba(255,255,255,0) 68%);
+  filter:blur(14px);pointer-events:none;animation:mistmove linear infinite}
+@keyframes mistmove{from{transform:translateX(-6%)}50%{transform:translateX(6%)}to{transform:translateX(-6%)}}
+#sun{position:absolute;top:9vh;right:16vw;width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle,#f4eeda 30%,rgba(244,238,218,0) 72%);pointer-events:none}
+#ground{position:absolute;left:0;right:0;bottom:0;height:16vh;pointer-events:none;
+  background:linear-gradient(180deg,rgba(29,26,21,.06),rgba(29,26,21,.24))}
+#ground::before{content:"";position:absolute;inset:0;opacity:.5;
+  background:repeating-linear-gradient(175deg,transparent 0 46px,var(--ink-18) 46px 47px)}
+.leaf-fall{position:absolute;top:-4vh;width:9px;height:13px;background:var(--ink-45);
+  border-radius:60% 0 60% 0;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{
+  0%{transform:translate3d(0,-4vh,0) rotate(0deg);opacity:0}
+  8%{opacity:.85}
+  100%{transform:translate3d(-16vw,108vh,0) rotate(660deg);opacity:0}
+}
+
+/* ---------------- 战场 ---------------- */
+#field{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 2vw}
+#lanes{width:min(1180px,94vw);display:grid;grid-template-columns:1fr auto 1fr;gap:2.4vw;align-items:center}
+.army{display:flex;flex-direction:column;gap:1.6vh}
+.lane{display:flex;gap:1vw;align-items:center}
+.lane.enemy{justify-content:flex-start}
+.lane-tag{font-family:var(--kai);font-size:12px;writing-mode:vertical-rl;letter-spacing:.35em;color:var(--ink-45)}
+.unit{position:relative;width:86px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform .35s var(--ease)}
+.unit.party{cursor:pointer}
+.unit.party:hover{transform:translateY(-4px)}
+.token{position:relative;width:62px;height:62px;border-radius:50%;
+  border:3.5px solid var(--ink);background:var(--paper);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--kai);font-size:26px;box-shadow:3px 4px 0 rgba(29,26,21,.18);overflow:hidden}
+.token img.face{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.token.enemy{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.token .seal{position:absolute;right:-7px;top:-7px;width:22px;height:22px;border-radius:4px;
+  background:var(--crimson);color:#fdf7ee;font-size:11px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--kai);box-shadow:1px 2px 0 rgba(29,26,21,.25)}
+.u-name{font-size:12px;font-weight:600;letter-spacing:.08em}
+.u-hp{width:64px;height:5px;background:var(--ink-18);border-radius:3px;overflow:hidden}
+.u-hp i{display:block;height:100%;background:var(--ink);border-radius:3px;transition:width .4s var(--ease)}
+.u-hp.low i{background:var(--crimson)}
+.u-en{display:flex;gap:3px}
+.u-en b{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ink-45)}
+.u-en b.on{background:var(--crimson);border-color:var(--crimson)}
+#party .unit{cursor:pointer}
+#party .unit.picked .token{border-color:var(--crimson);box-shadow:0 0 0 3px var(--crimson-soft)}
+#party .unit.picked{cursor:crosshair}
+#midline{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--ink-70)}
+#midline .vs{font-family:var(--kai);font-size:22px;letter-spacing:.2em}
+#midline .waveinfo{font-size:12px;letter-spacing:.2em;text-align:center;line-height:1.7}
+#midline .waveinfo b{font-family:var(--latin);font-size:20px;letter-spacing:.05em}
+#vsline{width:1px;height:34vh;background:linear-gradient(180deg,transparent,var(--ink-45) 18%,var(--ink-45) 82%,transparent)}
+
+/* 伤害飘字 / 波次横幅 */
+.float{position:absolute;font-family:var(--latin);font-weight:700;font-size:20px;color:var(--crimson);
+  pointer-events:none;animation:floatup 1s var(--ease) forwards;z-index:5;white-space:nowrap}
+.float.heal{color:var(--ink)}
+.float.gold{color:var(--ink);font-size:14px}
+@keyframes floatup{0%{opacity:0;transform:translateY(6px) scale(.7)}15%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-52px) scale(1.02)}}
+#wavebanner{position:absolute;top:24vh;left:50%;transform:translateX(-50%);pointer-events:none;
+  font-family:var(--kai);font-size:clamp(28px,4vw,44px);letter-spacing:.3em;color:var(--ink);
+  opacity:0;z-index:6;text-shadow:2px 3px 0 rgba(236,229,211,.7)}
+#wavebanner.show{animation:banner 2.4s var(--ease) forwards}
+@keyframes banner{0%{opacity:0;transform:translateX(-50%) scale(1.15);filter:blur(6px)}
+  18%{opacity:1;transform:translateX(-50%) scale(1);filter:blur(0)}
+  78%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-14px)}}
+
+/* ---------------- HUD ---------------- */
+.hud{position:fixed;z-index:20}
+#resbar{top:14px;left:16px;display:flex;gap:10px;align-items:stretch}
+.purse{display:flex;align-items:center;gap:8px;padding:7px 12px;background:rgba(244,239,226,.66);
+  border:1.5px solid var(--ink);backdrop-filter:blur(3px);box-shadow:2px 3px 0 rgba(29,26,21,.14)}
+.purse .glyph{width:24px;height:24px;border-radius:5px;background:var(--ink);color:var(--paper);
+  display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:13px}
+.purse b{font-family:var(--latin);font-size:16px;letter-spacing:.02em}
+.purse small{font-size:10px;color:var(--ink-70);letter-spacing:.15em;display:block;line-height:1.3}
+.purse .tickline{width:52px;height:4px;background:var(--ink-18);border-radius:2px;margin-top:3px;overflow:hidden}
+.purse .tickline i{display:block;height:100%;background:var(--crimson);border-radius:2px}
+
+#iconbar{top:12px;right:14px;display:flex;gap:8px}
+.iconbtn{width:62px;height:62px;border:3.5px solid var(--ink);background:rgba(244,239,226,.8);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  box-shadow:3px 4px 0 rgba(29,26,21,.2);transition:transform .25s var(--ease),background .25s}
+.iconbtn:hover{transform:translate(-2px,-2px);background:#fff;box-shadow:5px 6px 0 rgba(29,26,21,.22)}
+.iconbtn.on{background:var(--ink);color:var(--paper)}
+.iconbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.iconbtn .cn{font-family:var(--kai);font-size:13px;letter-spacing:.1em}
+.iconbtn .dot{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;
+  background:var(--crimson);border:2px solid var(--paper)}
+
+#ctlbar{bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
+  padding:9px 18px;background:rgba(244,239,226,.78);border:2px solid var(--ink);
+  box-shadow:3px 4px 0 rgba(29,26,21,.2);backdrop-filter:blur(4px)}
+#ctlbar .waves{display:flex;gap:5px;align-items:center}
+.wbead{width:11px;height:11px;border-radius:50%;border:2px solid var(--ink-45)}
+.wbead.done{background:var(--ink);border-color:var(--ink)}
+.wbead.cur{border-color:var(--crimson);background:var(--crimson-soft);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{background:var(--crimson)}}
+.ctl{font-family:var(--kai);font-size:14px;letter-spacing:.12em;padding:6px 13px;
+  border:2px solid var(--ink);transition:all .2s var(--ease)}
+.ctl:hover{background:var(--ink);color:var(--paper)}
+.ctl.on{background:var(--ink);color:var(--paper);box-shadow:inset 2px 2px 0 rgba(236,229,211,.25)}
+.ctl.warn{border-color:var(--crimson);color:var(--crimson)}
+.ctl.warn:hover{background:var(--crimson);color:#fff}
+.ctlsplit{width:1px;height:22px;background:var(--ink-18)}
+.ctlgroup{display:flex;gap:4px}
+.ctl.mini{padding:6px 9px;font-size:12px}
+
+#lootfeed{bottom:88px;left:16px;width:290px;display:flex;flex-direction:column-reverse;gap:4px;pointer-events:none}
+.feed{font-size:12px;color:var(--ink-70);background:rgba(244,239,226,.72);border-left:3px solid var(--ink);
+  padding:4px 9px;animation:feedin .4s var(--ease);letter-spacing:.04em}
+.feed b{color:var(--crimson)}
+@keyframes feedin{from{opacity:0;transform:translateX(-10px)}to{opacity:1}}
+
+</style>
+<style>
+/* ---------------- 夜册 · 功能面板 ---------------- */
+#scrim{position:fixed;inset:0;background:rgba(25,22,18,.34);z-index:38;opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+#scrim.show{opacity:1;pointer-events:auto}
+.leaf{position:fixed;top:0;right:0;bottom:0;width:var(--leaf-w);z-index:40;
+  background:var(--night);color:var(--pn);display:flex;flex-direction:column;
+  transform:translateX(103%);transition:transform .5s var(--ease);
+  border-left:1px solid var(--night-line-2);
+  box-shadow:-18px 0 48px rgba(25,22,18,.5)}
+.leaf.open{transform:translateX(0)}
+.leaf::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;
+  background:repeating-linear-gradient(180deg,var(--night-line-2) 0 5px,transparent 5px 22px)}
+.leaf::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;opacity:.5;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 0.91 0 0 0 0 0.88 0 0 0 0 0.80 0 0 0 0.05 0"/></filter><rect width="260" height="260" filter="url(%23n)"/></svg>')}
+.leaf-head{padding:20px 22px 14px 26px;border-bottom:1px solid var(--night-line);display:flex;align-items:flex-start;gap:12px}
+.leaf-head h2{font-family:var(--kai);font-size:27px;letter-spacing:.18em;font-weight:600;margin-top:2px}
+.leaf-close{margin-left:auto;width:36px;height:36px;border:2px solid var(--night-line-2);color:var(--pn);
+  font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.leaf-close:hover{border-color:var(--crimson);color:var(--crimson);transform:rotate(90deg)}
+.leaf-body{flex:1;overflow-y:auto;padding:16px 22px 26px 26px}
+
+/* 居中册页模式（宽屏默认 · 可切回右侧停靠） */
+.leaf.modal{left:50%;right:auto;top:3.5vh;bottom:3.5vh;width:min(1560px,94vw);
+  transform:translate(-50%,110%);border:1px solid var(--night-line-2);
+  box-shadow:0 40px 120px rgba(25,22,18,.55)}
+.leaf.modal.open{transform:translate(-50%,0)}
+.leaf.modal::before{display:none}
+
+/* 夜册通用组件 */
+.nsec{margin-bottom:22px}
+.nsec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.nsec-head h3{font-family:var(--kai);font-size:17px;letter-spacing:.2em}
+.nsec-head .right{margin-left:auto;font-size:11px;color:var(--pn-dim)}
+.nrow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--night-line);font-size:13px}
+.nrow .k{color:var(--pn-dim);font-size:12px;letter-spacing:.1em}
+.nrow .v{margin-left:auto;font-family:var(--latin);font-size:14px}
+.nrow .v.crimson{color:var(--crimson)}
+.hairline{height:1px;background:var(--night-line);margin:14px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;
+  border:2px solid var(--pn-dim);color:var(--pn);font-size:13px;letter-spacing:.12em;font-family:var(--kai);
+  transition:all .22s var(--ease)}
+.btn:hover{border-color:var(--pn);background:rgba(236,229,211,.08)}
+.btn.solid{background:var(--pn);color:var(--night);border-color:var(--pn);font-weight:600}
+.btn.solid:hover{background:#fff;border-color:#fff}
+.btn.crimson{border-color:var(--crimson);color:var(--crimson)}
+.btn.crimson:hover{background:var(--crimson);color:#fff}
+.btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.btn.xs{padding:4px 10px;font-size:11px;border-width:1.5px}
+.chip{padding:4px 11px;border:1.5px solid var(--night-line-2);font-size:12px;letter-spacing:.08em;color:var(--pn-dim);transition:all .18s}
+.chip:hover{color:var(--pn);border-color:var(--pn-dim)}
+.chip.on{background:var(--pn);color:var(--night);border-color:var(--pn);font-weight:600}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-block;padding:2px 8px;font-size:10px;letter-spacing:.12em;border:1px solid var(--night-line-2);color:var(--pn-dim)}
+.tag.red{border-color:var(--crimson);color:var(--crimson)}
+.pbar{height:5px;background:var(--night-line);border-radius:3px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--pn);border-radius:3px;transition:width .5s var(--ease)}
+.pbar.red i{background:var(--crimson)}
+
+/* 关卡面板 · 位面带 */
+.planestrip{display:flex;flex-wrap:wrap;gap:8px;padding:4px 2px 10px}
+.plane{flex:0 0 auto;width:88px;padding:9px 6px;border:1.5px solid var(--night-line-2);text-align:center;transition:all .2s}
+.plane .no{font-family:var(--latin);font-size:9px;letter-spacing:.14em;color:var(--pn-faint)}
+.plane .nm{font-family:var(--kai);font-size:14px;letter-spacing:.1em;margin-top:2px}
+.plane .st{font-size:9px;color:var(--pn-dim);margin-top:3px;letter-spacing:.08em}
+.plane.on{border-color:var(--pn);background:rgba(236,229,211,.1)}
+.plane.on .nm{color:#fff}
+.plane.lock{opacity:.38}
+.diffbars{display:flex;gap:5px;margin:10px 0 4px}
+.diffbar{flex:1;padding:7px 2px;text-align:center;border:1.5px solid var(--night-line-2);font-size:11px;color:var(--pn-dim);transition:all .18s}
+.diffbar.on{background:var(--pn);color:var(--night);border-color:var(--pn);font-weight:700}
+.diffbar.lock{opacity:.3;pointer-events:none}
+.stagepath{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:8px}
+.stagenode{position:relative;padding:11px 4px 8px;text-align:center;border:1.5px solid var(--night-line-2);transition:all .2s}
+.stagenode .n{font-family:var(--kai);font-size:16px}
+.stagenode .t{font-size:9px;color:var(--pn-dim);margin-top:2px;letter-spacing:.04em}
+.stagenode .s{font-size:9px;margin-top:3px;color:var(--pn-faint)}
+.stagenode.on{border-color:var(--crimson);background:var(--crimson-soft)}
+.stagenode.on .s{color:var(--crimson)}
+.stagenode.done{border-color:var(--pn-dim)}
+.stagenode.done .s{color:var(--pn-dim)}
+.stagenode.lock{opacity:.32;pointer-events:none}
+
+/* 行囊 · 装备 */
+.herochips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
+/* 规模适配：侠客选择器 = 搜索 + 双列滚动列表（替代横滑 chips） */
+.herolist{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;max-height:208px;overflow-y:auto;padding-right:4px}
+.herolist .hrow{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--night-line);cursor:pointer;font-size:12px;transition:background .15s}
+.herolist .hrow:hover{background:rgba(236,229,211,.06)}
+.herolist .hrow.on{background:var(--crimson-soft)}
+.herolist .hrow .face{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--pn-dim);display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:11px;flex:0 0 auto}
+.herolist .hrow.on .face{border-color:var(--crimson);background:var(--crimson);color:#fff}
+.herolist .hrow .hn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.herolist .hrow small{color:var(--pn-dim);font-size:10px;margin-left:auto;white-space:nowrap;flex:0 0 auto}
+/* 筛选条吸顶：长列表滚动时不丢筛选 */
+.stickybar{position:sticky;top:-17px;background:var(--night);z-index:3;padding:8px 0 6px;margin-bottom:8px}
+/* 限高滚动容器 */
+.vscroll{max-height:220px;overflow-y:auto}
+.hchip{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:5px 11px;border:1.5px solid var(--night-line-2);font-size:12px}
+.hchip .face{width:20px;height:20px;border-radius:50%;background:var(--pn-dim);color:var(--night);
+  display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:11px}
+.hchip.on{border-color:var(--crimson);background:var(--crimson-soft)}
+.hchip.on .face{background:var(--crimson);color:#fff}
+.equipzone{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;margin-bottom:8px}
+.eslot{position:relative;height:62px;border:1.5px dashed var(--night-line-2);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;font-size:10px;color:var(--pn-faint);transition:all .2s;padding-top:8px}
+.eslot.filled{border-style:solid;border-color:var(--night-line-2);background:var(--night-2);color:var(--pn)}
+.eslot .g{font-family:var(--kai);font-size:15px;color:var(--pn);line-height:1}
+.eslot .eq{position:absolute;top:3px;left:5px;font-size:9px;letter-spacing:.15em;color:var(--pn-faint)}
+.eslot .lv{font-family:var(--latin);font-size:9px;color:var(--pn-dim)}
+.baggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px}
+.bcell{position:relative;aspect-ratio:1;border:1.5px solid var(--night-line-2);background:var(--night-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .2s var(--ease);overflow:hidden}
+.bcell img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92}
+.bcell{cursor:pointer}
+.bcell span{position:relative;z-index:1}
+.bcell:hover{border-color:var(--pn-dim);transform:translateY(-2px)}
+.bcell .g{font-family:var(--kai);font-size:17px}
+.bcell .lv{font-family:var(--latin);font-size:9px;color:var(--pn-dim)}
+.bcell .lk{position:absolute;top:3px;right:4px;font-size:9px;color:var(--crimson)}
+.bcell.sel{border-color:var(--crimson);box-shadow:0 0 0 1px var(--crimson)}
+.bcell.q0{opacity:.55}
+.bcell.q3 .g,.bcell.q4 .g{color:#e8d9a0}
+.bcell.q5 .g{color:var(--crimson)}
+.itemdetail{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:12px 14px;margin-top:10px;font-size:12px}
+.itemdetail h4{font-family:var(--kai);font-size:16px;letter-spacing:.1em;display:flex;gap:8px;align-items:baseline}
+.itemdetail .attr{display:flex;justify-content:space-between;padding:3px 0;color:var(--pn-dim);border-bottom:1px dashed var(--night-line)}
+.itemdetail .attr b{color:var(--pn);font-family:var(--latin)}
+.itemdetail .ops{display:flex;gap:8px;margin-top:10px}
+
+/* 势力 · 悬榜 */
+.questgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px}
+.quest{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:11px 12px;position:relative;transition:all .2s}
+.quest:hover{border-color:var(--pn-dim)}
+.quest .qt{display:flex;justify-content:space-between;font-size:10px;color:var(--pn-dim);letter-spacing:.1em}
+.quest h4{font-family:var(--kai);font-size:15px;margin:5px 0 3px;letter-spacing:.08em}
+.quest .qp{font-size:11px;color:var(--pn-dim);line-height:1.6}
+.quest .qr{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11px}
+.quest .qr b{font-family:var(--latin);color:var(--crimson)}
+.quest.done{opacity:.55}
+.quest .stamp{position:absolute;top:8px;right:8px;font-family:var(--kai);font-size:10px;color:var(--crimson);
+  border:1px solid var(--crimson);padding:1px 5px;transform:rotate(8deg)}
+.autobox{border:1.5px solid var(--night-line-2);padding:11px 13px;margin-bottom:12px;background:rgba(194,64,42,.06)}
+.autobox .ahead{display:flex;align-items:center;gap:9px;font-family:var(--kai);font-size:14px;letter-spacing:.14em}
+.switch{width:38px;height:20px;border-radius:12px;background:var(--night-line);position:relative;transition:background .25s;flex:0 0 auto}
+.switch::after{content:"";position:absolute;top:2.5px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--pn-dim);transition:all .25s var(--ease)}
+.switch.on{background:var(--crimson)}
+.switch.on::after{left:20px;background:#fff}
+.autobox .aline{display:flex;gap:14px;margin-top:9px;flex-wrap:wrap;font-size:11px;color:var(--pn-dim);align-items:center}
+.autobox .aline .chiprow{gap:4px}
+.autobox .aline .chip{font-size:10px;padding:3px 8px}
+
+/* 势力 · 兑换目录 */
+.catrow{display:flex;align-items:center;gap:9px;padding:9px 4px;border-bottom:1px solid var(--night-line)}
+.catrow .ic{width:30px;height:30px;border:1.5px solid var(--night-line-2);display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:14px;flex:0 0 auto}
+.catrow .nm{font-size:13px}
+.catrow .nm small{display:block;font-size:10px;color:var(--pn-dim);margin-top:1px}
+.catrow .cost{margin-left:auto;font-size:11px;color:var(--pn-dim);text-align:right;line-height:1.5;white-space:nowrap}
+.catrow .cost b{font-family:var(--latin);color:var(--pn)}
+.catrow .btn{flex:0 0 auto}
+.catrow.hiddenrow{opacity:.45}
+.catrow .hcheck{width:15px;height:15px;border:1.5px solid var(--night-line-2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--crimson)}
+.catrow .hcheck.on{border-color:var(--crimson);background:var(--crimson-soft)}
+
+/* 侠客详情 · 册页 */
+.sheetwrap{position:fixed;inset:0;z-index:44;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.sheet{width:min(680px,94vw);max-height:88vh;overflow-y:auto;background:var(--night);color:var(--pn);
+  border:1px solid var(--night-line-2);box-shadow:0 30px 80px rgba(25,22,18,.6);pointer-events:none;
+  transform:translateY(26px) scale(.97);opacity:0;transition:all .45s var(--ease)}
+.sheet.open{transform:none;opacity:1;pointer-events:auto}
+.sheet-head{display:flex;gap:14px;padding:18px 22px;border-bottom:1px solid var(--night-line);align-items:center}
+.sheet-head .bigface{width:58px;height:58px;border-radius:50%;border:3px solid var(--pn-dim);background:var(--night-2);
+  display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:24px;position:relative;overflow:hidden}
+.sheet-head .bigface img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.sheet-head h2{font-family:var(--kai);font-size:24px;letter-spacing:.14em}
+.sheet-head .meta{font-size:11px;color:var(--pn-dim);margin-top:3px;letter-spacing:.1em}
+.sheet-tabs{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--night-line)}
+.stab{padding:9px 15px;font-family:var(--kai);font-size:14px;letter-spacing:.14em;color:var(--pn-dim);border-bottom:2px solid transparent}
+.stab.on{color:var(--pn);border-color:var(--crimson)}
+.sheet-body{padding:16px 22px 22px}
+.radar{display:flex;justify-content:center;padding:6px 0 2px}
+
+/* 阵容 · 演武场 */
+.fstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:16px}
+.fstat{border:1.5px solid var(--night-line-2);padding:9px 10px;background:var(--night-2)}
+.fstat b{font-family:var(--latin);font-size:17px;display:block}
+.fstat span{font-size:10px;color:var(--pn-dim);letter-spacing:.15em}
+/* 单屏双栏：左演武场 · 右名册（独立滚动） */
+.fmain{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr);gap:20px;align-items:start}
+.fright{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:12px 12px 10px;
+  position:sticky;top:0;max-height:calc(100vh - 265px);display:flex;flex-direction:column}
+.fright .froster{overflow-y:auto;min-height:0;margin-top:2px;padding-right:4px}
+.frighthint{font-size:10.5px;color:var(--pn-dim);line-height:1.75;margin-bottom:8px}
+/* 行囊三栏：侠客 | 物品 | 装备详情 */
+.baglayout3{display:grid;grid-template-columns:280px minmax(0,1fr) 300px;gap:18px;align-items:start}
+.bagheroes{position:sticky;top:0}
+.bagheroes .herolist{grid-template-columns:1fr;max-height:calc(100vh - 330px)}
+.pager{display:flex;align-items:center;gap:8px;justify-content:center;padding:8px 0 2px;font-size:10.5px;color:var(--pn-dim);border-top:1px solid var(--night-line);margin-top:4px}
+.pager .chip[disabled]{opacity:.35;pointer-events:none}
+@media (max-width:1500px){
+  .baglayout3{grid-template-columns:260px minmax(0,1fr)}
+  .bagside{grid-column:1/-1;position:static}
+}
+@media (max-width:1100px){
+  .fmain{grid-template-columns:1fr}
+  .fright{position:static;max-height:none}
+  .fright .froster{overflow:visible}
+  .baglayout3{grid-template-columns:1fr}
+  .bagheroes{position:static}
+  .bagheroes .herolist{max-height:208px}
+}
+.ffield{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:12px 10px 10px;margin-bottom:4px}
+.flane{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.flane:last-child{margin-bottom:0}
+.flane-tag{flex:0 0 auto;width:26px;font-family:var(--kai);font-size:10px;color:var(--pn-faint);text-align:center}
+.fslot{flex:1;max-width:66px;aspect-ratio:1/1.12;border:1.5px dashed var(--night-line-2);display:flex;align-items:center;justify-content:center;position:relative;transition:all .18s}
+.fslot .void{font-size:9px;color:var(--pn-faint);letter-spacing:.2em}
+.fslot.filled{border-style:solid;background:var(--night);cursor:pointer}
+.fslot.over{border-color:var(--crimson);background:var(--crimson-soft)}
+.ftoken{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:var(--kai);width:100%;height:100%;padding:4px 0}
+.ftoken .face{width:30px;height:30px;border-radius:50%;border:2px solid var(--pn-dim);background:var(--night-2);display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;flex:0 0 auto;overflow:hidden}
+.ftoken .face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.ftoken .seal{position:absolute;top:-7px;right:-9px;font-size:8px;color:var(--crimson);border:1px solid var(--crimson);background:var(--night);padding:0 2px;border-radius:2px;line-height:1.4}
+.ftoken .nm{font-size:9px;color:var(--pn-dim);letter-spacing:.02em;white-space:nowrap}
+.ftoken.sel .face{border-color:var(--crimson);box-shadow:0 0 0 2px var(--crimson-soft)}
+.ffield-axis{display:flex;justify-content:space-between;font-size:9px;color:var(--pn-faint);letter-spacing:.2em;margin:2px 2px 10px}
+.fops{display:flex;gap:8px;margin:2px 0 10px}
+.fbench{min-height:58px;border:1.5px dashed var(--night-line-2);padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fbench .hint{font-size:10px;color:var(--pn-faint);letter-spacing:.12em}
+.fbench .ftoken{width:46px;height:54px;cursor:grab;border:1px solid var(--night-line)}
+.fbench.over{border-color:var(--crimson);background:var(--crimson-soft)}
+.froster{display:grid;grid-template-columns:1fr}
+.froster .rrow{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--night-line);cursor:pointer;transition:background .15s}
+.froster .rrow:hover{background:rgba(236,229,211,.06)}
+.froster .rrow .face{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--pn-dim);display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:13px;flex:0 0 auto}
+.froster .rrow .nm{font-size:13px}
+.froster .rrow .nm small{display:block;font-size:10px;color:var(--pn-dim);margin-top:1px}
+.froster .rrow .state{margin-left:auto;font-size:10px;letter-spacing:.12em;color:var(--pn-faint);flex:0 0 auto}
+.froster .rrow .state.on{color:var(--crimson);border:1px solid var(--crimson);padding:1px 6px;transform:rotate(6deg)}
+.froster .rrow.picked{background:var(--crimson-soft)}
+.froster .rrow.picked .face{border-color:var(--crimson)}
+
+/* 大列表 · 两栏 / 分组折叠 / 检索 */
+.baglayout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:20px;align-items:start}
+.bagside{position:sticky;top:0}
+.bagside .equipzone{grid-template-columns:repeat(3,1fr)}
+.bagside .eslot{height:58px}
+.catlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));column-gap:22px}
+.kindhead{display:flex;align-items:baseline;gap:8px;width:100%;padding:8px 2px;margin-top:8px;
+  border-bottom:1px solid var(--night-line-2);font-family:var(--kai);font-size:13px;letter-spacing:.18em;color:var(--pn)}
+.kindhead .cnt{font-family:var(--latin);font-size:10px;color:var(--pn-faint);letter-spacing:.1em}
+.kindhead .arr{margin-left:auto;color:var(--pn-faint);font-size:11px;transition:transform .2s}
+.kindhead.closed .arr{transform:rotate(-90deg)}
+.kindgroup.closed .catlist,.kindgroup.closed .recruitrows{display:none}
+.recruitrows .catrow:last-child{border-bottom:none}
+@media (max-width:1100px){
+  .baglayout{grid-template-columns:1fr}
+  .bagside{position:static}
+  .catlist{grid-template-columns:1fr}
+}
+/* 右侧停靠模式统一单列，宽布局仅居中模式启用 */
+.leaf:not(.modal) .baglayout{grid-template-columns:1fr}
+.leaf:not(.modal) .baglayout3{grid-template-columns:1fr}
+.leaf:not(.modal) .bagheroes{position:static}
+.leaf:not(.modal) .bagheroes .herolist{max-height:208px}
+.leaf:not(.modal) .bagside{position:static;grid-column:auto}
+.leaf:not(.modal) .catlist{grid-template-columns:1fr}
+.leaf:not(.modal) .fmain{grid-template-columns:1fr}
+.leaf:not(.modal) .fright{position:static;max-height:none}
+.leaf:not(.modal) .fright .froster{overflow:visible}
+
+/* 商城 / 城市 / 设置 */
+.poolbox{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:16px;text-align:center}
+.poolbox .drawface{width:54px;height:54px;margin:8px auto;border-radius:50%;border:2.5px solid var(--crimson);
+  display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:22px;color:var(--crimson)}
+.card{border:1.5px solid var(--night-line-2);padding:12px 14px;margin-bottom:9px}
+.card h4{font-family:var(--kai);font-size:15px;letter-spacing:.1em;display:flex;justify-content:space-between}
+.card h4 .state{font-size:10px;color:var(--pn-dim);font-family:var(--sans)}
+.card h4 .state.live{color:var(--crimson)}
+.card p{font-size:11px;color:var(--pn-dim);margin-top:5px;line-height:1.7}
+.staffrow{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--night-line);font-size:12px}
+.setrow{display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--night-line)}
+.setrow .t{font-size:13px}
+.setrow .t small{display:block;color:var(--pn-dim);font-size:11px;margin-top:3px;line-height:1.6}
+.setrow select{margin-left:auto;background:var(--night-2);color:var(--pn);border:1.5px solid var(--night-line-2);padding:7px 10px;font-size:12px;font-family:inherit}
+input[type=text],input[type=search]{background:var(--night-2);border:1.5px solid var(--night-line-2);color:var(--pn);padding:8px 11px;font-size:12px;font-family:inherit}
+input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--pn-dim)}
+
+/* Toast */
+#toasts{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--ink);color:var(--paper);padding:10px 20px;font-size:13px;letter-spacing:.08em;
+  box-shadow:3px 4px 0 rgba(25,22,18,.3);animation:toastin .4s var(--ease);border-left:3px solid var(--crimson)}
+@keyframes toastin{from{opacity:0;transform:translateY(12px)}to{opacity:1}}
+
+/* 响应式 */
+@media (max-width:900px){
+  #lanes{grid-template-columns:1fr auto 1fr;gap:1vw}
+  .unit{width:60px}
+  .token{width:44px;height:44px;font-size:19px;border-width:2.5px}
+  .u-hp{width:46px}
+  .iconbtn{width:44px;height:44px;border-width:2.5px}
+  .iconbtn svg{width:16px;height:16px}
+  #iconbar{top:8px;right:8px;gap:5px;flex-wrap:wrap;width:150px;justify-content:flex-end}
+  #resbar{top:8px;left:8px;gap:5px;flex-direction:column;max-width:44vw}
+  .purse{padding:4px 7px;gap:5px}
+  .purse .glyph{width:18px;height:18px;font-size:10px;border-radius:3px}
+  .purse b{font-size:13px}
+  .purse small{display:none}
+  .purse .tickline{width:38px;margin-top:2px}
+  #resbar .purse:nth-child(3){display:none}
+  #field{padding-top:96px}
+  #wavebanner{top:15vh}
+  #ctlbar{bottom:10px;gap:6px;padding:6px 8px;max-width:96vw;flex-wrap:wrap;justify-content:center}
+  #lootfeed{display:none}
+  .questgrid{grid-template-columns:1fr}
+  .equipzone{grid-template-columns:repeat(5,1fr)}
+  .eslot{height:52px}
+  .baggrid{grid-template-columns:repeat(4,1fr)}
+  .leaf.modal{left:0;top:0;bottom:0;width:100%;transform:translateX(103%)}
+  .leaf.modal.open{transform:none}
+  .baglayout{grid-template-columns:1fr}
+  .bagside{position:static}
+  .catlist{grid-template-columns:1fr}
+  .froster{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<!-- ================= 昼卷 · 主场景 ================= -->
+<div id="scene">
+  <div id="sun"></div>
+  <svg class="mountains" viewBox="0 0 1440 420" preserveAspectRatio="none" aria-hidden="true">
+    <path class="ridge" style="animation-duration:120s" fill="rgba(29,26,21,.10)"
+      d="M0,300 L120,240 L260,290 L400,200 L560,280 L700,180 L880,270 L1040,190 L1200,260 L1340,210 L1440,250 L1440,420 L0,420 Z"/>
+    <path class="ridge" style="animation-duration:90s;animation-direction:reverse" fill="rgba(29,26,21,.16)"
+      d="M0,340 L160,260 L320,330 L480,240 L640,320 L820,230 L1000,310 L1180,250 L1320,300 L1440,270 L1440,420 L0,420 Z"/>
+    <path class="ridge" style="animation-duration:60s" fill="rgba(29,26,21,.24)"
+      d="M0,380 L200,300 L380,370 L560,290 L760,365 L960,285 L1160,360 L1320,310 L1440,350 L1440,420 L0,420 Z"/>
+  </svg>
+  <div class="mist" style="bottom:26vh;animation-duration:38s"></div>
+  <div class="mist" style="bottom:14vh;height:11vh;animation-duration:27s;opacity:.7"></div>
+  <div id="ground"></div>
+</div>
+
+<!-- 战场 -->
+<div id="field"><div id="lanes">
+  <div class="army" id="party"></div>
+  <div id="midline">
+    <span class="vs">对 阵</span>
+    <div id="vsline"></div>
+    <div class="waveinfo" id="waveinfo"></div>
+  </div>
+  <div class="army" id="enemies"></div>
+</div></div>
+<div id="wavebanner"></div>
+
+<!-- HUD · 左上资源 -->
+<div class="hud" id="resbar">
+  <div class="purse">
+    <span class="glyph">蛋</span>
+    <div><b id="voucherNum">1,280</b><small>蛋蛋 · 今日 <span id="voucherToday">420</span>/700</small>
+      <div class="tickline"><i id="voucherTick" style="width:38%"></i></div></div>
+  </div>
+  <div class="purse">
+    <span class="glyph" id="coinGlyph">汉</span>
+    <div><b id="coinNum">54,200</b><small id="coinName">汉末通宝 · 本卷</small></div>
+  </div>
+  <div class="purse">
+    <span class="glyph" style="background:var(--crimson)">力</span>
+    <div><b id="powerNum">128,600</b><small>队伍战力</small></div>
+  </div>
+</div>
+
+<!-- HUD · 右上功能图标 -->
+<div class="hud" id="iconbar">
+  <button class="iconbtn" data-panel="stage" aria-label="关卡">
+    <svg viewBox="0 0 24 24"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2zm0 0v14m6-12v14"/></svg>
+    <span class="cn">关卡</span>
+  </button>
+  <button class="iconbtn" data-panel="bag" aria-label="行囊">
+    <svg viewBox="0 0 24 24"><path d="M5 8h14l-1.5 12h-11L5 8zm4 0a3 3 0 0 1 6 0"/></svg>
+    <span class="cn">行囊</span>
+  </button>
+  <button class="iconbtn" data-panel="formation" aria-label="阵容">
+    <svg viewBox="0 0 24 24"><path d="M6 4.5h.01M12 4.5h.01M18 4.5h.01M6 12h.01M12 12h.01M18 12h.01M4 19.5h16"/></svg>
+    <span class="cn">阵容</span>
+  </button>
+  <button class="iconbtn" data-panel="quest" aria-label="悬榜">
+    <svg viewBox="0 0 24 24"><path d="M7 3h10v18l-5-3-5 3V3zM9.5 8h5M9.5 12h5"/></svg>
+    <span class="cn">悬榜</span>
+  </button>
+  <button class="iconbtn" data-panel="exchange" aria-label="兑换">
+    <svg viewBox="0 0 24 24"><path d="M7 8h11m0 0-3-3m3 3-3 3M17 16H6m0 0 3-3m-3 3 3 3"/></svg>
+    <span class="cn">兑换</span>
+  </button>
+  <button class="iconbtn" data-panel="recruit" aria-label="招募">
+    <svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.5"/><path d="M4 20c0-3.5 2.7-6 6-6s6 2.5 6 6M18 8v6M15 11h6"/></svg>
+    <span class="cn">招募</span>
+  </button>
+  <button class="iconbtn" data-panel="shop" aria-label="商城">
+    <svg viewBox="0 0 24 24"><path d="M4 9 6 4h12l2 5M4 9h16M4 9v11h16V9m-10 0v11m4-11v11"/></svg>
+    <span class="cn">商城</span>
+  </button>
+  <button class="iconbtn" data-panel="city" aria-label="城市">
+    <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V9h6v12M14 21V5h5v16M8 12h.01M8 16h.01M16.5 9h.01M16.5 13h.01"/></svg>
+    <span class="cn">城市</span>
+  </button>
+  <button class="iconbtn" data-panel="settings" aria-label="设置">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg>
+    <span class="cn">设置</span>
+  </button>
+</div>
+
+<!-- HUD · 底部战斗控制 -->
+<div class="hud" id="ctlbar">
+  <div class="waves" id="wavebeads"></div>
+  <span class="ctlsplit"></span>
+  <div class="ctlgroup">
+    <button class="ctl on" id="modeGuard">驻 守</button>
+    <button class="ctl" id="modeRoam">闯 荡</button>
+  </div>
+  <div class="ctlgroup" id="speedgroup">
+    <button class="ctl mini on" data-speed="1">1×</button>
+    <button class="ctl mini" data-speed="2">2×</button>
+    <button class="ctl mini" data-speed="4">4×</button>
+  </div>
+  <span class="ctlsplit"></span>
+  <button class="ctl" id="btnForm">布 阵</button>
+  <button class="ctl warn" id="btnStop">停 止</button>
+</div>
+
+<div class="hud" id="lootfeed"></div>
+
+<!-- 夜册 -->
+<div id="scrim"></div>
+<aside class="leaf" id="leaf" aria-hidden="true">
+  <div class="leaf-head">
+    <div><h2 id="leafTitle"></h2></div>
+    <button class="leaf-close" id="dockToggle" title="切换 居中册页 / 右侧停靠" aria-label="切换面板位置">⇄</button>
+    <button class="leaf-close" id="leafClose" aria-label="关闭">✕</button>
+  </div>
+  <div class="leaf-body" id="leafBody"></div>
+</aside>
+
+<!-- 侠客册页 -->
+<div class="sheetwrap" id="sheetwrap"><div class="sheet" id="sheet"></div></div>
+
+<div id="toasts"></div>
+
+<script>
+/* ============================================================
+   模拟数据（取自游戏真实内容配置）
+   ============================================================ */
+const WORLDS = [
+  {id:1,name:'东汉三国',latin:'Eastern Han',coin:'汉末通宝',cleared:6},
+  {id:2,name:'武侠江湖',latin:'Wuxia Jianghu',coin:'江湖通宝',cleared:2},
+  {id:3,name:'摸金盗墓',latin:'Tomb Raiders',coin:'摸金通宝',cleared:0},
+  {id:4,name:'十字东征',latin:'Crusades',coin:'圣战通宝',cleared:0},
+  {id:5,name:'聊斋志异',latin:'Liaozhai',coin:'聊斋通宝',cleared:0},
+  {id:6,name:'东瀛战国',latin:'Sengoku',coin:'战国通宝',cleared:0},
+  {id:7,name:'二战风云',latin:'World War II',coin:'战火通宝',cleared:0},
+  {id:8,name:'凡人修仙',latin:'Mortal Cultivation',coin:'灵石通宝',cleared:0},
+  {id:9,name:'星球战争',latin:'Star Wars',coin:'星战通宝',cleared:0},
+  {id:10,name:'斗气大陆',latin:'Battle Qi',coin:'斗气通宝',cleared:0},
+  {id:11,name:'艾泽大陆',latin:'Azeroth',coin:'艾泽通宝',cleared:0},
+  {id:12,name:'超级英雄',latin:'Super Heroes',coin:'英雄通宝',cleared:0},
+  {id:13,name:'西行之路',latin:'Journey West',coin:'西行通宝',cleared:0},
+];
+const STAGE_NAMES = {
+  1:['黄巾起义','联军讨董','濮阳之战','新野之战','会师江夏','刮骨疗毒','败走麦城','夷陵之战','濡须口战','六出祁山'],
+  2:['丐帮内乱','聚义山庄','少室山下','巫山云雨','绝情山谷','华山崖壁','雁门山麓','西湖湖畔','英雄大会','海外孤岛'],
+};
+const SLOTS = ['weapon','offhand','head','armor','wrist','boots','necklace','ring','treasure'];
+const SLOT_CN = {weapon:'兵',offhand:'副',head:'冠',armor:'甲',wrist:'腕',boots:'履',necklace:'链',ring:'戒',treasure:'宝'};
+
+const S = {
+  world: 0, difficulty: 1, stage: 4, wave: 4, speed: 1, fighting: true,
+  vouchers: {balance:1280, today:420}, coins: 54200,
+  heroes: [
+    {id:'h1',name:'无名少侠',grade:'主',lv:38,career:'侠客',cat:'剑',row:0,col:0,hp:5200,maxHp:5200,en:3,equip:{weapon:{n:'青锋剑',q:3,lv:32,a:['物攻 +412','暴击 +6%']},head:{n:'纶巾',q:2,lv:30,a:['法防 +88']},armor:{n:'游侠袍',q:3,lv:31,a:['气血 +620']},offhand:null,boots:{n:'疾风靴',q:2,lv:28,a:['身法 +24']},wrist:null,necklace:null,ring:null,treasure:null}},
+    {id:'h2',name:'赵云',grade:'天',lv:35,career:'游龙枪卫',cat:'剑',row:0,col:1,hp:6100,maxHp:6100,en:1,equip:{weapon:{n:'龙胆亮银枪',q:5,lv:34,a:['物攻 +668','暴击 +11%'],lock:true},armor:{n:'明光铠',q:4,lv:33,a:['气血 +940','物防 +180']},boots:null,head:null,offhand:null,wrist:null,necklace:null,ring:null,treasure:null}},
+    {id:'h3',name:'燕十三',grade:'地',lv:33,career:'剑侍',cat:'剑',row:1,col:0,hp:4400,maxHp:4400,en:0,equip:{weapon:{n:'骨毒剑',q:4,lv:31,a:['物攻 +520','吸血 +4%']},head:null,armor:null,boots:null,offhand:null,wrist:null,necklace:null,ring:null,treasure:null}},
+    {id:'h4',name:'铁中棠',grade:'甲',lv:31,career:'铁衣卫',cat:'拳',row:1,col:1,hp:8600,maxHp:8600,en:2,equip:{weapon:{n:'铁掌套',q:3,lv:29,a:['物攻 +310']},armor:{n:'铁布衣',q:3,lv:30,a:['气血 +780']},head:{n:'护额',q:1,lv:24,a:['物防 +45']},offhand:null,boots:null,wrist:null,necklace:null,ring:null,treasure:null}},
+    {id:'h5',name:'苏樱',grade:'甲',lv:30,career:'医师',cat:'医',row:2,col:1,hp:3800,maxHp:3800,en:4,equip:{weapon:{n:'银针囊',q:3,lv:28,a:['法攻 +288','治疗 +8%']},necklace:{n:'回春坠',q:4,lv:30,a:['法攻 +150','能量回复 +2']},head:null,armor:null,boots:null,offhand:null,wrist:null,ring:null,treasure:null}},
+    {id:'h6',name:'司空摘星',grade:'乙',lv:28,career:'妙手空空',cat:'暗',row:2,col:0,hp:3600,maxHp:3600,en:2,equip:{weapon:{n:'柳叶飞刀',q:2,lv:26,a:['物攻 +205']},boots:{n:'轻烟履',q:2,lv:25,a:['身法 +31']},head:null,armor:null,offhand:null,wrist:null,necklace:null,ring:null,treasure:null}},
+    {id:'h7',name:'阿青',grade:'甲',lv:26,career:'越女剑侍',cat:'剑',row:null,col:null,inForm:false,equip:{}},
+    {id:'h8',name:'扫地僧',grade:'天',lv:40,career:'藏经阁隐者',cat:'内家',row:null,col:null,inForm:false,equip:{}},
+    {id:'h9',name:'楚留香',grade:'地',lv:32,career:'踏月留香',cat:'暗',row:null,col:null,inForm:false,equip:{}},
+  ],
+  bag: [
+    {uid:'b1',slot:'weapon',n:'百炼环首刀',q:3,lv:33,a:['物攻 +455','物攻增伤 +5%']},
+    {uid:'b2',slot:'weapon',n:'丈八蛇矛',q:4,lv:35,a:['物攻 +590','暴击 +8%']},
+    {uid:'b3',slot:'armor',n:'兽面吞头铠',q:4,lv:34,a:['气血 +1020','物理减伤 +6%']},
+    {uid:'b4',slot:'head',n:'凤翅盔',q:3,lv:31,a:['气血 +340','法防 +95']},
+    {uid:'b5',slot:'boots',n:'逐电靴',q:3,lv:30,a:['身法 +42','速度 +4%']},
+    {uid:'b6',slot:'ring',n:'玄铁指环',q:2,lv:27,a:['物攻 +88','命中 +3%']},
+    {uid:'b7',slot:'necklace',n:'明月珰',q:3,lv:29,a:['法攻 +130','定力 +12']},
+    {uid:'b8',slot:'treasure',n:'传国玉玺残片',q:5,lv:36,a:['全属性 +3%','最终增伤 +4%'],lock:true},
+    {uid:'b9',slot:'weapon',n:'生锈的铁剑',q:0,lv:12,a:['物攻 +40']},
+    {uid:'b10',slot:'wrist',n:'熟铜护腕',q:1,lv:18,a:['物防 +30']},
+    {uid:'b11',slot:'offhand',n:'精钢短戟',q:2,lv:24,a:['物攻 +120','格挡 +4%']},
+    {uid:'b12',slot:'armor',n:'皮甲',q:0,lv:10,a:['气血 +90']},
+    {uid:'b13',slot:'ring',n:'玛瑙扳指',q:1,lv:16,a:['法攻 +26']},
+    {uid:'b14',slot:'boots',n:'麻布鞋',q:0,lv:8,a:['身法 +5']},
+  ],
+  bagFilter: {slot:'all', q:'all', sel:null, hero:'h1', show:12, sort:'lv', heroQ:'', heroPage:1},
+  faction: {
+    contrib: 8640, reputation: 342, sp: 120, hidden: [], hideMode: false, hideSel: [],
+    search: '', closedKinds: [], closedWorlds: [1,2,3,4,5,6,7,8,9,10,11,12],
+    auto: {on:true, cats:['消灭','挑战'], diffs:['凡','甲']},
+    quests: [
+      {id:1,type:'消灭',name:'剿灭黄巾残部',diff:'凡',prog:7,target:10,reward:120,rep:12,state:'accepted'},
+      {id:2,type:'收集',name:'收集汉末通宝',diff:'凡',prog:1200,target:5000,reward:90,rep:8,state:'open'},
+      {id:3,type:'挑战',name:'挑战吕布幻影',diff:'甲',prog:0,target:1,reward:420,rep:45,state:'open'},
+      {id:4,type:'筹措',name:'筹措品质「良」装备',diff:'乙',prog:1,target:3,reward:150,rep:15,state:'open'},
+      {id:5,type:'寻宝',name:'寻得天外陨铁',diff:'地',prog:0,target:2,reward:380,rep:30,state:'open'},
+      {id:6,type:'消灭',name:'讨伐山越先锋',diff:'甲',prog:12,target:15,reward:260,rep:22,state:'done'},
+    ],
+    catalog: [
+      {id:'c1',kind:'武学',name:'奔雷剑法',meta:'剑系 · 威力 2.4 · 调息 6s',need:{contrib:1200},once:false,owned:false},
+      {id:'c2',kind:'武学',name:'青囊回春术',meta:'医系 · 群体治疗 · 调息 8s',need:{contrib:1500},once:false,owned:false},
+      {id:'c3',kind:'转职书',name:'《游龙枪卫进阶》',meta:'转职前置 · 枪卫 Lv.20',need:{contrib:800,world:0},once:true,owned:false},
+      {id:'c4',kind:'图纸',name:'明光铠图纸',meta:'锻造 · 品质 良',need:{contrib:600,rep:200},once:true,owned:false},
+      {id:'c5',kind:'幻型',name:'赵云 · 白袍银甲',meta:'侠客幻型 · 永久',need:{contrib:3000,rep:400},once:true,owned:false},
+      {id:'c6',kind:'侠客',name:'郭嘉',meta:'智囊 · 法系 · 声望「闻名」可邀',need:{contrib:2400,rep:350},once:true,owned:false},
+      {id:'c7',kind:'武学',name:'八门金锁阵',meta:'阵法 · 团队减伤 · 调息 12s',need:{contrib:5000,world:1},once:false,owned:false},
+      {id:'c8',kind:'材料',name:'天外陨铁',meta:'锻造至宝材料 · 每周限购',need:{contrib:200},once:false,owned:false,buyable:true},
+      {id:'c9',kind:'材料',name:'秘境门票 · 古墓',meta:'进入摸金秘境一次',need:{contrib:900,world:2},once:true,owned:false},
+      {id:'c10',kind:'武学',name:'心剑通明',meta:'剑系被动 · 会心 +6%',need:{contrib:4200,rep:500},once:false,owned:false},
+    ],
+    recruits: [
+      {name:'郭嘉',grade:'天',req:'闻名 · 贡献 2400',world:0,ok:false},
+      {name:'黄月英',grade:'地',req:'知名 · 贡献 1600',world:0,ok:false},
+      {name:'小乔',grade:'甲',req:'小有名气 · 贡献 900',world:0,ok:true},
+      {name:'鸠摩智',grade:'地',req:'知名 · 贡献 1600 · 武侠江湖',world:1,ok:false},
+      {name:'王语嫣',grade:'天',req:'闻名 · 贡献 2600 · 武侠江湖',world:1,ok:false},
+    ],
+  },
+  shop: {poolDrawn:null, premium:[
+    {name:'周卡 · 历练加速',days:7,price:600,active:true},
+    {name:'月卡 · 满载而归',days:30,price:1800,active:false},
+    {name:'季卡 · 江湖通惠',days:90,price:4200,active:false},
+  ]},
+  city: {open:true, cash:12600, revenue:8800, sold:23, level:3, staff:[
+      {name:'苏樱',ability:12,busy:true},
+      {name:'司空摘星',ability:9,busy:false},
+    ],candidates:[{name:'燕十三',ability:7},{name:'铁中棠',ability:5}],
+    stock:[{n:'百炼环首刀',lv:33,price:3200},{n:'玄铁指环',lv:27,price:680}],
+  },
+  settings: {autoSellBelow:1, hiddenFromCatalog:[], welfare:'', resetArm:false},
+};
+/* 规模压测：追加 12 名模拟侠客（均在后备），用于验证 200 侠级别的浏览/检索/翻页 */
+[['沈孤鸿','天',36,'流云剑客','剑'],['叶知秋','地',34,'摘星手','暗'],['花满楼','甲',30,'听风医者','医'],
+ ['陆小凤','天',38,'灵犀指','拳'],['西门吹雪','地',37,'吹雪剑侍','剑'],['李寻欢','天',39,'飞刀客','暗'],
+ ['上官金虹','地',35,'龙凤双环','拳'],['天机老人','天',41,'机枢内宗','内家'],['孙小红','乙',24,'红衣剑童','剑'],
+ ['阿飞','甲',29,'快剑无名','剑'],['荆无命','地',33,'无命杀手','暗'],['林仙儿','乙',22,'素手医仙','医'],
+].forEach((x,i)=>S.heroes.push({id:'x'+i,name:x[0],grade:x[1],lv:x[2],career:x[3],cat:x[4],
+  row:null,col:null,inForm:false,equip:{},hp:3000+x[2]*80,maxHp:3000+x[2]*80,en:0}));
+
+/* ============================================================
+   工具
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const fmt = n => n.toLocaleString('zh-CN');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg){
+  const t = document.createElement('div'); t.className='toast'; t.innerHTML = msg;
+  $('#toasts').appendChild(t); setTimeout(()=>{t.style.opacity=0;t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400)}, 2400);
+}
+
+/* ============================================================
+   战场渲染
+   ============================================================ */
+const ENEMY_KEYS = {'黄巾力士':'brute','先锋校尉':'vanguard','弓骑兵':'archer','巫师':'shaman','渠帅':'chief','精英·张曼成':'boss'};
+function unitHTML(h, side){
+  const hpPct = Math.round(h.hp/h.maxHp*100);
+  const en = Array.from({length:5},(_,i)=>`<b class="${i<h.en?'on':''}"></b>`).join('');
+  const face = side==='party'
+    ? `<img class="face" src="../assets/ui/hero-${h.id}.png" alt="" onerror="this.remove()">${esc(h.name[0])}`
+    : `<img class="face" src="../assets/ui/enemy-${h.key}.png" alt="" onerror="this.remove()">${esc(h.name[0])}`;
+  return `<div class="unit ${side}" data-hero="${h.id}" data-row="${h.row}" data-col="${h.col}" ${side==='party'?`draggable="${S.forming}" title="点击查看 · 布阵态可拖拽"`:'style="cursor:default"'}>
+    <div class="token ${side}">${face}<span class="seal">${h.grade}</span></div>
+    <span class="u-name">${esc(h.name)}</span>
+    <span class="u-hp ${hpPct<=30?'low':''}"><i style="width:${hpPct}%"></i></span>
+    ${side==='party'?`<span class="u-en">${en}</span>`:''}
+  </div>`;
+}
+const ENEMY_NAMES = ['黄巾力士','先锋校尉','弓骑兵','巫师','渠帅','精英·张曼成'];
+function enemyAt(row, idx){
+  const name = ENEMY_NAMES[(row+idx)%ENEMY_NAMES.length];
+  return {id:'e'+row+'_'+idx, name, key:ENEMY_KEYS[name], grade:'卒', hp:2800+Math.random()*2200, maxHp:5000, en:0, row, col:idx};
+}
+function renderField(){
+  const lanes = [[],[],[]];
+  S.heroes.filter(h=>h.inForm!==false && h.row!=null).forEach(h => lanes[h.row].push(h));
+  $('#party').innerHTML = lanes.map((ls,i)=>
+    `<div class="lane">${ls.sort((a,b)=>a.col-b.col).map(h=>unitHTML(h,'party')).join('')}<span class="lane-tag">${['上路','中路','下路'][i]}</span></div>`).join('');
+  const elanes = [[],[],[]];
+  const per = [2,2,1];
+  for(let r=0;r<3;r++) for(let i=0;i<per[r];i++) elanes[r].push(enemyAt(r,i));
+  $('#enemies').innerHTML = elanes.map((ls,i)=>
+    `<div class="lane enemy"><span class="lane-tag">${['上路','中路','下路'][i]}</span>${ls.map(h=>unitHTML(h,'enemy')).join('')}</div>`).join('');
+  const w = WORLDS[S.world];
+  $('#waveinfo').innerHTML = `<span>第 <b>${S.wave}</b> / 10 波</span><br><span style="letter-spacing:.3em">${esc(w.name)} · 第${S.stage}关</span><br><span style="font-size:10px;letter-spacing:.2em">${S.fighting?'自动战斗中':'已停驻'}</span>`;
+  $('#wavebeads').innerHTML = Array.from({length:10},(_,i)=>
+    `<span class="wbead ${i+1<S.wave?'done':''} ${i+1===S.wave?'cur':''}"></span>`).join('');
+  if(typeof markFieldPick==='function') markFieldPick();
+}
+function floatText(text, side, cls=''){
+  const field = $('#field'); const d = document.createElement('span');
+  d.className = 'float '+cls; d.textContent = text;
+  d.style.left = (side==='party'? 22+Math.random()*22 : 62+Math.random()*20)+'%';
+  d.style.top = (34+Math.random()*26)+'%';
+  field.appendChild(d); setTimeout(()=>d.remove(), 1100);
+}
+function feed(html){
+  const f = $('#lootfeed'); const d = document.createElement('div');
+  d.className='feed'; d.innerHTML = html; f.prepend(d);
+  while(f.children.length>5) f.lastChild.remove();
+}
+function banner(text){
+  const b = $('#wavebanner'); b.textContent = text;
+  b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+}
+
+/* 挂机循环 */
+let acc = 0;
+setInterval(()=>{
+  if(!S.fighting) return;
+  acc += S.speed;
+  // 伤害飘字
+  if(Math.random()<.5) floatText('-'+fmt(200+Math.random()*1400|0), 'enemy');
+  if(Math.random()<.25) floatText('-'+fmt(100+Math.random()*700|0), 'party');
+  if(Math.random()<.12) floatText('+'+fmt(60+Math.random()*300|0), 'party','heal');
+  if(Math.random()<.18){ const g = 30+Math.random()*220|0; S.coins += g; floatText('+'+g+' 通宝','party','gold'); feed(`拾得 <b>${fmt(g)}</b> 通宝`); }
+  // 气血波动
+  S.heroes.filter(h=>h.inForm!==false && h.row!=null).forEach(h=>{ h.hp = Math.max(h.maxHp*.35, Math.min(h.maxHp, h.hp + (Math.random()-.42)*300)); h.en = Math.min(5, Math.max(0, h.en + (Math.random()<.3?1:0) - (Math.random()<.25?1:0))); });
+  // 蛋蛋积累
+  S.vouchers.today = Math.min(700, S.vouchers.today + S.speed*0.05);
+  if(Math.random()<.02*S.speed){ S.vouchers.balance += 10; }
+  $('#voucherTick').style.width = (S.vouchers.today/700*100)+'%';
+  $('#voucherToday').textContent = Math.floor(S.vouchers.today);
+  $('#voucherNum').textContent = fmt(Math.floor(S.vouchers.balance));
+  $('#coinNum').textContent = fmt(Math.floor(S.coins));
+  // 波次推进
+  if(acc >= 260){ acc = 0;
+    S.wave = S.wave>=10 ? 1 : S.wave+1;
+    if(S.wave===1){ if(S.modeRoam){ S.stage = Math.min(10, S.stage+1); banner('闯荡 · 深入第'+S.stage+'关'); feed(`自动深入 · 第 <b>${S.stage}</b> 关`);} else { banner('重整旗鼓 · 再临第1波'); } }
+    else banner('第 '+S.wave+' 波 · 敌至');
+    renderField();
+  } else {
+    // 仅更新血条与能量
+    document.querySelectorAll('#party .unit').forEach(el=>{
+      const h = S.heroes.find(x=>x.id===el.dataset.hero); if(!h) return;
+      const pct = Math.round(h.hp/h.maxHp*100);
+      el.querySelector('.u-hp i').style.width = pct+'%';
+      el.querySelector('.u-hp').classList.toggle('low', pct<=30);
+      el.querySelectorAll('.u-en b').forEach((b,i)=>b.classList.toggle('on', i<h.en));
+    });
+  }
+}, 900);
+
+/* 落叶氛围 */
+setInterval(()=>{
+  const l = document.createElement('div'); l.className='leaf-fall';
+  l.style.left = (55+Math.random()*45)+'vw';
+  l.style.animationDuration = (7+Math.random()*6)+'s';
+  $('#scene').appendChild(l); setTimeout(()=>l.remove(), 14000);
+}, 2600);
+
+/* HUD 事件 */
+$('#modeGuard').onclick = ()=>{ S.modeRoam=false; $('#modeGuard').classList.add('on'); $('#modeRoam').classList.remove('on'); toast('已切换 · 驻守：原地迎敌，败退自动重整'); };
+$('#modeRoam').onclick = ()=>{ S.modeRoam=true; $('#modeRoam').classList.add('on'); $('#modeGuard').classList.remove('on'); toast('已切换 · 闯荡：破阵后自动深入下一关'); };
+document.querySelectorAll('#speedgroup .ctl').forEach(b=>b.onclick=()=>{
+  S.speed = +b.dataset.speed;
+  document.querySelectorAll('#speedgroup .ctl').forEach(x=>x.classList.toggle('on', x===b));
+});
+$('#btnStop').onclick = ()=>{ S.fighting=false; toast('已停驻 · 点击「关卡」选择新的目的地'); renderField(); };
+/* 战场快捷布阵：与阵容册同一套「选槽换人」逻辑 */
+let formPickId = null;
+function markFieldPick(){ document.querySelectorAll('#party .unit').forEach(el=>el.classList.toggle('picked', S.forming && el.dataset.hero===formPickId)); }
+$('#btnForm').onclick = ()=>{
+  S.forming = !S.forming;
+  if(!S.forming) formPickId = null;
+  $('#btnForm').classList.toggle('on', S.forming);
+  document.querySelectorAll('#party .unit').forEach(el=>el.draggable = S.forming);
+  markFieldPick();
+  toast(S.forming ? '布阵态 · 点令牌选槽，再点另一枚即互换（选中留槽可连续调整）' : '布阵已收起');
+};
+$('#party').addEventListener('click', e=>{
+  const u = e.target.closest('.unit'); if(!u) return;
+  if(S.forming){
+    const id = u.dataset.hero;
+    if(!formPickId){ formPickId = id; markFieldPick(); return; }
+    if(formPickId===id){ formPickId = null; markFieldPick(); return; }
+    const a = S.heroes.find(h=>h.id===formPickId), b = S.heroes.find(h=>h.id===id);
+    [a.row,b.row] = [b.row,a.row]; [a.col,b.col] = [b.col,a.col];
+    renderField(); formPickId = id; markFieldPick();
+    toast(`${b.name} 已与 ${a.name} 互换 · 选中留槽可继续`); return;
+  }
+  openHeroSheet(u.dataset.hero);
+});
+/* 布阵：拖拽 */
+let dragHero = null;
+$('#party').addEventListener('dragstart', e=>{ const u=e.target.closest('.unit'); if(u) dragHero=u.dataset.hero; });
+$('#party').addEventListener('dragover', e=>e.preventDefault());
+$('#party').addEventListener('drop', e=>{
+  e.preventDefault(); if(!dragHero) return;
+  const u = e.target.closest('.unit'); if(!u || u.dataset.hero===dragHero) return;
+  const a = S.heroes.find(h=>h.id===dragHero), b = S.heroes.find(h=>h.id===u.dataset.hero);
+  [a.row,b.row]=[b.row,a.row]; [a.col,b.col]=[b.col,a.col];
+  dragHero=null; formPickId=null; renderField(); markFieldPick(); toast('阵位已调整');
+});
+
+</script>
+<script>
+/* ============================================================
+   夜册 · 面板机制
+   ============================================================ */
+let curPanel = null;
+const leaf = $('#leaf'), scrim = $('#scrim');
+/* 面板位置：宽屏默认居中册页，可切回右侧停靠；手机端恒为全屏 */
+let panelMode = window.matchMedia('(max-width:900px)').matches ? 'dock' : 'modal';
+function applyPanelMode(){ leaf.classList.toggle('modal', panelMode==='modal'); }
+$('#dockToggle').onclick = ()=>{
+  panelMode = panelMode==='modal' ? 'dock' : 'modal';
+  applyPanelMode();
+  toast(panelMode==='modal' ? '面板已居中 · 宽屏大册（⇄ 可换回右侧）' : '面板已停靠右侧');
+};
+applyPanelMode();
+function openPanel(name){
+  if($('#sheet').classList.contains('open')) closeSheet();
+  curPanel = name;
+  document.querySelectorAll('.iconbtn').forEach(b=>b.classList.toggle('on', b.dataset.panel===name));
+  renderPanel(name);
+  leaf.classList.add('open'); leaf.setAttribute('aria-hidden','false'); scrim.classList.add('show');
+}
+function closePanel(){
+  curPanel = null; leaf.classList.remove('open'); leaf.setAttribute('aria-hidden','true'); scrim.classList.remove('show');
+  document.querySelectorAll('.iconbtn').forEach(b=>b.classList.remove('on'));
+}
+$('#leafClose').onclick = closePanel;
+scrim.onclick = closePanel;
+document.querySelectorAll('.iconbtn').forEach(b=>b.onclick = ()=> curPanel===b.dataset.panel ? closePanel() : openPanel(b.dataset.panel));
+
+function leafMeta(crumb, title){
+  $('#leafTitle').textContent = title;
+}
+function renderPanel(name){
+  ({stage:renderStagePanel, bag:renderBagPanel, formation:renderFormationPanel,
+    quest:renderQuestPanel, exchange:renderExchangePanel, recruit:renderRecruitPanel,
+    shop:renderShopPanel, city:renderCityPanel, settings:renderSettingsPanel})[name]();
+  $('#leafBody').scrollTop = 0;
+}
+
+/* ============================================================
+   阵容 · 演武场（无阵势系统；出手次序由速度属性决定）
+   ============================================================ */
+const inFormHeroes = () => S.heroes.filter(h=>h.inForm!==false && h.row!=null);
+const heroPower = h => h.lv*620 + (h.grade==='天'?1800:h.grade==='地'?1200:0);
+const teamPower = () => inFormHeroes().reduce((s,h)=>s+heroPower(h),0);
+function syncPower(){ const p=$('#powerNum'); if(p) p.textContent = fmt(teamPower()); }
+
+let fPick = null, fCat = '全部', fDrag = null, fSearch = '';
+function renderFormationPanel(){
+  const F = inFormHeroes();
+  const cols = [4,3,2,1,0]; /* 右起第一列为前列（贴敌） */
+  const slotHero = (r,c) => F.find(h=>h.row===r&&h.col===c);
+  const tokenHTML = h => `<div class="ftoken ${fPick===h.id?'sel':''}" draggable="true" data-fhero="${h.id}">
+      <span class="face"><img src="../assets/ui/hero-${h.id}.png" alt="" onerror="this.remove()">${esc(h.name[0])}<span class="seal">${h.grade}</span></span><span class="nm">${esc(h.name)}</span></div>`;
+  const laneTxt = h => `${['上路','中路','下路'][h.row]}${h.col===0?'前列':'第'+(h.col+1)+'列'}`;
+  leafMeta('LINEUP · 演武布阵', '阵容', `上阵 ${F.length} / 6`, '点阵位选槽 → 右册点将即换防 · 拖令牌亦可');
+  $('#leafBody').innerHTML = `
+    <div class="fstats">
+      <div class="fstat"><b>${fmt(teamPower())}</b><span>队伍战力</span></div>
+      <div class="fstat"><b>${F.length} / 6</b><span>在阵侠客</span></div>
+    </div>
+
+    <div class="fmain">
+      <div class="fleft">
+        <div class="nsec" style="margin-bottom:0"><div class="nsec-head"><h3>演武场</h3><span class="right">点令牌选槽 · 拖拽换位</span></div>
+          <div class="ffield">
+            ${[0,1,2].map(r=>`<div class="flane"><span class="flane-tag">${['上路','中路','下路'][r]}</span>
+              ${cols.map(c=>{ const h=slotHero(r,c);
+                return `<div class="fslot ${h?'filled':''}" data-fslot="${r},${c}">${h?tokenHTML(h):'<span class="void">虚位</span>'}</div>`; }).join('')}
+            </div>`).join('')}
+          </div>
+          <div class="ffield-axis"><span>← 后列</span><span>前列贴敌 →</span></div>
+          <div class="fops"><button class="btn solid xs" id="fAuto">自动列阵 · 按脉系推荐</button></div>
+        </div>
+      </div>
+
+      <aside class="fright">
+        <div class="nsec-head" style="margin-bottom:6px"><h3>点将名册</h3><span class="right">${S.heroes.length} 侠</span></div>
+        <p class="frighthint">名册即后备，无需拖动。<b style="color:var(--pn)">点阵上任一令牌选槽，再点此处侠客即换防</b>（选中留在槽上，可连续换人）；未选槽时，点后备直接入阵；点「在阵」即下阵。</p>
+        <input type="search" id="fSearch" placeholder="搜索侠客 · 名称 / 职业 / 脉系" value="${esc(fSearch)}" style="width:100%;margin-bottom:6px">
+        <div class="chiprow" style="margin-bottom:6px">${['全部','拳','剑','刀','暗','医','内家'].map(c=>`<button class="chip ${fCat===c?'on':''}" data-fcat="${c}">${c}</button>`).join('')}</div>
+        <div class="froster">${S.heroes.filter(h=>(fCat==='全部'||h.cat===fCat) && (!fSearch.trim() || (h.name+h.career+h.cat).includes(fSearch.trim()))).map(h=>{
+          const on = h.inForm!==false && h.row!=null;
+          return `<div class="rrow ${fPick===h.id?'picked':''}" data-fpick="${h.id}">
+            <span class="face">${esc(h.name[0])}</span>
+            <span class="nm">${esc(h.name)}<small>${h.grade} 品 · ${esc(h.cat)}之脉 · Lv.${h.lv} · ${esc(h.career)}</small></span>
+            <span class="state ${on?'on':''}">${on?'在阵':'后备'}</span></div>`; }).join('')}
+        </div>
+      </aside>
+    </div>`;
+
+  const body = $('#leafBody');
+  const refresh = ()=>{ renderFormationPanel(); renderField(); syncPower(); };
+  const placeAt = (id, r, c)=>{
+    const h = S.heroes.find(x=>x.id===id); if(!h) return false;
+    const occ = inFormHeroes().find(x=>x.row===r&&x.col===c);
+    if(occ && occ.id!==h.id){ [h.row,occ.row]=[occ.row,h.row]; [h.col,occ.col]=[occ.col,h.col]; h.inForm=true; toast('阵位已互换'); }
+    else if(!occ){
+      const wasOut = h.inForm===false || h.row==null;
+      if(wasOut && inFormHeroes().length>=6){ toast('阵上已满 · 六侠为限，先点一位在阵者下阵'); return false; }
+      h.row=r; h.col=c; h.inForm=true; toast(`${h.name} 已入阵`);
+    }
+    else return false;
+    return true;
+  };
+  body.querySelectorAll('[data-fcat]').forEach(b=>b.onclick=()=>{ fCat=b.dataset.fcat; renderFormationPanel(); });
+  const fs = $('#fSearch');
+  if(fs) fs.oninput = ()=>{
+    fSearch = fs.value; renderFormationPanel();
+    const n = $('#fSearch'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+  };
+  body.querySelectorAll('[data-fhero]').forEach(el=>{
+    el.onclick = ()=>{ fPick = fPick===el.dataset.fhero?null:el.dataset.fhero; renderFormationPanel(); };
+    el.addEventListener('dragstart', e=>{ fDrag=el.dataset.fhero; e.dataTransfer.effectAllowed='move'; });
+  });
+  body.querySelectorAll('.fslot').forEach(el=>{
+    el.onclick = ()=>{
+      const [r,c] = el.dataset.fslot.split(',').map(Number);
+      const occ = inFormHeroes().find(h=>h.row===r&&h.col===c);
+      if(fPick){
+        const sel = S.heroes.find(x=>x.id===fPick);
+        if(sel && sel.inForm!==false && sel.row!=null && !occ){ /* 在阵者点空位=移动，选槽保留 */ if(placeAt(fPick,r,c)){ fPick=sel.id; refresh(); return; } }
+        else if(placeAt(fPick,r,c)){ fPick=null; refresh(); return; }
+      }
+      else if(occ){ fPick = occ.id; renderFormationPanel(); }
+    };
+    el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('over'); });
+    el.addEventListener('dragleave', ()=>el.classList.remove('over'));
+    el.addEventListener('drop', e=>{ e.preventDefault(); el.classList.remove('over'); if(!fDrag) return;
+      const [r,c] = el.dataset.fslot.split(',').map(Number);
+      if(placeAt(fDrag,r,c)){ fDrag=null; fPick=null; refresh(); } });
+  });
+  body.querySelectorAll('[data-fpick]').forEach(el=>el.onclick=()=>{
+    const h = S.heroes.find(x=>x.id===el.dataset.fpick);
+    const on = h.inForm!==false && h.row!=null;
+    if(on){ h.inForm=false; h.row=null; h.col=null; if(fPick===h.id) fPick=null; toast(`${h.name} 已下阵`); refresh(); return; }
+    /* 后备：优先与选中槽换防，选中留在槽上可连续换人 */
+    const sel = fPick ? S.heroes.find(x=>x.id===fPick) : null;
+    if(sel && sel.inForm!==false && sel.row!=null){
+      [h.row,sel.row]=[sel.row,h.row]; [h.col,sel.col]=[sel.col,h.col]; h.inForm=true;
+      fPick=h.id; toast(`${h.name} 已换防至 ${laneTxt(h)} · 选中留槽可继续换人`); refresh(); return;
+    }
+    const cur = inFormHeroes();
+    if(cur.length>=6){
+      const last = [...cur].sort((a,b)=>b.row*5+b.col-a.row*5-a.col)[0];
+      [h.row,last.row]=[last.row,h.row]; [h.col,last.col]=[last.col,h.col]; h.inForm=true;
+      fPick=h.id; toast(`未选阵位 · ${h.name} 已与后排末位 ${last.name} 互换（点阵位可指定）`); refresh(); return;
+    }
+    /* 一键入阵：按脉系推荐空位 */
+    const pref = (h.cat==='拳'||h.cat==='刀')?0 : h.cat==='剑'?1 : 2;
+    const freeIn = r => [0,1,2,3,4].find(c=>!cur.some(x=>x.row===r&&x.col===c));
+    let spot = null;
+    const c0 = freeIn(pref); if(c0!==undefined) spot=[pref,c0];
+    else for(const r of [0,1,2]){ const c=freeIn(r); if(c!==undefined){ spot=[r,c]; break; } }
+    if(!spot){ toast('演武场无虚位'); return; }
+    h.row=spot[0]; h.col=spot[1]; h.inForm=true;
+    fPick=h.id; toast(`${h.name} 已入阵 · ${laneTxt(h)}`); refresh();
+  });
+  $('#fAuto').onclick = ()=>{
+    inFormHeroes().forEach(h=>{ h.inForm=false; h.row=null; h.col=null; });
+    const rowOf = h => (h.cat==='拳'||h.cat==='刀')?0 : h.cat==='剑'?1 : 2;
+    const lane = [0,0,0]; let n = 0;
+    for(const h of [...S.heroes].sort((a,b)=>b.lv-a.lv)){
+      if(n>=6) break;
+      let r = rowOf(h);
+      if(lane[r]>=2){ r = [0,1,2].find(x=>lane[x]<2); if(r===undefined) break; }
+      h.row=r; h.col=lane[r]++; h.inForm=true; n++;
+    }
+    fPick=null; toast('已按脉系自动列阵 · 前拳刀 / 中剑 / 后暗医内'); refresh();
+  };
+}
+
+/* ============================================================
+   关卡 · 世界与选关
+   ============================================================ */
+function renderStagePanel(){
+  const w = WORLDS[S.world];
+  leafMeta('CAMPAIGN · 择面穿越', '关卡', `十三位面 · 当前`, '选择位面与难度 · 点关开始');
+  const cleared = w.cleared;
+  $('#leafBody').innerHTML = `
+    <div class="nsec"><div class="nsec-head"><h3>位面</h3><span class="right">已开 ${WORLDS.filter(x=>x.cleared>0).length} / 13</span></div>
+      <div class="planestrip">${WORLDS.map((x,i)=>`
+        <button class="plane ${i===S.world?'on':''} ${x.cleared>0||i<=1?'':'lock'}" data-plane="${i}">
+          <div class="no">No.${String(i+1).padStart(3,'0')}</div><div class="nm">${x.name}</div>
+          <div class="st">${x.cleared>0?`已通 ${x.cleared} 关`:i<=1?'可穿越':'未解锁'}</div>
+        </button>`).join('')}
+      </div>
+      <p style="font-size:11px;color:var(--pn-dim);line-height:1.7">${esc(w.latin)} · ${esc(w.coin)}<br>烽火燃天地，英雄乱世争。</p>
+    </div>
+    <div class="nsec"><div class="nsec-head"><h3>难度</h3></div>
+      <div class="diffbars">${Array.from({length:10},(_,i)=>{
+        const d=i+1, lock = d > Math.min(3, Math.floor(cleared/3)+1);
+        return `<button class="diffbar ${d===S.difficulty?'on':''} ${lock?'lock':''}" data-diff="${d}">${d}</button>`;
+      }).join('')}</div>
+    </div>
+    <div class="nsec"><div class="nsec-head"><h3>闯关路径</h3><span class="right">已历 ${cleared} / 10</span></div>
+      <div class="stagepath">${Array.from({length:10},(_,i)=>{
+        const st=i+1, names=STAGE_NAMES[w.id]||[], lock=st>cleared+1, done=st<=cleared;
+        return `<button class="stagenode ${st===S.stage?'on':''} ${done?'done':''} ${lock?'lock':''}" data-stage="${st}">
+          <div class="n">${'壹贰叁肆伍陆柒捌玖拾'[i]}</div><div class="t">${esc(names[i]||('第'+st+'关'))}</div>
+          <div class="s">${done?'已通关':lock?'未解锁':'可挑战'}</div></button>`;
+      }).join('')}</div>
+      <div style="margin-top:14px;display:flex;gap:10px">
+        <button class="btn solid" id="btnDeploy" style="flex:1">驻守此关 · 原地挂机</button>
+        <button class="btn crimson" id="btnDeployRoam" style="flex:1">闯荡此关 · 破阵深入</button>
+      </div>
+    </div>`;
+  $('#leafBody').querySelectorAll('[data-plane]').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.plane;
+    if(WORLDS[i].cleared===0 && i>1){ toast('该位面尚未解锁 · 先通关前一位面第 10 关'); return; }
+    S.world=i; $('#coinGlyph').textContent=WORLDS[i].coin[0]; $('#coinName').textContent=WORLDS[i].coin+' · 本卷';
+    renderStagePanel(); renderField();
+  });
+  $('#leafBody').querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{ S.difficulty=+b.dataset.diff; renderStagePanel(); });
+  $('#leafBody').querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{ S.stage=+b.dataset.stage; renderStagePanel(); });
+  $('#btnDeploy').onclick = ()=>{ S.fighting=true; S.modeRoam=false; $('#modeGuard').classList.add('on'); $('#modeRoam').classList.remove('on');
+    closePanel(); S.wave=1; renderField(); banner('驻守 · 第'+S.stage+'关'); toast(`开始驻守 ${WORLDS[S.world].name} · 第${S.stage}关`); };
+  $('#btnDeployRoam').onclick = ()=>{ S.fighting=true; S.modeRoam=true; $('#modeRoam').classList.add('on'); $('#modeGuard').classList.remove('on');
+    closePanel(); S.wave=1; renderField(); banner('闯荡 · 第'+S.stage+'关'); toast(`开始闯荡 ${WORLDS[S.world].name} · 第${S.stage}关 · 破阵自动深入`); };
+}
+
+/* ============================================================
+   行囊 · 换装 / 出售 / 仓储（唯一入口）
+   ============================================================ */
+function renderBagPanel(){
+  const hero = S.heroes.find(h=>h.id===S.bagFilter.hero) || S.heroes[0];
+  leafMeta('INVENTORY · 行囊', '行囊', `换装 · 出售 · 仓储`, '双击与悬停对比已省略 · 评审后可补');
+  const f = S.bagFilter;
+  const hq = (f.heroQ||'').trim();
+  const inForm = h => h.inForm!==false && h.row!=null;
+  const GR = {主:0,天:1,地:2,甲:3,乙:4,丙:5};
+  /* 稳定排序：在阵 → 品级 → 等级，保证翻页顺序可预期 */
+  const hpool = S.heroes
+    .filter(h=>!hq || (h.name+h.career+h.cat).includes(hq))
+    .sort((a,b)=>((inForm(b)?1:0)-(inForm(a)?1:0)) || ((GR[a.grade]??9)-(GR[b.grade]??9)) || b.lv-a.lv);
+  const HPZ = 10;
+  const hpages = Math.max(1, Math.ceil(hpool.length/HPZ));
+  const hpage = Math.min(f.heroPage||1, hpages);
+  const hshown = hpool.slice((hpage-1)*HPZ, hpage*HPZ);
+  const sorted = [...S.bag].sort(f.sort==='q' ? (a,b)=>b.q-a.q||b.lv-a.lv : (a,b)=>b.lv-a.lv);
+  const items = sorted.filter(it => (f.slot==='all'||it.slot===f.slot) && (f.q==='all'||it.q===+f.q));
+  const shown = items.slice(0, f.show);
+  $('#leafBody').innerHTML = `
+    <div class="baglayout3">
+      <aside class="bagheroes">
+        <div class="nsec-head" style="margin-bottom:6px"><h3>为谁换装</h3><span class="right">${S.heroes.length} 侠 · 在阵优先</span></div>
+        <input type="search" id="heroSearch" placeholder="搜索侠客 · 名称 / 职业 / 脉系" value="${esc(f.heroQ||'')}" style="width:100%;margin-bottom:6px">
+        <div class="herolist">${hshown.map(h=>`
+          <button class="hrow ${h.id===hero.id?'on':''}" data-h="${h.id}">
+            <span class="face">${esc(h.name[0])}</span><span class="hn">${esc(h.name)}</span>
+            <small>${h.grade}品 Lv.${h.lv} · ${inForm(h)?'在阵':'后备'}</small></button>`).join('')
+          || '<p style="grid-column:1/-1;color:var(--pn-faint);font-size:11px;padding:10px 0">无匹配侠客</p>'}
+        </div>
+        <div class="pager">
+          <button class="chip" id="heroPrev" ${hpage<=1?'disabled':''}>‹ 上一页</button>
+          <span>第 ${hpage} / ${hpages} 页</span>
+          <button class="chip" id="heroNext" ${hpage>=hpages?'disabled':''}>下一页 ›</button>
+        </div>
+      </aside>
+      <div class="nsec" style="margin-bottom:0"><div class="nsec-head"><h3>囊中物</h3>
+        <span class="right">${items.length} 件${items.length!==S.bag.length?` / 共 ${S.bag.length}`:''}</span></div>
+        <div class="stickybar">
+        <div class="chiprow" style="margin-bottom:8px">
+          <button class="chip ${f.slot==='all'?'on':''}" data-fslot="all">全部位</button>
+          ${SLOTS.map(sl=>`<button class="chip ${f.slot===sl?'on':''}" data-fslot="${sl}">${SLOT_CN[sl]}</button>`).join('')}
+        </div>
+        <div class="chiprow" style="margin-bottom:8px">
+          <button class="chip ${f.q==='all'?'on':''}" data-fq="all">全品质</button>
+          ${[0,1,2,3,4,5].map(q=>`<button class="chip ${f.q==q?'on':''}" data-fq="${q}">${q}品</button>`).join('')}
+          <span style="width:8px"></span>
+          <button class="chip ${f.sort==='lv'?'on':''}" data-fsort="lv">等级↓</button>
+          <button class="chip ${f.sort==='q'?'on':''}" data-fsort="q">品质↓</button>
+        </div>
+        </div>
+        <div class="baggrid">${shown.map(it=>`
+          <button class="bcell q${it.q} ${f.sel===it.uid?'sel':''}" data-item="${it.uid}" title="${esc(it.n)}">
+            ${it.lock?'<span class="lk">锁</span>':''}<img src="../assets/ui/item-${it.slot}.png" alt="" onerror="this.remove()"><span class="g">${esc(it.n[0])}</span>
+            <span style="font-size:8.5px;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pn-dim)">${esc(it.n)}</span>
+            <span class="lv">Lv.${it.lv}</span>
+          </button>`).join('') || '<p style="grid-column:1/-1;color:var(--pn-faint);font-size:12px;padding:18px 0;text-align:center">囊中无此物 · 调整筛选试试</p>'}
+        </div>
+        ${items.length>shown.length?`<button class="btn xs" id="bagMore" style="margin-top:10px;width:100%">还有 ${items.length-shown.length} 件 · 点击展开更多</button>`:''}
+        <div class="hairline"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--pn-dim);gap:8px;flex-wrap:wrap">
+          <span> 自动出售：低于 ${S.settings.autoSellBelow} 品 → <b style="color:var(--crimson)">在当前挂机世界自动出售</b>（设置中可改）</span>
+          <button class="btn xs" id="btnOrganize">整理行囊</button>
+        </div>
+      </div>
+      <aside class="bagside">
+        <div class="nsec-head"><h3>身上装备</h3><span class="right">${esc(hero.name)} · ${esc(hero.career)}</span></div>
+        <div class="equipzone">${SLOTS.map(sl=>{
+          const e = hero.equip[sl];
+          return `<button class="eslot ${e?'filled':''}" data-eslot="${sl}" ${e?`title="${esc(e.n)}"`:''}>
+            <span class="eq">${SLOT_CN[sl]}</span>${e?`<span class="g">${esc(e.n[0])}</span><span class="lv">Lv.${e.lv}</span>`:`<span style="font-size:9px">空</span>`}
+          </button>`;}).join('')}
+        </div>
+        <p style="font-size:10px;color:var(--pn-faint);margin:6px 0 0;letter-spacing:.08em">点格子可卸下装备 · 与行囊互换</p>
+        <div id="bagDetail"></div>
+      </aside>
+    </div>`;  $('#leafBody').querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{ S.bagFilter.hero=b.dataset.h; S.bagFilter.sel=null; renderBagPanel(); });
+  const hs = $('#heroSearch');
+  if(hs) hs.oninput = ()=>{
+    S.bagFilter.heroQ = hs.value; S.bagFilter.heroPage = 1; renderBagPanel();
+    const n = $('#heroSearch'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+  };
+  const hp2 = $('#heroPrev'); if(hp2) hp2.onclick=()=>{ S.bagFilter.heroPage=Math.max(1,hpage-1); renderBagPanel(); };
+  const hn2 = $('#heroNext'); if(hn2) hn2.onclick=()=>{ S.bagFilter.heroPage=Math.min(hpages,hpage+1); renderBagPanel(); };
+  $('#leafBody').querySelectorAll('[data-fslot]').forEach(b=>b.onclick=()=>{ S.bagFilter.slot=b.dataset.fslot; S.bagFilter.show=12; renderBagPanel(); });
+  $('#leafBody').querySelectorAll('[data-fq]').forEach(b=>b.onclick=()=>{ S.bagFilter.q=b.dataset.fq==='all'?'all':+b.dataset.fq; S.bagFilter.show=12; renderBagPanel(); });
+  $('#leafBody').querySelectorAll('[data-fsort]').forEach(b=>b.onclick=()=>{ S.bagFilter.sort=b.dataset.fsort; renderBagPanel(); });
+  const bm = $('#bagMore'); if(bm) bm.onclick=()=>{ S.bagFilter.show+=24; renderBagPanel(); };
+  $('#leafBody').querySelectorAll('[data-eslot]').forEach(b=>b.onclick=()=>{
+    const sl=b.dataset.eslot, e=hero.equip[sl];
+    if(e){ hero.equip[sl]=null; S.bag.push({uid:'x'+Math.random().toString(36).slice(2,7),slot:sl,n:e.n,q:e.q,lv:e.lv,a:e.a,lock:e.lock}); toast(`已卸下 ${e.n}`); renderBagPanel(); }
+  });
+  $('#leafBody').querySelectorAll('[data-item]').forEach(b=>b.onclick=()=>{
+    S.bagFilter.sel = S.bagFilter.sel===b.dataset.item ? null : b.dataset.item;
+    renderBagPanel();
+  });
+  $('#btnOrganize').onclick = ()=>{ S.bag.sort((a,b)=>b.q-a.q||b.lv-a.lv); toast('行囊已整理 · 品质优先'); renderBagPanel(); };
+  renderBagDetail(hero);
+}
+function renderBagDetail(hero){
+  const box = $('#bagDetail'); if(!box) return;
+  const it = S.bag.find(x=>x.uid===S.bagFilter.sel);
+  if(!it){ box.innerHTML=''; return; }
+  setTimeout(()=>box.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+  const cur = hero.equip[it.slot];
+  box.innerHTML = `<div class="itemdetail">
+    <h4>${esc(it.n)} <span class="tag ${it.q>=4?'red':''}">${it.q} 品 · Lv.${it.lv}</span></h4>
+    <div style="font-size:10px;color:var(--pn-faint);margin:3px 0 6px;letter-spacing:.15em">${SLOT_CN[it.slot]} 部位</div>
+    ${it.a.map(a=>`<div class="attr"><span>${esc(a.split(' +')[0])}</span><b>+${esc(a.split(' +')[1]||'')}</b></div>`).join('')}
+    ${cur?`<div style="font-size:11px;color:var(--pn-dim);margin-top:8px">身上：${esc(cur.n)}（${it.q>cur.q?'<b style="color:var(--crimson)">优于身上</b>':'不如此件'}）</div>`:''}
+    <div class="ops">
+      <button class="btn solid xs" id="dEquip">装备给 ${esc(hero.name)}</button>
+      <button class="btn xs" id="dLock">${it.lock?'解锁':'锁定'}</button>
+      <button class="btn crimson xs" id="dSell">出售 · ${fmt(it.lv*(it.q+1)*12)} 通宝</button>
+    </div></div>`;
+  $('#dEquip').onclick = ()=>{
+    const old = hero.equip[it.slot];
+    hero.equip[it.slot] = {n:it.n,q:it.q,lv:it.lv,a:it.a,lock:it.lock};
+    S.bag = S.bag.filter(x=>x.uid!==it.uid);
+    if(old) S.bag.push({uid:'x'+Math.random().toString(36).slice(2,7),slot:it.slot,n:old.n,q:old.q,lv:old.lv,a:old.a,lock:old.lock});
+    toast(`${it.n} 已装备`); S.bagFilter.sel=null; renderBagPanel();
+  };
+  $('#dLock').onclick = ()=>{ it.lock=!it.lock; renderBagPanel(); };
+  $('#dSell').onclick = ()=>{
+    if(it.lock){ toast('已锁定 · 先解锁再出售'); return; }
+    const price = it.lv*(it.q+1)*12; S.coins += price;
+    S.bag = S.bag.filter(x=>x.uid!==it.uid); S.bagFilter.sel=null;
+    toast(`售出 ${it.n} · +${fmt(price)} 通宝`); renderBagPanel();
+  };
+}
+
+/* ============================================================
+   侠客册页
+   ============================================================ */
+let sheetHero = null, sheetTab = 'base';
+function openHeroSheet(id){
+  if(curPanel) closePanel();
+  sheetHero = S.heroes.find(h=>h.id===id); sheetTab='base';
+  renderSheet();
+  requestAnimationFrame(()=>$('#sheet').classList.add('open'));
+}
+function closeSheet(){ $('#sheet').classList.remove('open'); }
+document.addEventListener('keydown', e=>{ if(e.key!=='Escape') return;
+  if($('#sheet').classList.contains('open')) closeSheet();
+  else if(leaf.classList.contains('open')) closePanel();
+});
+function renderSheet(){
+  const h = sheetHero;
+  const tabs = [['base','基础'],['equip','装备'],['martial','武学'],['career','职业']];
+  let body = '';
+  if(sheetTab==='base'){
+    body = `<div class="radar"><svg width="210" height="170" viewBox="0 0 200 170">
+      ${[38,76].map(r=>`<polygon fill="none" stroke="var(--night-line-2)" points="${[0,72,144,216,288].map(a=>{const rad=(a-90)*Math.PI/180;return `${100+Math.cos(rad)*r},${85+Math.sin(rad)*r*.8}`}).join(' ')}"/>`).join('')}
+      <polygon fill="rgba(194,64,42,.25)" stroke="var(--crimson)" points="${[42,68,55,80,60].map((v,i)=>{const rad=(i*72-90)*Math.PI/180;return `${100+Math.cos(rad)*v},${85+Math.sin(rad)*v*.8}`}).join(' ')}"/>
+      ${['臂力','悟性','体魄','身法','定力'].map((l,i)=>{const rad=(i*72-90)*Math.PI/180;return `<text x="${100+Math.cos(rad)*94}" y="${85+Math.sin(rad)*94*.8+3}" font-size="9" fill="var(--pn-dim)" text-anchor="middle">${l}</text>`}).join('')}
+    </svg></div>
+    <div class="nrow"><span class="k">等级</span><span class="v">Lv.${h.lv}</span></div>
+    <div class="nrow"><span class="k">职业</span><span class="v">${esc(h.career)}</span></div>
+    <div class="nrow"><span class="k">脉系</span><span class="v">${esc(h.cat)} 之脉</span></div>
+    <div class="nrow"><span class="k">气血 / 能量</span><span class="v">${fmt(h.maxHp)} / 5 格</span></div>
+    <p style="font-size:11px;color:var(--pn-faint);margin-top:10px;line-height:1.8">点将谱已并入战场：点任意侠客令牌即可打开此册页；布阵态下拖拽令牌调位。</p>`;
+  } else if(sheetTab==='equip'){
+    body = `<div class="equipzone" style="margin-top:6px">${SLOTS.map(sl=>{
+      const e=h.equip[sl];
+      return `<div class="eslot ${e?'filled':''}" ${e?`title="${esc(e.n)}"`:''}><span class="eq">${SLOT_CN[sl]}</span>${e?`<span class="g">${esc(e.n[0])}</span><span class="lv">Lv.${e.lv}</span>`:'<span style="font-size:9px">空</span>'}</div>`;
+    }).join('')}</div>
+    <button class="btn xs" style="margin-top:8px" id="sheetToBag">前往行囊 · 换装与整理 →</button>
+    <p style="font-size:11px;color:var(--pn-faint);margin-top:8px">装备的唯一操作入口是行囊，此处只读展示，避免两处改装备状态不一致。</p>`;
+  } else if(sheetTab==='martial'){
+    body = `<div class="nrow"><span class="k">第 1 槽</span><span class="v">奔雷剑法 · Lv.4</span></div>
+    <div class="nrow"><span class="k">第 2 槽</span><span class="v">流云身法 · Lv.3</span></div>
+    <div class="nrow"><span class="k">第 3 槽</span><span class="v" style="color:var(--pn-faint)">空槽位</span></div>
+    <div class="nrow"><span class="k">主修心法</span><span class="v">混元功 · 回气 +2</span></div>
+    <p style="font-size:11px;color:var(--pn-faint);margin-top:10px;line-height:1.8">新武学在「兑换」研习后全局可装配。</p>`;
+  } else {
+    body = `<div class="nrow"><span class="k">当前职业</span><span class="v">${esc(h.career)}</span></div>
+    <div class="nrow"><span class="k">职业等级</span><span class="v">Lv.${Math.max(1,h.lv-6)}</span></div>
+    <div class="nrow"><span class="k">可转职</span><span class="v">游龙枪卫 · 剑侍</span></div>
+    <button class="btn xs" style="margin-top:10px" id="sheetCareer">打开职业树（原型示意）</button>`;
+  }
+  $('#sheet').innerHTML = `
+    <div class="sheet-head"><div class="bigface"><img src="../assets/ui/hero-${h.id}.png" alt="" onerror="this.remove()">${esc(h.name[0])}</div>
+      <div><h2>${esc(h.name)}</h2><div class="meta">${h.grade} 品 · ${esc(h.cat)}之脉 · Lv.${h.lv} · ${esc(h.career)}</div></div>
+      <button class="leaf-close" style="margin-left:auto" onclick="closeSheet()">✕</button></div>
+    <div class="sheet-tabs">${tabs.map(t=>`<button class="stab ${sheetTab===t[0]?'on':''}" data-stab="${t[0]}">${t[1]}</button>`).join('')}</div>
+    <div class="sheet-body">${body}</div>`;
+  $('#sheet').querySelectorAll('[data-stab]').forEach(b=>b.onclick=()=>{ sheetTab=b.dataset.stab; renderSheet(); });
+  const toBag = $('#sheetToBag'); if(toBag) toBag.onclick = ()=>{ closeSheet(); openPanel('bag'); };
+  const car = $('#sheetCareer'); if(car) car.onclick = ()=>toast('职业树为全屏册页 · 评审通过后再细化');
+}
+</script>
+<script>
+/* ============================================================
+   势力三入口 · 悬榜 / 兑换 / 招募（右上各一枚图标，独立面板）
+   ============================================================ */
+const QCATS = ['消灭','筹措','收集','挑战','寻宝'];
+const QDIFFS = ['凡','良','甲','地','天'];
+
+/* 贡献 / 声望条：悬榜与兑换共用 */
+function factionStrip(){
+  const F = S.faction;
+  const repPct = Math.min(100, F.reputation/500*100);
+  return `
+    <div class="nrow" style="border:1.5px solid var(--night-line-2);padding:12px;background:var(--night-2)">
+      <span class="k">势力贡献</span><span class="v crimson">${fmt(F.contrib)}</span>
+      <span class="k" style="margin-left:14px">声望</span><span class="v">${fmt(F.reputation)} · 小有名气</span>
+    </div>
+    <div style="margin:8px 0 16px"><div class="pbar red"><i style="width:${repPct}%"></i></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--pn-faint);margin-top:4px"><span>声望进度</span><span>距「闻名」还需 ${fmt(Math.max(0,500-F.reputation))}</span></div></div>`;
+}
+
+/* 条件未足 → 一键前往对应世界挂机（兑换 / 招募共用） */
+function bindGoto(){
+  $('#leafBody').querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{
+    const w = +b.dataset.goto;
+    S.world=w; S.stage=Math.min(WORLDS[w].cleared+1,10); S.wave=1; S.modeRoam=true; S.fighting=true;
+    $('#coinGlyph').textContent=WORLDS[w].coin[0]; $('#coinName').textContent=WORLDS[w].coin+' · 本卷';
+    $('#modeRoam').classList.add('on'); $('#modeGuard').classList.remove('on');
+    closePanel(); renderField(); banner('奔赴 · '+WORLDS[w].name);
+    toast(`已前往 ${WORLDS[w].name} 开始闯荡挂机 · 条件备齐后回「兑换」领取`);
+  });
+}
+
+/* —— 悬榜：任务榜 + 自动办差 —— */
+function renderQuestPanel(){
+  const F = S.faction;
+  leafMeta('BOUNTY · 悬榜办差', '悬榜', `跨世界共享任务`, '一炷香换榜 · 可勾选自动接取 / 完成');
+  $('#leafBody').innerHTML = factionStrip() + `
+    <div class="nsec">
+      <div class="nsec-head"><h3>悬榜</h3><span class="right">一炷香后换榜 · 23 分钟</span></div>
+      <div class="autobox">
+        <div class="ahead"><span class="switch ${F.auto.on?'on':''}" id="autoSwitch"></span>自动接取 / 完成任务</div>
+        <div class="aline"><span>类型</span><div class="chiprow">${QCATS.map(c=>`<button class="chip ${F.auto.cats.includes(c)?'on':''}" data-acat="${c}">${c}</button>`).join('')}</div></div>
+        <div class="aline"><span>难度</span><div class="chiprow">${QDIFFS.map(d=>`<button class="chip ${F.auto.diffs.includes(d)?'on':''}" data-adiff="${d}">${d}</button>`).join('')}</div></div>
+        <div class="aline" style="color:var(--pn-faint);font-size:10px">只自动处理勾选范围内的新榜 · 已揭榜不受影响</div>
+      </div>
+      <div class="questgrid">${F.quests.map(q=>{
+        const label = q.state==='done'?'已结':q.state==='accepted'?'放弃':'揭榜';
+        const cls = q.state==='done'?'done':q.state==='accepted'?'':'';
+        return `<div class="quest ${cls}" data-quest="${q.id}">
+          ${q.state!=='open'?`<span class="stamp">${q.state==='done'?'功成':'在办'}</span>`:''}
+          <div class="qt"><span>${q.type}</span><span>${q.diff}品榜</span></div>
+          <h4>${esc(q.name)}</h4>
+          <div class="qp">${fmt(q.prog)} / ${fmt(q.target)} · 赏 <b style="color:var(--crimson)">${q.reward}</b> 贡献 · ${q.rep} 声望</div>
+          <div class="qr"><span style="color:var(--pn-faint);font-size:10px">${q.state==='done'?'已入宗卷':q.state==='accepted'?'进行中有进度即累计':'点击揭榜开始办差'}</span>
+          <button class="btn xs ${q.state==='open'?'solid':''}" data-qact="${q.id}">${label}</button></div>
+        </div>`;}).join('')}
+      </div>
+    </div>`;
+
+  $('#autoSwitch').onclick = ()=>{ F.auto.on=!F.auto.on; renderQuestPanel(); toast(F.auto.on?'已开启自动办差':'已关闭自动办差'); };
+  $('#leafBody').querySelectorAll('[data-acat]').forEach(b=>b.onclick=()=>{
+    const c=b.dataset.acat, i=F.auto.cats.indexOf(c);
+    i>=0?F.auto.cats.splice(i,1):F.auto.cats.push(c); renderQuestPanel();
+  });
+  $('#leafBody').querySelectorAll('[data-adiff]').forEach(b=>b.onclick=()=>{
+    const d=b.dataset.adiff, i=F.auto.diffs.indexOf(d);
+    i>=0?F.auto.diffs.splice(i,1):F.auto.diffs.push(d); renderQuestPanel();
+  });
+  $('#leafBody').querySelectorAll('[data-qact]').forEach(b=>b.onclick=()=>{
+    const q = F.quests.find(x=>x.id===+b.dataset.qact);
+    if(q.state==='open'){ q.state='accepted'; toast(`已揭榜 · ${q.name}`); }
+    else if(q.state==='accepted'){ q.state='open'; q.prog=0; toast(`已放弃 · ${q.name}`); }
+    else { F.contrib+=q.reward; F.reputation+=q.rep; F.quests = F.quests.filter(x=>x.id!==q.id); toast(`领赏 +${q.reward} 贡献 · +${q.rep} 声望`); }
+    renderQuestPanel();
+  });
+}
+
+/* —— 兑换：贡献兑换目录（全局通用） —— */
+function renderExchangePanel(){
+  const F = S.faction;
+  const kw = (F.search||'').trim();
+  const searching = kw.length>0;
+  leafMeta('EXCHANGE · 以功易赏', '兑换', `目录全局通用`, '解锁后任何世界可兑换 / 研习 · 条件未足可一键前往挂机');
+  const catalogHTML = (()=>{
+    const match = c => !searching || (c.name+c.kind+c.meta).includes(kw);
+    const html = ['武学','转职书','图纸','幻型','侠客','材料'].map(kind=>{
+      const list = F.catalog.filter(c=>c.kind===kind && !F.hidden.includes(c.id) && !(c.once && c.owned) && match(c));
+      if(!list.length) return '';
+      const closed = !searching && F.closedKinds.includes(kind);
+      return `<div class="kindgroup ${closed?'closed':''}">
+        <button class="kindhead ${closed?'closed':''}" data-kind="${kind}">${kind}<span class="cnt">${list.length} 项</span><span class="arr">▾</span></button>
+        <div class="catlist">` +
+        list.map(c=>{
+          const lackWorld = c.need.world!==undefined && c.need.world!==S.world;
+          const lackContrib = (c.need.contrib||0) > F.contrib;
+          const lackRep = (c.need.rep||0) > F.reputation;
+          const blocked = lackWorld || lackContrib || lackRep;
+          let btn;
+          if(c.owned && c.once) btn = `<button class="btn xs" disabled>已入藏</button>`;
+          else if(F.hideMode && !c.once) btn = `<span class="hcheck ${F.hideSel.includes(c.id)?'on':''}" data-hsel="${c.id}">${F.hideSel.includes(c.id)?'✓':''}</span>`;
+          else if(lackWorld) btn = `<button class="btn crimson xs" data-goto="${c.need.world}">前往${WORLDS[c.need.world].name}挂机</button>`;
+          else if(blocked) btn = `<button class="btn xs" disabled>条件未足</button>`;
+          else btn = `<button class="btn solid xs" data-buy="${c.id}">${c.buyable?'兑换':'研习'}</button>`;
+          const needTxt = [c.need.contrib?`${fmt(c.need.contrib)} 贡献`:null, c.need.rep?`声望 ${fmt(c.need.rep)}`:null, c.need.world!==undefined?`货币 · ${WORLDS[c.need.world].coin}`:null].filter(Boolean).join(' · ');
+          return `<div class="catrow">
+            <span class="ic">${c.kind[0]}</span>
+            <span class="nm">${esc(c.name)}${c.once?` <span class="tag" style="margin-left:4px">一次</span>`:''}${c.buyable?` <span class="tag red" style="margin-left:4px">限购</span>`:''}<small>${esc(c.meta)}</small></span>
+            <span class="cost">${needTxt}<br>${lackContrib?'<b style="color:var(--crimson)">贡献不足</b>':lackRep?'<b style="color:var(--crimson)">声望不足</b>':'&nbsp;'}</span>
+            ${btn}</div>`;
+        }).join('') +
+        `</div></div>`;
+    }).join('');
+    return html || (searching?`<p style="font-size:11px;color:var(--pn-faint);padding:10px 0">无匹配「${esc(kw)}」的兑换项</p>`:'<p style="font-size:11px;color:var(--pn-faint);padding:10px 0">目录暂空</p>');
+  })();
+  $('#leafBody').innerHTML = factionStrip() + `
+    <div class="nsec">
+      <div class="nsec-head"><h3>贡献兑换</h3>
+        <span class="right"> <button class="chip ${F.hideMode?'on':''}" id="hideModeBtn" style="margin-left:6px">${F.hideMode?'完成':'多选隐藏'}</button></span></div>
+      <p style="font-size:11px;color:var(--pn-dim);margin-bottom:8px;line-height:1.7">目录已合并各世界势力。解锁后<b style="color:var(--pn)">在任何世界都可兑换/研习</b>；声望、贡献或世界货币不足时，可一键前往对应世界挂机获取。</p>
+      <input type="search" id="catSearch" placeholder="检索目录 · 名称 / 类型 / 说明" value="${esc(F.search||'')}" style="width:100%;margin-bottom:2px">
+      ${catalogHTML}
+      ${F.hideMode?`<div style="margin-top:10px;display:flex;gap:8px"><button class="btn crimson xs" id="doHide">隐藏所选（${F.hideSel.length}）</button><button class="btn xs" id="cancelHide">取消</button></div>`:''}
+    </div>`;
+
+  $('#leafBody').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
+    const c = F.catalog.find(x=>x.id===b.dataset.buy);
+    F.contrib -= c.need.contrib||0;
+    if(c.once){ c.owned=true; toast(`${c.name} 已入藏 · 一次性物品不再显示`); }
+    else toast(`${c.name} 已${c.buyable?'兑换':'研习'} · 全局可用`);
+    renderExchangePanel();
+  });
+  const hm = $('#hideModeBtn');
+  if(hm) hm.onclick = ()=>{ F.hideMode=!F.hideMode; if(!F.hideMode)F.hideSel=[]; renderExchangePanel(); };
+  $('#leafBody').querySelectorAll('[data-hsel]').forEach(el=>el.onclick=()=>{
+    const id=el.dataset.hsel, i=F.hideSel.indexOf(id);
+    i>=0?F.hideSel.splice(i,1):F.hideSel.push(id); renderExchangePanel();
+  });
+  const dh = $('#doHide');
+  if(dh) dh.onclick = ()=>{
+    F.hidden.push(...F.hideSel); F.hideMode=false;
+    toast(`已隐藏 ${F.hideSel.length} 项 · 可在设置中恢复`); F.hideSel=[]; renderExchangePanel();
+  };
+  const ch = $('#cancelHide'); if(ch) ch.onclick=()=>{ F.hideMode=false; F.hideSel=[]; renderExchangePanel(); };
+  $('#leafBody').querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.kind, i=F.closedKinds.indexOf(k);
+    i>=0?F.closedKinds.splice(i,1):F.closedKinds.push(k); renderExchangePanel();
+  });
+  const cs = $('#catSearch');
+  if(cs) cs.oninput = ()=>{
+    F.search = cs.value; renderExchangePanel();
+    const n = $('#catSearch'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+  };
+  bindGoto();
+}
+
+/* —— 招募：各世界名录（合并展示，按位面分组） —— */
+function renderRecruitPanel(){
+  const F = S.faction;
+  leafMeta('RECRUIT · 广纳贤才', '招募', '名录合并各世界势力 · 按位面分组', '条件未足可先前往该位面挂机积攒');
+  $('#leafBody').innerHTML = `
+    <div class="nsec">
+      <div class="nsec-head"><h3>招募</h3><span class="right">名录已合并各世界势力 · 按位面分组</span></div>
+      ${(()=>{
+        const groups = {};
+        F.recruits.forEach(r=>{ (groups[r.world]=groups[r.world]||[]).push(r); });
+        const keys = Object.keys(groups).sort((a,b)=>a-b);
+        if(!keys.length) return '<p style="font-size:11px;color:var(--pn-faint)">名录暂空 · 通关位面与提升声望后可遇更多侠客</p>';
+        return keys.map(wid=>{
+          const closed = F.closedWorlds.includes(+wid);
+          return `<div class="kindgroup ${closed?'closed':''}">
+            <button class="kindhead ${closed?'closed':''}" data-wgroup="${wid}">${WORLDS[wid].name}<span class="cnt">${groups[wid].length} 位</span><span class="arr">▾</span></button>
+            <div class="recruitrows">${groups[wid].map(r=>{
+              const wrongWorld = +wid!==S.world;
+              return `<div class="catrow"><span class="ic">${esc(r.name[0])}</span>
+                <span class="nm">${esc(r.name)} <span class="tag" style="margin-left:4px">${r.grade} 品</span><small>${esc(r.req)}</small></span>
+                ${wrongWorld?`<button class="btn crimson xs" data-goto="${wid}">前往${WORLDS[wid].name}</button>`
+                  :r.ok?`<button class="btn solid xs" data-recruit="${esc(r.name)}">邀请入队</button>`
+                  :`<button class="btn xs" disabled>条件未足</button>`}</div>`;
+            }).join('')}</div></div>`;
+        }).join('');
+      })()}
+      <p style="font-size:11px;color:var(--pn-faint);margin-top:8px">商城「普通池」为另一招募途径，保留在商城图标内。</p>
+    </div>`;
+
+  $('#leafBody').querySelectorAll('[data-recruit]').forEach(b=>b.onclick=()=>{
+    toast(`${b.dataset.recruit} 已入麾下 · 点战场令牌查看`); S.faction.recruits = S.faction.recruits.filter(r=>r.name!==b.dataset.recruit);
+    renderRecruitPanel();
+  });
+  $('#leafBody').querySelectorAll('[data-wgroup]').forEach(b=>b.onclick=()=>{
+    const w=+b.dataset.wgroup, i=F.closedWorlds.indexOf(w);
+    i>=0?F.closedWorlds.splice(i,1):F.closedWorlds.push(w); renderRecruitPanel();
+  });
+  bindGoto();
+}
+
+/* ============================================================
+   商城 · 普通池 + 收益特权
+   ============================================================ */
+function renderShopPanel(){
+  leafMeta('MARKET · 江湖百货', '商城', '普通池招募 · 蛋蛋兑换', '周卡月卡即买即生效 · 续购延长');
+  $('#leafBody').innerHTML = `
+    <div class="nsec"><div class="nsec-head"><h3>侠客招募 · 普通池</h3></div>
+      <div class="poolbox">
+        <p style="font-size:12px;color:var(--pn-dim)">蛋蛋充裕时来此碰运气。当前持有 <b style="color:var(--crimson)">${fmt(Math.floor(S.vouchers.balance))}</b> 蛋蛋</p>
+        <div class="drawface" id="drawFace">侠</div>
+        <div id="drawResult" style="font-size:12px;color:var(--pn);min-height:20px;margin:6px 0"></div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn solid" id="draw1">招募 ×1 · 300</button>
+          <button class="btn crimson" id="draw10">招募 ×10 · 2,700</button>
+        </div>
+        <p style="font-size:10px;color:var(--pn-faint);margin-top:10px">十次必出乙品以上 · 已招募侠客转化为武学点</p>
+      </div>
+    </div>
+    <div class="nsec"><div class="nsec-head"><h3>收益特权</h3><span class="right">原「查看加成」并入此处</span></div>
+      ${S.shop.premium.map((p,i)=>`<div class="card">
+        <h4>${p.name}<span class="state ${p.active?'live':''}">${p.active?'生效中':'未购买'}</span></h4>
+        <p>购买后 ${p.days} 天内：装备掉率 ×1.25 · 经验 ×1.2 · 战斗 SP ×1.2。续购延长有效期，不叠加。</p>
+        <div style="margin-top:8px"><button class="btn xs ${p.active?'':'solid'}" data-prem="${i}" ${Math.floor(S.vouchers.balance)<p.price?'disabled':''}>${p.active?'续购':'购买'} · ${fmt(p.price)} 蛋蛋 / ${p.days} 天</button></div>
+      </div>`).join('')}
+      <p style="font-size:11px;color:var(--pn-faint)">掉率来源明细：上阵侠客 +18% · 城市科技 +6% · 最终概率最高 100%</p>
+    </div>`;
+  const doDraw = n=>{
+    if(S.vouchers.balance < (n===1?300:2700)){ toast('蛋蛋不足 · 挂机每 6 分钟 +10'); return; }
+    S.vouchers.balance -= n===1?300:2700;
+    const grades=['丙','乙','甲','地']; const picks=Array.from({length:n},()=>grades[Math.random()<.6?0:Math.random()<.75?1:Math.random()<.85?2:3]);
+    const best=picks.includes('地')?'地':picks.includes('甲')?'甲':'乙';
+    $('#drawFace').textContent = best; $('#drawFace').style.transform='scale(1.15)';
+    setTimeout(()=>$('#drawFace').style.transform='',300);
+    $('#drawResult').innerHTML = `招募 ${n} 次 · 最佳 <b style="color:var(--crimson)">${best} 品</b>${n>1?`（${picks.join(' · ')}）`:''}`;
+    $('#voucherNum').textContent = fmt(Math.floor(S.vouchers.balance));
+  };
+  $('#draw1').onclick = ()=>doDraw(1);
+  $('#draw10').onclick = ()=>doDraw(10);
+  $('#leafBody').querySelectorAll('[data-prem]').forEach(b=>b.onclick=()=>{
+    const p=S.shop.premium[+b.dataset.prem];
+    S.vouchers.balance-=p.price; p.active=true;
+    toast(`${p.name} 已生效 · ${p.days} 天`); renderShopPanel();
+  });
+}
+
+/* ============================================================
+   城市 · 古玩店经营
+   ============================================================ */
+function renderCityPanel(){
+  const c = S.city;
+  leafMeta('CITY · 现世经营', '城市', `古玩店 · 跨位面产业`, '游戏运行期间营业 · 关闭后歇业');
+  $('#leafBody').innerHTML = `
+    <div class="nrow" style="border:1.5px solid var(--night-line-2);padding:12px;background:var(--night-2)">
+      <span class="k">现世现金</span><span class="v">${fmt(c.cash)}</span>
+      <span class="k" style="margin-left:14px">累计收入</span><span class="v">${fmt(c.revenue)}</span>
+      <span class="k" style="margin-left:14px">已售</span><span class="v">${c.sold} 件</span>
+    </div>
+    <div class="nsec" style="margin-top:14px"><div class="nsec-head"><h3>古玩店 · Lv.${c.level}</h3>
+      <span class="right"><button class="btn xs ${c.open?'crimson':'solid'}" id="cityToggle">${c.open?'打烊':'开门营业'}</button></span></div>
+      <p style="font-size:11px;color:var(--pn-dim);margin-bottom:8px">${c.open?'营业中 · 顾客到店店员自动接待，现金即时入账':'已打烊 · 货架保留，开门后继续'}</p>
+      <div class="nsec-head" style="margin-top:8px"><h3 style="font-size:13px">店员</h3></div>
+      ${c.staff.map(s=>`<div class="staffrow"><span style="font-family:var(--kai)">${esc(s.name)}</span>
+        <span style="color:var(--pn-dim);font-size:11px">商业 Lv.${s.ability} · ${s.busy?'正在接待':'待命中'}</span>
+        <button class="btn xs" style="margin-left:auto" data-dismiss="${esc(s.name)}">卸任</button></div>`).join('')}
+      ${c.candidates.length?`<div class="staffrow" style="color:var(--pn-faint)">可任命：${c.candidates.map(x=>`<button class="chip" style="margin-left:6px" data-hire="${esc(x.name)}">${esc(x.name)} · 商${x.ability}</button>`).join('')}</div>`:'<div class="staffrow" style="color:var(--pn-faint)">暂无可任命侠客 · 去招募</div>'}
+    </div>
+    <div class="nsec"><div class="nsec-head"><h3>柜上货物</h3><span class="right">${c.stock.length} / 8</span></div>
+      ${c.stock.map(s=>`<div class="catrow"><span class="ic">货</span><span class="nm">${esc(s.n)}<small>预计售价 ${fmt(s.price)} 现金</small></span>
+        <button class="btn xs" data-unstock="${esc(s.n)}">取回</button></div>`).join('')||'<p style="font-size:11px;color:var(--pn-faint)">货架尚空 · 从行囊把闲置装备带来（行囊不收上架，专设此口）</p>'}
+    </div>
+    <div class="nsec"><div class="nsec-head"><h3>生意往来</h3></div>
+      <div class="nrow"><span class="k">第 23 笔 · 售出</span><span class="v">丈八蛇矛 +3,200</span></div>
+      <div class="nrow"><span class="k">第 22 笔 · 售出</span><span class="v">兽面吞头铠 +5,600</span></div>
+      <div class="nrow"><span class="k">第 21 笔 · 售出</span><span class="v">明月珰 +1,150</span></div>
+      <p style="font-size:10px;color:var(--pn-faint);margin-top:8px">显示最近十笔 · 账页实时更新</p>
+    </div>`;
+  $('#cityToggle').onclick=()=>{ c.open=!c.open; toast(c.open?'古玩店开门营业':'古玩店打烊'); renderCityPanel(); };
+  $('#leafBody').querySelectorAll('[data-dismiss]').forEach(b=>b.onclick=()=>{
+    c.staff=c.staff.filter(s=>s.name!==b.dataset.dismiss); c.candidates.push({name:b.dataset.dismiss,ability:8});
+    toast(`${b.dataset.dismiss} 已卸任`); renderCityPanel();
+  });
+  $('#leafBody').querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>{
+    if(c.staff.length>=2){ toast('店员已满 · 先卸任一位'); return; }
+    c.candidates=c.candidates.filter(x=>x.name!==b.dataset.hire); c.staff.push({name:b.dataset.hire,ability:7,busy:false});
+    toast(`${b.dataset.hire} 已任命店员`); renderCityPanel();
+  });
+  $('#leafBody').querySelectorAll('[data-unstock]').forEach(b=>b.onclick=()=>{
+    c.stock=c.stock.filter(s=>s.n!==b.dataset.unstock); toast(`${b.dataset.unstock} 已取回行囊`); renderCityPanel();
+  });
+}
+
+/* ============================================================
+   设置
+   ============================================================ */
+function renderSettingsPanel(){
+  const st = S.settings, F = S.faction;
+  leafMeta('SETUP · 偏好与存档', '设置', `修改即生效并自动保存`, '蛋蛋江湖 2.0 · UX 原型 v1');
+  $('#leafBody').innerHTML = `
+    <div class="nsec"><div class="nsec-head"><h3>战斗与掉落</h3></div>
+      <div class="setrow"><div class="t">自动出售低品质装备
+        <small>只处理设置生效后新掉落的装备；出售所得为当前挂机世界货币。<b style="color:var(--crimson)">会在当前挂机世界自动出售</b>，切换世界后币种随之切换。</small></div>
+        <select id="autoSell">
+          <option value="off" ${st.autoSellBelow===null?'selected':''}>关闭 · 全部保留</option>
+          ${[0,1,2,3,4,5].map(q=>`<option value="${q}" ${st.autoSellBelow===q?'selected':''}>低于 ${q} 品</option>`).join('')}
+        </select></div>
+    </div>
+    <div class="nsec"><div class="nsec-head"><h3>隐藏目录</h3></div>
+      <p style="font-size:11px;color:var(--pn-dim);margin-bottom:8px;line-height:1.7">被隐藏的兑换项在此恢复显示。</p>
+      ${F.hidden.length?`<div class="vscroll">${F.hidden.map(id=>{
+        const c=F.catalog.find(x=>x.id===id);
+        return `<div class="nrow"><span class="k">${c.kind} · ${esc(c.name)}</span>
+          <button class="btn xs" style="margin-left:auto" data-unhide="${id}">恢复显示</button></div>`;
+      }).join('')}</div>`:'<p style="font-size:11px;color:var(--pn-faint)">暂无隐藏项 · 在「兑换」面板多选隐藏</p>'}
+    </div>
+    <div class="nsec"><div class="nsec-head"><h3>福利与云存档</h3></div>
+      <div class="setrow"><div class="t">福利码<small>每存档限领一次，领取记录随存档保存。</small></div>
+        <div style="margin-left:auto;display:flex;gap:6px"><input type="text" id="welfareInput" placeholder="输入福利码" value="${esc(st.welfare)}" style="width:130px"><button class="btn xs solid" id="welfareBtn">领取</button></div></div>
+      <div class="setrow"><div class="t">账号与云存档<small>跨设备同步进度 · 存档冲突时保留最新。</small></div>
+        <button class="btn xs" style="margin-left:auto" id="cloudBtn">打开云存档</button></div>
+    </div>
+    <div class="nsec"><div class="nsec-head"><h3>危险区</h3></div>
+      ${st.resetArm?`<div class="autobox"><div class="ahead" style="color:var(--crimson)">确认删档？进度将永久删除且无法恢复。</div>
+        <div style="display:flex;gap:8px;margin-top:10px"><button class="btn xs" id="resetCancel">取消</button>
+        <button class="btn crimson xs" id="resetGo">确认删档</button></div></div>`
+      :`<p style="font-size:11px;color:var(--pn-faint);margin-bottom:8px">删档重开已移出侧栏，收于此处，避免误触。</p>
+        <button class="btn crimson xs" id="resetArm">删档重开…</button>`}
+    </div>`;
+  $('#autoSell').onchange = e=>{ st.autoSellBelow = e.target.value==='off'?null:+e.target.value;
+    toast(st.autoSellBelow===null?'自动出售已关闭':`已开启 · 低于 ${st.autoSellBelow} 品自动出售（当前挂机世界）`); };
+  $('#leafBody').querySelectorAll('[data-unhide]').forEach(b=>b.onclick=()=>{
+    F.hidden=F.hidden.filter(x=>x!==b.dataset.unhide); toast('已恢复显示'); renderSettingsPanel();
+  });
+  $('#welfareBtn').onclick=()=>{
+    const v=$('#welfareInput').value.trim();
+    toast(v?`福利码「${v}」已领取 · 奖励发放（原型示意）`:'请输入福利码');
+  };
+  $('#cloudBtn').onclick=()=>toast('云存档面板 · 登录后跨设备同步（原型示意）');
+  const ra=$('#resetArm'); if(ra) ra.onclick=()=>{ st.resetArm=true; renderSettingsPanel(); };
+  const rc=$('#resetCancel'); if(rc) rc.onclick=()=>{ st.resetArm=false; renderSettingsPanel(); };
+  const rg=$('#resetGo'); if(rg) rg.onclick=()=>{ st.resetArm=false; toast('存档已删除 · 回到卷首（原型示意）'); };
+}
+
+/* 初始化 */
+renderField();
+syncPower();
+banner('第 4 波 · 敌至');
+setTimeout(()=>feed('驻守中 · 汉末通宝持续入账'), 800);
+setTimeout(()=>feed('悬榜「剿灭黄巾残部」进度 +1'), 2000);
+/* 山水底图：素材文件就位后自动启用（未生成前保持内置山峦） */
+(()=>{ const im = new Image(); im.onload = ()=>$('#scene').classList.add('hasbg'); im.src = '../assets/ui/bg-battlefield.png'; })();
+</script>
+</body>
+</html>
