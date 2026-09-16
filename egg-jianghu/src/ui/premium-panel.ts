@@ -33,7 +33,7 @@ const renderPremiumContent = (state: GameStateV10, panel: 'shop' | 'bonuses', no
       </dl>
       <p class="premium-rules">同项目卡片加成相加后乘算；续购延长有效期，不叠加同卡效果。有效期包含离线时间，到期自动停止加成。</p>
       <p class="premium-rules">原掉率由基础概率与队伍、科技加成计算，最终概率最高 100%。卡片不增加掉落数量或品质，不影响蛋蛋、特殊票券、抽池和任务奖励。经验与 SP 的不足 1 点加成累计后发放。</p>
-      ${panel === 'bonuses' ? '<p class="premium-rules">本页列出实际生效的收益加成；下方阵势搭配仍为预览，不计入战斗属性。</p><button type="button" data-action="open-premium-shop">前往商城</button>' : ''}`
+      ${panel === 'bonuses' ? '<p class="premium-rules">本页列出实际生效的收益加成。</p><button type="button" data-action="open-premium-shop">前往商城</button>' : ''}`
 }
 
 export const renderPremiumPanel = (state: GameStateV10, panel: PremiumPanel, now = Date.now()): string =>

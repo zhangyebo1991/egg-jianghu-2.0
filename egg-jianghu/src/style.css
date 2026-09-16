@@ -3159,7 +3159,6 @@ body {
 .formation-stats b { display: block; color: var(--formation-gold-bright); font-size: 25px; font-weight: 700; line-height: 1.05; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .formation-stats b i { color: var(--formation-gold); font-size: 17px; font-style: normal; }
 .formation-stats small { display: block; margin-top: 5px; color: var(--formation-gold); font-size: 10px; letter-spacing: .3em; white-space: nowrap; }
-.formation-stats .accent b, .formation-stats .accent small { color: var(--formation-cinnabar-bright); }
 
 .formation-muster-layout {
   position: relative;
@@ -3405,41 +3404,11 @@ body {
 .formation-martial-chip.heart { grid-column: 1 / -1; color: #3d2c10; font-weight: 600; border-color: rgb(138 100 32 / 55%); background: linear-gradient(160deg, rgb(230 198 127 / 45%), rgb(201 163 92 / 25%)); }
 .formation-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 14px; color: #8a7a55; font-size: 10px; letter-spacing: .14em; border-top: 1px dashed rgb(120 95 55 / 40%); }
 .formation-card-foot b { color: var(--formation-cinnabar-deep); font-weight: 600; }
-
-.formation-synergy { position: relative; z-index: 1; margin-bottom: 0; overflow: hidden; border: 1px solid var(--formation-line-soft); border-radius: 12px; background: radial-gradient(900px 300px at 50% -80px, rgb(201 163 92 / 7%), transparent 70%), linear-gradient(170deg, var(--formation-ink-850), var(--formation-ink-900) 70%); }
-.formation-synergy::before, .formation-synergy::after { position: absolute; top: 0; bottom: 0; width: 5px; content: ""; background: linear-gradient(180deg, #3a3122, #241d12); }
-.formation-synergy::before { left: 0; border-radius: 12px 0 0 12px; }
-.formation-synergy::after { right: 0; border-radius: 0 12px 12px 0; }
-.formation-synergy-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding: 22px 30px 4px; }
-.formation-synergy-head > div { display: flex; align-items: baseline; gap: 14px; }
-.formation-synergy-head h2 { margin: 0; color: #e6d7b4; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 30px; font-weight: 400; letter-spacing: .14em; }
-.formation-synergy-head > div > span { color: rgb(233 222 195 / 42%); font-size: 10px; letter-spacing: .3em; }
-.formation-synergy-head > small { color: var(--formation-paper-mute); font-size: 11px; letter-spacing: .2em; }
-.formation-synergy-head > small b { color: var(--formation-gold-bright); font-size: 16px; font-variant-numeric: tabular-nums; }
-.formation-synergy-grid { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; padding: 20px 30px 30px; }
-.formation-synergy-grid::before { position: absolute; top: 31px; right: 46px; left: 46px; content: ""; border-top: 2px dashed rgb(233 222 195 / 13%); }
-.formation-synergy-card { position: relative; padding-top: 24px; }
-.formation-synergy-node { position: absolute; top: 6px; left: 50%; z-index: 1; width: 13px; height: 13px; border: 1.5px solid rgb(233 222 195 / 28%); border-radius: 50%; background: var(--formation-ink-900); transition: all .4s cubic-bezier(.22, 1, .36, 1); transform: translateX(-50%); }
-.formation-synergy-card.active .formation-synergy-node { border-color: var(--formation-gold-bright); background: radial-gradient(circle at 38% 32%, var(--formation-gold-bright), var(--formation-gold-deep) 75%); box-shadow: 0 0 14px 3px rgb(201 163 92 / 50%); }
-.formation-synergy-body { display: flex; flex-direction: column; gap: 8px; min-height: 150px; height: 100%; padding: 13px 12px 12px; border: 1px solid var(--formation-line); border-radius: 8px; background: linear-gradient(168deg, rgb(233 222 195 / 3%), transparent 55%); transition: all .35s cubic-bezier(.22, 1, .36, 1); }
-.formation-synergy-card.active .formation-synergy-body { border-color: rgb(201 163 92 / 60%); background: linear-gradient(168deg, rgb(201 163 92 / 10%), rgb(201 163 92 / 2%) 60%); box-shadow: 0 10px 24px rgb(0 0 0 / 30%), inset 0 0 20px rgb(201 163 92 / 5%); }
-.formation-synergy-body h3 { margin: 0; color: rgb(233 222 195 / 55%); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 21px; font-weight: 400; line-height: 1.1; letter-spacing: .1em; }
-.formation-synergy-card.active .formation-synergy-body h3 { color: var(--formation-gold-bright); text-shadow: 0 0 16px rgb(201 163 92 / 35%); }
-.formation-synergy-needs { display: flex; flex-wrap: wrap; gap: 5px; }
-.formation-synergy-needs span { padding: 2px 7px; color: var(--formation-paper-mute); font-size: 9px; letter-spacing: .1em; font-variant-numeric: tabular-nums; border: 1px dashed rgb(233 222 195 / 25%); border-radius: 3px; }
-.formation-synergy-needs span.met { color: var(--formation-gold-bright); border-style: solid; border-color: rgb(201 163 92 / 60%); background: rgb(201 163 92 / 8%); }
-.formation-synergy-body p { margin: 0; color: rgb(233 222 195 / 45%); font-size: 10px; line-height: 1.7; letter-spacing: .08em; }
-.formation-synergy-card.active .formation-synergy-body p { color: var(--formation-paper-dim); }
-.formation-synergy-state { margin-top: auto; color: rgb(233 222 195 / 30%); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 14px; font-weight: 400; letter-spacing: .22em; }
-.formation-synergy-card.active .formation-synergy-state { color: var(--formation-cinnabar-bright); }
 .formation-page-foot { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 44px; padding-top: 18px; color: var(--formation-paper-mute); font-size: 10px; letter-spacing: .24em; border-top: 1px solid var(--formation-line-soft); }
 .formation-page-foot b { color: var(--formation-gold); font-weight: 500; }
 
 @media (max-width: 1460px) {
   .formation-muster-layout { grid-template-columns: 272px minmax(0, 1fr) 288px; }
-  .formation-synergy-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .formation-synergy-grid::before, .formation-synergy-card::before { display: none; }
-  .formation-synergy-card { padding-top: 0; }
 }
 
 @media (max-width: 1180px) {
@@ -3455,7 +3424,6 @@ body {
   .formation-roster, .formation-hero-card { position: static; }
   .formation-row { grid-template-columns: 1fr; gap: 4px; }
   .formation-row-tag { flex-direction: row; align-items: center; }
-  .formation-synergy-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .formation-page-head { flex-direction: column; align-items: flex-start; }
   .formation-page-head h1 { font-size: 44px; }
   .formation-ghost { display: none; }
@@ -3476,9 +3444,6 @@ body {
   .formation-field-body { grid-template-columns: minmax(0, 1fr) 30px; padding-right: 8px; }
   .formation-enemy-strip { gap: 10px; margin: 10px 0; }
   .formation-roster-list { max-height: 360px; }
-  .formation-synergy-head { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px 18px 12px; }
-  .formation-synergy-head > div { align-items: flex-start; flex-direction: column; gap: 4px; }
-  .formation-synergy-grid { gap: 12px; padding: 8px 14px 18px; }
   .formation-page-foot { align-items: flex-start; flex-direction: column; gap: 8px; padding-bottom: 12px; letter-spacing: .12em; }
 }
 
@@ -3490,8 +3455,6 @@ body {
   .formation-slots { gap: 4px; transform: none; }
   .formation-slot { min-height: 148px; }
   .formation-order-ribbon { overflow-x: auto; min-width: 430px; }
-  .formation-synergy-grid { grid-template-columns: 1fr; }
-  .formation-synergy-card { min-height: 0; }
   .formation-hero-head h2 { font-size: 31px; }
   .formation-martials { grid-template-columns: 1fr 1fr; }
 }

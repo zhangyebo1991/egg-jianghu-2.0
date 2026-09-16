@@ -186,7 +186,7 @@ button:disabled { opacity: .35; }
 .ink-shell .ink-leaf .formation-roster-list { max-height: 54vh; overflow-y: auto; overflow-x: hidden; }
 .ink-shell .ink-leaf .formation-roster-row { background: transparent; color: var(--pn); }
 .ink-shell .ink-leaf .formation-roster-row.active { background: var(--crimson-soft); }
-.ink-shell .ink-leaf :is(.formation-order-ribbon, .formation-enemy-strip, .formation-synergy-card) { border-color: var(--night-line); background: transparent; box-shadow: none; }
+.ink-shell .ink-leaf :is(.formation-order-ribbon, .formation-enemy-strip) { border-color: var(--night-line); background: transparent; box-shadow: none; }
 
 /* 势力拆为册页，使用同一份贡献、任务、兑换与招募数据。 */
 .ink-shell .ink-leaf .faction-page-head { justify-content: flex-end; padding: 0; margin-bottom: 12px; border: 0; }
@@ -394,10 +394,6 @@ button:disabled { opacity: .35; }
 .ink-shell .ink-leaf .formation-hero-card { transform: none; min-height: 0; color: var(--pn); }
 .ink-shell .ink-leaf .formation-hero-card::before { content: none; }
 .ink-shell .ink-leaf :is(.formation-hero-stats > div, .formation-martial-chip) { color: var(--pn); background: var(--night); border-color: var(--night-line-2); }
-.ink-shell .ink-leaf .formation-synergy { margin-top: 18px; border: 1px solid var(--night-line-2); border-radius: 0; background: var(--night-2); box-shadow: none; }
-.ink-shell .ink-leaf .formation-synergy::before, .ink-shell .ink-leaf .formation-synergy::after { content: none; }
-.ink-shell .ink-leaf .formation-synergy-body { border-radius: 0; border-color: var(--night-line-2); background: none; box-shadow: none; }
-.ink-shell .ink-leaf .formation-synergy-card.active .formation-synergy-node { border-color: var(--crimson); background: var(--crimson); box-shadow: none; }
 .ink-shell .ink-leaf .formation-enemy-strip { display: none; }
 .ink-shell .ink-leaf .formation-slots::before, .ink-shell .ink-leaf .formation-slots::after { content: none; }
 .ink-shell .ink-leaf .formation-slot { overflow: hidden; }

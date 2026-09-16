@@ -31,14 +31,6 @@ export interface FormationPageViewModel {
   heroes: FormationHeroView[]
 }
 
-interface FormationSynergyView {
-  id: string
-  name: string
-  needs: Array<{ label: string; required: number; current: number; met: boolean }>
-  effect: string
-  active: boolean
-}
-
 const filterOptions: Array<{ id: FormationFilter; label: string }> = [
   { id: 'all', label: '全' },
   { id: '剑', label: '剑' },
@@ -72,20 +64,6 @@ const positionNames = ['壹', '贰', '叁', '肆', '伍'] as const
 const orderNames = ['壹', '贰', '叁', '肆', '伍', '陆'] as const
 
 const slotName = (row: FormationLane, col: FormationDepth): string => `${rowNames[row]}·${positionNames[col]}位`
-
-const synergyDefinitions: Array<{
-  id: string
-  name: string
-  need: Array<[string, number]>
-  effect: string
-}> = [
-  { id: 'fist', name: '双拳镇岳', need: [['拳', 2]], effect: '气血上限 +10% · 前排承伤更稳' },
-  { id: 'sword', name: '三剑齐鸣', need: [['剑', 3]], effect: '会心一击 +8% · 剑光相映成辉' },
-  { id: 'doctor-fist', name: '医武相济', need: [['医', 1], ['拳', 1]], effect: '每回合回复 2% 气血' },
-  { id: 'blade-shadow', name: '刀暗双绝', need: [['刀', 1], ['暗', 1]], effect: '破甲 +6% · 攻其不备' },
-  { id: 'inner', name: '内家护脉', need: [['内家', 2]], effect: '内力回复 +12% · 气脉悠长' },
-  { id: 'full', name: '六侠成阵', need: [['满员', 6]], effect: '全属性 +3% · 阵势圆熟' },
-]
 
 const heroAt = (view: FormationPageViewModel, heroId: string | null | undefined): FormationHeroView | undefined =>
   heroId ? view.heroes.find((hero) => hero.id === heroId) : undefined
@@ -166,7 +144,7 @@ const renderFormationField = (view: FormationPageViewModel): string => {
   const orderSlots = Array.from({ length: 6 }, (_, index) => order[index])
   return `<section class="formation-field panel" aria-label="演武场">
     <header class="formation-field-head">
-      <div><div class="formation-field-title"><h2>演武场</h2><span>三路五列 · <i>至多六将</i></span></div><p>${view.locked ? '战斗进行中 · 结束或退出战斗后可调整阵容' : '令牌落位，阵势自成 · 拖拽可移动或交换'}</p></div>
+      <div><div class="formation-field-title"><h2>演武场</h2><span>三路五列 · <i>至多六将</i></span></div><p>${view.locked ? '战斗进行中 · 结束或退出战斗后可调整阵容' : '令牌落位 · 拖拽可移动或交换'}</p></div>
       <div class="formation-field-ops"><button type="button" class="formation-btn-gold" data-action="formation-auto-arrange" ${view.locked ? 'disabled' : ''}>自动列阵</button><button type="button" class="formation-btn-ghost" data-action="formation-clear" ${view.locked ? 'disabled' : ''}>悉数下阵</button></div>
     </header>
     <div class="formation-field-body">
@@ -219,28 +197,13 @@ const renderHeroCard = (view: FormationPageViewModel): string => {
   return `<aside class="formation-hero-card panel" data-testid="formation-hero-card">
     <span class="formation-card-corner" aria-hidden="true"></span>
     <div class="formation-hero-head">${renderPortraitWithGrade(hero, 'formation-card-portrait')}<div><small>${escapeHtml(hero.source)} · ${escapeHtml(hero.category)}门</small><h2>${escapeHtml(hero.name)}</h2><p>侠客 · 行走江湖</p></div><span class="formation-level-badge"><b>${hero.level}</b><i>等级</i></span></div>
-    <div class="formation-hero-fit"><b>宜</b><span>${escapeHtml(fitText[hero.category] ?? '身随阵势，择位而行。')}</span></div>
+    <div class="formation-hero-fit"><b>宜</b><span>${escapeHtml(fitText[hero.category] ?? '身随其位，各展所长。')}</span></div>
     <div class="formation-card-title">五维禀赋</div>
     ${renderRadar(hero)}
     <div class="formation-card-title">当前职业</div>
     ${renderCurrentCareer(hero)}
     <div class="formation-card-foot"><span>现居 <b>${escapeHtml(slotText)}</b></span>${hero.slot ? `<button type="button" class="formation-btn-line" data-action="formation-remove" ${view.locked ? 'disabled' : ''} data-hero-id="${escapeHtml(hero.id)}">遣其下阵</button>` : ''}</div>
   </aside>`
-}
-
-const formationSynergies = (view: FormationPageViewModel): FormationSynergyView[] => {
-  const heroes = placedHeroes(view)
-  const counts = heroes.reduce<Record<string, number>>((result, hero) => {
-    result[hero.category] = (result[hero.category] ?? 0) + 1
-    return result
-  }, {})
-  return synergyDefinitions.map((synergy) => {
-    const needs = synergy.need.map(([category, required]) => {
-      const current = category === '满员' ? heroes.length : counts[category] ?? 0
-      return { label: categoryLabel(category), required, current, met: current >= required }
-    })
-    return { ...synergy, needs, active: needs.every((need) => need.met) }
-  })
 }
 
 export const displayPower = (heroes: FormationHeroView[]): number => heroes.reduce((total, hero) => {
@@ -253,24 +216,13 @@ export const displayPower = (heroes: FormationHeroView[]): number => heroes.redu
   )
 }, 0)
 
-const renderSynergy = (view: FormationPageViewModel): string => {
-  const synergies = formationSynergies(view)
-  const active = synergies.filter((synergy) => synergy.active).length
-  return `<section class="formation-synergy" aria-label="阵势">
-    <header class="formation-synergy-head"><div><h2>阵势</h2><span>同气相求 · 其势自生</span></div><small>已激发 <b>${active}</b> / ${synergies.length}</small></header>
-    <div class="formation-synergy-grid">${synergies.map((synergy) => `<article class="formation-synergy-card${synergy.active ? ' active' : ''}" data-testid="formation-synergy-${escapeHtml(synergy.id)}"><div class="formation-synergy-node"></div><div class="formation-synergy-body"><h3>${escapeHtml(synergy.name)}</h3><div class="formation-synergy-needs">${synergy.needs.map((need) => `<span class="${need.met ? 'met' : ''}">${escapeHtml(need.label)} ${Math.min(need.current, need.required)}/${need.required}</span>`).join('')}</div><p>${escapeHtml(synergy.effect)}</p><b class="formation-synergy-state">${synergy.active ? '已激发' : '未竟'}</b></div></article>`).join('')}</div>
-  </section>`
-}
-
 export const renderFormationPage = (view: FormationPageViewModel): string => {
   const heroesInFormation = placedHeroes(view)
-  const synergies = formationSynergies(view)
   return `<section class="formation-page" data-testid="formation-page">
     <span class="formation-ghost formation-ghost-array" aria-hidden="true">陣</span><span class="formation-ghost formation-ghost-muster" aria-hidden="true">將</span>
-    <header class="formation-page-head"><div><p class="formation-crumb">蛋蛋江湖 2.0 <b>/</b> 阵容 · 演武点将</p><h1>阵容</h1><span>FORMATION · MUSTER AT THE ARENA</span></div><div class="formation-stats" aria-label="队伍概览"><div><b>${formatNumber(displayPower(heroesInFormation))}</b><small>队伍战力</small></div><div><b><i>${heroesInFormation.length}</i>/6</b><small>上阵侠客</small></div><div class="accent"><b>${synergies.filter((synergy) => synergy.active).length}</b><small>阵势激发</small></div></div></header>
+    <header class="formation-page-head"><div><p class="formation-crumb">蛋蛋江湖 2.0 <b>/</b> 阵容 · 演武点将</p><h1>阵容</h1><span>FORMATION · MUSTER AT THE ARENA</span></div><div class="formation-stats" aria-label="队伍概览"><div><b>${formatNumber(displayPower(heroesInFormation))}</b><small>队伍战力</small></div><div><b><i>${heroesInFormation.length}</i>/6</b><small>上阵侠客</small></div></div></header>
     <div class="formation-bonus-entry"><button type="button" class="formation-btn-line" data-action="open-formation-bonuses">查看加成</button></div>
     <div class="formation-muster-layout">${renderRoster(view)}${renderFormationField(view)}${renderHeroCard(view)}</div>
-    ${renderSynergy(view)}
-    <footer class="formation-page-foot"><span><b>阵容页高保真重设计</b> · 蛋蛋江湖 2.0 · 演武点将</span><span>阵势仅作队伍搭配预览，不改变战斗数值</span></footer>
+    <footer class="formation-page-foot"><span><b>阵容页高保真重设计</b> · 蛋蛋江湖 2.0 · 演武点将</span></footer>
   </section>`
 }
