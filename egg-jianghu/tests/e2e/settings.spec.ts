@@ -9,7 +9,7 @@ test('设置保存品质门槛且战斗第九波横排清晰，桌面和手机�
   await page.getByLabel('玩家姓名').fill('设置少侠')
   await page.getByLabel('玩家姓名').press('Enter')
   await openPanel(page, 'settings')
-  const quality = page.getByLabel('自动丢弃低品质装备')
+  const quality = page.getByLabel('自动出售低品质装备')
   await expect(quality).toHaveValue('off')
   await quality.selectOption('3')
   await expect(page.getByRole('status')).toContainText('优秀及以上')
@@ -23,7 +23,7 @@ test('设置保存品质门槛且战斗第九波横排清晰，桌面和手机�
     await page.screenshot({ path: testInfo.outputPath(`settings-${width}.png`) })
   }
   await quality.selectOption('off')
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().settings.autoDiscardBelowQuality)).toBeNull()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().settings.autoSellBelowQuality)).toBeNull()
   await page.evaluate(() => {
     const api = window.__EGG_JIANGHU__
     api.startStage('world_01', 1, 'guard', 19)

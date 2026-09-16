@@ -2868,11 +2868,11 @@ app.addEventListener('submit', (event) => {
 
 app.addEventListener('change', (event) => {
   const target = event.target as HTMLElement
-  const discardSelect = target.closest<HTMLSelectElement>('[data-action="auto-discard-quality"]')
-  if (discardSelect && appScreen === 'playing') {
-    const value = discardSelect.value === 'off' ? null : Number(discardSelect.value)
+  const sellSelect = target.closest<HTMLSelectElement>('[data-action="auto-sell-quality"]')
+  if (sellSelect && appScreen === 'playing') {
+    const value = sellSelect.value === 'off' ? null : Number(sellSelect.value)
     if (value !== null && (!Number.isInteger(value) || value < 0 || value > 9)) return
-    session.state.settings.autoDiscardBelowQuality = value as EquipmentQuality | null
+    session.state.settings.autoSellBelowQuality = value as EquipmentQuality | null
     saveSession()
     render()
     return

@@ -342,19 +342,29 @@ describe('version 20 存档', () => {
 })
 
 
-describe('自动丢弃设置存档', () => {
+describe('自动出售设置存档', () => {
   it('既有 v19 缺少设置时默认关闭，配置后保存并恢复', () => {
     const state = createInitialStateV10(0)
     const raw = JSON.parse(JSON.stringify(state))
     delete raw.settings
-    expect(hydrateStateV10(raw, 0).settings.autoDiscardBelowQuality).toBeNull()
-    state.settings.autoDiscardBelowQuality = 3
+    expect(hydrateStateV10(raw, 0).settings.autoSellBelowQuality).toBeNull()
+    state.settings.autoSellBelowQuality = 3
     const storage = memoryStorage()
     saveGameV10(storage, state, 0)
-    expect(hydrateStateV10(JSON.parse(storage.getItem(SAVE_KEY_V10)!), 0).settings.autoDiscardBelowQuality).toBe(3)
+    expect(hydrateStateV10(JSON.parse(storage.getItem(SAVE_KEY_V10)!), 0).settings.autoSellBelowQuality).toBe(3)
+  })
+  it('v20 旧字段 autoDiscardBelowQuality 迁移为新名且再次保存后不再写出旧键', () => {
+    const state = createInitialStateV10(0)
+    const legacy = { ...state, settings: { autoDiscardBelowQuality: 4 } }
+    expect(hydrateStateV10(legacy, 0).settings.autoSellBelowQuality).toBe(4)
+    const storage = memoryStorage()
+    saveGameV10(storage, hydrateStateV10(legacy, 0), 0)
+    const saved = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
+    expect(saved.settings.autoSellBelowQuality).toBe(4)
+    expect('autoDiscardBelowQuality' in saved.settings).toBe(false)
   })
   it.each([-1, 10, 2.5, '3', undefined])('拒绝无效品质 %s', value => {
     const state = createInitialStateV10(0)
-    expect(() => hydrateStateV10({ ...state, settings: { autoDiscardBelowQuality: value } }, 0)).toThrow()
+    expect(() => hydrateStateV10({ ...state, settings: { autoSellBelowQuality: value } }, 0)).toThrow()
   })
 })

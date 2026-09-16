@@ -3,7 +3,7 @@ import { equipmentDefinitionById } from '../content/equipment'
 import { CAMPAIGN_LOOT_STAGES, CAMPAIGN_ENEMY_DROPS, CAMPAIGN_DROP_ITEMS, CAMPAIGN_MATERIALS } from '../content/campaign-loot.generated'
 import { campaignDropBonus, campaignDropChance, grantKillLoot, materialExtraQuality, pickWeightedQuality } from './loot'
 import { createInitialStateV10 } from './state'
-import { INVENTORY_CAPACITY } from './inventory'
+import { INVENTORY_CAPACITY, equipmentSellPrice } from './inventory'
 import { ORIGINAL_FACTION_RULES } from '../content/original-faction-rules.generated'
 
 const input = { worldId: 'world_01', difficulty: 1, stage: 1, rank: 'normal' as const, seed: 11, enemyId: 'world_01_stage_01_mob_1' }
@@ -100,29 +100,34 @@ describe('原版普通位面掉落', () => {
 })
 
 
-describe('战斗自动丢弃', () => {
-  it.each([0, 1, 2, 3, 4, 9] as const)('只过滤低于 %i 的新掉落，保留边界品质且不改变材料或后续随机结果', threshold => {
-    let kept = 0, discarded = 0
+describe('战斗自动出售', () => {
+  it.each([0, 1, 2, 3, 4, 9] as const)('只出售低于 %i 的新掉落，保留边界品质且不改变材料或后续随机结果', threshold => {
+    let kept = 0, sold = 0
     for (let seed = 1; seed <= 80; seed++) {
       const original = createInitialStateV10(0)
       original.city.technologyLevels['65'] = 1_000_000
       grantKillLoot(original, { ...input, seed: seed + 1000 })
       original.inventory.forEach(item => { item.locked = true })
       const filtered = structuredClone(original)
-      filtered.settings.autoDiscardBelowQuality = threshold
+      filtered.settings.autoSellBelowQuality = threshold
       const existing = structuredClone(original.inventory)
       const ids = grantKillLoot(original, { ...input, seed })
       const filteredIds = grantKillLoot(filtered, { ...input, seed })
       const drops = original.inventory.filter(item => ids.includes(item.uid))
       const expected = drops.filter(item => item.quality >= threshold)
+      const soldItems = drops.filter(item => item.quality < threshold)
+      const income = soldItems.reduce((total, item) => total + equipmentSellPrice(item), 0)
       kept += expected.length
-      discarded += drops.length - expected.length
+      sold += soldItems.length
       expect(filteredIds).toEqual(expected.map(item => item.uid))
       expect(filtered.inventory).toEqual([...existing, ...expected])
       expect(filtered.materials).toEqual(original.materials)
-      expect(filtered.worldCurrency).toEqual(original.worldCurrency)
+      expect(filtered.worldCurrency).toEqual({
+        ...original.worldCurrency,
+        [input.worldId]: (original.worldCurrency[input.worldId] ?? 0) + income,
+      })
     }
-    if (threshold > 1) expect(discarded).toBeGreaterThan(0)
+    if (threshold > 1) expect(sold).toBeGreaterThan(0)
     if (threshold <= 3) expect(kept).toBeGreaterThan(0)
   })
 })

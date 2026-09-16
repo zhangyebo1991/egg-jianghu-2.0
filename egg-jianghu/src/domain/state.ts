@@ -82,7 +82,7 @@ export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
   premiumCards: createPremiumCards(),
   ordinaryPoolMisses: 0,
   redeemedWelfareCodes: [],
-  settings: { autoDiscardBelowQuality: null },
+  settings: { autoSellBelowQuality: null },
   worldCurrency: { world_01: 1000 },
   contribution: {},
   worldReputation: { world_01: 0 },

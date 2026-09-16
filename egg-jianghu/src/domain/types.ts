@@ -211,7 +211,7 @@ export interface GameStateV10 {
   premiumCards: import('./premium-cards').PremiumCards
   ordinaryPoolMisses: number
   redeemedWelfareCodes: string[]
-  settings: { autoDiscardBelowQuality: EquipmentQuality | null }
+  settings: { autoSellBelowQuality: EquipmentQuality | null }
   worldCurrency: CurrencyWallet
   contribution: ContributionWallet
   worldReputation: Record<string, number>
