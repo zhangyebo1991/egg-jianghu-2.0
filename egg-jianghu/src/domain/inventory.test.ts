@@ -179,7 +179,7 @@ describe('装备背包', () => {
 
       const result = discardEquipmentByQuality(state, 1)
 
-      expect(result).toEqual({ ok: true, message: '已丢弃 2 件品质 1 及以下装备' })
+      expect(result).toEqual({ ok: true, message: '已丢弃 2 件普通及以下装备' })
       expect(state.inventory.map((item) => item.uid)).toEqual(['c', 'd'])
     })
 

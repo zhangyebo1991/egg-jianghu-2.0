@@ -1,4 +1,4 @@
-import { EQUIPMENT_QUALITIES, type EquipmentSlot } from '../content/equipment'
+import { EQUIPMENT_QUALITIES, EQUIPMENT_QUALITY_NAMES, type EquipmentSlot } from '../content/equipment'
 import type { EquipmentQuality } from '../domain/types'
 import { equipmentIconAsset } from './equipment-icon-assets'
 import { escapeHtml } from './html'
@@ -116,7 +116,7 @@ const renderStack = (item: InventoryStackView, selectedId?: number): string => `
   </button>`
 
 const renderStackDetail = (item: InventoryStackView): string => `
-  <div class="inventory-appraise-head"><span class="inventory-slot-tag">${item.kind === 'material' ? '材料' : '特殊物品'}</span><span class="inventory-quality-tag" data-rarity="${item.quality}">品质 ${item.quality}</span></div>
+  <div class="inventory-appraise-head"><span class="inventory-slot-tag">${item.kind === 'material' ? '材料' : '特殊物品'}</span><span class="inventory-quality-tag" data-rarity="${item.quality}">品质 ${escapeHtml(EQUIPMENT_QUALITY_NAMES[item.quality] ?? String(item.quality))}</span></div>
   <h2>${escapeHtml(item.name)}</h2><p>持有数量：<strong>${item.quantity.toLocaleString('zh-CN')}</strong></p>
   <p class="inventory-original-description">${escapeHtml(item.description)}</p>
   <p>${item.kind === 'material' ? '收集任务提交时会扣除所需数量。' : '在对应玩法中使用。'}</p>`
@@ -137,7 +137,7 @@ const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null
   <button type="button" class="inventory-cell${item.uid === selectedUid ? ' selected' : ''}" data-rarity="${item.quality}"
     data-equipment-uid="${escapeHtml(item.uid)}" data-testid="equipment-${escapeHtml(item.uid)}"
     data-action="inventory-select" aria-pressed="${item.uid === selectedUid}"
-    aria-label="${escapeHtml(`${item.name}，品质 ${item.quality}，物品等级 ${item.level}，穿戴等级 ${item.equipmentLevel}`)}">
+    aria-label="${escapeHtml(`${item.name}，品质 ${EQUIPMENT_QUALITY_NAMES[item.quality] ?? item.quality}，物品等级 ${item.level}，穿戴等级 ${item.equipmentLevel}`)}">
     ${item.locked ? '<span class="inventory-lock-mark" aria-label="已锁定">锁</span>' : ''}
     <span class="inventory-cell-level" title="物品等级">Lv.${item.level}</span>
     <span class="inventory-cell-icon" aria-hidden="true">${renderEquipmentIcon(item)}</span>
@@ -183,7 +183,7 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
 
   return `<div class="inventory-appraise-head">
     <span class="inventory-slot-tag">${escapeHtml(item.slotName)}</span>
-    <span class="inventory-quality-tag" data-rarity="${item.quality}">品质 ${item.quality}</span>
+    <span class="inventory-quality-tag" data-rarity="${item.quality}">品质 ${escapeHtml(EQUIPMENT_QUALITY_NAMES[item.quality] ?? String(item.quality))}</span>
     <span class="inventory-slot-tag" data-testid="inventory-item-level">物品等级 Lv.${item.level}</span>
     <span class="inventory-slot-tag" data-testid="inventory-equipment-level">穿戴等级 Lv.${item.equipmentLevel}</span>
   </div>
@@ -191,7 +191,7 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
     <span class="inventory-figure-ring" data-rarity="${item.quality}">${renderEquipmentIcon(item)}</span>
     <div>
       <h2 class="inventory-appraise-name">${escapeHtml(item.name)}</h2>
-      <div class="inventory-appraise-latin">品质 ${item.quality} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Item Lv.${item.level} · Wear Lv.${item.equipmentLevel}</div>
+      <div class="inventory-appraise-latin">品质 ${escapeHtml(EQUIPMENT_QUALITY_NAMES[item.quality] ?? String(item.quality))} · ${escapeHtml(item.slotName)}${item.weaponTypeName ? ` · ${escapeHtml(item.weaponTypeName)}` : ''} · Item Lv.${item.level} · Wear Lv.${item.equipmentLevel}</div>
       ${item.equipmentKindLabel ? `<div class="inventory-kind-label">${escapeHtml(item.equipmentKindLabel)}</div>` : ''}
     </div>
   </div>
@@ -281,17 +281,17 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
             </div>
             <div class="inventory-actions">
               <button type="button" class="inventory-ink-button" data-action="inventory-organize">整理囊袋</button>
-              <button type="button" class="inventory-ink-button danger" data-action="inventory-discard-common">丢弃品质 0</button>
+              <button type="button" class="inventory-ink-button danger" data-action="inventory-discard-common">丢弃粗糙</button>
             </div>
           </div>
         </header>
         <nav class="inventory-slot-tabs" aria-label="物品分类">${(['all', 'equipment', 'material', 'special'] as const).map((category, index) => `<button type="button" class="inventory-slot-tab${(view.category ?? 'all') === category ? ' active' : ''}" data-action="inventory-category" data-category="${category}" aria-pressed="${(view.category ?? 'all') === category}">${['全部', '装备', '材料', '特殊物品'][index]}<small>${view.categoryCounts?.[category] ?? (category === 'all' || category === 'equipment' ? view.itemCount : 0)}</small></button>`).join('')}</nav>
         <label class="inventory-search">搜索物品<input type="search" data-action="inventory-search" aria-label="搜索背包物品" placeholder="输入物品名称" value="${escapeHtml(view.query ?? '')}"></label>
         ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="inventory-slot-tabs" aria-label="部位筛选">${renderSlotTabs(view)}</nav>` : ''}
-        ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="ink-bag-filters" aria-label="品质与排序"><button type="button" data-action="inventory-quality" data-quality="all" aria-pressed="${(view.qualityFilter ?? 'all') === 'all'}">全品质</button>${EQUIPMENT_QUALITIES.map(quality => `<button type="button" data-action="inventory-quality" data-quality="${quality}" aria-pressed="${view.qualityFilter === quality}">${quality}品</button>`).join('')}<button type="button" data-action="inventory-sort" data-sort="level" aria-pressed="${(view.sort ?? 'level') === 'level'}">等级↓</button><button type="button" data-action="inventory-sort" data-sort="quality" aria-pressed="${view.sort === 'quality'}">品质↓</button></nav>` : ''}
+        ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="ink-bag-filters" aria-label="品质与排序"><button type="button" data-action="inventory-quality" data-quality="all" aria-pressed="${(view.qualityFilter ?? 'all') === 'all'}">全品质</button>${EQUIPMENT_QUALITIES.map(quality => `<button type="button" data-action="inventory-quality" data-quality="${quality}" aria-pressed="${view.qualityFilter === quality}">${EQUIPMENT_QUALITY_NAMES[quality]}</button>`).join('')}<button type="button" data-action="inventory-sort" data-sort="level" aria-pressed="${(view.sort ?? 'level') === 'level'}">等级↓</button><button type="button" data-action="inventory-sort" data-sort="quality" aria-pressed="${view.sort === 'quality'}">品质↓</button></nav>` : ''}
         <div class="inventory-grid-wrap"><div class="inventory-grid">${renderInventoryGrid(view)}</div></div>
         <footer class="inventory-legend">
-          ${(view.category ?? 'all') === 'all' || view.category === 'equipment' ? EQUIPMENT_QUALITIES.map((quality) => `<span data-quality="${quality}">品质 ${quality}<b>${view.qualityCounts[quality]}</b></span>`).join('') : ''}
+          ${(view.category ?? 'all') === 'all' || view.category === 'equipment' ? EQUIPMENT_QUALITIES.map((quality) => `<span data-quality="${quality}">${EQUIPMENT_QUALITY_NAMES[quality]}<b>${view.qualityCounts[quality]}</b></span>`).join('') : ''}
           <span class="inventory-legend-total">装备 ${view.itemCount} 件 · 堆叠物品不占装备格</span>
         </footer>
       </div>

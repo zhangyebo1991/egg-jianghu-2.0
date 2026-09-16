@@ -651,7 +651,7 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="inventory-appraise-figure"')
     expect(html).toContain('class="inventory-figure-ring"')
     expect(html.match(/data-equipment-icon-source="unique"/g)).toHaveLength(2)
-    expect(html).toContain('品质 1<b>1</b>')
+    expect(html).toContain('普通<b>1</b>')
     expect(html).toContain('物攻</span>')
     expect(html).toContain('(94%)')
     expect(html).toContain('[C]')

@@ -1,5 +1,6 @@
 import type { ActionResult, EquipmentInstance, EquipmentQuality, GameStateV10, HeroProgressV10 } from './types'
 import {
+  EQUIPMENT_QUALITY_NAMES,
   EQUIPMENT_SET_COUNT,
   EQUIPMENT_SLOTS,
   canonicalEquipmentDefinitionId,
@@ -265,7 +266,7 @@ export const discardEquipmentByQuality = (
   if (discarded.length === 0) return { ok: false, message: '没有可丢弃的装备' }
   const removed = new Set(discarded.map((item) => item.uid))
   state.inventory = state.inventory.filter((item) => !removed.has(item.uid))
-  return { ok: true, message: `已丢弃 ${discarded.length} 件品质 ${maxQuality} 及以下装备` }
+  return { ok: true, message: `已丢弃 ${discarded.length} 件${EQUIPMENT_QUALITY_NAMES[maxQuality]}及以下装备` }
 }
 
 // 原版「物品买卖价格function」：买价 max(round((修正系数×10)×(10+物品等级)×2.5^品质), 1)，售价为买价 × 0.4。
