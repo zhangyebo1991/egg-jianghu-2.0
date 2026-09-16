@@ -43,6 +43,15 @@ npm run test:e2e -- tests/e2e/ink-ui.spec.ts tests/e2e/premium-cards.spec.ts tes
 
 截图保留在本地 `tmp/ink-qa/`，最终自动化截图在 `test-results/`。`ink-vitest.log`、`ink-e2e-verified.log`、`ink-e2e-final-regression.log`、`ink-build-final.log` 保留运行结果。截图、日志、依赖和 dist 均不纳入源码提交。
 
+## 三路五列阵位修复（2026-09-16）
+
+- 双方各保留 3 行 × 5 列隐形格阵，空位保留，按真实 `row/col` 放置角色；列方向围绕中线镜像。
+- 战场采用原型的 1180px 宽度上限，桌面单格最大 86px；三行高度固定，不再受同排人数、能量珠或护盾内容影响。
+- 手机竖屏和横屏各自使用固定行高，三路标签在窄屏隐藏、横屏保持单列竖排。
+- 新增 `tests/e2e/battle-grid.spec.ts`：在 1440×900、1920×1080、390×844、320×844、844×390、740×360 下比较全部 30 个格子的镜像坐标；覆盖单人到六人、普通波到首领波及战斗推进。旧样式会因双方行高不一致触发失败，修复后全部通过。
+- 本次验证：战斗页面单测 11 项、相关 Playwright 18 项通过，`npm run build` 通过。保留既有大 chunk 提示。
+- 本地截图：`tmp/ink-qa/fixed-grid-*-regression.png`；日志：`ink-grid-unit.log`、`ink-grid-regression.log`、`ink-grid-combat.log`、`ink-grid-build.log`。
+
 ## 主要文件
 
 - `src/ui/shell.ts`、`src/main.ts`：册页、导航、真实动作与焦点控制。

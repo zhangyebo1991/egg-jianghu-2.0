@@ -243,6 +243,7 @@ const renderLane = (
       ${unit ? renderUnit(unit, side, effects) : ''}
     </div>`
   }).join('')}
+  <span class="ink-lane-label" aria-hidden="true">${laneNames[row]}</span>
 </div>`
 }
 
