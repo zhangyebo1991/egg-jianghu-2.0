@@ -98,6 +98,22 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 #midline .waveinfo b{font-family:var(--latin);font-size:20px;letter-spacing:.05em}
 #vsline{width:1px;height:34vh;background:linear-gradient(180deg,transparent,var(--ink-45) 18%,var(--ink-45) 82%,transparent)}
 
+/* 气机 · 行动条（速度决定出手先后，进度满即行动） */
+#atb{position:absolute;left:50%;transform:translateX(-50%);bottom:12.6vh;width:min(1180px,92vw);z-index:4;
+  display:flex;align-items:center;gap:14px;pointer-events:none}
+.atb-label{font-family:var(--kai);font-size:13px;letter-spacing:.34em;color:var(--ink-45);flex:0 0 auto}
+.atb-track{position:relative;flex:1;height:2px;background:var(--ink-18)}
+.atb-track::after{content:"";position:absolute;right:0;top:-4px;width:2px;height:10px;background:var(--ink-45)}
+.atb-end{position:absolute;right:-6px;top:-24px;font-family:var(--kai);font-size:11px;letter-spacing:.2em;color:var(--ink-45)}
+.atb-chip{position:absolute;top:-12px;width:23px;height:23px;margin-left:-12px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:11px;
+  border:2px solid var(--ink);background:var(--paper);color:var(--ink);
+  box-shadow:2px 2px 0 rgba(29,26,21,.16);transition:left .85s linear,box-shadow .3s}
+.atb-chip.enemy{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.atb-chip.next{border-color:var(--crimson);box-shadow:0 0 0 3px var(--crimson-soft)}
+.atb-chip.act{animation:atbact .5s var(--ease)}
+@keyframes atbact{40%{transform:scale(1.35)}100%{transform:scale(1)}}
+
 /* 伤害飘字 / 波次横幅 */
 .float{position:absolute;font-family:var(--latin);font-weight:700;font-size:20px;color:var(--crimson);
   pointer-events:none;animation:floatup 1s var(--ease) forwards;z-index:5;white-space:nowrap}
@@ -514,6 +530,7 @@ input[type=text]:focus,input[type=search]:focus{outline:none;border-color:var(--
   </div>
   <div class="army" id="enemies"></div>
 </div></div>
+<div id="atb"><span class="atb-label">气机</span><div class="atb-track"><span class="atb-end">出手</span></div></div>
 <div id="wavebanner"></div>
 
 <!-- HUD · 左上资源 -->
@@ -740,7 +757,7 @@ function unitHTML(h, side){
   const face = side==='party'
     ? `<img class="face" src="../assets/ui/hero-${h.id}.png" alt="" onerror="this.remove()">${esc(h.name[0])}`
     : `<img class="face" src="../assets/ui/enemy-${h.key}.png" alt="" onerror="this.remove()">${esc(h.name[0])}`;
-  return `<div class="unit ${side}" data-hero="${h.id}" data-row="${h.row}" data-col="${h.col}" ${side==='party'?`draggable="${S.forming}" title="点击查看 · 布阵态可拖拽"`:'style="cursor:default"'}>
+  return `<div class="unit ${side}" data-hero="${h.id}" data-row="${h.row}" data-col="${h.col}" ${side==='party'?`draggable="${S.forming}" title="点击查看 · 布阵态可拖拽"`:`data-spd="${h.spd}" style="cursor:default"`}>
     <div class="token ${side}">${face}<span class="seal">${h.grade}</span></div>
     <span class="u-name">${esc(h.name)}</span>
     <span class="u-hp ${hpPct<=30?'low':''}"><i style="width:${hpPct}%"></i></span>
@@ -750,7 +767,7 @@ function unitHTML(h, side){
 const ENEMY_NAMES = ['黄巾力士','先锋校尉','弓骑兵','巫师','渠帅','精英·张曼成'];
 function enemyAt(row, idx){
   const name = ENEMY_NAMES[(row+idx)%ENEMY_NAMES.length];
-  return {id:'e'+row+'_'+idx, name, key:ENEMY_KEYS[name], grade:'卒', hp:2800+Math.random()*2200, maxHp:5000, en:0, row, col:idx};
+  return {id:'e'+row+'_'+idx, name, key:ENEMY_KEYS[name], grade:'卒', hp:2800+Math.random()*2200, maxHp:5000, en:0, row, col:idx, spd:+(8.2+Math.random()*4).toFixed(2)};
 }
 function renderField(){
   const lanes = [[],[],[]];
@@ -785,14 +802,55 @@ function banner(text){
   b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
 }
 
+/* ============================================================
+   气机 · 行动条：速度决定出手先后，进度走满即行动
+   ============================================================ */
+const heroSpd = h => h._spd ??= +(9 + h.lv*0.12 + ({'天':2.6,'地':1.8,'甲':1.2,'乙':0.6,'主':1.5}[h.grade]||0) + Math.random()*1.2).toFixed(2);
+const atb = new Map(); /* unitId -> {prog, spd, side, name} */
+function atbUnit(id, side, name, spd){
+  let u = atb.get(id);
+  if(!u){ u = {id, prog:Math.random()*55, spd, side, name}; atb.set(id, u); }
+  u.spd = spd; u.side = side; u.name = name;
+  return u;
+}
+function renderATB(live){
+  const track = document.querySelector('#atb .atb-track'); if(!track) return;
+  const seen = new Set();
+  let lead = null;
+  live.forEach(u=>{ if(!lead || u.prog > lead.prog) lead = u; });
+  live.forEach(u=>{
+    seen.add(u.id);
+    let chip = track.querySelector(`[data-atb="${u.id}"]`);
+    if(!chip){
+      chip = document.createElement('span');
+      chip.className = 'atb-chip ' + u.side;
+      chip.dataset.atb = u.id; chip.textContent = u.name[0];
+      track.appendChild(chip);
+    }
+    chip.style.left = Math.min(100, u.prog) + '%';
+    chip.classList.toggle('next', u === lead && u.prog > 55);
+  });
+  track.querySelectorAll('[data-atb]').forEach(c=>{ if(!seen.has(c.dataset.atb)) c.remove(); });
+}
+
 /* 挂机循环 */
 let acc = 0;
 setInterval(()=>{
   if(!S.fighting) return;
   acc += S.speed;
-  // 伤害飘字
-  if(Math.random()<.5) floatText('-'+fmt(200+Math.random()*1400|0), 'enemy');
-  if(Math.random()<.25) floatText('-'+fmt(100+Math.random()*700|0), 'party');
+  // 气机推进：进度满则出手（速度决定先后）
+  const live = [];
+  S.heroes.filter(h=>h.inForm!==false && h.row!=null).forEach(h=>live.push(atbUnit('h:'+h.id,'party',h.name,heroSpd(h))));
+  document.querySelectorAll('#enemies .unit').forEach(el=>live.push(atbUnit('e:'+el.dataset.hero,'enemy',el.querySelector('.u-name').textContent, +el.dataset.spd)));
+  const acted = [];
+  live.forEach(u=>{ u.prog += u.spd*S.speed*0.9; if(u.prog>=100){ u.prog = Math.max(0, u.prog-100); acted.push(u); } });
+  acted.forEach(u=>{
+    const chip = document.querySelector(`#atb .atb-chip[data-atb="${u.id}"]`);
+    if(chip){ chip.classList.remove('act'); void chip.offsetWidth; chip.classList.add('act'); }
+    if(u.side==='party') floatText('-'+fmt(200+Math.random()*1400|0), 'enemy');
+    else floatText('-'+fmt(100+Math.random()*700|0), 'party');
+  });
+  renderATB(live);
   if(Math.random()<.12) floatText('+'+fmt(60+Math.random()*300|0), 'party','heal');
   if(Math.random()<.18){ const g = 30+Math.random()*220|0; S.coins += g; floatText('+'+g+' 通宝','party','gold'); feed(`拾得 <b>${fmt(g)}</b> 通宝`); }
   // 气血波动
@@ -806,6 +864,7 @@ setInterval(()=>{
   $('#coinNum').textContent = fmt(Math.floor(S.coins));
   // 波次推进
   if(acc >= 260){ acc = 0;
+    atb.forEach((u,id)=>{ if(u.side==='enemy') atb.delete(id); });
     S.wave = S.wave>=10 ? 1 : S.wave+1;
     if(S.wave===1){ if(S.modeRoam){ S.stage = Math.min(10, S.stage+1); banner('闯荡 · 深入第'+S.stage+'关'); feed(`自动深入 · 第 <b>${S.stage}</b> 关`);} else { banner('重整旗鼓 · 再临第1波'); } }
     else banner('第 '+S.wave+' 波 · 敌至');
