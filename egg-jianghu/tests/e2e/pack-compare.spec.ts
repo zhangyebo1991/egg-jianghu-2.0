@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { equipmentDefinitionById } from '../../src/content/equipment'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
@@ -23,7 +24,7 @@ test('行囊属性笺并排对比身上装备，宽窄屏均可读', async ({ pa
   }, { key: SAVE_KEY_V10, items: [makeItem('equipped', 10), makeItem('candidate', 20)] })
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('[data-action="hero-main-tab"][data-main-tab="equipment"]').click()
 
   const anchor = page.getByTestId('hero-pack-candidate')

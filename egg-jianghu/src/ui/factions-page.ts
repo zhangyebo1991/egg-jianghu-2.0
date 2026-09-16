@@ -268,7 +268,7 @@ const renderMartialDetail = (view: FactionsPageViewModel): string => {
   </div>`
 }
 
-export const renderFactionsPage = (view: FactionsPageViewModel): string => {
+export const renderFactionsPage = (view: FactionsPageViewModel, section: 'quests' | 'exchange' | 'recruit' | 'martials' | 'all' = 'all'): string => {
   if (view.factions.length === 0) {
     return `<section class="factions-layout faction-empty-page" data-testid="factions-page">
       <div class="panel section-empty"><strong>本卷暂无可用势力</strong><span>返回关卡继续推进江湖进度。</span></div>
@@ -296,8 +296,9 @@ export const renderFactionsPage = (view: FactionsPageViewModel): string => {
     </header>
 
     <div class="faction-plaque-row" data-testid="faction-selector">${renderFactionPlaques(view)}</div>
+    <nav class="ink-faction-tabs" aria-label="势力事务">${(['quests', 'exchange', 'recruit', 'martials'] as const).map((id, index) => `<button type="button" data-action="open-faction-panel" data-faction-panel="${id}" class="${section === id ? 'active' : ''}" aria-pressed="${section === id}">${['悬榜', '兑换', '招募', '武学传承'][index]}</button>`).join('')}</nav>
 
-    <section class="faction-board" data-testid="faction-quest-board">
+    ${section === 'all' || section === 'quests' ? `<section class="faction-board" data-testid="faction-quest-board">
       <div class="faction-board-inner">
         <header class="faction-section-head">
           <div class="faction-section-title"><h2>悬榜</h2><span>五格悬榜 · <i>揭榜办差</i> · 以功易赏</span></div>
@@ -305,20 +306,20 @@ export const renderFactionsPage = (view: FactionsPageViewModel): string => {
         </header>
         <div class="faction-quest-grid">${view.quests.map(({ slot, quest }) => renderQuest(view.selectedFactionId, slot, quest)).join('')}</div>
       </div>
-    </section>
+    </section>` : ''}
 
-    ${view.exchange ? renderFactionExchange(view.exchange) : ''}
+    ${(section === 'all' || section === 'exchange') && view.exchange ? renderFactionExchange(view.exchange) : ''}
 
-    <section class="faction-meridian" data-testid="faction-meridian">
+    ${section === 'all' || section === 'martials' ? `<section class="faction-meridian" data-testid="faction-meridian">
       <header class="faction-section-head faction-meridian-head">
         <div class="faction-section-title"><h2>传承</h2><span>双线行功 · 每线三门 · <i>逐穴打通</i></span></div>
         <div class="faction-disciple"><span class="faction-disciple-label">研习对象</span><button type="button" class="faction-disciple-plate" data-action="toggle-faction-roster" aria-haspopup="dialog" aria-expanded="${view.rosterOpen}">${view.selectedHero ? `<span class="faction-disciple-seal" data-grade="${escapeHtml(view.selectedHero.grade)}">${escapeHtml(view.selectedHero.grade)}</span><strong>${escapeHtml(view.selectedHero.name)}</strong><i>⌄</i>` : '<strong>选择侠客</strong><i>⌄</i>'}</button>${renderRoster(view)}</div>
       </header>
       <div class="faction-branch-zone">${view.branches.map((branch) => renderBranch(view, branch)).join('')}</div>
       ${renderMartialDetail(view)}
-    </section>
+    </section>` : ''}
 
-    ${view.recruitment ? renderFactionRecruitment(view.recruitment) : ''}
+    ${(section === 'all' || section === 'recruit') && view.recruitment ? renderFactionRecruitment(view.recruitment) : ''}
 
     <footer class="faction-page-foot">蛋蛋江湖 2.0 · 势力页 · 数据与规则取自游戏真实配置</footer>
   </section>`

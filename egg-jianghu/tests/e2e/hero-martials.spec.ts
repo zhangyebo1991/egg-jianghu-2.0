@@ -1,3 +1,4 @@
+import { openPanel, openFactionSection } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { FACTION_MARTIALS, martialByIdV10, martialEffectAtLevel } from '../../src/content/martials'
 import { EQUIPMENT_DEFINITIONS } from '../../src/content/equipment'
@@ -14,8 +15,8 @@ test('传承研习对象不显示旧脉系，通用武馆六门技能对全部�
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.evaluate(() => window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci'))
   await page.getByTestId('world-world_01').click()
-  await page.getByTestId('start-crossing').click()
-  await page.getByTestId('world-section-factions').click()
+
+  await openFactionSection(page, 'martials')
   const firstFactionId = martialByIdV10('original_skill_42')!.factionId
   const martialIds = FACTION_MARTIALS.filter((martial) => martial.factionId === firstFactionId).map((martial) => martial.id)
   expect(martialIds).toHaveLength(6)
@@ -51,7 +52,7 @@ test('武学装配替换卸下、筛选记忆、保存和战斗快照', async ({
     const id = `original_skill_${42 + index}`
     return { id, level: Math.min(10, martialByIdV10(id)!.maxLevel) }
   }))
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]').click()
   await expect(page.locator('.hm-slot')).toHaveCount(4)
   await expect(page.locator('.hm-card')).toHaveCount(12)
@@ -70,8 +71,8 @@ test('武学装配替换卸下、筛选记忆、保存和战斗快照', async ({
   await page.getByTestId('learned-original_skill_42').getByRole('button').click()
   await page.getByLabel('搜索已学武学').fill('野球')
   await expect(page.locator('.hm-card')).toHaveCount(1)
-  await page.getByTestId('tab-inventory').click()
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'inventory')
+  await openPanel(page, 'heroes')
   await expect(page.getByLabel('搜索已学武学')).toHaveValue('野球')
   await page.getByLabel('搜索已学武学').fill('')
   await page.getByLabel('武学类型').selectOption('通用')
@@ -81,12 +82,12 @@ test('武学装配替换卸下、筛选记忆、保存和战斗快照', async ({
   await expect(page.getByTestId('learned-original_skill_47')).toBeVisible()
   await page.getByLabel('搜索已学武学').fill('')
   await page.screenshot({ path: testInfo.outputPath('martials-desktop.png'), animations: 'disabled' })
-  await page.locator('.hero-martials').evaluate((el) => { el.scrollTop = 180 })
-  const scroll = await page.locator('.hero-martials').evaluate((el) => el.scrollTop)
+  await page.locator('.game-main').evaluate((el) => { el.scrollTop = 180 })
+  const scroll = await page.locator('.game-main').evaluate((el) => el.scrollTop)
   expect(scroll).toBeGreaterThan(0)
-  await page.getByTestId('tab-inventory').click()
-  await page.getByTestId('tab-heroes').click()
-  await expect.poll(() => page.locator('.hero-martials').evaluate((el) => el.scrollTop)).toBe(scroll)
+  await openPanel(page, 'inventory')
+  await openPanel(page, 'heroes')
+  await expect.poll(() => page.locator('.game-main').evaluate((el) => el.scrollTop)).toBe(scroll)
   for (const width of [1440, 640, 390]) {
     await page.setViewportSize({ width, height: 900 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
@@ -100,7 +101,7 @@ test('武学装配替换卸下、筛选记忆、保存和战斗快照', async ({
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 13)
   })
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat().party[0].skillIds)).toEqual([42])
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]').click()
   await expect(page.getByTestId('martial-slot-2').getByRole('button', { name: '卸下' })).toBeDisabled()
   await expect(page.getByTestId('idle-combat-return')).toBeVisible()
@@ -122,7 +123,7 @@ test('器魂增加技能等级后，武学说明显示超过学习上限的实�
   }, { key: SAVE_KEY_V10, equipment, maxLevel: martial.maxLevel })
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]').click()
   const card = page.getByTestId('learned-original_skill_42')
   await expect(card).toContainText(`技能等级加成 +5 · 生效 Lv.${martial.maxLevel + 5}`)
@@ -133,7 +134,7 @@ test('器魂增加技能等级后，武学说明显示超过学习上限的实�
 test('武学装配属性在实际基础面板生效，卸下恢复', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.evaluate(() => window.__EGG_JIANGHU__.seedLearnedMartial('hero_player', 'original_skill_42', 10))
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   const basicTab = page.locator('[data-action="hero-main-tab"][data-main-tab="basic"]')
   const martialTab = page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]')
   const attack = page.locator('.attr2[data-stat-label="物攻"] .av')
@@ -162,8 +163,8 @@ test('世界与势力往返保留位置，已学武学可直达装配', async ({
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
   await page.getByTestId('world-world_01').click()
-  await page.getByTestId('start-crossing').click()
-  await page.getByTestId('world-section-factions').click()
+
+  await openFactionSection(page, 'martials')
   await page.locator('.game-main').evaluate((el) => { el.scrollTop = 100 })
   await page.locator('[data-action="select-martial"][data-martial-id="original_skill_42"]').click()
   await page.locator('[data-action="martial-learn"]').click()
@@ -177,8 +178,8 @@ test('世界与势力往返保留位置，已学武学可直达装配', async ({
   await page.getByTestId('hero-world-return').click()
   await expect(page.getByTestId('factions-page')).toBeVisible()
   await expect(page.getByTestId('faction-martial-detail')).toContainText('野球拳')
-  await page.getByTestId('tab-heroes').click()
-  await page.getByTestId('tab-idle').click()
+  await openPanel(page, 'heroes')
+  await openFactionSection(page, 'martials')
   await expect(page.getByTestId('factions-page')).toBeVisible()
   await expect(page.getByTestId('world-overview')).toHaveCount(0)
   await page.locator('.world-subnav [data-action="return-worlds"]').click()
@@ -191,7 +192,7 @@ test('行囊末页与侠客选择在离页后保留', async ({ page }) => {
     window.__EGG_JIANGHU__.fillInventory(300)
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
   })
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.getByTestId('hero-hero_mu_nianci').click()
   await page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]').click()
   for (let index = 0; index < 30; index++) {
@@ -201,8 +202,8 @@ test('行囊末页与侠客选择在离页后保留', async ({ page }) => {
   }
   const status = await page.locator('.pack-page-status').innerText()
   const firstUid = await page.locator('.pack-cell').first().getAttribute('data-equipment-uid')
-  await page.getByTestId('tab-inventory').click()
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'inventory')
+  await openPanel(page, 'heroes')
   await expect(page.locator('.pack-page-status')).toHaveText(status)
   await expect(page.locator('.pack-cell').first()).toHaveAttribute('data-equipment-uid', firstUid!)
   await expect(page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]')).toHaveAttribute('aria-pressed', 'true')
@@ -213,7 +214,7 @@ test('同类武学使用各自原版图标，携带槽位与列表一致', async
   await page.evaluate(() => {
     for (const [slot, id] of [42, 43, 44].entries()) window.__EGG_JIANGHU__.seedLearnedMartial('hero_player', `original_skill_${id}`, 1, slot)
   })
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('[data-action="hero-main-tab"][data-main-tab="martials"]').click()
   for (const [slot, id] of [42, 43, 44].entries()) {
     const icon = page.getByTestId(`learned-original_skill_${id}`).locator('header img')

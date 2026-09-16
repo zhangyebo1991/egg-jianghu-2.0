@@ -6,6 +6,7 @@ import { renderHeroSkins } from './ui/hero-skins'
 import { heroAppearanceAsset } from './ui/hero-appearance-assets'
 import { selectHeroSkin, upgradeHeroSkin } from './domain/hero-skins'
 import './style.css'
+import './ink-theme.css'
 import { GameSession, SaveConflictError } from './app/game-session'
 import { RuntimeClock } from './app/runtime-clock'
 import { createRng } from './combat/rng'
@@ -135,7 +136,7 @@ import { MARTIAL_LORE } from './content/martial-lore'
 import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
 import type { FactionExchangeViewModel } from './ui/faction-exchange'
 import type { FactionRecruitmentViewModel } from './ui/faction-recruitment'
-import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
+import { displayPower, renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
 import { renderPremiumPanel, renderShopPage, type PremiumPanel } from './ui/premium-panel'
 import { renderHeroesPage, type HeroesHeroView, type HeroesMainTab, type HeroesPageViewModel } from './ui/heroes-page'
 import {
@@ -150,7 +151,10 @@ import {
 import { renderInventoryPage, type InventoryItemView, type InventoryPageViewModel } from './ui/inventory-page'
 import { STACK_ITEM_DEFINITIONS } from './content/campaign-loot.generated'
 import { renderProgressionPage, type ProgressionPageViewModel, type ProgressionSection } from './ui/progression-page'
-import { renderStageList, renderWorldOverview, type PlaneSelectViewModel, type StageListViewModel } from './ui/jianghu-page'
+import { type PlaneSelectViewModel, type StageListViewModel } from './ui/jianghu-page'
+import { renderInkStages } from './ui/ink-stages'
+import { renderInkInventoryHeroes, renderInkInventoryEquipment } from './ui/ink-inventory'
+import { markInkImages } from './ui/ink-assets'
 import { createDomPatcher } from './ui/dom-patch'
 import { renderWelfareRewards } from './ui/welfare-rewards'
 import { WELFARE_CODE_ID } from './domain/welfare-codes'
@@ -178,6 +182,12 @@ type JianghuView = 'worlds' | 'world' | 'combat'
 let appScreen: AppScreen = 'title'
 let session: GameSession
 let activeTab: TabId = 'idle'
+let inkPanelOpen = true
+let inkPanelDocked = false
+let inkCombatLogOpen = false
+let inkBookShopOpen = false
+let inkPanelReturnFocus: HTMLElement | null = null
+let inkFactionPanel: 'quests' | 'exchange' | 'recruit' | 'martials' = 'quests'
 let jianghuView: JianghuView = 'worlds'
 let jianghuSection: JianghuSection = 'stages'
 let jianghuMotionPending: 'overview' | 'stage' | null = null
@@ -187,6 +197,8 @@ let selectedDifficulty = 1
 let selectedStage = 1
 let selectedHeroId: string | null = null
 let inventorySlotFilter: EquipmentSlot | 'all' = 'all'
+let inventoryQualityFilter: EquipmentQuality | 'all' = 'all'
+let inventorySort: 'level' | 'quality' = 'level'
 let inventoryCategory: 'all' | 'equipment' | 'material' | 'special' = 'all'
 let inventoryQuery = ''
 let selectedStackId: number | null = null
@@ -578,6 +590,7 @@ const notify = (message: string, warning = false): void => {
 const enterPlaying = (nextSession: GameSession): void => {
   session = nextSession
   appScreen = 'playing'
+  inkPanelOpen = true
   activeTab = 'idle'
   jianghuView = 'worlds'
   jianghuSection = 'stages'
@@ -593,6 +606,8 @@ const enterPlaying = (nextSession: GameSession): void => {
   careerTreeOpen = false
   selectedTreeCareerId = null
   inventorySlotFilter = 'all'
+  inventoryQualityFilter = 'all'
+  inventorySort = 'level'
   welfareInput = ''
   shopSection = 'recruit'
   ordinaryPoolRulesOpen = false
@@ -700,8 +715,8 @@ const positionVoucherDetails = (): void => {
   const anchor = app.querySelector<HTMLElement>('.voucher-wallet-summary')
   if (!panel || !anchor) return
   const rect = anchor.getBoundingClientRect()
-  panel.style.left = `clamp(8px, ${rect.right + 10}px, calc(100vw - ${panel.offsetWidth + 8}px))`
-  panel.style.top = `clamp(8px, ${rect.top}px, calc(100dvh - ${panel.offsetHeight + 8}px))`
+  panel.style.left = `clamp(8px, ${rect.left}px, calc(100vw - ${panel.offsetWidth + 8}px))`
+  panel.style.top = `clamp(8px, ${rect.bottom + 12}px, calc(100dvh - ${panel.offsetHeight + 8}px))`
 }
 const installCloudSave = (json: string): void => {
   const validated = importSaveV10(json).state
@@ -879,8 +894,8 @@ const worldOverviewViewModel = (): PlaneSelectViewModel => {
   }
 }
 
-const stageListViewModel = (): StageListViewModel => {
-  const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
+const stageListViewModel = (worldId = selectedWorldId): StageListViewModel => {
+  const world = WORLDS.find((item) => item.id === worldId) ?? WORLDS[0]
   const difficulty = selectedDifficulty
   const cleared = clearedStageOf(session.state.clearedStageByWorldDifficulty, world.id, difficulty)
   const presentation = worldPresentation(world.id)
@@ -1777,7 +1792,9 @@ const inventoryViewModel = (): InventoryPageViewModel => {
   }).sort((a, b) => a.id - b.id)
   const query = inventoryQuery.trim().toLocaleLowerCase()
   const visibleItems = allItems.filter(item => (inventoryCategory === 'all' || inventoryCategory === 'equipment')
-    && (inventorySlotFilter === 'all' || item.slot === inventorySlotFilter) && item.name.toLocaleLowerCase().includes(query))
+    && (inventorySlotFilter === 'all' || item.slot === inventorySlotFilter)
+    && (inventoryQualityFilter === 'all' || item.quality === inventoryQualityFilter) && item.name.toLocaleLowerCase().includes(query))
+    .sort((a, b) => inventorySort === 'quality' ? b.quality - a.quality || b.level - a.level : b.level - a.level || b.quality - a.quality)
   const stacks = allStacks.filter(item => (inventoryCategory === 'all' || item.kind === inventoryCategory)
     && item.name.toLocaleLowerCase().includes(query))
   let selectedStack = stacks.find(item => item.id === selectedStackId) ?? null
@@ -1812,6 +1829,8 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     capacityRatio: Math.max(2, Math.min(100, allItems.length / INVENTORY_CAPACITY * 100)),
     qualityCounts,
     slotFilter: inventorySlotFilter,
+    qualityFilter: inventoryQualityFilter,
+    sort: inventorySort,
     slotTabs,
     selectedUid: selectedInventoryUid,
     detailOpen: inventoryDetailOpen,
@@ -1997,16 +2016,16 @@ const normalizeSelectedWorld = (): void => {
 }
 
 const renderJianghuContent = (): string => {
-  if (jianghuView === 'worlds') return renderWorldOverview(worldOverviewViewModel())
-  if (jianghuView === 'combat' && session.combat) return renderIdlePage(idleViewModel())
+  if (jianghuView === 'worlds') return renderInkStages(worldOverviewViewModel(), stageListViewModel(selectedPlaneId), selectedStage, true)
+  if (jianghuView === 'combat' && session.combat) return ''
   if (jianghuView === 'combat') {
     jianghuView = 'world'
     jianghuSection = 'stages'
   }
-  if (jianghuSection === 'factions') return renderFactionsPage(factionsViewModel())
+  if (jianghuSection === 'factions') return renderFactionsPage(factionsViewModel(), inkFactionPanel)
   if (jianghuSection === 'towns') return renderTownsPage(townsViewModel())
   if (jianghuSection === 'city') return renderCityPage(cityViewModel())
-  return renderStageList(stageListViewModel())
+  return renderInkStages(worldOverviewViewModel(), stageListViewModel(selectedPlaneId), selectedStage, false)
 }
 
 const playPendingJianghuMotion = (): void => {
@@ -2030,6 +2049,7 @@ const navigationLocationKey = (): string => activeTab === 'idle'
 
 const rememberPageScroll = (): void => {
   if (!renderedLocationKey) return
+  if (!app.querySelector('.game-main')) return
   const positions = [{ selector: 'document', top: window.scrollY, left: window.scrollX }]
   const main = app.querySelector<HTMLElement>('.game-main')
   if (main) for (const element of [main, ...main.querySelectorAll<HTMLElement>('*')]) {
@@ -2070,7 +2090,7 @@ const render = (): void => {
     return
   }
   normalizeSelectedWorld()
-  const locationKey = navigationLocationKey()
+  const locationKey = `${navigationLocationKey()}:${inkFactionPanel}:${inkPanelOpen}`
   const locationChanged = locationKey !== renderedLocationKey
   if (locationChanged) rememberPageScroll()
   const shouldPlayFactionSwitch = factionSwitchAnimationPending
@@ -2078,20 +2098,36 @@ const render = (): void => {
     && jianghuView === 'world'
     && jianghuSection === 'factions'
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
+  const panelOpen = inkPanelOpen && !(activeTab === 'idle' && jianghuView === 'combat' && session.combat)
+  const panelWasOpen = Boolean(app.querySelector('.ink-leaf'))
+  const careerWasOpen = Boolean(app.querySelector('.career-tree-dialog'))
+  const formation = formationViewModel()
+  const heroes = activeTab === 'heroes' || activeTab === 'inventory' ? heroesViewModel() : null
   const content = activeTab === 'idle'
     ? renderJianghuContent()
     : activeTab === 'heroes'
-      ? renderHeroesPage(heroesViewModel())
+      ? renderHeroesPage(heroes!)
     : activeTab === 'formation'
-      ? renderFormationPage(formationViewModel())
+      ? renderFormationPage(formation)
       : activeTab === 'inventory'
-        ? renderInventoryPage(inventoryViewModel())
+        ? renderInventoryPage({ ...inventoryViewModel(), shopOpen: inkBookShopOpen, heroSidebar: renderInkInventoryHeroes(heroes!), heroEquipment: renderInkInventoryEquipment(heroes!), selectedHeroName: heroes!.heroes.find(hero => hero.id === selectedHeroId)?.name })
         : activeTab === 'shop'
           ? renderShopPage(session.state, Date.now(), renderOrdinaryHeroPool(ordinaryPoolViewModel()), shopSection)
         : activeTab === 'settings'
           ? renderSettingsPage(session.state.settings, welfareInput, session.state.redeemedWelfareCodes.includes(WELFARE_CODE_ID))
           : renderProgressionPage(progressionViewModel())
   patchApp(renderShell({
+    panelOpen,
+    panelDocked: inkPanelDocked,
+    panelTitle: activeTab === 'idle' && jianghuView === 'world'
+      ? jianghuSection === 'factions' ? ({ quests: '悬榜', exchange: '兑换', recruit: '招募', martials: '传承' })[inkFactionPanel]
+        : jianghuSection === 'city' ? '城市' : '关卡'
+      : undefined,
+    factionPanel: inkFactionPanel,
+    battlefield: session.combat ? renderIdlePage({ ...idleViewModel(), logOpen: inkCombatLogOpen }) : undefined,
+    currencyName: worldPresentation(session.combat?.state.worldId ?? world.id).currencyName,
+    currency: session.state.worldCurrency[session.combat?.state.worldId ?? world.id] ?? 0,
+    power: displayPower(formation.heroes.filter(hero => hero.inFormation)),
     premiumPanel: premiumPanel ? renderPremiumPanel(session.state, premiumPanel) : '',
     idleVouchers: session.state.idleVouchers,
     voucherDetailsOpen: voucherDetailsOpen || voucherHovered,
@@ -2106,6 +2142,9 @@ const render = (): void => {
     content,
   }))
   renderedLocationKey = locationKey
+  markInkImages(document.body)
+  if (panelOpen && (!panelWasOpen || locationChanged)) app.querySelector<HTMLElement>('.game-main')?.focus({ preventScroll: true })
+  if (careerTreeOpen && !careerWasOpen) app.querySelector<HTMLButtonElement>('[data-action="close-career-tree"]')?.focus({ preventScroll: true })
   positionVoucherDetails()
   if (locationChanged) {
     restorePageScroll(locationKey)
@@ -2214,6 +2253,8 @@ const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => 
     beginCombatPresentation()
     if (!saveSession()) return
     jianghuView = 'combat'
+    activeTab = 'idle'
+    inkPanelOpen = false
     jianghuSection = 'stages'
   }
   render()
@@ -2629,7 +2670,17 @@ const performAction = (button: HTMLButtonElement): void => {
     const visibleItems = backpackEquipment(session.state).filter((item) =>
       inventorySlotFilter === 'all' || equipmentDefinitionById(item.definitionId)?.slot === inventorySlotFilter)
     if (!visibleItems.some((item) => item.uid === selectedInventoryUid)) selectedInventoryUid = visibleItems[0]?.uid ?? null
-  } else if (action === 'inventory-organize') commitAction(organizeInventory(session.state))
+  } else if (action === 'inventory-quality') {
+    const quality = Number(button.dataset.quality)
+    inventoryQualityFilter = button.dataset.quality === 'all' || !isEquipmentQuality(quality) ? 'all' : quality
+    inventoryCategory = 'equipment'
+    selectedStackId = null
+  } else if (action === 'inventory-sort') {
+    inventorySort = button.dataset.sort === 'quality' ? 'quality' : 'level'
+  } else if (action === 'inventory-organize') {
+    inventorySort = 'quality'
+    commitAction(organizeInventory(session.state))
+  }
   else if (action === 'inventory-discard-common') {
     const result = discardEquipmentByQuality(session.state, 0)
     if (selectedInventoryUid && !session.state.inventory.some((item) => item.uid === selectedInventoryUid)) {
@@ -2865,8 +2916,19 @@ app.addEventListener('input', (event) => {
   render()
 })
 
+app.addEventListener('toggle', (event) => {
+  if (event.target instanceof HTMLDetailsElement && event.target.classList.contains('ink-book-shop')) inkBookShopOpen = event.target.open
+}, true)
+
 app.addEventListener('keydown', (event) => {
+  if ((event.key === 'Enter' || event.key === ' ') && event.target instanceof HTMLElement
+    && event.target.matches('[data-action="inspect-combat-hero"]')) {
+    event.preventDefault()
+    event.target.click()
+    return
+  }
   if (event.key !== 'Escape' || !factionRosterOpen) return
+  event.preventDefault()
   factionRosterOpen = false
   factionRosterQuery = ''
   render()
@@ -3018,7 +3080,29 @@ document.addEventListener('click', (event) => {
     voucherDetailsOpen = false; voucherHovered = false; render()
   }
 })
+const closeInkPanel = (): void => {
+  inkPanelOpen = false
+  activeTab = 'idle'
+  jianghuView = session.combat ? 'combat' : 'worlds'
+  inventoryDetailOpen = false
+  careerTreeOpen = false
+  factionRosterOpen = false
+  showResetConfirmation = false
+  voucherDetailsOpen = false
+  voucherHovered = false
+  render()
+  if (inkPanelReturnFocus?.isConnected) inkPanelReturnFocus.focus({ preventScroll: true })
+  else app.querySelector<HTMLButtonElement>('[data-testid="tab-idle"]')?.focus({ preventScroll: true })
+}
+
 document.addEventListener('keydown', (event) => {
+  if (event.defaultPrevented) return
+  if (careerTreeOpen && event.key === 'Escape') {
+    careerTreeOpen = false
+    render()
+    app.querySelector<HTMLButtonElement>('[data-action="open-career-tree"]')?.focus()
+    return
+  }
   if (premiumPanel && event.key === 'Escape') { closePremiumPanel(); return }
   if (premiumPanel && event.key === 'Tab') {
     const buttons = [...app.querySelectorAll<HTMLButtonElement>('.premium-panel button:not(:disabled)')]
@@ -3029,6 +3113,20 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && (voucherDetailsOpen || voucherHovered)) {
     clearTimeout(voucherHoverTimer)
     voucherDetailsOpen = false; voucherHovered = false; render()
+    return
+  }
+  const leaf = app.querySelector<HTMLElement>('.career-tree-dialog, [data-testid="reset-save-confirmation"]') ?? app.querySelector<HTMLElement>('.ink-leaf')
+  if (!leaf || document.querySelector('dialog[open], .cloud-overlay')) return
+  if (event.key === 'Escape') {
+    if (showResetConfirmation) { showResetConfirmation = false; render(); return }
+    if (inventoryDetailOpen) { inventoryDetailOpen = false; render(); return }
+    closeInkPanel()
+  } else if (event.key === 'Tab' && !premiumPanel) {
+    const focusable = [...leaf.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], [tabindex="0"]')].filter(element => element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
+    const first = focusable[0], last = focusable.at(-1)
+    if (!leaf.contains(document.activeElement) || document.activeElement?.classList.contains('game-main')) { event.preventDefault(); (event.shiftKey ? last : first)?.focus() }
+    else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
   }
 })
 window.addEventListener('resize', positionVoucherDetails)
@@ -3036,6 +3134,40 @@ app.addEventListener('scroll', positionVoucherDetails, true)
 
 app.addEventListener('click', (event) => {
   const target = event.target as HTMLElement
+  const inkAction = target.closest<HTMLElement>('[data-action]')
+  if (inkAction?.dataset.action === 'close-ink-panel') { closeInkPanel(); return }
+  if (inkAction?.dataset.action === 'return-hero-origin') {
+    activeTab = 'idle'
+    inkPanelOpen = jianghuView !== 'combat'
+    render()
+    return
+  }
+  if (inkAction?.dataset.action === 'dock-ink-panel') { inkPanelDocked = !inkPanelDocked; render(); return }
+  if (inkAction?.dataset.action === 'toggle-combat-log') {
+    inkCombatLogOpen = !inkCombatLogOpen
+    render()
+    return
+  }
+  if (inkAction?.dataset.action === 'inspect-combat-hero') {
+    selectedHeroId = inkAction.dataset.heroId ?? null
+    inkPanelReturnFocus = inkAction
+    inkPanelOpen = true
+    activeTab = 'heroes'
+    render()
+    return
+  }
+  if (inkAction?.dataset.action === 'open-faction-panel') {
+    const panel = inkAction.dataset.factionPanel
+    if (panel !== 'quests' && panel !== 'exchange' && panel !== 'recruit' && panel !== 'martials') return
+    inkPanelReturnFocus = inkAction
+    inkPanelOpen = true
+    inkFactionPanel = panel
+    activeTab = 'idle'
+    jianghuView = 'world'
+    jianghuSection = 'factions'
+    render()
+    return
+  }
   if (target.closest('.premium-overlay')) {
     const action = target.closest<HTMLButtonElement>('button[data-action]')?.dataset.action
     if (target.classList.contains('premium-overlay') || action === 'close-premium-panel') closePremiumPanel()
@@ -3043,6 +3175,7 @@ app.addEventListener('click', (event) => {
       shopSection = 'premium'
       premiumPanel = null
       activeTab = 'shop'
+      inkPanelOpen = true
       render()
       app.querySelector<HTMLButtonElement>('[data-testid="tab-shop"]')?.focus()
     }
@@ -3067,6 +3200,10 @@ app.addEventListener('click', (event) => {
   const tab = target.closest<HTMLElement>('[data-tab]')?.dataset.tab as TabId | undefined
   if (tab) {
     if (!isTabAvailable(tab)) return
+    inkPanelReturnFocus = target.closest<HTMLElement>('[data-tab]') ?? null
+    inkPanelOpen = true
+    showResetConfirmation = false
+    if (tab === 'idle') { jianghuView = 'worlds'; jianghuSection = 'stages'; selectedPlaneId = selectedWorldId }
     activeTab = tab
     if (tab !== 'inventory') inventoryDetailOpen = false
     render()
@@ -3077,6 +3214,8 @@ app.addEventListener('click', (event) => {
   if (worldSection) {
     if (!isJianghuSectionAvailable(worldSection)) return
     activeTab = 'idle'
+    inkPanelReturnFocus = target.closest<HTMLElement>('[data-jianghu-section]') ?? null
+    inkPanelOpen = true
     jianghuView = 'world'
     jianghuSection = worldSection
     jianghuMotionPending = worldSection === 'stages' ? 'stage' : null
@@ -3086,6 +3225,22 @@ app.addEventListener('click', (event) => {
   const button = target.closest<HTMLButtonElement>('[data-action]')
   if (!button || button.disabled) return
   const { action } = button.dataset
+  if (action === 'inventory-equip') {
+    const heroId = normalizeSelectedHero()
+    if (heroId) commitAction(equipEquipment(session.state, heroId, button.dataset.equipmentUid ?? ''))
+    render()
+    return
+  }
+  if (action === 'select-ink-stage') {
+    selectedStage = Number(button.dataset.stage) || 1
+    render()
+    return
+  }
+  if (action === 'begin-ink-stage') {
+    selectedWorldId = selectedPlaneId
+    startSelectedStage(button.dataset.mode === 'roam' ? 'roam' : 'guard')
+    return
+  }
   if (action === 'buy-premium-card' && activeTab === 'shop') {
     try {
       const result = session.buyPremiumCard(button.dataset.cardId ?? '')
@@ -3131,6 +3286,7 @@ app.addEventListener('click', (event) => {
     cityPageSection = 'map'
   } else if (action === 'city-to-stages' || action === 'city-to-factions') {
     jianghuSection = action === 'city-to-stages' ? 'stages' : 'factions'
+    if (action === 'city-to-factions') inkFactionPanel = 'recruit'
     jianghuView = 'world'
   } else if (action === 'select-city-tile') {
     const tileId = Number(button.dataset.cityTileId)
@@ -3139,12 +3295,14 @@ app.addEventListener('click', (event) => {
     if (tile && tile.gridX < effectiveGrid.columns && tile.gridY < effectiveGrid.rows) selectedCityTileId = tileId
   } else if (action === 'select-plane' && button.dataset.worldId) {
     selectedPlaneId = button.dataset.worldId
+    if (session.state.unlockedWorldIds.includes(selectedPlaneId)) selectedWorldId = selectedPlaneId
     const highest = highestUnlockedDifficulty(
       session.state.unlockedWorldIds,
       session.state.clearedStageByWorldDifficulty,
       selectedPlaneId,
     )
     selectedDifficulty = session.state.unlockedWorldIds.includes(selectedPlaneId) ? Math.max(1, highest) : 1
+    selectedStage = Math.min(10, Math.max(1, clearedStageOf(session.state.clearedStageByWorldDifficulty, selectedPlaneId, selectedDifficulty) + 1))
   } else if (action === 'prev-plane' || action === 'next-plane') {
     const currentIndex = WORLDS.findIndex((world) => world.id === selectedPlaneId)
     const nextIndex = action === 'prev-plane'
@@ -3166,6 +3324,7 @@ app.addEventListener('click', (event) => {
       difficulty,
     )) {
       selectedDifficulty = difficulty
+      selectedStage = Math.min(10, Math.max(1, clearedStageOf(session.state.clearedStageByWorldDifficulty, selectedPlaneId, difficulty) + 1))
     }
   } else if (action === 'start-crossing') {
     if (!session.state.unlockedWorldIds.includes(selectedPlaneId)) {
@@ -3298,10 +3457,18 @@ app.addEventListener('click', (event) => {
     notify(result.message, !result.ok)
     if (result.ok) addCombatLog('system', mode === 'guard' ? '守' : '闯', mode === 'guard' ? '转为驻守：原地迎敌，败退自动重整。' : '转为闯荡：破阵后自动深入。')
   } else if (action === 'stop-combat') {
+    if (session.combat) {
+      selectedWorldId = session.combat.state.worldId
+      selectedDifficulty = session.combat.state.difficulty
+      selectedStage = session.combat.state.stage
+    }
     session.stopCombat()
     if (!saveSession()) return
     notify('已停止战斗')
+    activeTab = 'idle'
     jianghuView = 'world'
+    inkPanelOpen = true
+    selectedPlaneId = selectedWorldId
     jianghuSection = 'stages'
     combatEffects = []
     combatRunPresentation = null
@@ -3313,6 +3480,7 @@ app.addEventListener('click', (event) => {
     selectedDifficulty = session.combat.state.difficulty
     selectedStage = session.combat.state.stage
     jianghuView = 'combat'
+    inkPanelOpen = false
     jianghuSection = 'stages'
   } else if (action === 'return-worlds') {
     selectedPlaneId = selectedWorldId || selectedPlaneId
@@ -3511,11 +3679,14 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   setTab: (tab) => {
     ensurePlaying()
     activeTab = tab
+    inkPanelOpen = true
+    if (tab === 'idle' && jianghuView === 'combat') jianghuView = 'worlds'
     render()
   },
   setJianghuSection: (section) => {
     ensurePlaying()
     activeTab = 'idle'
+    inkPanelOpen = true
     selectedWorldId = selectedWorldId || session.state.unlockedWorldIds[0] || 'world_01'
     jianghuView = 'world'
     jianghuSection = section

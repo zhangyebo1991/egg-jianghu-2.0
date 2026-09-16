@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { equipmentDefinitionById } from '../../src/content/equipment'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
@@ -19,7 +20,7 @@ test('一键穿戴按所选方向换装并保存，桌面和手机按钮正常�
   }, { key: SAVE_KEY_V10, inventory })
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('[data-action="hero-main-tab"][data-main-tab="equipment"]').click()
   const equip = page.getByRole('button', { name: '一键穿戴', exact: true })
   const direction = page.getByRole('button', { name: '切换一键穿戴方向' })

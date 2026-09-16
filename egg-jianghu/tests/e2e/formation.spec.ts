@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test, type Page } from '@playwright/test'
 
 test.beforeEach(async ({ page }) => {
@@ -9,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('头像品级角标叠在头像右下角且名册不产生横向滚动', async ({ page }) => {
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'formation')
 
   const metrics = await page.evaluate(() => {
     const rect = (selector: string) => {
@@ -59,7 +60,7 @@ test('桌面拖拽：已占格拖到另一已占格交换位置', async ({ page 
     window.__EGG_JIANGHU__.recruitHero('hero_guo_jing')
     window.__EGG_JIANGHU__.placeHero('hero_guo_jing', 0, 2)
   })
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'formation')
 
   await dragToSlot(page, '.formation-slot[data-row="1"][data-col="0"]', '.formation-slot[data-row="0"][data-col="2"]')
 
@@ -71,7 +72,7 @@ test('桌面拖拽：已占格拖到另一已占格交换位置', async ({ page 
 })
 
 test('桌面拖拽：已占格拖到名单区下阵', async ({ page }) => {
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'formation')
   await dragToSlot(page, '.formation-slot[data-row="1"][data-col="0"]', '.formation-roster')
 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
@@ -79,7 +80,7 @@ test('桌面拖拽：已占格拖到名单区下阵', async ({ page }) => {
 })
 
 test('桌面点击已占格不产生任何阵容变化', async ({ page }) => {
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'formation')
   await page.locator('.formation-slot[data-row="1"][data-col="0"]').click()
 
   const formation = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
@@ -93,7 +94,7 @@ test.describe('触屏视口', () => {
     await page.evaluate(() => {
       window.__EGG_JIANGHU__.recruitHero('hero_guo_jing')
     })
-    await page.getByTestId('tab-formation').click()
+    await openPanel(page, 'formation')
 
     await page.getByTestId('formation-hero-hero_guo_jing').click()
     await page.locator('.formation-slot[data-row="2"][data-col="1"]').click()
@@ -118,7 +119,7 @@ test('战斗期间可查看阵容但不能点击或拖拽改阵，退出后恢�
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 13)
   })
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'formation')
   await expect(page.locator('.formation-field-head')).toContainText('战斗进行中')
   for (const action of ['formation-remove', 'formation-auto-arrange', 'formation-clear']) {
     const buttons = page.locator(`[data-action="${action}"]`)
@@ -138,12 +139,12 @@ test('战斗期间可查看阵容但不能点击或拖拽改阵，退出后恢�
     })
   }
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().formation)).toEqual(before)
-  await page.getByTestId('tab-heroes').click()
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'heroes')
+  await openPanel(page, 'formation')
   await page.screenshot({ path: testInfo.outputPath('formation-battle-locked.png'), fullPage: true, animations: 'disabled' })
   await page.getByTestId('idle-combat-return').click()
   await page.locator('[data-action="stop-combat"]').click()
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'formation')
   await expect(page.locator('[data-action="formation-auto-arrange"]')).toBeEnabled()
   await page.getByTestId('formation-hero-hero_guo_jing').click()
   await page.getByTestId('formation-slot-0-4').click()

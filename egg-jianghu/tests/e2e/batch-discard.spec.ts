@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 
 let pageErrors: string[]
@@ -19,7 +20,7 @@ test.afterEach(() => {
 test('侠客页提供行囊与按等阶售出', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(60))
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
 
   await expect(page.getByTestId('hero-inventory-panel')).toBeVisible()
   await expect(page.getByRole('button', { name: '按等阶售出' })).toBeVisible()
@@ -33,17 +34,20 @@ test('侠客页提供行囊与按等阶售出', async ({ page }) => {
   await page.getByTestId('hero-inventory-panel').screenshot({ path: 'verification-q3-blue.png' })
 })
 
-test('宽屏行囊增加列数且分页完整覆盖装备', async ({ page }, testInfo) => {
+test('侠客册行囊独立滚动且分页完整覆盖装备', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1920, height: 911 })
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(300))
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   const grid = page.locator('.pack-grid')
-  await expect.poll(() => grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(/\s+/).length)).toBeGreaterThanOrEqual(10)
+  await expect.poll(() => grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(/\s+/).length)).toBeGreaterThanOrEqual(4)
   for (const tab of ['basic', 'equipment', 'career']) {
     await page.locator(`[data-action="hero-main-tab"][data-main-tab="${tab}"]`).click()
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1920)
     await page.screenshot({ path: testInfo.outputPath(`heroes-wide-${tab}.png`) })
   }
+  const packBounds = await grid.boundingBox()
+  const pagerBounds = await page.locator('.pack-page').boundingBox()
+  expect(packBounds!.y + packBounds!.height).toBeLessThanOrEqual(pagerBounds!.y + 1)
   const seen = new Set<string>()
   for (;;) {
     const ids = await grid.locator('.pack-cell').evaluateAll((cells) => cells.map((cell) => (cell as HTMLElement).dataset.equipmentUid!))

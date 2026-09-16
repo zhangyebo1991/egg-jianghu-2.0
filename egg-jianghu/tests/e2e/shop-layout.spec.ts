@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 
 test('商城栏目分开展示，商城背包阵容设置共享宽屏与手机内容边界', async ({ page }, testInfo) => {
@@ -5,7 +6,7 @@ test('商城栏目分开展示，商城背包阵容设置共享宽屏与手机�
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').fill('页面布局核验')
   await page.getByLabel('玩家姓名').press('Enter')
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await expect(page.getByTestId('ordinary-hero-pool')).toBeVisible()
   await expect(page.getByTestId('premium-card-monthly')).toHaveCount(0)
   await page.getByRole('button', { name: '收益特权', exact: true }).click()
@@ -17,7 +18,7 @@ test('商城栏目分开展示，商城背包阵容设置共享宽屏与手机�
     await page.setViewportSize({ width, height: 1000 })
     const edges: Array<{ x: number; width: number }> = []
     for (const tab of ['shop', 'inventory', 'formation', 'settings']) {
-      await page.getByTestId(`tab-${tab}`).click()
+      await openPanel(page, tab)
       const bounds = await page.locator(`.${tab}-page`).boundingBox()
       expect(bounds).not.toBeNull()
       edges.push(bounds!)

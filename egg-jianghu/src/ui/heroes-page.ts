@@ -268,7 +268,7 @@ const renderAccessibleHeroStats = (hero: HeroesHeroView): string => {
 
 const renderHeroPortrait = (hero: HeroesHeroView, className: string): string => {
   const portrait = heroPortraitAsset(hero.id, hero.category ?? '剑')
-  return `<img class="${className}" src="${escapeHtml(hero.appearanceUrl ?? portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">`
+  return `<img class="${className}" src="${escapeHtml(portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">`
 }
 
 const renderXpBar = (value: number, required: number, maxed: boolean, extraClass = ''): string => {
@@ -390,9 +390,11 @@ const renderCareerTreeOverlay = (hero: HeroesHeroView, view: HeroesPageViewModel
         <button type="button" class="ct-close" data-action="close-career-tree" aria-label="关闭">收起</button>
       </header>
       <div class="ct-body">
+        <div class="ct-scroll" tabindex="0" aria-label="职业路线，可左右滚动">
         <div class="ct-tree">
           <svg class="ct-links" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
           ${ranks}
+        </div>
         </div>
         ${detailHtml}
       </div>
@@ -550,7 +552,7 @@ const renderEquipmentTab = (hero: HeroesHeroView, equipment: HeroesEquipmentView
 }
 
 const renderMainTabs = (view: HeroesPageViewModel, hero: HeroesHeroView): string => `
-  ${view.returnLabel ? `<button type="button" class="hero-world-return" data-tab="idle" data-testid="hero-world-return">返回 · ${escapeHtml(view.returnLabel)}</button>` : ''}
+  ${view.returnLabel ? `<button type="button" class="hero-world-return" data-action="return-hero-origin" data-testid="hero-world-return">返回 · ${escapeHtml(view.returnLabel)}</button>` : ''}
   <nav class="hero-htabs" aria-label="侠客资料分页">
     ${HERO_MAIN_TABS.map(({ tab, label }) => `<button type="button" class="htab${view.mainTab === tab ? ' active' : ''}" data-action="hero-main-tab" data-main-tab="${tab}" aria-pressed="${view.mainTab === tab}">${label}</button>`).join('')}
   </nav>

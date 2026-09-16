@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
@@ -10,8 +11,8 @@ test('正常新档从江湖战利品完成首笔城市收入，剧情和账簿�
   await page.getByLabel('玩家姓名').fill('城中少侠')
   await page.getByLabel('玩家姓名').press('Enter')
   await page.getByTestId('world-world_01').click()
-  await page.getByTestId('start-crossing').click()
-  await page.getByTestId('world-section-city').click()
+
+  await openPanel(page, 'city')
   await expect(page.getByTestId('city-story')).toContainText('旧契归来')
   await page.screenshot({ path: testInfo.outputPath('city-story-desktop.png'), animations: 'disabled' })
   await page.getByRole('button', { name: '接过钥匙' }).click()
@@ -25,6 +26,7 @@ test('正常新档从江湖战利品完成首笔城市收入，剧情和账簿�
   await expect(page.getByTestId('city-story')).toHaveCount(0)
   await page.getByRole('button', { name: '去江湖寻货' }).click()
   await page.getByTestId('stage-1').click()
+  await page.getByTestId('start-guard').click()
   // 仅加速游戏时钟；不添加装备、现金、等级或通关结果，战利品来自真实战斗。
   const lootCount = await page.evaluate(() => {
     const api = window.__EGG_JIANGHU__
@@ -33,16 +35,16 @@ test('正常新档从江湖战利品完成首笔城市收入，剧情和账簿�
   })
   expect(lootCount).toBeGreaterThan(0)
   await page.locator('[data-action="stop-combat"]').click()
-  await page.getByTestId('world-section-city').click()
+  await openPanel(page, 'city')
   await page.locator('[data-action="city-stock"]').first().click()
   await expect(page.locator('[aria-label="货架"] .city-goods-row')).toHaveCount(1)
   await page.locator('[data-action="city-hire-open"]').first().click()
   await page.getByRole('button', { name: '去势力招募侠客' }).click()
-  await expect(page.getByTestId('faction-page-title')).toBeVisible()
-  await page.getByTestId('tab-formation').click()
+  await expect(page.locator('#ink-leaf-title')).toBeVisible()
+  await openPanel(page, 'formation')
   await page.locator('[data-action="formation-clear"]').click()
-  await page.getByTestId('tab-idle').click()
-  await page.getByTestId('world-section-city').click()
+  await openPanel(page, 'idle')
+  await openPanel(page, 'city')
   await page.locator('[data-action="city-hire"][data-hero-id="hero_player"]').click()
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 960 })
@@ -86,6 +88,7 @@ test('v18 旧档保留但不能继续，新建和删档只操作 v19', async ({ 
   await page.getByLabel('玩家姓名').fill('新城主')
   await page.getByLabel('玩家姓名').press('Enter')
   expect(await page.evaluate(() => localStorage.getItem('egg-jianghu-2-save-v18'))).toBe('{"version":18}')
+  await openPanel(page, 'settings')
   await page.locator('[data-action="request-reset-save"]').click()
   await page.locator('[data-action="confirm-reset-save"]').click()
   expect(await page.evaluate(() => localStorage.getItem('egg-jianghu-2-save-v18'))).toBe('{"version":18}')

@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test, type Page } from '@playwright/test'
 
 let pageErrors: string[]
@@ -25,13 +26,14 @@ test('首次进入可新建角色并以玩家姓名直接开始第一关战斗',
   await expect(page.getByRole('button', { name: '继续游戏' })).toBeDisabled()
 
   await createGame(page, '燕七')
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await expect(page.getByTestId('hero-hero_player')).toContainText('燕七')
 
-  await page.getByTestId('tab-idle').click()
+  await openPanel(page, 'idle')
   await page.getByTestId('world-world_01').click()
-  await page.getByTestId('start-crossing').click()
+
   await page.getByTestId('stage-1').click()
+  await page.getByTestId('start-guard').click()
   await expect(page.locator('.combat-unit.party[data-unit-id="hero_player"]')).toContainText('燕七')
 })
 
@@ -45,6 +47,8 @@ test('version 17 旧档不可继续且新建和删除 version 19 存档都不覆
   await createGame(page, '燕七')
   expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v17'))).toBe('version-17-save')
   expect(await page.evaluate(() => window.localStorage.getItem('egg-jianghu-2-save-v19'))).not.toBeNull()
+
+  await openPanel(page, 'settings')
 
   await page.locator('[data-action="request-reset-save"]').click()
   await page.locator('[data-action="confirm-reset-save"]').click()
@@ -93,6 +97,7 @@ test('覆盖存档可取消保留旧角色，也可确认创建新角色', async
 
 test('确认删档后回到新建页且标题页不可继续', async ({ page }) => {
   await createGame(page, '燕七')
+  await openPanel(page, 'settings')
   await page.locator('[data-action="request-reset-save"]').click()
   await expect(page.getByTestId('reset-save-confirmation')).toBeVisible()
   await page.locator('[data-action="confirm-reset-save"]').click()
@@ -105,6 +110,7 @@ test('确认删档后回到新建页且标题页不可继续', async ({ page }) 
 
 test('打开删档确认后将焦点放在取消按钮', async ({ page }) => {
   await createGame(page, '燕七')
+  await openPanel(page, 'settings')
   await page.locator('[data-action="request-reset-save"]').click()
 
   await expect(page.locator('[data-action="cancel-reset-save"]')).toBeFocused()
@@ -148,8 +154,9 @@ test('覆盖前重新检查存档并在存档变化后要求再次确认', async
 test('移动端删档确认使用可读且可操作的居中面板', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await createGame(page, '燕七')
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await expect(page.getByTestId('tab-heroes')).toBeVisible()
+  await openPanel(page, 'settings')
   await page.locator('[data-action="request-reset-save"]').click()
 
   const confirmation = page.getByTestId('reset-save-confirmation')
@@ -178,6 +185,7 @@ test('多标签页同步存档状态且旧会话不能覆盖外部删档或新�
   await createGame(page, '甲少侠')
   await expect(secondPage.getByRole('button', { name: '继续游戏' })).toBeEnabled()
   await secondPage.getByRole('button', { name: '继续游戏' }).click()
+  await openPanel(page, 'settings')
   await page.evaluate(() => {
     document.querySelector<HTMLButtonElement>('[data-action="request-reset-save"]')?.click()
     document.querySelector<HTMLButtonElement>('[data-action="confirm-reset-save"]')?.click()

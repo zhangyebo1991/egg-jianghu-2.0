@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
@@ -18,8 +19,8 @@ test('背包展示堆叠数量、分类搜索、物品详情与实时入库', as
   }, SAVE_KEY_V10)
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
-  await page.getByTestId('tab-inventory').click()
-  await expect(page.getByRole('heading', { name: '背包', exact: true })).toBeVisible()
+  await openPanel(page, 'inventory')
+  await expect(page.getByRole('heading', { name: '行囊', exact: true })).toBeVisible()
   await expect(page.locator('[data-action="inventory-stack-select"]')).toHaveCount(4)
   await expect(page.getByTestId('stack-item-11')).toContainText('×12')
   await expect(page.getByTestId('stack-item-7')).toHaveCount(0)

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderShell } from './shell'
 
 describe('应用 Shell', () => {
-  it('显示江湖、侠客、阵容、背包和设置入口并隐藏秘境且不显示顶部资源和自动存档', () => {
+  it('显示水墨战场、顶部资源和完整功能入口，未开放秘境仍隐藏', () => {
     const html = renderShell({
       activeTab: 'idle',
       worldContext: null,
@@ -11,20 +11,20 @@ describe('应用 Shell', () => {
       content: '<p>内容</p>',
     })
 
-    expect(html).toContain('class="game-sidebar"')
+    expect(html).toContain('class="app-shell ink-shell"')
+    expect(html).toContain('aria-label="江湖资源"')
     expect(html).toContain('data-testid="tab-idle"')
     expect(html).toContain('data-testid="tab-heroes"')
     expect(html).toContain('data-testid="tab-formation"')
     expect(html).toContain('data-testid="tab-inventory"')
     expect(html).toContain('data-testid="tab-settings"')
     expect(html).not.toContain('data-testid="tab-progression"')
-    expect(html).toContain('class="nav-mark"')
-    expect(html).toContain('class="sidebar-landscape"')
-    expect(html).toContain('十万里一剑 · 不负侠者行')
-    expect(html).not.toMatch(/tab-factions|tab-city|势力贡献|装备背包|自动存档|resource-strip/)
+    expect(html).toContain('data-testid="tab-city"')
+    for (const panel of ['quests', 'exchange', 'recruit']) expect(html).toContain(`data-faction-panel="${panel}"`)
+    expect(html).not.toContain('data-action="request-reset-save"')
   })
 
-  it('进入位面后侧栏显示返回江湖与三个分离入口并隐藏城镇', () => {
+  it('册内位面导航保留关卡、势力、城市和返回战斗入口', () => {
     const html = renderShell({
       activeTab: 'idle',
       worldContext: { worldName: '东汉三国', activeSection: 'factions' },
@@ -42,32 +42,34 @@ describe('应用 Shell', () => {
     expect(html).toMatch(/class="world-section active"[^>]*data-jianghu-section="factions"/)
   })
 
-  it('江湖页面不额外创建第二套导航，统一复用阵容式左侧栏', () => {
+  it('收起册页后保留战场，解除其交互锁定', () => {
     const html = renderShell({
       activeTab: 'idle',
       worldContext: null,
       hasCombatReturn: false,
       showResetConfirmation: false,
-      jianghuChrome: true,
+      panelOpen: false,
+      battlefield: '<p>真实战斗</p>',
       content: '<p>内容</p>',
     })
 
-    expect(html).toContain('class="app-shell jianghu-shell"')
+    expect(html).toContain('真实战斗')
     expect(html).toContain('data-testid="tab-formation"')
-    expect(html).not.toContain('jianghu-mobile-topbar')
-    expect(html).not.toContain('mobile-tab-')
+    expect(html).not.toContain('data-testid="ink-panel"')
+    expect(html).not.toContain('inert')
+    expect(html).not.toContain('<p>内容</p>')
   })
 
-  it('默认在侧栏底部显示删档重开入口', () => {
+  it('设置页危险区显示删档重开入口', () => {
     const html = renderShell({
-      activeTab: 'idle',
+      activeTab: 'settings',
       worldContext: null,
       hasCombatReturn: false,
       showResetConfirmation: false,
       content: '<p>内容</p>',
     })
 
-    expect(html).toContain('class="sidebar-danger-zone"')
+    expect(html).toContain('class="ink-danger-zone"')
     expect(html).toContain('data-action="request-reset-save"')
     expect(html).toContain('删档重开')
     expect(html).not.toContain('data-testid="reset-save-confirmation"')
@@ -75,7 +77,7 @@ describe('应用 Shell', () => {
 
   it('请求删档后显示永久删除警告与取消确认操作', () => {
     const html = renderShell({
-      activeTab: 'idle',
+      activeTab: 'settings',
       worldContext: null,
       hasCombatReturn: false,
       showResetConfirmation: true,

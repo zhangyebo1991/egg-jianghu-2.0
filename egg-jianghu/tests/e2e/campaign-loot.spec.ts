@@ -1,3 +1,4 @@
+import { openFactionSection } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
@@ -22,8 +23,8 @@ for (const [targetId, name, quality] of [[11, '初晶矿石', 2], [12, '灵耀�
     await page.reload()
     await page.getByRole('button', { name: '继续游戏' }).click()
     await page.getByTestId('world-world_01').click()
-    await page.getByTestId('start-crossing').click()
-    await page.getByTestId('world-section-factions').click()
+
+    await openFactionSection(page, 'quests')
     await page.getByTestId('faction-plaque-tieyi_school').click()
     const card = page.getByTestId('quest-slot-0')
     await expect(card).toContainText(name)

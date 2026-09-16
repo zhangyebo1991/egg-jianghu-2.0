@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test, type Page } from '@playwright/test'
 import { originalFactionExchangeByFaction } from '../../src/content/original-faction-exchange.generated'
 import { originalFactionRecruitmentByFaction } from '../../src/content/original-faction-recruitment.generated'
@@ -26,29 +27,31 @@ const prepareParty = async (page: Page): Promise<void> => {
 }
 
 const enterWorld = async (page: Page, worldId = 'world_01'): Promise<void> => {
-  await page.getByTestId('tab-idle').click()
+  await openPanel(page, 'idle')
   await page.getByTestId(`world-${worldId}`).click()
-  await page.getByTestId('start-crossing').click()
+
 }
 
 const openWorldSection = async (page: Page, section: 'stages' | 'factions' | 'towns' | 'city'): Promise<void> => {
   await page.evaluate((nextSection) => window.__EGG_JIANGHU__.setJianghuSection(nextSection), section)
 }
 
-test('江湖按大关小关分层并在点击小关后立即驻守', async ({ page }) => {
+test('同册选位面与小关，确认驻守后开始战斗', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
     window.__EGG_JIANGHU__.placeHero('hero_mu_nianci', 1, 1)
   })
   await expect(page.getByTestId('world-overview')).toBeVisible()
-  await expect(page.getByTestId('stage-1')).toHaveCount(0)
+  await expect(page.getByTestId('stage-1')).toBeVisible()
+  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat())).toBeNull()
 
   await page.getByTestId('world-world_01').click()
-  await page.getByTestId('start-crossing').click()
+
   await expect(page.getByTestId('stage-overview')).toBeVisible()
   await expect(page.locator('button[data-testid^="stage-"]')).toHaveCount(10)
 
   await page.getByTestId('stage-1').click()
+  await page.getByTestId('start-guard').click()
   await expect(page.getByTestId('idle-page')).toBeVisible()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getSelection())).toEqual({
     worldId: 'world_01',
@@ -124,7 +127,7 @@ test('驻守胜利显示 3 秒倒计时并在额外 0.3 秒后重开', async ({ 
   const mobile = await page.getByTestId('combat-settlement').evaluate((element) => {
     const rect = element.getBoundingClientRect()
     const battlefield = document.querySelector<HTMLElement>('[data-testid="battlefield"]')!.getBoundingClientRect()
-    const rail = document.querySelector<HTMLElement>('.combat-rail')!.getBoundingClientRect()
+    const rail = document.querySelector<HTMLElement>('.battle-controls')!.getBoundingClientRect()
     return {
       left: rect.left,
       right: rect.right,
@@ -134,7 +137,7 @@ test('驻守胜利显示 3 秒倒计时并在额外 0.3 秒后重开', async ({ 
       documentWidth: document.documentElement.scrollWidth,
     }
   })
-  expect(mobile.left).toBeGreaterThanOrEqual(64)
+  expect(mobile.left).toBeGreaterThanOrEqual(0)
   expect(mobile.right).toBeLessThanOrEqual(390)
   expect(mobile.battlefieldWidth).toBeGreaterThanOrEqual(300)
   expect(mobile.railTop).toBeGreaterThanOrEqual(mobile.battlefieldBottom)
@@ -158,8 +161,9 @@ test('战场左右对峙且敌我最前列在中线两侧相邻', async ({ page 
     }
   })
   await page.getByTestId('world-world_01').click()
-  await page.getByTestId('start-crossing').click()
+
   await page.getByTestId('stage-1').click()
+  await page.getByTestId('start-guard').click()
 
   const layout = await page.evaluate(() => {
     const rect = (selector: string) => document.querySelector<HTMLElement>(selector)!.getBoundingClientRect()
@@ -181,85 +185,41 @@ test('战场左右对峙且敌我最前列在中线两侧相邻', async ({ page 
   expect(layout.enemyFront.right).toBeLessThanOrEqual(layout.enemyBack.right)
 })
 
-test('桌面与移动端均使用统一左侧栏', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 })
-  const desktop = await page.evaluate(() => {
-    const sidebar = document.querySelector('.game-sidebar')!.getBoundingClientRect()
-    const main = document.querySelector('.game-main')!.getBoundingClientRect()
-    return { sidebar: { x: sidebar.x, width: sidebar.width, height: sidebar.height }, mainX: main.x }
-  })
-  expect(desktop.sidebar.x).toBe(0)
-  expect(desktop.sidebar.width).toBe(212)
-  expect(desktop.sidebar.height).toBe(800)
-  expect(desktop.mainX).toBeGreaterThanOrEqual(desktop.sidebar.width)
-
-  await page.setViewportSize({ width: 390, height: 844 })
-  const mobile = await page.evaluate(() => {
-    const sidebar = document.querySelector('.game-sidebar')!
-    const main = document.querySelector('.game-main')!.getBoundingClientRect()
-    return {
-      sidebarDisplay: getComputedStyle(sidebar).display,
-      sidebarWidth: sidebar.getBoundingClientRect().width,
-      mainX: main.x,
-      mainTop: main.y,
-      topbarCount: document.querySelectorAll('.jianghu-mobile-topbar').length,
-      scrollWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
+test('册页桌面居中、手机全屏，所有页面共享边界', async ({ page }) => {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 844 })
+    const bounds = []
+    for (const tab of ['idle', 'heroes', 'formation', 'inventory']) {
+      await openPanel(page, tab)
+      const leaf = await page.getByTestId('ink-panel').boundingBox()
+      expect(leaf).not.toBeNull()
+      expect(leaf!.x).toBeGreaterThanOrEqual(0)
+      expect(leaf!.x + leaf!.width).toBeLessThanOrEqual(width)
+      expect(leaf!.width).toBeCloseTo(width === 390 ? 390 : width * .94, 0)
+      bounds.push(leaf!.width)
+      expect(await page.locator('.game-main').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
     }
-  })
-  expect(mobile.sidebarDisplay).toBe('flex')
-  expect(mobile.sidebarWidth).toBe(64)
-  expect(mobile.mainX).toBe(64)
-  expect(mobile.mainTop).toBe(0)
-  expect(mobile.topbarCount).toBe(0)
-  expect(mobile.scrollWidth).toBeLessThanOrEqual(mobile.viewportWidth)
-})
-
-test('四个全局入口共享同一套侧栏外观', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 })
-  const metrics = []
-  for (const tab of ['idle', 'heroes', 'formation', 'inventory'] as const) {
-    await page.getByTestId(`tab-${tab}`).click()
-    metrics.push(await page.evaluate(() => {
-      const sidebar = document.querySelector<HTMLElement>('.game-sidebar')!
-      const seal = document.querySelector<HTMLElement>('.brand-seal')!
-      const navItem = document.querySelector<HTMLElement>('.nav-item')!
-      const navMark = document.querySelector<HTMLElement>('.nav-mark')!
-      const sealStyle = getComputedStyle(seal)
-      const navStyle = getComputedStyle(navItem)
-      const markStyle = getComputedStyle(navMark)
-      return {
-        sidebarWidth: sidebar.getBoundingClientRect().width,
-        sidebarPadding: getComputedStyle(sidebar).padding,
-        sealRadius: sealStyle.borderRadius,
-        sealFont: sealStyle.fontFamily,
-        navHeight: navItem.getBoundingClientRect().height,
-        navRadius: navStyle.borderRadius,
-        markRadius: markStyle.borderRadius,
-        markFont: markStyle.fontFamily,
-        topbarCount: document.querySelectorAll('.jianghu-mobile-topbar').length,
-      }
-    }))
+    expect(new Set(bounds).size).toBe(1)
   }
-
-  expect(new Set(metrics.map((item) => JSON.stringify(item))).size).toBe(1)
-  expect(metrics[0]).toMatchObject({
-    sidebarWidth: 212,
-    sidebarPadding: '26px 20px 20px',
-    sealRadius: '6px',
-    navHeight: 50,
-    navRadius: '6px',
-    markRadius: '5px',
-    topbarCount: 0,
-  })
 })
 
-test('江湖总览展示十三位面缩略图且未解锁面仍可点选', async ({ page }) => {
-  await expect(page.locator('.plane-thumb')).toHaveCount(13)
+test('顶部图标覆盖完整功能，收起册页可返回战场', async ({ page }) => {
+  await page.getByRole('button', { name: '关闭册页', exact: true }).click()
+  await expect(page.locator('.ink-iconbar button')).toHaveCount(10)
+  for (const name of ['关卡', '行囊', '侠客', '阵容', '悬榜', '兑换', '招募', '商城', '城市', '设置']) {
+    await page.locator('.ink-iconbar').getByRole('button', { name, exact: true }).click()
+    await expect(page.locator('#ink-leaf-title')).toHaveText(name)
+    await page.getByRole('button', { name: '关闭册页', exact: true }).click()
+    await expect(page.getByTestId('ink-panel')).toHaveCount(0)
+  }
+})
+
+test('关卡册展示十三位面且可预览未解锁位面', async ({ page }) => {
+  await expect(page.locator('.ink-world')).toHaveCount(13)
   await expect(page.getByTestId('world-overview')).toBeVisible()
-  await expect(page.getByTestId('start-crossing')).toBeEnabled()
+  await expect(page.getByTestId('start-guard')).toBeEnabled()
   await page.getByTestId('world-world_02').click()
-  await expect(page.getByTestId('start-crossing')).toBeDisabled()
+  await expect(page.getByTestId('start-guard')).toBeDisabled()
   await expect(page.getByTestId('world-overview')).toContainText('武侠江湖')
 })
 
@@ -267,6 +227,7 @@ test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) 
   await prepareParty(page)
   await enterWorld(page)
   await page.getByTestId('stage-1').click()
+  await page.getByTestId('start-guard').click()
   const before = await page.evaluate(() => ({
     combat: window.__EGG_JIANGHU__.getCombat(),
     currency: window.__EGG_JIANGHU__.getState().worldCurrency.world_01,
@@ -291,12 +252,13 @@ test('战斗中即时切换闯荡且不重置现场或收益', async ({ page }) 
 
 test('江湖侧栏隐藏城镇且直接路由与旧按钮不可进入，势力和城市可用', async ({ page }, testInfo) => {
   await enterWorld(page)
-  await expect(page.locator('[data-jianghu-section]')).toHaveCount(3)
+  await expect(page.getByTestId('tab-city')).toBeAttached()
   await expect(page.getByTestId('world-section-towns')).toHaveCount(0)
   await openWorldSection(page, 'towns')
   await expect(page.getByTestId('stage-overview')).toBeVisible()
-  const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
-  await page.evaluate(() => {
+  const { before, after } = await page.evaluate(() => {
+    // 同一任务内取样，防止后台经营计时穿插进旧入口的无副作用检查。
+    const before = structuredClone(window.__EGG_JIANGHU__.getState())
     for (const attributes of [
       { 'data-jianghu-section': 'towns' },
       { 'data-action': 'city-to-towns' },
@@ -308,12 +270,13 @@ test('江湖侧栏隐藏城镇且直接路由与旧按钮不可进入，势力�
       button.click()
       button.remove()
     }
+    return { before, after: window.__EGG_JIANGHU__.getState() }
   })
   await expect(page.getByTestId('towns-page')).toHaveCount(0)
-  expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState())).toEqual(before)
+  expect(after).toEqual(before)
   await page.getByTestId('world-section-factions').click()
-  await expect(page.getByTestId('faction-page-title')).toBeVisible()
-  await page.getByTestId('world-section-city').click()
+  await expect(page.locator('#ink-leaf-title')).toBeVisible()
+  await openPanel(page, 'city')
   await expect(page.getByTestId('city-page')).toContainText('跨位面经营')
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 960 })
@@ -325,7 +288,7 @@ test('江湖侧栏隐藏城镇且直接路由与旧按钮不可进入，势力�
 
 test('城市地图可选择 324 块地块并切换公司总览，未核验操作保持关闭', async ({ page }) => {
   await enterWorld(page)
-  await page.getByTestId('world-section-city').click()
+  await openPanel(page, 'city')
 
   await page.locator('button[data-city-section="map"]').click()
   const map = page.getByTestId('city-map')
@@ -361,9 +324,10 @@ test('离页后恢复同一战斗并在停止后返回小关列表', async ({ pa
   await prepareParty(page)
   await enterWorld(page)
   await page.getByTestId('stage-1').click()
+  await page.getByTestId('start-guard').click()
   const seed = await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.seed)
 
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.getByTestId('idle-combat-return').click()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getCombat()?.seed)).toBe(seed)
 
@@ -374,8 +338,7 @@ test('离页后恢复同一战斗并在停止后返回小关列表', async ({ pa
 
 test('返回总览隐藏二级导航且通关基础后可穿越下一位面', async ({ page }) => {
   await enterWorld(page)
-  await page.getByRole('button', { name: '← 返回位面' }).click()
-  await expect(page.locator('[data-jianghu-section]')).toHaveCount(0)
+  await expect(page.locator('.world-subnav')).toHaveCount(0)
 
   await prepareParty(page)
   await page.evaluate(() => {
@@ -383,15 +346,15 @@ test('返回总览隐藏二级导航且通关基础后可穿越下一位面', as
     window.__EGG_JIANGHU__.startStage('world_01', 10, 'roam', 23)
     window.__EGG_JIANGHU__.forceCombatResult('victory')
   })
-  await page.getByTestId('tab-idle').click()
-  await page.locator('.world-subnav [data-action="return-worlds"]').click()
+  await openPanel(page, 'idle')
   await page.getByTestId('world-world_02').click()
-  await page.getByTestId('start-crossing').click()
+
   await expect(page.getByTestId('stage-overview')).toBeVisible()
-  await expect(page.getByTestId('stage-overview')).toContainText('武侠江湖')
+  await expect(page.getByTestId('world-overview')).toContainText('武侠江湖')
 })
 
 test('连续 tick 保持页签按钮节点并支持慢速点击', async ({ page }) => {
+  await page.getByRole('button', { name: '关闭册页', exact: true }).click()
   const stableAcrossTicks = await page.getByTestId('tab-heroes').evaluate(async (button) => {
     await new Promise((resolve) => setTimeout(resolve, 350))
     return button === document.querySelector('[data-testid="tab-heroes"]')
@@ -412,6 +375,7 @@ test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => 
   await prepareParty(page)
   await enterWorld(page)
   await page.getByTestId('stage-1').click()
+  await page.getByTestId('start-guard').click()
 
   const stableAcrossCombatTicks = await page.evaluate(async () => {
     const tab = document.querySelector('[data-testid="tab-idle"]')
@@ -428,7 +392,7 @@ test('战斗刷新保持页签和战斗控制按钮节点', async ({ page }) => 
 
 test('侠客页展示当前职业与诸天属性', async ({ page }) => {
   await page.setViewportSize({ width: 1676, height: 941 })
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
 
   const rosterList = page.getByTestId('hero-roster-list')
   await expect(rosterList).toHaveCSS('overflow-x', 'hidden')
@@ -454,7 +418,7 @@ test('侠客页展示当前职业与诸天属性', async ({ page }) => {
 test('侠客页展示八槽装备栏与行囊', async ({ page }) => {
   await page.setViewportSize({ width: 1676, height: 941 })
   await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(2))
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
 
   await expect(page.getByTestId('hero-inventory-panel')).toBeVisible()
   await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="equipment"]').click()
@@ -473,7 +437,7 @@ test('侠客页展示八槽装备栏与行囊', async ({ page }) => {
 })
 
 test('侠客页打开转职树可查看职业节点与转职书', async ({ page }, testInfo) => {
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="career"]').click()
   await page.getByTestId('open-career-tree').click()
   await expect(page.getByTestId('career-tree')).toBeVisible()
@@ -498,7 +462,7 @@ test('已招募侠客可在阵容页拖拽上阵', async ({ page }) => {
     window.__EGG_JIANGHU__.recruitHero('hero_yang_tiexin')
   })
 
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'formation')
   await expect(page.getByTestId('formation-page')).toBeVisible()
 
   await page.dragAndDrop('[data-testid="formation-hero-hero_mu_nianci"]', '.formation-slot[data-row="0"][data-col="0"]')
@@ -519,7 +483,7 @@ test('白丁 Lv.5 持弓手转职书可转职且侠客等级保持不变', async
   })
   const heroLevel = await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_mu_nianci.level)
 
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.getByTestId('hero-hero_mu_nianci').click()
   await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="career"]').click()
   await page.getByTestId('open-career-tree').click()
@@ -552,7 +516,7 @@ test('每个小关第十波显示一个 Boss 与五个普通品级敌人', async
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 19)
     window.__EGG_JIANGHU__.showWave(10, 19)
   })
-  await expect(page.getByRole('heading', { name: '第 10 / 10 波' })).toBeVisible()
+  await expect(page.getByLabel('战斗进度')).toContainText('第 10 / 10 波')
   const enemyBoard = page.getByRole('region', { name: '敌方阵容' })
   await expect(enemyBoard.locator('[data-rank="boss"]')).toHaveCount(1)
   await expect(enemyBoard.locator('[data-rank]')).toHaveCount(6)
@@ -585,7 +549,8 @@ test('敌人死亡时货币立即入账并掉落诸天装备，且不掉转职�
 })
 
 test('背包坊市可用当前位面铜钱购买转职书', async ({ page }) => {
-  await page.getByTestId('tab-inventory').click()
+  await openPanel(page, 'inventory')
+  await page.locator('.ink-book-shop summary').click()
   await expect(page.getByTestId('job-book-shop')).toBeVisible()
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().worldCurrency.world_01 ?? 0)
   await page.getByTestId('shop-buy-job_5').click()
@@ -620,13 +585,13 @@ test('势力五格悬榜锁定已接任务并刷新未接任务', async ({ page 
   await expect(page.locator('[data-quest-slot]')).toHaveCount(5)
   await expect(page.locator('.faction-quest-grid')).not.toContainText('world_01_stage_01')
   await expect(page.locator('.faction-notice h3').first()).toHaveText(/\S+/)
-  await page.getByTestId('faction-page-title').hover()
+  await page.locator('#ink-leaf-title').hover()
   await page.waitForTimeout(750)
   const questCard = page.getByTestId('quest-slot-0')
   const restingTransform = await questCard.evaluate((element) => getComputedStyle(element).transform)
   await questCard.hover()
-  await expect.poll(() => questCard.evaluate((element) => getComputedStyle(element).transform)).not.toBe(restingTransform)
-  await page.getByTestId('faction-page-title').hover()
+  await expect.poll(() => questCard.evaluate((element) => getComputedStyle(element).transform)).toBe(restingTransform)
+  await page.locator('#ink-leaf-title').hover()
   await expect.poll(() => questCard.evaluate((element) => getComputedStyle(element).transform)).toBe(restingTransform)
 
   const purse = page.getByTestId('faction-purse').locator('strong')
@@ -661,11 +626,13 @@ test('势力页支持切换匾额和原版招募名录', async ({ page }) => {
 
   await page.getByTestId('faction-plaque-tieyi_school').click()
   await expect(page.getByTestId('faction-plaque-tieyi_school')).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByTestId('faction-page-title')).toBeVisible()
+  await expect(page.locator('#ink-leaf-title')).toBeVisible()
   await page.getByTestId('faction-plaque-qingfeng_hall').click()
   await expect(page.getByTestId('faction-plaque-qingfeng_hall')).toHaveAttribute('aria-pressed', 'true')
+  await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   await expect(page.getByTestId('faction-recruitment')).toBeVisible()
   await expect(page.getByTestId('faction-recruitment-hero-2')).toContainText('邢道荣')
+  await page.locator('.ink-faction-tabs [data-faction-panel="martials"]').click()
   await expect(page.getByTestId('faction-meridian')).toBeVisible()
 })
 
@@ -678,6 +645,7 @@ test('势力页支持声望、连续贡献兑换与招募', async ({ page }, tes
   await openWorldSection(page, 'factions')
   await page.getByTestId('faction-plaque-tieyi_school').click()
 
+  await page.locator('.ink-faction-tabs [data-faction-panel="exchange"]').click()
   const exchange = page.getByTestId('faction-exchange')
   await expect(exchange).toHaveAttribute('data-faction-id', 'tieyi_school')
   await expect(page.getByTestId('faction-reputation')).toContainText('友好')
@@ -699,6 +667,7 @@ test('势力页支持声望、连续贡献兑换与招募', async ({ page }, tes
   await page.getByTestId('faction-exchange').scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('faction-second-exchange.png'), fullPage: true })
 
+  await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   const recruitment = page.getByTestId('faction-recruitment')
   await expect(recruitment).toHaveAttribute('data-faction-id', 'tieyi_school')
   await expect(recruitment.locator('[data-testid^="faction-recruitment-hero-"]'))
@@ -721,6 +690,7 @@ test('势力页主区可滚动查看悬榜与原版招募名录', async ({ page 
   await openWorldSection(page, 'factions')
   const main = page.locator('.game-main')
   await expect(page.getByTestId('faction-quest-board')).toBeAttached()
+  await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   await expect(page.getByTestId('faction-recruitment')).toBeAttached()
 
   const metrics = await main.evaluate((element) => ({
@@ -739,6 +709,7 @@ test('势力页主区可滚动查看悬榜与原版招募名录', async ({ page 
 test('势力招募名录在移动端保持单列且不横向溢出', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openWorldSection(page, 'factions')
+  await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   const recruitment = page.getByTestId('faction-recruitment')
   await recruitment.scrollIntoViewIfNeeded()
 
@@ -769,13 +740,13 @@ test('重载页面后长期收益保留但必须重新选择关卡', async ({ pa
 
 test('页面不出现离线收益抽卡残页铁匠铺和首次奖励', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await expect(page.getByTestId('tab-idle')).toHaveAttribute('aria-current', 'page')
-  await page.getByTestId('tab-heroes').click()
-  await expect(page.getByTestId('tab-heroes')).toHaveAttribute('aria-current', 'page')
-  await page.getByTestId('tab-idle').click()
-  await expect(page.getByTestId('tab-idle')).toHaveAttribute('aria-current', 'page')
-  await page.getByTestId('tab-formation').click()
-  await expect(page.getByTestId('tab-formation')).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByTestId('tab-idle')).toHaveAttribute('aria-pressed', 'true')
+  await openPanel(page, 'heroes')
+  await expect(page.getByTestId('tab-heroes')).toHaveAttribute('aria-pressed', 'true')
+  await openPanel(page, 'idle')
+  await expect(page.getByTestId('tab-idle')).toHaveAttribute('aria-pressed', 'true')
+  await openPanel(page, 'formation')
+  await expect(page.getByTestId('tab-formation')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.world-subnav')).toHaveCount(0)
   expect(await page.locator('body').innerText()).not.toMatch(/离线收益|十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解|首次通关|首次奖励|叩关/)
 })

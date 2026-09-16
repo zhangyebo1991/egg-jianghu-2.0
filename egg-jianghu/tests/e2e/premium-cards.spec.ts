@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
@@ -10,10 +11,10 @@ test('蛋蛋购卡、阵容加成、续期持久化和到期在桌面手机可�
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').fill('特权少侠')
   await page.getByLabel('玩家姓名').press('Enter')
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await page.locator('[data-action="shop-section"][data-section="premium"]').click()
   await expect(page.getByTestId('shop-page')).toContainText('收益特权')
-  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page.getByRole('dialog')).toHaveCount(1)
   await expect(page.locator('[data-card-id="monthly"]')).toBeDisabled()
   await page.keyboard.press('Escape')
   // 测试存档注入预算，不给正式游戏增加免费蛋蛋入口。
@@ -29,7 +30,7 @@ test('蛋蛋购卡、阵容加成、续期持久化和到期在桌面手机可�
   await page.goto('/')
   await page.getByRole('button', { name: '继续游戏' }).click()
   await page.setViewportSize({ width: 1440, height: 960 })
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await page.locator('[data-action="shop-section"][data-section="premium"]').click()
   for (const id of ['monthly', 'treasure', 'training']) await page.locator(`[data-card-id="${id}"]`).click()
   await expect(page.getByTestId('voucher-balance')).toHaveText('5,400')
@@ -39,7 +40,7 @@ test('蛋蛋购卡、阵容加成、续期持久化和到期在桌面手机可�
   await expect(page.getByTestId('premium-card-treasure')).toContainText('2026/09/25')
   await page.screenshot({ path: testInfo.outputPath('premium-shop-1440.png') })
   await page.keyboard.press('Escape')
-  await page.getByTestId('tab-formation').click()
+  await openPanel(page, 'formation')
   await page.getByRole('button', { name: '查看加成', exact: true }).click()
   await expect(page.getByTestId('premium-panel')).toContainText('原有加成合计')
   await expect(page.getByTestId('premium-totals')).toContainText('1.10')
@@ -50,7 +51,7 @@ test('蛋蛋购卡、阵容加成、续期持久化和到期在桌面手机可�
   expect(panel!.x).toBeGreaterThanOrEqual(0)
   expect(panel!.x + panel!.width).toBeLessThanOrEqual(390)
   await page.getByRole('button', { name: '前往商城' }).click()
-  await expect(page.getByTestId('tab-shop')).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByTestId('tab-shop')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('premium-panel')).toHaveCount(0)
   await page.locator('[data-card-id="training"]').click()
   await expect(page.getByTestId('voucher-balance')).toHaveText('3,800')
@@ -59,7 +60,7 @@ test('蛋蛋购卡、阵容加成、续期持久化和到期在桌面手机可�
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
   await expect(page.getByTestId('voucher-balance')).toHaveText('3,800')
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await page.locator('[data-action="shop-section"][data-section="premium"]').click()
   await expect(page.getByTestId('premium-totals')).toContainText('1.13')
   await page.clock.setFixedTime(now + 30 * 86_400_000)

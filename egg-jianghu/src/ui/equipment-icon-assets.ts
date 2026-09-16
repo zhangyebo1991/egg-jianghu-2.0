@@ -7,6 +7,7 @@ import ringIcon from '../assets/equipment/slots/token.png'
 import weaponIcon from '../assets/equipment/slots/weapon.png'
 import wristIcon from '../assets/equipment/slots/wrist.png'
 import { equipmentDefinitionById, type EquipmentSlot } from '../content/equipment'
+import { inkAsset } from './ink-assets'
 
 const slotIcons: Record<EquipmentSlot, string> = {
   weapon: weaponIcon,
@@ -38,8 +39,10 @@ export interface EquipmentIconAsset {
 
 export const equipmentIconAsset = (slot: EquipmentSlot, definitionId?: string): EquipmentIconAsset => {
   const iconKey = definitionId ? equipmentDefinitionById(definitionId)?.iconKey : undefined
+  const ink = iconKey ? inkAsset(`equipment/${iconKey}`) : undefined
+  if (ink) return { url: ink, source: 'unique' }
   const uniqueIcon = iconKey ? uniqueEquipmentIcons[iconKey] : undefined
   return uniqueIcon
     ? { url: uniqueIcon, source: 'unique' }
-    : { url: slotIcons[slot], source: 'slot' }
+    : { url: inkAsset(`slots/${slot}`) ?? slotIcons[slot], source: 'slot' }
 }

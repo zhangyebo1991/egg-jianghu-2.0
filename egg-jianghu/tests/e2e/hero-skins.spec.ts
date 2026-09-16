@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { createHeroProgress } from '../../src/domain/state'
 import { expect, test } from '@playwright/test'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
@@ -18,7 +19,7 @@ test.beforeEach(async ({ page }) => {
   }, { key: SAVE_KEY_V10, originalHero, progress: createHeroProgress(originalHero.baseCareerId) })
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
 })
 
 test('装备页按角色显示原版立绘，自创侠客使用自己的图', async ({ page }, testInfo) => {
@@ -50,7 +51,7 @@ test('免费皮肤切换、升星扣材料、刷新保留及窄屏展示', async
   }
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('[data-action="hero-main-tab"][data-main-tab="equipment"]').first().click()
   await expect(page.getByTestId('hero-appearance')).toHaveAttribute('src', /skin_212\.webp/)
   await expect(page.getByTestId('hero-appearance')).toBeVisible()
@@ -60,7 +61,7 @@ test('免费皮肤切换、升星扣材料、刷新保留及窄屏展示', async
 
 test('战斗期间不能通过按钮切换和升星', async ({ page }) => {
   await page.evaluate(() => window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 13))
-  await page.getByTestId('tab-heroes').click()
+  await openPanel(page, 'heroes')
   await page.locator('[data-action="hero-main-tab"][data-main-tab="skins"]').first().click()
   const card = page.getByTestId('skin-212')
   await expect(card.getByRole('button', { name: '使用外观' })).toBeDisabled()

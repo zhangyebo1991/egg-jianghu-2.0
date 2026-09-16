@@ -1,4 +1,5 @@
 import { heroByIdV10 } from '../content/heroes'
+import { inkAsset } from './ink-assets'
 import heroABi from '../assets/heroes/hero_a_bi.png'
 import heroAZhu from '../assets/heroes/hero_a_zhu.png'
 import heroBaoXiruo from '../assets/heroes/hero_bao_xiruo.png'
@@ -99,6 +100,8 @@ const originalHeroes = import.meta.glob<string>('../assets/heroes/original/hero_
 
 export const heroPortraitAsset = (heroId: string, category = '剑'): PortraitAsset => {
   const sourceId = heroByIdV10(heroId)?.sourceId
+  const ink = inkAsset(`portraits/hero_${sourceId}`) ?? inkAsset(`portraits/${heroId}`)
+  if (ink) return { url: ink, source: 'unique' }
   const unique = originalHeroes[`../assets/heroes/original/hero_${sourceId}.webp`] ?? heroPortraits[heroId]
   return unique
     ? { url: unique, source: 'unique' }
@@ -118,10 +121,14 @@ const zhutianPortraits = import.meta.glob<string>('../assets/enemies/zt/zt_*.web
 export const enemyPortraitAsset = (rank: CombatRank, unitKey: string): PortraitAsset => {
   const summonMatch = unitKey.match(/^summon_(\d+)_/)
   if (summonMatch) {
+    const ink = inkAsset(`enemies/zt_s${summonMatch[1]}`)
+    if (ink) return { url: ink, source: 'unique' }
     const unique = zhutianPortraits[`../assets/enemies/zt/zt_s${summonMatch[1]}.webp`]
     if (unique) return { url: unique, source: 'unique' }
   }
   const definition = enemyDefinitionById(unitKey)
+  const ink = definition ? inkAsset(`enemies/zt_${definition.drId}`) : undefined
+  if (ink) return { url: ink, source: 'unique' }
   const unique = definition ? zhutianPortraits[`../assets/enemies/zt/zt_${definition.drId}.webp`] : undefined
   if (unique) return { url: unique, source: 'unique' }
   // 缺图兜底：按档位通用立绘哈希取变体

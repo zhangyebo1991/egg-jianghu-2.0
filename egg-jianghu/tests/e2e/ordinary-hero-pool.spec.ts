@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test, type Page } from '@playwright/test'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 import { createHeroProgress } from '../../src/domain/state'
@@ -29,7 +30,7 @@ test('商城统一池、逐人概率与属性、无重复抽空、世界解锁�
   page.on('pageerror', error => errors.push(error.message))
   await page.setViewportSize({ width: 1440, height: 1000 })
   await start(page)
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await expect(page.getByTestId('ordinary-hero-pool')).toBeVisible()
   const rules = page.locator('[data-action="ordinary-pool-rules"]')
   await expect(rules).toHaveAttribute('aria-expanded', 'false')
@@ -46,7 +47,7 @@ test('商城统一池、逐人概率与属性、无重复抽空、世界解锁�
   const state = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
   state.idleVouchers.balance = 2000
   await loadTestSave(page, state, 'ordinary-funded')
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await page.getByTestId('ordinary-pool-hero-hero_orig_9').click()
   const preview = page.getByTestId('ordinary-pool-preview')
   await expect(preview).toContainText('关羽')
@@ -63,7 +64,7 @@ test('商城统一池、逐人概率与属性、无重复抽空、世界解锁�
   await expect(page.locator('.ordinary-pool-results')).toContainText('× 2')
   await page.reload()
   await page.getByRole('button', { name: '继续游戏' }).click()
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await expect(page.getByTestId('ordinary-hero-pool')).toContainText('再抽 69 次')
   await setRandom(page, 0)
   await single.click()
@@ -75,12 +76,12 @@ test('商城统一池、逐人概率与属性、无重复抽空、世界解锁�
   await expect(single).toBeDisabled()
   await expect(ten).toBeDisabled()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().idleVouchers.balance)).toBe(1600)
-  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page.getByRole('dialog')).toHaveCount(1)
   await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('ordinary-pool-empty.png') })
   const unlocked = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
   unlocked.unlockedWorldIds.push('world_02')
   await loadTestSave(page, unlocked, 'ordinary-second-world')
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await expect(candidates(page)).toHaveCount(3)
   await expect(candidates(page)).toHaveText([/扫地僧/s, /令狐少侠/s, /张三丰/s])
   await page.setViewportSize({ width: 390, height: 960 })
@@ -96,7 +97,7 @@ test('商城统一池、逐人概率与属性、无重复抽空、世界解锁�
   all.unlockedWorldIds = Array.from({ length: 13 }, (_, i) => `world_${String(i + 1).padStart(2, '0')}`)
   await loadTestSave(page, all, 'ordinary-all-worlds')
   await page.setViewportSize({ width: 320, height: 960 })
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await expect(candidates(page)).toHaveCount(26)
   await candidates(page).last().click()
   await expect(preview).toContainText('紫霞')
@@ -116,7 +117,7 @@ test('旧拥有角色排除、保底概率透明，势力入口指向商城且�
   state.heroes.hero_orig_11 = createHeroProgress('job_1')
   state.heroes.hero_orig_11.level = 23
   await loadTestSave(page, state, 'ordinary-old-owned')
-  await page.getByTestId('tab-shop').click()
+  await openPanel(page, 'shop')
   await expect(candidates(page)).toHaveCount(2)
   for (const candidate of await candidates(page).all()) {
     await expect(candidate).toContainText('本次 50%')
@@ -136,6 +137,7 @@ test('旧拥有角色排除、保底概率透明，势力入口指向商城且�
     api.setJianghuSection('factions')
   })
   await page.getByTestId('faction-plaque-renxin_hall').click()
+  await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   const guanYu = page.getByTestId('faction-recruitment-hero-9')
   await expect(guanYu).not.toContainText('聘资')
   await expect(guanYu.getByRole('button', { name: '前往普通池' })).toBeEnabled()

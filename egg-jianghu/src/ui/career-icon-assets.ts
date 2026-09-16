@@ -1,4 +1,5 @@
 import { skillIconAsset } from './skill-icon-assets'
+import { inkAsset } from './ink-assets'
 import bladeIcon from '../assets/careers/blade.png'
 import doctorIcon from '../assets/careers/doctor.png'
 import fistIcon from '../assets/careers/fist.png'
@@ -23,7 +24,7 @@ export const careerCategoryIconAsset = (category: string): string => categoryIco
 
 export const careerIconAsset = (careerId: string): string => {
   const career = careerById(careerId)
-  return careerImages[`../assets/careers/original/career_${career?.zyId ?? 1}.webp`]
+  return inkAsset(`careers/career_${career?.zyId ?? 1}`) ?? careerImages[`../assets/careers/original/career_${career?.zyId ?? 1}.webp`]
 }
 
 export const martialIconAsset = (martialId: string): string => {

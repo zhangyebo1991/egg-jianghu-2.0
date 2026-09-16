@@ -243,7 +243,7 @@ const formationSynergies = (view: FormationPageViewModel): FormationSynergyView[
   })
 }
 
-const displayPower = (heroes: FormationHeroView[]): number => heroes.reduce((total, hero) => {
+export const displayPower = (heroes: FormationHeroView[]): number => heroes.reduce((total, hero) => {
   const stats = hero.combatStats
   return total + Math.round(
     stats.maxHp * 0.5

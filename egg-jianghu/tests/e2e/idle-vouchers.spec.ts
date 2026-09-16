@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
@@ -25,6 +26,7 @@ test('挂机退出后补蛋蛋，重进不重复；钱包在桌面和手机可�
   await next.getByRole('button', { name: '继续游戏' }).click()
   await expect(next.getByTestId('voucher-balance')).toHaveText('700')
   await next.setViewportSize({ width: 1440, height: 960 })
+  await next.getByRole('button', { name: '关闭册页', exact: true }).click()
   const navBefore = await next.getByTestId('tab-idle').boundingBox()
   await next.getByTestId('voucher-balance').hover()
   await expect(next.locator('#voucher-details')).toBeVisible()
@@ -48,7 +50,7 @@ test('挂机退出后补蛋蛋，重进不重复；钱包在桌面和手机可�
   await expect(next.locator('#voucher-details')).toHaveCount(0)
   await next.getByRole('button', { name: '查看蛋蛋说明' }).dispatchEvent('click')
   await expect(next.locator('#voucher-details')).toBeVisible()
-  await next.getByTestId('tab-idle').click()
+  await openPanel(next, 'idle')
   await expect(next.locator('#voucher-details')).toHaveCount(0)
   await next.getByRole('button', { name: '查看蛋蛋说明' }).dispatchEvent('click')
   await expect(next.locator('#voucher-details')).toBeVisible()

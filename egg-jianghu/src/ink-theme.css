@@ -1,0 +1,613 @@
+/* UI高保真_v1：宣纸昼卷、松烟夜册、朱砂。布局沿用真实页面的数据和动作。 */
+:root {
+  --paper: #ece5d3; --paper-2: #e3dac5; --paper-3: #d3c8ae; --paper-sky: #f3edde;
+  --ink: #1d1a15; --ink-70: rgb(29 26 21 / 72%); --ink-45: rgb(29 26 21 / 45%); --ink-18: rgb(29 26 21 / 16%);
+  --night: #191611; --night-2: #211d16; --night-line: rgb(236 229 211 / 14%); --night-line-2: rgb(236 229 211 / 26%);
+  --pn: #e9e2cf; --pn-dim: #a99f88; --pn-faint: #7c7461;
+  --crimson: #c2402a; --crimson-deep: #93301f; --crimson-soft: rgb(194 64 42 / 15%);
+  --kai: "Kaiti SC", "STKaiti", "KaiTi", "楷体", "Faction Brush", serif;
+  --sans: "PingFang SC", "Microsoft YaHei", sans-serif; --latin: Georgia, "Songti SC", serif;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --ink-950: var(--night); --ink-900: var(--night); --ink-850: var(--night-2); --ink-800: #2c271e;
+  --paper-muted: var(--pn-dim); --line: var(--night-line); --line-bright: var(--night-line-2);
+  --jade: var(--pn-dim); --jade-bright: var(--pn); --gold: var(--pn); --cinnabar: var(--crimson); --danger: #db6851; --radius: 0;
+  font-family: var(--sans); background: var(--paper); color: var(--ink);
+}
+html, body, #app { height: 100%; min-width: 320px; }
+body { background: var(--paper); }
+body:has(.ink-shell) { overflow: hidden; }
+button, input, select { font-family: var(--sans); }
+button { border-radius: 0; }
+button:focus-visible, [role="button"]:focus-visible, a:focus-visible { outline: 2px solid var(--crimson); outline-offset: 3px; }
+button:disabled { opacity: .35; }
+.ink-shell.app-shell { position: relative; display: block; width: 100%; height: 100dvh; min-height: 0; overflow: hidden; color: var(--ink); background: var(--paper); }
+.ink-scene { position: absolute; inset: 0; overflow: hidden; background: url('./assets/ink/ui/bg-battlefield.png') center bottom / cover no-repeat, linear-gradient(var(--paper-sky), var(--paper-2)); }
+.ink-scene::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .13; mix-blend-mode: multiply; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23807155' filter='url(%23n)' opacity='.35' d='M0 0h260v260H0z'/%3E%3C/svg%3E"); }
+.ink-mist { position: absolute; left: -20%; bottom: 14%; width: 140%; height: 20%; background: radial-gradient(ellipse, rgb(255 255 255 / 35%), transparent 65%); filter: blur(14px); animation: ink-mist 38s ease-in-out infinite alternate; }
+@keyframes ink-mist { to { transform: translateX(9%); } }
+.ink-battle-layer { position: absolute; inset: 0; }
+.ink-camp { position: absolute; inset: 28% 0 20%; display: grid; place-content: center; justify-items: center; gap: 16px; }
+.ink-camp > span { font: 44px var(--kai); letter-spacing: .3em; }
+.ink-camp p { color: var(--ink-70); font-size: 13px; letter-spacing: .2em; }
+.ink-camp button { padding: 10px 30px; border: 2px solid var(--ink); background: var(--paper); font: 18px var(--kai); }
+.ink-hud { position: absolute; z-index: 20; top: 14px; left: 16px; display: flex; align-items: stretch; gap: 10px; }
+.ink-purse, .ink-hud .voucher-wallet { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; padding: 7px 12px; border: 1.5px solid var(--ink); background: rgb(244 239 226 / 78%); color: var(--ink); box-shadow: 2px 3px 0 var(--ink-18); backdrop-filter: blur(3px); }
+.ink-purse b, .ink-hud .voucher-wallet strong { display: block; font: bold 16px var(--latin); color: var(--ink); }
+.ink-purse small, .ink-hud .voucher-wallet small { display: block; color: var(--ink-70); font: 10px var(--sans); letter-spacing: .1em; }
+.ink-glyph, .ink-hud .voucher-wallet::before { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 5px; background: var(--ink); color: var(--paper); font: 13px var(--kai); }
+.ink-hud .voucher-wallet::before { content: '蛋'; }
+.ink-hud .voucher-wallet { backdrop-filter: none; }
+.ink-hud:has(.voucher-details) { z-index: 35; }
+.ink-power .ink-glyph { background: var(--crimson); }
+.ink-hud .voucher-wallet-summary { display: grid; grid-template-columns: auto auto; gap: 0 7px; align-items: center; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.ink-hud .voucher-wallet-label { grid-column: 2; grid-row: 1; font-size: 0; }
+.ink-hud .voucher-wallet-summary strong { grid-row: 1; }
+.ink-hud .voucher-wallet-summary small { grid-column: 1 / -1; }
+.ink-hud .voucher-help { width: 17px; height: 17px; margin: 0; padding: 0; border: 1px solid var(--ink-45); border-radius: 50%; background: none; color: var(--ink-70); font: 11px var(--sans); }
+.ink-hud .voucher-details { z-index: 90; color: var(--pn); background: var(--night); border-color: var(--night-line-2); border-radius: 0; }
+.ink-hud .voucher-details progress { accent-color: var(--crimson); }
+.ink-hud .voucher-details strong { color: var(--pn); }
+.ink-iconbar { position: absolute; top: 12px; right: 14px; z-index: 20; display: flex; gap: 8px; }
+.ink-icon { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 62px; height: 62px; padding: 0; border: 3.5px solid var(--ink); background: rgb(244 239 226 / 85%); box-shadow: 3px 4px 0 rgb(29 26 21 / 20%); color: var(--ink); transition: transform .25s var(--ease), background .25s; }
+.ink-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ink-icon span { font: 13px var(--kai); letter-spacing: .1em; }
+.ink-icon:hover:not(:disabled) { transform: translate(-2px, -2px); background: #fff7e6; border-color: var(--ink); color: var(--ink); }
+.ink-icon.active { background: var(--ink); color: var(--paper); }
+.ink-scrim { position: absolute; inset: 0; z-index: 38; width: 100%; height: 100%; padding: 0; border: 0; background: rgb(25 22 18 / 34%); cursor: default; }
+.ink-leaf { position: absolute; left: 3%; top: 3.5%; bottom: 3.5%; width: min(1560px, 94%); z-index: 40; display: flex; flex-direction: column; background: var(--night); color: var(--pn); border: 1px solid var(--night-line-2); box-shadow: 0 40px 120px rgb(25 22 18 / 55%); animation: ink-open .35s var(--ease); }
+@media (min-width: 1660px) { .ink-leaf { left: calc((100% - 1560px) / 2); } }
+@keyframes ink-open { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } }
+.ink-leaf.docked { left: auto; right: 0; top: 0; bottom: 0; width: min(580px, 100%); }
+.ink-leaf.docked::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: repeating-linear-gradient(180deg, var(--night-line-2) 0 5px, transparent 5px 22px); pointer-events: none; }
+.ink-leaf-head { display: flex; flex: none; gap: 12px; align-items: center; padding: 20px 22px 14px 26px; border-bottom: 1px solid var(--night-line); }
+.ink-leaf-head h1 { margin: 0; font: 600 27px var(--kai); letter-spacing: .18em; }
+.ink-leaf-head button { width: 36px; height: 36px; min-height: 36px; padding: 0; border: 2px solid var(--night-line-2); background: transparent; color: var(--pn); font: 23px var(--sans); }
+.ink-leaf-head .ink-dock { margin-left: auto; font-size: 20px; }
+.ink-leaf-head button:hover { color: var(--crimson); border-color: var(--crimson); }
+.ink-shell .ink-leaf .game-main { flex: 1; min-width: 0; min-height: 0; width: 100%; max-width: none; height: auto; margin: 0; padding: 16px 22px 26px 26px; overflow: auto; background: none; scrollbar-width: thin; scrollbar-color: var(--night-line-2) transparent; }
+.ink-shell .game-main:focus { outline: 0; }
+.ink-shell .world-subnav { display: flex; flex: none; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 26px; margin: 0; border-bottom: 1px solid var(--night-line); }
+.ink-shell .world-subnav-title { margin: 0; color: var(--pn-dim); font: 12px var(--kai); }
+.ink-shell .world-subnav-sections { display: flex; gap: 6px; }
+.ink-shell .world-section, .ink-shell .world-back { width: auto; margin: 0; padding: 5px 10px; min-height: 30px; border: 1px solid var(--night-line-2); background: none; color: var(--pn-dim); font: 12px var(--kai); }
+.ink-shell .world-section > span { display: none; }
+.ink-shell .world-section.active { background: var(--pn); color: var(--night); }
+.ink-shell .ink-leaf-head .idle-combat-return { position: static; width: auto; padding: 0 10px; font: 12px var(--kai); color: var(--pn-dim); border: 1px solid var(--night-line-2); background: transparent; }
+
+/* 夜册通用色阶及排版。旧页面的业务组件保留，旧材质、金边与装饰退出。 */
+.ink-shell .ink-leaf :is(.heroes-page, .inventory-page, .formation-page, .faction-page, .city-page, .shop-page, .settings-page) {
+  --paper: var(--pn); --paper-dim: var(--pn-dim); --paper-mute: var(--pn-dim); --paper-muted: var(--pn-dim);
+  --gold: var(--pn); --gold-bright: var(--pn); --gold-deep: var(--night-line-2); --gold-dim: var(--pn-dim); --gold-mid: var(--pn-dim);
+  --line: var(--night-line); --line-soft: var(--night-line); --line-bright: var(--night-line-2);
+  --heroes-ink-950: var(--night); --heroes-ink-900: var(--night); --heroes-ink-850: var(--night-2); --heroes-paper: var(--pn);
+  --font-brush: var(--kai); --font-song: var(--sans); --font-body: var(--sans); --font-num: var(--latin);
+  --formation-paper: var(--pn); --formation-gold: var(--pn-dim); --formation-gold-bright: var(--pn); --formation-gold-deep: var(--night-line-2); --formation-cinnabar-bright: var(--crimson); --formation-line: var(--night-line); --formation-line-soft: var(--night-line);
+  width: 100%; max-width: none; min-width: 0; min-height: 0; height: auto; margin: 0; padding: 0; color: var(--pn); background: transparent; font-family: var(--sans);
+}
+.ink-shell .ink-leaf :is(.ghost-char, .inventory-ghost-char, .formation-ghost, .faction-ghost, .city-ghost, .inventory-page-foot, .formation-page-foot, .faction-page-foot, .city-page-foot, .heroes-page-foot, .inventory-latin, .formation-page-head > div:first-child, .faction-page-head > div:first-child, .city-page-head, .inventory-page-head, .settings-page > header) { display: none; }
+.ink-shell .ink-leaf :is(h1, h2, h3, h4) { color: var(--pn); font-family: var(--kai); font-weight: 500; text-shadow: none; }
+.ink-shell .ink-leaf h2 { font-size: 18px; letter-spacing: .12em; }
+.ink-shell .ink-leaf :is(p, small) { color: var(--pn-dim); text-shadow: none; }
+.ink-shell .ink-leaf :is(button, input, select) { border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf input, .ink-shell .ink-leaf select { max-width: 100%; border: 1px solid var(--night-line-2); background: var(--night-2); color: var(--pn); }
+.ink-shell .ink-leaf :is(button, a) { -webkit-tap-highlight-color: transparent; }
+.ink-shell .ink-leaf :is(button:hover:not(:disabled), a:hover) { border-color: var(--pn-dim); color: var(--pn); }
+.ink-shell .ink-leaf :is(.panel, .roster-rail, .dossier, .pack-rail, .inventory-board, .inventory-appraise, .inventory-shop, .formation-field, .formation-roster, .formation-hero-card, .faction-board, .faction-meridian, .faction-exchange, .faction-recruitment, .city-shop-book, .city-receipts, .settings-group) { border: 1px solid var(--night-line-2); border-radius: 0; background: var(--night-2); box-shadow: none; }
+.ink-shell .ink-leaf :is(.roster-inner, .pack-inner, .inventory-board-inner, .inventory-appraise-paper, .formation-roster-inner, .faction-board-inner) { background: transparent; box-shadow: none; }
+.ink-shell .ink-leaf :is(.roster-rail, .pack-rail, .inventory-board, .inventory-appraise, .formation-field, .formation-roster, .faction-board, .faction-meridian)::before,
+.ink-shell .ink-leaf :is(.roster-rail, .pack-rail, .inventory-board, .inventory-appraise, .formation-field, .formation-roster, .faction-board, .faction-meridian)::after { content: none; }
+.ink-shell .ink-leaf :is(.r-row, .formation-roster-row, .faction-plaque, .catrow, .city-goods-row) { box-shadow: none; border-color: var(--night-line); }
+.ink-shell .ink-leaf :is(.active, .selected, .on)[aria-pressed="true"] { border-color: var(--crimson); }
+.ink-shell img:not([data-ink-asset]) { filter: grayscale(1) sepia(.15); }
+.ink-shell :is(img[data-portrait-source], .unit-portrait img, .ink-bag-roster img) { object-position: 50% 0%; }
+.ink-section-title { display: flex; align-items: baseline; gap: 12px; margin: 0 0 10px; }
+.ink-section-title h2 { margin: 0; }
+.ink-section-title > span { margin-left: auto; color: var(--pn-dim); font-size: 11px; }
+.ink-worlds { display: grid; grid-template-columns: repeat(13, minmax(74px, 1fr)); gap: 7px; overflow: auto; padding: 2px 1px 8px; }
+.ink-world { display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: center; min-height: 66px; padding: 7px 3px; border: 1.5px solid var(--night-line-2); background: transparent; color: var(--pn); }
+.ink-world small { font: 10px var(--latin); letter-spacing: .1em; }
+.ink-world strong { white-space: nowrap; font: 14px var(--kai); }
+.ink-world > span { font-size: 10px; color: var(--pn-dim); }
+.ink-world.active { border-color: var(--pn); background: rgb(236 229 211 / 6%); }
+.ink-world.locked { opacity: .45; }
+.ink-world-note { margin: 3px 0 24px; font-size: 12px; line-height: 1.8; }
+.ink-difficulties { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; margin-bottom: 24px; }
+.ink-difficulties button { height: 34px; border: 1px solid var(--night-line-2); background: none; color: var(--pn-dim); font-size: 12px; }
+.ink-difficulties button.active, .ink-stage-actions .ink-solid { color: var(--night); background: var(--pn); border-color: var(--pn); }
+.ink-stagepath { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+.ink-stage { min-width: 0; min-height: 74px; padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--pn); border: 1px solid var(--night-line-2); background: none; }
+.ink-stage b { font: 18px var(--kai); }
+.ink-stage span { font-size: 11px; overflow-wrap: anywhere; }
+.ink-stage small { font-size: 10px; }
+.ink-stage.done { border-color: var(--pn-dim); }
+.ink-stage.active { border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-stage-actions { display: flex; gap: 10px; margin-top: 14px; }
+.ink-stage-actions button { flex: 1; min-height: 38px; padding: 8px; font: 15px var(--kai); letter-spacing: .12em; }
+.ink-stage-actions .ink-crimson { color: var(--crimson); border: 1px solid var(--crimson); background: transparent; }
+
+/* 行囊 / 侠客：检索名册、物品网格、装备详情均留在夜册。 */
+.ink-shell .ink-leaf .heroes-stage { display: grid; height: auto; min-height: 0; grid-template-columns: 240px minmax(0, 1fr) 290px; gap: 18px; align-items: start; }
+.ink-shell .ink-leaf :is(.roster-rail, .pack-rail, .dossier) { position: relative; top: 0; height: auto; min-height: 0; }
+.ink-shell .ink-leaf .roster-list { grid-template-columns: minmax(0, 1fr); max-height: 54vh; overflow-y: auto; }
+.ink-shell .ink-leaf :is(.hb-idcard, .hb-growrow, .hb-attrs, .hero-martials, .hc-wrap, .hero-equip, .hero-basic, .dossier-sec, .attr-tab-content, .hm-card, .hm-slot, .hc-card, .learned-card) { background: var(--night-2); border-color: var(--night-line-2); border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf :is(.roster-head, .pack-head, .dossier-head, .htabs, .hb-idrow, .hb-growrow, .attr-tab-bar, .pack-tool-btns, .qchips, .slotstrip, .pack-page, .pack-foot) { border-color: var(--night-line); background: transparent; }
+.ink-shell .ink-leaf .roster-inner, .ink-shell .ink-leaf .pack-inner { height: auto; padding: 12px; }
+.ink-shell .ink-leaf .r-row { background: transparent; color: var(--pn); }
+.ink-shell .ink-leaf .r-row.active { background: var(--crimson-soft); }
+.ink-shell .ink-leaf :is(.r-seal, .formation-grade-seal, .hb-grade) { background: var(--crimson); color: var(--pn); border-color: var(--crimson); }
+.ink-shell .ink-leaf .packbody { flex: none; height: min(440px, 50vh); min-height: 280px; grid-template-rows: minmax(0, 1fr); }
+.ink-shell .ink-leaf .pack-grid { scrollbar-gutter: stable; }
+.ink-shell .ink-leaf .pack-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ink-shell .ink-leaf :is(.pack-cell, .inventory-cell) { background: var(--night-2); border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf .inventory-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+.ink-shell .ink-leaf .inventory-board-inner { padding: 14px; }
+.ink-shell .ink-leaf .inventory-appraise { position: sticky; top: 0; }
+.ink-shell .ink-leaf .inventory-appraise-paper { padding: 16px; color: var(--pn); }
+.ink-shell .ink-leaf :is(.inventory-board-head, .inventory-board-title, .inventory-slot-tabs, .inventory-legend, .inventory-appraise-head, .inventory-base-stat, .inventory-affix-list) { border-color: var(--night-line); background: transparent; }
+.ink-shell .ink-leaf .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 7px; }
+.ink-shell .ink-leaf .inventory-cell { aspect-ratio: 1; min-height: 0; border: 1px solid var(--night-line-2); }
+.ink-shell .ink-leaf .inventory-cell.selected { border-color: var(--crimson); }
+.ink-shell .ink-leaf :is(.inventory-appraise-name, .inventory-base-value, .inventory-core-roll, .inventory-affix-value, .inventory-cell-name, .inventory-capacity-number, .inventory-search, .inventory-slot-tab) { color: var(--pn); }
+.ink-shell .ink-leaf :is(.inventory-base-label, .inventory-affix-name, .inventory-appraise-note, .inventory-cell-slot, .inventory-cell-level) { color: var(--pn-dim); }
+.ink-shell .ink-leaf .inventory-search { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; }
+.ink-shell .ink-leaf .inventory-search input { flex: 1; min-width: 120px; padding: 8px; }
+.ink-shell .ink-leaf :is(.inventory-ink-button, .inventory-action-ghost, .inventory-slot-tab, .pk-btn, .qchip, .chip, .htab, .formation-btn-line, .formation-btn-gold, .formation-btn-ghost) { border: 1px solid var(--night-line-2); background: transparent; color: var(--pn); text-shadow: none; }
+.ink-shell .ink-leaf :is(.inventory-slot-tab.active, .htab.active, .qchip.active) { border-color: var(--crimson); background: var(--crimson-soft); }
+
+/* 演武场：令牌方格与右侧名册。 */
+.ink-shell .ink-leaf .formation-page-head { padding: 0; margin: 0 0 16px; border: 0; }
+.ink-shell .ink-leaf .formation-stats { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; gap: 8px; }
+.ink-shell .ink-leaf .formation-stats > div { padding: 9px 12px; border: 1px solid var(--night-line-2); background: var(--night-2); text-align: left; }
+.ink-shell .ink-leaf .formation-stats b { color: var(--pn); font: 20px var(--latin); }
+.ink-shell .ink-leaf .formation-muster-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr); gap: 18px; }
+.ink-shell .ink-leaf .formation-roster { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 0; }
+.ink-shell .ink-leaf .formation-field { grid-column: 1; grid-row: 1; padding: 12px; }
+.ink-shell .ink-leaf .formation-hero-card { grid-column: 1; grid-row: 2; }
+.ink-shell .ink-leaf .formation-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; padding: 0; background: transparent; border: 0; }
+.ink-shell .ink-leaf .formation-row-tag { flex: 0 0 28px; width: 28px; color: var(--pn-dim); font: 11px var(--kai); writing-mode: vertical-rl; }
+.ink-shell .ink-leaf .formation-row-tag small { display: none; }
+.ink-shell .ink-leaf .formation-slots { display: grid; flex: 1; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding: 0; }
+.ink-shell .ink-leaf .formation-slot { width: 100%; min-width: 0; height: auto; min-height: 0; aspect-ratio: 1; margin: 0; padding: 0; border: 1px dashed var(--night-line-2); border-radius: 0; background: var(--night); box-shadow: none; }
+.ink-shell .ink-leaf .formation-slot.filled { border-style: solid; }
+.ink-shell .ink-leaf .formation-slot.selected { border-color: var(--crimson); }
+.ink-shell .ink-leaf :is(.formation-slot-disc, .formation-slot-label, .formation-token-hole, .formation-token-cat, .formation-token-level, .formation-card-corner) { display: none; }
+.ink-shell .ink-leaf .formation-token { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; padding: 0; margin: 0; border: 0; transform: none; animation: none; background: none; box-shadow: none; clip-path: none; }
+.ink-shell .ink-leaf .formation-token::before, .ink-shell .ink-leaf .formation-token::after { content: none; }
+.ink-shell .ink-leaf .formation-token-portrait { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; object-fit: cover; border: 0; border-radius: 0; transform: none; box-shadow: none; }
+.ink-shell .ink-leaf .formation-token-name { position: absolute; inset: auto 0 0; padding: 12px 2px 3px; color: var(--pn); font: 12px/1.3 var(--kai); background: linear-gradient(transparent, rgb(25 22 18 / 94%)); writing-mode: horizontal-tb; text-align: center; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ink-shell .ink-leaf .formation-token .formation-grade-seal { position: absolute; top: 3px; right: 3px; bottom: auto; width: 20px; height: 20px; z-index: 3; }
+.ink-shell .ink-leaf .formation-token-remove { z-index: 4; top: 2px; left: 2px; right: auto; opacity: 1; background: var(--night); color: var(--pn); }
+.ink-shell .ink-leaf .formation-field-body { padding: 0; grid-template-columns: minmax(0, 1fr); background: transparent; }
+.ink-shell .ink-leaf .formation-field-rows { padding: 0; }
+.ink-shell .ink-leaf .formation-row-tag > span:first-child { font-size: 13px; color: var(--pn-dim); letter-spacing: .12em; }
+.ink-shell .ink-leaf .formation-row-tag > span:first-child::after { content: none; }
+.ink-shell .ink-leaf .formation-token-remove { transform: none; width: 22px; height: 22px; }
+.ink-shell .ink-leaf .formation-field-head { flex-wrap: wrap; padding: 0 0 10px; border-bottom: 1px solid var(--night-line); background: transparent; }
+.ink-shell .ink-leaf .formation-roster-list { max-height: 54vh; overflow-y: auto; overflow-x: hidden; }
+.ink-shell .ink-leaf .formation-roster-row { background: transparent; color: var(--pn); }
+.ink-shell .ink-leaf .formation-roster-row.active { background: var(--crimson-soft); }
+.ink-shell .ink-leaf :is(.formation-order-ribbon, .formation-enemy-strip, .formation-synergy-card) { border-color: var(--night-line); background: transparent; box-shadow: none; }
+
+/* 势力拆为册页，使用同一份贡献、任务、兑换与招募数据。 */
+.ink-shell .ink-leaf .faction-page-head { justify-content: flex-end; padding: 0; margin-bottom: 12px; border: 0; }
+.ink-shell .ink-leaf .faction-purse { color: var(--pn); background: none; border: 1px solid var(--night-line-2); box-shadow: none; }
+.ink-shell .ink-leaf .faction-purse svg { display: none; }
+.ink-shell .ink-leaf .faction-plaque-row { display: flex; flex-wrap: wrap; gap: 7px; padding: 0; margin: 0 0 12px; }
+.ink-shell .ink-leaf .faction-plaque { flex: 1 1 170px; min-width: 0; padding: 9px; border: 1px solid var(--night-line-2); background: var(--night-2); color: var(--pn); }
+.ink-shell .ink-leaf .faction-plaque.active { border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-shell .ink-leaf .faction-plaque::before, .ink-shell .ink-leaf .faction-plaque::after { content: none; }
+.ink-shell .ink-leaf .faction-plaque-char { width: 28px; height: 28px; padding: 0; border: 0; background: none; }
+.ink-shell .ink-leaf .faction-plaque-name { color: var(--pn); font: 16px var(--kai); }
+.ink-shell .ink-leaf .faction-plaque-meta { font-size: 10px; color: var(--pn-dim); }
+.ink-faction-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--night-line); }
+.ink-faction-tabs button { padding: 8px 16px; background: transparent; border: 1px solid var(--night-line-2); color: var(--pn-dim); font: 14px var(--kai); }
+.ink-faction-tabs button.active { border-color: var(--crimson); color: var(--pn); background: var(--crimson-soft); }
+.ink-shell .ink-leaf .faction-board { padding: 0; border: 0; background: none; }
+.ink-shell .ink-leaf .faction-board-inner { padding: 0; }
+.ink-shell .ink-leaf .faction-quest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 9px; }
+.ink-shell .ink-leaf .faction-notice { min-height: 140px; padding: 12px; border: 1px solid var(--night-line-2); background: var(--night-2); transform: none; box-shadow: none; color: var(--pn); }
+.ink-shell .ink-leaf .faction-notice::before, .ink-shell .ink-leaf .faction-notice::after { content: none; }
+.ink-shell .ink-leaf :is(.faction-notice h3, .faction-notice-type, .faction-reward b, .faction-tally-row) { color: var(--pn); }
+.ink-shell .ink-leaf :is(.faction-stamp, .faction-action-button) { color: var(--crimson); border-color: var(--crimson); background: transparent; }
+.ink-shell .ink-leaf .faction-section-head { flex-wrap: wrap; padding: 10px 0; border-color: var(--night-line); }
+.ink-shell .ink-leaf :is(.faction-branch, .faction-detail, .faction-recruit-card, .faction-exchange-card, .faction-agent, .faction-agent-card, .faction-recruitment-group) { border-color: var(--night-line-2); background: var(--night-2); border-radius: 0; box-shadow: none; }
+
+/* 商城、现世经营与设置采用同一册页材质。 */
+.ink-shell .ink-leaf :is(.premium-card, .ordinary-pool, .pool-card, .pool-banner, .ordinary-pool-console, .city-business-ribbon, .city-worker, .city-guide, .city-story, .city-map-panel, .city-land-deed, .city-company-overview, .city-finance-book) { border: 1px solid var(--night-line-2); border-radius: 0; background: var(--night-2); box-shadow: none; }
+.ink-shell .ink-leaf :is(.shop-header, .shop-page > header, .ordinary-pool-header) { background: transparent; border-color: var(--night-line); }
+.ink-shell .ink-leaf .settings-layout { display: block; }
+.ink-shell .ink-leaf .settings-layout > nav { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 0 0 18px; border: 0; background: transparent; }
+.ink-shell .ink-leaf .settings-layout > nav a { color: var(--pn-dim); }
+.ink-shell .ink-leaf .settings-groups { display: grid; gap: 20px; }
+.ink-shell .ink-leaf .settings-group { padding: 16px; }
+.ink-shell .ink-leaf .settings-group h2 { margin: 0 0 12px; }
+.ink-shell .ink-leaf :is(.settings-field, .welfare-form > div) { gap: 14px; }
+.ink-shell .ink-leaf .ink-danger-zone { margin: 24px 0 0; padding: 16px; border: 1px solid var(--crimson-deep); }
+.ink-danger-zone p { font-size: 12px; }
+.ink-danger-zone button { padding: 8px 20px; color: var(--pn); background: transparent; border-color: var(--crimson); }
+.ink-shell .ink-leaf .danger-confirm { position: static; color: var(--pn); background: transparent; border: 0; box-shadow: none; }
+
+/* 战场：三路五列的实际坐标不变，卡片改为圆形水墨令牌。 */
+.ink-shell .idle-page { position: absolute; inset: 0; min-width: 0; min-height: 0; height: 100%; padding: 0; margin: 0; display: block; background: transparent; color: var(--ink); }
+.ink-shell .idle-page::before, .ink-shell .idle-page::after, .ink-shell .idle-ghost-char { display: none; }
+.ink-shell .battle-topbar { display: contents; }
+.ink-shell .battle-topbar > :not(.battle-controls) { display: none; }
+.ink-shell .battle-stage { position: absolute; inset: 0; display: block; min-height: 0; padding: 0; }
+.ink-shell .battlefield, .ink-shell .battlefield.has-scene { position: absolute; inset: 20% 3% 25%; width: auto; min-height: 0; height: auto; display: grid; grid-template-columns: minmax(0, 1fr) 90px minmax(0, 1fr); grid-template-rows: 1fr; gap: 20px; padding: 0; align-items: center; border: 0; background: transparent; box-shadow: none; overflow: visible; }
+.ink-shell .battlefield::before, .ink-shell .battlefield::after { display: none; }
+.ink-shell .battle-half { position: relative; min-width: 0; height: auto; padding: 0; display: block; background: none; border: 0; grid-row: 1; }
+.ink-shell .battle-half.party { grid-column: 1; }
+.ink-shell .battle-half.enemy { grid-column: 3; padding: 0; }
+.ink-shell .half-heading { display: none; }
+.ink-shell .battle-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0; background: none; border: 0; }
+.ink-shell .unit-lane { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(2px, .5vw, 10px); width: 100%; padding: 0; min-height: 90px; border: 0; background: transparent; transform: none; }
+.ink-shell .unit-cell { position: relative; width: 100%; height: auto; min-height: 90px; padding: 0; border: 0; background: none; }
+.ink-shell .cell-tile { display: none; }
+.ink-shell .combat-unit { position: relative; inset: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; width: 100%; min-width: 0; height: auto; min-height: 90px; padding: 0; margin: 0; border: 0; background: transparent; box-shadow: none; color: var(--ink); }
+.ink-shell .combat-unit[role="button"] { cursor: pointer; }
+.ink-shell .combat-unit::before, .ink-shell .combat-unit::after { content: none; }
+.ink-shell .combat-unit .unit-portrait, .ink-shell .combat-unit[data-rank="boss"] .unit-portrait { position: relative; width: clamp(34px, 4.3vw, 62px); height: clamp(34px, 4.3vw, 62px); margin: 0; padding: 0; border: 3.5px solid var(--ink); border-radius: 50%; background: var(--paper); box-shadow: 3px 4px 0 var(--ink-18); overflow: hidden; }
+.ink-shell .combat-unit.enemy .unit-portrait { background: var(--ink); border-color: var(--ink); }
+.ink-shell .unit-portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ink-shell .portrait-ring { display: none; }
+.ink-shell .unit-body { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; min-width: 0; padding: 0; }
+.ink-shell .unit-head { display: block; width: 100%; text-align: center; margin: 0; padding: 0; }
+.ink-shell .unit-name { display: block; max-width: 100%; color: var(--ink); font: 600 12px var(--sans); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ink-shell .unit-tag, .ink-shell .unit-foot, .ink-shell .meter-label, .ink-shell .meter-num { display: none; }
+.ink-shell .combat-unit .meter { width: min(64px, 90%); height: 5px; min-height: 0; margin: 0; padding: 0; display: block; background: transparent; }
+.ink-shell .meter-track { display: block; height: 5px; padding: 0; border: 0; border-radius: 3px; background: var(--ink-18); overflow: hidden; }
+.ink-shell .hp-meter .meter-fill { display: block; height: 5px; background: var(--ink); border-radius: 3px; box-shadow: none; }
+.ink-shell .hp-meter.low .meter-fill { background: var(--crimson); }
+.ink-shell .shield-meter .meter-fill { background: var(--pn-dim); }
+.ink-shell .unit-energy-orbs { display: flex; position: static; gap: 3px; justify-content: center; height: 8px; }
+.ink-shell .energy-orb { width: 7px; height: 7px; border: 1px solid var(--ink-45); background: transparent; box-shadow: none; }
+.ink-shell .energy-orb.charged { border-color: var(--crimson); background: var(--crimson); box-shadow: none; }
+.ink-shell .unit-statuses { position: absolute; top: -13px; left: 0; right: 0; justify-content: center; z-index: 1; }
+.ink-shell .status-chip { color: var(--ink); background: var(--paper); border-color: var(--ink-18); font-size: 9px; }
+.ink-shell .battle-divider { display: flex; grid-row: 1; grid-column: 2; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 100%; min-height: 0; padding: 0; border: 0; background: none; }
+.ink-shell .battle-divider::before, .ink-shell .battle-divider::after { display: none; }
+.ink-shell .battle-divider > strong { font: 22px var(--kai); white-space: nowrap; }
+.ink-shell .battle-divider > i { width: 1px; height: 28vh; min-height: 80px; background: linear-gradient(transparent, var(--ink-45) 18%, var(--ink-45) 82%, transparent); }
+.ink-shell .battle-divider .divider-status { width: auto; max-width: 100%; height: auto; display: block; padding: 0; border: 0; color: var(--ink-70); background: none; font: 12px/1.8 var(--kai); text-align: center; white-space: normal; letter-spacing: 0; }
+.ink-shell .divider-status em { color: var(--ink); font: 20px var(--latin); }
+.ink-shell .combat-action-timeline { position: fixed; top: auto; left: 5%; right: 5%; bottom: 13%; width: 90%; height: auto; margin: 0; padding: 0; display: flex; gap: 14px; align-items: center; border: 0; background: none; color: var(--ink-70); box-shadow: none; }
+.ink-shell .action-timeline-label { flex: none; color: var(--ink-45); font: 13px var(--kai); }
+.ink-shell .action-timeline-label small { display: none; }
+.ink-shell .action-track { flex: 1; height: 2px; background: var(--ink-18); border: 0; }
+.ink-shell .action-track-fill { display: none; }
+.ink-shell .action-track::before { display: none; }
+.ink-shell .action-marker { width: 23px; height: 23px; top: -11px; border: 2px solid var(--ink); border-radius: 50%; color: var(--ink); background: var(--paper); box-shadow: 2px 2px 0 var(--ink-18); }
+.ink-shell .action-marker i { color: inherit; font: 11px var(--kai); }
+.ink-shell .action-marker.enemy { color: var(--paper); background: var(--ink); }
+.ink-shell .action-marker.active, .ink-shell .action-marker.ready { border-color: var(--crimson); }
+.ink-shell .action-ready-label { color: var(--ink-45); font: 12px var(--kai); }
+.ink-shell .battle-controls { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 22; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; width: max-content; max-width: 96%; padding: 9px 14px; border: 2px solid var(--ink); background: rgb(244 239 226 / 85%); box-shadow: 3px 4px 0 var(--ink-18); }
+.ink-shell .battle-controls .ctl-btn { width: auto; min-width: 0; min-height: 34px; padding: 6px 12px; border: 2px solid var(--ink); color: var(--ink); background: transparent; font: 14px var(--kai); box-shadow: none; }
+.ink-shell .battle-controls .ctl-btn.active { background: var(--ink); color: var(--paper); }
+.ink-shell .battle-controls .ctl-btn.gold { color: var(--crimson); border-color: var(--crimson); }
+.ink-shell .speed-controls { display: flex; gap: 4px; margin: 0 6px; }
+.ink-shell .speed-controls .ctl-btn { padding: 6px 8px; font: 12px var(--latin); }
+.ink-shell .ink-control-waves { display: flex; gap: 4px; order: -1; margin-right: 12px; }
+.ink-shell .wave-bead { width: 10px; height: 10px; border: 2px solid var(--ink-45); border-radius: 50%; background: none; box-shadow: none; }
+.ink-shell .wave-bead.cleared { background: var(--ink); border-color: var(--ink); }
+.ink-shell .wave-bead.current { border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-shell .ink-loot-feed { position: fixed; bottom: 17%; left: 16px; width: 290px; display: grid; gap: 4px; pointer-events: none; }
+.ink-loot-feed > div { padding: 4px 9px; border-left: 3px solid var(--ink); color: var(--ink-70); background: rgb(244 239 226 / 72%); font-size: 12px; }
+.ink-shell .combat-rail { display: none; }
+.ink-shell .combat-rail.expanded { position: fixed; display: flex; left: 16px; bottom: 90px; z-index: 24; width: min(380px, calc(100% - 32px)); max-height: 65dvh; overflow: auto; padding: 12px; border: 1px solid var(--night-line-2); color: var(--pn); background: var(--night); box-shadow: 0 12px 44px var(--ink-45); }
+.ink-log-close { align-self: flex-end; width: 32px; min-height: 32px; color: var(--pn); background: none; }
+.ink-shell .wave-banner { color: var(--ink); text-shadow: 2px 3px 0 var(--paper); font-family: var(--kai); background: transparent; border: 0; }
+.ink-shell .dmg-float { color: var(--crimson); text-shadow: 0 1px 2px var(--paper); }
+.ink-shell .dmg-float.heal, .ink-shell .dmg-float.skill-name-float { color: var(--ink); }
+.ink-shell .idle-page .combat-settlement { color: var(--ink); background: rgb(236 229 211 / 92%); border-color: var(--ink); }
+.ink-shell .idle-page .combat-settlement .settlement-copy :is(strong, small, em) { color: var(--ink); text-shadow: none; }
+.ink-shell .idle-page .combat-settlement .settlement-seal { color: var(--paper); background: var(--crimson); border: 2px solid var(--crimson-deep); border-radius: 0; box-shadow: none; text-shadow: none; }
+.ink-shell .enemy-arrival { color: var(--ink-70); background: none; border: 0; }
+
+/* 卷首与独立对话框也使用同一套纸墨色。 */
+.start-page { color: var(--ink); }
+.start-page::before { inset: 0; background: url('./assets/ink/ui/bg-battlefield.png') center bottom / cover no-repeat; animation: none; }
+.start-page::after { background: rgb(236 229 211 / 12%); }
+.start-title-wrap h1 { color: var(--ink); background: none; filter: none; }
+.start-kicker, .start-tagline, .start-foot { color: var(--ink-70); text-shadow: none; }
+.start-kicker::before, .start-kicker::after { background: linear-gradient(90deg, transparent, var(--ink-45)); }
+.start-divider { background: linear-gradient(90deg, transparent, var(--ink-45), transparent); }
+.start-divider::after { background: var(--ink); box-shadow: none; }
+.start-page .start-seal { color: var(--paper); background: var(--crimson); border: 2px solid var(--crimson-deep); border-radius: 0; box-shadow: none; }
+.start-actions button { border: 2px solid var(--ink); color: var(--ink); background: rgb(244 239 226 / 85%); box-shadow: 3px 4px 0 var(--ink-18); }
+.start-actions .primary { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+.start-page .start-actions button:hover:not(:disabled) { border-color: var(--crimson); }
+.start-page .start-actions .primary:hover:not(:disabled) { background: var(--ink); }
+.start-page .start-card { color: var(--pn); background: var(--night); border-color: var(--night-line-2); border-radius: 0; box-shadow: 0 20px 70px rgb(25 22 17 / 40%); }
+.start-card .start-actions button { color: var(--pn); background: transparent; border-color: var(--night-line-2); box-shadow: none; }
+.start-page .start-card .start-actions .primary, .start-page .start-card .start-actions .primary:hover:not(:disabled) { color: var(--night); background: var(--pn); border-color: var(--pn); }
+.start-page .start-card .start-actions .danger { color: var(--pn); background: var(--crimson); border-color: var(--crimson); }
+.start-card :is(.start-heading h1, .start-heading p, .start-form label) { color: var(--pn); }
+.start-card input { background: var(--night-2); color: var(--pn); }
+.start-card .start-form input:focus { border-color: var(--pn); box-shadow: 0 0 0 2px var(--night-line-2); }
+.toast, .toast.inventory-toast { z-index: 120; color: var(--pn); background: var(--night); border: 1px solid var(--night-line-2); border-radius: 0; box-shadow: none; font-family: var(--sans); letter-spacing: 0; pointer-events: none; }
+.ink-shell[data-panel-open="false"] ~ .toast, body:has(.ink-shell[data-panel-open="false"]) > .toast { top: 100px; bottom: auto; left: 16px; right: auto; max-width: min(360px, calc(100vw - 176px)); transform: none; }
+.toast.inventory-toast::before { background: var(--crimson); box-shadow: none; }
+.toast.warning { border-color: var(--crimson); color: var(--pn); background: var(--night); }
+.cloud-dialog, .premium-panel, .ink-shell .career-tree-dialog { color: var(--pn); background: var(--night); border: 1px solid var(--night-line-2); border-radius: 0; box-shadow: 0 20px 70px rgb(25 22 17 / 40%); }
+.cloud-dialog :is(h2, h3, button), .premium-panel :is(h2, h3, button), .ink-shell .career-tree-dialog :is(h2, h3, button) { color: var(--pn); font-family: var(--kai); }
+.cloud-dialog :is(button, input), .premium-panel button, .ink-shell .career-tree-dialog :is(button, input, .ct-detail) { border-color: var(--night-line-2); border-radius: 0; color: var(--pn); background: var(--night-2); box-shadow: none; }
+.premium-panel { scrollbar-width: thin; scrollbar-color: var(--pn-faint) var(--night); }
+.premium-panel .premium-card { border-color: var(--night-line-2); border-radius: 0; background: var(--night-2); box-shadow: none; }
+.premium-panel .premium-card:hover { border-color: var(--pn-dim); box-shadow: none; }
+.premium-panel :is(.premium-card p, .premium-totals dd) { color: var(--pn); }
+.premium-panel :is(.premium-card small, .premium-source, .premium-rules, .premium-totals dt) { color: var(--pn-dim); }
+.premium-panel .premium-card header span { color: var(--pn-dim); border-color: var(--night-line-2); border-radius: 0; }
+.premium-panel .premium-card header .active { color: var(--crimson); border-color: var(--crimson); background: var(--crimson-soft); transform: none; }
+.premium-panel .premium-totals > div { border-color: var(--night-line); }
+.ink-shell .career-tree-dialog :is(.ct-node.current, .ct-node.selected, .ct-action), .premium-panel button.primary { border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-shell .career-tree-dialog .ct-scroll { min-width: 0; min-height: 0; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--pn-faint) var(--night); }
+.ink-shell .career-tree-dialog .ct-tree { min-width: 960px; min-height: 520px; overflow: visible; }
+.ink-shell .career-tree-dialog .ct-links line { stroke: var(--night-line-2); }
+.ink-shell .career-tree-dialog .cg-cell { background: var(--night-2); border: 1px solid var(--night-line-2); border-radius: 0; }
+.ink-shell .ink-leaf .danger-confirm button { min-height: 44px; }
+.ink-shell .equipment-tooltip { color: var(--pn); background: var(--night); border-color: var(--night-line-2); border-radius: 0; box-shadow: 0 10px 40px rgb(25 22 17 / 40%); }
+.ink-shell .equipment-tooltip :is(header, section, footer) { border-color: var(--night-line); background: transparent; }
+
+.ink-shell .idle-page .combat-unit.party .unit-portrait, .ink-shell .idle-page .combat-unit.enemy .unit-portrait { border-color: var(--ink); }
+.ink-shell .idle-page .combat-unit.energy-full .unit-portrait { border-color: var(--crimson); }
+.ink-shell .idle-page .energy-orb { transform: none; border-radius: 50%; }
+.ink-shell .idle-page .action-timeline-label strong { color: var(--ink-45); }
+.ink-shell .idle-page .wave-bead.boss-bead { width: 10px; height: 10px; border-color: var(--ink-45); }
+.ink-shell .ink-leaf :is(.heroes-page, .formation-page, .inventory-page, .city-page, .shop-page) * { text-shadow: none; }
+.ink-shell .ink-leaf :is(.heroes-page, .formation-page, .inventory-page, .city-page, .shop-page) :is(b, strong) { color: var(--pn); }
+.ink-shell .ink-leaf :is(.heroes-page, .formation-page, .inventory-page, .city-page, .shop-page) :is(article, section, header, footer, nav, aside, dl, .roster-inner, .pack-inner) { border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf :is(.roster-head, .roster-search-row, .roster-list) { padding: 10px 0; }
+.ink-shell .ink-leaf .roster-head { flex-wrap: wrap; gap: 10px; }
+.ink-shell .ink-leaf .roster-head-right { flex: 1; }
+.ink-shell .ink-leaf .roster-row { min-width: 0; gap: 8px; padding: 8px 3px; background: none; }
+.ink-shell .ink-leaf .roster-row.active { background: var(--crimson-soft); box-shadow: none; border-color: var(--crimson); }
+.ink-shell .ink-leaf .r-flag { padding: 2px 3px; letter-spacing: 0; border-color: var(--night-line-2); border-radius: 0; }
+.ink-shell .ink-leaf :is(.roster-ghead, .hb-idcard, .hb-idrow, .hb-base, .hb-growrow, .pack-inner, .roster-inner, .attr2-cell, .ability-cell) { background: var(--night-2); }
+.ink-shell .ink-leaf .heroes-page .fchip.active { color: var(--night); background: var(--pn); border-color: var(--pn); }
+.ink-shell .ink-leaf .heroes-page :is(.htab, .hb-grade, .attr-tab-label, .ability-node, .attr2-ic, .pg-btn, .pg-num) { border-radius: 0; box-shadow: none; background: transparent; border-color: var(--night-line-2); color: var(--pn); }
+.ink-shell .ink-leaf .heroes-page :is(.htab.active, .attr-tab-label.active, .pg-num.active) { background: var(--crimson-soft); border-color: var(--crimson); }
+.ink-shell .ink-leaf .heroes-page .qchips { flex-wrap: wrap; overflow: visible; }
+.ink-shell .ink-leaf .heroes-page :is(.hb-idcard, .hb-base, .hb-growth, .attr2-cell, .ability-cell) { border-radius: 0; border-color: var(--night-line-2); box-shadow: none; }
+.ink-shell .ink-leaf .heroes-page .ag { color: var(--pn-dim); }
+.ink-shell .ink-leaf .heroes-page .pip { color: var(--pn-faint); background: var(--night); border-color: var(--night-line); }
+.ink-shell .ink-leaf .heroes-page .pip.on { color: var(--pn); border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-shell .ink-leaf .hero-medallion { border: 1px solid var(--crimson); border-radius: 0; color: var(--pn); background: var(--crimson-soft); box-shadow: none; }
+.ink-shell .ink-leaf .city-page :is(button, .city-tab) { border-color: var(--night-line-2); color: var(--pn); background: var(--night-2); }
+.ink-shell .ink-leaf .city-page :is(button.active, button[aria-pressed="true"], .city-primary-action) { border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-shell .ink-leaf .formation-stats { border: 0; padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
+.ink-shell .ink-leaf .formation-row-tag span { font: 12px var(--kai); }
+.ink-shell .ink-leaf .formation-token-ghost { position: absolute; inset: 0; width: 100%; height: 100%; display: grid; place-items: center; padding: 0; margin: 0; border: 0; box-shadow: none; }
+.ink-shell .ink-leaf .formation-token-ghost span { font: 11px var(--kai); color: var(--pn-faint); writing-mode: horizontal-tb; letter-spacing: 0; }
+.ink-shell .ink-leaf .formation-slots { transform: none; }
+.ink-shell .ink-leaf .formation-token { filter: none; outline: none; border-radius: 0; }
+.ink-shell .ink-leaf .formation-order-node > span { border: 1px solid var(--night-line-2); color: var(--pn-dim); background: var(--night-2); box-shadow: none; }
+.ink-shell .ink-leaf .formation-order-node.lit > span { color: var(--pn); border-color: var(--crimson); }
+.ink-shell .ink-leaf .formation-hero-card { transform: none; min-height: 0; color: var(--pn); }
+.ink-shell .ink-leaf .formation-hero-card::before { content: none; }
+.ink-shell .ink-leaf :is(.formation-hero-stats > div, .formation-martial-chip) { color: var(--pn); background: var(--night); border-color: var(--night-line-2); }
+.ink-shell .ink-leaf .formation-synergy { margin-top: 18px; border: 1px solid var(--night-line-2); border-radius: 0; background: var(--night-2); box-shadow: none; }
+.ink-shell .ink-leaf .formation-synergy::before, .ink-shell .ink-leaf .formation-synergy::after { content: none; }
+.ink-shell .ink-leaf .formation-synergy-body { border-radius: 0; border-color: var(--night-line-2); background: none; box-shadow: none; }
+.ink-shell .ink-leaf .formation-synergy-card.active .formation-synergy-node { border-color: var(--crimson); background: var(--crimson); box-shadow: none; }
+.ink-shell .ink-leaf .formation-enemy-strip { display: none; }
+.ink-shell .ink-leaf .formation-slots::before, .ink-shell .ink-leaf .formation-slots::after { content: none; }
+.ink-shell .ink-leaf .formation-slot { overflow: hidden; }
+.ink-shell .ink-leaf .shop-head { margin: 0 0 12px; padding: 0; }
+.ink-shell .ink-leaf .shop-head > div:first-child { display: none; }
+.ink-shell .ink-leaf .shop-wallet { margin-left: auto; padding: 8px 14px; border: 1px solid var(--night-line-2); border-radius: 0; background: transparent; box-shadow: none; }
+.ink-shell .ink-leaf :is(.ordinary-pool-roster button, .ordinary-pool-actions button, .inventory-shop-item, .inventory-shop-buy, .inventory-shop-rank) { color: var(--pn); background: var(--night-2); border: 1px solid var(--night-line-2); border-radius: 0; }
+.ink-shell .ink-leaf :is(.ordinary-pool-roster button[aria-pressed="true"], .inventory-shop-rank.active) { border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-shell .ink-leaf .ordinary-pool-actions button { background: var(--pn); color: var(--night); }
+.ink-shell .ink-leaf .ordinary-pool-actions button strong, .ink-shell .ink-leaf .ordinary-pool-actions button span { color: var(--night); }
+.ink-book-shop { margin-top: 20px; border-top: 1px solid var(--night-line); padding-top: 12px; }
+.ink-book-shop summary { cursor: pointer; font: 16px var(--kai); padding: 8px 0; }
+.ink-book-shop .inventory-shop { margin-top: 8px; }
+.ink-bag-heroes { min-width: 0; position: sticky; top: 0; }
+.ink-bag-heroes > input { width: 100%; padding: 9px; font-size: 12px; }
+.ink-bag-roster { display: grid; max-height: 32vh; overflow: auto; margin: 8px 0 20px; }
+.ink-bag-roster button { display: flex; gap: 8px; align-items: center; min-width: 0; padding: 8px 4px; border: 0; border-bottom: 1px solid var(--night-line); background: transparent; color: var(--pn); }
+.ink-bag-roster img { width: 28px; height: 28px; border: 1px solid var(--pn-dim); border-radius: 50%; object-fit: cover; }
+.ink-bag-roster strong { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
+.ink-bag-roster small { margin-left: auto; flex: none; font-size: 10px; }
+.ink-bag-roster button.active { background: var(--crimson-soft); }
+.ink-equipped { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-bottom: 10px; }
+.ink-equipped button { position: relative; min-height: 68px; overflow: hidden; border: 1px solid var(--night-line-2); background: var(--night-2); color: var(--pn); }
+.ink-equipped img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ink-equipped small { position: absolute; top: 3px; left: 4px; font-size: 9px; z-index: 1; }
+.ink-equipped span { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 2px 3px; background: linear-gradient(transparent, var(--night)); color: var(--pn); font-size: 10px; z-index: 1; }
+.ink-equip-action { width: 100%; margin-top: 10px; padding: 10px; border: 1px solid var(--crimson); background: var(--crimson-soft); color: var(--pn); }
+
+/* 细部统一：移除旧金漆材质，保留品级小标与真实数据。 */
+.ink-shell .ink-leaf :is(.inventory-slot-tag, .inventory-appraise-latin, .inventory-affix-empty, .inventory-kind-label, .inventory-affix-grade) { color: var(--pn-dim); border-color: var(--night-line-2); letter-spacing: .05em; }
+.ink-shell .ink-leaf .inventory-appraise-head { flex-wrap: wrap; gap: 6px; }
+.ink-shell .ink-leaf .inventory-appraise-paper::after, .ink-shell .ink-leaf .inventory-grid-wrap::after { content: none; }
+.ink-shell .ink-leaf .inventory-appraise-figure { height: auto; min-height: 72px; }
+.ink-shell .ink-leaf .inventory-board { border: 0; background: transparent; }
+.ink-shell .ink-leaf .inventory-board-inner { padding: 0; }
+.ink-shell .ink-leaf :is(.inventory-board-head, .inventory-slot-tabs, .inventory-search, .inventory-legend) { padding: 0 0 10px; }
+.ink-shell .ink-leaf .inventory-board-title { display: flex; align-items: baseline; gap: 12px; }
+.ink-shell .ink-leaf .inventory-board-title h2 { margin: 0; }
+.ink-shell .ink-leaf .inventory-capacity-bar { background: var(--night-line); }
+.ink-shell .ink-leaf .inventory-capacity-bar i { background: var(--pn-dim); box-shadow: none; }
+.ink-shell .ink-leaf .inventory-grid-wrap { flex: none; max-height: min(360px, 45vh); padding: 8px 0; }
+.ink-shell .ink-leaf .inventory-cell-icon { position: absolute; inset: 7% 10% 16%; width: 80%; height: 77%; filter: none; }
+.ink-shell .ink-leaf .inventory-cell-name { position: absolute; bottom: 16px; z-index: 1; width: 100%; padding: 5px 0 0; background: linear-gradient(transparent, var(--night-2)); }
+.ink-shell .ink-leaf .inventory-cell-level { top: auto; bottom: 3px; right: 0; width: 100%; z-index: 1; text-align: center; }
+.ink-shell .ink-leaf .inventory-cell-slot { display: none; }
+.ink-bag-side { position: sticky; top: 0; min-width: 0; }
+.ink-bag-equipped { margin-bottom: 16px; }
+.ink-bag-equipped .ink-section-title { flex-wrap: wrap; }
+.ink-bag-equipped .ink-section-title span { font-size: 10px; }
+.ink-shell .ink-bag-equipped .ink-equipped { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ink-shell .ink-equipped button { min-height: 58px; }
+.ink-shell .ink-equipped button:disabled { opacity: .6; }
+.ink-shell .ink-leaf .ink-bag-side .inventory-appraise { position: static; }
+.ink-shell .ink-leaf .ink-bag-side .inventory-appraise-paper { padding: 12px; }
+.ink-bag-filters { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.ink-bag-filters button { padding: 5px 9px; color: var(--pn-dim); background: transparent; border: 1px solid var(--night-line-2); font-size: 11px; }
+.ink-bag-filters button[aria-pressed="true"] { color: var(--night); background: var(--pn); }
+.ink-shell .ink-leaf .formation-slot { max-width: 78px; }
+.ink-shell .ink-leaf .formation-slots { grid-template-columns: repeat(5, minmax(0, 78px)); }
+.ink-shell .ink-leaf :is(.roster-inner, .formation-roster-inner, .hb-idrow, .faction-notice, .faction-purse) { border-radius: 0; }
+.ink-shell .ink-leaf .faction-page { --faction-gold: var(--pn-dim); --faction-gold-bright: var(--pn); --faction-gold-deep: var(--night-line-2); --faction-paper: var(--pn); --faction-paper-dim: var(--pn-dim); --faction-paper-mute: var(--pn-faint); --faction-cinnabar: var(--crimson); --faction-cinnabar-bright: var(--crimson); --faction-line: var(--night-line); --faction-jade: var(--pn); }
+.ink-shell .ink-leaf .faction-page::before { content: none; }
+.ink-shell .ink-leaf .faction-page-head { display: block; margin: 0 0 10px; padding: 0; border: 0; }
+.ink-shell .ink-leaf .faction-purse { width: 100%; padding: 10px 12px; }
+.ink-shell .ink-leaf .faction-purse > div { display: flex; align-items: center; gap: 12px; width: 100%; }
+.ink-shell .ink-leaf .faction-purse strong { order: 2; margin-left: auto; font-size: 18px; }
+.ink-shell .ink-leaf .faction-purse :is(span, small) { margin: 0; }
+.ink-shell .ink-leaf .faction-quest-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.ink-shell .ink-leaf .faction-incense-track { background: var(--night-line); }
+.ink-shell .ink-leaf .faction-incense-track :is(i, em) { background: var(--crimson); box-shadow: none; }
+.ink-shell .ink-leaf .faction-page :is(.faction-exchange-head, .faction-recruitment-head, .faction-reputation, .faction-exchange-group, .faction-recruitment-group, .faction-detail-cost, .faction-detail-tags span, .faction-node) { background: transparent; border-color: var(--night-line-2); border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf .faction-page :is(.faction-exchange-head span, .faction-recruitment-head span, .faction-exchange-wallet strong, .faction-exchange-wallet span, .faction-reputation strong, .faction-reputation span, .faction-reputation small, .faction-recruitment-wallet strong, .faction-recruitment-wallet span) { color: var(--pn-dim); }
+.ink-shell .ink-leaf .ordinary-pool { --pool-gold: var(--pn); --pool-text: var(--pn); --pool-muted: var(--pn-dim); --pool-line: var(--night-line-2); }
+.ink-shell .ink-leaf .ordinary-pool-aptitudes > div { background: transparent; border-color: var(--night-line); border-radius: 0; }
+.ink-shell .ink-leaf .shop-head { display: block; }
+.ink-shell .ink-leaf .shop-wallet { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; }
+.ink-shell .ink-leaf .shop-wallet strong { font-size: 18px; }
+.ink-shell .ink-leaf .heroes-page :is(.hb-name, .hb-career, .hb-category, .gl-label, .gl-num, .ability-cell, .attr2-label, .apt-label, .apt-label b) { color: var(--pn-dim); }
+.ink-shell .ink-leaf .heroes-page .radar-label { fill: var(--pn-dim); }
+.ink-shell .ink-leaf .heroes-page .radar-value { fill: var(--pn); }
+.ink-shell .ink-leaf .heroes-page .radar-shape { fill: rgb(236 229 211 / 12%); stroke: var(--pn-dim); }
+.ink-shell .ink-leaf .heroes-page .xp i { background: var(--crimson); }
+.ink-shell .ink-leaf .heroes-page :is(.hero-skin-card, .eq-box, .eq-set-btn) { background: var(--night-2); border-color: var(--night-line-2); border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf .heroes-page .eq-disc { background: radial-gradient(ellipse, var(--night-line), transparent 70%); border: 0; box-shadow: none; }
+.ink-shell .ink-leaf .heroes-page :is(.hero-skins button, .eq-set-btn) { color: var(--pn); background: transparent; border: 1px solid var(--night-line-2); }
+.ink-shell .ink-leaf .heroes-page .eq-set-btn.active { border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-shell .ink-leaf .settings-layout > nav { position: static; padding-bottom: 14px; }
+.ink-shell .ink-leaf .settings-page::before, .ink-shell .ink-leaf .settings-page::after { content: none; }
+.ink-shell .ink-leaf .settings-layout > nav :is(a, button) { flex: none; width: auto; margin: 0; padding: 8px 12px; color: var(--pn-dim); background: transparent; border: 1px solid var(--night-line-2); border-radius: 0; }
+.ink-shell .ink-leaf .welfare-form button, .welfare-dialog button { color: var(--night); background: var(--pn); border: 1px solid var(--pn); border-radius: 0; box-shadow: none; }
+.welfare-dialog { color: var(--pn); background: var(--night); border: 1px solid var(--night-line-2); border-radius: 0; box-shadow: 0 20px 70px rgb(25 22 17 / 40%); }
+.welfare-dialog :is(h2, h3) { color: var(--pn); font-family: var(--kai); }
+.welfare-dialog p { color: var(--pn-dim); }
+.welfare-dialog img:not([data-ink-asset]) { filter: grayscale(1) sepia(.15); }
+
+@media (max-width: 1600px) and (min-width: 701px) {
+  .ink-shell .ink-leaf .inventory-layout { grid-template-columns: 260px minmax(0, 1fr); }
+  .ink-bag-side { grid-column: 1 / -1; position: static; }
+  .ink-shell .ink-leaf .ink-bag-side:has(.inventory-appraise.open) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr); gap: 18px; }
+}
+
+@media (max-width: 1250px) and (min-width: 701px) {
+  .ink-icon { width: 49px; height: 52px; border-width: 2.5px; }
+  .ink-iconbar { gap: 6px; }
+  .ink-purse, .ink-hud .voucher-wallet { padding: 6px 8px; }
+  .ink-hud { gap: 6px; }
+  .ink-power { display: none; }
+}
+@media (max-width: 1100px) {
+  .ink-shell .ink-leaf .inventory-layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .ink-shell .ink-leaf .inventory-appraise { grid-column: 1 / -1; position: static; }
+  .ink-shell .ink-leaf .heroes-stage { grid-template-columns: 230px minmax(0, 1fr); }
+  .ink-shell .ink-leaf .pack-rail { grid-column: 1 / -1; }
+  .ink-shell .ink-leaf .formation-muster-layout { grid-template-columns: 1fr; }
+  .ink-shell .ink-leaf .formation-roster, .ink-shell .ink-leaf .formation-field, .ink-shell .ink-leaf .formation-hero-card { grid-column: auto; grid-row: auto; position: static; }
+}
+@media (min-width: 701px) and (max-width: 900px) {
+  .ink-iconbar { width: 280px; flex-wrap: wrap; justify-content: flex-end; }
+}
+.ink-shell .ink-leaf.docked .heroes-stage, .ink-shell .ink-leaf.docked .inventory-layout, .ink-shell .ink-leaf.docked .formation-muster-layout, .ink-shell .ink-leaf.docked .ink-bag-side { display: grid; grid-template-columns: minmax(0, 1fr); }
+.ink-shell .ink-leaf.docked :is(.formation-roster, .formation-field, .formation-hero-card, .pack-rail) { grid-column: auto; grid-row: auto; position: static; }
+.ink-shell .ink-leaf.docked .roster-list { max-height: 208px; }
+.ink-leaf.docked .ink-worlds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 700px) {
+  .ink-hud { left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top)); flex-direction: column; gap: 5px; }
+  .ink-purse, .ink-hud .voucher-wallet { padding: 4px 7px; gap: 5px; max-width: 144px; }
+  .ink-purse b, .ink-hud .voucher-wallet strong { font-size: 13px; }
+  .ink-purse small, .ink-hud .voucher-wallet small { font-size: 9px; letter-spacing: 0; }
+  .ink-glyph, .ink-hud .voucher-wallet::before { width: 18px; height: 18px; font-size: 10px; }
+  .ink-hud .ink-power { display: none; }
+  .ink-iconbar { top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); width: 148px; justify-content: flex-end; flex-wrap: wrap; gap: 5px; }
+  .ink-icon { width: 44px; height: 44px; border-width: 2.5px; }
+  .ink-icon svg { width: 16px; height: 16px; }
+  .ink-icon span { font-size: 12px; }
+  .ink-leaf, .ink-leaf.docked { top: 0; left: 0; right: 0; bottom: 0; width: 100%; border: 0; }
+  .ink-leaf-head { padding: max(12px, env(safe-area-inset-top)) 14px 12px; gap: 8px; }
+  .ink-leaf-head h1 { font-size: 24px; }
+  .ink-leaf-head button { width: 40px; height: 40px; }
+  .ink-leaf-head .ink-dock { visibility: hidden; }
+  .ink-shell .ink-leaf .game-main { padding: 14px 12px max(22px, env(safe-area-inset-bottom)); }
+  .ink-shell .world-subnav { padding: 8px 12px; }
+  .ink-worlds, .ink-leaf.docked .ink-worlds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ink-world { min-height: 62px; }
+  .ink-difficulties { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .ink-difficulties button { height: 38px; }
+  .ink-stagepath { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+  .ink-stage { min-height: 84px; }
+  .ink-stage span { font-size: 10px; }
+  .ink-stage-actions { position: sticky; bottom: -1px; padding: 10px 0; background: var(--night); }
+  .ink-stage-actions button { padding: 8px 4px; font-size: 13px; letter-spacing: 0; }
+  .ink-shell .ink-leaf .heroes-stage, .ink-shell .ink-leaf .inventory-layout { grid-template-columns: minmax(0, 1fr); }
+  .ink-shell .career-tree-dialog .ct-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: min(280px, 36dvh) minmax(0, 1fr); }
+  .ink-shell .ink-leaf .roster-list { max-height: 208px; }
+  .ink-shell .ink-leaf .roster-rail { position: static; }
+  .ink-shell .ink-leaf .ink-bag-side .inventory-appraise { position: fixed; z-index: 50; inset: auto 0 0; max-height: 84dvh; overflow: auto; border-top: 1px solid var(--night-line-2); background: var(--night); }
+  .ink-bag-side { position: static; grid-column: auto; }
+  .ink-bag-heroes { position: static; }
+  .ink-bag-roster { max-height: 150px; }
+  .ink-equipped { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .ink-shell .ink-leaf .inventory-appraise:not(.open) { display: none; }
+  .ink-shell .ink-leaf .inventory-appraise.open { transform: none; }
+  .ink-shell .ink-leaf .inventory-appraise-close { display: block; position: sticky; top: 5px; margin: 5px 8px 0 auto; width: 36px; height: 36px; color: var(--pn); background: var(--night-2); }
+  .ink-shell .ink-leaf .inventory-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ink-shell .ink-leaf .inventory-board-inner { padding: 9px; }
+  .ink-shell .ink-leaf .formation-stats { gap: 5px; }
+  .ink-shell .ink-leaf .formation-stats > div { padding: 9px 5px; }
+  .ink-shell .ink-leaf .formation-stats b { font-size: 17px; }
+  .ink-shell .ink-leaf .formation-slot { min-height: 52px; }
+  .ink-shell .ink-leaf .formation-token-name { font-size: 10px; }
+  .ink-shell .ink-leaf .faction-quest-grid { grid-template-columns: minmax(0, 1fr); }
+  .ink-shell .ink-leaf .settings-field { display: flex; flex-direction: column; align-items: stretch; }
+  .ink-shell .ink-leaf .welfare-form > div { flex-wrap: wrap; }
+  .ink-shell .ink-leaf .welfare-form input { min-width: 0; width: 100%; flex: 1; }
+  .ink-shell .idle-page .battlefield { inset: 29% 8px 23%; grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr); gap: 3px; }
+  .ink-shell .battle-grid { gap: 24px; }
+  .ink-shell .unit-lane { gap: 0; min-height: 70px; }
+  .ink-shell .unit-cell, .ink-shell .combat-unit { min-height: 70px; }
+  .ink-shell .combat-unit .unit-portrait, .ink-shell .combat-unit[data-rank="boss"] .unit-portrait { width: clamp(22px, 7vw, 44px); height: clamp(22px, 7vw, 44px); border-width: 2px; box-shadow: 1px 2px 0 var(--ink-18); }
+  .ink-shell .unit-name { font-size: 10px; }
+  .ink-shell .unit-energy-orbs { gap: 1px; }
+  .ink-shell .energy-orb { width: 4px; height: 4px; }
+  .ink-shell .battle-divider > strong { font-size: 15px; writing-mode: vertical-rl; }
+  .ink-shell .battle-divider > i { height: 14vh; }
+  .ink-shell .battle-divider .divider-status { font-size: 10px; line-height: 1.4; }
+  .ink-shell .battle-divider .divider-status:last-child { position: fixed; top: max(208px, 24vh); left: 16px; max-width: calc(100% - 32px); text-align: left; }
+  .ink-shell .divider-status em { font-size: 15px; }
+  .ink-shell .combat-action-timeline { bottom: 18%; left: 5%; right: 5%; gap: 8px; }
+  .ink-shell .action-marker { width: 18px; height: 18px; top: -9px; border-width: 1px; }
+  .ink-shell .battle-controls { bottom: max(10px, env(safe-area-inset-bottom)); gap: 4px; padding: 6px 8px; width: max-content; }
+  .ink-shell .battle-controls .ctl-btn { font-size: 13px; padding: 6px 9px; min-height: 36px; }
+  .ink-shell .ink-control-waves { width: 100%; margin: 0 0 3px; justify-content: center; }
+  .ink-shell .speed-controls { width: auto; margin: 0; gap: 3px; }
+  .ink-shell .speed-controls .ctl-btn { padding: 6px; font-size: 11px; }
+  .ink-shell .ink-loot-feed { display: none; }
+  .ink-shell .idle-combat-return { right: 12px; bottom: 12px; }
+}
+@media (max-height: 550px) and (min-width: 701px) {
+  .ink-iconbar { width: auto; flex-wrap: nowrap; gap: 4px; }
+  .ink-icon { width: 36px; height: 40px; border-width: 2px; }
+  .ink-icon svg { width: 15px; height: 15px; }
+  .ink-icon span { font-size: 10px; letter-spacing: 0; }
+  .ink-shell .idle-page .battlefield { inset: 23% 3% 30%; }
+  .ink-shell .battle-grid { gap: 4px; }
+  .ink-shell .combat-unit .unit-portrait, .ink-shell .combat-unit[data-rank="boss"] .unit-portrait { width: 28px; height: 28px; border-width: 2px; }
+  .ink-shell .unit-lane, .ink-shell .unit-cell, .ink-shell .combat-unit { min-height: 56px; }
+  .ink-shell .combat-unit, .ink-shell .unit-body { gap: 2px; }
+  .ink-shell .unit-name { font-size: 10px; }
+  .ink-shell .unit-energy-orbs { height: 6px; }
+  .ink-shell .energy-orb { width: 5px; height: 5px; }
+  .ink-shell .battle-divider > i { height: 12vh; min-height: 30px; }
+  .ink-shell .battle-divider .divider-status:last-child { position: fixed; top: 66px; left: 16px; max-width: 32%; text-align: left; }
+  .ink-shell .combat-action-timeline { bottom: 80px; }
+  .ink-shell .battle-controls { gap: 4px; padding: 6px 8px; }
+  .ink-shell .battle-controls .ctl-btn { padding: 6px 9px; font-size: 13px; min-height: 36px; }
+  .ink-shell .speed-controls { width: auto; margin: 0 3px; }
+  .ink-shell .speed-controls .ctl-btn { padding: 6px; font-size: 11px; }
+  .ink-shell .ink-loot-feed { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ink-shell *, .ink-shell *::before, .ink-shell *::after, .start-page * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

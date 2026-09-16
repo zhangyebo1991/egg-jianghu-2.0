@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 
 for (const width of [1440, 390]) {
@@ -10,6 +11,7 @@ for (const width of [1440, 390]) {
     await page.getByLabel('玩家姓名').fill('阶段核验')
     await page.getByLabel('玩家姓名').press('Enter')
     await page.evaluate(() => window.__EGG_JIANGHU__.setJianghuSection('factions'))
+    await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
     const card = page.getByTestId('faction-recruitment-hero-5')
     await card.scrollIntoViewIfNeeded()
     await expect(card).not.toContainText('前期过渡')
@@ -23,10 +25,12 @@ for (const width of [1440, 390]) {
     await page.screenshot({ animations: 'disabled', path: testInfo.outputPath(`recruitment-${width}.png`) })
     await card.getByRole('button', { name: '邀请入队' }).click()
     expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().worldCurrency.world_01)).toBe(0)
-    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toHaveCount(1)
+    await expect(page.getByTestId('ink-panel')).toBeVisible()
     await page.evaluate(() => window.__EGG_JIANGHU__.grantWorldCurrency('world_01', 30_000))
+    await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
     await page.getByTestId('faction-recruitment-hero-4').getByRole('button', { name: '邀请入队' }).click()
-    await page.getByTestId('tab-heroes').click()
+    await openPanel(page, 'heroes')
     await page.getByTestId('hero-hero_orig_5').click()
     const detail = page.locator('.hero-basic')
     await expect(page.locator('.heroes-page')).not.toContainText(/章节培养|第1章可得|前期过渡|培养与替换建议|已有赵云时|中期重点评估/)

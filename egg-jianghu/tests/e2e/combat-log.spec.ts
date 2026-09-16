@@ -17,6 +17,7 @@ test('伤口包扎实际施放与治疗结果写入札记', async ({ page }) => 
     return null
   })
   expect(found).not.toBeNull()
+  await page.locator('.battle-controls [data-action="toggle-combat-log"]').click()
   const log = page.getByTestId('combat-log')
   await expect(log).toContainText('使出「伤口包扎」')
   await expect(log).toContainText(/使用「伤口包扎」，为.+恢复 [\d,]+ 点气血/)
@@ -35,6 +36,7 @@ test('战斗札记显示技能目标和伤害，窄屏可读', async ({ page }, 
     window.__EGG_JIANGHU__.startStage('world_01', 1, 'guard', 17)
     window.__EGG_JIANGHU__.advanceCombat(200)
   })
+  await page.locator('.battle-controls [data-action="toggle-combat-log"]').click()
   const log = page.getByTestId('combat-log')
   await expect(log).toContainText(/使用「.+」，对.+造成 [\d,]+ 点伤害/)
   await expect(log).not.toContainText(/恢复 \d+\.\d{6}/)

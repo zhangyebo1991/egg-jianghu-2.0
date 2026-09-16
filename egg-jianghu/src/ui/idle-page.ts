@@ -5,6 +5,7 @@ import { enemyPortraitAsset, heroPortraitAsset } from './portrait-assets'
 import { worldSceneAsset } from './world-scene-assets'
 import { ORIGINAL_COMBAT_SPEEDS, type CombatSpeed } from '../combat/scheduler'
 import partyDeathImageUrl from '../assets/combat/zt-party-death.webp'
+import { inkAsset } from './ink-assets'
 
 export interface IdleCombatUnitView {
   appearanceUrl?: string
@@ -94,6 +95,7 @@ export interface IdleCombatStatsView {
 }
 
 export interface IdlePageViewModel {
+  logOpen?: boolean
   worldId: string
   worldName: string
   selectedStage: number
@@ -140,7 +142,7 @@ const renderUnitPortrait = (unit: IdleCombatUnitView, side: 'party' | 'enemy'): 
   const fallback = side === 'party' ? category.slice(0, 1) : unit.name.slice(0, 1)
   return `<span class="unit-portrait">
     <span class="portrait-char" aria-hidden="true">${escapeHtml(fallback)}</span>
-    <img src="${escapeHtml(unit.appearanceUrl ?? portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">
+    <img src="${escapeHtml(side === 'party' ? inkAsset(`portraits/hero_${definition?.sourceId}`) ?? unit.appearanceUrl ?? portrait.url : portrait.url)}" data-portrait-source="${portrait.source}" alt="" aria-hidden="true" draggable="false">
     <span class="portrait-ring" aria-hidden="true"></span>
   </span>`
 }
@@ -203,7 +205,7 @@ const renderUnit = (
   }
   const energyFull = side === 'party' && displayedEnergy(unit) === DISPLAY_ENERGY_CAP
   return `<article class="combat-unit ${side}${unit.alive ? '' : ' fallen'}${energyFull ? ' energy-full' : ''}${motionClasses ? ` ${motionClasses}` : ''}"
-      data-unit-id="${escapeHtml(unit.id)}" data-rank="${unit.rank}" data-testid="combat-unit-${escapeHtml(unit.id)}"${motionEffect ? renderEffectTimingStyle(motionEffect) : ''}>
+      data-unit-id="${escapeHtml(unit.id)}" data-rank="${unit.rank}" data-testid="combat-unit-${escapeHtml(unit.id)}"${side === 'party' ? ` role="button" tabindex="0" data-action="inspect-combat-hero" data-hero-id="${escapeHtml(unit.id)}" aria-label="查看${escapeHtml(unit.name)}"` : ''} title="${escapeHtml(unit.name)} · 气血 ${Math.floor(unit.hp)} / ${Math.floor(unit.maxHp)} · ${escapeHtml(unit.skillName)} · 回气 ${(unit.cooldownMs / 1000).toFixed(1)}s"${motionEffect ? renderEffectTimingStyle(motionEffect) : ''}>
     ${renderUnitPortrait(unit, side)}
     <span class="unit-body">
       <span class="unit-head">
@@ -328,9 +330,6 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
           <span class="stage-seal" aria-hidden="true">关</span>
           <span class="stage-text"><small>${escapeHtml(view.worldName)} · 第 ${view.selectedStage} 关 · ${modeLabel}</small><h1>第 <em>${view.combat.wave}</em> / 10 波</h1></span>
         </div>
-        <div class="wave-track" aria-label="十波进度">
-          <span class="wave-label">波次</span><span class="wave-beads">${renderWaveTrack(view.combat.wave)}</span><span class="wave-label"><strong>${waveHint}</strong></span>
-        </div>
         <div class="topbar-stats">
           <div class="stat-chip${inventoryFull ? ' warn' : ''}" title="背包容量" ${inventoryFull ? 'role="status"' : ''}>
             <span class="chip-mark" aria-hidden="true">囊</span><span class="chip-num">背包 <em>${view.inventoryCount}</em> / ${view.inventoryCapacity}</span>
@@ -339,11 +338,14 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
         <div class="battle-controls">
           <button type="button" class="ctl-btn${view.combat.mode === 'guard' ? ' active' : ''}" data-action="set-mode-guard" data-testid="mode-guard" title="驻守：原地迎敌，败退自动重整">驻守</button>
           <button type="button" class="ctl-btn${view.combat.mode === 'roam' ? ' active' : ''}" data-action="set-mode-roam" data-testid="mode-roam" title="闯荡：破阵后自动深入下一关">闯荡</button>
-          <button type="button" class="ctl-btn gold" data-action="stop-combat" data-testid="stop-combat" title="停止战斗并返回关卡列表">停止</button>
+          <span class="ink-control-waves" aria-label="十波进度" title="${waveHint}">${renderWaveTrack(view.combat.wave)}</span>
           <span class="ctl-sep" aria-hidden="true"></span>
           <span class="speed-controls speed-group" aria-label="战斗速度">
             ${ORIGINAL_COMBAT_SPEEDS.map((speed) => `<button type="button" data-action="speed-${speed}" class="ctl-btn${view.combatSpeed === speed ? ' active' : ''}" aria-pressed="${view.combatSpeed === speed}">${speed}×</button>`).join('')}
           </span>
+          <button type="button" class="ctl-btn" data-tab="formation">布阵</button>
+          <button type="button" class="ctl-btn gold" data-action="stop-combat" data-testid="stop-combat" title="停止战斗并返回关卡列表">停止</button>
+          <button type="button" class="ctl-btn ink-log-toggle" data-action="toggle-combat-log" aria-expanded="${view.logOpen === true}">札记</button>
         </div>
       </header>
 
@@ -353,7 +355,7 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
             <header class="half-heading party"><strong>我方</strong><span>三路五列 · 前列临阵</span><span class="half-hint">六侠成阵</span></header>
             <div class="battle-grid party">${renderLanes(view.combat.party, 'party', view.effects)}</div>
           </section>
-          <div class="battle-divider" aria-label="战斗进度"><span class="divider-status">第 <em>${view.combat.wave}</em> / 10 波</span><span class="divider-status">斩敌 <em>${view.stats.kills}</em></span></div>
+          <div class="battle-divider" aria-label="战斗进度"><strong>对 阵</strong><i></i><span class="divider-status">第 <em>${view.combat.wave}</em> / 10 波</span><span class="divider-status">${escapeHtml(view.worldName)}<br>第 ${view.selectedStage} 关 · ${modeLabel}</span></div>
           <section class="battle-half enemy" aria-label="敌方阵容">
             <header class="half-heading enemy"><strong>敌方</strong><span>自右来犯 · 前列临阵</span><span class="half-hint">${enemyVisible ? `余敌 ${enemyCount}` : '敌阵未现'}</span></header>
             <div class="battle-grid enemy">${renderLanes(visibleEnemies, 'enemy', view.effects)}</div>
@@ -364,7 +366,9 @@ export const renderIdlePage = (view: IdlePageViewModel): string => {
           ${renderSettlement(view.combat)}
         </section>
 
-        <aside class="combat-rail" aria-label="本场收益与战斗札记">
+        <div class="ink-loot-feed" aria-hidden="true">${view.logs.slice(-4).map(entry => `<div>${escapeHtml(entry.text)}</div>`).join('')}</div>
+        <aside class="combat-rail${view.logOpen ? ' expanded' : ''}" aria-label="本场收益与战斗札记">
+          <button type="button" class="ink-log-close" data-action="toggle-combat-log" aria-label="关闭战斗札记">×</button>
           <section class="rail-section loot-section">
             <header class="rail-title"><strong>本场收益</strong><small>即时入账</small><span class="rail-extra">${formatDuration(view.stats.elapsedMs)}</span></header>
             <div class="loot-grid">

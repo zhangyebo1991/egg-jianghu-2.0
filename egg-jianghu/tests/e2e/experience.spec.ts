@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { expect, test } from '@playwright/test'
 import { PRE_V20_SAVE_BACKUP_KEY, SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
@@ -8,7 +9,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await page.getByRole('button', { name: '新建游戏' }).click()
     await page.getByLabel('玩家姓名').fill('经验核验')
     await page.getByLabel('玩家姓名').press('Enter')
-    await page.getByTestId('tab-heroes').click()
+    await openPanel(page, 'heroes')
     const levelLine = page.locator('.hb-growline').filter({ hasText: '等级' })
     await expect(levelLine).toContainText('0 / 1,000')
 
@@ -21,7 +22,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     }, SAVE_KEY_V10)
     await page.reload()
     await page.getByRole('button', { name: '继续游戏' }).click()
-    await page.getByTestId('tab-heroes').click()
+    await openPanel(page, 'heroes')
     await expect(levelLine).toContainText('Lv.44')
     await expect(levelLine).toContainText('4,399 / 1,835,334')
     const careerLine = page.locator('.hb-growline').filter({ hasText: '职业' })
@@ -48,7 +49,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     }, SAVE_KEY_V10)
     await page.reload()
     await page.getByRole('button', { name: '继续游戏' }).click()
-    await page.getByTestId('tab-heroes').click()
+    await openPanel(page, 'heroes')
     await expect(page.locator('.hb-growline').filter({ hasText: '等级' })).toContainText('Lv.19')
     await expect(page.locator('.hb-growline').filter({ hasText: '等级' })).toContainText('61,645')
     await expect(page.locator('.hb-growline').filter({ hasText: '职业' })).toContainText('Lv.10')

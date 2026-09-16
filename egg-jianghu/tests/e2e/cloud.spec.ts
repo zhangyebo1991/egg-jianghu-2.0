@@ -1,3 +1,4 @@
+import { openPanel } from './ink-helpers'
 import { readFile } from 'node:fs/promises'
 import { resolve, extname } from 'node:path'
 import { expect, test } from '@playwright/test'
@@ -24,7 +25,7 @@ test('真实 API 完成邮箱注册登录、云档上传下载、本地恢复及
   await page.getByRole('button',{name:'新建游戏'}).click()
   await page.getByLabel('玩家姓名').fill('云端少侠')
   await page.getByLabel('玩家姓名').press('Enter')
-  await page.getByTestId('tab-settings').click()
+  await openPanel(page, 'settings')
   await page.getByRole('button',{name:'账号与云存档',exact:true}).click()
   const dialog=page.getByRole('dialog',{name:'账号与云存档'})
   await dialog.locator('[data-cloud="mode-register"]').click()
@@ -101,7 +102,7 @@ test('HTTP 旧站安全弹窗上传实时本地快照，下载回原位置且关
   await page.getByRole('button',{name:'新建游戏'}).click()
   await page.getByLabel('玩家姓名').fill('初始本地')
   await page.getByLabel('玩家姓名').press('Enter')
-  await page.getByTestId('tab-settings').click()
+  await openPanel(page, 'settings')
   const opened=page.waitForEvent('popup')
   await page.getByRole('button',{name:'账号与云存档',exact:true}).click()
   const popup=await opened,dialog=popup.getByRole('dialog',{name:'账号与云存档'})
@@ -110,6 +111,7 @@ test('HTTP 旧站安全弹窗上传实时本地快照，下载回原位置且关
   await dialog.getByRole('button',{name:'登录账号'}).click()
   await expect(dialog.getByRole('status')).toContainText('登录成功')
   const newLocal=async(name:string)=>{
+    await openPanel(page, 'settings')
     await page.locator('[data-action="request-reset-save"]').click()
     await page.locator('[data-action="confirm-reset-save"]').click()
     await page.getByLabel('玩家姓名').fill(name)

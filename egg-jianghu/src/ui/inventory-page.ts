@@ -71,6 +71,12 @@ export interface InventoryShopView {
 }
 
 export interface InventoryPageViewModel {
+  shopOpen?: boolean
+  heroSidebar?: string
+  heroEquipment?: string
+  selectedHeroName?: string
+  qualityFilter?: EquipmentQuality | 'all'
+  sort?: 'level' | 'quality'
   category?: 'all' | 'equipment' | 'material' | 'special'
   query?: string
   categoryCounts?: Record<'all' | 'equipment' | 'material' | 'special', number>
@@ -260,7 +266,7 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
   </header>
 
   <div class="inventory-layout">
-    ${renderShop(view.shop)}
+    ${view.heroSidebar ?? ''}
     <section class="inventory-board" aria-label="百宝囊">
       <div class="inventory-board-inner">
         <header class="inventory-board-head">
@@ -282,6 +288,7 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
         <nav class="inventory-slot-tabs" aria-label="物品分类">${(['all', 'equipment', 'material', 'special'] as const).map((category, index) => `<button type="button" class="inventory-slot-tab${(view.category ?? 'all') === category ? ' active' : ''}" data-action="inventory-category" data-category="${category}" aria-pressed="${(view.category ?? 'all') === category}">${['全部', '装备', '材料', '特殊物品'][index]}<small>${view.categoryCounts?.[category] ?? (category === 'all' || category === 'equipment' ? view.itemCount : 0)}</small></button>`).join('')}</nav>
         <label class="inventory-search">搜索物品<input type="search" data-action="inventory-search" aria-label="搜索背包物品" placeholder="输入物品名称" value="${escapeHtml(view.query ?? '')}"></label>
         ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="inventory-slot-tabs" aria-label="部位筛选">${renderSlotTabs(view)}</nav>` : ''}
+        ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="ink-bag-filters" aria-label="品质与排序"><button type="button" data-action="inventory-quality" data-quality="all" aria-pressed="${(view.qualityFilter ?? 'all') === 'all'}">全品质</button>${EQUIPMENT_QUALITIES.map(quality => `<button type="button" data-action="inventory-quality" data-quality="${quality}" aria-pressed="${view.qualityFilter === quality}">${quality}品</button>`).join('')}<button type="button" data-action="inventory-sort" data-sort="level" aria-pressed="${(view.sort ?? 'level') === 'level'}">等级↓</button><button type="button" data-action="inventory-sort" data-sort="quality" aria-pressed="${view.sort === 'quality'}">品质↓</button></nav>` : ''}
         <div class="inventory-grid-wrap"><div class="inventory-grid">${renderInventoryGrid(view)}</div></div>
         <footer class="inventory-legend">
           ${(view.category ?? 'all') === 'all' || view.category === 'equipment' ? EQUIPMENT_QUALITIES.map((quality) => `<span data-quality="${quality}">品质 ${quality}<b>${view.qualityCounts[quality]}</b></span>`).join('') : ''}
@@ -290,11 +297,14 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
       </div>
     </section>
 
+    <div class="ink-bag-side">${view.heroEquipment ?? ''}
     <aside class="inventory-appraise${view.detailOpen ? ' open' : ''}" data-testid="inventory-detail" aria-label="物品详情">
       <button type="button" class="inventory-appraise-close" data-action="inventory-close-detail" aria-label="关闭详情">✕</button>
-      <div class="inventory-appraise-paper">${view.selectedStack ? renderStackDetail(view.selectedStack) : renderSelectedDetail(view.selectedItem)}</div>
+      <div class="inventory-appraise-paper">${view.selectedStack ? renderStackDetail(view.selectedStack) : renderSelectedDetail(view.selectedItem)}${view.selectedItem && !view.selectedStack && view.selectedHeroName ? `<button type="button" class="ink-equip-action" data-action="inventory-equip" data-equipment-uid="${escapeHtml(view.selectedItem.uid)}">为${escapeHtml(view.selectedHeroName)}穿戴</button>` : ''}</div>
     </aside>
+    </div>
   </div>
+  <details class="ink-book-shop" ${view.shopOpen ? 'open' : ''}><summary>坊市 · 购入转职书</summary>${renderShop(view.shop)}</details>
 
   <footer class="inventory-page-foot">蛋蛋江湖 2.0 · 背包页重设计 v2 · 墨底宣纸 / 朱砂印 / 金漆匾</footer>
 </section>`
