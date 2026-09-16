@@ -289,17 +289,20 @@ button{font-family:inherit;color:inherit;background:none;border:none;cursor:poin
 .baggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px}
 .bcell{position:relative;aspect-ratio:1;border:1.5px solid var(--night-line-2);background:var(--night-2);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .2s var(--ease);overflow:hidden}
-.bcell img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92}
 .bcell{cursor:pointer}
-.bcell span{position:relative;z-index:1}
-.bcell:hover{border-color:var(--pn-dim);transform:translateY(-2px)}
-.bcell .g{font-family:var(--kai);font-size:17px}
-.bcell .lv{font-family:var(--latin);font-size:9px;color:var(--pn-dim)}
-.bcell .lk{position:absolute;top:3px;right:4px;font-size:9px;color:var(--crimson)}
+.bcell img{position:absolute;left:0;right:0;top:0;width:100%;height:58%;object-fit:cover;opacity:.95}
+.bcell::before{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:var(--night);border-top:1px solid var(--night-line-2)}
+.bcell .g{position:absolute;left:0;right:0;top:0;height:58%;display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:22px}
+.bcell img~.g{display:none}
+.bcell .bn{position:absolute;left:2px;right:2px;bottom:14px;text-align:center;font-size:9px;color:var(--pn);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:1}
+.bcell .lv{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-family:var(--latin);font-size:8.5px;color:var(--pn-dim);z-index:1}
+.bcell .lk{position:absolute;top:3px;right:4px;font-size:9px;color:var(--crimson);z-index:2}
+.bcell.q3,.bcell.q4{border-color:rgba(232,217,160,.45)}
+.bcell.q5{border-color:var(--crimson)}
 .bcell.sel{border-color:var(--crimson);box-shadow:0 0 0 1px var(--crimson)}
 .bcell.q0{opacity:.55}
-.bcell.q3 .g,.bcell.q4 .g{color:#e8d9a0}
-.bcell.q5 .g{color:var(--crimson)}
+.bcell:hover{border-color:var(--pn-dim);transform:translateY(-2px)}
 .itemdetail{border:1.5px solid var(--night-line-2);background:var(--night-2);padding:12px 14px;margin-top:10px;font-size:12px}
 .itemdetail h4{font-family:var(--kai);font-size:16px;letter-spacing:.1em;display:flex;gap:8px;align-items:baseline}
 .itemdetail .attr{display:flex;justify-content:space-between;padding:3px 0;color:var(--pn-dim);border-bottom:1px dashed var(--night-line)}
@@ -1212,7 +1215,7 @@ function renderBagPanel(){
         <div class="baggrid">${shown.map(it=>`
           <button class="bcell q${it.q} ${f.sel===it.uid?'sel':''}" data-item="${it.uid}" title="${esc(it.n)}">
             ${it.lock?'<span class="lk">锁</span>':''}<img src="../assets/ui/item-${it.slot}.png" alt="" onerror="this.remove()"><span class="g">${esc(it.n[0])}</span>
-            <span style="font-size:8.5px;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pn-dim)">${esc(it.n)}</span>
+            <span class="bn">${esc(it.n)}</span>
             <span class="lv">Lv.${it.lv}</span>
           </button>`).join('') || '<p style="grid-column:1/-1;color:var(--pn-faint);font-size:12px;padding:18px 0;text-align:center">囊中无此物 · 调整筛选试试</p>'}
         </div>
