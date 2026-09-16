@@ -1,3 +1,4 @@
+import { EQUIPMENT_QUALITY_NAMES } from '../content/equipment'
 import { escapeHtml, formatNumber } from './html'
 
 export type ProgressionSection = 'dungeons' | 'beasts' | 'divine' | 'forge' | 'interworld'
@@ -103,7 +104,7 @@ const renderDungeons = (view: ProgressionPageViewModel): string => `<section cla
   <header><div><span class="progression-kicker">QUALITY 7 · ARTIFACT SOUL I</span><h2>大型副本</h2></div><p>四阶段挑战完成后，30 个原版候选按各自万分比独立判定。</p></header>
   <div class="progression-card-grid dungeon-grid">${view.dungeons.map((dungeon) => `<article class="progression-card dungeon-card">
     <div class="progression-card-head"><span class="progression-card-seal">副</span><div><h3>${escapeHtml(dungeon.name)}</h3><p>${escapeHtml(dungeon.worldName)} · ${dungeon.stageNames.map(escapeHtml).join(' → ')}</p></div><b>通关 ${dungeon.clears}</b></div>
-    <div class="dungeon-reward-list">${dungeon.rewards.map((reward) => `<span data-kind="${escapeHtml(reward.kind)}"><b>${escapeHtml(reward.name)}</b><small>品质 ${reward.quality} · ${escapeHtml(reward.probability)}</small></span>`).join('')}</div>
+    <div class="dungeon-reward-list">${dungeon.rewards.map((reward) => `<span data-kind="${escapeHtml(reward.kind)}"><b>${escapeHtml(reward.name)}</b><small>${escapeHtml(EQUIPMENT_QUALITY_NAMES[reward.quality])} · ${escapeHtml(reward.probability)}</small></span>`).join('')}</div>
     <button type="button" class="progression-primary" data-action="progression-complete-dungeon" data-dungeon-id="${dungeon.id}">结算难度 ${dungeon.difficulty} 四阶段挑战</button>
   </article>`).join('')}</div>
 </section>`
@@ -153,12 +154,12 @@ const renderDivine = (view: ProgressionPageViewModel): string => `<section class
 </section>`
 
 const renderForge = (view: ProgressionPageViewModel): string => `<section class="progression-panel" data-testid="progression-forge">
-  <header><div><span class="progression-kicker">QUALITY 9 · ARTIFACT SOUL III</span><h2>帝兵改造与圣具进阶</h2></div><p>选中任意品质 8 装备：可按臣服神殿改造成帝兵，或按固定映射进阶为三阶圣具。</p></header>
+  <header><div><span class="progression-kicker">QUALITY 9 · ARTIFACT SOUL III</span><h2>帝兵改造与圣具进阶</h2></div><p>选中任意圣阶装备：可按臣服神殿改造成帝兵，或按固定映射进阶为三阶圣具。</p></header>
   <div class="forge-layout">
-    <div class="progression-subpanel"><h3>品质 8 装备</h3><div class="forge-equipment-list">${view.forge.equipment.length ? view.forge.equipment.map((item) => `<article class="${item.selected ? 'selected' : ''}">
-      <button type="button" data-action="progression-select-forge" data-equipment-uid="${escapeHtml(item.uid)}"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.slotName)} · 品质 8</span></button>
+    <div class="progression-subpanel"><h3>圣阶装备</h3><div class="forge-equipment-list">${view.forge.equipment.length ? view.forge.equipment.map((item) => `<article class="${item.selected ? 'selected' : ''}">
+      <button type="button" data-action="progression-select-forge" data-equipment-uid="${escapeHtml(item.uid)}"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.slotName)} · 圣阶</span></button>
       ${item.sacredTargetName ? `<button type="button" class="forge-advance" data-action="progression-advance-sacred" data-equipment-uid="${escapeHtml(item.uid)}">进阶为 ${escapeHtml(item.sacredTargetName)}</button>` : ''}
-    </article>`).join('') : '<p class="progression-empty">背包与已装备物品中没有品质 8 装备。</p>'}</div></div>
+    </article>`).join('') : '<p class="progression-empty">背包与已装备物品中没有圣阶装备。</p>'}</div></div>
     <div class="progression-subpanel"><h3>帝兵目标</h3><div class="imperial-target-list">${view.forge.imperialTargets.map((target) => `<article class="${target.unlocked ? '' : 'locked'}"><div><strong>${escapeHtml(target.weaponName)}</strong><span>${escapeHtml(target.shrineName)}</span></div><button type="button" data-action="progression-forge-imperial" data-shrine-id="${target.shrineId}" ${!target.unlocked || !view.forge.selectedUid ? 'disabled' : ''}>改造选中装备</button></article>`).join('')}</div></div>
   </div>
 </section>`

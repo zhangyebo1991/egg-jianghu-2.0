@@ -70,7 +70,8 @@ describe('秘境与神界页面', () => {
     expect(html).toContain('火烧赤壁')
     expect(html).toContain('博望坡 → 借东风 → 连环船 → 华容道')
     expect(html).toContain('祝融灵珠')
-    expect(html).toContain('1.03%')
+    expect(html).toContain('神物 · 1.03%')
+    expect(html).not.toContain('品质 7')
     expect(html).toContain('data-action="progression-complete-dungeon"')
     expect(html).not.toMatch(/wp_|original_skill_/)
   })
@@ -95,6 +96,21 @@ describe('秘境与神界页面', () => {
     expect(html).toContain('寂灭终章')
     expect(html).toContain('data-action="progression-settle-shrine"')
     expect(html).not.toContain('> -1 <')
+  })
+
+  it('帝兵改造区用品质名代替数字品阶', () => {
+    const view = baseView()
+    view.section = 'forge'
+    const emptyHtml = renderProgressionPage(view)
+
+    expect(emptyHtml).toContain('选中任意圣阶装备')
+    expect(emptyHtml).toContain('圣阶装备')
+    expect(emptyHtml).toContain('背包与已装备物品中没有圣阶装备')
+    expect(emptyHtml).not.toContain('品质 8')
+
+    view.forge.equipment = [{ uid: 'u1', name: '孙子兵法', slotName: '法宝', selected: false, sacredTargetName: null }]
+    const html = renderProgressionPage(view)
+    expect(html).toContain('法宝 · 圣阶')
   })
 
   it('五个高阶子页都提供明确导航且异界逐项展示候选概率', () => {

@@ -349,7 +349,7 @@ export const forgeImperialWeapon = (
   const deity = ORIGINAL_DEITIES.find((item) => item.shrineId === shrineId)
   const source = state.inventory.find((item) => item.uid === sourceUid)
   if (!deity || state.shrines[String(shrineId)]?.phase !== 'subdued') return { ok: false, message: '神殿尚未完全臣服' }
-  if (!source || source.quality !== 8) return { ok: false, message: '帝兵改造需要任意品质 8 装备' }
+  if (!source || source.quality !== 8) return { ok: false, message: '帝兵改造需要任意圣阶装备' }
   const target = equipmentDefinitionById(`wp_${deity.imperialWeapon.itemId}`)
   if (!target) return { ok: false, message: '帝兵定义不存在' }
   const rebind = rebindTransformedEquipment(state, sourceUid, target)
