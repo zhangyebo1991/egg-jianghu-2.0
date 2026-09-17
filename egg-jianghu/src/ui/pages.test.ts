@@ -360,17 +360,13 @@ const formationFixture = (): FormationPageViewModel => ({
   heroes: [
     {
       id: 'hero_test', name: '试剑人', grade: '乙', level: 12, inFormation: true,
-      category: '剑', source: '本队主角', careerName: '白丁', careerLevel: 5,
-      aptitudes: { strength: 8, insight: 8, constitution: 9, agility: 9, resolve: 8 },
+      category: '剑', source: '本队主角',
       combatStats: { maxHp: 420, externalAttack: 90, internalAttack: 80, externalDefense: 60, internalDefense: 55, effectiveAgility: 74 },
-      slot: { row: 1, col: 0 },
     },
     {
       id: 'hero_shen', name: '郭靖', grade: '乙', level: 1, inFormation: false,
-      category: '拳', source: '酒馆相逢', careerName: '白丁', careerLevel: 1,
-      aptitudes: { strength: 10, insight: 7, constitution: 11, agility: 7, resolve: 7 },
+      category: '拳', source: '酒馆相逢',
       combatStats: { maxHp: 360, externalAttack: 74, internalAttack: 65, externalDefense: 58, internalDefense: 45, effectiveAgility: 62 },
-      slot: null,
     },
   ],
 })
@@ -698,24 +694,21 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('下路')
     expect(html).toContain('点将名册')
     expect(html).toContain('演武场')
-    expect(html).toContain('data-testid="formation-hero-card"')
+    expect(html).not.toContain('data-testid="formation-hero-card"')
     expect(html).not.toContain('formation-synergy')
     expect(html).not.toContain('阵势')
     expect(html).toContain('data-action="formation-auto-arrange"')
     expect(html).toContain('data-action="formation-filter"')
-    expect(html).toContain('formation-radar')
     expect(html).toMatch(/formation-portrait-frame compact[\s\S]*formation-grade-seal/)
-    expect(html).toMatch(/formation-portrait-frame card[\s\S]*formation-grade-seal/)
     expect(html).toContain('在阵')
     expect(html).toContain('data-testid="formation-hero-hero_test"')
+    expect(html).toContain('data-action="formation-view-hero"')
     expect(html).toContain('formation-slot-remove')
-    expect(html).toContain('data-testid="formation-career"')
-    expect(html).toContain('职业 Lv.5')
-    expect(html).toContain('白丁')
 
     const selectedHtml = renderFormationPage({ ...formationFixture(), selectedHeroId: 'hero_test' })
-    expect(selectedHtml).toMatch(/data-hero-id="hero_test"[^>]*class="[^"]*\bactive\b/)
-    expect(selectedHtml).not.toMatch(/data-hero-id="hero_shen"[^>]*class="[^"]*\bactive\b/)
+    expect(selectedHtml).toContain('<div class="formation-roster-row in-formation active">')
+    expect(selectedHtml).toMatch(/formation-roster-row in-formation active[\s\S]*data-hero-id="hero_test"/)
+    expect(selectedHtml).toContain('<div class="formation-roster-row">')
   })
 
   it('withLore 注入 lore 字段，无 lore 时原样返回', async () => {

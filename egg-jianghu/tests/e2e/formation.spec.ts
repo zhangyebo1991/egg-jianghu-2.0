@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByTestId('world-overview')).toBeVisible()
 })
 
-test('头像品级角标叠在头像右下角且名册不产生横向滚动', async ({ page }) => {
+test('名册头像品级角标不溢出，阵容页不渲染详情卡', async ({ page }, testInfo) => {
   await openPanel(page, 'formation')
 
   const metrics = await page.evaluate(() => {
@@ -26,9 +26,6 @@ test('头像品级角标叠在头像右下角且名册不产生横向滚动', as
       rosterClientWidth: rosterList?.clientWidth ?? null,
       rosterFrame: rect('.formation-roster-row .formation-portrait-frame'),
       rosterSeal: rect('.formation-roster-row .formation-portrait-frame > .formation-grade-seal'),
-      detailFrame: rect('.formation-hero-card .formation-portrait-frame'),
-      detailSeal: rect('.formation-hero-card .formation-portrait-frame > .formation-grade-seal'),
-      detailName: rect('.formation-hero-card h2'),
     }
   })
 
@@ -36,9 +33,22 @@ test('头像品级角标叠在头像右下角且名册不产生横向滚动', as
   expect(metrics.rosterScrollWidth).toBe(metrics.rosterClientWidth)
   expect(metrics.rosterSeal?.left).toBeLessThan(metrics.rosterFrame?.right ?? 0)
   expect(metrics.rosterSeal?.bottom).toBeGreaterThan(metrics.rosterFrame?.bottom ?? 0)
-  expect(metrics.detailSeal?.left).toBeLessThan(metrics.detailFrame?.right ?? 0)
-  expect(metrics.detailSeal?.bottom).toBeGreaterThan(metrics.detailFrame?.bottom ?? 0)
-  expect(metrics.detailName?.width).toBeGreaterThan(0)
+  await expect(page.getByTestId('formation-hero-card')).toHaveCount(0)
+  await page.screenshot({ path: testInfo.outputPath('formation-desktop.png'), fullPage: true, animations: 'disabled' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  await page.screenshot({ path: testInfo.outputPath('formation-mobile.png'), fullPage: true, animations: 'disabled' })
+})
+
+test('阵容名册的详情入口跳转侠客页并选中对应侠客', async ({ page }) => {
+  await page.evaluate(() => window.__EGG_JIANGHU__.recruitHero('hero_guo_jing'))
+  await openPanel(page, 'formation')
+
+  await page.getByRole('button', { name: '查看 郭靖 的侠客详情' }).click()
+
+  await expect(page.getByTestId('tab-heroes')).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('hero-hero_guo_jing')).toHaveClass(/\bactive\b/)
+  await expect(page.getByText('郭靖', { exact: true }).first()).toBeVisible()
 })
 
 const dragToSlot = async (page: Page, source: string, target: string): Promise<void> => {
@@ -127,7 +137,7 @@ test('战斗期间可查看阵容但不能点击或拖拽改阵，退出后恢�
   }
   await expect(page.locator('[data-testid="formation-page"] [draggable="true"]')).toHaveCount(0)
   await page.getByTestId('formation-hero-hero_guo_jing').click()
-  await expect(page.getByTestId('formation-hero-card')).toContainText('郭靖')
+  await expect(page.getByTestId('formation-hero-card')).toHaveCount(0)
   await page.getByTestId('formation-slot-0-4').click()
   await dragToSlot(page, '[data-testid="formation-hero-hero_guo_jing"]', '[data-testid="formation-slot-0-4"]')
   await dragToSlot(page, '.formation-token', '.formation-roster')

@@ -1,5 +1,4 @@
 import type { CombatStats } from '../combat/stats'
-import type { HeroAptitudes } from '../content/heroes'
 import { escapeHtml, formatNumber } from './html'
 import { heroPortraitAsset } from './portrait-assets'
 
@@ -16,11 +15,7 @@ export interface FormationHeroView {
   inFormation: boolean
   category: string
   source: string
-  careerName: string
-  careerLevel: number
-  aptitudes: HeroAptitudes
   combatStats: Pick<CombatStats, 'maxHp' | 'externalAttack' | 'internalAttack' | 'externalDefense' | 'internalDefense' | 'effectiveAgility'>
-  slot: { row: FormationLane; col: FormationDepth } | null
 }
 
 export interface FormationPageViewModel {
@@ -44,15 +39,6 @@ const filterOptions: Array<{ id: FormationFilter; label: string }> = [
 const gradeClass = (grade: string): string => `g-${grade}`
 
 const categoryLabel = (category: string): string => category === '内家' ? '内' : category
-
-const fitText: Record<string, string> = {
-  拳: '拳系武者根骨沉厚，宜居前列，为队友遮拦锋镝。',
-  刀: '刀势沉猛，宜居前列以先手破敌，势不可挡。',
-  剑: '剑走轻灵，前列可抢先手，后列可保其锋。',
-  暗: '淬毒暗器，藏于帷幄之中，出手最难提防。',
-  医: '医者仁心，居后列方得悬壶续命、安稳施救。',
-  内家: '内家气脉绵长，居后运气，可护全队心脉。',
-}
 
 const FORMATION_LANES: readonly FormationLane[] = [0, 1, 2]
 const FORMATION_DEPTHS: readonly FormationDepth[] = [0, 1, 2, 3, 4]
@@ -97,12 +83,15 @@ const renderRoster = (view: FormationPageViewModel): string => {
         ${filterOptions.map((filter) => `<button type="button" class="formation-filter-chip${view.filter === filter.id ? ' active' : ''}" data-action="formation-filter" data-filter="${escapeHtml(filter.id)}" aria-pressed="${view.filter === filter.id}">${filter.label}</button>`).join('')}
       </div>
       <div class="formation-roster-list">
-        ${heroes.map((hero) => `<button type="button" draggable="${!view.locked}" data-action="formation-select" data-hero-id="${escapeHtml(hero.id)}" data-testid="formation-hero-${escapeHtml(hero.id)}" class="formation-roster-row${hero.inFormation ? ' in-formation' : ''}${hero.id === view.selectedHeroId ? ' active' : ''}" aria-pressed="${hero.id === view.selectedHeroId}">
+        ${heroes.map((hero) => `<div class="formation-roster-row${hero.inFormation ? ' in-formation' : ''}${hero.id === view.selectedHeroId ? ' active' : ''}">
+          <button type="button" draggable="${!view.locked}" data-action="formation-select" data-hero-id="${escapeHtml(hero.id)}" data-testid="formation-hero-${escapeHtml(hero.id)}" class="formation-roster-select" aria-pressed="${hero.id === view.selectedHeroId}" aria-label="点选 ${escapeHtml(hero.name)} 布阵">
           ${renderPortraitWithGrade(hero, 'formation-roster-portrait', true)}
-          <span class="formation-roster-copy"><strong>${escapeHtml(hero.name)}</strong><small>${escapeHtml(categoryLabel(hero.category))} · ${escapeHtml(hero.careerName)} · ${escapeHtml(hero.source)}</small></span>
+          <span class="formation-roster-copy"><strong>${escapeHtml(hero.name)}</strong><small>${escapeHtml(categoryLabel(hero.category))} · ${escapeHtml(hero.source)}</small></span>
           <span class="formation-roster-level">Lv.${hero.level}</span>
+          </button>
           ${hero.inFormation ? '<em class="formation-roster-stamp">在阵</em>' : ''}
-        </button>`).join('') || '<p class="formation-empty-roster">此类侠客尚未入册</p>'}
+          <button type="button" class="formation-roster-detail" data-action="formation-view-hero" data-hero-id="${escapeHtml(hero.id)}" aria-label="查看 ${escapeHtml(hero.name)} 的侠客详情">详情</button>
+        </div>`).join('') || '<p class="formation-empty-roster">此类侠客尚未入册</p>'}
       </div>
       <footer>${view.locked ? '战斗中可查看侠客，退出战斗后可布阵' : '点击选将 · 拖拽令牌亦可布阵'}</footer>
     </div>
@@ -155,57 +144,6 @@ const renderFormationField = (view: FormationPageViewModel): string => {
   </section>`
 }
 
-const renderRadar = (hero: FormationHeroView): string => {
-  const axes = [
-    ['臂力', 'strength'], ['悟性', 'insight'], ['体魄', 'constitution'], ['身法', 'agility'], ['定力', 'resolve'],
-  ] as const
-  const cx = 100
-  const cy = 95
-  const radius = 58
-  const max = 16
-  const point = (index: number, distance: number): [number, number] => {
-    const angle = (-90 + index * 72) * Math.PI / 180
-    return [cx + distance * Math.cos(angle), cy + distance * Math.sin(angle)]
-  }
-  const polygon = (distance: number, className: string): string => `<polygon class="${className}" points="${axes.map((_, index) => point(index, distance).map((value) => value.toFixed(1)).join(',')).join(' ')}"></polygon>`
-  const lines = axes.map((_, index) => {
-    const [x, y] = point(index, radius)
-    return `<line class="axis" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"></line>`
-  }).join('')
-  const shape = axes.map((axis, index) => point(index, radius * Math.min(hero.aptitudes[axis[1]] / max, 1)).map((value) => value.toFixed(1)).join(',')).join(' ')
-  const dots = axes.map((axis, index) => {
-    const [x, y] = point(index, radius * Math.min(hero.aptitudes[axis[1]] / max, 1))
-    return `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4"></circle>`
-  }).join('')
-  const labels = axes.map(([label, key], index) => {
-    const angle = -90 + index * 72
-    const cosine = Math.cos(angle * Math.PI / 180)
-    const anchor = Math.abs(cosine) < 0.2 ? 'middle' : cosine > 0 ? 'start' : 'end'
-    const [x, y] = point(index, radius + 18)
-    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}">${label} ${hero.aptitudes[key]}</text>`
-  }).join('')
-  return `<svg class="formation-radar" width="200" height="190" viewBox="0 0 200 190" role="img" aria-label="${escapeHtml(hero.name)}五维资质"><polygon class="ring" points="${axes.map((_, index) => point(index, radius / 3).map((value) => value.toFixed(1)).join(',')).join(' ')}"></polygon>${polygon(radius * 2 / 3, 'ring')} ${polygon(radius, 'ring outer')}${lines}<polygon class="shape" points="${shape}"></polygon>${dots}${labels}</svg>`
-}
-
-const renderCurrentCareer = (hero: FormationHeroView): string =>
-  `<div class="formation-career-now" data-testid="formation-career"><strong>${escapeHtml(hero.careerName)}</strong><span>职业 Lv.${hero.careerLevel}</span></div>`
-
-const renderHeroCard = (view: FormationPageViewModel): string => {
-  const hero = heroAt(view, view.selectedHeroId)
-  if (!hero) return `<aside class="formation-hero-card panel empty" data-testid="formation-hero-card"><span class="formation-card-corner"></span><div class="formation-card-empty"><b>帖</b><span>点选名册侠客 · 览其身手帖</span></div></aside>`
-  const slotText = hero.slot ? slotName(hero.slot.row, hero.slot.col) : '未在阵中'
-  return `<aside class="formation-hero-card panel" data-testid="formation-hero-card">
-    <span class="formation-card-corner" aria-hidden="true"></span>
-    <div class="formation-hero-head">${renderPortraitWithGrade(hero, 'formation-card-portrait')}<div><small>${escapeHtml(hero.source)} · ${escapeHtml(hero.category)}门</small><h2>${escapeHtml(hero.name)}</h2><p>侠客 · 行走江湖</p></div><span class="formation-level-badge"><b>${hero.level}</b><i>等级</i></span></div>
-    <div class="formation-hero-fit"><b>宜</b><span>${escapeHtml(fitText[hero.category] ?? '身随其位，各展所长。')}</span></div>
-    <div class="formation-card-title">五维禀赋</div>
-    ${renderRadar(hero)}
-    <div class="formation-card-title">当前职业</div>
-    ${renderCurrentCareer(hero)}
-    <div class="formation-card-foot"><span>现居 <b>${escapeHtml(slotText)}</b></span>${hero.slot ? `<button type="button" class="formation-btn-line" data-action="formation-remove" ${view.locked ? 'disabled' : ''} data-hero-id="${escapeHtml(hero.id)}">遣其下阵</button>` : ''}</div>
-  </aside>`
-}
-
 export const displayPower = (heroes: FormationHeroView[]): number => heroes.reduce((total, hero) => {
   const stats = hero.combatStats
   return total + Math.round(
@@ -222,7 +160,7 @@ export const renderFormationPage = (view: FormationPageViewModel): string => {
     <span class="formation-ghost formation-ghost-array" aria-hidden="true">陣</span><span class="formation-ghost formation-ghost-muster" aria-hidden="true">將</span>
     <header class="formation-page-head"><div><p class="formation-crumb">蛋蛋江湖 2.0 <b>/</b> 阵容 · 演武点将</p><h1>阵容</h1><span>FORMATION · MUSTER AT THE ARENA</span></div><div class="formation-stats" aria-label="队伍概览"><div><b>${formatNumber(displayPower(heroesInFormation))}</b><small>队伍战力</small></div><div><b><i>${heroesInFormation.length}</i>/6</b><small>上阵侠客</small></div></div></header>
     <div class="formation-bonus-entry"><button type="button" class="formation-btn-line" data-action="open-formation-bonuses">查看加成</button></div>
-    <div class="formation-muster-layout">${renderRoster(view)}${renderFormationField(view)}${renderHeroCard(view)}</div>
+    <div class="formation-muster-layout">${renderRoster(view)}${renderFormationField(view)}</div>
     <footer class="formation-page-foot"><span><b>阵容页高保真重设计</b> · 蛋蛋江湖 2.0 · 演武点将</span></footer>
   </section>`
 }

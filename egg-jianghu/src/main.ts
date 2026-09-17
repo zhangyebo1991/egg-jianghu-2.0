@@ -229,7 +229,7 @@ let heroRosterGradeFilter = 'all'
 let heroRosterCategoryFilter = 'all'
 let heroRosterLocatePending = false
 let formationSelectedHeroId: string | null = null
-let formationDetailHeroId: string | null = null
+let formationFocusedHeroId: string | null = null
 let formationFilter: FormationFilter = 'all'
 let dragHeroId: string | null = null
 let dragCandidateHeroId: string | null = null
@@ -1130,8 +1130,6 @@ const formationLocked = (): boolean => Boolean(session.combat || session.pending
 const formationViewModel = (): FormationPageViewModel => {
   if (formationLocked()) formationSelectedHeroId = null
   const heroes = recruitedHeroes().map(({ definition, progress, name }) => {
-    const currentCareer = careerById(progress.currentCareerId) ?? careerById(definition.baseCareerId)
-    const careerRecord = progress.careers[progress.currentCareerId]
     const combatStats = buildCombatStats(definition, progress, session.state.inventory, session.state.unlockedSkinIds)
     return {
       id: definition.id,
@@ -1141,9 +1139,6 @@ const formationViewModel = (): FormationPageViewModel => {
       inFormation: session.state.formation.some((slot) => slot.heroId === definition.id),
       category: heroMeridianCategory(definition),
       source: formationSourceLabel(definition),
-      careerName: currentCareer?.name ?? progress.currentCareerId,
-      careerLevel: careerRecord?.level ?? 1,
-      aptitudes: definition.aptitudes,
       combatStats: {
         maxHp: combatStats.maxHp,
         externalAttack: combatStats.externalAttack,
@@ -1152,13 +1147,12 @@ const formationViewModel = (): FormationPageViewModel => {
         internalDefense: combatStats.internalDefense,
         effectiveAgility: combatStats.effectiveAgility,
       },
-      slot: session.state.formation.find((slot) => slot.heroId === definition.id) ?? null,
     }
   })
-  const selectedHeroId = heroes.some((hero) => hero.id === formationDetailHeroId)
-    ? formationDetailHeroId
+  const selectedHeroId = heroes.some((hero) => hero.id === formationFocusedHeroId)
+    ? formationFocusedHeroId
     : session.state.formation[0]?.heroId ?? heroes[0]?.id ?? null
-  formationDetailHeroId = selectedHeroId
+  formationFocusedHeroId = selectedHeroId
   return { formation: session.state.formation, selectedHeroId, filter: formationFilter, heroes, locked: formationLocked() }
 }
 
@@ -2634,8 +2628,17 @@ const performAction = (button: HTMLButtonElement): void => {
   }
   if (action === 'formation-remove') commitAction(removeFormation(session.state, heroId))
   else if (action === 'formation-select') {
-    formationDetailHeroId = heroId
+    formationFocusedHeroId = heroId
     formationSelectedHeroId = formationLocked() ? null : heroId
+  } else if (action === 'formation-view-hero') {
+    selectedHeroId = heroId
+    heroMartialSlot = null
+    heroMartialQuery = ''
+    heroMartialCategory = 'all'
+    highlightedHeroMartialId = null
+    careerTreeOpen = false
+    selectedTreeCareerId = null
+    activeTab = 'heroes'
   } else if (action === 'formation-filter') {
     const nextFilter = button.dataset.filter as FormationFilter
     if (formationFilterOptions.includes(nextFilter)) formationFilter = nextFilter
@@ -2649,10 +2652,10 @@ const performAction = (button: HTMLButtonElement): void => {
     const slotHeroId = button.dataset.heroId ?? null
     if (formationSelectedHeroId && !formationLocked()) {
       commitAction(placeFormation(session.state, formationSelectedHeroId, dataNumber(button, 'row') as FormationRow, dataNumber(button, 'col') as FormationColumn))
-      formationDetailHeroId = formationSelectedHeroId
+      formationFocusedHeroId = formationSelectedHeroId
       formationSelectedHeroId = null
     } else if (slotHeroId) {
-      formationDetailHeroId = slotHeroId
+      formationFocusedHeroId = slotHeroId
     }
   }
   else if (action === 'career-change') {
