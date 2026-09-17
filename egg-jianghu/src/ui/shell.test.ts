@@ -13,6 +13,11 @@ describe('应用 Shell', () => {
 
     expect(html).toContain('class="app-shell ink-shell"')
     expect(html).toContain('aria-label="江湖资源"')
+    // 右上角资源位从队伍战力改为位面声望。
+    expect(html).toContain('data-testid="hud-reputation"')
+    expect(html).toContain('位面声望')
+    expect(html).not.toContain('hud-power')
+    expect(html).not.toContain('队伍战力')
     expect(html).toContain('data-testid="tab-idle"')
     expect(html).toContain('data-testid="tab-heroes"')
     expect(html).toContain('data-testid="tab-formation"')

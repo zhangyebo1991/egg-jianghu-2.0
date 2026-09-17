@@ -548,10 +548,11 @@ test('敌人死亡时货币立即入账并掉落诸天装备，且不掉转职�
   expect(after.worldCurrency.world_01).toBeGreaterThan(before)
 })
 
-test('背包坊市可用当前位面铜钱购买转职书', async ({ page }) => {
-  await openPanel(page, 'inventory')
-  await page.locator('.ink-book-shop summary').click()
-  await expect(page.getByTestId('job-book-shop')).toBeVisible()
+test('兑换页通用 tab 可用当前位面铜钱购买转职书', async ({ page }) => {
+  await openWorldSection(page, 'factions')
+  await page.locator('.ink-faction-tabs [data-faction-panel="exchange"]').click()
+  await expect(page.getByTestId('exchange-general')).toBeVisible()
+  await expect(page.getByTestId('exchange-wallet-world_01')).toHaveAttribute('aria-pressed', 'true')
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().worldCurrency.world_01 ?? 0)
   await page.getByTestId('shop-buy-job_5').click()
   const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
@@ -636,22 +637,26 @@ test('势力页支持切换匾额和原版招募名录', async ({ page }) => {
   await expect(page.getByTestId('faction-meridian')).toBeVisible()
 })
 
-test('势力页支持声望、连续贡献兑换与招募', async ({ page }, testInfo) => {
+test('兑换页聚合位面声望、贡献兑换与招募', async ({ page }, testInfo) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
     window.__EGG_JIANGHU__.grantContribution('tieyi_school', 100_000)
     window.__EGG_JIANGHU__.grantWorldReputation('world_01', 200)
   })
   await openWorldSection(page, 'factions')
-  await page.getByTestId('faction-plaque-tieyi_school').click()
+  // 右上角资源位从战力改为位面声望，200 声望对应「友好」。
+  await expect(page.getByTestId('hud-reputation')).toContainText('友好')
 
   await page.locator('.ink-faction-tabs [data-faction-panel="exchange"]').click()
   const exchange = page.getByTestId('faction-exchange')
-  await expect(exchange).toHaveAttribute('data-faction-id', 'tieyi_school')
-  await expect(page.getByTestId('faction-reputation')).toContainText('友好')
-  await expect(exchange.locator('[data-testid^="faction-exchange-item-"]'))
+  await expect(exchange).toBeVisible()
+  await page.getByTestId('exchange-tab-contribution').click()
+  // 全局目录按势力分组，随时可购任意已解锁势力的物品。
+  await expect(exchange.locator('[data-testid^="faction-exchange-item-tieyi_school-"]'))
     .toHaveCount(originalFactionExchangeByFaction(2).length)
-  const blueprint = page.getByTestId('faction-exchange-item-2')
+  await expect(exchange.locator('.exchange-faction-group[data-faction-id="tieyi_school"]'))
+    .toContainText('声望 友好')
+  const blueprint = page.getByTestId('faction-exchange-item-tieyi_school-2')
   await expect(blueprint).toContainText('虎豹之头盔图纸')
   await blueprint.getByRole('button', { name: '兑换' }).click()
   await expect(blueprint.getByRole('button', { name: '已拥有' })).toBeDisabled()
@@ -660,8 +665,7 @@ test('势力页支持声望、连续贡献兑换与招募', async ({ page }, tes
   await exchange.scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('faction-exchange.png'), fullPage: true })
 
-  await expect(page.getByTestId('faction-exchange')).toHaveAttribute('data-faction-id', 'tieyi_school')
-  await page.getByTestId('faction-exchange-item-1').getByRole('button', { name: '兑换' }).click()
+  await page.getByTestId('faction-exchange-item-tieyi_school-1').getByRole('button', { name: '兑换' }).click()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().jobBooks.job_2)).toBe(1)
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.tieyi_school)).toBe(73_828)
   await page.getByTestId('faction-exchange').scrollIntoViewIfNeeded()

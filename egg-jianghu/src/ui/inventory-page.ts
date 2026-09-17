@@ -52,26 +52,17 @@ export interface InventorySlotTabView {
   count: number
 }
 
-export interface InventoryShopItemView {
-  careerId: string
-  bookName: string
-  careerName: string
-  price: number
-  owned: number
-  affordable: boolean
-}
-
-export interface InventoryShopView {
-  worldName: string
-  currencyName: string
-  currency: number
-  rank: 2 | 3 | 4 | 5 | 6
-  ranks: Array<{ id: 2 | 3 | 4 | 5 | 6; name: string }>
-  items: InventoryShopItemView[]
+export interface InventoryPagerView {
+  page: number
+  pageCount: number
+  pageSize: number
+  total: number
+  rangeStart: number
+  rangeEnd: number
 }
 
 export interface InventoryPageViewModel {
-  shopOpen?: boolean
+  pager?: InventoryPagerView
   sellOpen?: boolean
   heroSidebar?: string
   heroEquipment?: string
@@ -95,7 +86,6 @@ export interface InventoryPageViewModel {
   detailOpen: boolean
   items: InventoryItemView[]
   selectedItem: InventoryItemView | null
-  shop: InventoryShopView
 }
 
 export interface InventoryStackView {
@@ -234,6 +224,36 @@ const renderInventoryGrid = (view: InventoryPageViewModel): string => view.items
       <span>暂无符合当前分类和搜索条件的物品。</span>
     </div>`
 
+// 页码窗口：首末页常驻，当前页前后各一页，其余折叠为省略号，总槽位恒不超过 7。
+const pagerSlots = (page: number, pageCount: number): Array<number | 'gap'> => {
+  if (pageCount <= 7) return Array.from({ length: pageCount }, (_, index) => index + 1)
+  const start = Math.max(2, Math.min(page - 1, pageCount - 4))
+  const end = Math.min(pageCount - 1, Math.max(page + 1, 5))
+  return [
+    1,
+    ...(start > 2 ? ['gap' as const] : []),
+    ...Array.from({ length: end - start + 1 }, (_, index) => start + index),
+    ...(end < pageCount - 1 ? ['gap' as const] : []),
+    pageCount,
+  ]
+}
+
+const renderPagerStep = (label: string, target: number, disabled: boolean, name: string): string =>
+  `<button type="button" class="inventory-pager-step" data-action="inventory-page" data-page="${target}" aria-label="${name}"${disabled ? ' disabled' : ''}>${label}</button>`
+
+const renderInventoryPager = (pager?: InventoryPagerView): string => {
+  if (!pager || pager.pageCount <= 1) return ''
+  const { page, pageCount } = pager
+  return `<nav class="inventory-pager" aria-label="百宝囊分页" data-testid="inventory-pager">
+    ${renderPagerStep('‹ 上页', page - 1, page <= 1, '上一页')}
+    <div class="inventory-pager-nums">${pagerSlots(page, pageCount).map((slot) => slot === 'gap'
+      ? '<span class="inventory-pager-gap" aria-hidden="true">···</span>'
+      : `<button type="button" class="inventory-pager-num${slot === page ? ' active' : ''}" data-action="inventory-page" data-page="${slot}" aria-label="第 ${slot} 页"${slot === page ? ' aria-current="page"' : ''}>${slot}</button>`).join('')}</div>
+    ${renderPagerStep('下页 ›', page + 1, page >= pageCount, '下一页')}
+    <span class="inventory-pager-meta">第 <b>${page}</b> / ${pageCount} 页 · 本页 ${pager.rangeStart}-${pager.rangeEnd} 件 · 共 ${pager.total} 件</span>
+  </nav>`
+}
+
 const renderAffixes = (item: InventoryItemView): string => item.affixes.length
   ? item.affixes.map((affix) => `
     <div class="inventory-affix-row" data-affix-grade="${affix.grade}">
@@ -295,39 +315,6 @@ const renderSelectedDetail = (item: InventoryItemView | null): string => {
   </div>`
 }
 
-const renderShop = (shop: InventoryShopView): string => `
-  <aside class="inventory-shop" data-testid="job-book-shop" aria-label="坊市">
-    <header class="inventory-shop-head">
-      <div>
-        <h2>坊市</h2>
-        <span>转职书 · ${escapeHtml(shop.worldName)}</span>
-      </div>
-      <div class="inventory-shop-purse">
-        <b data-testid="shop-currency">${shop.currency}</b>
-        <small>${escapeHtml(shop.currencyName)}</small>
-      </div>
-    </header>
-    <nav class="inventory-shop-ranks" aria-label="转职书阶位">
-      ${shop.ranks.map((rank) => `
-        <button type="button" class="inventory-shop-rank${shop.rank === rank.id ? ' active' : ''}"
-          data-action="shop-rank" data-rank="${rank.id}" data-testid="shop-rank-${rank.id}"
-          aria-pressed="${shop.rank === rank.id}">${escapeHtml(rank.name)}</button>`).join('')}
-    </nav>
-    <ul class="inventory-shop-list">
-      ${shop.items.map((item) => `
-        <li class="inventory-shop-item" data-testid="shop-book-${escapeHtml(item.careerId)}">
-          <div>
-            <strong>${escapeHtml(item.bookName)}</strong>
-            <span>持有 ${item.owned} · ${item.price} 铜钱</span>
-          </div>
-          <button type="button" class="inventory-shop-buy" data-action="shop-buy"
-            data-career-id="${escapeHtml(item.careerId)}" data-testid="shop-buy-${escapeHtml(item.careerId)}"
-            ${item.affordable ? '' : 'disabled'}>购入</button>
-        </li>`).join('')}
-    </ul>
-    <p class="inventory-shop-note">战斗不掉转职书。可先囤书，转职仍需前置职业等级。</p>
-  </aside>`
-
 export const renderInventoryPage = (view: InventoryPageViewModel): string => `<section class="inventory-page" data-testid="inventory-page">
   <span class="inventory-ghost-char" aria-hidden="true">囊</span>
 
@@ -341,7 +328,7 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
       <span class="inventory-head-note-seal" aria-hidden="true">囊</span>
       <div class="inventory-head-note-copy">
         <span>装备 · 材料 · 特殊物品 · <b>已装备不入此囊</b></span>
-        <small>穿戴与卸下 · 请往侠客页操办 · 坊市只卖转职书</small>
+        <small>穿戴与卸下 · 请往侠客页操办 · 转职书在兑换页购入</small>
       </div>
     </div>
   </header>
@@ -377,6 +364,7 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
         ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="inventory-slot-tabs" aria-label="部位筛选">${renderSlotTabs(view)}</nav>` : ''}
         ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="ink-bag-filters" aria-label="品质与排序"><button type="button" data-action="inventory-quality" data-quality="all" aria-pressed="${(view.qualityFilter ?? 'all') === 'all'}">全品质</button>${EQUIPMENT_QUALITIES.map(quality => `<button type="button" data-action="inventory-quality" data-quality="${quality}" aria-pressed="${view.qualityFilter === quality}">${EQUIPMENT_QUALITY_NAMES[quality]}</button>`).join('')}<button type="button" data-action="inventory-sort" data-sort="level" aria-pressed="${(view.sort ?? 'level') === 'level'}">等级↓</button><button type="button" data-action="inventory-sort" data-sort="quality" aria-pressed="${view.sort === 'quality'}">品质↓</button></nav>` : ''}
         <div class="inventory-grid-wrap"><div class="inventory-grid">${renderInventoryGrid(view)}</div></div>
+        ${renderInventoryPager(view.pager)}
         <footer class="inventory-legend">
           ${(view.category ?? 'all') === 'all' || view.category === 'equipment' ? EQUIPMENT_QUALITIES.map((quality) => `<span data-quality="${quality}">${EQUIPMENT_QUALITY_NAMES[quality]}<b>${view.qualityCounts[quality]}</b></span>`).join('') : ''}
           <span class="inventory-legend-total">装备 ${view.itemCount} 件 · 堆叠物品不占装备格</span>
@@ -391,7 +379,6 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
     </aside>
     </div>
   </div>
-  <details class="ink-book-shop" ${view.shopOpen ? 'open' : ''}><summary>坊市 · 购入转职书</summary>${renderShop(view.shop)}</details>
 
   <footer class="inventory-page-foot">蛋蛋江湖 2.0 · 背包页重设计 v2 · 墨底宣纸 / 朱砂印 / 金漆匾</footer>
 </section>`

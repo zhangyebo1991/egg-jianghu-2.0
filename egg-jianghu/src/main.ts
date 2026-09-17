@@ -57,7 +57,6 @@ import {
   originalFactionTaskTargetName,
   originalWorldReputationLevel,
   originalWorldReputationLevelName,
-  originalWorldReputationThreshold,
 } from './content/original-faction-rules.generated'
 import { originalFactionExchangeByFaction } from './content/original-faction-exchange.generated'
 import { originalFactionRecruitmentByFaction } from './content/original-faction-recruitment.generated'
@@ -134,9 +133,9 @@ import type { ActionResult, EquipmentInstance, EquipmentQuality, FormationColumn
 import { renderCityPage, type CityPageSection, type CityPageViewModel } from './ui/city-page'
 import { MARTIAL_LORE } from './content/martial-lore'
 import { renderFactionsPage, withLore, type FactionMartialState, type FactionsPageViewModel } from './ui/factions-page'
-import type { FactionExchangeViewModel } from './ui/faction-exchange'
+import type { ExchangeCategory, FactionExchangeViewModel } from './ui/faction-exchange'
 import type { FactionRecruitmentViewModel } from './ui/faction-recruitment'
-import { displayPower, renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
+import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
 import { renderPremiumPanel, renderShopPage, type PremiumPanel } from './ui/premium-panel'
 import { renderHeroesPage, type HeroesHeroView, type HeroesMainTab, type HeroesPageViewModel } from './ui/heroes-page'
 import {
@@ -185,7 +184,6 @@ let activeTab: TabId = 'idle'
 let inkPanelOpen = true
 let inkPanelDocked = false
 let inkCombatLogOpen = false
-let inkBookShopOpen = false
 let inkPanelReturnFocus: HTMLElement | null = null
 let inkFactionPanel: 'quests' | 'exchange' | 'recruit' | 'martials' = 'quests'
 let jianghuView: JianghuView = 'worlds'
@@ -201,11 +199,20 @@ let inventoryQualityFilter: EquipmentQuality | 'all' = 'all'
 let inventorySort: 'level' | 'quality' = 'level'
 let inventoryCategory: 'all' | 'equipment' | 'material' | 'special' = 'all'
 let inventoryQuery = ''
+// 百宝囊分页：容量放大到上千件时避免一次渲染整袋格子。
+const INVENTORY_PAGE_SIZE = 60
+let inventoryPage = 1
+let inventoryGridScrollPending = false
 let selectedStackId: number | null = null
 let selectedInventoryUid: string | null = null
 let inventoryDetailOpen = false
 let pendingInventoryDropUids: string[] = []
 let shopRank: 2 | 3 | 4 | 5 | 6 = 2
+// 兑换页状态：通用/贡献双 tab、付款位面钱包、贡献目录的种类与位面筛选。
+let exchangeTab: 'general' | 'contribution' = 'general'
+let exchangeWalletWorldId: string | null = null
+let exchangeCategory: 'all' | 'job-book' | 'blueprint' | 'secret-realm-ticket' | 'skin' = 'all'
+let exchangeWorldFilter: string = 'all'
 let progressionSection: ProgressionSection = 'dungeons'
 let progressionDungeonDifficulty = 1
 let selectedProgressionEquipmentUid: string | null = null
@@ -611,6 +618,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   ordinaryPoolRewards = []
   inventoryCategory = 'all'
   inventoryQuery = ''
+  inventoryPage = 1
   selectedStackId = null
   selectedInventoryUid = null
   inventoryDetailOpen = false
@@ -1195,51 +1203,135 @@ const clearFormation = (): ActionResult => {
   return { ok: true, message: '已悉数下阵' }
 }
 
-const factionExchangeViewModel = (factionId: string): FactionExchangeViewModel | null => {
-  const faction = FACTIONS.find((candidate) => candidate.id === factionId)
-  if (!faction || !session.state.unlockedFactionIds.includes(factionId)) return null
+// 兑换页付款位面：未手动选择时跟随当前位面（战斗中为战场位面）。
+const exchangeWalletWorldIdResolved = (): string => {
+  if (exchangeWalletWorldId && session.state.unlockedWorldIds.includes(exchangeWalletWorldId)) return exchangeWalletWorldId
+  const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
+  return session.combat?.state.worldId ?? world.id
+}
 
-  const worldIndex = Number(faction.worldId.slice(-2))
-  const reputation = session.state.worldReputation[faction.worldId] ?? 0
-  const reputationLevel = originalWorldReputationLevel(reputation, worldIndex)
-  const contribution = session.state.contribution[factionId] ?? 0
+const exchangeHubViewModel = (): FactionExchangeViewModel => {
+  // —— 通用兑换：转职书随侠客习得的最高职业等阶解锁，铜钱取自所选付款位面 ——
+  const walletWorldId = exchangeWalletWorldIdResolved()
+  const walletWorld = WORLDS.find((item) => item.id === walletWorldId) ?? WORLDS[0]
+  const balance = session.state.worldCurrency[walletWorldId] ?? 0
+  const maxRank = Object.values(session.state.heroes).reduce((max, hero) => {
+    for (const careerId of Object.keys(hero.careers)) {
+      const rank = careerById(careerId)?.rank ?? 1
+      if (rank > max) max = rank
+    }
+    return max
+  }, 1)
+  const ranks = JOB_BOOK_SHOP_RANKS.map((rank) => ({
+    id: rank,
+    name: JOB_BOOK_SHOP_TIER_LABELS[rank],
+    unlocked: rank <= maxRank + 1,
+    lockedReason: rank <= maxRank + 1
+      ? null
+      : `需先转职至${JOB_BOOK_SHOP_TIER_LABELS[(rank - 1) as 2 | 3 | 4 | 5] ?? '上阶'}职业`,
+  }))
+  const highestUnlockedRank = Math.min(6, maxRank + 1) as 2 | 3 | 4 | 5 | 6
+  if (shopRank > highestUnlockedRank) shopRank = highestUnlockedRank
+  const generalItems = shopJobBooksForRank(shopRank).map((item) => ({
+    careerId: item.careerId,
+    bookName: item.bookName,
+    price: item.price,
+    owned: session.state.jobBooks[item.careerId] ?? 0,
+    affordable: balance >= item.price,
+  }))
+  const general = {
+    wallets: WORLDS.filter((world) => session.state.unlockedWorldIds.includes(world.id)).map((world) => ({
+      worldId: world.id,
+      worldName: world.name,
+      currencyName: world.currencyName,
+      balance: session.state.worldCurrency[world.id] ?? 0,
+      selected: world.id === walletWorldId,
+    })),
+    selectedWorldName: walletWorld.name,
+    currencyName: walletWorld.currencyName,
+    balance,
+    fundsShort: generalItems.some((item) => !item.affordable),
+    ranks,
+    rank: shopRank,
+    items: generalItems,
+  }
+
+  // —— 贡献兑换：所有已解锁势力的原版目录聚合，跨位面随时可购 ——
+  if (exchangeWorldFilter !== 'all' && !session.state.unlockedWorldIds.includes(exchangeWorldFilter)) exchangeWorldFilter = 'all'
+  const worldFiltered = FACTIONS
+    .filter((faction) => session.state.unlockedFactionIds.includes(faction.id))
+    .filter((faction) => exchangeWorldFilter === 'all' || faction.worldId === exchangeWorldFilter)
+  const catalogEntries = worldFiltered.flatMap((faction) =>
+    originalFactionExchangeByFaction(faction.originalId).map((item) => ({ faction, item })))
+  const categoryNames: Record<ExchangeCategory, string> = {
+    all: '全部',
+    'job-book': '转职书',
+    blueprint: '装备图纸',
+    'secret-realm-ticket': '秘境门票',
+    skin: '幻型',
+  }
+  const categories = (Object.keys(categoryNames) as ExchangeCategory[]).map((id) => ({
+    id,
+    name: categoryNames[id],
+    count: id === 'all'
+      ? catalogEntries.length
+      : catalogEntries.filter(({ item }) => item.kind === id).length,
+  }))
+  const groups = worldFiltered.map((faction) => {
+    const worldIndex = Number(faction.worldId.slice(-2))
+    const reputation = session.state.worldReputation[faction.worldId] ?? 0
+    const reputationLevel = originalWorldReputationLevel(reputation, worldIndex)
+    const contribution = session.state.contribution[faction.id] ?? 0
+    const items = originalFactionExchangeByFaction(faction.originalId)
+      .filter((item) => exchangeCategory === 'all' || item.kind === exchangeCategory)
+      .map((item) => {
+        const owned = factionExchangeItemOwned(session.state, item)
+        const requiredReputationName = item.requiredReputationLevel === null
+          ? null
+          : originalWorldReputationLevelName(item.requiredReputationLevel)
+        const reputationLocked = item.requiredReputationLevel !== null && reputationLevel < item.requiredReputationLevel
+        return {
+          slot: item.slot,
+          kind: item.kind,
+          name: item.originalName,
+          price: item.price,
+          requiredReputationLevel: item.requiredReputationLevel,
+          requiredReputationName,
+          quantity: factionExchangeItemQuantity(session.state, item),
+          owned,
+          reputationLocked,
+          insufficientFunds: !reputationLocked && !owned && contribution < item.price,
+          actionReason: reputationLocked ? `需${requiredReputationName}声望` : null,
+        }
+      })
+    return {
+      factionId: faction.id,
+      factionName: faction.name,
+      worldId: faction.worldId,
+      worldName: WORLDS.find((world) => world.id === faction.worldId)?.name ?? `第${worldIndex}位面`,
+      contribution,
+      reputationLevel,
+      reputationLevelName: originalWorldReputationLevelName(reputationLevel),
+      fundsShort: items.some((item) => item.insufficientFunds),
+      items,
+    }
+  }).filter((group) => group.items.length > 0)
+
   return {
-    factionId,
-    factionName: faction.name,
-    contribution,
-    reputation,
-    reputationLevel,
-    reputationLevelName: originalWorldReputationLevelName(reputationLevel),
-    reputationCurrentThreshold: originalWorldReputationThreshold(reputationLevel, worldIndex),
-    reputationNextThreshold: reputationLevel < 5
-      ? originalWorldReputationThreshold(reputationLevel + 1, worldIndex)
-      : null,
-    items: originalFactionExchangeByFaction(faction.originalId).map((item) => {
-      const owned = factionExchangeItemOwned(session.state, item)
-      const requiredReputationName = item.requiredReputationLevel === null
-        ? null
-        : originalWorldReputationLevelName(item.requiredReputationLevel)
-      let actionReason: string | null = null
-      if (item.requiredReputationLevel !== null && reputationLevel < item.requiredReputationLevel) {
-        actionReason = `需${requiredReputationName}声望`
-      } else if (owned) {
-        actionReason = '已拥有'
-      } else if (contribution < item.price) {
-        actionReason = '贡献不足'
-      }
-      return {
-        slot: item.slot,
-        kind: item.kind,
-        name: item.originalName,
-        price: item.price,
-        requiredReputationLevel: item.requiredReputationLevel,
-        requiredReputationName,
-        quantity: factionExchangeItemQuantity(session.state, item),
-        owned,
-        actionDisabled: actionReason !== null,
-        actionReason,
-      }
-    }),
+    tab: exchangeTab,
+    general,
+    contribution: {
+      category: exchangeCategory,
+      categories,
+      worldFilter: exchangeWorldFilter,
+      worlds: [
+        { id: 'all', name: '全部位面', selected: exchangeWorldFilter === 'all' },
+        ...WORLDS.filter((world) => session.state.unlockedWorldIds.includes(world.id))
+          .map((world) => ({ id: world.id, name: world.name, selected: exchangeWorldFilter === world.id })),
+      ],
+      groups,
+      totalShown: groups.reduce((total, group) => total + group.items.length, 0),
+    },
   }
 }
 
@@ -1383,7 +1475,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
     worldIndex: world.index,
     worldName: world.name,
     selectedFactionId,
-    exchange: faction ? factionExchangeViewModel(faction.id) : null,
+    exchange: exchangeHubViewModel(),
     recruitment: faction ? factionRecruitmentViewModel(faction.id) : null,
     factions: availableFactions.map((item) => ({
       id: item.id,
@@ -1551,9 +1643,6 @@ const townsViewModel = (): TownsPageViewModel => {
     })),
     factionAgent: townFactionFunction === 'agent'
       ? factionAgentViewModel(world.id, world.name)
-      : null,
-    factionExchange: townFactionFunction === 'exchange' && selectedTownFactionId
-      ? factionExchangeViewModel(selectedTownFactionId)
       : null,
     factionRecruitment: townFactionFunction === 'recruitment' && selectedTownFactionId
       ? factionRecruitmentViewModel(selectedTownFactionId)
@@ -1747,11 +1836,22 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     .sort((a, b) => inventorySort === 'quality' ? b.quality - a.quality || b.level - a.level : b.level - a.level || b.quality - a.quality)
   const stacks = allStacks.filter(item => (inventoryCategory === 'all' || item.kind === inventoryCategory)
     && item.name.toLocaleLowerCase().includes(query))
+  // 装备与堆叠物在同一格子流中依次排布，按整体序号切页。
+  const totalCells = visibleItems.length + stacks.length
+  const pageCount = Math.max(1, Math.ceil(totalCells / INVENTORY_PAGE_SIZE))
+  inventoryPage = Math.min(Math.max(1, inventoryPage), pageCount)
+  const pageStart = (inventoryPage - 1) * INVENTORY_PAGE_SIZE
+  const pageEnd = pageStart + INVENTORY_PAGE_SIZE
+  const pagedItems = visibleItems.slice(pageStart, pageEnd)
+  const pagedStacks = stacks.slice(
+    Math.max(0, pageStart - visibleItems.length),
+    Math.max(0, pageEnd - visibleItems.length),
+  )
   let selectedStack = stacks.find(item => item.id === selectedStackId) ?? null
   let selectedItem = selectedStack ? null : visibleItems.find(item => item.uid === selectedInventoryUid) ?? null
   if (!selectedStack && !selectedItem) {
-    selectedItem = visibleItems[0] ?? null
-    selectedStack = selectedItem ? null : stacks[0] ?? null
+    selectedItem = pagedItems[0] ?? null
+    selectedStack = selectedItem ? null : pagedStacks[0] ?? null
   }
   selectedInventoryUid = selectedItem?.uid ?? null
   selectedStackId = selectedStack?.id ?? null
@@ -1764,7 +1864,6 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     return counts
   }, {} as Record<EquipmentQuality, number>)
   const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
-  const currency = session.state.worldCurrency[world.id] ?? 0
   // 悬停对比需要选中侠客身上各部位的装备（无选中侠客则不对比）。
   const equippedHero = selectedHeroId ? session.state.heroes[selectedHeroId] : undefined
   const equippedLoadout = equippedHero?.recruited ? bindActiveEquipmentLoadout(equippedHero) : null
@@ -1783,8 +1882,16 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     categoryCounts: { all: allItems.length + allStacks.length, equipment: allItems.length,
       material: allStacks.filter(item => item.kind === 'material').length,
       special: allStacks.filter(item => item.kind === 'special').length },
-    stacks,
+    stacks: pagedStacks,
     selectedStack,
+    pager: {
+      page: inventoryPage,
+      pageCount,
+      pageSize: INVENTORY_PAGE_SIZE,
+      total: totalCells,
+      rangeStart: totalCells ? pageStart + 1 : 0,
+      rangeEnd: Math.min(pageEnd, totalCells),
+    },
     capacity: INVENTORY_CAPACITY,
     itemCount: allItems.length,
     capacityRatio: Math.max(2, Math.min(100, allItems.length / INVENTORY_CAPACITY * 100)),
@@ -1795,21 +1902,9 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     slotTabs,
     selectedUid: selectedInventoryUid,
     detailOpen: inventoryDetailOpen,
-    items: visibleItems,
+    items: pagedItems,
     selectedItem,
     equippedBySlot,
-    shop: {
-      worldName: world.name,
-      currencyName: world.currencyName,
-      currency,
-      rank: shopRank,
-      ranks: JOB_BOOK_SHOP_RANKS.map((rank) => ({ id: rank, name: JOB_BOOK_SHOP_TIER_LABELS[rank] })),
-      items: shopJobBooksForRank(shopRank).map((item) => ({
-        ...item,
-        owned: session.state.jobBooks[item.careerId] ?? 0,
-        affordable: currency >= item.price,
-      })),
-    },
   }
 }
 
@@ -2072,7 +2167,7 @@ const render = (): void => {
     : activeTab === 'formation'
       ? renderFormationPage(formation)
       : activeTab === 'inventory'
-        ? renderInventoryPage({ ...inventoryViewModel(), shopOpen: inkBookShopOpen, sellOpen: inventorySellOpen, heroSidebar: renderInkInventoryHeroes(heroes!), heroEquipment: renderInkInventoryEquipment(heroes!), selectedHeroName: heroes!.heroes.find(hero => hero.id === selectedHeroId)?.name })
+        ? renderInventoryPage({ ...inventoryViewModel(), sellOpen: inventorySellOpen, heroSidebar: renderInkInventoryHeroes(heroes!), heroEquipment: renderInkInventoryEquipment(heroes!), selectedHeroName: heroes!.heroes.find(hero => hero.id === selectedHeroId)?.name })
         : activeTab === 'shop'
           ? renderShopPage(session.state, Date.now(), renderOrdinaryHeroPool(ordinaryPoolViewModel()), shopSection)
         : activeTab === 'settings'
@@ -2089,7 +2184,15 @@ const render = (): void => {
     battlefield: session.combat ? renderIdlePage({ ...idleViewModel(), logOpen: inkCombatLogOpen }) : undefined,
     currencyName: worldPresentation(session.combat?.state.worldId ?? world.id).currencyName,
     currency: session.state.worldCurrency[session.combat?.state.worldId ?? world.id] ?? 0,
-    power: displayPower(formation.heroes.filter(hero => hero.inFormation)),
+    reputation: (() => {
+      const reputationWorldId = session.combat?.state.worldId ?? world.id
+      const value = session.state.worldReputation[reputationWorldId] ?? 0
+      return {
+        value,
+        levelName: originalWorldReputationLevelName(
+          originalWorldReputationLevel(value, Number(reputationWorldId.slice(-2)))),
+      }
+    })(),
     premiumPanel: premiumPanel ? renderPremiumPanel(session.state, premiumPanel) : '',
     idleVouchers: session.state.idleVouchers,
     voucherDetailsOpen: voucherDetailsOpen || voucherHovered,
@@ -2105,6 +2208,10 @@ const render = (): void => {
   }))
   renderedLocationKey = locationKey
   markInkImages(document.body)
+  if (inventoryGridScrollPending) {
+    inventoryGridScrollPending = false
+    app.querySelector<HTMLElement>('.inventory-grid-wrap')?.scrollTo({ top: 0 })
+  }
   if (panelOpen && (!panelWasOpen || locationChanged)) app.querySelector<HTMLElement>('.game-main')?.focus({ preventScroll: true })
   if (careerTreeOpen && !careerWasOpen) app.querySelector<HTMLButtonElement>('[data-action="close-career-tree"]')?.focus({ preventScroll: true })
   positionVoucherDetails()
@@ -2613,6 +2720,7 @@ const performAction = (button: HTMLButtonElement): void => {
     const category = button.dataset.category
     if (category === 'all' || category === 'equipment' || category === 'material' || category === 'special') inventoryCategory = category
     inventorySlotFilter = 'all'
+    inventoryPage = 1
   } else if (action === 'inventory-close-detail') {
     inventoryDetailOpen = false
   } else if (action === 'inventory-filter') {
@@ -2622,6 +2730,7 @@ const performAction = (button: HTMLButtonElement): void => {
     inventorySlotFilter = nextFilter === 'all' || EQUIPMENT_SLOTS.includes(nextFilter as EquipmentSlot)
       ? nextFilter as EquipmentSlot | 'all'
       : 'all'
+    inventoryPage = 1
     const visibleItems = backpackEquipment(session.state).filter((item) =>
       inventorySlotFilter === 'all' || equipmentDefinitionById(item.definitionId)?.slot === inventorySlotFilter)
     if (!visibleItems.some((item) => item.uid === selectedInventoryUid)) selectedInventoryUid = visibleItems[0]?.uid ?? null
@@ -2630,10 +2739,17 @@ const performAction = (button: HTMLButtonElement): void => {
     inventoryQualityFilter = button.dataset.quality === 'all' || !isEquipmentQuality(quality) ? 'all' : quality
     inventoryCategory = 'equipment'
     selectedStackId = null
+    inventoryPage = 1
   } else if (action === 'inventory-sort') {
     inventorySort = button.dataset.sort === 'quality' ? 'quality' : 'level'
+    inventoryPage = 1
+  } else if (action === 'inventory-page') {
+    const page = Number(button.dataset.page)
+    if (Number.isFinite(page)) inventoryPage = Math.max(1, Math.trunc(page))
+    inventoryGridScrollPending = true
   } else if (action === 'inventory-organize') {
     inventorySort = 'quality'
+    inventoryPage = 1
     commitAction(organizeInventory(session.state))
   }
   else if (action === 'inventory-sell-toggle') {
@@ -2649,6 +2765,7 @@ const performAction = (button: HTMLButtonElement): void => {
       }
       commitAction(result)
     }
+    inventoryPage = 1
     inventorySellOpen = false
   } else if (action === 'inventory-toggle-lock') commitAction(toggleEquipmentLock(session.state, button.dataset.equipmentUid ?? ''))
   else if (action === 'inventory-discard') {
@@ -2663,7 +2780,40 @@ const performAction = (button: HTMLButtonElement): void => {
     const rank = Number(button.dataset.rank)
     if (rank === 2 || rank === 3 || rank === 4 || rank === 5 || rank === 6) shopRank = rank
   } else if (action === 'shop-buy') {
-    commitAction(buyJobBook(session.state, button.dataset.careerId ?? '', selectedWorldId || selectedPlaneId))
+    commitAction(buyJobBook(session.state, button.dataset.careerId ?? '', exchangeWalletWorldIdResolved()))
+  }
+  else if (action === 'exchange-tab') {
+    const tab = button.dataset.exchangeTab
+    if (tab === 'general' || tab === 'contribution') exchangeTab = tab
+  } else if (action === 'exchange-wallet') {
+    const worldId = button.dataset.worldId ?? ''
+    if (session.state.unlockedWorldIds.includes(worldId)) exchangeWalletWorldId = worldId
+  } else if (action === 'exchange-category') {
+    const category = button.dataset.category
+    if (category === 'all' || category === 'job-book' || category === 'blueprint'
+      || category === 'secret-realm-ticket' || category === 'skin') exchangeCategory = category
+  } else if (action === 'exchange-world') {
+    const world = button.dataset.world ?? 'all'
+    exchangeWorldFilter = world === 'all' || session.state.unlockedWorldIds.includes(world) ? world : 'all'
+  } else if (action === 'exchange-goto-world') {
+    // 货币不足时的引导：跳到目标位面，关卡侧去挂机刷铜钱，势力侧去悬榜赚贡献。
+    const worldId = button.dataset.worldId ?? ''
+    if (session.state.unlockedWorldIds.includes(worldId)) {
+      selectedWorldId = worldId
+      selectedPlaneId = worldId
+      selectedDifficulty = Math.max(1, highestUnlockedDifficulty(
+        session.state.unlockedWorldIds,
+        session.state.clearedStageByWorldDifficulty,
+        worldId,
+      ))
+      selectedStage = Math.min(10, Math.max(1, clearedStageOf(session.state.clearedStageByWorldDifficulty, worldId, selectedDifficulty) + 1))
+      activeTab = 'idle'
+      jianghuView = 'world'
+      jianghuSection = button.dataset.dest === 'factions' ? 'factions' : 'stages'
+      if (jianghuSection === 'factions') inkFactionPanel = 'quests'
+      inkPanelOpen = true
+      inkPanelReturnFocus = button
+    }
   }
   else if (action === 'skin-select' || action === 'skin-upgrade') {
     if (session.combat || session.pendingCombatRestart) { notify('战斗期间不能更换或升级皮肤', true); return }
@@ -2833,6 +2983,7 @@ app.addEventListener('input', (event) => {
   const inventoryInput = target.closest<HTMLInputElement>('[data-action="inventory-search"]')
   if (inventoryInput) {
     inventoryQuery = inventoryInput.value
+    inventoryPage = 1
     render()
     return
   }
@@ -2854,10 +3005,6 @@ app.addEventListener('input', (event) => {
   factionRosterOpen = true
   render()
 })
-
-app.addEventListener('toggle', (event) => {
-  if (event.target instanceof HTMLDetailsElement && event.target.classList.contains('ink-book-shop')) inkBookShopOpen = event.target.open
-}, true)
 
 app.addEventListener('keydown', (event) => {
   if ((event.key === 'Enter' || event.key === ' ') && event.target instanceof HTMLElement

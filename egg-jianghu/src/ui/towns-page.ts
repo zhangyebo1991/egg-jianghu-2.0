@@ -1,6 +1,5 @@
 import { escapeHtml, formatNumber } from './html'
 import { renderFactionAgent, type FactionAgentViewModel } from './faction-agent'
-import { renderFactionExchange, type FactionExchangeViewModel } from './faction-exchange'
 import { renderFactionRecruitment, type FactionRecruitmentViewModel } from './faction-recruitment'
 
 export interface TownTavernHeroView {
@@ -39,7 +38,6 @@ export interface TownsPageViewModel {
   publicLocations: readonly TownLocationView[]
   factionTowns: readonly FactionTownView[]
   factionAgent: FactionAgentViewModel | null
-  factionExchange: FactionExchangeViewModel | null
   factionRecruitment: FactionRecruitmentViewModel | null
   tavernHeroes: readonly TownTavernHeroView[]
 }
@@ -138,7 +136,6 @@ export const renderTownsPage = (view: TownsPageViewModel): string => `<section c
     ${renderPublicLocations(view)}
     ${view.factionAgent ? renderFactionAgent(view.factionAgent) : ''}
     ${renderFactionTowns(view)}
-    ${view.factionExchange ? renderFactionExchange(view.factionExchange) : ''}
     ${view.factionRecruitment ? renderFactionRecruitment(view.factionRecruitment) : ''}
     ${renderTavern(view)}
   </div>

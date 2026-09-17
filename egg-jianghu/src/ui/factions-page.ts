@@ -269,7 +269,8 @@ const renderMartialDetail = (view: FactionsPageViewModel): string => {
 }
 
 export const renderFactionsPage = (view: FactionsPageViewModel, section: 'quests' | 'exchange' | 'recruit' | 'martials' | 'all' = 'all'): string => {
-  if (view.factions.length === 0) {
+  // 兑换是全局目录，跨位面聚合，本卷没有势力时也要照常展示。
+  if (view.factions.length === 0 && section !== 'exchange') {
     return `<section class="factions-layout faction-empty-page" data-testid="factions-page">
       <div class="panel section-empty"><strong>本卷暂无可用势力</strong><span>返回关卡继续推进江湖进度。</span></div>
     </section>`
@@ -289,13 +290,13 @@ export const renderFactionsPage = (view: FactionsPageViewModel, section: 'quests
         <h1 class="faction-page-title" data-testid="faction-page-title">势力</h1>
         <p class="faction-page-latin">FACTIONS · ${escapeHtml(view.worldName)} VOLUME ${worldRoman}</p>
       </div>
-      <div class="faction-purse" data-testid="faction-purse">
+      ${selected ? `<div class="faction-purse" data-testid="faction-purse">
         <svg width="34" height="30" viewBox="0 0 34 30" fill="none" aria-hidden="true"><path d="M17 3C10 3 5 8 4.5 14C4 20 9 26 17 26C25 26 30 20 29.5 14C29 8 24 3 17 3Z" fill="url(#faction-ingot)" stroke="#8f6f3a" stroke-width="1"/><ellipse cx="17" cy="9.5" rx="5.5" ry="3" fill="#f2ddab" opacity=".85"/><defs><linearGradient id="faction-ingot" x1="4" y1="4" x2="30" y2="26"><stop stop-color="#e6c67f"/><stop offset="1" stop-color="#a37e3f"/></linearGradient></defs></svg>
         <div><strong>${formatNumber(selected.contribution)}</strong><span>势力贡献</span><small>${escapeHtml(selected.name)}</small></div>
-      </div>
+      </div>` : ''}
     </header>
 
-    <div class="faction-plaque-row" data-testid="faction-selector">${renderFactionPlaques(view)}</div>
+    ${section !== 'exchange' ? `<div class="faction-plaque-row" data-testid="faction-selector">${renderFactionPlaques(view)}</div>` : ''}
     <nav class="ink-faction-tabs" aria-label="势力事务">${(['quests', 'exchange', 'recruit', 'martials'] as const).map((id, index) => `<button type="button" data-action="open-faction-panel" data-faction-panel="${id}" class="${section === id ? 'active' : ''}" aria-pressed="${section === id}">${['悬榜', '兑换', '招募', '武学传承'][index]}</button>`).join('')}</nav>
 
     ${section === 'all' || section === 'quests' ? `<section class="faction-board" data-testid="faction-quest-board">
@@ -308,7 +309,7 @@ export const renderFactionsPage = (view: FactionsPageViewModel, section: 'quests
       </div>
     </section>` : ''}
 
-    ${(section === 'all' || section === 'exchange') && view.exchange ? renderFactionExchange(view.exchange) : ''}
+    ${section === 'exchange' && view.exchange ? renderFactionExchange(view.exchange) : ''}
 
     ${section === 'all' || section === 'martials' ? `<section class="faction-meridian" data-testid="faction-meridian">
       <header class="faction-section-head faction-meridian-head">

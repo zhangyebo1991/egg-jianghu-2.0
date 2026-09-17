@@ -16,7 +16,7 @@ export interface ShellViewModel {
   battlefield?: string
   currencyName?: string
   currency?: number
-  power?: number
+  reputation?: { value: number; levelName: string }
   premiumPanel?: string
   idleVouchers?: IdleVouchers
   voucherDetailsOpen?: boolean
@@ -93,7 +93,7 @@ export const renderShell = (view: ShellViewModel): string => {
       <header class="ink-hud" aria-label="江湖资源">
         ${renderVoucherWallet(view)}
         <div class="ink-purse"><span class="ink-glyph">${escapeHtml((view.currencyName ?? '通宝').slice(0, 1))}</span><div><b data-testid="hud-currency">${(view.currency ?? 0).toLocaleString('zh-CN')}</b><small>${escapeHtml(view.currencyName ?? '通宝')} · 本卷</small></div></div>
-        <div class="ink-purse ink-power"><span class="ink-glyph">力</span><div><b data-testid="hud-power">${(view.power ?? 0).toLocaleString('zh-CN')}</b><small>队伍战力</small></div></div>
+        <div class="ink-purse ink-reputation" data-testid="hud-reputation"><span class="ink-glyph">声</span><div><b>${(view.reputation?.value ?? 0).toLocaleString('zh-CN')}</b><small>${escapeHtml(view.reputation?.levelName ?? '冷淡')} · 位面声望</small></div></div>
       </header>
       <nav class="ink-iconbar" aria-label="游戏区域">
         ${tabs.slice(0, 4).map(tabButton).join('')}

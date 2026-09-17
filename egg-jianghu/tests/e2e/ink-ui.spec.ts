@@ -70,7 +70,8 @@ for (const width of [1440, 390]) {
     await worn.click()
     await expect(item).toBeVisible()
     await expect(worn).toHaveCount(0)
-    await page.locator('.ink-book-shop summary').click()
+    // 坊市已并入兑换页通用 tab：收起册页后从图标栏直达兑换购买转职书。
+    await openFactionSection(page, 'exchange')
     await expect(page.getByTestId('shop-buy-job_5')).toBeVisible()
     await page.waitForTimeout(350)
     await page.getByTestId('shop-buy-job_5').click()

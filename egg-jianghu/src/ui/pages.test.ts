@@ -69,24 +69,67 @@ const heroesFixture = (): HeroesPageViewModel => ({
   },
 })
 
-const exchangeFixture = (factionId = 'qingfeng_hall', factionName = '全真教'): FactionExchangeViewModel => ({
-  factionId,
-  factionName,
-  contribution: 600,
-  reputation: 120,
-  reputationLevel: 1,
-  reputationLevelName: '冷淡',
-  reputationCurrentThreshold: 0,
-  reputationNextThreshold: 200,
-  items: [{
-    slot: 1, kind: 'job-book', name: '护卫转职书', price: 200,
-    requiredReputationLevel: null, requiredReputationName: null,
-    quantity: 1, owned: false, actionDisabled: false, actionReason: null,
-  }, {
-    slot: 2, kind: 'blueprint', name: '虎豹之头盔图纸', price: 800,
-    requiredReputationLevel: 2, requiredReputationName: '友好',
-    quantity: 0, owned: false, actionDisabled: true, actionReason: '需友好声望',
-  }],
+const exchangeFixture = (tab: 'general' | 'contribution' = 'contribution'): FactionExchangeViewModel => ({
+  tab,
+  general: {
+    wallets: [
+      { worldId: 'world_01', worldName: '东汉三国', currencyName: '汉末通宝', balance: 1000, selected: true },
+      { worldId: 'world_02', worldName: '武侠江湖', currencyName: '江湖通宝', balance: 60, selected: false },
+    ],
+    selectedWorldName: '东汉三国',
+    currencyName: '汉末通宝',
+    balance: 1000,
+    fundsShort: false,
+    ranks: [
+      { id: 2, name: '一阶', unlocked: true, lockedReason: null },
+      { id: 3, name: '二阶', unlocked: false, lockedReason: '需先转职至一阶职业' },
+      { id: 4, name: '三阶', unlocked: false, lockedReason: '需先转职至二阶职业' },
+      { id: 5, name: '四阶', unlocked: false, lockedReason: '需先转职至三阶职业' },
+      { id: 6, name: '五阶', unlocked: false, lockedReason: '需先转职至四阶职业' },
+    ],
+    rank: 2,
+    items: [{ careerId: 'job_5', bookName: '弓手转职书', price: 200, owned: 0, affordable: true }],
+  },
+  contribution: {
+    category: 'all',
+    categories: [
+      { id: 'all', name: '全部', count: 3 },
+      { id: 'job-book', name: '转职书', count: 1 },
+      { id: 'blueprint', name: '装备图纸', count: 1 },
+      { id: 'secret-realm-ticket', name: '秘境门票', count: 0 },
+      { id: 'skin', name: '幻型', count: 1 },
+    ],
+    worldFilter: 'all',
+    worlds: [
+      { id: 'all', name: '全部位面', selected: true },
+      { id: 'world_01', name: '东汉三国', selected: false },
+      { id: 'world_02', name: '武侠江湖', selected: false },
+    ],
+    groups: [{
+      factionId: 'qingfeng_hall',
+      factionName: '全真教',
+      worldId: 'world_01',
+      worldName: '东汉三国',
+      contribution: 1000,
+      reputationLevel: 1,
+      reputationLevelName: '冷淡',
+      fundsShort: true,
+      items: [{
+        slot: 1, kind: 'job-book', name: '护卫转职书', price: 200,
+        requiredReputationLevel: null, requiredReputationName: null,
+        quantity: 1, owned: false, reputationLocked: false, insufficientFunds: false, actionReason: null,
+      }, {
+        slot: 2, kind: 'blueprint', name: '虎豹之头盔图纸', price: 800,
+        requiredReputationLevel: 2, requiredReputationName: '友好',
+        quantity: 0, owned: false, reputationLocked: true, insufficientFunds: false, actionReason: '需友好声望',
+      }, {
+        slot: 3, kind: 'skin', name: '貂蝉·拜月幻型', price: 5000,
+        requiredReputationLevel: null, requiredReputationName: null,
+        quantity: 0, owned: false, reputationLocked: false, insufficientFunds: true, actionReason: null,
+      }],
+    }],
+    totalShown: 3,
+  },
 })
 
 const recruitmentFixture = (
@@ -292,7 +335,6 @@ const townsFixture = (): TownsPageViewModel => ({
     { name: '建业', factionId: 'original_faction_04', factionName: '吴国', unlocked: true, selected: false, functions: ['阵营任务', '学习技能', '贡献兑换', '势力招募'] },
   ],
   factionAgent: null,
-  factionExchange: exchangeFixture('tieyi_school', '魏国'),
   factionRecruitment: null,
   tavernHeroes: [{ id: 'hero_guo_jing', name: '郭靖', grade: '乙', category: '拳', careerName: '白丁', cost: 240, recruited: false, line: '憨厚少年，根骨清奇。' }],
 })
@@ -324,23 +366,6 @@ const inventoryFixture = (): InventoryPageViewModel => ({
       { attributeId: 20, name: '物理增伤', value: 0.1, formattedValue: '10%', rollPercent: 103 },
     ],
     affixes: [{ attributeId: 40, name: '土系增伤', value: 0.04, formattedValue: '4%', grade: 'C' }],
-  },
-  shop: {
-    worldName: '牛家村',
-    currencyName: '铜钱',
-    currency: 1000,
-    rank: 2,
-    ranks: [
-      { id: 2, name: '一阶' },
-      { id: 3, name: '二阶' },
-      { id: 4, name: '三阶' },
-      { id: 5, name: '四阶' },
-      { id: 6, name: '五阶' },
-    ],
-    items: [{
-      careerId: 'job_5', bookName: '弓手转职书', careerName: '弓手',
-      price: 200, owned: 0, affordable: true,
-    }],
   },
 })
 
@@ -457,6 +482,30 @@ describe('version 10 长期循环页面', () => {
     expect(renderInventoryPage(same)).toContain('class="equipment-tooltip"')
   })
 
+  it('百宝囊分页条只在多页时出现，并折叠中间页码', () => {
+    // 单页不渲染分页条，保持小行囊的原有版面。
+    const single = { ...inventoryFixture(), pager: { page: 1, pageCount: 1, pageSize: 60, total: 12, rangeStart: 1, rangeEnd: 12 } }
+    expect(renderInventoryPage(single)).not.toContain('data-testid="inventory-pager"')
+    expect(renderInventoryPage(inventoryFixture())).not.toContain('data-testid="inventory-pager"')
+
+    // 千件容量：17 页时首末页常驻，中段折叠，页码槽位不超过 7 个。
+    const many = { ...inventoryFixture(), pager: { page: 9, pageCount: 17, pageSize: 60, total: 1000, rangeStart: 481, rangeEnd: 540 } }
+    const html = renderInventoryPage(many)
+    expect(html).toContain('data-testid="inventory-pager"')
+    expect(html.match(/class="inventory-pager-num[ "]/g)).toHaveLength(5)
+    expect(html.match(/class="inventory-pager-gap"/g)).toHaveLength(2)
+    expect(html).toContain('data-action="inventory-page" data-page="1"')
+    expect(html).toContain('data-action="inventory-page" data-page="17"')
+    expect(html).toContain('aria-current="page">9<')
+    expect(html).toContain('第 <b>9</b> / 17 页 · 本页 481-540 件 · 共 1000 件')
+
+    // 首页禁用上一页，末页禁用下一页。
+    const first = { ...inventoryFixture(), pager: { page: 1, pageCount: 17, pageSize: 60, total: 1000, rangeStart: 1, rangeEnd: 60 } }
+    expect(renderInventoryPage(first)).toContain('data-page="0" aria-label="上一页" disabled')
+    const last = { ...inventoryFixture(), pager: { page: 17, pageCount: 17, pageSize: 60, total: 1000, rangeStart: 961, rangeEnd: 1000 } }
+    expect(renderInventoryPage(last)).toContain('data-page="18" aria-label="下一页" disabled')
+  })
+
   it('势力页显示五格悬榜、两线三门传承和原版招募名录', () => {
     const html = renderFactionsPage(factionsFixture())
     expect(html.match(/data-quest-slot=/g)).toHaveLength(5)
@@ -474,16 +523,50 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('451 SP + 势力贡献 80')
     expect(html).toContain('效果值 100')
     expect(html).toContain('来源 <b>全真教</b>')
-    expect(html).toContain('data-testid="faction-reputation"')
-    expect(html).toContain('<strong>冷淡</strong>')
+  })
+
+  it('兑换页聚合通用与贡献双 tab，贡献不足时提供前往位面引导', () => {
+    const html = renderFactionsPage(factionsFixture(), 'exchange')
+    expect(html).toContain('data-testid="faction-exchange"')
+    expect(html).toContain('data-testid="exchange-tab-general"')
+    expect(html).toContain('data-testid="exchange-tab-contribution"')
+    // 兑换模式不再依赖势力匾额与位面声望块，改为全局目录 + 分组声望摘要。
+    expect(html).not.toContain('data-testid="faction-selector"')
+    expect(html).not.toContain('data-testid="faction-reputation"')
     expect(html).toContain('护卫转职书')
     expect(html).toContain('虎豹之头盔图纸')
-    expect(html).toContain('data-action="faction-exchange"')
+    expect(html).toContain('data-action="faction-exchange" data-faction-id="qingfeng_hall" data-slot="1"')
+    expect(html).toContain('data-testid="faction-exchange-item-qingfeng_hall-1"')
+    expect(html).toContain('声望 冷淡 · 等级 1 / 5')
+    // 贡献不足的物品：按钮变为跳转引导，声望不足的物品保持禁用说明。
+    expect(html).toContain('data-action="exchange-goto-world" data-world-id="world_01" data-dest="factions"')
+    expect(html).toContain('>需友好声望</button>')
+    expect(html).toContain('贡献不足 · 点击前往赚取')
+    // 种类与位面筛选切换。
+    expect(html).toContain('data-action="exchange-category" data-category="blueprint"')
+    expect(html).toContain('data-action="exchange-world" data-world="world_02"')
+    expect(html).toContain('当前筛选共 3 件')
+  })
+
+  it('兑换页通用 tab 提供付款位面钱包与等阶锁定', () => {
+    const view = factionsFixture()
+    view.exchange = exchangeFixture('general')
+    const html = renderFactionsPage(view, 'exchange')
+    expect(html).toContain('data-testid="exchange-general"')
+    expect(html).toContain('data-testid="exchange-wallet-world_01"')
+    expect(html).toContain('data-action="exchange-wallet" data-world-id="world_02"')
+    expect(html).toContain('data-testid="shop-buy-job_5"')
+    expect(html).toContain('data-action="shop-rank" data-rank="2"')
+    expect(html).toContain('title="需先转职至一阶职业"')
+    expect(html).toContain('持有 0 · 200 汉末通宝')
   })
 
   it('城市和背包页没有抽卡、残页与旧铁匠操作', () => {
     const html = renderCityPage(cityFixture()) + renderInventoryPage(inventoryFixture())
     expect(html).not.toMatch(/十连|保底|秘籍残页|铁匠铺|强化|淬炼|重铸|拆解/)
+    // 坊市已迁往兑换页，行囊底部不再挂购书入口。
+    expect(html).not.toContain('ink-book-shop')
+    expect(html).not.toContain('购入转职书')
   })
 
   it('城镇页输出五处公共场所、势力城镇并保留酒馆邀请契约', () => {
@@ -498,8 +581,7 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-action="select-town-agent"')
     expect(html).toContain('data-action="select-town-exchange"')
     expect(html).toContain('data-action="select-town-recruitment"')
-    expect(html).toContain('data-testid="faction-exchange"')
-    expect(html).toContain('data-faction-id="tieyi_school"')
+    expect(html).not.toContain('data-testid="faction-exchange"')
     expect(html).toContain('本存档尚未解锁此势力')
     expect(html).toContain('data-testid="tavern-hero_guo_jing"')
     expect(html).toContain('data-action="tavern-recruit"')
@@ -511,7 +593,6 @@ describe('version 10 长期循环页面', () => {
     const html = renderTownsPage({
       ...townsFixture(),
       factionAgent: factionAgentFixture(),
-      factionExchange: null,
     })
     expect(html).toContain('data-testid="faction-agent"')
     expect(html).toContain('位面代理人')
@@ -573,9 +654,10 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('(94%)')
     expect(html).toContain('[C]')
     expect(html).toContain('装备 1 件 · 堆叠物品不占装备格')
-    expect(html).toContain('data-testid="job-book-shop"')
-    expect(html).toContain('弓手转职书')
-    expect(html).toContain('data-testid="shop-buy-job_5"')
+    // 坊市迁往兑换页后，行囊不再输出购书面板。
+    expect(html).not.toContain('data-testid="job-book-shop"')
+    expect(html).not.toContain('弓手转职书')
+    expect(html).not.toContain('data-testid="shop-buy-job_5"')
   })
 
   it('装备详情区分物品等级与穿戴等级', () => {

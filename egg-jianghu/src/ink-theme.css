@@ -38,7 +38,7 @@ button:disabled { opacity: .35; }
 .ink-hud .voucher-wallet::before { content: '蛋'; }
 .ink-hud .voucher-wallet { backdrop-filter: none; }
 .ink-hud:has(.voucher-details) { z-index: 35; }
-.ink-power .ink-glyph { background: var(--crimson); }
+.ink-reputation .ink-glyph { background: var(--crimson); }
 .ink-hud .voucher-wallet-summary { display: grid; grid-template-columns: auto auto; gap: 0 7px; align-items: center; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .ink-hud .voucher-wallet-label { grid-column: 2; grid-row: 1; font-size: 0; }
 .ink-hud .voucher-wallet-summary strong { grid-row: 1; }
@@ -401,9 +401,13 @@ button:disabled { opacity: .35; }
 .ink-shell .ink-leaf :is(.ordinary-pool-roster button[aria-pressed="true"], .inventory-shop-rank.active) { border-color: var(--crimson); background: var(--crimson-soft); }
 .ink-shell .ink-leaf .ordinary-pool-actions button { background: var(--pn); color: var(--night); }
 .ink-shell .ink-leaf .ordinary-pool-actions button strong, .ink-shell .ink-leaf .ordinary-pool-actions button span { color: var(--night); }
-.ink-book-shop { margin-top: 20px; border-top: 1px solid var(--night-line); padding-top: 12px; }
-.ink-book-shop summary { cursor: pointer; font: 16px var(--kai); padding: 8px 0; }
-.ink-book-shop .inventory-shop { margin-top: 8px; }
+/* 兑换页（通用 / 贡献）在夜册里的观感：与坊市按钮同源的墨底描边。 */
+.ink-shell .ink-leaf :is(.exchange-main-tabs button, .exchange-chip, .exchange-wallet) { color: var(--pn); border: 1px solid var(--night-line-2); background: var(--night-2); border-radius: 0; }
+.ink-shell .ink-leaf :is(.exchange-main-tabs button.active, .exchange-chip.active, .exchange-wallet.active) { border-color: var(--crimson); background: var(--crimson-soft); }
+.ink-shell .ink-leaf .exchange-main-tabs button.active { color: var(--pn); }
+.ink-shell .ink-leaf .exchange-goto { color: var(--pn); border: 1px dashed var(--night-line-2); background: var(--night-2); border-radius: 0; }
+.ink-shell .ink-leaf :is(.exchange-main-tabs button small, .exchange-chip small, .exchange-wallet span, .exchange-wallet small, .exchange-shown-note, .exchange-faction-meta b) { color: var(--pn-dim); }
+.ink-shell .ink-leaf :is(.exchange-wallet b, .exchange-faction-meta b i) { color: var(--pn); }
 .ink-bag-heroes { min-width: 0; position: sticky; top: 0; }
 .ink-bag-heroes > input { width: 100%; padding: 9px; font-size: 12px; }
 .ink-bag-roster { display: grid; max-height: 32vh; overflow: auto; margin: 8px 0 20px; }
@@ -449,6 +453,13 @@ button:disabled { opacity: .35; }
 .ink-bag-tools .ink-tool-btn.primary { border-color: var(--crimson); background: var(--crimson-soft); color: var(--pn); }
 .ink-shell .ink-leaf .ink-bag-side .inventory-appraise { position: static; }
 .ink-shell .ink-leaf .ink-bag-side .inventory-appraise-paper { padding: 12px; }
+.ink-shell .ink-leaf .inventory-pager { padding: 9px 0 0; border-top: 1px dashed var(--night-line); }
+.ink-shell .ink-leaf :is(.inventory-pager-step, .inventory-pager-num) { min-width: 28px; padding: 5px 9px; border: 1px solid var(--night-line-2); border-radius: 0; background: transparent; color: var(--pn-dim); font-size: 11px; box-shadow: none; }
+.ink-shell .ink-leaf :is(.inventory-pager-step:hover:not(:disabled), .inventory-pager-num:hover:not(.active)) { border-color: var(--pn-dim); background: transparent; color: var(--pn); }
+.ink-shell .ink-leaf .inventory-pager-num.active { border-color: var(--pn); background: var(--pn); color: var(--night); box-shadow: none; }
+.ink-shell .ink-leaf .inventory-pager-gap { color: var(--night-line-2); }
+.ink-shell .ink-leaf .inventory-pager-meta { color: var(--pn-faint); }
+.ink-shell .ink-leaf .inventory-pager-meta b { color: var(--pn); }
 .ink-bag-filters { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 .ink-bag-filters button { padding: 5px 9px; color: var(--pn-dim); background: transparent; border: 1px solid var(--night-line-2); font-size: 11px; }
 .ink-bag-filters button[aria-pressed="true"] { color: var(--night); background: var(--pn); }
@@ -465,8 +476,8 @@ button:disabled { opacity: .35; }
 .ink-shell .ink-leaf .faction-quest-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 .ink-shell .ink-leaf .faction-incense-track { background: var(--night-line); }
 .ink-shell .ink-leaf .faction-incense-track :is(i, em) { background: var(--crimson); box-shadow: none; }
-.ink-shell .ink-leaf .faction-page :is(.faction-exchange-head, .faction-recruitment-head, .faction-reputation, .faction-exchange-group, .faction-recruitment-group, .faction-detail-cost, .faction-detail-tags span, .faction-node) { background: transparent; border-color: var(--night-line-2); border-radius: 0; box-shadow: none; }
-.ink-shell .ink-leaf .faction-page :is(.faction-exchange-head span, .faction-recruitment-head span, .faction-exchange-wallet strong, .faction-exchange-wallet span, .faction-reputation strong, .faction-reputation span, .faction-reputation small, .faction-recruitment-wallet strong, .faction-recruitment-wallet span) { color: var(--pn-dim); }
+.ink-shell .ink-leaf .faction-page :is(.faction-exchange-head, .faction-recruitment-head, .faction-exchange-group, .faction-recruitment-group, .faction-detail-cost, .faction-detail-tags span, .faction-node) { background: transparent; border-color: var(--night-line-2); border-radius: 0; box-shadow: none; }
+.ink-shell .ink-leaf .faction-page :is(.faction-exchange-head span, .faction-recruitment-head span, .faction-exchange-wallet strong, .faction-exchange-wallet span, .exchange-faction-meta span, .faction-recruitment-wallet strong, .faction-recruitment-wallet span) { color: var(--pn-dim); }
 .ink-shell .ink-leaf .ordinary-pool { --pool-gold: var(--pn); --pool-text: var(--pn); --pool-muted: var(--pn-dim); --pool-line: var(--night-line-2); }
 .ink-shell .ink-leaf .ordinary-pool-aptitudes > div { background: transparent; border-color: var(--night-line); border-radius: 0; }
 .ink-shell .ink-leaf .shop-head { display: block; }
@@ -501,7 +512,7 @@ button:disabled { opacity: .35; }
   .ink-iconbar { gap: 6px; }
   .ink-purse, .ink-hud .voucher-wallet { padding: 6px 8px; }
   .ink-hud { gap: 6px; }
-  .ink-power { display: none; }
+  .ink-reputation { display: none; }
 }
 @media (max-width: 1100px) {
   .ink-shell .ink-leaf .inventory-layout { grid-template-columns: 220px minmax(0, 1fr); }
@@ -523,7 +534,7 @@ button:disabled { opacity: .35; }
   .ink-purse b, .ink-hud .voucher-wallet strong { font-size: 13px; }
   .ink-purse small, .ink-hud .voucher-wallet small { font-size: 9px; letter-spacing: 0; }
   .ink-glyph, .ink-hud .voucher-wallet::before { width: 18px; height: 18px; font-size: 10px; }
-  .ink-hud .ink-power { display: none; }
+  .ink-hud .ink-reputation { display: none; }
   .ink-iconbar { top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); width: 148px; justify-content: flex-end; flex-wrap: wrap; gap: 5px; }
   .ink-icon { width: 44px; height: 44px; border-width: 2.5px; }
   .ink-icon svg { width: 16px; height: 16px; }
@@ -557,6 +568,7 @@ button:disabled { opacity: .35; }
   .ink-shell .ink-leaf .inventory-appraise.open { transform: none; }
   .ink-shell .ink-leaf .inventory-appraise-close { display: block; position: sticky; top: 5px; margin: 5px 8px 0 auto; width: 36px; height: 36px; color: var(--pn); background: var(--night-2); }
   .ink-shell .ink-leaf .inventory-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ink-shell .ink-leaf .inventory-pager-nums { display: none; }
   .ink-shell .ink-leaf .inventory-board-inner { padding: 9px; }
   .ink-shell .ink-leaf .formation-stats { gap: 5px; }
   .ink-shell .ink-leaf .formation-stats > div { padding: 9px 5px; }
