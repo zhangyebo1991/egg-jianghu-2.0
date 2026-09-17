@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { originalFactionExchangeByFaction } from '../content/original-faction-exchange.generated'
 import { factionByOriginalId } from '../content/factions'
 import { originalWorldReputationThreshold } from '../content/original-faction-rules.generated'
+import { progressKey, syncFactionUnlocks } from './progression'
 import { createInitialStateV10 } from './state'
 import { exchangeFactionItem, factionExchangeItemOwned, factionExchangeItemQuantity } from './faction-exchange'
 
@@ -14,6 +15,27 @@ const unlockedFactionState = (factionSourceId = 2) => {
 }
 
 describe('原版势力贡献兑换', () => {
+  it('第一位面通关第三小关后才开放魏国护卫转职书，价格为 4688 贡献', () => {
+    const state = createInitialStateV10(0)
+    const faction = factionByOriginalId(2)
+    const jobBook = originalFactionExchangeByFaction(2).find((item) => item.kind === 'job-book')
+    if (!faction || !jobBook) throw new Error('魏国转职书目录缺失')
+    state.contribution[faction.id] = jobBook.price
+
+    expect(syncFactionUnlocks(state, 'world_01')).toEqual([])
+    expect(exchangeFactionItem(state, faction.id, jobBook.slot)).toEqual({ ok: false, message: '势力尚未解锁' })
+
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 1)] = 2
+    expect(syncFactionUnlocks(state, 'world_01')).toEqual([])
+
+    state.clearedStageByWorldDifficulty[progressKey('world_01', 1)] = 3
+    expect(syncFactionUnlocks(state, 'world_01')).toEqual([faction.id])
+    expect(jobBook).toMatchObject({ originalName: '护卫转职书', price: 4688, requiredReputationLevel: null })
+    expect(exchangeFactionItem(state, faction.id, jobBook.slot)).toEqual({ ok: true, message: '兑换成功：护卫转职书' })
+    expect(state.jobBooks.job_2).toBe(1)
+    expect(state.contribution[faction.id]).toBe(0)
+  })
+
   it('只允许已解锁的正式贡献势力兑换目录内商品', () => {
     const { state, faction } = unlockedFactionState()
     state.unlockedFactionIds = []

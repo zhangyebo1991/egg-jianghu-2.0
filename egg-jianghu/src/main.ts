@@ -71,7 +71,6 @@ import { APT_DESC, STAT_DESC } from './content/stat-descriptions'
 import { worldPresentation } from './content/world-presentations'
 import { CAREER_MAX_LEVEL, changeCareer, careerExperienceForNextLevel, previewCareerChange } from './domain/careers'
 import { backpackEquipment, discardEquipment, equipEquipment, equipBestEquipment, type EquipmentBuild, INVENTORY_CAPACITY, organizeInventory, sellEquipmentByQuality, switchEquipmentSet, toggleEquipmentLock, unequipEquipment, bindActiveEquipmentLoadout } from './domain/inventory'
-import { buyJobBook, JOB_BOOK_SHOP_RANKS, JOB_BOOK_SHOP_TIER_LABELS, shopJobBooksForRank } from './domain/shop'
 import { equipHeartMethod, equipMartial, forgetMartial, isMartialCareerCompatible, learnFactionMartial, unequipMartial, upgradeMartial } from './domain/martial-training'
 import { acceptQuest, cancelQuest, claimQuest, factionQuestCurrentProgress, initializeQuestBoard } from './domain/quests'
 import { appointFactionAgent, dismissFactionAgent, factionAgentAbilityLevel, factionAgentCandidateIds, heroAbilityAttributes, toggleFactionAgent } from './domain/faction-agent'
@@ -207,10 +206,7 @@ let selectedStackId: number | null = null
 let selectedInventoryUid: string | null = null
 let inventoryDetailOpen = false
 let pendingInventoryDropUids: string[] = []
-let shopRank: 2 | 3 | 4 | 5 | 6 = 2
-// 兑换页状态：通用/贡献双 tab、付款位面钱包、贡献目录的种类与位面筛选。
-let exchangeTab: 'general' | 'contribution' = 'general'
-let exchangeWalletWorldId: string | null = null
+// 兑换页仅展示已解锁正式势力的原版贡献目录。
 let exchangeCategory: 'all' | 'job-book' | 'blueprint' | 'secret-realm-ticket' | 'skin' = 'all'
 let exchangeWorldFilter: string = 'all'
 let progressionSection: ProgressionSection = 'dungeons'
@@ -623,7 +619,6 @@ const enterPlaying = (nextSession: GameSession): void => {
   selectedInventoryUid = null
   inventoryDetailOpen = false
   pendingInventoryDropUids = []
-  shopRank = 2
   heroMainTab = 'basic'
   heroMartialSlot = null
   heroMartialQuery = ''
@@ -1203,60 +1198,8 @@ const clearFormation = (): ActionResult => {
   return { ok: true, message: '已悉数下阵' }
 }
 
-// 兑换页付款位面：未手动选择时跟随当前位面（战斗中为战场位面）。
-const exchangeWalletWorldIdResolved = (): string => {
-  if (exchangeWalletWorldId && session.state.unlockedWorldIds.includes(exchangeWalletWorldId)) return exchangeWalletWorldId
-  const world = WORLDS.find((item) => item.id === selectedWorldId) ?? WORLDS[0]
-  return session.combat?.state.worldId ?? world.id
-}
-
 const exchangeHubViewModel = (): FactionExchangeViewModel => {
-  // —— 通用兑换：转职书随侠客习得的最高职业等阶解锁，铜钱取自所选付款位面 ——
-  const walletWorldId = exchangeWalletWorldIdResolved()
-  const walletWorld = WORLDS.find((item) => item.id === walletWorldId) ?? WORLDS[0]
-  const balance = session.state.worldCurrency[walletWorldId] ?? 0
-  const maxRank = Object.values(session.state.heroes).reduce((max, hero) => {
-    for (const careerId of Object.keys(hero.careers)) {
-      const rank = careerById(careerId)?.rank ?? 1
-      if (rank > max) max = rank
-    }
-    return max
-  }, 1)
-  const ranks = JOB_BOOK_SHOP_RANKS.map((rank) => ({
-    id: rank,
-    name: JOB_BOOK_SHOP_TIER_LABELS[rank],
-    unlocked: rank <= maxRank + 1,
-    lockedReason: rank <= maxRank + 1
-      ? null
-      : `需先转职至${JOB_BOOK_SHOP_TIER_LABELS[(rank - 1) as 2 | 3 | 4 | 5] ?? '上阶'}职业`,
-  }))
-  const highestUnlockedRank = Math.min(6, maxRank + 1) as 2 | 3 | 4 | 5 | 6
-  if (shopRank > highestUnlockedRank) shopRank = highestUnlockedRank
-  const generalItems = shopJobBooksForRank(shopRank).map((item) => ({
-    careerId: item.careerId,
-    bookName: item.bookName,
-    price: item.price,
-    owned: session.state.jobBooks[item.careerId] ?? 0,
-    affordable: balance >= item.price,
-  }))
-  const general = {
-    wallets: WORLDS.filter((world) => session.state.unlockedWorldIds.includes(world.id)).map((world) => ({
-      worldId: world.id,
-      worldName: world.name,
-      currencyName: world.currencyName,
-      balance: session.state.worldCurrency[world.id] ?? 0,
-      selected: world.id === walletWorldId,
-    })),
-    selectedWorldName: walletWorld.name,
-    currencyName: walletWorld.currencyName,
-    balance,
-    fundsShort: generalItems.some((item) => !item.affordable),
-    ranks,
-    rank: shopRank,
-    items: generalItems,
-  }
-
-  // —— 贡献兑换：所有已解锁势力的原版目录聚合，跨位面随时可购 ——
+  // 所有已解锁正式势力的原版目录聚合，跨位面随时可购。
   if (exchangeWorldFilter !== 'all' && !session.state.unlockedWorldIds.includes(exchangeWorldFilter)) exchangeWorldFilter = 'all'
   const worldFiltered = FACTIONS
     .filter((faction) => session.state.unlockedFactionIds.includes(faction.id))
@@ -1318,8 +1261,6 @@ const exchangeHubViewModel = (): FactionExchangeViewModel => {
   }).filter((group) => group.items.length > 0)
 
   return {
-    tab: exchangeTab,
-    general,
     contribution: {
       category: exchangeCategory,
       categories,
@@ -2776,19 +2717,7 @@ const performAction = (button: HTMLButtonElement): void => {
     }
     commitAction(result)
   }
-  else if (action === 'shop-rank') {
-    const rank = Number(button.dataset.rank)
-    if (rank === 2 || rank === 3 || rank === 4 || rank === 5 || rank === 6) shopRank = rank
-  } else if (action === 'shop-buy') {
-    commitAction(buyJobBook(session.state, button.dataset.careerId ?? '', exchangeWalletWorldIdResolved()))
-  }
-  else if (action === 'exchange-tab') {
-    const tab = button.dataset.exchangeTab
-    if (tab === 'general' || tab === 'contribution') exchangeTab = tab
-  } else if (action === 'exchange-wallet') {
-    const worldId = button.dataset.worldId ?? ''
-    if (session.state.unlockedWorldIds.includes(worldId)) exchangeWalletWorldId = worldId
-  } else if (action === 'exchange-category') {
+  else if (action === 'exchange-category') {
     const category = button.dataset.category
     if (category === 'all' || category === 'job-book' || category === 'blueprint'
       || category === 'secret-realm-ticket' || category === 'skin') exchangeCategory = category

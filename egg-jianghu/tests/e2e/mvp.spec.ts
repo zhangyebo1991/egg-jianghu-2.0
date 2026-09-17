@@ -548,17 +548,31 @@ test('敌人死亡时货币立即入账并掉落诸天装备，且不掉转职�
   expect(after.worldCurrency.world_01).toBeGreaterThan(before)
 })
 
-test('兑换页通用 tab 可用当前位面铜钱购买转职书', async ({ page }) => {
+for (const width of [1440, 390]) {
+test(`兑换页仅在正式势力解锁后按原版贡献价格出售转职书 ${width}`, async ({ page }, testInfo) => {
+  await page.setViewportSize({ width, height: 900 })
   await openWorldSection(page, 'factions')
   await page.locator('.ink-faction-tabs [data-faction-panel="exchange"]').click()
-  await expect(page.getByTestId('exchange-general')).toBeVisible()
-  await expect(page.getByTestId('exchange-wallet-world_01')).toHaveAttribute('aria-pressed', 'true')
-  const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().worldCurrency.world_01 ?? 0)
-  await page.getByTestId('shop-buy-job_5').click()
+  const exchange = page.getByTestId('faction-exchange')
+  await expect(exchange.getByTestId('exchange-contribution')).toBeVisible()
+  await expect(exchange).not.toContainText('护卫转职书')
+  await expect(page.getByTestId('exchange-tab-general')).toHaveCount(0)
+
+  await page.evaluate(() => {
+    window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
+    window.__EGG_JIANGHU__.grantContribution('tieyi_school', 4_688)
+  })
+  const book = page.getByTestId('faction-exchange-item-tieyi_school-1')
+  await expect(book).toContainText('护卫转职书')
+  await expect(book).toContainText('4,688')
+  await book.scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath(`faction-exchange-${width}.png`), fullPage: true })
+  await book.getByRole('button', { name: '兑换' }).click()
   const after = await page.evaluate(() => window.__EGG_JIANGHU__.getState())
-  expect(after.jobBooks.job_5).toBe(1)
-  expect(after.worldCurrency.world_01).toBe(before - 200)
+  expect(after.jobBooks.job_2).toBe(1)
+  expect(after.contribution.tieyi_school).toBe(0)
 })
+}
 
 test('击杀不因背包容量中断战斗', async ({ page }) => {
   await page.evaluate(() => {
@@ -650,7 +664,6 @@ test('兑换页聚合位面声望、贡献兑换与招募', async ({ page }, tes
   await page.locator('.ink-faction-tabs [data-faction-panel="exchange"]').click()
   const exchange = page.getByTestId('faction-exchange')
   await expect(exchange).toBeVisible()
-  await page.getByTestId('exchange-tab-contribution').click()
   // 全局目录按势力分组，随时可购任意已解锁势力的物品。
   await expect(exchange.locator('[data-testid^="faction-exchange-item-tieyi_school-"]'))
     .toHaveCount(originalFactionExchangeByFaction(2).length)

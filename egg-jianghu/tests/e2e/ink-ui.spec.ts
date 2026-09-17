@@ -70,17 +70,10 @@ for (const width of [1440, 390]) {
     await worn.click()
     await expect(item).toBeVisible()
     await expect(worn).toHaveCount(0)
-    // 坊市已并入兑换页通用 tab：收起册页后从图标栏直达兑换购买转职书。
-    await openFactionSection(page, 'exchange')
-    await expect(page.getByTestId('shop-buy-job_5')).toBeVisible()
-    await page.waitForTimeout(350)
-    await page.getByTestId('shop-buy-job_5').click()
-    expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().jobBooks.job_5)).toBe(1)
     await page.reload()
     await page.getByRole('button', { name: '继续游戏' }).click()
     await openPanel(page, 'inventory')
     await expect(item).toBeVisible()
-    expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().jobBooks.job_5)).toBe(1)
   })
 }
 

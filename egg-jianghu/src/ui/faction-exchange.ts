@@ -1,35 +1,7 @@
 import type { OriginalFactionExchangeKind } from '../content/original-faction-exchange.generated'
 import { escapeHtml, formatNumber } from './html'
 
-export type ExchangeMainTab = 'general' | 'contribution'
 export type ExchangeCategory = 'all' | OriginalFactionExchangeKind
-
-export interface ExchangeWalletView {
-  worldId: string
-  worldName: string
-  currencyName: string
-  balance: number
-  selected: boolean
-}
-
-export interface ExchangeJobBookItemView {
-  careerId: string
-  bookName: string
-  price: number
-  owned: number
-  affordable: boolean
-}
-
-export interface ExchangeGeneralTabView {
-  wallets: readonly ExchangeWalletView[]
-  selectedWorldName: string
-  currencyName: string
-  balance: number
-  fundsShort: boolean
-  ranks: ReadonlyArray<{ id: number; name: string; unlocked: boolean; lockedReason: string | null }>
-  rank: number
-  items: readonly ExchangeJobBookItemView[]
-}
 
 export interface FactionExchangeItemView {
   slot: number
@@ -67,8 +39,6 @@ export interface FactionExchangeContributionTabView {
 }
 
 export interface FactionExchangeViewModel {
-  tab: ExchangeMainTab
-  general: ExchangeGeneralTabView
   contribution: FactionExchangeContributionTabView
 }
 
@@ -119,43 +89,6 @@ const renderExchangeItem = (group: FactionExchangeGroupView, item: FactionExchan
   </article>`
 }
 
-const renderGeneralTab = (view: ExchangeGeneralTabView): string => `
-  <div class="exchange-general" data-testid="exchange-general">
-    <div class="exchange-wallet-row">
-      <div class="exchange-wallets" role="group" aria-label="选择付款位面">
-        ${view.wallets.map((wallet) => `
-          <button type="button" class="exchange-wallet${wallet.selected ? ' active' : ''}" data-action="exchange-wallet" data-world-id="${escapeHtml(wallet.worldId)}" data-testid="exchange-wallet-${escapeHtml(wallet.worldId)}" aria-pressed="${wallet.selected}">
-            <span>${escapeHtml(wallet.worldName)}</span>
-            <b>${formatNumber(wallet.balance)}</b>
-            <small>${escapeHtml(wallet.currencyName)}</small>
-          </button>`).join('')}
-      </div>
-      ${view.fundsShort
-        ? exchangeGotoButton(view.wallets.find((wallet) => wallet.selected)?.worldId ?? '', 'stages', `铜钱不足 · 前往${view.selectedWorldName}挂机`, `铜钱不足 · 前往${view.selectedWorldName}闯荡挂机赚取`)
-        : ''}
-    </div>
-    <nav class="inventory-shop-ranks" aria-label="转职书阶位">
-      ${view.ranks.map((rank) => rank.unlocked
-        ? `<button type="button" class="inventory-shop-rank${view.rank === rank.id ? ' active' : ''}"
-            data-action="shop-rank" data-rank="${rank.id}" data-testid="shop-rank-${rank.id}"
-            aria-pressed="${view.rank === rank.id}">${escapeHtml(rank.name)}</button>`
-        : `<button type="button" class="inventory-shop-rank locked" disabled title="${escapeHtml(rank.lockedReason ?? '尚未解锁')}">🔒 ${escapeHtml(rank.name)}</button>`).join('')}
-    </nav>
-    <ul class="inventory-shop-list">
-      ${view.items.map((item) => `
-        <li class="inventory-shop-item" data-testid="shop-book-${escapeHtml(item.careerId)}">
-          <div>
-            <strong>${escapeHtml(item.bookName)}</strong>
-            <span>持有 ${item.owned} · ${formatNumber(item.price)} ${escapeHtml(view.currencyName)}</span>
-          </div>
-          <button type="button" class="inventory-shop-buy" data-action="shop-buy"
-            data-career-id="${escapeHtml(item.careerId)}" data-testid="shop-buy-${escapeHtml(item.careerId)}"
-            ${item.affordable ? '' : 'disabled'}>购入</button>
-        </li>`).join('')}
-    </ul>
-    <p class="inventory-shop-note">战斗不掉转职书，可先囤书，转职仍需前置职业等级。新等阶随侠客习得上阶职业解锁，铜钱取自所选位面。</p>
-  </div>`
-
 const renderContributionTab = (view: FactionExchangeContributionTabView): string => `
   <div class="exchange-contribution" data-testid="exchange-contribution">
     <div class="exchange-filter-row">
@@ -190,16 +123,12 @@ const renderContributionTab = (view: FactionExchangeContributionTabView): string
             </section>`).join('')}
         </div>
         <p class="exchange-shown-note">当前筛选共 ${view.totalShown} 件 · 全部来自已解锁势力的原版目录</p>`
-      : '<div class="faction-exchange-empty"><strong>此筛选下暂无可兑换物品</strong><span>推进关卡解锁更多位面与势力。</span></div>'}
+      : '<div class="faction-exchange-empty"><strong>此筛选下暂无可兑换物品</strong><span>推进当前位面的基础难度，解锁正式势力后可用贡献兑换。</span></div>'}
   </div>`
 
 export const renderFactionExchange = (view: FactionExchangeViewModel): string => `<section class="faction-exchange exchange-page" data-testid="faction-exchange">
   <header class="faction-exchange-head">
-    <div><span>PLANE EXCHANGE</span><h2>兑换</h2><p>已解锁位面随时可购 · 货币不足时点击前往挂机</p></div>
-    <nav class="exchange-main-tabs" aria-label="兑换方式">
-      <button type="button" class="${view.tab === 'general' ? 'active' : ''}" data-action="exchange-tab" data-exchange-tab="general" aria-pressed="${view.tab === 'general'}" data-testid="exchange-tab-general">通用兑换<small>转职书 · 位面铜钱</small></button>
-      <button type="button" class="${view.tab === 'contribution' ? 'active' : ''}" data-action="exchange-tab" data-exchange-tab="contribution" aria-pressed="${view.tab === 'contribution'}" data-testid="exchange-tab-contribution">贡献兑换<small>原版完整目录</small></button>
-    </nav>
+    <div><span>FACTION EXCHANGE</span><h2>兑换</h2><p>仅已解锁正式势力可兑换 · 使用势力贡献</p></div>
   </header>
-  ${view.tab === 'general' ? renderGeneralTab(view.general) : renderContributionTab(view.contribution)}
+  ${renderContributionTab(view.contribution)}
 </section>`

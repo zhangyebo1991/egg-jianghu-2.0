@@ -2216,9 +2216,6 @@ body {
 .faction-exchange-head > div:first-child > span { color: #8d8267; font-size: 9px; letter-spacing: .34em; }
 .faction-exchange-head h2 { margin: 3px 0 0; color: #eadcb8; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 32px; font-weight: 400; letter-spacing: .14em; }
 .faction-exchange-head p { margin: 5px 0 0; color: #8f8d80; font-size: 10px; letter-spacing: .12em; }
-.faction-exchange-wallet { flex: none; text-align: right; }
-.faction-exchange-wallet strong { display: block; color: #e6c67f; font-size: 25px; font-variant-numeric: tabular-nums; line-height: 1; }
-.faction-exchange-wallet span { display: block; margin-top: 5px; color: #b79655; font-size: 9px; letter-spacing: .26em; }
 .faction-exchange-groups { display: grid; gap: 19px; }
 .faction-exchange-group { display: grid; gap: 10px; }
 .faction-exchange-group > header { display: flex; align-items: baseline; justify-content: space-between; padding-inline: 2px; }
@@ -2243,24 +2240,8 @@ body {
 .faction-exchange-empty { display: grid; justify-items: center; gap: 5px; padding: 38px 20px; border: 1px dashed rgb(233 222 195 / 13%); color: #8f8d80; text-align: center; }
 .faction-exchange-empty strong { color: #c9bda1; font-size: 14px; font-weight: 500; letter-spacing: .12em; }
 .faction-exchange-empty span { font-size: 10px; }
-/* 兑换页：通用 / 贡献双 tab 的全局兑换中心 */
-.exchange-main-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
-.exchange-main-tabs button { display: grid; gap: 3px; padding: 8px 15px; border: 1px solid rgb(201 163 92 / 32%); border-radius: 6px; color: #b7a98a; background: rgb(201 163 92 / 6%); font-size: 13px; letter-spacing: .18em; text-align: left; }
-.exchange-main-tabs button small { color: #7f7e72; font-size: 9px; letter-spacing: .1em; }
-.exchange-main-tabs button.active { border-color: #c9a35c; color: #2e2208; background: linear-gradient(160deg, #e6c67f, #a37e3f); }
-.exchange-main-tabs button.active small { color: rgb(46 34 8 / 78%); }
-.exchange-general { display: grid; gap: 14px; }
-.exchange-wallet-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid rgb(143 111 58 / 30%); border-radius: 8px; background: rgb(201 163 92 / 5%); }
-.exchange-wallets { display: flex; flex-wrap: wrap; gap: 7px; }
-.exchange-wallet { display: grid; gap: 2px; min-width: 96px; padding: 7px 10px; border: 1px solid #3a4138; border-radius: 5px; color: #9aa08f; background: transparent; text-align: left; }
-.exchange-wallet span { color: #7d7f72; font-size: 10px; letter-spacing: .1em; }
-.exchange-wallet b { color: #e6c67f; font-size: 14px; font-variant-numeric: tabular-nums; }
-.exchange-wallet small { color: #6f7369; font-size: 9px; }
-.exchange-wallet.active { border-color: #c9a35c; background: rgb(201 163 92 / 12%); }
 .exchange-goto { flex: none; padding: 7px 12px; border: 1px dashed #8d7444; border-radius: 5px; color: #e3d4af; background: rgb(201 163 92 / 10%); font-size: 11px; letter-spacing: .12em; }
 .exchange-goto:hover { border-color: #e6c67f; background: rgb(201 163 92 / 18%); }
-.exchange-general .inventory-shop-list { overflow: visible; }
-.exchange-general .inventory-shop-rank.locked { opacity: .45; cursor: not-allowed; }
 .exchange-filter-row { display: grid; gap: 10px; padding: 12px 14px; border: 1px solid rgb(143 111 58 / 30%); border-radius: 8px; background: rgb(201 163 92 / 5%); }
 .exchange-kind-tabs, .exchange-world-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .exchange-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 5px 11px; border: 1px solid #3a4138; border-radius: 999px; color: #9aa08f; background: transparent; font-size: 11px; letter-spacing: .12em; }
@@ -2356,8 +2337,6 @@ body {
   .faction-calling-cards { grid-template-columns: 1fr; gap: 12px; padding-inline: 6px; }
   .faction-exchange { gap: 15px; padding: 16px; }
   .faction-exchange-head { align-items: flex-start; flex-direction: column; gap: 12px; }
-  .faction-exchange-wallet { text-align: left; }
-  .exchange-wallet-row { align-items: stretch; flex-direction: column; }
   .exchange-faction-group > header { justify-content: flex-start; }
   .faction-exchange-grid { grid-template-columns: 1fr; }
   .faction-recruitment { gap: 14px; padding: 16px; }
@@ -2494,7 +2473,7 @@ body {
 }
 .inventory-board,
 .inventory-appraise,
-.inventory-shop {
+.inventory-board {
   min-width: 0;
   min-height: 0;
   border-radius: 10px;
@@ -2509,32 +2488,6 @@ body {
     radial-gradient(640px 300px at 88% -8%, rgb(201 163 92 / 6%), transparent 60%),
     linear-gradient(170deg, rgb(31 36 28 / 55%), rgb(17 20 15 / 82%));
 }
-.inventory-shop {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: 16px 16px 14px;
-  border: 1px solid #31382e;
-  background:
-    radial-gradient(420px 220px at 10% -20%, rgb(201 163 92 / 8%), transparent 62%),
-    linear-gradient(170deg, rgb(31 36 28 / 55%), rgb(17 20 15 / 82%));
-}
-.inventory-shop-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-.inventory-shop-head h2 { margin: 0; color: #eee0bb; font-size: 20px; letter-spacing: .18em; }
-.inventory-shop-head span { display: block; margin-top: 4px; color: #7d7f72; font-size: 10px; letter-spacing: .16em; }
-.inventory-shop-purse { text-align: right; }
-.inventory-shop-purse b { display: block; color: #e6c67f; font-size: 18px; font-variant-numeric: tabular-nums; }
-.inventory-shop-purse small { color: #7d7f72; font-size: 10px; letter-spacing: .14em; }
-.inventory-shop-ranks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-.inventory-shop-rank { padding: 5px 10px; border: 1px solid #3a4138; border-radius: 4px; color: #9aa08f; font-size: 11px; letter-spacing: .16em; background: transparent; }
-.inventory-shop-rank.active { border-color: #c9a35c; color: #2e2208; background: linear-gradient(160deg, #e6c67f, #a37e3f); font-weight: 700; }
-.inventory-shop-list { display: grid; gap: 8px; margin: 0; padding: 0; overflow: auto; list-style: none; }
-.inventory-shop-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid #31382e; border-radius: 6px; background: rgb(12 14 11 / 35%); }
-.inventory-shop-item strong { display: block; color: #e8e1d3; font-size: 13px; letter-spacing: .08em; }
-.inventory-shop-item span { color: #7d7f72; font-size: 10px; letter-spacing: .1em; }
-.inventory-shop-buy { flex: none; padding: 6px 12px; border: 1px solid #8d7444; border-radius: 4px; color: #2e2208; background: linear-gradient(160deg, #e6c67f, #a37e3f); font-size: 11px; letter-spacing: .18em; }
-.inventory-shop-buy:disabled { opacity: .4; cursor: not-allowed; }
-.inventory-shop-note { margin: 12px 0 0; color: #7d7f72; font-size: 10px; letter-spacing: .12em; line-height: 1.7; }
 .inventory-board-inner {
   display: flex;
   min-height: 0;
