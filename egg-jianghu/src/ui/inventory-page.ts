@@ -59,6 +59,9 @@ export interface InventoryPagerView {
   total: number
   rangeStart: number
   rangeEnd: number
+  columns?: number
+  rows?: number
+  cellSize?: number
 }
 
 export interface InventoryPageViewModel {
@@ -86,6 +89,9 @@ export interface InventoryPageViewModel {
   detailOpen: boolean
   items: InventoryItemView[]
   selectedItem: InventoryItemView | null
+  gridColumns?: number
+  gridRows?: number
+  gridCellSize?: number
 }
 
 export interface InventoryStackView {
@@ -212,7 +218,7 @@ const renderInventoryCell = (item: InventoryItemView, selectedUid: string | null
     <span class="inventory-cell-icon" aria-hidden="true">${renderEquipmentIcon(item)}</span>
     <span class="inventory-cell-name">${escapeHtml(item.name)}</span>
     <span class="inventory-cell-slot">${escapeHtml(item.slotName)}</span>
-    ${renderEquipmentTooltip(item, '点击鉴定 · 详情页可为选中侠客穿戴', equipped?.uid === item.uid ? null : equipped)}
+    ${renderEquipmentTooltip(item, '悬停查看属性 · 详情区可为选中侠客装备', equipped?.uid === item.uid ? null : equipped)}
   </button>`
 }
 
@@ -244,7 +250,7 @@ const renderPagerStep = (label: string, target: number, disabled: boolean, name:
 const renderInventoryPager = (pager?: InventoryPagerView): string => {
   if (!pager || pager.pageCount <= 1) return ''
   const { page, pageCount } = pager
-  return `<nav class="inventory-pager" aria-label="百宝囊分页" data-testid="inventory-pager">
+  return `<nav class="inventory-pager" aria-label="百宝囊分页" data-testid="inventory-pager" data-page-size="${pager.pageSize}" data-grid-columns="${pager.columns ?? ''}" data-grid-rows="${pager.rows ?? ''}" data-cell-size="${pager.cellSize ?? ''}">
     ${renderPagerStep('‹ 上页', page - 1, page <= 1, '上一页')}
     <div class="inventory-pager-nums">${pagerSlots(page, pageCount).map((slot) => slot === 'gap'
       ? '<span class="inventory-pager-gap" aria-hidden="true">···</span>'
@@ -276,13 +282,15 @@ const renderOriginalFixedDetails = (item: InventoryItemView): string => `
   ${item.manualSkill ? `<section class="inventory-manual-skill" data-learned="${item.manualSkill.learned}"><h3>秘籍传承 · ${escapeHtml(item.manualSkill.name)}</h3><b>${item.manualSkill.learned ? '已领悟' : '未领悟'}</b><p>首次装备后永久领悟；卸下不会失去，重复装备不会重复授予。</p></section>` : ''}
   ${item.artifactSoul ? `<section class="inventory-artifact-soul" data-tier="${item.artifactSoul.tier}"><header><h3>器魂 · ${escapeHtml(item.artifactSoul.name)}</h3><b>${item.artifactSoul.tier} 阶</b></header><p>${escapeHtml(item.artifactSoul.description)}</p><strong>当前生效 +${escapeHtml(item.artifactSoul.formattedValue)}</strong></section>` : ''}`
 
-const renderSelectedDetail = (item: InventoryItemView | null): string => {
+const renderSelectedDetail = (item: InventoryItemView | null, selectedHeroName?: string): string => {
   if (!item) return `<div class="inventory-appraise-blank">
     <span class="inventory-blank-char">鉴</span>
     <span>点 选 囊 中 一 物<br>细 细 端 详</span>
   </div>`
 
-  return `<div class="inventory-appraise-head">
+  return `${selectedHeroName ? `<div class="inventory-detail-toolbar">
+    <button type="button" class="inventory-detail-equip" data-action="inventory-equip" data-equipment-uid="${escapeHtml(item.uid)}" aria-label="为${escapeHtml(selectedHeroName)}装备${escapeHtml(item.name)}" title="为${escapeHtml(selectedHeroName)}装备此物品">装备</button>
+  </div>` : ''}<div class="inventory-appraise-head">
     <span class="inventory-slot-tag">${escapeHtml(item.slotName)}</span>
     <span class="inventory-quality-tag" data-rarity="${item.quality}">品质 ${escapeHtml(EQUIPMENT_QUALITY_NAMES[item.quality] ?? String(item.quality))}</span>
     <span class="inventory-slot-tag" data-testid="inventory-item-level">物品等级 Lv.${item.level}</span>
@@ -363,22 +371,17 @@ export const renderInventoryPage = (view: InventoryPageViewModel): string => `<s
         <label class="inventory-search">搜索物品<input type="search" data-action="inventory-search" aria-label="搜索背包物品" placeholder="输入物品名称" value="${escapeHtml(view.query ?? '')}"></label>
         ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="inventory-slot-tabs" aria-label="部位筛选">${renderSlotTabs(view)}</nav>` : ''}
         ${(view.category ?? 'all') === 'equipment' || (view.category ?? 'all') === 'all' ? `<nav class="ink-bag-filters" aria-label="品质与排序"><button type="button" data-action="inventory-quality" data-quality="all" aria-pressed="${(view.qualityFilter ?? 'all') === 'all'}">全品质</button>${EQUIPMENT_QUALITIES.map(quality => `<button type="button" data-action="inventory-quality" data-quality="${quality}" aria-pressed="${view.qualityFilter === quality}">${EQUIPMENT_QUALITY_NAMES[quality]}</button>`).join('')}<button type="button" data-action="inventory-sort" data-sort="level" aria-pressed="${(view.sort ?? 'level') === 'level'}">等级↓</button><button type="button" data-action="inventory-sort" data-sort="quality" aria-pressed="${view.sort === 'quality'}">品质↓</button></nav>` : ''}
-        <div class="inventory-grid-wrap"><div class="inventory-grid">${renderInventoryGrid(view)}</div></div>
+        <div class="inventory-grid-wrap" data-testid="inventory-grid-wrap" data-grid-columns="${view.gridColumns ?? ''}" data-grid-rows="${view.gridRows ?? ''}" data-cell-size="${view.gridCellSize ?? ''}"><div class="inventory-grid" data-testid="inventory-grid">${renderInventoryGrid(view)}</div></div>
         ${renderInventoryPager(view.pager)}
-        <footer class="inventory-legend">
-          ${(view.category ?? 'all') === 'all' || view.category === 'equipment' ? EQUIPMENT_QUALITIES.map((quality) => `<span data-quality="${quality}">${EQUIPMENT_QUALITY_NAMES[quality]}<b>${view.qualityCounts[quality]}</b></span>`).join('') : ''}
-          <span class="inventory-legend-total">装备 ${view.itemCount} 件 · 堆叠物品不占装备格</span>
-        </footer>
       </div>
     </section>
 
     <div class="ink-bag-side">${view.heroEquipment ?? ''}
     <aside class="inventory-appraise${view.detailOpen ? ' open' : ''}" data-testid="inventory-detail" aria-label="物品详情">
       <button type="button" class="inventory-appraise-close" data-action="inventory-close-detail" aria-label="关闭详情">✕</button>
-      <div class="inventory-appraise-paper">${view.selectedStack ? renderStackDetail(view.selectedStack) : renderSelectedDetail(view.selectedItem)}${view.selectedItem && !view.selectedStack && view.selectedHeroName ? `<button type="button" class="ink-equip-action" data-action="inventory-equip" data-equipment-uid="${escapeHtml(view.selectedItem.uid)}">为${escapeHtml(view.selectedHeroName)}穿戴</button>` : ''}</div>
+      <div class="inventory-appraise-paper">${view.selectedStack ? renderStackDetail(view.selectedStack) : renderSelectedDetail(view.selectedItem, view.selectedHeroName)}</div>
     </aside>
     </div>
   </div>
 
-  <footer class="inventory-page-foot">蛋蛋江湖 2.0 · 背包页重设计 v2 · 墨底宣纸 / 朱砂印 / 金漆匾</footer>
 </section>`

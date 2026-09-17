@@ -53,6 +53,7 @@ test('同册选位面与小关，确认驻守后开始战斗', async ({ page }) 
   await page.getByTestId('stage-1').click()
   await page.getByTestId('start-guard').click()
   await expect(page.getByTestId('idle-page')).toBeVisible()
+  await expect(page.locator('.toast')).toBeHidden()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getSelection())).toEqual({
     worldId: 'world_01',
     difficulty: 1,
@@ -601,7 +602,7 @@ test('位面十五格悬榜锁定已接任务并刷新未接任务', async ({ pa
     window.__EGG_JIANGHU__.prepareQuestBoard('world_01', 211)
   })
   await openWorldSection(page, 'factions')
-  await page.getByTestId('faction-plaque-tieyi_school').click()
+  await expect(page.getByTestId('faction-selector')).toHaveCount(0)
   await expect(page.locator('[data-quest-slot]')).toHaveCount(15)
   await expect(page.locator('.faction-quest-grid')).not.toContainText('world_01_stage_01')
   await expect(page.locator('.faction-notice h3').first()).toHaveText(/\S+/)
@@ -614,20 +615,6 @@ test('位面十五格悬榜锁定已接任务并刷新未接任务', async ({ pa
   await page.locator('#ink-leaf-title').hover()
   await expect.poll(() => questCard.evaluate((element) => getComputedStyle(element).transform)).toBe(restingTransform)
 
-  const purse = page.getByTestId('faction-purse').locator('strong')
-  await page.getByTestId('faction-plaque-qingfeng_hall').click()
-  await page.getByTestId('faction-plaque-tieyi_school').click()
-  const cardMotionPlaying = await page.getByTestId('quest-slot-0').evaluate((element) =>
-    element.getAnimations().some((animation) => animation.playState === 'running'))
-  const purseMotionPlaying = await page.getByTestId('faction-purse').evaluate((element) =>
-    element.getAnimations().some((animation) => animation.playState === 'running'))
-  expect(cardMotionPlaying).toBe(true)
-  expect(purseMotionPlaying).toBe(true)
-  await page.waitForTimeout(120)
-  const worldContribution = await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.world_01 ?? 0)
-  await expect(purse).toHaveText(worldContribution.toLocaleString('zh-CN'))
-  await page.waitForTimeout(750)
-
   const before = await page.evaluate(() => window.__EGG_JIANGHU__.getState().factionBoards.world_01.slots.map((slot) => slot?.id ?? null))
   await page.getByTestId('quest-slot-0').getByRole('button', { name: '揭榜' }).click()
   await page.evaluate(() => window.__EGG_JIANGHU__.advanceRuntime(1_200_000))
@@ -636,19 +623,20 @@ test('位面十五格悬榜锁定已接任务并刷新未接任务', async ({ pa
   expect(after.slice(1)).not.toEqual(before.slice(1))
 })
 
-test('势力页支持切换匾额和原版招募名录', async ({ page }) => {
+test('势力专属页支持切换匾额和原版招募名录', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
     window.__EGG_JIANGHU__.grantContribution('qingfeng_hall', 1000)
   })
   await openWorldSection(page, 'factions')
 
+  await expect(page.getByTestId('faction-selector')).toHaveCount(0)
+  await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   await page.getByTestId('faction-plaque-tieyi_school').click()
   await expect(page.getByTestId('faction-plaque-tieyi_school')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('#ink-leaf-title')).toBeVisible()
   await page.getByTestId('faction-plaque-qingfeng_hall').click()
   await expect(page.getByTestId('faction-plaque-qingfeng_hall')).toHaveAttribute('aria-pressed', 'true')
-  await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   await expect(page.getByTestId('faction-recruitment')).toBeVisible()
   await expect(page.getByTestId('faction-recruitment-hero-2')).toContainText('邢道荣')
   await page.locator('.ink-faction-tabs [data-faction-panel="martials"]').click()
@@ -675,6 +663,7 @@ test('兑换页聚合位面声望、贡献兑换与招募', async ({ page }, tes
     .toContainText('声望 友好')
   const blueprint = page.getByTestId('faction-exchange-item-tieyi_school-2')
   await expect(blueprint).toContainText('虎豹之头盔图纸')
+  await expect(blueprint.locator('header small')).toHaveText('东汉三国声望 · 友好 · 可兑')
   await blueprint.getByRole('button', { name: '兑换' }).click()
   await expect(blueprint.getByRole('button', { name: '已拥有' })).toBeDisabled()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().blueprints['5'])).toBe(1)

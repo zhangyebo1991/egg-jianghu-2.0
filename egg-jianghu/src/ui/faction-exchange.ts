@@ -54,7 +54,7 @@ const exchangeGotoButton = (worldId: string, dest: 'stages' | 'factions', label:
 
 const renderItemAction = (group: FactionExchangeGroupView, item: FactionExchangeItemView): string => {
   if (item.reputationLocked) {
-    return `<button type="button" disabled title="在${escapeHtml(group.worldName)}办差挂机提升声望后解锁">${escapeHtml(item.actionReason ?? `需${item.requiredReputationName}声望`)}</button>`
+    return `<button type="button" disabled title="${escapeHtml(group.worldName)}当前声望为${escapeHtml(group.reputationLevelName)}，达到${escapeHtml(item.requiredReputationName ?? '目标')}后可兑换">${escapeHtml(item.actionReason ?? `需${item.requiredReputationName}声望`)}</button>`
   }
   if (item.owned) {
     return '<button type="button" disabled title="该物品已在囊中">已拥有</button>'
@@ -71,19 +71,23 @@ const renderItemAction = (group: FactionExchangeGroupView, item: FactionExchange
 
 const renderExchangeItem = (group: FactionExchangeGroupView, item: FactionExchangeItemView): string => {
   const reputationRequirement = item.requiredReputationLevel === null
-    ? '无声望门槛'
-    : `${item.requiredReputationName}可兑`
+    ? `${group.worldName} · 无声望门槛`
+    : `${group.worldName}声望 · ${group.reputationLevelName}${item.reputationLocked ? `（需${item.requiredReputationName}）` : ' · 可兑'}`
   const quantity = item.quantity > 0 && !item.owned
     ? `<span class="faction-exchange-count">持有 ${formatNumber(item.quantity)}</span>`
+    : ''
+  const reputationNote = item.reputationLocked
+    ? `<span class="faction-exchange-count faction-exchange-reputation">当前${group.reputationLevelName} · 需${item.requiredReputationName}声望</span>`
     : ''
   const shortNote = item.insufficientFunds && !item.reputationLocked && !item.owned
     ? `<span class="faction-exchange-count">贡献不足 · 点击前往赚取</span>`
     : ''
+  const reputationState = item.requiredReputationLevel !== null && item.reputationLocked ? 'reputation-locked' : 'reputation-ready'
   return `<article class="faction-exchange-item ${item.owned ? 'owned' : ''}" data-kind="${item.kind}" data-testid="faction-exchange-item-${escapeHtml(group.factionId)}-${item.slot}">
-    <header><span>${escapeHtml(kindLabels[item.kind])}</span><small>${escapeHtml(reputationRequirement)}</small></header>
+    <header><span>${escapeHtml(kindLabels[item.kind])}</span><small class="${reputationState}" title="${escapeHtml(item.requiredReputationLevel === null ? `${group.worldName}不设声望门槛` : `${group.worldName}当前声望为${group.reputationLevelName}，${item.reputationLocked ? `需达到${item.requiredReputationName}后可兑换` : '已满足兑换声望门槛'}`)}">${escapeHtml(reputationRequirement)}</small></header>
     <h4>${escapeHtml(item.name)}</h4>
     <div class="faction-exchange-item-foot">
-      <div><b>${formatNumber(item.price)}</b><small>贡献</small>${quantity}${shortNote}</div>
+      <div><b>${formatNumber(item.price)}</b><small>贡献</small>${quantity}${reputationNote}${shortNote}</div>
       ${renderItemAction(group, item)}
     </div>
   </article>`

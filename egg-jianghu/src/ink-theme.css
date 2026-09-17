@@ -627,3 +627,45 @@ button:disabled { opacity: .35; }
 @media (prefers-reduced-motion: reduce) {
   .ink-shell *, .ink-shell *::before, .ink-shell *::after, .start-page * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* 居中册页的行囊采用三列工作区：名册、百宝囊、身上装备各自处理滚动。 */
+.ink-shell .ink-leaf .inventory-detail-toolbar { display: flex; flex: none; min-height: 30px; align-items: center; justify-content: flex-end; margin: -4px -4px 4px; }
+.ink-shell .ink-leaf .inventory-detail-equip { min-width: 48px; min-height: 30px; padding: 4px 10px; border: 1px solid var(--crimson); color: var(--night); background: var(--pn); font-size: 12px; letter-spacing: .12em; }
+.ink-shell .ink-leaf .inventory-detail-equip:hover:not(:disabled) { border-color: var(--pn); color: var(--night); background: #f4eddb; }
+
+@media (min-width: 981px) {
+  .ink-shell .ink-leaf:not(.docked) .game-main[data-page="inventory"] { display: flex; flex-direction: column; overflow: hidden; }
+  .ink-shell .ink-leaf:not(.docked) .inventory-page { height: auto; flex: 1 1 auto; }
+  .ink-shell .ink-leaf:not(.docked) .inventory-layout {
+    height: auto;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(190px, .72fr) minmax(350px, 1.7fr) minmax(280px, .9fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .ink-shell .ink-leaf:not(.docked) .inventory-layout > :is(.ink-bag-heroes, .inventory-board, .ink-bag-side) { min-height: 0; height: 100%; }
+  .ink-shell .ink-leaf:not(.docked) .ink-bag-heroes { position: static; display: flex; flex-direction: column; overflow: hidden; }
+  .ink-shell .ink-leaf:not(.docked) .ink-bag-roster { flex: 1 1 auto; min-height: 0; max-height: none; margin: 8px 0 0; overflow-y: auto; align-content: start; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--night-line-2) transparent; }
+  .ink-shell .ink-leaf:not(.docked) .inventory-board { overflow: hidden; }
+  .ink-shell .ink-leaf:not(.docked) .inventory-grid-wrap { flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: auto; padding-block: 8px; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  .ink-shell .ink-leaf:not(.docked) .inventory-grid { align-content: start; }
+  .ink-shell .ink-leaf:not(.docked) .ink-bag-side,
+  .ink-shell .ink-leaf:not(.docked) .ink-bag-side:has(.inventory-appraise.open) { grid-column: auto; position: static; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; gap: 12px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--night-line-2) transparent; }
+  .ink-shell .ink-leaf:not(.docked) .ink-bag-equipped { flex: none; min-height: 0; margin: 0; }
+  .ink-shell .ink-leaf:not(.docked) .inventory-appraise { min-height: 0; flex: 1 1 auto; overflow: hidden; }
+  .ink-shell .ink-leaf:not(.docked) .inventory-appraise-paper { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .ink-shell .ink-leaf:not(.docked) .inventory-page-foot { display: none; }
+}
+
+@media (min-width: 981px) and (max-width: 1120px) {
+  .ink-shell .ink-leaf:not(.docked) .inventory-layout { grid-template-columns: minmax(180px, .7fr) minmax(310px, 1.45fr) minmax(250px, .9fr); gap: 10px; }
+  .ink-shell .ink-leaf:not(.docked) .ink-bag-equipment-actions { gap: 2px; }
+  .ink-shell .ink-leaf:not(.docked) .ink-bag-equipment-actions .ink-tool-btn { padding-inline: 5px; font-size: 10px; }
+}
+
+.ink-bag-equipment-actions { display: flex; flex: none; align-items: center; gap: 4px; }
+.ink-bag-equipment-actions .ink-tool-btn { min-width: 0; min-height: 28px; padding: 4px 7px; border: 1px solid var(--night-line-2); background: transparent; color: var(--pn-dim); font-size: 11px; letter-spacing: .04em; white-space: nowrap; }
+.ink-bag-equipment-actions .ink-tool-btn:hover:not(:disabled) { border-color: var(--pn-dim); color: var(--pn); }
+.ink-bag-equipment-actions .ink-tool-btn.primary { border-color: var(--crimson); background: var(--crimson-soft); color: var(--pn); }
+.ink-equipped-slot { isolation: isolate; }
+.toast.inventory-toast[hidden] { display: none; }

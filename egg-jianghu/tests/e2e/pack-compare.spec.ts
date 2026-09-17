@@ -4,6 +4,7 @@ import { equipmentDefinitionById } from '../../src/content/equipment'
 import { SAVE_KEY_V10 } from '../../src/domain/save-v10'
 
 test('行囊页悬停对比身上装备，宽窄屏均可读，并可一键穿戴', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1536, height: 960 })
   await page.goto('/')
   await page.getByRole('button', { name: '新建游戏' }).click()
   await page.getByLabel('玩家姓名').fill('对比少侠')
@@ -35,6 +36,16 @@ test('行囊页悬停对比身上装备，宽窄屏均可读，并可一键穿�
   // 行囊物品等级更高，核心词条应标出上升箭头
   await expect(tooltip).toContainText(/▲/)
   await expect(tooltip).not.toContainText(/恢复 \d+\.\d{6}/)
+  await expect(page.locator('.inventory-detail-equip')).toBeVisible()
+  await expect(page.locator('.ink-equip-action')).toHaveCount(0)
+
+  const equippedAnchor = page.locator('.ink-equipped button:not(:disabled)').first()
+  const equippedTooltip = page.locator('.ink-equipped .equipment-tooltip')
+  await equippedAnchor.hover()
+  await expect(equippedTooltip).toBeVisible()
+  await expect(equippedTooltip).toContainText('核心词条')
+  await expect(equippedTooltip).toContainText('物攻')
+
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 })
     await anchor.hover()

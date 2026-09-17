@@ -5,6 +5,7 @@ import { renderFactionsPage, type FactionsPageViewModel } from './factions-page'
 import type { FactionExchangeViewModel } from './faction-exchange'
 import { renderHeroesPage, type HeroesPageViewModel } from './heroes-page'
 import { renderInventoryPage, type InventoryPageViewModel } from './inventory-page'
+import { renderInkInventoryEquipment } from './ink-inventory'
 import { renderFormationPage, type FormationPageViewModel } from './formation-page'
 import { renderTownsPage, type TownsPageViewModel } from './towns-page'
 import { heroAbilityAttributes } from '../domain/faction-agent'
@@ -508,6 +509,15 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('来源 <b>全真教</b>')
   })
 
+  it('悬榜页不显示势力选择器，势力专属页保留匾额选择', () => {
+    const questHtml = renderFactionsPage(factionsFixture(), 'quests')
+    expect(questHtml).not.toContain('data-testid="faction-selector"')
+    expect(questHtml).not.toContain('data-action="select-faction"')
+
+    expect(renderFactionsPage(factionsFixture(), 'recruit')).toContain('data-testid="faction-selector"')
+    expect(renderFactionsPage(factionsFixture(), 'martials')).toContain('data-testid="faction-selector"')
+  })
+
   it('兑换页只展示已解锁正式势力的原版贡献目录', () => {
     const html = renderFactionsPage(factionsFixture(), 'exchange')
     expect(html).toContain('data-testid="faction-exchange"')
@@ -524,6 +534,8 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('data-action="faction-exchange" data-faction-id="tieyi_school" data-slot="1"')
     expect(html).toContain('data-testid="faction-exchange-item-tieyi_school-1"')
     expect(html).toContain('声望 冷淡 · 等级 1 / 5')
+    expect(html).toContain('东汉三国声望 · 冷淡（需友好）')
+    expect(html).toContain('当前冷淡 · 需友好声望')
     // 贡献不足的物品：按钮变为跳转引导，声望不足的物品保持禁用说明。
     expect(html).toContain('data-action="exchange-goto-world" data-world-id="world_01" data-dest="factions"')
     expect(html).toContain('>需友好声望</button>')
@@ -622,11 +634,12 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('class="inventory-appraise-figure"')
     expect(html).toContain('class="inventory-figure-ring"')
     expect(html.match(/data-equipment-icon-source="unique"/g)).toHaveLength(2)
-    expect(html).toContain('普通<b>1</b>')
     expect(html).toContain('物攻</span>')
     expect(html).toContain('(94%)')
     expect(html).toContain('[C]')
-    expect(html).toContain('装备 1 件 · 堆叠物品不占装备格')
+    expect(html).not.toContain('inventory-legend')
+    expect(html).not.toContain('装备 1 件 · 堆叠物品不占装备格')
+    expect(html).not.toContain('inventory-page-foot')
     // 坊市迁往兑换页后，行囊不再输出购书面板。
     expect(html).not.toContain('data-testid="job-book-shop"')
     expect(html).not.toContain('弓手转职书')
@@ -644,6 +657,30 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('人物等级达到穿戴等级 Lv.12 方可穿戴')
     // 背包格只显示物品等级，避免与穿戴等级混淆
     expect(html).toContain('class="inventory-cell-level" title="物品等级">Lv.20')
+  })
+
+  it('装备详情右上角提供紧凑装备入口，身上装备槽也输出完整属性提示', () => {
+    const item = inventoryFixture().items[0]
+    const detail = renderInventoryPage({
+      ...inventoryFixture(), detailOpen: true, items: [item], selectedItem: item, selectedHeroName: '试剑人',
+    })
+    expect(detail).toContain('class="inventory-detail-equip"')
+    expect(detail).toContain('data-action="inventory-equip"')
+    expect(detail).toContain('aria-label="为试剑人装备长戟"')
+    expect(detail).not.toContain('为试剑人穿戴')
+    expect(detail).not.toContain('class="ink-equip-action"')
+
+    const heroView = heroesFixture()
+    heroView.equipment = {
+      heroId: 'hero_test',
+      setIndex: 0,
+      slots: EQUIPMENT_SLOTS.map((slot) => ({ slot, item: slot === item.slot ? item : null })),
+    }
+    const equipped = renderInkInventoryEquipment(heroView)
+    expect(equipped).toContain('class="ink-equipped-slot"')
+    expect(equipped).toContain('class="equipment-tooltip"')
+    expect(equipped).toContain('物攻')
+    expect(equipped).toContain('物理增伤')
   })
 
   it('当前大关没有势力内容时显示本卷空状态', () => {

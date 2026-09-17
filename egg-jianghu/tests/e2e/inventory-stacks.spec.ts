@@ -64,3 +64,74 @@ test('背包展示堆叠数量、分类搜索、物品详情与实时入库', as
   await page.screenshot({ path: testInfo.outputPath('backpack-mobile.png'), fullPage: true })
   expect(errors).toEqual([])
 })
+
+test('居中桌面行囊按三栏空间动态分页，内容区不推动整页滚动', async ({ page }, testInfo) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 1536, height: 960 })
+  await page.goto('/')
+  await page.getByRole('button', { name: '新建游戏' }).click()
+  await page.getByLabel('玩家姓名').fill('动态分页验收')
+  await page.getByLabel('玩家姓名').press('Enter')
+  await page.evaluate(() => window.__EGG_JIANGHU__.fillInventory(300))
+  await openPanel(page, 'inventory')
+
+  await page.waitForFunction(() => {
+    const pager = document.querySelector<HTMLElement>('[data-testid="inventory-pager"]')
+    return Boolean(pager?.dataset.gridColumns && pager.dataset.gridRows && pager.dataset.cellSize)
+  })
+  const firstMetrics = await page.evaluate(() => {
+    const layout = document.querySelector<HTMLElement>('.inventory-layout')!
+    const main = document.querySelector<HTMLElement>('.game-main')!
+    const gridWrap = document.querySelector<HTMLElement>('.inventory-grid-wrap')!
+    const grid = document.querySelector<HTMLElement>('.inventory-grid')!
+    const cell = document.querySelector<HTMLElement>('.inventory-cell')!
+    const pager = document.querySelector<HTMLElement>('[data-testid="inventory-pager"]')!
+    const boxes = [...layout.children].map(element => {
+      const rect = element.getBoundingClientRect()
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+    })
+    const columns = Number(pager.dataset.gridColumns)
+    const rows = Number(pager.dataset.gridRows)
+    return {
+      boxes,
+      pageSize: Number(pager.dataset.pageSize),
+      columns,
+      rows,
+      cellSize: Number(pager.dataset.cellSize),
+      actualCellSize: Math.round(cell.getBoundingClientRect().width),
+      gridColumns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length,
+      mainClientHeight: main.clientHeight,
+      mainScrollHeight: main.scrollHeight,
+      scrollModes: {
+        roster: getComputedStyle(document.querySelector('.ink-bag-roster')!).overflowY,
+        grid: getComputedStyle(gridWrap).overflowY,
+        side: getComputedStyle(document.querySelector('.ink-bag-side')!).overflowY,
+      },
+    }
+  })
+  expect(firstMetrics.boxes).toHaveLength(3)
+  expect(firstMetrics.boxes.every(box => Math.abs(box.y - firstMetrics.boxes[0].y) < 1)).toBe(true)
+  expect(firstMetrics.boxes[0].x).toBeLessThan(firstMetrics.boxes[1].x)
+  expect(firstMetrics.boxes[1].x).toBeLessThan(firstMetrics.boxes[2].x)
+  expect(firstMetrics.pageSize).toBe(firstMetrics.columns * firstMetrics.rows)
+  expect(firstMetrics.gridColumns).toBe(firstMetrics.columns)
+  expect(firstMetrics.cellSize).toBe(firstMetrics.actualCellSize)
+  expect(firstMetrics.mainScrollHeight).toBe(firstMetrics.mainClientHeight)
+  expect(firstMetrics.scrollModes).toEqual({ roster: 'auto', grid: 'auto', side: 'auto' })
+  await expect(page.getByTestId('inventory-pager')).toContainText(`/ ${Math.ceil(300 / firstMetrics.pageSize)} 页`)
+  await page.screenshot({ path: testInfo.outputPath('inventory-centered-1536.png') })
+
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.waitForFunction((initialPageSize) => {
+    const pager = document.querySelector<HTMLElement>('[data-testid="inventory-pager"]')
+    const columns = Number(pager?.dataset.gridColumns)
+    const rows = Number(pager?.dataset.gridRows)
+    const pageSize = Number(pager?.dataset.pageSize)
+    return columns > 0 && rows > 0 && pageSize === columns * rows && pageSize !== initialPageSize
+  }, firstMetrics.pageSize)
+  const resizedPageSize = await page.getByTestId('inventory-pager').getAttribute('data-page-size')
+  expect(Number(resizedPageSize)).toBeGreaterThan(0)
+  expect(Number(resizedPageSize)).not.toBe(firstMetrics.pageSize)
+  expect(errors).toEqual([])
+})

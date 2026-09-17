@@ -26,7 +26,6 @@ for (const [targetId, name, quality] of [[11, '初晶矿石', 2], [12, '灵耀�
     await page.getByTestId('world-world_01').click()
 
     await openFactionSection(page, 'quests')
-    await page.getByTestId('faction-plaque-tieyi_school').click()
     const card = page.getByTestId('quest-slot-0')
     await expect(card).toContainText(name)
     await card.getByRole('button', { name: '揭榜' }).click()

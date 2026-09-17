@@ -198,8 +198,11 @@ let inventoryQualityFilter: EquipmentQuality | 'all' = 'all'
 let inventorySort: 'level' | 'quality' = 'level'
 let inventoryCategory: 'all' | 'equipment' | 'material' | 'special' = 'all'
 let inventoryQuery = ''
-// 百宝囊分页：容量放大到上千件时避免一次渲染整袋格子。
-const INVENTORY_PAGE_SIZE = 60
+// 百宝囊分页首帧只作兜底；居中桌面册页完成布局后按实际可见网格重算。
+const INVENTORY_PAGE_SIZE_FALLBACK = 24
+let inventoryPageSize = INVENTORY_PAGE_SIZE_FALLBACK
+let inventoryGridMetrics = { columns: 4, rows: 6, cellSize: 96 }
+let inventoryGridMeasureFrame: number | null = null
 let inventoryPage = 1
 let inventoryGridScrollPending = false
 let selectedStackId: number | null = null
@@ -278,7 +281,7 @@ let factionAgentFocusPending = false
 let factionContributionAnimation: FactionContributionAnimation | null = null
 let factionMotionTimer: number | null = null
 
-const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .inventory-cell'
+const EQUIPMENT_TOOLTIP_ANCHOR = '.hero-equipment-slot, .inventory-cell, .ink-equipped button'
 const EQUIPMENT_TOOLTIP_GAP = 10
 const EQUIPMENT_TOOLTIP_VIEWPORT_PADDING = 12
 
@@ -584,6 +587,12 @@ try {
 }
 
 const notify = (message: string, warning = false): void => {
+  if (!message.trim()) {
+    toast.hidden = true
+    if (toastTimer) window.clearTimeout(toastTimer)
+    toastTimer = 0
+    return
+  }
   toast.textContent = message
   toast.classList.toggle('warning', warning)
   toast.hidden = false
@@ -619,6 +628,9 @@ const enterPlaying = (nextSession: GameSession): void => {
   ordinaryPoolRewards = []
   inventoryCategory = 'all'
   inventoryQuery = ''
+  inventoryPageSize = INVENTORY_PAGE_SIZE_FALLBACK
+  inventoryGridMetrics = { columns: 4, rows: 6, cellSize: 96 }
+  inventoryGridMeasureFrame = null
   inventoryPage = 1
   selectedStackId = null
   selectedInventoryUid = null
@@ -1785,10 +1797,10 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     && item.name.toLocaleLowerCase().includes(query))
   // 装备与堆叠物在同一格子流中依次排布，按整体序号切页。
   const totalCells = visibleItems.length + stacks.length
-  const pageCount = Math.max(1, Math.ceil(totalCells / INVENTORY_PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(totalCells / inventoryPageSize))
   inventoryPage = Math.min(Math.max(1, inventoryPage), pageCount)
-  const pageStart = (inventoryPage - 1) * INVENTORY_PAGE_SIZE
-  const pageEnd = pageStart + INVENTORY_PAGE_SIZE
+  const pageStart = (inventoryPage - 1) * inventoryPageSize
+  const pageEnd = pageStart + inventoryPageSize
   const pagedItems = visibleItems.slice(pageStart, pageEnd)
   const pagedStacks = stacks.slice(
     Math.max(0, pageStart - visibleItems.length),
@@ -1834,10 +1846,13 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     pager: {
       page: inventoryPage,
       pageCount,
-      pageSize: INVENTORY_PAGE_SIZE,
+      pageSize: inventoryPageSize,
       total: totalCells,
       rangeStart: totalCells ? pageStart + 1 : 0,
       rangeEnd: Math.min(pageEnd, totalCells),
+      columns: inventoryGridMetrics.columns,
+      rows: inventoryGridMetrics.rows,
+      cellSize: inventoryGridMetrics.cellSize,
     },
     capacity: INVENTORY_CAPACITY,
     itemCount: allItems.length,
@@ -1852,6 +1867,9 @@ const inventoryViewModel = (): InventoryPageViewModel => {
     items: pagedItems,
     selectedItem,
     equippedBySlot,
+    gridColumns: inventoryGridMetrics.columns,
+    gridRows: inventoryGridMetrics.rows,
+    gridCellSize: inventoryGridMetrics.cellSize,
   }
 }
 
@@ -2076,6 +2094,62 @@ const restorePageScroll = (key: string): void => {
   }
 }
 
+const isCenteredDesktopInventory = (): boolean => activeTab === 'inventory'
+  && !inkPanelDocked
+  && typeof window.matchMedia === 'function'
+  && window.matchMedia('(min-width: 981px)').matches
+
+const measureInventoryGrid = (): void => {
+  if (!isCenteredDesktopInventory()) return
+  const wrap = app.querySelector<HTMLElement>('.inventory-grid-wrap')
+  const grid = app.querySelector<HTMLElement>('.inventory-grid')
+  const firstCell = grid?.querySelector<HTMLElement>('.inventory-cell')
+  if (!wrap || !grid || !firstCell || wrap.clientWidth <= 0 || wrap.clientHeight <= 0) return
+
+  const wrapStyle = getComputedStyle(wrap)
+  const gridStyle = getComputedStyle(grid)
+  const px = (value: string): number => {
+    const parsed = Number.parseFloat(value)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  const paddingX = px(wrapStyle.paddingLeft) + px(wrapStyle.paddingRight)
+  const paddingY = px(wrapStyle.paddingTop) + px(wrapStyle.paddingBottom)
+  const columnGap = px(gridStyle.columnGap) || px(gridStyle.gap)
+  const rowGap = px(gridStyle.rowGap) || px(gridStyle.gap)
+  const cellRect = firstCell.getBoundingClientRect()
+  const innerWidth = Math.max(0, wrap.clientWidth - paddingX)
+  const innerHeight = Math.max(0, wrap.clientHeight - paddingY)
+  const templateColumns = gridStyle.gridTemplateColumns.split(/\s+/).filter(Boolean)
+  let columns = templateColumns.length
+  if (columns === 0 && cellRect.width > 0) {
+    columns = Math.max(1, Math.floor((innerWidth + columnGap) / (cellRect.width + columnGap)))
+  }
+  if (columns <= 0 || cellRect.width <= 0 || cellRect.height <= 0) return
+  const rows = Math.max(1, Math.floor((innerHeight + rowGap) / (cellRect.height + rowGap)))
+  const next = { columns, rows, cellSize: Math.round(cellRect.width) }
+  wrap.dataset.gridColumns = String(next.columns)
+  wrap.dataset.gridRows = String(next.rows)
+  wrap.dataset.cellSize = String(next.cellSize)
+  const changed = next.columns !== inventoryGridMetrics.columns
+    || next.rows !== inventoryGridMetrics.rows
+    || next.cellSize !== inventoryGridMetrics.cellSize
+  if (!changed) return
+
+  const pageSizeChanged = next.columns * next.rows !== inventoryPageSize
+  inventoryGridMetrics = next
+  if (pageSizeChanged) inventoryPageSize = Math.max(1, next.columns * next.rows)
+  inventoryGridScrollPending = true
+  render()
+}
+
+const scheduleInventoryGridMeasurement = (): void => {
+  if (!isCenteredDesktopInventory() || inventoryGridMeasureFrame !== null) return
+  inventoryGridMeasureFrame = window.requestAnimationFrame(() => {
+    inventoryGridMeasureFrame = null
+    measureInventoryGrid()
+  })
+}
+
 const render = (): void => {
   if (!isTabAvailable(activeTab)) activeTab = 'idle'
   if (!isJianghuSectionAvailable(jianghuSection)) jianghuSection = 'stages'
@@ -2217,6 +2291,7 @@ const render = (): void => {
   positionOpenEquipmentTooltip()
   toast.classList.toggle('inventory-toast', activeTab === 'inventory')
   syncInventoryDetailScrollLock()
+  scheduleInventoryGridMeasurement()
   playInventoryDropMotion()
 }
 
@@ -2257,7 +2332,7 @@ const startSelectedStage = (mode: 'guard' | 'roam', seed = Date.now()): void => 
     mode,
     seed,
   })
-  notify(result.message, !result.ok)
+  if (!result.ok) notify(result.message, true)
   if (result.ok) {
     beginCombatPresentation()
     if (!saveSession()) return
@@ -2422,7 +2497,10 @@ const playInventoryDropMotion = (): void => {
   })
 }
 
-window.addEventListener('resize', syncInventoryDetailScrollLock)
+window.addEventListener('resize', () => {
+  syncInventoryDetailScrollLock()
+  scheduleInventoryGridMeasurement()
+})
 
 const clearDragOver = (): void => {
   app.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'))

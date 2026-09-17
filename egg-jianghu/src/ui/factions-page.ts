@@ -279,6 +279,8 @@ export const renderFactionsPage = (view: FactionsPageViewModel, section: 'quests
   const selected = view.factions.find((faction) => faction.id === view.selectedFactionId) ?? view.factions[0]
   const minutes = formatMinutes(view.refreshRemainingMs)
   const worldRoman = romanNumerals[view.worldIndex] ?? String(view.worldIndex)
+  // 悬榜是当前位面的公共任务池，不按势力切换；招募、传承仍需选择具体势力。
+  const showFactionSelector = section === 'all' || section === 'recruit' || section === 'martials'
   return `<section class="factions-layout faction-page" data-testid="factions-page">
     <span class="faction-ghost faction-ghost-board" aria-hidden="true">榜</span>
     <span class="faction-ghost faction-ghost-meridian" aria-hidden="true">脉</span>
@@ -296,7 +298,7 @@ export const renderFactionsPage = (view: FactionsPageViewModel, section: 'quests
       </div>` : ''}
     </header>
 
-    ${section !== 'exchange' ? `<div class="faction-plaque-row" data-testid="faction-selector">${renderFactionPlaques(view)}</div>` : ''}
+    ${showFactionSelector ? `<div class="faction-plaque-row" data-testid="faction-selector">${renderFactionPlaques(view)}</div>` : ''}
     <nav class="ink-faction-tabs" aria-label="势力事务">${(['quests', 'exchange', 'recruit', 'martials'] as const).map((id, index) => `<button type="button" data-action="open-faction-panel" data-faction-panel="${id}" class="${section === id ? 'active' : ''}" aria-pressed="${section === id}">${['悬榜', '兑换', '招募', '武学传承'][index]}</button>`).join('')}</nav>
 
     ${section === 'all' || section === 'quests' ? `<section class="faction-board" data-testid="faction-quest-board" data-world-id="${escapeHtml(view.worldId)}">

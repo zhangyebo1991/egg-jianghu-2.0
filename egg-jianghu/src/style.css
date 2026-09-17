@@ -2225,13 +2225,16 @@ body {
 .faction-exchange-item { display: grid; min-height: 132px; padding: 13px; border: 1px solid rgb(233 222 195 / 11%); border-radius: 7px; background: linear-gradient(150deg, rgb(233 222 195 / 5%), rgb(5 7 6 / 26%)); transition: border-color .2s, transform .2s, background .2s; }
 .faction-exchange-item:hover { border-color: rgb(201 163 92 / 40%); background: linear-gradient(150deg, rgb(201 163 92 / 9%), rgb(5 7 6 / 26%)); transform: translateY(-2px); }
 .faction-exchange-item > header { display: flex; justify-content: space-between; gap: 8px; color: #b79655; font-size: 9px; letter-spacing: .12em; }
-.faction-exchange-item > header small { color: #73776c; font-size: 8px; letter-spacing: .05em; }
+.faction-exchange-item > header small { max-width: 58%; color: #73776c; font-size: 8px; line-height: 1.45; letter-spacing: .05em; text-align: right; }
+.faction-exchange-item > header small.reputation-locked { color: #c17e6d; }
+.faction-exchange-item > header small.reputation-ready { color: #9daa88; }
 .faction-exchange-item h4 { margin: 9px 0 13px; color: #ddd1b4; font-size: 12px; font-weight: 500; line-height: 1.55; letter-spacing: .05em; }
 .faction-exchange-item-foot { display: flex; align-items: end; justify-content: space-between; gap: 8px; margin-top: auto; }
 .faction-exchange-item-foot > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; }
 .faction-exchange-item-foot b { color: #e6c67f; font-size: 15px; font-variant-numeric: tabular-nums; }
 .faction-exchange-item-foot small { color: #7f7e72; font-size: 8px; }
 .faction-exchange-count { flex-basis: 100%; color: #7fa28d; font-size: 8px; letter-spacing: .08em; }
+.faction-exchange-reputation { color: #c17e6d; }
 .faction-exchange-item button { min-width: 64px; padding: 6px 8px; border: 1px solid rgb(201 163 92 / 38%); border-radius: 4px; color: #e3d4af; background: rgb(201 163 92 / 8%); font-size: 9px; letter-spacing: .1em; }
 .faction-exchange-item button:hover:not(:disabled) { border-color: #e6c67f; background: rgb(201 163 92 / 17%); }
 .faction-exchange-item button:disabled { border-color: rgb(255 255 255 / 8%); color: #686b64; background: rgb(255 255 255 / 3%); cursor: not-allowed; }
