@@ -113,26 +113,26 @@ const exchangeFixture = (): FactionExchangeViewModel => ({
   },
 })
 
-const recruitmentFixture = (
-  factionId = 'qingfeng_hall',
-  factionName = '武馆',
-): NonNullable<FactionsPageViewModel['recruitment']> => ({
-  factionId,
-  factionName,
-  resourceName: '位面货币',
-  balance: 600,
-  reputationLevel: 1,
-  reputationLevelName: '冷淡',
+const recruitmentFixture = (): NonNullable<FactionsPageViewModel['recruitment']> => ({
+  worldFilter: 'all',
+  worlds: [{ id: 'all', name: '全部位面', selected: true }, { id: 'world_01', name: '东汉三国', selected: false }],
   heroes: [{
     heroSourceId: 2,
     heroId: 'hero_orig_2',
+    factionId: 'qingfeng_hall',
     name: '邢道荣',
-    requiredReputationLevel: 1,
-    requiredReputationName: '冷淡',
+    worldId: 'world_01',
+    worldName: '东汉三国',
     price: 100,
+    resourceName: '位面货币',
     aptitudes: { strength: 38, insight: 17, constitution: 47, agility: 26, resolve: 34 },
+    requiredProgress: 1,
+    currentProgress: 31,
+    unlocked: true,
     actionReason: null,
+    ordinaryPool: false,
   }],
+  detailHero: null,
 })
 
 const factionAgentFixture = (): NonNullable<TownsPageViewModel['factionAgent']> => ({
@@ -490,12 +490,12 @@ describe('version 10 长期循环页面', () => {
     expect(html.match(/data-quest-slot=/g)).toHaveLength(15)
     expect(html).toContain('data-testid="faction-quest-board" data-world-id="world_01"')
     expect(html).toContain('村中泼皮')
-    expect(html).toContain('势力招募')
+    expect(html).toContain('招募名册')
     expect(html).toContain('邢道荣')
     expect(html).toContain('邀请入队')
     expect(html).toContain('data-action="faction-recruit"')
     expect(html).toContain('data-hero-id="hero_orig_2"')
-    expect(html).toContain('勇38 · 智17 · 体47 · 敏26 · 精34')
+    expect(html).toContain('勇 38　智 17　体 47　敏 26　精 34')
     expect(html).not.toContain('world_01_stage_01_mob_1')
     expect(html).toContain('data-testid="faction-meridian"')
     expect(html.match(/class="faction-node /g)).toHaveLength(6)
@@ -505,13 +505,13 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('来源 <b>全真教</b>')
   })
 
-  it('悬榜页不显示势力选择器，势力专属页保留匾额选择', () => {
+  it('悬榜、招募与传承页均不显示势力选择器', () => {
     const questHtml = renderFactionsPage(factionsFixture(), 'quests')
     expect(questHtml).not.toContain('data-testid="faction-selector"')
     expect(questHtml).not.toContain('data-action="select-faction"')
 
-    expect(renderFactionsPage(factionsFixture(), 'recruit')).toContain('data-testid="faction-selector"')
-    expect(renderFactionsPage(factionsFixture(), 'martials')).toContain('data-testid="faction-selector"')
+    expect(renderFactionsPage(factionsFixture(), 'recruit')).not.toContain('data-testid="faction-selector"')
+    expect(renderFactionsPage(factionsFixture(), 'martials')).not.toContain('data-testid="faction-selector"')
   })
 
   it('兑换页只展示已解锁正式势力的原版贡献目录', () => {

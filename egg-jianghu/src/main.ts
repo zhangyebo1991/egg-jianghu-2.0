@@ -87,7 +87,7 @@ const AGENT_FILTER = ORIGINAL_FACTION_RULES.stateLayout.agentFilter
 const AGENT_TASK_FILTER_NAMES = ['消灭', '筹措', '收集', '挑战', '寻宝'] as const
 import { exchangeFactionItem, factionExchangeItemOwned, factionExchangeItemQuantity } from './domain/faction-exchange'
 import { recruitFromFaction, recruitFromTavern } from './domain/recruitment'
-import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey } from './domain/progression'
+import { clearedStageOf, difficultyLabel, highestUnlockedDifficulty, isDifficultyUnlocked, progressKey, worldBattleProgress } from './domain/progression'
 import { heroExperienceForNextLevel, settleCombatEvent } from './domain/rewards'
 import {
   advanceSacredEquipment,
@@ -212,6 +212,8 @@ let pendingInventoryDropUids: string[] = []
 // 兑换页仅展示已解锁正式势力的原版贡献目录。
 let exchangeCategory: 'all' | 'job-book' | 'blueprint' | 'secret-realm-ticket' | 'skin' = 'all'
 let exchangeWorldFilter: string = 'all'
+let recruitmentWorldFilter: string = 'all'
+let recruitmentDetailHeroId: string | null = null
 let progressionSection: ProgressionSection = 'dungeons'
 let progressionDungeonDifficulty = 1
 let selectedProgressionEquipmentUid: string | null = null
@@ -1287,47 +1289,34 @@ const exchangeHubViewModel = (): FactionExchangeViewModel => {
   }
 }
 
-const factionRecruitmentViewModel = (factionId: string): FactionRecruitmentViewModel | null => {
-  const faction = FACTIONS.find((candidate) => candidate.id === factionId)
-  if (!faction || !session.state.unlockedFactionIds.includes(factionId)) return null
-
-  const worldIndex = Number(faction.worldId.slice(-2))
-  const reputation = session.state.worldReputation[faction.worldId] ?? 0
-  const reputationLevel = originalWorldReputationLevel(reputation, worldIndex)
-  const resourceName = faction.currencyKind === 'contribution' ? '位面贡献' : '位面货币'
-  const balance = faction.currencyKind === 'contribution'
-    ? session.state.contribution[faction.worldId] ?? 0
-    : session.state.worldCurrency[faction.worldId] ?? 0
-  return {
-    factionId,
-    factionName: faction.name,
-    resourceName,
-    balance,
-    reputationLevel,
-    reputationLevelName: originalWorldReputationLevelName(reputationLevel),
-    heroes: originalFactionRecruitmentByFaction(faction.originalId).map((hero) => {
+const factionRecruitmentViewModel = (): FactionRecruitmentViewModel => {
+  if (recruitmentWorldFilter !== 'all' && !session.state.unlockedWorldIds.includes(recruitmentWorldFilter)) recruitmentWorldFilter = 'all'
+  const factions = FACTIONS.filter((faction) => recruitmentWorldFilter === 'all' || faction.worldId === recruitmentWorldFilter)
+    .filter((faction) => session.state.unlockedWorldIds.includes(faction.worldId))
+  const heroes = factions.flatMap((faction) => {
+    const currentProgress = worldBattleProgress(session.state.clearedStageByWorldDifficulty, faction.worldId)
+    const unlocked = session.state.unlockedFactionIds.includes(faction.id)
+    const resourceName = faction.currencyKind === 'contribution' ? '位面贡献' : '位面货币'
+    const balance = faction.currencyKind === 'contribution'
+      ? session.state.contribution[faction.worldId] ?? 0
+      : session.state.worldCurrency[faction.worldId] ?? 0
+    const worldName = WORLDS.find((world) => world.id === faction.worldId)?.name ?? faction.worldId
+    return originalFactionRecruitmentByFaction(faction.originalId).map((hero) => {
       const heroId = `hero_orig_${hero.heroSourceId}`
-      const recruited = Boolean(session.state.heroes[heroId]?.recruited)
+      const ordinaryPool = isOrdinaryPoolHero(heroId)
       let actionReason: string | null = null
-      if (recruited) actionReason = '已邀请'
-      else if (isOrdinaryPoolHero(heroId)) actionReason = '普通池招募'
-      else if (reputationLevel < hero.requiredReputationLevel) {
-        actionReason = `需${hero.requiredReputationName}声望`
-      } else if (balance < hero.price) {
-        actionReason = `${resourceName}不足`
-      }
-      return {
-        ordinaryPool: isOrdinaryPoolHero(heroId),
-        heroSourceId: hero.heroSourceId,
-        heroId,
-        name: hero.name,
-        requiredReputationLevel: hero.requiredReputationLevel,
-        requiredReputationName: hero.requiredReputationName,
-        price: hero.price,
-        aptitudes: hero.aptitudes,
-        actionReason,
-      }
-    }),
+      if (session.state.heroes[heroId]?.recruited) actionReason = '已邀请'
+      else if (!unlocked) actionReason = `需关卡进度 ${faction.requiredProgress}`
+      else if (ordinaryPool) actionReason = '普通池招募'
+      else if (balance < hero.price) actionReason = `${resourceName}不足`
+      return { heroSourceId: hero.heroSourceId, heroId, factionId: faction.id, name: hero.name, worldId: faction.worldId, worldName, price: hero.price, resourceName, aptitudes: hero.aptitudes, requiredProgress: faction.requiredProgress, currentProgress, unlocked, actionReason, ordinaryPool }
+    })
+  })
+  return {
+    worldFilter: recruitmentWorldFilter,
+    worlds: [{ id: 'all', name: '全部位面', selected: recruitmentWorldFilter === 'all' }, ...WORLDS.filter((world) => session.state.unlockedWorldIds.includes(world.id)).map((world) => ({ id: world.id, name: world.name, selected: recruitmentWorldFilter === world.id }))],
+    heroes,
+    detailHero: heroes.find((hero) => hero.heroId === recruitmentDetailHeroId) ?? null,
   }
 }
 
@@ -1341,7 +1330,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
   const board = session.state.factionBoards[selectedWorldId]
   const normalizedHeroId = normalizeSelectedHero()
   const heroProgress = normalizedHeroId ? session.state.heroes[normalizedHeroId] : undefined
-  const factionMartials = FACTION_MARTIALS.filter((martial) => martial.factionId === selectedFactionId)
+  const factionMartials = FACTION_MARTIALS.filter((martial) => availableFactions.some((faction) => faction.id === martial.factionId))
   if (!factionMartials.some((martial) => martial.id === selectedFactionMartialId)) {
     selectedFactionMartialId = factionMartials[0]?.id ?? null
   }
@@ -1388,7 +1377,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
       nextEffect: level < martial.maxLevel ? martialEffectAtLevel(martial, targetLevel) : null,
       currentBuffChance: learned && martial.buffId ? martialBuffChanceAtLevel(martial, level) : null,
       nextBuffChance: level < martial.maxLevel && martial.buffId ? martialBuffChanceAtLevel(martial, targetLevel) : null,
-      sourceName: faction?.name ?? '特殊来源',
+      sourceName: FACTIONS.find((item) => item.id === martial.factionId)?.name ?? '特殊来源',
       refundableSp: learnedRecord?.investedSp ?? 0,
       state,
       energyCost: martial.energyCost,
@@ -1430,7 +1419,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
     contribution: session.state.contribution[world.id] ?? 0,
     selectedFactionId,
     exchange: exchangeHubViewModel(),
-    recruitment: faction ? factionRecruitmentViewModel(faction.id) : null,
+    recruitment: factionRecruitmentViewModel(),
     factions: availableFactions.map((item) => ({
       id: item.id,
       name: item.name,
@@ -1472,10 +1461,13 @@ const factionsViewModel = (): FactionsPageViewModel => {
         },
       }
     }),
-    branches: (faction?.branchLabels ?? []).map((branch) => ({
-      name: branch,
-      martials: martialViews.filter((martial) => factionMartials.find((definition) => definition.id === martial.id)?.branch === branch),
-    })),
+    branches: availableFactions.flatMap((availableFaction) => availableFaction.branchLabels.map((branch) => ({
+      name: `${availableFaction.name} · ${branch}`,
+      martials: martialViews.filter((martial) => {
+        const definition = factionMartials.find((item) => item.id === martial.id)
+        return definition?.factionId === availableFaction.id && definition.branch === branch
+      }),
+    }))),
     selectedHeroId: normalizedHeroId,
     selectedHero,
     roster,
@@ -1598,7 +1590,7 @@ const townsViewModel = (): TownsPageViewModel => {
       ? factionAgentViewModel(world.id, world.name)
       : null,
     factionRecruitment: townFactionFunction === 'recruitment' && selectedTownFactionId
-      ? factionRecruitmentViewModel(selectedTownFactionId)
+      ? factionRecruitmentViewModel()
       : null,
     tavernHeroes: tavernHeroesForWorld(world.id),
   }
@@ -2811,6 +2803,14 @@ const performAction = (button: HTMLButtonElement): void => {
   } else if (action === 'exchange-world') {
     const world = button.dataset.world ?? 'all'
     exchangeWorldFilter = world === 'all' || session.state.unlockedWorldIds.includes(world) ? world : 'all'
+  } else if (action === 'recruitment-world') {
+    const world = button.dataset.world ?? 'all'
+    recruitmentWorldFilter = world === 'all' || session.state.unlockedWorldIds.includes(world) ? world : 'all'
+    recruitmentDetailHeroId = null
+  } else if (action === 'open-recruit-detail') {
+    recruitmentDetailHeroId = button.dataset.heroId ?? null
+  } else if (action === 'close-recruit-detail') {
+    recruitmentDetailHeroId = null
   } else if (action === 'exchange-goto-world') {
     // 货币不足时的引导：跳到目标位面，关卡侧去挂机刷铜钱，势力侧去悬榜赚贡献。
     const worldId = button.dataset.worldId ?? ''
@@ -3662,6 +3662,7 @@ const debugRecruit = (heroId: string): void => {
     if (!result.ok) throw new Error(result.message)
   } else {
     const faction = factionById(definition.factionId!)
+    if (faction && !session.state.unlockedFactionIds.includes(faction.id)) session.state.unlockedFactionIds.push(faction.id)
     if (faction?.currencyKind === 'worldCurrency') {
       session.state.worldCurrency[definition.worldId] = Math.max(session.state.worldCurrency[definition.worldId] ?? 0, definition.cost)
     } else {

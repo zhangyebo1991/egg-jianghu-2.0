@@ -137,7 +137,7 @@ test('旧拥有角色排除、保底概率透明，势力入口指向商城且�
     api.setJianghuSection('factions')
   })
   await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
-  await page.getByTestId('faction-plaque-renxin_hall').click()
+  await expect(page.getByTestId('faction-selector')).toHaveCount(0)
   const guanYu = page.getByTestId('faction-recruitment-hero-9')
   await expect(guanYu).not.toContainText('聘资')
   await expect(guanYu.getByRole('button', { name: '前往普通池' })).toBeEnabled()

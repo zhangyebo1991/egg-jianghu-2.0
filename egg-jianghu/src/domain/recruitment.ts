@@ -1,7 +1,6 @@
 import { factionById } from '../content/factions'
 import { isOrdinaryPoolHero } from '../content/ordinary-hero-pool'
 import { heroByIdV10 } from '../content/heroes'
-import { originalWorldReputationLevel, originalWorldReputationLevelName } from '../content/original-faction-rules.generated'
 import { createHeroProgress } from './state'
 import type { ActionResult, GameStateV10 } from './types'
 
@@ -36,15 +35,9 @@ export const recruitFromFaction = (
   if (isOrdinaryPoolHero(heroId)) return { ok: false, message: '该侠客由商城普通池招募' }
   const faction = factionById(factionId)
   if (!faction) return { ok: false, message: '该势力没有这名侠客' }
-  const worldIndex = Number(faction.worldId.slice(-2))
-  const reputationLevel = originalWorldReputationLevel(
-    state.worldReputation[faction.worldId] ?? 0,
-    worldIndex,
-  )
-  if (definition.requiredReputationLevel !== undefined && reputationLevel < definition.requiredReputationLevel) {
-    return { ok: false, message: `需${originalWorldReputationLevelName(definition.requiredReputationLevel)}声望` }
+  if (!state.unlockedFactionIds.includes(factionId)) {
+    return { ok: false, message: '尚未达到该招募名册的关卡进度' }
   }
-
   // 原版口径：民团（货币势力）消耗位面货币，正式势力消耗贡献。
   const useWorldCurrency = faction.currencyKind === 'worldCurrency'
   const walletKey = definition.worldId

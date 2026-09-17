@@ -2170,6 +2170,16 @@ body {
 .faction-node-sub { display: flex; align-items: center; gap: 6px; margin-top: 3px; color: var(--faction-paper-mute); font-size: 10px; letter-spacing: .08em; white-space: nowrap; }
 .faction-node-sub b { color: var(--rarity); font-weight: 500; }
 .faction-node-sub i { color: var(--faction-gold); font-style: normal; font-variant-numeric: tabular-nums; }
+.faction-meridian .faction-branch-zone { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px 26px 4px; }
+.faction-meridian .faction-branch { display: block; margin: 0; padding: 12px; border: 1px solid rgb(233 222 195 / 10%); border-radius: 7px; background: rgb(255 255 255 / 2%); }
+.faction-meridian .faction-branch-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.faction-meridian .faction-branch-label strong { font-size: 18px; writing-mode: horizontal-tb; }
+.faction-meridian .faction-branch-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; overflow: visible; }
+.faction-meridian .faction-vein-svg { display: none; }
+.faction-meridian .faction-node { position: relative; top: auto; left: auto; display: grid; grid-template-columns: 38px minmax(0, 1fr); width: auto; min-height: 50px; margin: 0; padding: 7px; align-items: center; column-gap: 7px; border: 1px solid rgb(233 222 195 / 10%); border-radius: 5px; background: rgb(0 0 0 / 15%); }
+.faction-meridian .faction-node-button { width: 36px; height: 36px; }
+.faction-meridian .faction-node-name { grid-column: 2; grid-row: 1; margin: 0; overflow: hidden; font-size: 12px; text-overflow: ellipsis; }
+.faction-meridian .faction-node-sub { grid-column: 2; grid-row: 2; margin: 1px 0 0; overflow: hidden; font-size: 8px; text-overflow: ellipsis; }
 .faction-martial-detail { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px; margin: 6px 30px 26px; padding: 16px 26px; border: 1px solid var(--faction-line); border-radius: 8px; background: linear-gradient(165deg, rgb(201 163 92 / 6%), rgb(20 24 18 / 40%)); }
 .faction-martial-detail.empty { display: block; color: var(--faction-paper-mute); font-size: 12px; letter-spacing: .18em; text-align: center; }
 .faction-detail-name { color: #eadcb8; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 22px; letter-spacing: .1em; }
@@ -2256,30 +2266,37 @@ body {
 .exchange-faction-meta b { color: #8f8d80; font-size: 10px; letter-spacing: .1em; }
 .exchange-faction-meta b i { font-style: normal; color: #e6c67f; font-size: 14px; font-variant-numeric: tabular-nums; }
 .exchange-shown-note { margin: 0; color: #6f7369; font-size: 10px; letter-spacing: .12em; text-align: right; }
-.faction-recruitment { position: relative; z-index: 1; display: grid; gap: 18px; margin: 0 0 30px; padding: 24px; scroll-margin-top: 18px; border: 1px solid rgb(143 111 58 / 28%); border-radius: 10px; background: radial-gradient(circle at 10% 0%, rgb(109 138 111 / 12%), transparent 31%), linear-gradient(155deg, rgb(25 31 25 / 97%), rgb(13 16 14 / 99%)); box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 18px 34px rgb(0 0 0 / 24%); }
+.faction-recruitment { position: relative; z-index: 1; display: grid; gap: 18px; margin: 0 0 30px; padding: 28px; scroll-margin-top: 18px; border: 1px solid rgb(143 111 58 / 28%); border-radius: 10px; background: radial-gradient(circle at 10% 0%, rgb(109 138 111 / 12%), transparent 31%), linear-gradient(155deg, rgb(25 31 25 / 97%), rgb(13 16 14 / 99%)); box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 18px 34px rgb(0 0 0 / 24%); }
 .towns-page .faction-recruitment { margin: 0; }
 .faction-recruitment-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 16px; border-bottom: 1px solid rgb(201 163 92 / 18%); }
 .faction-recruitment-head > div:first-child > span { color: #758578; font-size: 9px; letter-spacing: .34em; }
-.faction-recruitment-head h2 { margin: 3px 0 0; color: #e3d9bd; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 32px; font-weight: 400; letter-spacing: .14em; }
-.faction-recruitment-head p { margin: 5px 0 0; color: #838b80; font-size: 10px; letter-spacing: .12em; }
+.faction-recruitment-head h2 { margin: 3px 0 0; color: #e3d9bd; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 38px; font-weight: 400; letter-spacing: .14em; }
+.faction-recruitment-head p { margin: 5px 0 0; color: #a9aea2; font-size: 13px; letter-spacing: .12em; }
 .faction-recruitment-wallet { flex: none; text-align: right; }
 .faction-recruitment-wallet strong { display: block; color: #d9bf7f; font-size: 25px; font-variant-numeric: tabular-nums; line-height: 1; }
 .faction-recruitment-wallet span, .faction-recruitment-wallet small { display: block; margin-top: 5px; font-size: 9px; letter-spacing: .2em; }
 .faction-recruitment-wallet span { color: #aa8f57; }
 .faction-recruitment-wallet small { color: #758578; }
-.faction-recruitment-notice { padding: 10px 13px; border-left: 2px solid #8b7041; color: #9c9d90; background: linear-gradient(90deg, rgb(139 112 65 / 11%), transparent); font-size: 10px; line-height: 1.65; letter-spacing: .08em; }
-.faction-recruitment-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.faction-recruitment-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px 12px; align-items: center; min-height: 118px; padding: 14px; border: 1px solid rgb(220 209 180 / 11%); border-radius: 7px; background: linear-gradient(145deg, rgb(220 209 180 / 5%), rgb(5 8 6 / 31%)); }
+.faction-recruitment-notice { padding: 12px 15px; border-left: 2px solid #8b7041; color: #b8bbad; background: linear-gradient(90deg, rgb(139 112 65 / 11%), transparent); font-size: 12px; line-height: 1.65; letter-spacing: .08em; }
+.faction-recruitment-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.faction-recruitment-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px 14px; align-items: center; min-height: 132px; padding: 16px; border: 1px solid rgb(220 209 180 / 14%); border-radius: 7px; background: linear-gradient(145deg, rgb(220 209 180 / 5%), rgb(5 8 6 / 31%)); }
+.faction-recruitment-card.locked { opacity: .68; }
 .faction-recruitment-seal { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgb(151 75 61 / 58%); color: #b56859; background: rgb(117 49 41 / 9%); font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 23px; transform: rotate(-3deg); }
 .faction-recruitment-copy { min-width: 0; }
 .faction-recruitment-copy header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.faction-recruitment-copy h3 { margin: 0; color: #dbd0b5; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 20px; font-weight: 400; letter-spacing: .1em; }
-.faction-recruitment-copy header span { flex: none; color: #9c8250; font-size: 9px; letter-spacing: .08em; }
-.faction-recruitment-copy p { margin: 7px 0 0; color: #777f76; font-size: 9px; line-height: 1.55; }
-.faction-recruitment-card button { grid-column: 1 / -1; width: 100%; padding: 7px 10px; border: 1px solid rgb(201 163 92 / 16%); border-radius: 4px; color: #72766f; background: rgb(255 255 255 / 3%); font-size: 9px; letter-spacing: .08em; cursor: not-allowed; }
+.faction-recruitment-copy h3 { margin: 0; color: #dbd0b5; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 25px; font-weight: 400; letter-spacing: .1em; }
+.faction-recruitment-copy header span { flex: none; color: #c2a46a; font-size: 11px; letter-spacing: .08em; }
+.faction-recruitment-copy p { margin: 7px 0 0; color: #a0a79b; font-size: 11px; line-height: 1.55; }
+.faction-recruitment-actions { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
+.faction-recruitment-card button { width: 100%; padding: 9px 11px; border: 1px solid rgb(201 163 92 / 16%); border-radius: 4px; color: #72766f; background: rgb(255 255 255 / 3%); font-size: 11px; letter-spacing: .08em; cursor: not-allowed; }
+.faction-recruitment-card .faction-recruitment-detail-button { width: auto; color: #b9a276; border-color: rgb(201 163 92 / 32%); cursor: pointer; }
 .faction-recruitment-card button:not(:disabled) { border-color: rgb(201 163 92 / 38%); color: #ead9ad; background: rgb(201 163 92 / 12%); cursor: pointer; }
 .faction-recruitment-card button:not(:disabled):hover { filter: brightness(1.15); }
 .faction-recruitment-card.recruited { filter: saturate(.7) brightness(.92); }
+.faction-recruitment-detail-dialog { position: fixed; top: 50%; left: 50%; z-index: 200; display: grid; grid-template-columns: auto minmax(0, 1fr); width: min(480px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); gap: 16px; margin: 0; padding: 24px; overflow: auto; box-sizing: border-box; color: #dcd0b3; border: 1px solid rgb(201 163 92 / 45%); border-radius: 8px; background: #18170f; box-shadow: 0 20px 70px rgb(0 0 0 / 70%); transform: translate(-50%, -50%); }
+.faction-recruitment-detail-dialog::backdrop { background: rgb(0 0 0 / 64%); }
+.faction-recruitment-detail-dialog h2 { margin: 4px 0 12px; color: #ead8ab; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 34px; font-weight: 400; }
+.faction-recruitment-detail-dialog p { color: #a9aa9a; font-size: 13px; line-height: 1.8; }.faction-recruitment-detail-dialog strong { color: #d9bf7f; }.faction-recruitment-detail-close { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; color: #d9bf7f; border: 1px solid rgb(201 163 92 / 35%); background: transparent; font-size: 20px; }
 .faction-town-card.selected { border-color: rgb(201 163 92 / 48%); box-shadow: inset 0 0 0 1px rgb(201 163 92 / 9%); }
 .faction-town-actions { display: flex; justify-content: flex-end; gap: 7px; }
 .faction-town-actions button { padding: 6px 10px; border-color: rgb(201 163 92 / 30%); color: #d6c292; background: rgb(201 163 92 / 6%); font-size: 9px; letter-spacing: .1em; }
@@ -2329,9 +2346,13 @@ body {
   .faction-meridian-head { margin: 0; }
   .faction-disciple { width: 100%; justify-content: space-between; }
   .faction-roster-pop { left: 0; right: auto; width: min(336px, calc(100vw - 34px)); }
-  .faction-branch-zone { padding: 4px 8px 0; }
-  .faction-branch { grid-template-columns: 58px minmax(620px, 1fr); margin-inline: 0; overflow-x: auto; }
-  .faction-branch-track { min-width: 620px; overflow-x: visible; }
+  .faction-meridian .faction-branch-zone { grid-template-columns: 1fr; gap: 9px; padding: 6px 10px 2px; }
+  .faction-meridian .faction-branch { min-width: 0; margin: 0; padding: 11px; overflow: hidden; }
+  .faction-meridian .faction-branch-track { min-width: 0; grid-template-columns: 1fr; gap: 6px; overflow: visible; }
+  .faction-meridian .faction-node { grid-template-columns: 40px minmax(0, 1fr); min-height: 48px; padding: 6px 7px; }
+  .faction-meridian .faction-node-button { width: 36px; height: 36px; }
+  .faction-meridian .faction-node-name { font-size: 12px; }
+  .faction-meridian .faction-node-sub { font-size: 8px; }
   .faction-martial-detail { grid-template-columns: 1fr; gap: 12px; margin: 4px 12px 18px; padding: 14px 16px; }
   .faction-detail-action { align-items: stretch; justify-items: stretch; }
   .faction-detail-action > span { text-align: left; }
@@ -2346,6 +2367,7 @@ body {
   .faction-recruitment-head { align-items: flex-start; flex-direction: column; gap: 12px; }
   .faction-recruitment-wallet { text-align: left; }
   .faction-recruitment-grid { grid-template-columns: 1fr; }
+  .faction-recruitment-detail-dialog { grid-template-columns: 1fr; gap: 10px; padding: 18px; }
   .faction-disciples-head { margin: 0 6px 14px; }
   .faction-disciples-head h2 { font-size: 28px; }
   .faction-page-foot { padding-bottom: 12px; letter-spacing: .2em; }

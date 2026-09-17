@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { FACTION_HEROES, HEROES_V10, heroByIdV10 } from './heroes'
 import { heroLifecycle } from './hero-lifecycle'
 import { factionById } from './factions'
-import { originalWorldReputationThreshold } from './original-faction-rules.generated'
 import { createInitialStateV10 } from '../domain/state'
 import { recruitFromFaction, recruitFromTavern } from '../domain/recruitment'
 
@@ -24,16 +23,14 @@ describe('阶段定位与原版确定兑换', () => {
     expect(heroLifecycle(HEROES_V10.find(hero => hero.name === '张三丰')!).jobs).toEqual([])
   })
 
-  it('非池章节角色逐人保留章节、声望和足额资源门槛，失败不写档，成功只扣对应资源', () => {
+  it('非池章节角色逐人保留章节、名册解锁和足额资源门槛，失败不写档，成功只扣对应资源', () => {
     for (const hero of FACTION_HEROES.filter(hero => !isOrdinaryPoolHero(hero.id))) {
       const state = createInitialStateV10(0)
+      state.unlockedFactionIds = []
       const faction = factionById(hero.factionId!)!
-      const worldIndex = Number(hero.worldId.slice(-2))
-      const threshold = originalWorldReputationThreshold(hero.requiredReputationLevel!, worldIndex)
       const wallet = faction.currencyKind === 'worldCurrency' ? state.worldCurrency : state.contribution
       const key = hero.worldId
       wallet[key] = hero.cost
-      state.worldReputation[hero.worldId] = threshold
       state.unlockedWorldIds = []
       const refuse = () => {
         const before = structuredClone(state)
@@ -42,11 +39,9 @@ describe('阶段定位与原版确定兑换', () => {
       }
       refuse()
       state.unlockedWorldIds = [hero.worldId]
-      if (threshold > 0) {
-        state.worldReputation[hero.worldId] = threshold - 1
-        refuse()
-        state.worldReputation[hero.worldId] = threshold
-      }
+      // 招募不再要求声望；仍必须由关卡进度解锁对应名册。
+      refuse()
+      state.unlockedFactionIds.push(faction.id)
       wallet[key] = hero.cost - 1
       refuse()
       wallet[key] = hero.cost

@@ -134,8 +134,7 @@ describe('城市、势力与装备操作', () => {
   it('正式势力侠客消耗贡献直接邀请', () => {
     const state = createInitialStateV10(0)
     state.contribution.world_01 = 20_000
-    // 甄宓需「友好」（等级 2）声望，world_01 阈值 200。
-    state.worldReputation.world_01 = 200
+    state.unlockedFactionIds.push('tieyi_school')
 
     expect(recruitFromFaction(state, 'tieyi_school', 'hero_orig_6').ok).toBe(true)
     expect(state.contribution.world_01).toBe(0)
@@ -151,13 +150,13 @@ describe('城市、势力与装备操作', () => {
     expect(state.heroes.hero_orig_2.recruited).toBe(true)
   })
 
-  it('声望不足时拒绝邀请且不扣贡献', () => {
+  it('名册关卡未解锁时拒绝邀请且不扣贡献', () => {
     const state = createInitialStateV10(0)
     state.contribution.world_01 = 100_000
 
     const result = recruitFromFaction(state, 'tieyi_school', 'hero_orig_6')
     expect(result.ok).toBe(false)
-    expect(result.message).toBe('需友好声望')
+    expect(result.message).toBe('尚未达到该招募名册的关卡进度')
     expect(state.contribution.world_01).toBe(100_000)
     expect(state.heroes.hero_orig_6).toBeUndefined()
   })

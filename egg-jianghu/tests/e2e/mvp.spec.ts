@@ -623,7 +623,7 @@ test('位面十五格悬榜锁定已接任务并刷新未接任务', async ({ pa
   expect(after.slice(1)).not.toEqual(before.slice(1))
 })
 
-test('势力专属页支持切换匾额和原版招募名录', async ({ page }) => {
+test('招募与传承页使用公共名册而非势力匾额', async ({ page }) => {
   await page.evaluate(() => {
     window.__EGG_JIANGHU__.unlockFaction('tieyi_school')
     window.__EGG_JIANGHU__.grantContribution('qingfeng_hall', 1000)
@@ -632,15 +632,13 @@ test('势力专属页支持切换匾额和原版招募名录', async ({ page }) 
 
   await expect(page.getByTestId('faction-selector')).toHaveCount(0)
   await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
-  await page.getByTestId('faction-plaque-tieyi_school').click()
-  await expect(page.getByTestId('faction-plaque-tieyi_school')).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.locator('#ink-leaf-title')).toBeVisible()
-  await page.getByTestId('faction-plaque-qingfeng_hall').click()
-  await expect(page.getByTestId('faction-plaque-qingfeng_hall')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('faction-recruitment')).toBeVisible()
+  await expect(page.getByTestId('faction-selector')).toHaveCount(0)
   await expect(page.getByTestId('faction-recruitment-hero-2')).toContainText('邢道荣')
+  await expect(page.locator('.faction-recruitment-card.locked').first()).toContainText('需关卡进度')
   await page.locator('.ink-faction-tabs [data-faction-panel="martials"]').click()
   await expect(page.getByTestId('faction-meridian')).toBeVisible()
+  await expect(page.getByTestId('faction-selector')).toHaveCount(0)
 })
 
 test('兑换页聚合位面声望、贡献兑换与招募', async ({ page }, testInfo) => {
@@ -679,12 +677,13 @@ test('兑换页聚合位面声望、贡献兑换与招募', async ({ page }, tes
 
   await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   const recruitment = page.getByTestId('faction-recruitment')
-  await expect(recruitment).toHaveAttribute('data-faction-id', 'tieyi_school')
-  await expect(recruitment.locator('[data-testid^="faction-recruitment-hero-"]'))
-    .toHaveCount(originalFactionRecruitmentByFaction(2).length)
+  await expect(recruitment).toBeVisible()
+  await expect(page.getByTestId('faction-selector')).toHaveCount(0)
+  expect(await recruitment.locator('[data-testid^="faction-recruitment-hero-"]').count())
+    .toBeGreaterThan(originalFactionRecruitmentByFaction(2).length)
   // 魏国最高门槛的王异已转普通池，名录提供商城入口。
   await expect(page.getByTestId('faction-recruitment-hero-11').getByRole('button', { name: '前往普通池' })).toBeEnabled()
-  // 甄宓需「友好」（等级 2）声望，贡献充足可直接邀请。
+  // 招募仅受关卡名册与贡献约束，不再读取声望门槛。
   const zhenMi = page.getByTestId('faction-recruitment-hero-6')
   await expect(zhenMi).toContainText('甄宓')
   await expect(zhenMi.getByRole('button', { name: '邀请入队' })).toBeEnabled()
@@ -692,6 +691,11 @@ test('兑换页聚合位面声望、贡献兑换与招募', async ({ page }, tes
   await expect(zhenMi.getByRole('button', { name: '已邀请' })).toBeDisabled()
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().contribution.world_01)).toBe(53_828)
   expect(await page.evaluate(() => window.__EGG_JIANGHU__.getState().heroes.hero_orig_6.recruited)).toBe(true)
+  await page.getByTestId('faction-recruitment-hero-2').getByRole('button', { name: '查看详情' }).click()
+  await expect(page.getByTestId('faction-recruitment-detail')).toBeVisible()
+  await expect(page.getByTestId('faction-recruitment-detail')).toContainText('邢道荣')
+  await page.getByTestId('faction-recruitment-detail').getByRole('button', { name: '关闭侠客详情' }).click()
+  await expect(page.getByTestId('faction-recruitment-detail')).toHaveCount(0)
   await recruitment.scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('faction-recruitment.png'), fullPage: true })
 })
@@ -728,6 +732,15 @@ test('势力招募名录在移动端保持单列且不横向溢出', async ({ pa
   expect(columns).toHaveLength(1)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.screenshot({ path: testInfo.outputPath('faction-recruitment-mobile.png') })
+
+  await page.locator('.ink-faction-tabs [data-faction-panel="martials"]').click()
+  const meridian = page.getByTestId('faction-meridian')
+  await meridian.scrollIntoViewIfNeeded()
+  const branchColumns = await meridian.locator('.faction-branch-zone')
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/))
+  expect(branchColumns).toHaveLength(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('faction-martials-mobile.png') })
 })
 
 test('重载页面后长期收益保留但必须重新选择关卡', async ({ page }) => {
