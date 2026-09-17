@@ -20,7 +20,7 @@ describe('原版势力贡献兑换', () => {
     const faction = factionByOriginalId(2)
     const jobBook = originalFactionExchangeByFaction(2).find((item) => item.kind === 'job-book')
     if (!faction || !jobBook) throw new Error('魏国转职书目录缺失')
-    state.contribution[faction.id] = jobBook.price
+    state.contribution[faction.worldId] = jobBook.price
 
     expect(syncFactionUnlocks(state, 'world_01')).toEqual([])
     expect(exchangeFactionItem(state, faction.id, jobBook.slot)).toEqual({ ok: false, message: '势力尚未解锁' })
@@ -33,7 +33,20 @@ describe('原版势力贡献兑换', () => {
     expect(jobBook).toMatchObject({ originalName: '护卫转职书', price: 4688, requiredReputationLevel: null })
     expect(exchangeFactionItem(state, faction.id, jobBook.slot)).toEqual({ ok: true, message: '兑换成功：护卫转职书' })
     expect(state.jobBooks.job_2).toBe(1)
-    expect(state.contribution[faction.id]).toBe(0)
+    expect(state.contribution[faction.worldId]).toBe(0)
+  })
+
+  it('同一位面的势力共用贡献余额', () => {
+    const state = createInitialStateV10(0)
+    const wei = factionByOriginalId(2)!
+    const shu = factionByOriginalId(3)!
+    const shuBook = originalFactionExchangeByFaction(shu.originalId).find((item) => item.kind === 'job-book')!
+    state.unlockedFactionIds.push(wei.id, shu.id)
+    state.contribution.world_01 = shuBook.price
+
+    expect(exchangeFactionItem(state, shu.id, shuBook.slot)).toEqual({ ok: true, message: `兑换成功：${shuBook.originalName}` })
+    expect(state.contribution.world_01).toBe(0)
+    expect(exchangeFactionItem(state, wei.id, 1)).toEqual({ ok: false, message: '位面贡献不足' })
   })
 
   it('只允许已解锁的正式贡献势力兑换目录内商品', () => {
@@ -54,34 +67,34 @@ describe('原版势力贡献兑换', () => {
   it('先校验声望和贡献，再原子发放图纸并防止重复拥有', () => {
     const { state, faction } = unlockedFactionState()
     const item = originalFactionExchangeByFaction(2).find((candidate) => candidate.slot === 2)!
-    state.contribution[faction.id] = item.price
+    state.contribution[faction.worldId] = item.price
     state.worldReputation[faction.worldId] = originalWorldReputationThreshold(2, 1) - 1
 
     expect(exchangeFactionItem(state, faction.id, item.slot)).toEqual({
       ok: false,
       message: '声望等级不足，需达到友好',
     })
-    expect(state.contribution[faction.id]).toBe(item.price)
+    expect(state.contribution[faction.worldId]).toBe(item.price)
     expect(state.blueprints[item.target.kind === 'blueprint' ? item.target.stateKey : '']).toBeUndefined()
 
     state.worldReputation[faction.worldId] += 1
-    state.contribution[faction.id] -= 1
-    expect(exchangeFactionItem(state, faction.id, item.slot)).toEqual({ ok: false, message: '势力贡献不足' })
-    expect(state.contribution[faction.id]).toBe(item.price - 1)
+    state.contribution[faction.worldId] -= 1
+    expect(exchangeFactionItem(state, faction.id, item.slot)).toEqual({ ok: false, message: '位面贡献不足' })
+    expect(state.contribution[faction.worldId]).toBe(item.price - 1)
     expect(factionExchangeItemQuantity(state, item)).toBe(0)
 
-    state.contribution[faction.id] += 1
+    state.contribution[faction.worldId] += 1
     expect(exchangeFactionItem(state, faction.id, item.slot)).toEqual({
       ok: true,
       message: `兑换成功：${item.originalName}`,
     })
-    expect(state.contribution[faction.id]).toBe(0)
+    expect(state.contribution[faction.worldId]).toBe(0)
     expect(factionExchangeItemQuantity(state, item)).toBe(1)
     expect(factionExchangeItemOwned(state, item)).toBe(true)
 
-    state.contribution[faction.id] = item.price
+    state.contribution[faction.worldId] = item.price
     expect(exchangeFactionItem(state, faction.id, item.slot)).toEqual({ ok: false, message: '该图纸已经拥有' })
-    expect(state.contribution[faction.id]).toBe(item.price)
+    expect(state.contribution[faction.worldId]).toBe(item.price)
 
     if (item.target.kind !== 'blueprint') throw new Error('测试商品不是图纸')
     state.blueprints[item.target.stateKey] = 0
@@ -94,7 +107,7 @@ describe('原版势力贡献兑换', () => {
     const items = originalFactionExchangeByFaction(2)
     const jobBook = items.find((item) => item.slot === 1)!
     const ticket = items.find((item) => item.slot === 12)!
-    state.contribution[faction.id] = jobBook.price * 2 + ticket.price * 2
+    state.contribution[faction.worldId] = jobBook.price * 2 + ticket.price * 2
     state.worldReputation[faction.worldId] = originalWorldReputationThreshold(4, 1)
 
     expect(exchangeFactionItem(state, faction.id, jobBook.slot).ok).toBe(true)
@@ -103,18 +116,18 @@ describe('原版势力贡献兑换', () => {
     expect(exchangeFactionItem(state, faction.id, ticket.slot).ok).toBe(true)
     expect(factionExchangeItemQuantity(state, jobBook)).toBe(2)
     expect(factionExchangeItemQuantity(state, ticket)).toBe(2)
-    expect(state.contribution[faction.id]).toBe(0)
+    expect(state.contribution[faction.worldId]).toBe(0)
   })
 
   it('幻型兑换永久解锁且不可重复购买', () => {
     const { state, faction } = unlockedFactionState()
     const skin = originalFactionExchangeByFaction(2).find((item) => item.kind === 'skin')!
-    state.contribution[faction.id] = skin.price * 2
+    state.contribution[faction.worldId] = skin.price * 2
     state.worldReputation[faction.worldId] = originalWorldReputationThreshold(5, 1)
 
     expect(exchangeFactionItem(state, faction.id, skin.slot).ok).toBe(true)
     expect(factionExchangeItemQuantity(state, skin)).toBe(1)
     expect(exchangeFactionItem(state, faction.id, skin.slot)).toEqual({ ok: false, message: '该幻型已经拥有' })
-    expect(state.contribution[faction.id]).toBe(skin.price)
+    expect(state.contribution[faction.worldId]).toBe(skin.price)
   })
 })

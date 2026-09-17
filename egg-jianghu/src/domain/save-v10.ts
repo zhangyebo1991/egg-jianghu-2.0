@@ -4,14 +4,16 @@ import { isIdleVouchers } from './idle-vouchers'
 import { isPremiumCards } from './premium-cards'
 import { equipmentDefinitionById } from '../content/equipment'
 import { HEROES_V10 } from '../content/heroes'
+import { factionById } from '../content/factions'
 import {
   ORIGINAL_CITY_INITIAL_TECHNOLOGY_LEVELS,
   ORIGINAL_CITY_TECHNOLOGIES,
 } from '../content/original-city.generated'
 import { ORIGINAL_FACTION_RULES } from '../content/original-faction-rules.generated'
 import { normalizeHeroEquipment, normalizeInventoryInstances } from './inventory'
-import type { GameStateV10, HeroProgressV10 } from './types'
+import type { FactionBoardState, GameStateV10, HeroProgressV10 } from './types'
 import { migrateLegacyProgression } from './save-progression-migration'
+import { QUEST_REFRESH_MS, QUEST_SLOT_COUNT } from './quests'
 
 // v20 仍使用现有槽位，让旧页面的快照冲突检查及时阻止覆盖；版本以内容字段为准。
 export const SAVE_KEY_V10 = 'egg-jianghu-2-save-v19'
@@ -44,7 +46,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value)
 
-const isNumberRecord = (value: unknown): boolean =>
+const isNumberRecord = (value: unknown): value is Record<string, number> =>
   isRecord(value) && Object.values(value).every(isFiniteNumber)
 
 const isCareerRecord = (value: unknown): boolean =>
@@ -167,21 +169,21 @@ const isFactionQuestBoardEntry = (value: unknown): boolean =>
   && Number.isInteger(Number(value.acceptedRecordId))
   && Number(value.acceptedRecordId) >= -1
 
-const isFactionBoardState = (value: unknown): boolean =>
+const isFactionBoardState = (value: unknown, slotCount: number): boolean =>
   isRecord(value)
   && isFiniteNumber(value.refreshRemainingMs)
   && Number(value.refreshRemainingMs) >= 0
   && Array.isArray(value.slots)
-  && value.slots.length === 5
+  && value.slots.length === slotCount
   && value.slots.every((slot) => slot === null || isFactionQuestBoardEntry(slot))
 
-const isAcceptedFactionQuest = (value: unknown): boolean =>
+const isAcceptedFactionQuest = (value: unknown, slotCount: number, legacyFactionFields: boolean): boolean =>
   isRecord(value)
   && Number.isInteger(Number(value.recordId))
   && Number(value.recordId) > 0
-  && typeof value.factionId === 'string'
-  && Number.isInteger(Number(value.factionSourceId))
-  && Number(value.factionSourceId) > 0
+  && (!legacyFactionFields || (typeof value.factionId === 'string'
+    && Number.isInteger(Number(value.factionSourceId))
+    && Number(value.factionSourceId) > 0))
   && Number.isInteger(Number(value.worldIndex))
   && Number(value.worldIndex) >= 1
   && Number(value.worldIndex) <= 13
@@ -199,7 +201,7 @@ const isAcceptedFactionQuest = (value: unknown): boolean =>
   && Number(value.progress) >= 0
   && Number.isInteger(Number(value.boardSlot))
   && Number(value.boardSlot) >= 0
-  && Number(value.boardSlot) < 5
+  && Number(value.boardSlot) < slotCount
   && value.status === 1
 
 const isFactionAgentState = (value: unknown): boolean =>
@@ -230,10 +232,15 @@ const isFactionAgentFilters = (value: unknown): boolean => {
   })
 }
 
-const hasConsistentFactionQuestLinks = (boards: unknown, acceptedQuests: unknown): boolean => {
+const hasConsistentFactionQuestLinks = (
+  boards: unknown,
+  acceptedQuests: unknown,
+  slotCount: number,
+  legacyFactionFields: boolean,
+): boolean => {
   if (!isRecord(boards) || !isRecord(acceptedQuests)) return false
-  for (const [factionId, boardValue] of Object.entries(boards)) {
-    if (!isFactionBoardState(boardValue)) return false
+  for (const [boardId, boardValue] of Object.entries(boards)) {
+    if (!isFactionBoardState(boardValue, slotCount)) return false
     const board = boardValue as Record<string, unknown>
     const slots = board.slots as unknown[]
     for (const [slotIndex, slotValue] of slots.entries()) {
@@ -242,16 +249,22 @@ const hasConsistentFactionQuestLinks = (boards: unknown, acceptedQuests: unknown
       const recordId = Number(slot.acceptedRecordId)
       if (recordId <= 0) continue
       const accepted = acceptedQuests[String(recordId)]
-      if (!isAcceptedFactionQuest(accepted)) return false
+      if (!isAcceptedFactionQuest(accepted, slotCount, legacyFactionFields)) return false
       const record = accepted as Record<string, unknown>
-      if (record.factionId !== factionId || Number(record.boardSlot) !== slotIndex) return false
+      const expectedBoardId = legacyFactionFields
+        ? record.factionId
+        : `world_${String(record.worldIndex).padStart(2, '0')}`
+      if (expectedBoardId !== boardId || Number(record.boardSlot) !== slotIndex) return false
     }
   }
   for (const accepted of Object.values(acceptedQuests)) {
-    if (!isAcceptedFactionQuest(accepted)) return false
+    if (!isAcceptedFactionQuest(accepted, slotCount, legacyFactionFields)) return false
     const record = accepted as Record<string, unknown>
-    const boardValue = boards[String(record.factionId)]
-    if (!isFactionBoardState(boardValue)) return false
+    const boardId = legacyFactionFields
+      ? String(record.factionId)
+      : `world_${String(record.worldIndex).padStart(2, '0')}`
+    const boardValue = boards[boardId]
+    if (!isFactionBoardState(boardValue, slotCount)) return false
     const slot = (boardValue as Record<string, unknown>).slots as unknown[]
     const boardQuest = slot[Number(record.boardSlot)]
     if (!isRecord(boardQuest) || Number(boardQuest.acceptedRecordId) !== Number(record.recordId)) return false
@@ -392,7 +405,7 @@ const normalizeLoadedHeroes = (heroes: GameStateV10['heroes'], inventory: GameSt
 
 const persistentState = (state: GameStateV10, lastSavedAt: number): GameStateV10 => ({
   settings: structuredClone(state.settings),
-  version: 20,
+  version: 21,
   idleVouchers: structuredClone(state.idleVouchers),
   premiumCards: structuredClone(state.premiumCards),
   ordinaryPoolMisses: state.ordinaryPoolMisses,
@@ -443,9 +456,66 @@ const pruneUnknownHeroes = (state: GameStateV10): GameStateV10 => {
 const isAutoSellSetting = (value: unknown): boolean =>
   value === null || (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 9)
 
+/** 将旧版按势力保存的贡献合并为位面公共余额，也兼容已经是位面键的实验性旧档。 */
+const migrateContributionWallet = (wallet: unknown): GameStateV10['contribution'] => {
+  if (!isNumberRecord(wallet)) return {}
+  return Object.entries(wallet).reduce<GameStateV10['contribution']>((result, [key, amount]) => {
+    const worldId = factionById(key)?.worldId ?? key
+    result[worldId] = (result[worldId] ?? 0) + amount
+    return result
+  }, {})
+}
+
+const migrateLearnedMartialContribution = (heroes: GameStateV10['heroes']): void => {
+  for (const hero of Object.values(heroes)) {
+    for (const learned of Object.values(hero.learnedMartials)) {
+      learned.invested.contribution = migrateContributionWallet(learned.invested.contribution)
+    }
+  }
+}
+
+/** 旧版一派一榜合并为一卷 15 格公共悬榜；已接任务按新格位重写关联。 */
+const migrateFactionBoards = (
+  legacyBoards: Record<string, FactionBoardState>,
+  legacyQuests: Record<string, GameStateV10['acceptedFactionQuests'][string] & { factionId: string, factionSourceId: number }>,
+): Pick<GameStateV10, 'factionBoards' | 'acceptedFactionQuests'> => {
+  const factionBoards: GameStateV10['factionBoards'] = {}
+  const acceptedFactionQuests: GameStateV10['acceptedFactionQuests'] = {}
+  const nextSlotByWorld = new Map<string, number>()
+
+  for (const [factionId, board] of Object.entries(legacyBoards)) {
+    const faction = factionById(factionId)
+    if (!faction) continue
+    const worldId = faction.worldId
+    const target = factionBoards[worldId] ?? {
+      refreshRemainingMs: Math.min(QUEST_REFRESH_MS, board.refreshRemainingMs),
+      slots: Array.from({ length: QUEST_SLOT_COUNT }, () => null),
+    }
+    target.refreshRemainingMs = Math.min(target.refreshRemainingMs, board.refreshRemainingMs)
+    factionBoards[worldId] = target
+    let nextSlot = nextSlotByWorld.get(worldId) ?? 0
+    for (const quest of board.slots) {
+      if (nextSlot >= QUEST_SLOT_COUNT) break
+      target.slots[nextSlot] = quest ? structuredClone(quest) : null
+      if (quest?.acceptedRecordId && quest.acceptedRecordId > 0) {
+        const accepted = legacyQuests[String(quest.acceptedRecordId)]
+        if (accepted) {
+          const { factionId: _factionId, factionSourceId: _factionSourceId, ...migrated } = structuredClone(accepted)
+          acceptedFactionQuests[String(migrated.recordId)] = { ...migrated, boardSlot: nextSlot }
+        }
+      }
+      nextSlot += 1
+    }
+    nextSlotByWorld.set(worldId, nextSlot)
+  }
+  return { factionBoards, acceptedFactionQuests }
+}
+
 export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 => {
+  const legacyQuestLayout = isRecord(raw) && (raw.version === 19 || raw.version === 20)
+  const questSlotCount = legacyQuestLayout ? 5 : QUEST_SLOT_COUNT
   if (!isRecord(raw)
-    || (raw.version !== 19 && raw.version !== 20)
+    || (raw.version !== 19 && raw.version !== 20 && raw.version !== 21)
     || (raw.ordinaryPoolMisses !== undefined && (typeof raw.ordinaryPoolMisses !== 'number' || !Number.isInteger(raw.ordinaryPoolMisses) || raw.ordinaryPoolMisses < 0 || raw.ordinaryPoolMisses >= ORDINARY_POOL_RULES.heroPity))
     || (raw.idleVouchers !== undefined && !isIdleVouchers(raw.idleVouchers))
     || (raw.premiumCards !== undefined && !isPremiumCards(raw.premiumCards))
@@ -465,11 +535,11 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     || !isFactionAgentFilters(raw.factionAgentFilters)
     || !isStringArray(raw.unlockedFactionIds)
     || !isRecord(raw.factionBoards)
-    || !Object.values(raw.factionBoards).every(isFactionBoardState)
+    || !Object.values(raw.factionBoards).every((board) => isFactionBoardState(board, questSlotCount))
     || !isRecord(raw.acceptedFactionQuests)
     || !Object.entries(raw.acceptedFactionQuests).every(([recordId, quest]) =>
-      isAcceptedFactionQuest(quest) && String((quest as Record<string, unknown>).recordId) === recordId)
-    || !hasConsistentFactionQuestLinks(raw.factionBoards, raw.acceptedFactionQuests)
+      isAcceptedFactionQuest(quest, questSlotCount, legacyQuestLayout) && String((quest as Record<string, unknown>).recordId) === recordId)
+    || !hasConsistentFactionQuestLinks(raw.factionBoards, raw.acceptedFactionQuests, questSlotCount, legacyQuestLayout)
     || !isNumberArray(raw.unlockedSkinIds)
     || !raw.unlockedSkinIds.every((skinId) => Number.isInteger(skinId) && skinId > 0)
     || new Set(raw.unlockedSkinIds).size !== raw.unlockedSkinIds.length
@@ -497,6 +567,15 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
   const rawSettings = raw.settings as
     & Partial<GameStateV10['settings']>
     & { autoDiscardBelowQuality?: GameStateV10['settings']['autoSellBelowQuality'] }
+  const legacyQuestState = legacyQuestLayout
+    ? migrateFactionBoards(
+      structuredClone(raw.factionBoards) as Record<string, FactionBoardState>,
+      structuredClone(raw.acceptedFactionQuests) as Record<string, GameStateV10['acceptedFactionQuests'][string] & { factionId: string, factionSourceId: number }>,
+    )
+    : {
+      factionBoards: structuredClone(raw.factionBoards) as GameStateV10['factionBoards'],
+      acceptedFactionQuests: structuredClone(raw.acceptedFactionQuests) as GameStateV10['acceptedFactionQuests'],
+    }
   const loaded = pruneUnknownHeroes(persistentState({
     ...state,
     idleVouchers: raw.idleVouchers === undefined ? state.idleVouchers : structuredClone(raw.idleVouchers) as GameStateV10['idleVouchers'],
@@ -509,7 +588,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
         : rawSettings.autoDiscardBelowQuality ?? null,
     },
     worldCurrency: isRecord(raw.worldCurrency) ? structuredClone(raw.worldCurrency) as GameStateV10['worldCurrency'] : state.worldCurrency,
-    contribution: isRecord(raw.contribution) ? structuredClone(raw.contribution) as GameStateV10['contribution'] : state.contribution,
+    contribution: migrateContributionWallet(raw.contribution),
     worldReputation: structuredClone(raw.worldReputation) as GameStateV10['worldReputation'],
     factionAgents: structuredClone(raw.factionAgents) as GameStateV10['factionAgents'],
     // v18 早期存档没有筛选矩阵，缺省即全部放行。
@@ -525,8 +604,8 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
       ? structuredClone(raw.clearedStageByWorldDifficulty) as GameStateV10['clearedStageByWorldDifficulty']
       : state.clearedStageByWorldDifficulty,
     encounteredEnemyIds: Array.isArray(raw.encounteredEnemyIds) ? structuredClone(raw.encounteredEnemyIds) as string[] : state.encounteredEnemyIds,
-    factionBoards: structuredClone(raw.factionBoards) as GameStateV10['factionBoards'],
-    acceptedFactionQuests: structuredClone(raw.acceptedFactionQuests) as GameStateV10['acceptedFactionQuests'],
+    factionBoards: legacyQuestState.factionBoards,
+    acceptedFactionQuests: legacyQuestState.acceptedFactionQuests,
     unlockedSkinIds: structuredClone(raw.unlockedSkinIds) as number[],
     inventory: structuredClone(raw.inventory) as GameStateV10['inventory'],
     materials: structuredClone(raw.materials) as Record<string, number>,
@@ -544,6 +623,7 @@ export const hydrateStateV10 = (raw: unknown, now = Date.now()): GameStateV10 =>
     city: structuredClone(raw.city) as GameStateV10['city'],
     statistics: isRecord(raw.statistics) ? structuredClone(raw.statistics) as GameStateV10['statistics'] : state.statistics,
   }, Math.min(now, Number(raw.lastSavedAt) || now)))
+  migrateLearnedMartialContribution(loaded.heroes)
   const allItems = [...loaded.inventory, ...loaded.city.shop.stock]
   if (new Set(allItems.map(item => item.uid)).size !== allItems.length) throw new Error('存档装备归属重复')
   const stockedIds = new Set(loaded.city.shop.stock.map(item => item.uid))
@@ -570,7 +650,7 @@ export const loadExistingGameV10 = (storage: StorageLike, now = Date.now()): Loa
   try {
     const raw = JSON.parse(serialized) as unknown
     return { state: hydrateStateV10(raw, now), recoveredFromError: false, serialized,
-      needsMigration: isRecord(raw) && raw.version === 19 }
+      needsMigration: isRecord(raw) && raw.version !== 21 }
   } catch {
     return { state: createInitialStateV10(now), recoveredFromError: true, serialized }
   }

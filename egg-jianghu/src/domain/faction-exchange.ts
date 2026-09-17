@@ -59,10 +59,10 @@ export const exchangeFactionItem = (
     return { ok: false, message: item.kind === 'skin' ? '该幻型已经拥有' : '该图纸已经拥有' }
   }
 
-  const contribution = state.contribution[factionId] ?? 0
-  if (contribution < item.price) return { ok: false, message: '势力贡献不足' }
+  const contribution = state.contribution[faction.worldId] ?? 0
+  if (contribution < item.price) return { ok: false, message: '位面贡献不足' }
 
-  state.contribution[factionId] = contribution - item.price
+  state.contribution[faction.worldId] = contribution - item.price
   switch (item.target.kind) {
     case 'job':
       state.jobBooks[item.target.stateKey] = (state.jobBooks[item.target.stateKey] ?? 0) + 1

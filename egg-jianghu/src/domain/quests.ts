@@ -2,7 +2,6 @@ import type { Rng } from '../combat/rng'
 import type { CombatRank } from '../combat/types'
 import { enemyDefinitionById, parseEnemyId } from '../content/enemy-names'
 import { equipmentDefinitionById } from '../content/equipment'
-import { factionById } from '../content/factions'
 import {
   ORIGINAL_FACTION_RULES,
   originalFactionTaskRequiredAmount,
@@ -22,7 +21,9 @@ import type {
   GameStateV10,
 } from './types'
 
-export const QUEST_REFRESH_MS = 3_600_000
+/** 一炷香由原来的 60 分钟缩短为 20 分钟。 */
+export const QUEST_REFRESH_MS = 1_200_000
+export const QUEST_SLOT_COUNT = 15
 
 interface WeightedNumber {
   value: number
@@ -61,28 +62,24 @@ const rollTaskId = (quality: FactionQuestQuality, rng: Rng): FactionQuestTaskId 
 
 const generateQuest = (
   state: GameStateV10,
-  factionId: string,
+  worldId: string,
   slotIndex: number,
   rng: Rng,
   generatedAt: number,
 ): FactionQuestBoardEntry | null => {
-  const faction = factionById(factionId)
-  if (!faction
-    || faction.currencyKind !== 'contribution'
-    || !state.unlockedFactionIds.includes(factionId)
-    || !state.unlockedWorldIds.includes(faction.worldId)) return null
+  if (!state.unlockedWorldIds.includes(worldId)) return null
 
   const quality = rollQuality(rng)
   const taskId = rollTaskId(quality, rng)
   const targets = originalFactionTaskTargetPool(
-    worldIndexOf(faction.worldId),
+    worldIndexOf(worldId),
     taskId,
     quality,
-    unlockedBossDrIds(state, faction.worldId),
+    unlockedBossDrIds(state, worldId),
   )
   if (targets.length === 0) return null
   return {
-    id: `quest_${factionId}_${slotIndex}_${generatedAt}_${rng.nextInt(1, 1_000_000)}`,
+    id: `quest_${worldId}_${slotIndex}_${generatedAt}_${rng.nextInt(1, 1_000_000)}`,
     taskId,
     quality,
     targetId: rng.pick(targets),
@@ -93,16 +90,27 @@ const generateQuest = (
 
 export const initializeQuestBoard = (
   state: GameStateV10,
-  factionId: string,
+  worldId: string,
   rng: Rng,
   generatedAt = 0,
 ): FactionBoardState => {
   const board: FactionBoardState = {
     refreshRemainingMs: QUEST_REFRESH_MS,
-    slots: Array.from({ length: 5 }, (_, index) => generateQuest(state, factionId, index, rng, generatedAt)),
+    slots: Array.from({ length: QUEST_SLOT_COUNT }, (_, index) => generateQuest(state, worldId, index, rng, generatedAt)),
   }
-  state.factionBoards[factionId] = board
+  state.factionBoards[worldId] = board
   return board
+}
+
+/** 补齐迁移存档中的空榜位，不覆盖已揭、已完成或已接任务。 */
+export const fillEmptyQuestSlots = (
+  state: GameStateV10,
+  worldId: string,
+  board: FactionBoardState,
+  rng: Rng,
+  generatedAt = 0,
+): void => {
+  board.slots = board.slots.map((slot, index) => slot ?? generateQuest(state, worldId, index, rng, generatedAt))
 }
 
 const nextGenerationTime = (board: FactionBoardState): number => {
@@ -112,21 +120,21 @@ const nextGenerationTime = (board: FactionBoardState): number => {
 
 const refreshUnacceptedSlots = (
   state: GameStateV10,
-  factionId: string,
+  worldId: string,
   board: FactionBoardState,
   rng: Rng,
   generatedAt: number,
 ): void => {
   board.slots = board.slots.map((slot, index) =>
-    slot && slot.acceptedRecordId > 0 ? slot : generateQuest(state, factionId, index, rng, generatedAt))
+    slot && slot.acceptedRecordId > 0 ? slot : generateQuest(state, worldId, index, rng, generatedAt))
 }
 
 export const advanceQuestBoards = (state: GameStateV10, elapsedRuntimeMs: number, rng: Rng): void => {
   const elapsed = Math.max(0, elapsedRuntimeMs)
-  for (const [factionId, board] of Object.entries(state.factionBoards)) {
+  for (const [worldId, board] of Object.entries(state.factionBoards)) {
     board.refreshRemainingMs -= elapsed
     while (board.refreshRemainingMs <= 0) {
-      refreshUnacceptedSlots(state, factionId, board, rng, nextGenerationTime(board))
+      refreshUnacceptedSlots(state, worldId, board, rng, nextGenerationTime(board))
       board.refreshRemainingMs += QUEST_REFRESH_MS
     }
   }
@@ -138,21 +146,18 @@ const nextAcceptedRecordId = (state: GameStateV10): number => {
   return recordId
 }
 
-export const acceptQuest = (state: GameStateV10, factionId: string, slotIndex: number): ActionResult => {
-  const faction = factionById(factionId)
-  const quest = state.factionBoards[factionId]?.slots[slotIndex]
-  if (!faction || !quest) return { ok: false, message: '任务不存在' }
+export const acceptQuest = (state: GameStateV10, worldId: string, slotIndex: number): ActionResult => {
+  const quest = state.factionBoards[worldId]?.slots[slotIndex]
+  if (!state.unlockedWorldIds.includes(worldId) || !quest) return { ok: false, message: '任务不存在' }
   if (quest.acceptedRecordId > 0) return { ok: false, message: '任务已经接受' }
   if (quest.acceptedRecordId < 0) return { ok: false, message: '任务已经完成' }
-  const requiredAmount = originalFactionTaskRequiredAmount(quest.taskId, quest.quality, worldIndexOf(faction.worldId))
+  const requiredAmount = originalFactionTaskRequiredAmount(quest.taskId, quest.quality, worldIndexOf(worldId))
   if (requiredAmount === null) return { ok: false, message: '该任务尚未开放' }
 
   const recordId = nextAcceptedRecordId(state)
   state.acceptedFactionQuests[String(recordId)] = {
     recordId,
-    factionId,
-    factionSourceId: faction.originalId,
-    worldIndex: worldIndexOf(faction.worldId),
+    worldIndex: worldIndexOf(worldId),
     taskId: quest.taskId,
     quality: quest.quality,
     targetId: quest.targetId,
@@ -227,32 +232,30 @@ const consumeQuestRequirement = (state: GameStateV10, quest: AcceptedFactionQues
   return true
 }
 
-export const claimQuest = (state: GameStateV10, factionId: string, slotIndex: number): ActionResult => {
-  const faction = factionById(factionId)
-  const board = state.factionBoards[factionId]
+export const claimQuest = (state: GameStateV10, worldId: string, slotIndex: number): ActionResult => {
+  const board = state.factionBoards[worldId]
   const boardQuest = board?.slots[slotIndex]
   const accepted = boardQuest && boardQuest.acceptedRecordId > 0
     ? state.acceptedFactionQuests[String(boardQuest.acceptedRecordId)]
     : undefined
-  if (!faction || !boardQuest || !accepted || !consumeQuestRequirement(state, accepted)) {
+  if (!state.unlockedWorldIds.includes(worldId) || !boardQuest || !accepted || !consumeQuestRequirement(state, accepted)) {
     return { ok: false, message: '任务尚不可领取' }
   }
 
-  const worldId = `world_${String(accepted.worldIndex).padStart(2, '0')}`
   const reward = applyFactionQuestAgentReward(
     originalFactionTaskReward(accepted.taskId, accepted.quality, accepted.worldIndex),
     factionAgentAbilityLevel(state, worldId),
   )
-  state.worldCurrency[faction.worldId] = (state.worldCurrency[faction.worldId] ?? 0) + reward.currency
-  state.contribution[factionId] = (state.contribution[factionId] ?? 0) + reward.contribution
-  state.worldReputation[faction.worldId] = (state.worldReputation[faction.worldId] ?? 0) + reward.reputation
+  state.worldCurrency[worldId] = (state.worldCurrency[worldId] ?? 0) + reward.currency
+  state.contribution[worldId] = (state.contribution[worldId] ?? 0) + reward.contribution
+  state.worldReputation[worldId] = (state.worldReputation[worldId] ?? 0) + reward.reputation
   delete state.acceptedFactionQuests[String(accepted.recordId)]
   boardQuest.acceptedRecordId = -1
   return { ok: true, message: '任务完成，奖励已发放' }
 }
 
-export const cancelQuest = (state: GameStateV10, factionId: string, slotIndex: number): ActionResult => {
-  const boardQuest = state.factionBoards[factionId]?.slots[slotIndex]
+export const cancelQuest = (state: GameStateV10, worldId: string, slotIndex: number): ActionResult => {
+  const boardQuest = state.factionBoards[worldId]?.slots[slotIndex]
   if (!boardQuest || boardQuest.acceptedRecordId <= 0) return { ok: false, message: '任务尚未接受' }
   delete state.acceptedFactionQuests[String(boardQuest.acceptedRecordId)]
   boardQuest.acceptedRecordId = 0

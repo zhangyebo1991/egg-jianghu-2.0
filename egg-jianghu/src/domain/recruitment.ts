@@ -47,10 +47,10 @@ export const recruitFromFaction = (
 
   // 原版口径：民团（货币势力）消耗位面货币，正式势力消耗贡献。
   const useWorldCurrency = faction.currencyKind === 'worldCurrency'
-  const walletKey = useWorldCurrency ? definition.worldId : factionId
+  const walletKey = definition.worldId
   const wallet = useWorldCurrency ? state.worldCurrency : state.contribution
   if ((wallet[walletKey] ?? 0) < definition.cost) {
-    return { ok: false, message: useWorldCurrency ? '位面货币不足' : '势力贡献不足' }
+    return { ok: false, message: useWorldCurrency ? '位面货币不足' : '位面贡献不足' }
   }
 
   wallet[walletKey] -= definition.cost

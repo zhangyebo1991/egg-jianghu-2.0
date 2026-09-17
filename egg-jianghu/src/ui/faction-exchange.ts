@@ -63,7 +63,7 @@ const renderItemAction = (group: FactionExchangeGroupView, item: FactionExchange
       group.worldId,
       'factions',
       `前往${group.worldName}`,
-      `贡献不足 · 前往${group.worldName}悬榜办差与挂机赚取`,
+      `位面贡献不足 · 前往${group.worldName}悬榜办差与挂机赚取`,
     )
   }
   return `<button type="button" data-action="faction-exchange" data-faction-id="${escapeHtml(group.factionId)}" data-slot="${item.slot}">兑换</button>`
@@ -115,8 +115,8 @@ const renderContributionTab = (view: FactionExchangeContributionTabView): string
                 <h3>${escapeHtml(group.factionName)}</h3>
                 <div class="exchange-faction-meta">
                   <span>${escapeHtml(group.worldName)} · 声望 ${escapeHtml(group.reputationLevelName)} · 等级 ${group.reputationLevel} / 5</span>
-                  <b><i>${formatNumber(group.contribution)}</i> 贡献</b>
-                  ${group.fundsShort ? exchangeGotoButton(group.worldId, 'factions', `前往${group.worldName}`, `贡献不足 · 前往${group.worldName}悬榜办差赚取`) : ''}
+                  <b><i>${formatNumber(group.contribution)}</i> 位面贡献</b>
+                  ${group.fundsShort ? exchangeGotoButton(group.worldId, 'factions', `前往${group.worldName}`, `位面贡献不足 · 前往${group.worldName}悬榜办差赚取`) : ''}
                 </div>
               </header>
               <div class="faction-exchange-grid">${group.items.map((item) => renderExchangeItem(group, item)).join('')}</div>

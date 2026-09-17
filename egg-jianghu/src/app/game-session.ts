@@ -3,7 +3,6 @@ import { createRng, type Rng } from '../combat/rng'
 import { advanceCityShop } from '../domain/city-shop'
 import { buildAttributeMap, buildCareerCombatCoefficients, buildCombatStats, equippedMainhandWeaponType, equippedBaseAttack, equippedOffhandSoulId } from '../combat/stats'
 import type { CombatEvent, CombatStartInput, CombatUnit, StageSelectionInput } from '../combat/types'
-import { FACTIONS } from '../content/factions'
 import { heroByIdV10, heroDisplayNameV10 } from '../content/heroes'
 import { WORLDS } from '../content/worlds'
 import { martialByIdV10 } from '../content/martials'
@@ -17,7 +16,7 @@ import {
   syncFactionUnlocks,
   type CampaignSelection,
 } from '../domain/progression'
-import { advanceQuestBoards, initializeQuestBoard } from '../domain/quests'
+import { advanceQuestBoards, fillEmptyQuestSlots, initializeQuestBoard } from '../domain/quests'
 import {
   AGENT_AUTOMATION_TICK_MS,
   runFactionAgentAutomation,
@@ -360,12 +359,12 @@ export class GameSession {
   }
 
   private ensureFactionBoards(refillEmpty = false): void {
-    const unlocked = new Set(this.state.unlockedFactionIds)
-    for (const faction of FACTIONS) {
-      if (!unlocked.has(faction.id) || faction.currencyKind !== 'contribution') continue
-      const board = this.state.factionBoards[faction.id]
+    for (const worldId of this.state.unlockedWorldIds) {
+      const board = this.state.factionBoards[worldId]
       if (!board || (refillEmpty && board.slots.every((slot) => slot === null))) {
-        initializeQuestBoard(this.state, faction.id, this.runtimeRng, 0)
+        initializeQuestBoard(this.state, worldId, this.runtimeRng, 0)
+      } else {
+        fillEmptyQuestSlots(this.state, worldId, board, this.runtimeRng, 0)
       }
     }
   }

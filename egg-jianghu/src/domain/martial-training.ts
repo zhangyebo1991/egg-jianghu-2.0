@@ -64,7 +64,7 @@ const spendMartialLevelCost = (
   const wallet = martial.currencySource.kind === 'contribution' ? state.contribution : state.worldCurrency
   if (hero.skillPoints < spCost) return { ok: false, message: `技能点不足，需要 ${spCost} SP` }
   if ((wallet[martial.currencySource.id] ?? 0) < resourceCost) {
-    return { ok: false, message: martial.currencySource.kind === 'contribution' ? '势力贡献不足' : '位面货币不足' }
+    return { ok: false, message: martial.currencySource.kind === 'contribution' ? '位面贡献不足' : '位面货币不足' }
   }
   hero.skillPoints -= spCost
   wallet[martial.currencySource.id] -= resourceCost

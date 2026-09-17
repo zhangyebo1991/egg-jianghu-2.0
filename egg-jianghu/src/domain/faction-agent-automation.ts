@@ -1,7 +1,5 @@
-import { FACTIONS } from '../content/factions'
 import {
   ORIGINAL_FACTION_RULES,
-  originalAgentFilterFactionColumn,
   originalAgentFilterQualityColumn,
   originalAgentFilterSubtypeColumn,
 } from '../content/original-faction-rules.generated'
@@ -59,12 +57,10 @@ const agentActive = (state: GameStateV10, worldId: string): boolean => {
 const passesFilters = (
   state: GameStateV10,
   worldId: string,
-  factionSourceId: number,
   quest: FactionQuestBoardEntry,
 ): boolean => {
   const { taskId, quality, targetId } = quest
   if (isFactionAgentColumnExcluded(state, worldId, taskId, FILTER.taskEnabledColumn)) return false
-  if (isFactionAgentColumnExcluded(state, worldId, taskId, originalAgentFilterFactionColumn(factionSourceId))) return false
   if (isFactionAgentColumnExcluded(state, worldId, taskId, originalAgentFilterQualityColumn(quality))) return false
   const subtypeColumn = originalAgentFilterSubtypeColumn(worldIndexOf(worldId), taskId, quality, targetId)
   return !isFactionAgentColumnExcluded(state, worldId, taskId, subtypeColumn)
@@ -88,31 +84,26 @@ const runCompletePass = (state: GameStateV10): number => {
   for (const quest of Object.values(state.acceptedFactionQuests)) {
     if (!agentActive(state, worldIdOf(quest.worldIndex))) continue
     if (!canAutoComplete(state, quest)) continue
-    if (claimQuest(state, quest.factionId, quest.boardSlot).ok) completed += 1
+    if (claimQuest(state, worldIdOf(quest.worldIndex), quest.boardSlot).ok) completed += 1
   }
   return completed
 }
 
 /**
  * 自动接受一轮。原版 Event 11682 只遍历「玩家当前所在位面」的已解锁正式势力，
- * 每势力 5 个悬榜槽位，槽位条件只有 acceptedRecordId == 0，无冷却。
+ * 每个位面一张公共悬榜，槽位条件只有 acceptedRecordId == 0，无冷却。
  */
 const runAcceptPass = (state: GameStateV10, worldId: string): number => {
   if (!agentActive(state, worldId)) return 0
   let accepted = 0
-  for (const faction of FACTIONS) {
-    if (faction.worldId !== worldId) continue
-    if (faction.currencyKind !== 'contribution') continue
-    if (!state.unlockedFactionIds.includes(faction.id)) continue
-    const board = state.factionBoards[faction.id]
-    if (!board) continue
-    for (const [slotIndex, quest] of board.slots.entries()) {
-      // 并发上限是跨位面跨势力的总数（原版 Event 10488），到顶即停止本轮接受。
-      if (acceptedQuestCount(state) >= AGENT_CONCURRENT_TASK_LIMIT) return accepted
-      if (!quest || quest.acceptedRecordId !== 0) continue
-      if (!passesFilters(state, worldId, faction.originalId, quest)) continue
-      if (acceptQuest(state, faction.id, slotIndex).ok) accepted += 1
-    }
+  const board = state.factionBoards[worldId]
+  if (!board) return 0
+  for (const [slotIndex, quest] of board.slots.entries()) {
+    // 并发上限为跨位面的总数，到顶即停止本轮接受。
+    if (acceptedQuestCount(state) >= AGENT_CONCURRENT_TASK_LIMIT) return accepted
+    if (!quest || quest.acceptedRecordId !== 0) continue
+    if (!passesFilters(state, worldId, quest)) continue
+    if (acceptQuest(state, worldId, slotIndex).ok) accepted += 1
   }
   return accepted
 }

@@ -77,7 +77,7 @@ export const createInitialCityState = (): CityState => ({
 })
 
 export const createInitialStateV10 = (now = Date.now()): GameStateV10 => ({
-  version: 20,
+  version: 21,
   idleVouchers: createIdleVouchers(now),
   premiumCards: createPremiumCards(),
   ordinaryPoolMisses: 0,

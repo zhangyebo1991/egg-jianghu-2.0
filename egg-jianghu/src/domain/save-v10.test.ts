@@ -12,7 +12,7 @@ const memoryStorage = () => {
   }
 }
 
-describe('version 20 存档', () => {
+describe('version 21 存档', () => {
   it('通过 version 19 专用 key 检测存档是否存在', () => {
     const storage = memoryStorage()
 
@@ -64,7 +64,7 @@ describe('version 20 存档', () => {
     saveGameV10(storage, state, 2000)
 
     const raw = JSON.parse(storage.getItem(SAVE_KEY_V10)!)
-    expect(raw.version).toBe(20)
+    expect(raw.version).toBe(21)
     expect(raw.combat).toBeUndefined()
     expect(raw.lastSavedAt).toBe(2000)
   })
@@ -72,28 +72,26 @@ describe('version 20 存档', () => {
   it('关闭期间不根据 lastSavedAt 推进悬榜倒计时', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(1000)
-    state.factionBoards.tieyi_school = { refreshRemainingMs: 1234, slots: [null, null, null, null, null] }
+    state.factionBoards.world_01 = { refreshRemainingMs: 1234, slots: Array.from({ length: 15 }, () => null) }
     saveGameV10(storage, state, 1000)
 
     const loaded = loadGameV10(storage, 99_999)
 
-    expect(loaded.state.factionBoards.tieyi_school.refreshRemainingMs).toBe(1234)
+    expect(loaded.state.factionBoards.world_01.refreshRemainingMs).toBe(1234)
   })
 
-  it('保存并恢复独立的声望、代理人、幻型、五格悬榜与接受记录', () => {
+  it('保存并恢复独立的声望、代理人、幻型、十五格公共悬榜与接受记录', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(1000)
     state.worldReputation.world_01 = 321
     state.factionAgents.world_01 = { heroId: 'hero_player', enabled: true }
     state.unlockedSkinIds = [7, 11]
-    state.factionBoards.tieyi_school = {
+    state.factionBoards.world_01 = {
       refreshRemainingMs: 1234,
-      slots: [{ id: 'q1', taskId: 1, quality: 2, targetId: 1, generatedAt: 1000, acceptedRecordId: 1 }, null, null, null, null],
+      slots: [{ id: 'q1', taskId: 1, quality: 2, targetId: 1, generatedAt: 1000, acceptedRecordId: 1 }, ...Array.from({ length: 14 }, () => null)],
     }
     state.acceptedFactionQuests['1'] = {
       recordId: 1,
-      factionId: 'tieyi_school',
-      factionSourceId: 2,
       worldIndex: 1,
       taskId: 1,
       quality: 2,
@@ -111,8 +109,45 @@ describe('version 20 存档', () => {
     expect(loaded.state.worldReputation.world_01).toBe(321)
     expect(loaded.state.factionAgents.world_01).toEqual({ heroId: 'hero_player', enabled: true })
     expect(loaded.state.unlockedSkinIds).toEqual([7, 11])
-    expect(loaded.state.factionBoards.tieyi_school.slots).toHaveLength(5)
+    expect(loaded.state.factionBoards.world_01.slots).toHaveLength(15)
     expect(loaded.state.acceptedFactionQuests['1'].progress).toBe(3)
+  })
+
+  it('v20 旧档合并同一位面的势力贡献与悬榜任务', () => {
+    const raw = structuredClone(createInitialStateV10(1000)) as unknown as Record<string, unknown>
+    raw.version = 20
+    raw.contribution = {
+      tieyi_school: 100,
+      renxin_hall: 200,
+      original_faction_04: 300,
+      world_01: 50,
+    }
+    raw.factionBoards = {
+      tieyi_school: {
+        refreshRemainingMs: 1234,
+        slots: [{ id: 'wei-task', taskId: 1, quality: 1, targetId: 1, generatedAt: 0, acceptedRecordId: 1 }, null, null, null, null],
+      },
+      renxin_hall: {
+        refreshRemainingMs: 5678,
+        slots: [{ id: 'shu-task', taskId: 1, quality: 1, targetId: 1, generatedAt: 0, acceptedRecordId: 0 }, null, null, null, null],
+      },
+    }
+    raw.acceptedFactionQuests = {
+      1: {
+        recordId: 1, factionId: 'tieyi_school', factionSourceId: 2, worldIndex: 1,
+        taskId: 1, quality: 1, targetId: 1, requiredAmount: 2, progress: 1, boardSlot: 0, status: 1,
+      },
+    }
+
+    const loaded = hydrateStateV10(raw, 2000)
+
+    expect(loaded.version).toBe(21)
+    expect(loaded.contribution.world_01).toBe(650)
+    expect(loaded.factionBoards.world_01.slots).toHaveLength(15)
+    expect(loaded.factionBoards.world_01.slots.slice(0, 2).map((slot) => slot?.id)).toEqual(['wei-task', undefined])
+    expect(loaded.factionBoards.world_01.slots[5]?.id).toBe('shu-task')
+    expect(loaded.acceptedFactionQuests['1']).toMatchObject({ worldIndex: 1, boardSlot: 0, progress: 1 })
+    expect('factionId' in loaded.acceptedFactionQuests['1']).toBe(false)
   })
 
   it('保存并恢复侠客计略培养，并拒绝越界能力字段', () => {
@@ -186,17 +221,17 @@ describe('version 20 存档', () => {
   it.each([
     ['缺少位面声望', (raw: Record<string, unknown>) => { delete raw.worldReputation }],
     ['代理人字段损坏', (raw: Record<string, unknown>) => { raw.factionAgents = { world_01: { heroId: 7, enabled: true } } }],
-    ['悬榜不是五格', (raw: Record<string, unknown>) => {
-      raw.factionBoards = { tieyi_school: { refreshRemainingMs: 1, slots: [null, null, null, null, null, null] } }
+    ['悬榜不是十五格', (raw: Record<string, unknown>) => {
+      raw.factionBoards = { world_01: { refreshRemainingMs: 1, slots: Array.from({ length: 16 }, () => null) } }
     }],
     ['接受记录键不匹配', (raw: Record<string, unknown>) => {
       raw.acceptedFactionQuests = {
-        2: { recordId: 1, factionId: 'tieyi_school', factionSourceId: 2, worldIndex: 1, taskId: 1, quality: 1, targetId: 1, requiredAmount: 1, progress: 0, boardSlot: 0, status: 1 },
+        2: { recordId: 1, worldIndex: 1, taskId: 1, quality: 1, targetId: 1, requiredAmount: 1, progress: 0, boardSlot: 0, status: 1 },
       }
     }],
     ['接受记录没有对应悬榜关联', (raw: Record<string, unknown>) => {
       raw.acceptedFactionQuests = {
-        1: { recordId: 1, factionId: 'tieyi_school', factionSourceId: 2, worldIndex: 1, taskId: 1, quality: 1, targetId: 1, requiredAmount: 1, progress: 0, boardSlot: 0, status: 1 },
+        1: { recordId: 1, worldIndex: 1, taskId: 1, quality: 1, targetId: 1, requiredAmount: 1, progress: 0, boardSlot: 0, status: 1 },
       }
     }],
     ['幻型 ID 非整数', (raw: Record<string, unknown>) => { raw.unlockedSkinIds = [1.5] }],

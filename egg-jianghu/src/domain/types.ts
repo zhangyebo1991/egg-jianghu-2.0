@@ -19,7 +19,8 @@ export interface CurrencyWallet {
 }
 
 export interface ContributionWallet {
-  [factionId: string]: number
+  /** 每个位面共用一份贡献，键为 worldId。 */
+  [worldId: string]: number
 }
 
 export interface InvestmentLedger {
@@ -80,8 +81,6 @@ export interface FactionQuestBoardEntry {
 
 export interface AcceptedFactionQuest {
   recordId: number
-  factionId: string
-  factionSourceId: number
   worldIndex: number
   taskId: FactionQuestTaskId
   quality: FactionQuestQuality
@@ -206,7 +205,7 @@ export interface CityState {
 }
 
 export interface GameStateV10 {
-  version: 20
+  version: 21
   idleVouchers: import('./idle-vouchers').IdleVouchers
   premiumCards: import('./premium-cards').PremiumCards
   ordinaryPoolMisses: number
@@ -224,6 +223,7 @@ export interface GameStateV10 {
   unlockedWorldIds: string[]
   clearedStageByWorldDifficulty: Record<string, number>
   encounteredEnemyIds: string[]
+  /** 悬榜按位面键存储，字段名为兼容既有存档保留。 */
   factionBoards: Record<string, FactionBoardState>
   acceptedFactionQuests: Record<string, AcceptedFactionQuest>
   unlockedSkinIds: number[]

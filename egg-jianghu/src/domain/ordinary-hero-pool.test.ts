@@ -125,7 +125,7 @@ describe('统一普通池', () => {
       const state = funded()
       state.unlockedWorldIds.push(hero.worldId)
       state.worldReputation[hero.worldId] = 1_000_000_000
-      state.contribution[hero.factionId!] = 1_000_000_000
+      state.contribution[hero.worldId] = 1_000_000_000
       const before = structuredClone(state)
       expect(recruitFromFaction(state, hero.factionId!, hero.id)).toMatchObject({ ok: false, message: '该侠客由商城普通池招募' })
       expect(state).toEqual(before)

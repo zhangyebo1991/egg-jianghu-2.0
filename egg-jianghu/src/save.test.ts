@@ -23,7 +23,7 @@ const quest = (): FactionQuestBoardEntry => ({
   acceptedRecordId: 1,
 })
 
-describe('version 20 公开存档入口', () => {
+describe('version 21 公开存档入口', () => {
   it('保存并恢复全部长期状态', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(100)
@@ -62,11 +62,11 @@ describe('version 20 公开存档入口', () => {
     expect(loaded.state).toEqual(createInitialStateV10(500))
   })
 
-  it('导出 version 20 并拒绝不支持的旧版结构', () => {
+  it('导出 version 21 并拒绝不支持的旧版结构', () => {
     const state = createInitialStateV10(100)
     state.worldCurrency.world_01 = 987
     const serialized = exportSave(state, 200)
-    expect(JSON.parse(serialized).version).toBe(20)
+    expect(JSON.parse(serialized).version).toBe(21)
     expect(importSave(serialized, 300).state.worldCurrency.world_01).toBe(987)
     expect(() => importSave(JSON.stringify({ version: 15 }), 300)).toThrow('存档版本不受支持')
   })
@@ -88,14 +88,12 @@ describe('version 20 公开存档入口', () => {
     expect(JSON.parse(exportSave(imported, 400)).combat).toBeUndefined()
   })
 
-  it('关闭期间不按 lastSavedAt 推进势力悬榜', () => {
+  it('关闭期间不按 lastSavedAt 推进位面悬榜', () => {
     const storage = memoryStorage()
     const state = createInitialStateV10(100)
-    state.factionBoards.tieyi_school = { refreshRemainingMs: 123_456, slots: [quest(), null, null, null, null] }
+    state.factionBoards.world_01 = { refreshRemainingMs: 123_456, slots: [quest(), ...Array.from({ length: 14 }, () => null)] }
     state.acceptedFactionQuests['1'] = {
       recordId: 1,
-      factionId: 'tieyi_school',
-      factionSourceId: 2,
       worldIndex: 1,
       taskId: 1,
       quality: 2,
@@ -107,7 +105,7 @@ describe('version 20 公开存档入口', () => {
     }
     saveGame(storage, state, 100)
     const loaded = loadGame(storage, 10_000_000)
-    expect(loaded.state.factionBoards.tieyi_school.refreshRemainingMs).toBe(123_456)
+    expect(loaded.state.factionBoards.world_01.refreshRemainingMs).toBe(123_456)
     expect(loaded.state.acceptedFactionQuests['1']?.progress).toBe(3)
   })
 })

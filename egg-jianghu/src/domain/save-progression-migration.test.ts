@@ -30,14 +30,14 @@ const storageFor = (raw = legacy()) => {
   }
 }
 
-describe('v19 → v20 一次性进度换算', () => {
+describe('v19 → v21 一次性进度换算', () => {
   it('复现 99 级存档，经验守恒、职业补升，其他长期进度和输入不变', () => {
     const raw = legacy()
     const before = structuredClone(raw)
     const loaded = hydrateStateV10(raw, 1000)
     expect(loaded.heroes.hero_player).toMatchObject({ level: 19, experience: 61645,
       careers: { job_1: { level: 10, experience: 0 } } })
-    const expected = { ...structuredClone(before), version: 20 }
+    const expected = { ...structuredClone(before), version: 21 }
     expected.heroes.hero_player.level = 19
     expected.heroes.hero_player.experience = 61645
     expected.heroes.hero_player.careers.job_1 = { level: 10, experience: 0 }
@@ -78,11 +78,11 @@ describe('v19 → v20 一次性进度换算', () => {
     expect(loaded.statistics).toEqual(raw.statistics)
   })
 
-  it('继续游戏先备份再保存 v20，重载不再换算，并阻止陈旧会话覆盖', () => {
+  it('继续游戏先备份再保存 v21，重载不再换算，并阻止陈旧会话覆盖', () => {
     const store = storageFor()
     const current = GameSession.continue(store, 1000)
     expect(store.getItem(PRE_V20_SAVE_BACKUP_KEY)).toBe(store.original)
-    expect(JSON.parse(store.getItem(SAVE_KEY_V10)!).version).toBe(20)
+    expect(JSON.parse(store.getItem(SAVE_KEY_V10)!).version).toBe(21)
     expect(GameSession.continue(store, 1000).state.heroes.hero_player.level).toBe(19)
     store.setItem(SAVE_KEY_V10, 'newer-snapshot')
     expect(() => current.save(1000)).toThrow(SaveConflictError)
@@ -102,9 +102,9 @@ describe('v19 → v20 一次性进度换算', () => {
     }
   })
 
-  it('云校验迁移旧档并输出 v20，重复上传不再换算；新 v20 的高等级不变', () => {
+  it('云校验迁移旧档并输出 v21，重复上传不再换算；新 v20 的高等级不变', () => {
     const first = validateSave(legacy())
-    expect(first.summary).toMatchObject({ version: 20, level: 19 })
+    expect(first.summary).toMatchObject({ version: 21, level: 19 })
     expect(validateSave(JSON.parse(first.json)).json).toBe(first.json)
     const current = { ...legacy(), version: 20 }
     expect(hydrateStateV10(current, 1000).heroes.hero_player.level).toBe(99)
@@ -116,6 +116,6 @@ describe('v19 → v20 一次性进度换算', () => {
       raw.heroes.hero_player.experience = experience
       expect(() => hydrateStateV10(raw, 1000)).toThrow()
     }
-    expect(() => hydrateStateV10({ ...legacy(), version: 21 }, 1000)).toThrow()
+    expect(() => hydrateStateV10({ ...legacy(), version: 22 }, 1000)).toThrow()
   })
 })

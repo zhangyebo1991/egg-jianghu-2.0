@@ -148,7 +148,8 @@ const buildMartial = (original: typeof ORIGINAL_PLAYER_SKILLS[number]): MartialD
   const worldId = `world_${String(worldIndex).padStart(2, '0')}`
   const branchIndex = (original.branchIndex ?? 1) as 1 | 2
   const currencyKind = faction?.currencyKind ?? 'worldCurrency'
-  const currencyId = currencyKind === 'contribution' ? faction?.id ?? '' : worldId
+  // 正式势力的传承仍各自开放，但同一位面的贡献余额共用。
+  const currencyId = worldId
   const basePower = original.baseEffect || original.basePowerPercent
   return {
     id: martialIdFromOriginal(original.id),

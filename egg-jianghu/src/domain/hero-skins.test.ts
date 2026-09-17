@@ -64,7 +64,7 @@ describe('皮肤所有权、升星与属性', () => {
     state.heroes[definition.id] = { ...createHeroProgress(definition.baseCareerId), recruited: true }
     state.unlockedFactionIds.push(faction.id)
     state.worldReputation[faction.worldId] = 1e12
-    state.contribution[faction.id] = item.price
+    state.contribution[faction.worldId] = item.price
     const before = ownedSkinAttributes(definition, state.heroes[definition.id], state.unlockedSkinIds)
     expect(exchangeFactionItem(state, faction.id, item.slot).ok).toBe(true)
     expect(selectHeroSkin(state, definition.id, item.target.sourceId).ok).toBe(true)

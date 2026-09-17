@@ -170,15 +170,17 @@ const factionAgentFixture = (): NonNullable<TownsPageViewModel['factionAgent']> 
 })
 
 const factionsFixture = (): FactionsPageViewModel => ({
+  worldId: 'world_01',
   worldIndex: 1,
   worldName: '牛家村',
+  contribution: 600,
   selectedFactionId: 'qingfeng_hall',
   factions: [{
-    id: 'qingfeng_hall', name: '全真教', category: '剑', branchNames: ['快剑', '重剑'], contribution: 600, selected: true,
+    id: 'qingfeng_hall', name: '全真教', category: '剑', branchNames: ['快剑', '重剑'], selected: true,
   }],
   exchange: exchangeFixture(),
-  refreshRemainingMs: 3_600_000,
-  quests: Array.from({ length: 5 }, (_, index) => ({
+  refreshRemainingMs: 1_200_000,
+  quests: Array.from({ length: 15 }, (_, index) => ({
     slot: index,
     quest: index === 0 ? {
       id: 'quest_qingfeng_0', taskId: 1, taskName: '消灭目标敌人', actionName: '杀敌', targetKind: '敌人',
@@ -486,9 +488,10 @@ describe('version 10 长期循环页面', () => {
     expect(renderInventoryPage(last)).toContain('data-page="18" aria-label="下一页" disabled')
   })
 
-  it('势力页显示五格悬榜、两线三门传承和原版招募名录', () => {
+  it('势力页显示十五格公共悬榜、两线三门传承和原版招募名录', () => {
     const html = renderFactionsPage(factionsFixture())
-    expect(html.match(/data-quest-slot=/g)).toHaveLength(5)
+    expect(html.match(/data-quest-slot=/g)).toHaveLength(15)
+    expect(html).toContain('data-testid="faction-quest-board" data-world-id="world_01"')
     expect(html).toContain('村中泼皮')
     expect(html).toContain('势力招募')
     expect(html).toContain('邢道荣')

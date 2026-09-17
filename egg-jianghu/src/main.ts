@@ -299,6 +299,11 @@ const combatEffectDuration: Record<IdleCombatEffectKind, number> = {
 const totalWorldCurrency = (): number => Object.values(session.state.worldCurrency)
   .reduce((total, value) => total + value, 0)
 
+const contributionForFaction = (factionId: string): number => {
+  const worldId = factionById(factionId)?.worldId
+  return worldId ? session.state.contribution[worldId] ?? 0 : 0
+}
+
 const cacheCombatUnits = (): void => {
   const combat = session.combat?.state
   if (!combat) return
@@ -1224,7 +1229,7 @@ const exchangeHubViewModel = (): FactionExchangeViewModel => {
     const worldIndex = Number(faction.worldId.slice(-2))
     const reputation = session.state.worldReputation[faction.worldId] ?? 0
     const reputationLevel = originalWorldReputationLevel(reputation, worldIndex)
-    const contribution = session.state.contribution[faction.id] ?? 0
+    const contribution = session.state.contribution[faction.worldId] ?? 0
     const items = originalFactionExchangeByFaction(faction.originalId)
       .filter((item) => exchangeCategory === 'all' || item.kind === exchangeCategory)
       .map((item) => {
@@ -1283,9 +1288,9 @@ const factionRecruitmentViewModel = (factionId: string): FactionRecruitmentViewM
   const worldIndex = Number(faction.worldId.slice(-2))
   const reputation = session.state.worldReputation[faction.worldId] ?? 0
   const reputationLevel = originalWorldReputationLevel(reputation, worldIndex)
-  const resourceName = faction.currencyKind === 'contribution' ? '势力贡献' : '位面货币'
+  const resourceName = faction.currencyKind === 'contribution' ? '位面贡献' : '位面货币'
   const balance = faction.currencyKind === 'contribution'
-    ? session.state.contribution[faction.id] ?? 0
+    ? session.state.contribution[faction.worldId] ?? 0
     : session.state.worldCurrency[faction.worldId] ?? 0
   return {
     factionId,
@@ -1327,7 +1332,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
     && session.state.unlockedFactionIds.includes(faction.id))
   if (!availableFactions.some((faction) => faction.id === selectedFactionId)) selectedFactionId = availableFactions[0]?.id ?? ''
   const faction = availableFactions.find((item) => item.id === selectedFactionId) ?? availableFactions[0]
-  const board = session.state.factionBoards[selectedFactionId]
+  const board = session.state.factionBoards[selectedWorldId]
   const normalizedHeroId = normalizeSelectedHero()
   const heroProgress = normalizedHeroId ? session.state.heroes[normalizedHeroId] : undefined
   const factionMartials = FACTION_MARTIALS.filter((martial) => martial.factionId === selectedFactionId)
@@ -1369,7 +1374,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
       spCost,
       availableSp,
       resourceKind: martial.currencySource.kind,
-      resourceName: martial.currencySource.kind === 'contribution' ? '势力贡献' : '位面货币',
+      resourceName: martial.currencySource.kind === 'contribution' ? '位面贡献' : '位面货币',
       learned,
       level,
       maxLevel: martial.maxLevel,
@@ -1413,8 +1418,10 @@ const factionsViewModel = (): FactionsPageViewModel => {
     })
   const selectedHero = roster.find((hero) => hero.id === normalizedHeroId) ?? null
   return {
+    worldId: world.id,
     worldIndex: world.index,
     worldName: world.name,
+    contribution: session.state.contribution[world.id] ?? 0,
     selectedFactionId,
     exchange: exchangeHubViewModel(),
     recruitment: faction ? factionRecruitmentViewModel(faction.id) : null,
@@ -1423,11 +1430,10 @@ const factionsViewModel = (): FactionsPageViewModel => {
       name: item.name,
       category: item.category,
       branchNames: [item.branchLabels[0], item.branchLabels[1]],
-      contribution: session.state.contribution[item.id] ?? 0,
       selected: item.id === selectedFactionId,
     })),
     refreshRemainingMs: board?.refreshRemainingMs ?? 0,
-    quests: Array.from({ length: 5 }, (_, slot) => {
+    quests: Array.from({ length: 15 }, (_, slot) => {
       const quest = board?.slots[slot]
       if (!quest || !faction) return { slot, quest: null }
       const accepted = quest.acceptedRecordId > 0
@@ -2309,7 +2315,7 @@ const startFactionContributionAnimation = (to: number): void => {
     factionContributionAnimation = null
     return
   }
-  const from = readFactionContribution() ?? session.state.contribution[selectedFactionId] ?? to
+  const from = readFactionContribution() ?? contributionForFaction(selectedFactionId) ?? to
   if (from === to) {
     factionContributionAnimation = null
     return
@@ -2605,14 +2611,14 @@ const performAction = (button: HTMLButtonElement): void => {
     factionRosterQuery = ''
   }   else if (action === 'select-martial') selectedFactionMartialId = button.dataset.martialId ?? selectedFactionMartialId
   else if (action === 'heart-method-equip') commitAction(equipHeartMethod(session.state, heroId, button.dataset.heartMethodId ?? ''))
-  else if (action === 'quest-accept') commitAction(acceptQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
-  else if (action === 'quest-cancel') commitAction(cancelQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
-  else if (action === 'quest-claim') commitAction(claimQuest(session.state, button.dataset.factionId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'quest-accept') commitAction(acceptQuest(session.state, button.dataset.worldId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'quest-cancel') commitAction(cancelQuest(session.state, button.dataset.worldId ?? '', dataNumber(button, 'slot')))
+  else if (action === 'quest-claim') commitAction(claimQuest(session.state, button.dataset.worldId ?? '', dataNumber(button, 'slot')))
   else if (action === 'faction-exchange') {
     const factionId = button.dataset.factionId ?? ''
     selectedFactionId = factionId
     const result = exchangeFactionItem(session.state, factionId, dataNumber(button, 'slot'))
-    if (result.ok) startFactionContributionAnimation(session.state.contribution[factionId] ?? 0)
+    if (result.ok) startFactionContributionAnimation(contributionForFaction(factionId))
     commitAction(result)
   }
   else if (action === 'shop-section') {
@@ -2644,7 +2650,7 @@ const performAction = (button: HTMLButtonElement): void => {
     if (result.ok) {
       selectedHeroId = heroId
       if (factionById(factionId)?.currencyKind === 'contribution') {
-        startFactionContributionAnimation(session.state.contribution[factionId] ?? 0)
+        startFactionContributionAnimation(contributionForFaction(factionId))
       }
     }
     commitAction(result)
@@ -3429,7 +3435,7 @@ app.addEventListener('click', (event) => {
       factionRosterQuery = ''
       factionSwitchAnimationPending = true
       jianghuSection = 'factions'
-      startFactionContributionAnimation(session.state.contribution[nextFactionId] ?? 0)
+      startFactionContributionAnimation(contributionForFaction(nextFactionId))
     }
   }
   else if (action === 'select-faction') {
@@ -3437,7 +3443,7 @@ app.addEventListener('click', (event) => {
     if (nextFactionId !== selectedFactionId) {
       selectedFactionMartialId = null
       factionSwitchAnimationPending = true
-      startFactionContributionAnimation(session.state.contribution[nextFactionId] ?? 0)
+      startFactionContributionAnimation(contributionForFaction(nextFactionId))
     }
     selectedFactionId = nextFactionId
     factionRosterOpen = false
@@ -3578,7 +3584,7 @@ const debugRecruit = (heroId: string): void => {
     if (faction?.currencyKind === 'worldCurrency') {
       session.state.worldCurrency[definition.worldId] = Math.max(session.state.worldCurrency[definition.worldId] ?? 0, definition.cost)
     } else {
-      session.state.contribution[definition.factionId!] = Math.max(session.state.contribution[definition.factionId!] ?? 0, definition.cost)
+      session.state.contribution[definition.worldId] = Math.max(session.state.contribution[definition.worldId] ?? 0, definition.cost)
     }
     const result = recruitFromFaction(session.state, definition.factionId!, heroId)
     if (!result.ok) throw new Error(result.message)
@@ -3646,7 +3652,7 @@ declare global {
       advanceCombat: (ticks: number) => CombatEvent[]
       advanceRuntime: (elapsedMs: number) => void
       grantWorldCurrency: (worldId: string, amount: number) => void
-      grantContribution: (factionId: string, amount: number) => void
+      grantContribution: (worldOrFactionId: string, amount: number) => void
       grantWorldReputation: (worldId: string, amount: number) => void
       unlockFaction: (factionId: string) => void
       recruitHero: (heroId: string) => void
@@ -3659,7 +3665,7 @@ declare global {
       settleEnemy: (seed: number, rank?: CombatRank) => string[]
       showWave: (wave: number, seed: number) => void
       forceCombatResult: (result: 'victory' | 'defeat') => void
-      prepareQuestBoard: (factionId: string, seed: number) => void
+      prepareQuestBoard: (worldOrFactionId: string, seed: number) => void
       reset: () => void
     }
   }
@@ -3714,16 +3720,22 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
   },
   advanceRuntime: (elapsedMs) => { ensurePlaying(); session.advanceRuntime(elapsedMs); render() },
   grantWorldCurrency: (worldId, amount) => { ensurePlaying(); session.state.worldCurrency[worldId] = amount; saveSession(); render() },
-  grantContribution: (factionId, amount) => { ensurePlaying(); session.state.contribution[factionId] = amount; saveSession(); render() },
+  grantContribution: (worldOrFactionId, amount) => {
+    ensurePlaying()
+    const worldId = factionById(worldOrFactionId)?.worldId ?? worldOrFactionId
+    session.state.contribution[worldId] = amount
+    saveSession()
+    render()
+  },
   grantWorldReputation: (worldId, amount) => { ensurePlaying(); session.state.worldReputation[worldId] = amount; saveSession(); render() },
   unlockFaction: (factionId) => {
     ensurePlaying()
     const faction = FACTIONS.find((item) => item.id === factionId)
     if (!faction) throw new Error('势力不存在')
     if (!session.state.unlockedFactionIds.includes(factionId)) session.state.unlockedFactionIds.push(factionId)
-    session.state.contribution[factionId] ??= 0
-    if (faction.currencyKind === 'contribution' && !session.state.factionBoards[factionId]) {
-      initializeQuestBoard(session.state, factionId, createRng(session.state.lastSavedAt), 0)
+    session.state.contribution[faction.worldId] ??= 0
+    if (!session.state.factionBoards[faction.worldId]) {
+      initializeQuestBoard(session.state, faction.worldId, createRng(session.state.lastSavedAt), 0)
     }
     saveSession()
     render()
@@ -3787,14 +3799,14 @@ if (import.meta.env.DEV) window.__EGG_JIANGHU__ = {
     presentCombatEvents(session.advanceTicks(0))
     render()
   },
-  prepareQuestBoard: (factionId, seed) => {
+  prepareQuestBoard: (worldOrFactionId, seed) => {
     ensurePlaying()
-    const faction = FACTIONS.find((item) => item.id === factionId)
-    if (!faction) throw new Error('势力不存在')
-    const normalId = `${faction.worldId}_stage_01_mob_1`
-    const bossId = `${faction.worldId}_stage_01_boss`
+    const worldId = factionById(worldOrFactionId)?.worldId ?? worldOrFactionId
+    if (!WORLDS.some((world) => world.id === worldId)) throw new Error('位面不存在')
+    const normalId = `${worldId}_stage_01_mob_1`
+    const bossId = `${worldId}_stage_01_boss`
     session.state.encounteredEnemyIds = [...new Set([...session.state.encounteredEnemyIds, normalId, bossId])]
-    initializeQuestBoard(session.state, factionId, createRng(seed), 0)
+    initializeQuestBoard(session.state, worldId, createRng(seed), 0)
     saveSession()
     render()
   },

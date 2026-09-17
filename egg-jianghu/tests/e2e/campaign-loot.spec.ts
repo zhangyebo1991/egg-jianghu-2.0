@@ -15,8 +15,9 @@ for (const [targetId, name, quality] of [[11, '初晶矿石', 2], [12, '灵耀�
     await page.evaluate(({ key, targetId, quality }) => {
       const state = window.__EGG_JIANGHU__.getState()
       state.clearedStageByWorldDifficulty['world_01:1'] = 3
-      state.factionBoards.tieyi_school = { refreshRemainingMs: 3_600_000, slots: [
-        { id: 'loot-audit', taskId: 3, quality, targetId, generatedAt: 0, acceptedRecordId: 0 }, null, null, null, null,
+      state.factionBoards.world_01 = { refreshRemainingMs: 1_200_000, slots: [
+        { id: 'loot-audit', taskId: 3, quality, targetId, generatedAt: 0, acceptedRecordId: 0 },
+        ...Array.from({ length: 14 }, () => null),
       ] }
       localStorage.setItem(key, JSON.stringify(state))
     }, { key: SAVE_KEY_V10, targetId, quality })

@@ -12,16 +12,21 @@ import {
   claimQuest,
   initializeQuestBoard,
   QUEST_REFRESH_MS,
+  QUEST_SLOT_COUNT,
 } from './quests'
 import { createHeroProgress, createInitialStateV10 } from './state'
 import type { AcceptedFactionQuest, FactionQuestBoardEntry, GameStateV10 } from './types'
 
-const FACTION_ID = 'tieyi_school'
+const WORLD_ID = 'world_01'
+
+const boardSlots = (...slots: Array<FactionQuestBoardEntry | null>): Array<FactionQuestBoardEntry | null> => [
+  ...slots,
+  ...Array.from({ length: QUEST_SLOT_COUNT - slots.length }, () => null),
+]
 
 const targetState = (): GameStateV10 => {
   const state = createInitialStateV10(0)
-  state.unlockedFactionIds.push(FACTION_ID)
-  initializeQuestBoard(state, FACTION_ID, createRng(9), 0)
+  initializeQuestBoard(state, WORLD_ID, createRng(9), 0)
   return state
 }
 
@@ -47,8 +52,6 @@ const acceptedQuest = (
   requiredAmount = 2,
 ): AcceptedFactionQuest => ({
   recordId,
-  factionId: FACTION_ID,
-  factionSourceId: 2,
   worldIndex: 1,
   taskId,
   quality: 1,
@@ -59,10 +62,10 @@ const acceptedQuest = (
   status: 1,
 })
 
-describe('原版势力五格悬榜', () => {
+describe('位面公共悬榜', () => {
   it.each([11, 12])('材料 %i 从真实击杀入库，经存读档后可交付且只扣一次', (targetId) => {
     const state = targetState()
-    state.factionBoards[FACTION_ID].slots[0] = boardQuest('collect', 1, 3, targetId)
+    state.factionBoards[WORLD_ID].slots[0] = boardQuest('collect', 1, 3, targetId)
     state.acceptedFactionQuests['1'] = acceptedQuest(1, 0, 3, targetId, 8)
     for (let seed = 1; seed <= 2000 && (state.materials[String(targetId)] ?? 0) < 9; seed++) {
       settleCombatEvent(state, { type: 'enemy-defeated', atMs: seed, worldId: 'world_01', stage: 1,
@@ -78,34 +81,33 @@ describe('原版势力五格悬榜', () => {
     saveGameV10(storage, state, 1000)
     const loaded = loadGameV10(storage, 2000).state
     const count = loaded.materials[String(targetId)]
-    expect(claimQuest(loaded, FACTION_ID, 0).ok).toBe(true)
+    expect(claimQuest(loaded, WORLD_ID, 0).ok).toBe(true)
     expect(loaded.materials[String(targetId)]).toBe(count - 8)
-    expect(loaded.contribution[FACTION_ID]).toBeGreaterThan(0)
-    expect(claimQuest(loaded, FACTION_ID, 0).ok).toBe(false)
+    expect(loaded.contribution[WORLD_ID]).toBeGreaterThan(0)
+    expect(claimQuest(loaded, WORLD_ID, 0).ok).toBe(false)
     expect(loaded.materials[String(targetId)]).toBe(count - 8)
   })
 
-  it('正式势力初始化五个任务刷新位且任务 6 不进入随机池', () => {
+  it('位面初始化十五个任务刷新位且任务 6 不进入随机池', () => {
     const state = targetState()
-    const board = state.factionBoards[FACTION_ID]
+    const board = state.factionBoards[WORLD_ID]
 
-    expect(board.slots).toHaveLength(5)
+    expect(board.slots).toHaveLength(QUEST_SLOT_COUNT)
     expect(board.slots.every(Boolean)).toBe(true)
     expect(board.slots.every((quest) => quest!.taskId >= 1 && quest!.taskId <= 5)).toBe(true)
     expect(board.refreshRemainingMs).toBe(QUEST_REFRESH_MS)
   })
 
-  it('接受记录独立于悬榜，运行一小时只刷新未接受格', () => {
+  it('接受记录独立于悬榜，20 分钟只刷新未接受格', () => {
     const state = targetState()
-    const board = state.factionBoards[FACTION_ID]
+    const board = state.factionBoards[WORLD_ID]
     const acceptedBoardId = board.slots[0]!.id
     const oldIds = board.slots.map((slot) => slot!.id)
 
-    expect(acceptQuest(state, FACTION_ID, 0).ok).toBe(true)
+    expect(acceptQuest(state, WORLD_ID, 0).ok).toBe(true)
     const acceptedRecordId = board.slots[0]!.acceptedRecordId
     expect(acceptedRecordId).toBeGreaterThan(0)
     expect(state.acceptedFactionQuests[String(acceptedRecordId)]).toMatchObject({
-      factionId: FACTION_ID,
       boardSlot: 0,
       status: 1,
     })
@@ -117,10 +119,10 @@ describe('原版势力五格悬榜', () => {
     expect(board.slots.slice(1).some((slot, index) => slot!.id !== oldIds[index + 1])).toBe(true)
   })
 
-  it('五格都已接受时换榜不覆盖悬榜或接受记录', () => {
+  it('十五格都已接受时换榜不覆盖悬榜或接受记录', () => {
     const state = targetState()
-    const board = state.factionBoards[FACTION_ID]
-    for (let slot = 0; slot < 5; slot += 1) expect(acceptQuest(state, FACTION_ID, slot).ok).toBe(true)
+    const board = state.factionBoards[WORLD_ID]
+    for (let slot = 0; slot < QUEST_SLOT_COUNT; slot += 1) expect(acceptQuest(state, WORLD_ID, slot).ok).toBe(true)
     const boardSnapshot = structuredClone(board.slots)
     const acceptedSnapshot = structuredClone(state.acceptedFactionQuests)
 
@@ -146,49 +148,49 @@ describe('原版势力五格悬榜', () => {
 
   it('领取奖励把悬榜写为已完成并清除接受记录，放弃则保留原任务可重接', () => {
     const state = createInitialStateV10(0)
-    state.factionBoards[FACTION_ID] = {
+    state.factionBoards[WORLD_ID] = {
       refreshRemainingMs: QUEST_REFRESH_MS,
-      slots: [boardQuest('claim', 1), boardQuest('cancel', 2), null, null, null],
+      slots: boardSlots(boardQuest('claim', 1), boardQuest('cancel', 2)),
     }
     state.acceptedFactionQuests = {
       1: { ...acceptedQuest(1, 0), progress: 2 },
       2: { ...acceptedQuest(2, 1), progress: 1 },
     }
 
-    expect(claimQuest(state, FACTION_ID, 0).ok).toBe(true)
-    expect(state.contribution[FACTION_ID]).toBeGreaterThan(0)
+    expect(claimQuest(state, WORLD_ID, 0).ok).toBe(true)
+    expect(state.contribution[WORLD_ID]).toBeGreaterThan(0)
     expect(state.worldReputation.world_01).toBeGreaterThan(0)
-    expect(state.factionBoards[FACTION_ID].slots[0]!.acceptedRecordId).toBe(-1)
+    expect(state.factionBoards[WORLD_ID].slots[0]!.acceptedRecordId).toBe(-1)
     expect(state.acceptedFactionQuests['1']).toBeUndefined()
 
-    expect(cancelQuest(state, FACTION_ID, 1)).toEqual({
+    expect(cancelQuest(state, WORLD_ID, 1)).toEqual({
       ok: true,
       message: '已放弃任务，悬榜任务可重新接受',
     })
-    expect(state.factionBoards[FACTION_ID].slots[1]).toMatchObject({ id: 'cancel', acceptedRecordId: 0 })
+    expect(state.factionBoards[WORLD_ID].slots[1]).toMatchObject({ id: 'cancel', acceptedRecordId: 0 })
     expect(state.acceptedFactionQuests['2']).toBeUndefined()
   })
 
   it('领取时按位面代理人计略乘贡献与声望，货币不乘', () => {
     const base = createInitialStateV10(0)
-    base.factionBoards[FACTION_ID] = {
+    base.factionBoards[WORLD_ID] = {
       refreshRemainingMs: QUEST_REFRESH_MS,
-      slots: [boardQuest('claim', 1), null, null, null, null],
+      slots: boardSlots(boardQuest('claim', 1)),
     }
     base.acceptedFactionQuests = { 1: { ...acceptedQuest(1, 0), progress: 2 } }
-    expect(claimQuest(base, FACTION_ID, 0).ok).toBe(true)
+    expect(claimQuest(base, WORLD_ID, 0).ok).toBe(true)
 
     const trained = createInitialStateV10(0)
     trained.heroes.hero_guo_jing = createHeroProgress('job_1')
     trained.heroes.hero_guo_jing.abilityTraining = { 9: 4 }
     trained.factionAgents.world_01 = { heroId: 'hero_guo_jing', enabled: true }
-    trained.factionBoards[FACTION_ID] = {
+    trained.factionBoards[WORLD_ID] = {
       refreshRemainingMs: QUEST_REFRESH_MS,
-      slots: [boardQuest('claim', 1), null, null, null, null],
+      slots: boardSlots(boardQuest('claim', 1)),
     }
     trained.acceptedFactionQuests = { 1: { ...acceptedQuest(1, 0), progress: 2 } }
-    expect(claimQuest(trained, FACTION_ID, 0).ok).toBe(true)
-    expect(trained.contribution[FACTION_ID]).toBe(Math.round((base.contribution[FACTION_ID] ?? 0) * 1.2))
+    expect(claimQuest(trained, WORLD_ID, 0).ok).toBe(true)
+    expect(trained.contribution[WORLD_ID]).toBe(Math.round((base.contribution[WORLD_ID] ?? 0) * 1.2))
     expect(trained.worldReputation.world_01).toBe(Math.round((base.worldReputation.world_01 ?? 0) * 1.08))
     expect(trained.worldCurrency.world_01).toBe(base.worldCurrency.world_01)
   })
@@ -206,15 +208,13 @@ describe('原版势力五格悬榜', () => {
       affixes: [],
       locked: false,
     })
-    state.factionBoards[FACTION_ID] = {
+    state.factionBoards[WORLD_ID] = {
       refreshRemainingMs: QUEST_REFRESH_MS,
-      slots: [
+      slots: boardSlots(
         boardQuest('currency', 1, 2, 2),
         boardQuest('material', 2, 3, 11),
         boardQuest('equipment', 3, 5, 1),
-        null,
-        null,
-      ],
+      ),
     }
     state.acceptedFactionQuests = {
       1: acceptedQuest(1, 0, 2, 2, 500),
@@ -222,11 +222,11 @@ describe('原版势力五格悬榜', () => {
       3: acceptedQuest(3, 2, 5, 1, 1),
     }
 
-    expect(claimQuest(state, FACTION_ID, 0).ok).toBe(true)
+    expect(claimQuest(state, WORLD_ID, 0).ok).toBe(true)
     expect(state.worldCurrency.world_01).toBe(500)
-    expect(claimQuest(state, FACTION_ID, 1).ok).toBe(true)
+    expect(claimQuest(state, WORLD_ID, 1).ok).toBe(true)
     expect(state.materials['11']).toBe(0)
-    expect(claimQuest(state, FACTION_ID, 2).ok).toBe(true)
+    expect(claimQuest(state, WORLD_ID, 2).ok).toBe(true)
     expect(state.inventory).toHaveLength(0)
   })
 
@@ -248,13 +248,13 @@ describe('原版势力五格悬榜', () => {
       equipment('normal-high', 'wp_101', 5, false),
       equipment('normal-low', 'wp_101', 3, false),
     )
-    state.factionBoards[FACTION_ID] = {
+    state.factionBoards[WORLD_ID] = {
       refreshRemainingMs: QUEST_REFRESH_MS,
-      slots: [boardQuest('equipment', 1, 5, 8), null, null, null, null],
+      slots: boardSlots(boardQuest('equipment', 1, 5, 8)),
     }
     state.acceptedFactionQuests = { 1: acceptedQuest(1, 0, 5, 8, 1) }
 
-    expect(claimQuest(state, FACTION_ID, 0).ok).toBe(true)
+    expect(claimQuest(state, WORLD_ID, 0).ok).toBe(true)
 
     // 只交出等级最低的普通装备，上锁件与至宝都必须留下。
     expect(state.inventory.map((item) => item.uid).sort())
@@ -273,13 +273,13 @@ describe('原版势力五格悬榜', () => {
       affixes: [],
       locked: true,
     })
-    state.factionBoards[FACTION_ID] = {
+    state.factionBoards[WORLD_ID] = {
       refreshRemainingMs: QUEST_REFRESH_MS,
-      slots: [boardQuest('equipment', 1, 5, 8), null, null, null, null],
+      slots: boardSlots(boardQuest('equipment', 1, 5, 8)),
     }
     state.acceptedFactionQuests = { 1: acceptedQuest(1, 0, 5, 8, 1) }
 
-    expect(claimQuest(state, FACTION_ID, 0).ok).toBe(false)
+    expect(claimQuest(state, WORLD_ID, 0).ok).toBe(false)
     expect(state.inventory).toHaveLength(1)
     expect(state.acceptedFactionQuests['1']).toBeDefined()
   })

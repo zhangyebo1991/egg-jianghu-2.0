@@ -74,13 +74,14 @@ export interface FactionSelectorView {
   name: string
   category: string
   branchNames: [string, string]
-  contribution: number
   selected: boolean
 }
 
 export interface FactionsPageViewModel {
+  worldId: string
   worldIndex: number
   worldName: string
+  contribution: number
   selectedFactionId: string
   factions: FactionSelectorView[]
   exchange: FactionExchangeViewModel | null
@@ -135,7 +136,7 @@ const renderTally = (progress: number, targetCount: number): string => {
 }
 
 const renderQuest = (
-  factionId: string,
+  worldId: string,
   slot: number,
   quest: FactionsPageViewModel['quests'][number]['quest'],
 ): string => {
@@ -170,7 +171,7 @@ const renderQuest = (
     </div>
     <div class="faction-notice-foot">
       <span class="faction-reward">赏 <b>${formatNumber(quest.rewardContribution)}</b> 贡献 · ${formatNumber(quest.rewardReputation)} 声望</span>
-      <button type="button" class="faction-action-button faction-action-${action}" data-action="${action}" data-faction-id="${escapeHtml(factionId)}" data-slot="${slot}"${quest.settled ? ' disabled' : ''}>${actionLabel}</button>
+      <button type="button" class="faction-action-button faction-action-${action}" data-action="${action}" data-world-id="${escapeHtml(worldId)}" data-slot="${slot}"${quest.settled ? ' disabled' : ''}>${actionLabel}</button>
     </div>
   </article>`
 }
@@ -182,7 +183,6 @@ const renderFactionPlaques = (view: FactionsPageViewModel): string => view.facti
       <strong class="faction-plaque-name">${escapeHtml(faction.name)}</strong>
       <span class="faction-plaque-meta"><b>${escapeHtml(faction.category)}</b>${escapeHtml(faction.branchNames.join(' · '))} 双线</span>
     </span>
-    <span class="faction-plaque-contrib"><b>${formatNumber(faction.contribution)}</b><small>贡献</small></span>
   </button>`).join('')
 
 const renderRoster = (view: FactionsPageViewModel): string => {
@@ -292,20 +292,20 @@ export const renderFactionsPage = (view: FactionsPageViewModel, section: 'quests
       </div>
       ${selected ? `<div class="faction-purse" data-testid="faction-purse">
         <svg width="34" height="30" viewBox="0 0 34 30" fill="none" aria-hidden="true"><path d="M17 3C10 3 5 8 4.5 14C4 20 9 26 17 26C25 26 30 20 29.5 14C29 8 24 3 17 3Z" fill="url(#faction-ingot)" stroke="#8f6f3a" stroke-width="1"/><ellipse cx="17" cy="9.5" rx="5.5" ry="3" fill="#f2ddab" opacity=".85"/><defs><linearGradient id="faction-ingot" x1="4" y1="4" x2="30" y2="26"><stop stop-color="#e6c67f"/><stop offset="1" stop-color="#a37e3f"/></linearGradient></defs></svg>
-        <div><strong>${formatNumber(selected.contribution)}</strong><span>势力贡献</span><small>${escapeHtml(selected.name)}</small></div>
+        <div><strong>${formatNumber(view.contribution)}</strong><span>位面贡献</span><small>${escapeHtml(view.worldName)}</small></div>
       </div>` : ''}
     </header>
 
     ${section !== 'exchange' ? `<div class="faction-plaque-row" data-testid="faction-selector">${renderFactionPlaques(view)}</div>` : ''}
     <nav class="ink-faction-tabs" aria-label="势力事务">${(['quests', 'exchange', 'recruit', 'martials'] as const).map((id, index) => `<button type="button" data-action="open-faction-panel" data-faction-panel="${id}" class="${section === id ? 'active' : ''}" aria-pressed="${section === id}">${['悬榜', '兑换', '招募', '武学传承'][index]}</button>`).join('')}</nav>
 
-    ${section === 'all' || section === 'quests' ? `<section class="faction-board" data-testid="faction-quest-board">
+    ${section === 'all' || section === 'quests' ? `<section class="faction-board" data-testid="faction-quest-board" data-world-id="${escapeHtml(view.worldId)}">
       <div class="faction-board-inner">
         <header class="faction-section-head">
-          <div class="faction-section-title"><h2>悬榜</h2><span>五格悬榜 · <i>揭榜办差</i> · 以功易赏</span></div>
-          <div class="faction-incense" title="一炷香尽，未揭之榜尽数更换"><span>一炷香后换榜 · <b>${minutes}</b> 分钟</span><span class="faction-incense-track"><i style="width:${Math.max(0, Math.min(100, (view.refreshRemainingMs / 3_600_000) * 100))}%"></i><em></em></span></div>
+          <div class="faction-section-title"><h2>悬榜</h2><span>十五格公共悬榜 · <i>揭榜办差</i> · 以功易赏</span></div>
+          <div class="faction-incense" title="一炷香尽，未揭之榜尽数更换"><span>一炷香后换榜 · <b>${minutes}</b> 分钟</span><span class="faction-incense-track"><i style="width:${Math.max(0, Math.min(100, (view.refreshRemainingMs / 1_200_000) * 100))}%"></i><em></em></span></div>
         </header>
-        <div class="faction-quest-grid">${view.quests.map(({ slot, quest }) => renderQuest(view.selectedFactionId, slot, quest)).join('')}</div>
+        <div class="faction-quest-grid">${view.quests.map(({ slot, quest }) => renderQuest(view.worldId, slot, quest)).join('')}</div>
       </div>
     </section>` : ''}
 

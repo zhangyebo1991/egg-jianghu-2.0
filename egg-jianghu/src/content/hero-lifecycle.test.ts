@@ -31,7 +31,7 @@ describe('阶段定位与原版确定兑换', () => {
       const worldIndex = Number(hero.worldId.slice(-2))
       const threshold = originalWorldReputationThreshold(hero.requiredReputationLevel!, worldIndex)
       const wallet = faction.currencyKind === 'worldCurrency' ? state.worldCurrency : state.contribution
-      const key = faction.currencyKind === 'worldCurrency' ? hero.worldId : faction.id
+      const key = hero.worldId
       wallet[key] = hero.cost
       state.worldReputation[hero.worldId] = threshold
       state.unlockedWorldIds = []
