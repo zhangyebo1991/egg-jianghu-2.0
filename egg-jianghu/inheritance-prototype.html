@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>传承 · 高保真原型</title>
+<title>传承 · 高保真原型 v2</title>
 <style>
-  /* ========== 基础变量（与游戏主题一致） ========== */
   :root {
     --ink-900: #141711;
     --ink-850: #1a1e16;
@@ -21,10 +20,11 @@
     --cinnabar: #b5503c;
     --cinnabar-bright: #cf6b53;
     --cinnabar-deep: #8a3a2b;
+    --blue: #4e7fb8;
+    --purple: #8b63a8;
     --line: #31382e;
     --line-2: #2a3027;
 
-    /* 品阶色 */
     --rarity-chuqian: #8e887d;
     --rarity-xunchang: #4f9168;
     --rarity-jingmiao: #4e7fb8;
@@ -42,46 +42,40 @@
     line-height: 1.6;
   }
 
-  /* ========== 页面头部 ========== */
+  /* ===== 页面头部 ===== */
   .page-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 28px;
+    padding: 14px 28px;
     border-bottom: 1px solid var(--line-2);
     background: linear-gradient(180deg, var(--ink-850), var(--ink-900));
   }
   .page-title {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 400;
     letter-spacing: .15em;
     color: var(--gold-bright);
   }
   .page-crumb {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--paper-mute);
     letter-spacing: .2em;
-    margin-top: 4px;
+    margin-top: 2px;
   }
-  .page-actions {
-    display: flex;
-    gap: 10px;
-  }
+  .page-actions { display: flex; gap: 10px; }
   .btn-icon {
-    width: 38px;
-    height: 38px;
+    width: 36px; height: 36px;
     border: 1px solid var(--line);
     border-radius: 6px;
     background: var(--ink-800);
     color: var(--paper-dim);
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
-    display: grid;
-    place-items: center;
+    display: grid; place-items: center;
   }
   .btn-text {
-    padding: 0 18px;
-    height: 38px;
+    padding: 0 16px; height: 36px;
     border: 1px solid var(--line);
     border-radius: 6px;
     background: var(--ink-800);
@@ -91,506 +85,367 @@
     cursor: pointer;
   }
 
-  /* ========== 资源栏 ========== */
+  /* ===== 资源栏 ===== */
   .resource-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 12px 28px;
+    gap: 28px;
+    padding: 10px 28px;
     border-bottom: 1px solid var(--line-2);
     background: rgba(201, 163, 92, .04);
   }
-  .resource-item {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
-  .resource-item .label {
-    font-size: 12px;
-    color: var(--paper-mute);
-    letter-spacing: .15em;
-  }
-  .resource-item .value {
-    font-size: 20px;
-    color: var(--gold-bright);
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-  }
-  .resource-item .value.sp {
-    color: var(--jade);
-  }
+  .resource-item { display: flex; align-items: baseline; gap: 8px; }
+  .resource-item .label { font-size: 11px; color: var(--paper-mute); letter-spacing: .15em; }
+  .resource-item .value { font-size: 18px; color: var(--gold-bright); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .resource-item .value.sp { color: var(--jade); }
 
-  /* ========== 研习工作台（Sticky） ========== */
+  /* ===== 研习工作台 ===== */
   .workbench {
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    position: sticky; top: 0; z-index: 50;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 20px;
-    padding: 14px 28px;
+    padding: 12px 28px;
     border-bottom: 1px solid var(--gold-deep);
     background: linear-gradient(105deg, #1c1f17, #141711);
     backdrop-filter: blur(12px);
     box-shadow: 0 4px 20px rgba(0,0,0,.4);
   }
-  .wb-disciple {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .wb-disciple-label {
-    font-size: 11px;
-    color: var(--paper-mute);
-    letter-spacing: .2em;
-  }
+  .wb-disciple { display: flex; align-items: center; gap: 10px; }
+  .wb-disciple-label { font-size: 10px; color: var(--paper-mute); letter-spacing: .2em; }
   .wb-disciple-plate {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 14px;
     border: 1px solid var(--gold-deep);
     border-radius: 6px;
     background: var(--ink-800);
     color: var(--paper);
-    font-size: 15px;
+    font-size: 14px;
     cursor: pointer;
   }
   .wb-disciple-plate .seal {
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
+    display: grid; place-items: center;
+    width: 22px; height: 22px;
     border-radius: 4px;
     background: var(--cinnabar-deep);
     color: #f0d2c4;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10px; font-weight: 700;
   }
-  .wb-skill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
-  .wb-skill-label {
-    font-size: 10px;
-    color: var(--paper-mute);
-    letter-spacing: .3em;
-  }
-  .wb-skill-name {
-    font-size: 22px;
-    color: var(--gold-bright);
-    letter-spacing: .1em;
-    font-weight: 400;
-  }
-  .wb-skill-level {
-    font-size: 12px;
-    color: var(--jade);
-  }
+  .wb-skill { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .wb-skill-label { font-size: 9px; color: var(--paper-mute); letter-spacing: .3em; }
+  .wb-skill-name { font-size: 20px; color: var(--gold-bright); letter-spacing: .1em; font-weight: 400; }
+  .wb-skill-level { font-size: 11px; color: var(--jade); }
   .wb-upgrade-btn {
-    padding: 12px 24px;
-    border: 0;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border: 0; border-radius: 8px;
     color: #2e2208;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: .1em;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: .08em;
     background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep));
     box-shadow: 0 6px 20px rgba(201, 163, 92, .35);
     cursor: pointer;
     white-space: nowrap;
   }
 
-  /* ========== 主内容区：左列表 + 右详情 ========== */
+  /* ===== 主布局 ===== */
   .main-layout {
     display: grid;
-    grid-template-columns: 1fr 420px;
-    gap: 0;
-    min-height: calc(100vh - 200px);
+    grid-template-columns: 1fr 460px;
+    min-height: calc(100vh - 180px);
   }
 
-  /* ===== 左侧：技能列表 ===== */
-  .skill-list {
-    padding: 20px 24px;
-    overflow-y: auto;
-  }
+  /* ===== 左侧技能列表 ===== */
+  .skill-list { padding: 16px 20px; overflow-y: auto; }
 
-  /* 势力分组 */
-  .faction-group {
-    margin-bottom: 24px;
-  }
+  .faction-group { margin-bottom: 20px; }
   .faction-group-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--line);
   }
-  .faction-group-title {
-    font-size: 16px;
-    color: var(--paper);
-    letter-spacing: .15em;
-    font-weight: 600;
-  }
-  .faction-group-progress {
-    font-size: 11px;
-    color: var(--jade);
-    letter-spacing: .1em;
-  }
+  .faction-group-title { font-size: 15px; color: var(--paper); letter-spacing: .12em; font-weight: 600; }
+  .faction-group-progress { font-size: 11px; color: var(--jade); letter-spacing: .1em; }
 
-  /* 技能卡片网格 */
   .skill-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
   }
 
-  /* 单个技能卡片 */
   .skill-card {
     display: grid;
-    grid-template-columns: 52px 1fr auto;
+    grid-template-columns: 46px 1fr auto;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: 10px;
+    padding: 10px 12px;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--ink-800);
     cursor: pointer;
-    transition: all .2s ease;
-    position: relative;
+    transition: all .15s ease;
   }
-  .skill-card:hover {
-    border-color: var(--gold);
-    background: var(--ink-700);
-    transform: translateY(-1px);
-  }
+  .skill-card:hover { border-color: var(--gold); background: var(--ink-700); }
   .skill-card.selected {
     border-color: var(--gold-bright);
     background: linear-gradient(135deg, rgba(201,163,92,.12), rgba(201,163,92,.04));
-    box-shadow: 0 0 0 1px var(--gold-bright), 0 4px 16px rgba(201,163,92,.15);
+    box-shadow: 0 0 0 1px var(--gold-bright);
   }
-  .skill-card.locked {
-    opacity: .5;
-  }
-  .skill-card.locked .skill-icon-wrap {
-    border-style: dashed;
-  }
+  .skill-card.locked { opacity: .45; }
+  .skill-card.locked .skill-icon-wrap { border-style: dashed; }
 
   .skill-icon-wrap {
-    width: 52px;
-    height: 52px;
+    width: 46px; height: 46px;
     border-radius: 8px;
-    border: 2px solid var(--rarity-color, var(--paper-mute));
-    display: grid;
-    place-items: center;
+    border: 2px solid var(--rc, var(--paper-mute));
+    display: grid; place-items: center;
     background: radial-gradient(circle at 35% 30%, var(--ink-700), var(--ink-900));
     position: relative;
-    flex-shrink: 0;
   }
-  .skill-icon-wrap .icon-char {
-    font-size: 22px;
-    color: var(--rarity-color, var(--paper-dim));
-    font-weight: 600;
-  }
+  .skill-icon-wrap .icon-char { font-size: 18px; color: var(--rc, var(--paper-dim)); font-weight: 600; }
   .skill-level-badge {
-    position: absolute;
-    bottom: -6px;
-    right: -6px;
-    padding: 2px 7px;
-    border-radius: 999px;
+    position: absolute; bottom: -5px; right: -5px;
+    padding: 1px 6px; border-radius: 999px;
     background: linear-gradient(160deg, var(--gold-bright), var(--gold));
-    color: #20180a;
-    font-size: 10px;
-    font-weight: 700;
+    color: #20180a; font-size: 9px; font-weight: 700;
     white-space: nowrap;
   }
 
-  .skill-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-  }
-  .skill-name-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .skill-name {
-    font-size: 16px;
-    color: var(--paper);
-    font-weight: 600;
-    letter-spacing: .05em;
-  }
+  .skill-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .skill-name-row { display: flex; align-items: center; gap: 6px; }
+  .skill-name { font-size: 14px; color: var(--paper); font-weight: 600; letter-spacing: .04em; }
   .skill-rarity-tag {
-    padding: 1px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    color: var(--rarity-color, var(--paper-mute));
-    background: color-mix(in srgb, var(--rarity-color, var(--paper-mute)) 15%, transparent);
-    letter-spacing: .08em;
+    padding: 0 6px; border-radius: 3px;
+    font-size: 10px;
+    color: var(--rc, var(--paper-mute));
+    background: color-mix(in srgb, var(--rc, var(--paper-mute)) 15%, transparent);
   }
-  .skill-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 12px;
-    color: var(--paper-mute);
-  }
-  .skill-meta .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .skill-meta .meta-value {
-    color: var(--paper-dim);
-    font-variant-numeric: tabular-nums;
-  }
-  .skill-cost {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-    font-size: 12px;
-  }
-  .skill-cost .cost-currency {
-    color: var(--gold);
-    font-variant-numeric: tabular-nums;
-  }
-  .skill-cost .cost-sp {
-    color: var(--jade);
-    font-variant-numeric: tabular-nums;
-    font-size: 11px;
-  }
+  .skill-meta { display: flex; gap: 10px; font-size: 11px; color: var(--paper-mute); }
+  .skill-meta .meta-value { color: var(--paper-dim); font-variant-numeric: tabular-nums; }
 
-  /* 已习得标记 */
+  .skill-cost { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; font-size: 11px; }
+  .skill-cost .cost-currency { color: var(--gold); font-variant-numeric: tabular-nums; }
+  .skill-cost .cost-sp { color: var(--jade); font-variant-numeric: tabular-nums; font-size: 10px; }
+
   .skill-card.learned .skill-icon-wrap {
     background: radial-gradient(circle at 35% 30%,
-      color-mix(in srgb, var(--rarity-color) 40%, #fff 5%),
-      color-mix(in srgb, var(--rarity-color) 60%, #000) 80%);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--rarity-color) 40%, transparent);
+      color-mix(in srgb, var(--rc) 40%, #fff 5%),
+      color-mix(in srgb, var(--rc) 60%, #000) 80%);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--rc) 40%, transparent);
   }
 
-  /* ===== 右侧：详情面板 ===== */
+  /* ===== 右侧详情面板 ===== */
   .detail-panel {
     border-left: 1px solid var(--line-2);
     background: var(--ink-850);
-    padding: 24px;
+    padding: 20px;
     overflow-y: auto;
     position: sticky;
-    top: 73px; /* 工作台高度 */
-    height: calc(100vh - 73px);
+    top: 67px;
+    height: calc(100vh - 67px);
   }
 
   .detail-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
     height: 100%;
     color: var(--paper-mute);
-    font-size: 14px;
-    letter-spacing: .2em;
-    text-align: center;
-    gap: 12px;
+    font-size: 14px; letter-spacing: .2em;
+    text-align: center; gap: 12px;
   }
-  .detail-empty .empty-icon {
-    font-size: 48px;
-    opacity: .3;
-  }
+  .detail-empty .empty-icon { font-size: 48px; opacity: .3; }
 
   /* 详情头部 */
   .detail-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 20px;
+    display: flex; gap: 14px;
+    margin-bottom: 16px;
   }
   .detail-icon {
-    width: 64px;
-    height: 64px;
+    width: 64px; height: 64px;
     border-radius: 10px;
-    border: 2px solid var(--rarity-color, var(--gold));
-    display: grid;
-    place-items: center;
+    border: 2px solid var(--rc, var(--gold));
+    display: grid; place-items: center;
     background: radial-gradient(circle at 35% 30%, var(--ink-700), var(--ink-900));
     flex-shrink: 0;
   }
-  .detail-icon .icon-char {
-    font-size: 28px;
-    color: var(--rarity-color, var(--gold-bright));
-    font-weight: 600;
-  }
-  .detail-title-block {
-    flex: 1;
-    min-width: 0;
-  }
-  .detail-name {
-    font-size: 26px;
-    color: var(--gold-bright);
-    letter-spacing: .08em;
-    font-weight: 400;
-    line-height: 1.2;
-  }
-  .detail-level {
-    font-size: 14px;
-    color: var(--jade);
-    margin-top: 4px;
+  .detail-icon .icon-char { font-size: 26px; color: var(--rc, var(--gold-bright)); font-weight: 600; }
+
+  .detail-title-block { flex: 1; min-width: 0; }
+  .detail-name { font-size: 24px; color: var(--gold-bright); letter-spacing: .06em; font-weight: 400; line-height: 1.2; }
+  .detail-lineage { font-size: 12px; color: var(--paper-mute); margin-top: 2px; }
+  .detail-tags-row { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .detail-type-tag {
+    padding: 1px 8px; border-radius: 4px;
+    font-size: 11px;
+    background: rgba(78, 127, 184, .15);
+    color: #6d9fd6;
   }
   .detail-rarity-badge {
-    display: inline-block;
-    margin-top: 6px;
-    padding: 2px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    color: var(--rarity-color, var(--paper-mute));
-    background: color-mix(in srgb, var(--rarity-color, var(--paper-mute)) 15%, transparent);
-    letter-spacing: .1em;
+    padding: 1px 8px; border-radius: 4px;
+    font-size: 11px;
+    color: var(--rc, var(--paper-mute));
+    background: color-mix(in srgb, var(--rc, var(--paper-mute)) 15%, transparent);
   }
 
-  /* 描述 */
-  .detail-desc {
-    margin: 16px 0;
+  /* 等级 + 星级 */
+  .detail-level-row {
+    display: flex; align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .detail-max-level { font-size: 13px; color: var(--jade); }
+  .star-row { display: flex; gap: 3px; }
+  .star {
+    width: 16px; height: 16px;
+    color: var(--paper-mute);
+    font-size: 14px;
+    line-height: 1;
+  }
+  .star.filled { color: var(--gold-bright); text-shadow: 0 0 6px rgba(230, 198, 127, .5); }
+
+  /* 技能描述 */
+  .detail-desc-box {
     padding: 12px 14px;
     border-left: 3px solid var(--gold-deep);
     background: rgba(201, 163, 92, .05);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 14px;
+  }
+  .desc-type-label {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11px; font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .desc-type-label.attack { background: rgba(181, 80, 60, .2); color: var(--cinnabar-bright); }
+  .desc-type-label.support { background: rgba(127, 168, 141, .2); color: var(--jade); }
+  .desc-type-label.defense { background: rgba(78, 127, 184, .2); color: #6d9fd6; }
+  .detail-desc-text {
     font-size: 13px;
     color: var(--paper-dim);
-    font-style: italic;
-    line-height: 1.8;
+    line-height: 1.7;
   }
+  .detail-desc-text .kw { color: var(--gold-bright); font-weight: 600; }
+  .detail-desc-text .kw-green { color: var(--jade); font-weight: 600; }
 
-  /* 属性网格 */
-  .detail-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin: 20px 0;
+  /* 消耗 + 冷却 */
+  .cost-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
   }
-  .stat-item {
+  .cost-item {
+    flex: 1;
     padding: 10px 12px;
     border: 1px solid var(--line);
     border-radius: 6px;
     background: var(--ink-800);
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
-  .stat-label {
-    font-size: 11px;
-    color: var(--paper-mute);
-    letter-spacing: .15em;
-    margin-bottom: 4px;
+  .cost-label { font-size: 10px; color: var(--paper-mute); letter-spacing: .15em; }
+  .energy-dots { display: flex; gap: 4px; align-items: center; }
+  .energy-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #e6c67f, #8f6f3a);
+    box-shadow: 0 0 6px rgba(230, 198, 127, .4);
   }
-  .stat-value {
-    font-size: 18px;
-    color: var(--paper);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
+  .energy-dot.empty { background: var(--ink-700); box-shadow: none; }
+  .cooldown-value { font-size: 16px; color: var(--paper); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* 成长属性列表 */
+  .growth-section { margin-bottom: 14px; }
+  .growth-title { font-size: 11px; color: var(--paper-mute); letter-spacing: .2em; margin-bottom: 8px; }
+  .growth-list { display: flex; flex-direction: column; gap: 6px; }
+  .growth-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--ink-800);
+    font-size: 12px;
   }
-  .stat-value.highlight {
-    color: var(--gold-bright);
+  .growth-badge {
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 10px; font-weight: 600;
+    flex-shrink: 0;
   }
+  .growth-badge.passive { background: rgba(78, 127, 184, .2); color: #6d9fd6; }
+  .growth-badge.specialty { background: rgba(201, 163, 92, .2); color: var(--gold-bright); }
+  .growth-attr { color: var(--paper-dim); }
+  .growth-value { color: var(--paper); font-weight: 600; font-variant-numeric: tabular-nums; margin-left: auto; }
+
+  /* 范围/目标预览 */
+  .range-section { margin-bottom: 14px; }
+  .range-title { font-size: 11px; color: var(--paper-mute); letter-spacing: .2em; margin-bottom: 8px; }
+  .range-preview {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--ink-800);
+  }
+  .range-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 22px);
+    grid-template-rows: repeat(3, 22px);
+    gap: 2px;
+  }
+  .range-cell {
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--ink-900);
+  }
+  .range-cell.hit { background: rgba(201, 163, 92, .3); border-color: var(--gold-deep); }
+  .range-cell.self { background: rgba(127, 168, 141, .4); border-color: var(--jade); }
+  .range-info { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+  .range-label { font-size: 11px; color: var(--paper-mute); }
+  .range-value { font-size: 13px; color: var(--paper); }
+  .range-effect { font-size: 11px; color: var(--jade); }
 
   /* 效果对比 */
-  .effect-compare {
-    margin: 20px 0;
-  }
-  .effect-compare-title {
-    font-size: 12px;
-    color: var(--paper-mute);
-    letter-spacing: .2em;
-    margin-bottom: 10px;
-  }
+  .effect-compare { margin-bottom: 14px; }
+  .effect-compare-title { font-size: 11px; color: var(--paper-mute); letter-spacing: .2em; margin-bottom: 8px; }
   .effect-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px;
     border-radius: 6px;
-    margin-bottom: 6px;
-  }
-  .effect-row.current {
-    background: rgba(127, 168, 141, .08);
-    border: 1px solid rgba(127, 168, 141, .2);
-  }
-  .effect-row.next {
-    background: rgba(201, 163, 92, .08);
-    border: 1px solid rgba(201, 163, 92, .2);
-  }
-  .effect-label {
-    font-size: 13px;
-    color: var(--paper-dim);
-  }
-  .effect-value {
-    font-size: 15px;
-    color: var(--paper);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* 标签 */
-  .detail-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 16px 0;
-  }
-  .detail-tags .tag {
-    padding: 3px 10px;
-    border: 1px solid rgba(201, 163, 92, .3);
-    border-radius: 999px;
-    color: var(--jade);
-    font-size: 11px;
-    letter-spacing: .08em;
-  }
-
-  /* 前置条件 */
-  .detail-prereq {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-radius: 6px;
-    background: rgba(139, 99, 168, .08);
-    border: 1px solid rgba(139, 99, 168, .2);
+    margin-bottom: 5px;
     font-size: 12px;
-    color: var(--paper-dim);
-    margin-bottom: 16px;
   }
-  .detail-prereq .prereq-name {
-    color: #b486cc;
-    font-weight: 600;
-  }
+  .effect-row.current { background: rgba(127, 168, 141, .08); border: 1px solid rgba(127, 168, 141, .2); }
+  .effect-row.next { background: rgba(201, 163, 92, .08); border: 1px solid rgba(201, 163, 92, .2); }
+  .effect-label { color: var(--paper-dim); }
+  .effect-value { color: var(--paper); font-weight: 600; font-variant-numeric: tabular-nums; }
 
-  /* 操作按钮区 */
+  /* 操作按钮 */
   .detail-actions {
-    margin-top: 24px;
-    padding-top: 20px;
+    margin-top: 18px;
+    padding-top: 16px;
     border-top: 1px solid var(--line);
   }
-  .action-cost-hint {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    font-size: 12px;
-    color: var(--paper-mute);
+  .action-cost-row {
+    display: flex; justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 11px; color: var(--paper-mute);
   }
-  .action-cost-hint .hint-value {
-    color: var(--gold-bright);
-    font-variant-numeric: tabular-nums;
-  }
+  .action-cost-row .v { color: var(--gold-bright); font-variant-numeric: tabular-nums; }
   .btn-primary {
     width: 100%;
-    padding: 14px;
-    border: 0;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: .15em;
+    padding: 12px;
+    border: 0; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    letter-spacing: .12em;
     cursor: pointer;
     transition: all .2s ease;
+    margin-top: 8px;
   }
   .btn-primary.learn {
     color: #f6e9d6;
@@ -602,87 +457,73 @@
     background: linear-gradient(160deg, var(--gold-bright), var(--gold-deep));
     box-shadow: 0 6px 20px rgba(201, 163, 92, .35);
   }
-  .btn-primary:disabled {
-    opacity: .5;
-    cursor: not-allowed;
-  }
   .btn-ghost {
     width: 100%;
-    margin-top: 8px;
-    padding: 10px;
+    margin-top: 6px;
+    padding: 9px;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: transparent;
     color: var(--paper-mute);
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: .1em;
     cursor: pointer;
   }
 
-  /* ========== 响应式 ========== */
+  /* 前置条件 */
+  .detail-prereq {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(139, 99, 168, .08);
+    border: 1px solid rgba(139, 99, 168, .2);
+    font-size: 11px;
+    color: var(--paper-dim);
+    margin-bottom: 12px;
+  }
+  .detail-prereq .pn { color: #b486cc; font-weight: 600; }
+
   @media (max-width: 1100px) {
-    .main-layout {
-      grid-template-columns: 1fr;
-    }
+    .main-layout { grid-template-columns: 1fr; }
     .detail-panel {
-      position: fixed;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 380px;
-      z-index: 100;
+      position: fixed; right: 0; top: 0; bottom: 0;
+      width: 400px; z-index: 100;
       transform: translateX(100%);
       transition: transform .3s ease;
       box-shadow: -8px 0 30px rgba(0,0,0,.5);
     }
-    .detail-panel.open {
-      transform: translateX(0);
-    }
-    .skill-grid {
-      grid-template-columns: 1fr;
-    }
+    .detail-panel.open { transform: translateX(0); }
+    .skill-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
-<!-- 页面头部 -->
 <header class="page-header">
   <div>
     <h1 class="page-title">传承</h1>
     <p class="page-crumb">东汉三国 · 武学传承 · 双线行功</p>
   </div>
   <div class="page-actions">
-    <button class="btn-icon" title="切换位面">⇄</button>
+    <button class="btn-icon">⇄</button>
     <button class="btn-text">返回战场</button>
     <button class="btn-icon">✕</button>
   </div>
 </header>
 
-<!-- 资源栏 -->
 <div class="resource-bar">
-  <div class="resource-item">
-    <span class="label">位面货币</span>
-    <span class="value">14,625</span>
-  </div>
-  <div class="resource-item">
-    <span class="label">SP</span>
-    <span class="value sp">1,235</span>
-  </div>
-  <div class="resource-item">
-    <span class="label">位面贡献</span>
-    <span class="value">5,012</span>
-  </div>
+  <div class="resource-item"><span class="label">位面货币</span><span class="value">14,625</span></div>
+  <div class="resource-item"><span class="label">SP</span><span class="value sp">1,235</span></div>
+  <div class="resource-item"><span class="label">位面贡献</span><span class="value">5,012</span></div>
 </div>
 
-<!-- 研习工作台 -->
 <div class="workbench">
   <div class="wb-disciple">
     <span class="wb-disciple-label">研习对象</span>
     <button class="wb-disciple-plate">
       <span class="seal">主</span>
       <strong>123</strong>
-      <span style="color:var(--paper-mute);font-size:12px">⌄</span>
+      <span style="color:var(--paper-mute);font-size:11px">⌄</span>
     </button>
   </div>
   <div class="wb-skill">
@@ -690,16 +531,13 @@
     <span class="wb-skill-name">野球拳</span>
     <span class="wb-skill-level">Lv.11/30</span>
   </div>
-  <button class="wb-upgrade-btn">
-    升级 · 1,235 SP + 14,625 位面货币
-  </button>
+  <button class="wb-upgrade-btn">升级 · 1,235 SP + 14,625 位面货币</button>
 </div>
 
-<!-- 主内容 -->
 <div class="main-layout">
 
-  <!-- 左侧：技能列表 -->
-  <div class="skill-list">
+  <!-- 左侧技能列表 -->
+  <div class="skill-list" id="skillList">
 
     <!-- 武馆 -->
     <div class="faction-group">
@@ -709,75 +547,31 @@
       </div>
       <div class="skill-grid">
 
-        <!-- 野球拳（已习得） -->
-        <div class="skill-card learned selected"
-             style="--rarity-color: var(--rarity-chuqian)"
-             data-martial="yeqiuquan">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">拳</span>
-            <span class="skill-level-badge">Lv.11</span>
-          </div>
+        <div class="skill-card learned selected" style="--rc: var(--rarity-chuqian)" data-id="yeqiuquan">
+          <div class="skill-icon-wrap"><span class="icon-char">拳</span><span class="skill-level-badge">Lv.11</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">野球拳</span>
-              <span class="skill-rarity-tag">粗浅</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">威力 <span class="meta-value">2.83</span></span>
-              <span class="meta-item">耗气 <span class="meta-value">3</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">野球拳</span><span class="skill-rarity-tag">粗浅</span></div>
+            <div class="skill-meta"><span>威力 <span class="meta-value">2.83</span></span><span>耗气 <span class="meta-value">3</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">14,625</span>
-            <span class="cost-sp">1,235 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">14,625</span><span class="cost-sp">1,235 SP</span></div>
         </div>
 
-        <!-- 竖斩（未习得） -->
-        <div class="skill-card locked"
-             style="--rarity-color: var(--rarity-xunchang)"
-             data-martial="shuzhan">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">斩</span>
-            <span class="skill-level-badge">Lv.0</span>
-          </div>
+        <div class="skill-card locked" style="--rc: var(--rarity-xunchang)" data-id="shuzhan">
+          <div class="skill-icon-wrap"><span class="icon-char">斩</span><span class="skill-level-badge">Lv.0</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">竖斩</span>
-              <span class="skill-rarity-tag">寻常</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">威力 <span class="meta-value">2.83</span></span>
-              <span class="meta-item">调息 <span class="meta-value">12s</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">竖斩</span><span class="skill-rarity-tag">寻常</span></div>
+            <div class="skill-meta"><span>威力 <span class="meta-value">2.83</span></span><span>调息 <span class="meta-value">12s</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">37,681</span>
-            <span class="cost-sp">2,292 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">37,681</span><span class="cost-sp">2,292 SP</span></div>
         </div>
 
-        <!-- 三连击（未解锁） -->
-        <div class="skill-card locked"
-             style="--rarity-color: var(--rarity-jingmiao)"
-             data-martial="sanlianji">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">连</span>
-            <span class="skill-level-badge">Lv.0</span>
-          </div>
+        <div class="skill-card locked" style="--rc: var(--rarity-jingmiao)" data-id="sanlianji">
+          <div class="skill-icon-wrap"><span class="icon-char">连</span><span class="skill-level-badge">Lv.0</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">三连击</span>
-              <span class="skill-rarity-tag">精妙</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">前置 <span class="meta-value">竖斩 Lv.30</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">三连击</span><span class="skill-rarity-tag">精妙</span></div>
+            <div class="skill-meta"><span>前置 <span class="meta-value">竖斩 Lv.30</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">198,766</span>
-            <span class="cost-sp">7,352 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">198,766</span><span class="cost-sp">7,352 SP</span></div>
         </div>
 
       </div>
@@ -791,70 +585,31 @@
       </div>
       <div class="skill-grid">
 
-        <div class="skill-card locked"
-             style="--rarity-color: var(--rarity-chuqian)"
-             data-martial="huzhiji">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">盾</span>
-            <span class="skill-level-badge">Lv.0</span>
-          </div>
+        <div class="skill-card locked" style="--rc: var(--rarity-chuqian)" data-id="huzhiji">
+          <div class="skill-icon-wrap"><span class="icon-char">盾</span><span class="skill-level-badge">Lv.0</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">虎盲击</span>
-              <span class="skill-rarity-tag">粗浅</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">来源 <span class="meta-value">贡献</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">虎盲击</span><span class="skill-rarity-tag">粗浅</span></div>
+            <div class="skill-meta"><span>来源 <span class="meta-value">贡献</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">69</span>
-            <span class="cost-sp">452 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">69</span><span class="cost-sp">452 SP</span></div>
         </div>
 
-        <div class="skill-card locked"
-             style="--rarity-color: var(--rarity-xunchang)"
-             data-martial="ziyu">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">愈</span>
-            <span class="skill-level-badge">Lv.0</span>
-          </div>
+        <div class="skill-card locked" style="--rc: var(--rarity-xunchang)" data-id="ziyu">
+          <div class="skill-icon-wrap"><span class="icon-char">愈</span><span class="skill-level-badge">Lv.0</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">自愈</span>
-              <span class="skill-rarity-tag">寻常</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">来源 <span class="meta-value">贡献</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">自愈</span><span class="skill-rarity-tag">寻常</span></div>
+            <div class="skill-meta"><span>来源 <span class="meta-value">贡献</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">985</span>
-            <span class="cost-sp">2,292 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">985</span><span class="cost-sp">2,292 SP</span></div>
         </div>
 
-        <div class="skill-card locked"
-             style="--rarity-color: var(--rarity-jingmiao)"
-             data-martial="weiwuhuwei">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">卫</span>
-            <span class="skill-level-badge">Lv.0</span>
-          </div>
+        <div class="skill-card locked" style="--rc: var(--rarity-jingmiao)" data-id="weiwuhuwei">
+          <div class="skill-icon-wrap"><span class="icon-char">卫</span><span class="skill-level-badge">Lv.0</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">魏武护卫</span>
-              <span class="skill-rarity-tag">精妙</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">前置 <span class="meta-value">自愈 Lv.30</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">魏武护卫</span><span class="skill-rarity-tag">精妙</span></div>
+            <div class="skill-meta"><span>前置 <span class="meta-value">自愈 Lv.30</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">5,012</span>
-            <span class="cost-sp">7,352 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">5,012</span><span class="cost-sp">7,352 SP</span></div>
         </div>
 
       </div>
@@ -868,70 +623,31 @@
       </div>
       <div class="skill-grid">
 
-        <div class="skill-card locked"
-             style="--rarity-color: var(--rarity-chuqian)"
-             data-martial="liaoshang">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">疗</span>
-            <span class="skill-level-badge">Lv.0</span>
-          </div>
+        <div class="skill-card locked" style="--rc: var(--rarity-chuqian)" data-id="liaoshang">
+          <div class="skill-icon-wrap"><span class="icon-char">疗</span><span class="skill-level-badge">Lv.0</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">疗伤</span>
-              <span class="skill-rarity-tag">粗浅</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">来源 <span class="meta-value">贡献</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">疗伤</span><span class="skill-rarity-tag">粗浅</span></div>
+            <div class="skill-meta"><span>来源 <span class="meta-value">贡献</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">69</span>
-            <span class="cost-sp">452 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">69</span><span class="cost-sp">452 SP</span></div>
         </div>
 
-        <div class="skill-card locked"
-             style="--rarity-color: var(--rarity-xunchang)"
-             data-martial="qingnangshu">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">囊</span>
-            <span class="skill-level-badge">Lv.0</span>
-          </div>
+        <div class="skill-card locked" style="--rc: var(--rarity-xunchang)" data-id="qingnangshu">
+          <div class="skill-icon-wrap"><span class="icon-char">囊</span><span class="skill-level-badge">Lv.0</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">青囊书</span>
-              <span class="skill-rarity-tag">寻常</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">来源 <span class="meta-value">贡献</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">青囊书</span><span class="skill-rarity-tag">寻常</span></div>
+            <div class="skill-meta"><span>来源 <span class="meta-value">贡献</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">985</span>
-            <span class="cost-sp">2,292 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">985</span><span class="cost-sp">2,292 SP</span></div>
         </div>
 
-        <div class="skill-card locked"
-             style="--rarity-color: var(--rarity-jingmiao)"
-             data-martial="qisihuisheng">
-          <div class="skill-icon-wrap">
-            <span class="icon-char">生</span>
-            <span class="skill-level-badge">Lv.0</span>
-          </div>
+        <div class="skill-card locked" style="--rc: var(--rarity-jingmiao)" data-id="qisihuisheng">
+          <div class="skill-icon-wrap"><span class="icon-char">生</span><span class="skill-level-badge">Lv.0</span></div>
           <div class="skill-info">
-            <div class="skill-name-row">
-              <span class="skill-name">起死回生</span>
-              <span class="skill-rarity-tag">精妙</span>
-            </div>
-            <div class="skill-meta">
-              <span class="meta-item">前置 <span class="meta-value">青囊书 Lv.30</span></span>
-            </div>
+            <div class="skill-name-row"><span class="skill-name">起死回生</span><span class="skill-rarity-tag">精妙</span></div>
+            <div class="skill-meta"><span>前置 <span class="meta-value">青囊书 Lv.30</span></span></div>
           </div>
-          <div class="skill-cost">
-            <span class="cost-currency">5,012</span>
-            <span class="cost-sp">7,352 SP</span>
-          </div>
+          <div class="skill-cost"><span class="cost-currency">5,012</span><span class="cost-sp">7,352 SP</span></div>
         </div>
 
       </div>
@@ -939,10 +655,9 @@
 
   </div>
 
-  <!-- 右侧：技能详情面板 -->
+  <!-- 右侧详情 -->
   <aside class="detail-panel" id="detailPanel">
-    <div class="detail-content" id="detailContent">
-      <!-- 详情内容（由JS填充） -->
+    <div id="detailContent">
       <div class="detail-empty">
         <div class="empty-icon">☯</div>
         <div>选择一处武功，查看详情</div>
@@ -953,313 +668,497 @@
 </div>
 
 <script>
-  // 技能数据
+  // ====== 技能数据（完整还原原版信息） ======
   const martialData = {
     yeqiuquan: {
       name: '野球拳',
+      lineage: '汉末武技',
+      type: '通用 · 物理',
+      rarity: '粗浅',
+      rc: 'var(--rarity-chuqian)',
+      icon: '拳',
       level: 11,
       maxLevel: 30,
-      rarity: '粗浅',
-      rarityColor: 'var(--rarity-chuqian)',
-      icon: '拳',
-      desc: '无门无派的野路子拳法，看似杂乱实则暗藏劲道。初学乍练，已有几分威力。',
+      stars: 1, // 已修炼星数（共10星）
+      desc: {
+        kind: 'attack',
+        label: '攻击',
+        text: '【攻击】对敌方单体造成释放者<span class="kw">物攻 × 130%</span>伤害'
+      },
       energyCost: 3,
-      cooldown: '8.0s',
-      power: '2.83',
-      source: '武馆',
-      career: '通用',
+      cooldown: '4s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '物攻增幅', value: '+0.35% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '通用 专精', value: '+4 / Lv' },
+      ],
+      range: {
+        area: '地面',
+        target: '敌方',
+        cells: [[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]], // 1=命中格
+        effect: '单体伤害 · 最远距离',
+      },
       currentEffect: 233,
       nextEffect: 245,
-      buffChance: null,
       learned: true,
       prereq: null,
-      tags: ['普攻', '近战'],
+      source: '武馆',
+      career: '通用',
       currencyCost: 14625,
       spCost: 1235,
     },
+
     shuzhan: {
       name: '竖斩',
+      lineage: '汉末武技',
+      type: '通用 · 物理',
+      rarity: '寻常',
+      rc: 'var(--rarity-xunchang)',
+      icon: '斩',
       level: 0,
       maxLevel: 30,
-      rarity: '寻常',
-      rarityColor: 'var(--rarity-xunchang)',
-      icon: '斩',
-      desc: '自上而下的一记重斩，势大力沉。虽只有一式，却也算得上堂堂正正。',
+      stars: 0,
+      desc: {
+        kind: 'attack',
+        label: '攻击',
+        text: '【攻击】对敌方单体造成释放者<span class="kw">物攻 × 283%</span>的重斩伤害'
+      },
       energyCost: 3,
-      cooldown: '12.0s',
-      power: '2.83',
-      source: '武馆',
-      career: '通用',
+      cooldown: '12s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '物攻增幅', value: '+0.50% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '通用 专精', value: '+5 / Lv' },
+      ],
+      range: {
+        area: '地面',
+        target: '敌方',
+        cells: [[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]],
+        effect: '单体伤害 · 高额倍率',
+      },
       currentEffect: null,
       nextEffect: 233,
-      buffChance: null,
       learned: false,
       prereq: { name: '野球拳', level: 30 },
-      tags: ['攻击', '近战'],
+      source: '武馆',
+      career: '通用',
       currencyCost: 37681,
       spCost: 2292,
     },
+
     sanlianji: {
       name: '三连击',
+      lineage: '汉末武技',
+      type: '通用 · 物理',
+      rarity: '精妙',
+      rc: 'var(--rarity-jingmiao)',
+      icon: '连',
       level: 0,
       maxLevel: 30,
-      rarity: '精妙',
-      rarityColor: 'var(--rarity-jingmiao)',
-      icon: '连',
-      desc: '快速连击三招，招招紧逼。对手避无可避，唯有硬接。',
+      stars: 0,
+      desc: {
+        kind: 'attack',
+        label: '连击',
+        text: '【连击】快速攻击敌方三次，每次造成<span class="kw">物攻 × 180%</span>伤害'
+      },
       energyCost: 6,
-      cooldown: '15.0s',
-      power: '5.66',
-      source: '武馆',
-      career: '通用',
+      cooldown: '15s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '物攻增幅', value: '+0.80% / Lv' },
+        { badge: '被动', badgeType: 'passive', attr: '暴击率', value: '+0.20% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '通用 专精', value: '+8 / Lv' },
+      ],
+      range: {
+        area: '地面',
+        target: '敌方',
+        cells: [[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]],
+        effect: '三段单体伤害',
+      },
       currentEffect: null,
       nextEffect: 466,
-      buffChance: null,
       learned: false,
       prereq: { name: '竖斩', level: 30 },
-      tags: ['连击', '近战'],
+      source: '武馆',
+      career: '通用',
       currencyCost: 198766,
       spCost: 7352,
     },
+
     huzhiji: {
       name: '虎盲击',
+      lineage: '魏国武学',
+      type: '虎卫 · 物理',
+      rarity: '粗浅',
+      rc: 'var(--rarity-chuqian)',
+      icon: '盾',
       level: 0,
       maxLevel: 30,
-      rarity: '粗浅',
-      rarityColor: 'var(--rarity-chuqian)',
-      icon: '盾',
-      desc: '仿虎豹扑击之势，一盾击出，势如盲虎。',
+      stars: 0,
+      desc: {
+        kind: 'attack',
+        label: '盾击',
+        text: '【攻击】以盾猛击敌方，造成<span class="kw">物攻 × 160%</span>伤害并降低其攻速'
+      },
       energyCost: 4,
-      cooldown: '10.0s',
-      power: '3.20',
-      source: '魏国贡献',
-      career: '虎卫',
+      cooldown: '10s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '物防增幅', value: '+0.40% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '虎卫 专精', value: '+4 / Lv' },
+      ],
+      range: {
+        area: '地面',
+        target: '敌方',
+        cells: [[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]],
+        effect: '单体伤害 + 减益',
+      },
       currentEffect: null,
       nextEffect: 250,
-      buffChance: null,
       learned: false,
       prereq: null,
-      tags: ['盾击', '近战'],
+      source: '魏国贡献',
+      career: '虎卫',
       currencyCost: 69,
       spCost: 452,
     },
+
     ziyu: {
       name: '自愈',
+      lineage: '魏国武学',
+      type: '虎卫 · 恢复',
+      rarity: '寻常',
+      rc: 'var(--rarity-xunchang)',
+      icon: '愈',
       level: 0,
       maxLevel: 30,
-      rarity: '寻常',
-      rarityColor: 'var(--rarity-xunchang)',
-      icon: '愈',
-      desc: '运功疗伤，缓慢恢复自身气血。持久战中不可或缺的本事。',
+      stars: 0,
+      desc: {
+        kind: 'support',
+        label: '恢复',
+        text: '【增益】运功疗伤，每回合恢复自身<span class="kw-green">最大生命 3%</span>，持续 3 回合'
+      },
       energyCost: 2,
-      cooldown: '20.0s',
-      power: '恢复 8%',
-      source: '魏国贡献',
-      career: '虎卫',
+      cooldown: '20s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '生命增幅', value: '+0.60% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '虎卫 专精', value: '+5 / Lv' },
+      ],
+      range: {
+        area: '自身',
+        target: '我方',
+        cells: [[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]],
+        effect: '持续恢复 · 自身',
+      },
       currentEffect: null,
       nextEffect: 180,
-      buffChance: null,
       learned: false,
       prereq: null,
-      tags: ['恢复', '增益'],
+      source: '魏国贡献',
+      career: '虎卫',
       currencyCost: 985,
       spCost: 2292,
     },
+
     weiwuhuwei: {
       name: '魏武护卫',
+      lineage: '魏国武学',
+      type: '虎卫 · 防御',
+      rarity: '精妙',
+      rc: 'var(--rarity-jingmiao)',
+      icon: '卫',
       level: 0,
       maxLevel: 30,
-      rarity: '精妙',
-      rarityColor: 'var(--rarity-jingmiao)',
-      icon: '卫',
-      desc: '魏武卒精锐护卫之法，大幅提升自身防御与抗击打能力。',
+      stars: 0,
+      desc: {
+        kind: 'defense',
+        label: '防御',
+        text: '【增益】进入护卫姿态，<span class="kw-green">物防 +30%</span>，<span class="kw-green">法防 +30%</span>，持续 2 回合'
+      },
       energyCost: 5,
-      cooldown: '25.0s',
-      power: '防御 +30%',
-      source: '魏国贡献',
-      career: '虎卫',
+      cooldown: '25s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '物防增幅', value: '+0.70% / Lv' },
+        { badge: '被动', badgeType: 'passive', attr: '法防增幅', value: '+0.70% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '虎卫 专精', value: '+8 / Lv' },
+      ],
+      range: {
+        area: '自身',
+        target: '我方',
+        cells: [[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]],
+        effect: '大幅双防提升',
+      },
       currentEffect: null,
       nextEffect: 320,
       buffChance: 15,
       learned: false,
       prereq: { name: '自愈', level: 30 },
-      tags: ['防御', '增益'],
+      source: '魏国贡献',
+      career: '虎卫',
       currencyCost: 5012,
       spCost: 7352,
     },
+
     liaoshang: {
       name: '疗伤',
+      lineage: '蜀国武学',
+      type: '药师 · 治疗',
+      rarity: '粗浅',
+      rc: 'var(--rarity-chuqian)',
+      icon: '疗',
       level: 0,
       maxLevel: 30,
-      rarity: '粗浅',
-      rarityColor: 'var(--rarity-chuqian)',
-      icon: '疗',
-      desc: '简单的金创药敷治，恢复少量气血。',
+      stars: 0,
+      desc: {
+        kind: 'support',
+        label: '治疗',
+        text: '【治疗】为单体友方恢复<span class="kw-green">最大生命 8%</span>的气血'
+      },
       energyCost: 2,
-      cooldown: '15.0s',
-      power: '恢复 5%',
-      source: '蜀国贡献',
-      career: '药师',
+      cooldown: '15s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '治疗增幅', value: '+0.50% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '药师 专精', value: '+4 / Lv' },
+      ],
+      range: {
+        area: '地面',
+        target: '我方',
+        cells: [[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]],
+        effect: '单体治疗',
+      },
       currentEffect: null,
       nextEffect: 150,
-      buffChance: null,
       learned: false,
       prereq: null,
-      tags: ['治疗', '恢复'],
+      source: '蜀国贡献',
+      career: '药师',
       currencyCost: 69,
       spCost: 452,
     },
+
     qingnangshu: {
       name: '青囊书',
+      lineage: '蜀国武学',
+      type: '药师 · 治疗',
+      rarity: '寻常',
+      rc: 'var(--rarity-xunchang)',
+      icon: '囊',
       level: 0,
       maxLevel: 30,
-      rarity: '寻常',
-      rarityColor: 'var(--rarity-xunchang)',
-      icon: '囊',
-      desc: '华佗所传医书，妙手回春之术。可恢复友方大量气血。',
+      stars: 0,
+      desc: {
+        kind: 'support',
+        label: '治疗',
+        text: '【治疗】为全体友方恢复<span class="kw-green">最大生命 12%</span>的气血'
+      },
       energyCost: 4,
-      cooldown: '18.0s',
-      power: '恢复 15%',
-      source: '蜀国贡献',
-      career: '药师',
+      cooldown: '18s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '治疗增幅', value: '+0.80% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '药师 专精', value: '+6 / Lv' },
+      ],
+      range: {
+        area: '地面',
+        target: '我方',
+        cells: [[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
+        effect: '全体治疗',
+      },
       currentEffect: null,
       nextEffect: 280,
-      buffChance: null,
       learned: false,
       prereq: null,
-      tags: ['治疗', '团队'],
+      source: '蜀国贡献',
+      career: '药师',
       currencyCost: 985,
       spCost: 2292,
     },
+
     qisihuisheng: {
       name: '起死回生',
+      lineage: '蜀国武学',
+      type: '药师 · 复活',
+      rarity: '精妙',
+      rc: 'var(--rarity-jingmiao)',
+      icon: '生',
       level: 0,
       maxLevel: 30,
-      rarity: '精妙',
-      rarityColor: 'var(--rarity-jingmiao)',
-      icon: '生',
-      desc: '医道绝学，可将濒死之人从鬼门关拉回。一局之战，关键在此一手。',
+      stars: 0,
+      desc: {
+        kind: 'support',
+        label: '复活',
+        text: '【绝学】复活一名已阵亡友方，恢复其<span class="kw-green">最大生命 30%</span>的气血'
+      },
       energyCost: 8,
-      cooldown: '60.0s',
-      power: '复活 30%',
-      source: '蜀国贡献',
-      career: '药师',
+      cooldown: '60s',
+      growth: [
+        { badge: '被动', badgeType: 'passive', attr: '治疗增幅', value: '+1.20% / Lv' },
+        { badge: '被动', badgeType: 'passive', attr: '复活比例', value: '+1.0% / Lv' },
+        { badge: '专精', badgeType: 'specialty', attr: '药师 专精', value: '+10 / Lv' },
+      ],
+      range: {
+        area: '地面',
+        target: '我方',
+        cells: [[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]],
+        effect: '单体复活 · 一局一次',
+      },
       currentEffect: null,
       nextEffect: 500,
-      buffChance: null,
       learned: false,
       prereq: { name: '青囊书', level: 30 },
-      tags: ['复活', '绝学'],
+      source: '蜀国贡献',
+      career: '药师',
       currencyCost: 5012,
       spCost: 7352,
     },
   };
 
-  // 渲染详情面板
+  // ====== 渲染详情 ======
   function renderDetail(id) {
     const m = martialData[id];
     if (!m) return;
 
+    // 星级
+    const totalStars = 10;
+    let starsHtml = '';
+    for (let i = 0; i < totalStars; i++) {
+      starsHtml += `<span class="star ${i < m.stars ? 'filled' : ''}">★</span>`;
+    }
+
+    // 能量点
+    let energyDots = '';
+    for (let i = 0; i < m.energyCost; i++) {
+      energyDots += `<span class="energy-dot"></span>`;
+    }
+
+    // 范围网格
+    let rangeCells = '';
+    for (let r = 0; r < m.range.cells.length; r++) {
+      for (let c = 0; c < m.range.cells[r].length; c++) {
+        const v = m.range.cells[r][c];
+        rangeCells += `<div class="range-cell ${v === 1 ? 'hit' : v === 2 ? 'self' : ''}"></div>`;
+      }
+    }
+
+    // 成长列表
+    let growthHtml = m.growth.map(g => `
+      <div class="growth-item">
+        <span class="growth-badge ${g.badgeType}">${g.badge}</span>
+        <span class="growth-attr">${g.attr}</span>
+        <span class="growth-value">${g.value}</span>
+      </div>
+    `).join('');
+
+    // 效果对比
     const effectRows = `
       <div class="effect-row current">
         <span class="effect-label">${m.learned ? `当前 Lv.${m.level}` : '当前'}</span>
-        <span class="effect-value">${m.currentEffect === null ? '尚未习得' : `效果值 ${m.currentEffect}${m.currentBuffChance ? ` · Buff ${m.currentBuffChance}%` : ''}`}</span>
+        <span class="effect-value">${m.currentEffect === null ? '尚未习得' : `效果值 ${m.currentEffect}`}</span>
       </div>
       <div class="effect-row next">
         <span class="effect-label">下一级 Lv.${m.learned ? m.level + 1 : 1}</span>
-        <span class="effect-value">${m.nextEffect === null ? '已臻化境' : `效果值 ${m.nextEffect}${m.nextBuffChance ? ` · Buff ${m.nextBuffChance}%` : ''}`}</span>
+        <span class="effect-value">${m.nextEffect === null ? '已臻化境' : `效果值 ${m.nextEffect}`}</span>
       </div>
     `;
 
+    // 前置
     const prereqHtml = m.prereq ? `
       <div class="detail-prereq">
-        <span>🔒 前置条件：</span>
-        <span class="prereq-name">${m.prereq.name}</span>
+        <span>🔒 前置条件</span>
+        <span class="pn">${m.prereq.name}</span>
         <span>Lv.${m.prereq.level}</span>
       </div>
     ` : '';
 
+    // 按钮
     const actionBtn = m.learned
-      ? `<button class="btn-primary upgrade" disabled>升级 · ${m.spCost.toLocaleString()} SP + ${m.currencyCost.toLocaleString()} 位面货币</button>
+      ? `<button class="btn-primary upgrade">升级 · ${m.spCost.toLocaleString()} SP + ${m.currencyCost.toLocaleString()} 位面货币</button>
          <button class="btn-ghost">遗忘 · 返还 ${Math.floor(m.spCost * 0.8).toLocaleString()} SP</button>`
-      : `<button class="btn-primary learn" disabled>研习 · ${m.spCost.toLocaleString()} SP + ${m.currencyCost.toLocaleString()} 位面货币</button>`;
+      : `<button class="btn-primary learn">研习 · ${m.spCost.toLocaleString()} SP + ${m.currencyCost.toLocaleString()} 位面货币</button>`;
 
     document.getElementById('detailContent').innerHTML = `
-      <div class="detail-header" style="--rarity-color: ${m.rarityColor}">
-        <div class="detail-icon">
-          <span class="icon-char">${m.icon}</span>
-        </div>
-        <div class="detail-title-block">
-          <div class="detail-name">${m.name}</div>
-          <div class="detail-level">Lv.${m.level} / ${m.maxLevel}</div>
-          <span class="detail-rarity-badge">${m.rarity}</span>
-        </div>
-      </div>
+      <div style="--rc: ${m.rc}">
 
-      <p class="detail-desc">${m.desc}</p>
+        <!-- 头部：图标 + 名称 -->
+        <div class="detail-header">
+          <div class="detail-icon"><span class="icon-char">${m.icon}</span></div>
+          <div class="detail-title-block">
+            <div class="detail-name">${m.name}</div>
+            <div class="detail-lineage">${m.lineage}</div>
+            <div class="detail-tags-row">
+              <span class="detail-type-tag">${m.type}</span>
+              <span class="detail-rarity-badge">${m.rarity}</span>
+            </div>
+          </div>
+        </div>
 
-      ${prereqHtml}
+        <!-- 等级 + 星级 -->
+        <div class="detail-level-row">
+          <span class="detail-max-level">最高 Lv.${m.maxLevel}</span>
+          <span class="star-row">${starsHtml}</span>
+        </div>
 
-      <div class="detail-stats">
-        <div class="stat-item">
-          <div class="stat-label">耗气</div>
-          <div class="stat-value highlight">${m.energyCost}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">调息</div>
-          <div class="stat-value">${m.cooldown}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">威力</div>
-          <div class="stat-value highlight">${m.power}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">来源</div>
-          <div class="stat-value" style="font-size:14px">${m.source}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">职业</div>
-          <div class="stat-value" style="font-size:14px">${m.career}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">品阶</div>
-          <div class="stat-value" style="font-size:14px;color:${m.rarityColor}">${m.rarity}</div>
-        </div>
-      </div>
+        ${prereqHtml}
 
-      <div class="effect-compare">
-        <div class="effect-compare-title">效果对比</div>
-        ${effectRows}
-      </div>
-
-      <div class="detail-tags">
-        ${m.tags.map(t => `<span class="tag">${t}</span>`).join('')}
-      </div>
-
-      <div class="detail-actions">
-        <div class="action-cost-hint">
-          <span>可用 SP</span>
-          <span class="hint-value">1,235</span>
+        <!-- 技能描述 -->
+        <div class="detail-desc-box">
+          <span class="desc-type-label ${m.desc.kind}">${m.desc.label}</span>
+          <div class="detail-desc-text">${m.desc.text}</div>
         </div>
-        <div class="action-cost-hint">
-          <span>位面货币</span>
-          <span class="hint-value">14,625</span>
+
+        <!-- 消耗 + 冷却 -->
+        <div class="cost-row">
+          <div class="cost-item">
+            <span class="cost-label">消耗能量</span>
+            <div class="energy-dots">${energyDots}</div>
+          </div>
+          <div class="cost-item">
+            <span class="cost-label">冷却时间</span>
+            <span class="cooldown-value">${m.cooldown}</span>
+          </div>
         </div>
-        ${actionBtn}
+
+        <!-- 范围/目标预览 -->
+        <div class="range-section">
+          <div class="range-title">范围 · 目标</div>
+          <div class="range-preview">
+            <div class="range-grid">${rangeCells}</div>
+            <div class="range-info">
+              <div><span class="range-label">范围 </span><span class="range-value">${m.range.area}</span></div>
+              <div><span class="range-label">目标 </span><span class="range-value">${m.range.target}</span></div>
+              <div class="range-effect">${m.range.effect}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 成长属性 -->
+        <div class="growth-section">
+          <div class="growth-title">每级成长</div>
+          <div class="growth-list">${growthHtml}</div>
+        </div>
+
+        <!-- 效果对比 -->
+        <div class="effect-compare">
+          <div class="effect-compare-title">效果对比</div>
+          ${effectRows}
+        </div>
+
+        <!-- 操作 -->
+        <div class="detail-actions">
+          <div class="action-cost-row"><span>可用 SP</span><span class="v">1,235</span></div>
+          <div class="action-cost-row"><span>位面货币</span><span class="v">14,625</span></div>
+          ${actionBtn}
+        </div>
+
       </div>
     `;
   }
 
-  // 卡片点击事件
+  // 卡片点击
   document.querySelectorAll('.skill-card').forEach(card => {
     card.addEventListener('click', () => {
       document.querySelectorAll('.skill-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
-      renderDetail(card.dataset.martial);
+      renderDetail(card.dataset.id);
     });
   });
 
-  // 默认选中第一个
+  // 默认选中
   renderDetail('yeqiuquan');
 </script>
 
