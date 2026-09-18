@@ -1862,7 +1862,7 @@ body {
   min-height: calc(100vh - 120px);
   margin: 0 auto;
   padding: 8px 0 28px;
-  overflow: hidden;
+  overflow: visible;
   color: var(--faction-paper);
   font-family: "Faction Song", "Noto Serif SC", "Source Han Serif SC", serif;
   font-synthesis: none;
@@ -2108,6 +2108,14 @@ body {
 .faction-meridian::after { right: 0; }
 .faction-meridian-head { flex-wrap: wrap; padding: 22px 30px 6px; }
 .faction-meridian-head .faction-section-title h2 { color: #e6d7b4; }
+.faction-martial-workbench { position: sticky; top: 10px; z-index: 30; display: grid; grid-template-columns: minmax(220px, .9fr) minmax(150px, 1fr) auto; align-items: center; gap: 14px; margin: 8px 30px 10px; padding: 10px 14px; border: 1px solid rgb(201 163 92 / 34%); border-radius: 8px; background: linear-gradient(105deg, rgb(28 31 23 / 98%), rgb(20 23 17 / 98%)); box-shadow: 0 10px 24px rgb(0 0 0 / 34%), inset 0 1px 0 rgb(233 222 195 / 8%); backdrop-filter: blur(10px); }
+.faction-workbench-target { min-width: 0; }
+.faction-workbench-skill { display: grid; min-width: 0; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 5px 9px; color: var(--faction-paper-mute); font-size: 10px; letter-spacing: .12em; }
+.faction-workbench-skill > span { grid-row: 1 / span 2; color: var(--faction-paper-mute); letter-spacing: .2em; }
+.faction-workbench-skill strong { overflow: hidden; color: #eadcb8; font-family: "Faction Brush", "Noto Serif SC", serif; font-size: 19px; font-weight: 400; letter-spacing: .1em; text-overflow: ellipsis; white-space: nowrap; }
+.faction-workbench-skill small { overflow: hidden; color: var(--faction-jade); font-size: 9px; letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
+.faction-workbench-action { min-width: 0; }
+.faction-workbench-action .faction-learn-button { min-height: 40px; padding: 9px 16px; font-size: 11px; letter-spacing: .12em; white-space: nowrap; }
 .faction-disciple { position: relative; display: flex; align-items: center; gap: 10px; }
 .faction-disciple-label { color: var(--faction-paper-mute); font-size: 10px; letter-spacing: .3em; }
 .faction-disciple-plate { display: flex; align-items: center; gap: 9px; padding: 7px 12px 7px 8px; border: 1px solid var(--faction-gold-deep); border-radius: 6px; color: var(--faction-paper); background: linear-gradient(165deg, rgb(201 163 92 / 12%), rgb(201 163 92 / 4%)); }
@@ -2126,6 +2134,10 @@ body {
 .faction-roster-pop input { min-width: 0; flex: 1; padding: 8px 11px; border: 1px solid var(--faction-line); border-radius: 5px; outline: none; color: var(--faction-paper); background: var(--faction-ink-950); font-size: 12px; letter-spacing: .08em; }
 .faction-roster-pop input:focus { border-color: var(--faction-gold); box-shadow: 0 0 0 3px rgb(201 163 92 / 14%); }
 .faction-roster-pop input::placeholder { color: var(--faction-paper-mute); }
+.faction-roster-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 12px; border-bottom: 1px solid rgb(233 222 195 / 7%); color: var(--faction-paper-mute); font-size: 10px; letter-spacing: .12em; }
+.faction-roster-tools b { color: var(--faction-jade); font-variant-numeric: tabular-nums; }
+.faction-roster-tools button { padding: 5px 8px; border: 1px solid rgb(201 163 92 / 32%); border-radius: 4px; color: var(--faction-gold-bright); background: rgb(201 163 92 / 6%); font-size: 10px; letter-spacing: .08em; }
+.faction-roster-tools button[aria-pressed="true"] { border-color: var(--faction-jade); color: #d4ead9; background: rgb(127 168 141 / 13%); }
 .faction-roster-list { max-height: 322px; padding: 6px; overflow-y: auto; scrollbar-color: #3d4438 transparent; scrollbar-width: thin; }
 .faction-roster-row { display: flex; align-items: center; width: 100%; gap: 10px; padding: 8px 10px; border: 0; border-radius: 6px; color: var(--faction-paper); text-align: left; background: transparent; }
 .faction-roster-row:hover { background: rgb(233 222 195 / 5%); }
@@ -2191,6 +2203,7 @@ body {
 .faction-detail-effects b { color: var(--faction-gold-bright); }
 .faction-detail-action { display: grid; justify-items: end; gap: 8px; }
 .faction-detail-action > span { color: var(--faction-jade); font-size: 10px; letter-spacing: .12em; white-space: nowrap; }
+.faction-detail-action > small { color: var(--faction-paper-mute); font-size: 9px; letter-spacing: .1em; }
 .faction-detail-origin { float: right; color: var(--faction-paper-mute); font-size: 11px; letter-spacing: .04em; }
 .faction-detail-desc { margin: 6px 0 0; color: var(--faction-paper-mute); font-size: 12px; font-style: italic; line-height: 1.7; letter-spacing: .02em; }
 .faction-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -2326,7 +2339,7 @@ body {
   .faction-plaque:last-child { grid-column: auto; }
   .faction-branch { grid-template-columns: 76px minmax(0, 1fr); margin: 10px 16px 6px; }
   .faction-branch-label strong { font-size: 24px; }
-  .faction-meridian-head, .faction-martial-detail { margin-left: 16px; margin-right: 16px; }
+  .faction-meridian-head, .faction-martial-workbench, .faction-martial-detail { margin-left: 16px; margin-right: 16px; }
 }
 
 @media (max-width: 760px) {
@@ -2345,7 +2358,11 @@ body {
   .faction-quest-grid { grid-template-columns: 1fr; gap: 14px; padding: 8px 14px 18px; }
   .faction-notice { min-height: 196px; }
   .faction-meridian-head { margin: 0; }
+  .faction-martial-workbench { top: 0; grid-template-columns: 1fr; gap: 9px; margin: 0 10px 8px; padding: 10px 12px; }
   .faction-disciple { width: 100%; justify-content: space-between; }
+  .faction-workbench-skill { grid-template-columns: auto minmax(0, 1fr); }
+  .faction-workbench-action, .faction-workbench-action .faction-learn-button { width: 100%; }
+  .faction-workbench-action .faction-learn-button { white-space: normal; }
   .faction-roster-pop { left: 0; right: auto; width: min(336px, calc(100vw - 34px)); }
   .faction-meridian .faction-branch-zone { grid-template-columns: 1fr; gap: 9px; padding: 6px 10px 2px; }
   .faction-meridian .faction-branch { min-width: 0; margin: 0; padding: 11px; overflow: hidden; }

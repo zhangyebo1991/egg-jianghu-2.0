@@ -247,6 +247,8 @@ let careerTreeOpen = false
 let selectedTreeCareerId: string | null = null
 let factionRosterOpen = false
 let factionRosterQuery = ''
+let factionRosterCompatibleOnly = false
+let factionRosterFocusPending = false
 let combatSpeed: CombatSpeed = 1
 let combatLogs: IdleCombatLogView[] = []
 type ActiveCombatEffect = IdleCombatEffectView & { startsAtMs: number; expiresAtMs: number }
@@ -1409,8 +1411,7 @@ const factionsViewModel = (): FactionsPageViewModel => {
   const selectedMartialDefinition = factionMartials.find((martial) => martial.id === selectedFactionMartialId)
   const recruited = recruitedHeroes()
   const rosterQuery = factionRosterQuery.trim()
-  const roster = recruited
-    .filter(({ name }) => !rosterQuery || name.includes(rosterQuery))
+  const rosterAll = recruited
     .map(({ definition, progress, name }) => {
       const heroFaction = definition.factionId ? FACTIONS.find((item) => item.id === definition.factionId) : undefined
       return {
@@ -1423,7 +1424,12 @@ const factionsViewModel = (): FactionsPageViewModel => {
         isPlayer: definition.source === 'starter',
       }
     })
-  const selectedHero = roster.find((hero) => hero.id === normalizedHeroId) ?? null
+  const rosterCompatibleCount = rosterAll.filter((hero) => hero.compatible).length
+  const roster = rosterAll
+    .filter((hero) => !rosterQuery || hero.name.includes(rosterQuery))
+    .filter((hero) => !factionRosterCompatibleOnly || hero.compatible)
+    .sort((left, right) => Number(right.selected) - Number(left.selected) || Number(right.compatible) - Number(left.compatible) || left.name.localeCompare(right.name, 'zh-CN'))
+  const selectedHero = rosterAll.find((hero) => hero.id === normalizedHeroId) ?? null
   return {
     worldId: world.id,
     worldIndex: world.index,
@@ -1483,9 +1489,11 @@ const factionsViewModel = (): FactionsPageViewModel => {
     selectedHeroId: normalizedHeroId,
     selectedHero,
     roster,
-    rosterCount: roster.length,
+    rosterCount: rosterAll.length,
     rosterOpen: factionRosterOpen,
-    rosterQuery: factionRosterQuery,
+    rosterQuery,
+    rosterCompatibleCount,
+    rosterCompatibleOnly: factionRosterCompatibleOnly,
     selectedMartialId: selectedFactionMartialId,
     selectedMartial,
   }
@@ -2233,6 +2241,10 @@ const render = (): void => {
   }
   if (panelOpen && (!panelWasOpen || locationChanged)) app.querySelector<HTMLElement>('.game-main')?.focus({ preventScroll: true })
   if (careerTreeOpen && !careerWasOpen) app.querySelector<HTMLButtonElement>('[data-action="close-career-tree"]')?.focus({ preventScroll: true })
+  if (factionRosterFocusPending) {
+    factionRosterFocusPending = false
+    window.requestAnimationFrame(() => app.querySelector<HTMLInputElement>('[data-action="faction-roster-search"]')?.focus({ preventScroll: true }))
+  }
   positionVoucherDetails()
   if (locationChanged) {
     restorePageScroll(locationKey)
@@ -2689,7 +2701,10 @@ const performAction = (button: HTMLButtonElement): void => {
   else if (action === 'martial-forget') commitAction(forgetMartial(session.state, heroId, button.dataset.martialId ?? ''))
   else if (action === 'toggle-faction-roster') {
     factionRosterOpen = !factionRosterOpen
-    if (!factionRosterOpen) factionRosterQuery = ''
+    if (factionRosterOpen) factionRosterFocusPending = true
+    else factionRosterQuery = ''
+  } else if (action === 'toggle-faction-roster-compatible') {
+    factionRosterCompatibleOnly = !factionRosterCompatibleOnly
   } else if (action === 'select-faction-hero') {
     selectedHeroId = button.dataset.heroId ?? selectedHeroId
     factionRosterOpen = false

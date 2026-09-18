@@ -228,6 +228,8 @@ const factionsFixture = (): FactionsPageViewModel => ({
   rosterCount: 1,
   rosterOpen: false,
   rosterQuery: '',
+  rosterCompatibleCount: 1,
+  rosterCompatibleOnly: false,
   selectedMartialId: 'qingfeng_hall_1',
   selectedMartial: {
     id: 'qingfeng_hall_1', name: '快剑第一式', stage: 1, rarity: '粗浅', cost: 80, upgradeCost: 96,
@@ -512,6 +514,24 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('451 SP + 势力贡献 80')
     expect(html).toContain('效果值 100')
     expect(html).toContain('来源 <b>全真教</b>')
+  })
+
+  it('传承工作台把点将、当前招式与研习操作集中在技能列表之前', () => {
+    const html = renderFactionsPage({
+      ...factionsFixture(),
+      rosterOpen: true,
+      rosterQuery: '试剑',
+      rosterCompatibleOnly: true,
+    }, 'martials')
+    const workbenchIndex = html.indexOf('data-testid="faction-martial-workbench"')
+    const branchIndex = html.indexOf('class="faction-branch-zone"')
+    expect(workbenchIndex).toBeGreaterThan(0)
+    expect(workbenchIndex).toBeLessThan(branchIndex)
+    expect(html).toContain('当前招式')
+    expect(html).toContain('data-action="martial-learn"')
+    expect(html).toContain('data-action="toggle-faction-roster-compatible" aria-pressed="true">显示全部')
+    expect(html).toContain('可传 <b>1</b> 人')
+    expect(html).toContain('已招募侠客 · 共 <b>1</b> 人 · 当前 1 人')
   })
 
   it('招募详情展示初始档案和未培养属性，而非重复名册五维', () => {

@@ -36,10 +36,53 @@ test('传承研习对象不显示旧脉系，通用武馆六门技能对全部�
   // 非通用技能仍按当前所选技能的职业限制显示，不能一律标记可传。
   const restricted = FACTION_MARTIALS.find((martial) => martial.worldId === 'world_01' && martial.skillCategory !== 1)!
   await page.evaluate((id) => window.__EGG_JIANGHU__.unlockFaction(id), restricted.factionId!)
-  await page.getByTestId(`faction-plaque-${restricted.factionId}`).click()
+  // 传承页不展示势力牌匾；重新激活当前册页后即可直接查看新解锁势力的招式。
+  await page.locator('.ink-faction-tabs [data-faction-panel="martials"]').click()
   await page.locator(`[data-action="select-martial"][data-martial-id="${restricted.id}"]`).click()
   await page.locator('[data-action="toggle-faction-roster"]').click()
   await expect(page.getByTestId('faction-roster-hero_player')).toContainText('职不符')
+})
+
+test('传承工作台在长列表中固定操作，点将搜索和可传筛选无需往返滚动', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 720 })
+  await page.evaluate((factionIds) => {
+    window.__EGG_JIANGHU__.recruitHero('hero_mu_nianci')
+    for (const factionId of factionIds) window.__EGG_JIANGHU__.unlockFaction(factionId)
+  }, [...new Set(FACTION_MARTIALS.filter((martial) => martial.worldId === 'world_01').map((martial) => martial.factionId!).filter(Boolean))])
+  await page.getByTestId('world-world_01').click()
+  await openFactionSection(page, 'martials')
+
+  const workbench = page.getByTestId('faction-martial-workbench')
+  await expect(workbench).toBeVisible()
+  await expect(workbench).toContainText('研习对象')
+  await expect(workbench).toContainText('当前招式')
+  await workbench.locator('[data-action="toggle-faction-roster"]').click()
+  const roster = page.getByTestId('faction-roster')
+  const search = roster.getByLabel('搜索研习对象')
+  await expect(search).toBeFocused()
+  await search.fill('穆')
+  await expect(roster.locator('.faction-roster-row')).toHaveCount(1)
+  await expect(roster).toContainText('穆念慈')
+  await roster.locator('[data-action="toggle-faction-roster-compatible"]').click()
+  await expect(roster.locator('[data-action="toggle-faction-roster-compatible"]')).toHaveAttribute('aria-pressed', 'true')
+  await page.locator('.game-main').evaluate((element) => { element.scrollTop = element.scrollHeight })
+  await expect(workbench).toBeVisible()
+  const [mainBox, workbenchBox] = await Promise.all([
+    page.locator('.game-main').boundingBox(),
+    workbench.boundingBox(),
+  ])
+  expect(mainBox).not.toBeNull()
+  expect(workbenchBox).not.toBeNull()
+  expect(workbenchBox!.y).toBeGreaterThanOrEqual(mainBox!.y)
+  expect(workbenchBox!.y).toBeLessThan(mainBox!.y + 100)
+  await page.screenshot({ path: testInfo.outputPath('faction-martial-workbench-desktop.png'), animations: 'disabled' })
+
+  await workbench.locator('[data-action="toggle-faction-roster"]').click()
+  await expect(roster).toBeHidden()
+  await page.setViewportSize({ width: 390, height: 700 })
+  await expect(workbench).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('faction-martial-workbench-mobile.png'), animations: 'disabled' })
 })
 
 test('武学装配替换卸下、筛选记忆、保存和战斗快照', async ({ page }, testInfo) => {
