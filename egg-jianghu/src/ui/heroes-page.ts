@@ -63,6 +63,7 @@ export interface CareerTreeDetailView {
 }
 
 export type HeroesMainTab = 'basic' | 'equipment' | 'martials' | 'career' | 'skins'
+export type HeroAttributeTab = 'basic' | 'additive' | 'special' | 'element' | 'mastery' | 'weapon'
 
 export interface HeroesHeroView {
   appearanceUrl?: string
@@ -107,6 +108,7 @@ export interface HeroesPageViewModel {
   skinsHtml?: string
   selectedHeroId: string | null
   mainTab: HeroesMainTab
+  attributeTab: HeroAttributeTab
   martials?: HeroMartialsView
   returnLabel?: string
   heroes: HeroesHeroView[]
@@ -203,7 +205,7 @@ const formatAttr = (value: number, unit: string): string => {
   return formatNumber(value)
 }
 
-const ATTR_TABS: Array<{ tab: string; label: string; cats: string[] }> = [
+const ATTR_TABS: Array<{ tab: HeroAttributeTab; label: string; cats: string[] }> = [
   { tab: 'basic', label: '基础', cats: ['核心', '能力'] },
   { tab: 'additive', label: '附加', cats: ['附加'] },
   { tab: 'special', label: '特殊', cats: ['特殊'] },
@@ -258,13 +260,13 @@ const renderXpBar = (value: number, required: number, maxed: boolean, extraClass
   return `<span class="bar${extraClass}" aria-hidden="true"><i style="width:${ratio.toFixed(1)}%"></i></span>`
 }
 
-const renderBasicTab = (hero: HeroesHeroView): string => {
+const renderBasicTab = (hero: HeroesHeroView, attributeTab: HeroAttributeTab): string => {
   const aptitudes = hero.aptitudes
   const attrs = { ...panelToAttributeMap(hero.combatStats, aptitudes), ...hero.abilityAttributes }
   const aptitudeTotal = aptitudeKeys.reduce((total, { key }) => total + aptitudes[key], 0)
   const uid = hero.id
-  const radios = ATTR_TABS.map((tab, index) =>
-    `<input type="radio" name="attrtab-${escapeHtml(uid)}" id="attrtab-${escapeHtml(uid)}-${tab.tab}" class="attr-tab-radio" data-attr-tab="${tab.tab}"${index === 0 ? ' checked' : ''}>`,
+  const radios = ATTR_TABS.map((tab) =>
+    `<input type="radio" name="attrtab-${escapeHtml(uid)}" id="attrtab-${escapeHtml(uid)}-${tab.tab}" class="attr-tab-radio" data-attr-tab="${tab.tab}"${tab.tab === attributeTab ? ' checked' : ''}>`,
   ).join('')
   const labels = ATTR_TABS.map((tab) =>
     `<label for="attrtab-${escapeHtml(uid)}-${tab.tab}" class="attr-tab-label" data-attr-tab="${tab.tab}">${escapeHtml(tab.label)}</label>`,
@@ -463,7 +465,7 @@ const renderMainTabs = (view: HeroesPageViewModel, hero: HeroesHeroView): string
   <nav class="hero-htabs" aria-label="侠客资料分页">
     ${HERO_MAIN_TABS.map(({ tab, label }) => `<button type="button" class="htab${view.mainTab === tab ? ' active' : ''}" data-action="hero-main-tab" data-main-tab="${tab}" aria-pressed="${view.mainTab === tab}">${label}</button>`).join('')}
   </nav>
-  <div class="hero-tab-panel" data-main-tab="basic"${view.mainTab === 'basic' ? '' : ' hidden'}>${renderBasicTab(hero)}</div>
+  <div class="hero-tab-panel" data-main-tab="basic"${view.mainTab === 'basic' ? '' : ' hidden'}>${renderBasicTab(hero, view.attributeTab)}</div>
   <div class="hero-tab-panel" data-main-tab="equipment"${view.mainTab === 'equipment' ? '' : ' hidden'}>${view.equipment ? renderEquipmentTab(hero, view.equipment) : ''}</div>
   <div class="hero-tab-panel" data-main-tab="martials"${view.mainTab === 'martials' ? '' : ' hidden'}>${view.martials ? renderHeroMartials(view.martials) : ''}</div>
   <div class="hero-tab-panel" data-main-tab="career"${view.mainTab === 'career' ? '' : ' hidden'}>${renderCareerTab(hero)}</div>

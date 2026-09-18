@@ -118,7 +118,7 @@ import {
 } from './domain/original-progression'
 import { clearSaveV10, hasLegacySave, hasSaveV10, SAVE_KEY_V10, importSaveV10, exportSaveV10 } from './domain/save-v10'
 import { placeFormation, removeFormation } from './domain/formation'
-import { normalizePlayerName } from './domain/state'
+import { createHeroProgress, normalizePlayerName } from './domain/state'
 import {
   cityBaseMonthlyRent,
   cityDevelopment,
@@ -136,7 +136,7 @@ import type { ExchangeCategory, FactionExchangeViewModel } from './ui/faction-ex
 import type { FactionRecruitmentViewModel } from './ui/faction-recruitment'
 import { renderFormationPage, type FormationFilter, type FormationPageViewModel } from './ui/formation-page'
 import { renderPremiumPanel, renderShopPage, type PremiumPanel } from './ui/premium-panel'
-import { renderHeroesPage, type HeroesHeroView, type HeroesMainTab, type HeroesPageViewModel } from './ui/heroes-page'
+import { renderHeroesPage, type HeroAttributeTab, type HeroesHeroView, type HeroesMainTab, type HeroesPageViewModel } from './ui/heroes-page'
 import {
   renderIdlePage,
   type IdleCombatEffectKind,
@@ -218,6 +218,7 @@ let progressionSection: ProgressionSection = 'dungeons'
 let progressionDungeonDifficulty = 1
 let selectedProgressionEquipmentUid: string | null = null
 let heroMainTab: HeroesMainTab = 'basic'
+let heroAttributeTab: HeroAttributeTab = 'basic'
 let heroAutoEquipBuild: EquipmentBuild = 'physical'
 let heroMartialSlot: number | null = null
 let heroMartialQuery = ''
@@ -639,6 +640,7 @@ const enterPlaying = (nextSession: GameSession): void => {
   inventoryDetailOpen = false
   pendingInventoryDropUids = []
   heroMainTab = 'basic'
+  heroAttributeTab = 'basic'
   heroMartialSlot = null
   heroMartialQuery = ''
   heroMartialCategory = 'all'
@@ -1093,6 +1095,7 @@ const heroesViewModel = (): HeroesPageViewModel => {
     skinsHtml: selectedId ? renderHeroSkins(session.state, selectedId, Boolean(session.combat || session.pendingCombatRestart)) : '',
     selectedHeroId: selectedId,
     mainTab: heroMainTab,
+    attributeTab: heroAttributeTab,
     martials: selectedProgress ? {
       hero: selectedProgress,
       attributes: buildAttributeMap(heroByIdV10(selectedId!)!, selectedProgress, session.state.inventory, session.state.unlockedSkinIds),
@@ -1301,15 +1304,24 @@ const factionRecruitmentViewModel = (): FactionRecruitmentViewModel => {
       ? session.state.contribution[faction.worldId] ?? 0
       : session.state.worldCurrency[faction.worldId] ?? 0
     const worldName = WORLDS.find((world) => world.id === faction.worldId)?.name ?? faction.worldId
-    return originalFactionRecruitmentByFaction(faction.originalId).map((hero) => {
+    return originalFactionRecruitmentByFaction(faction.originalId).flatMap((hero) => {
       const heroId = `hero_orig_${hero.heroSourceId}`
+      const definition = heroByIdV10(heroId)
+      if (!definition) return []
+      const initialProgress = createHeroProgress(definition.baseCareerId)
+      const initialStats = buildCombatStats(definition, initialProgress)
       const ordinaryPool = isOrdinaryPoolHero(heroId)
       let actionReason: string | null = null
       if (session.state.heroes[heroId]?.recruited) actionReason = '已邀请'
       else if (!unlocked) actionReason = `需关卡进度 ${faction.requiredProgress}`
       else if (ordinaryPool) actionReason = '普通池招募'
       else if (balance < hero.price) actionReason = `${resourceName}不足`
-      return { heroSourceId: hero.heroSourceId, heroId, factionId: faction.id, name: hero.name, worldId: faction.worldId, worldName, price: hero.price, resourceName, aptitudes: hero.aptitudes, requiredProgress: faction.requiredProgress, currentProgress, unlocked, actionReason, ordinaryPool }
+      return [{
+        heroSourceId: hero.heroSourceId, heroId, factionId: faction.id, name: hero.name, worldId: faction.worldId, worldName,
+        factionName: faction.name, grade: definition.grade, category: heroMeridianCategory(definition), careerName: careerById(definition.baseCareerId)?.name ?? definition.baseCareerId,
+        recruited: Boolean(session.state.heroes[heroId]?.recruited), price: hero.price, resourceName, aptitudes: hero.aptitudes,
+        requiredProgress: faction.requiredProgress, currentProgress, unlocked, actionReason, ordinaryPool, initialStats,
+      }]
     })
   })
   return {
@@ -2811,6 +2823,16 @@ const performAction = (button: HTMLButtonElement): void => {
     recruitmentDetailHeroId = button.dataset.heroId ?? null
   } else if (action === 'close-recruit-detail') {
     recruitmentDetailHeroId = null
+  } else if (action === 'open-recruit-hero-profile') {
+    const detailHero = factionRecruitmentViewModel().detailHero
+    if (!detailHero?.recruited) {
+      notify('请先邀请该侠客入队', true)
+    } else {
+      selectedHeroId = detailHero.heroId
+      heroMainTab = 'basic'
+      recruitmentDetailHeroId = null
+      activeTab = 'heroes'
+    }
   } else if (action === 'exchange-goto-world') {
     // 货币不足时的引导：跳到目标位面，关卡侧去挂机刷铜钱，势力侧去悬榜赚贡献。
     const worldId = button.dataset.worldId ?? ''
@@ -3165,6 +3187,7 @@ const closeInkPanel = (): void => {
   activeTab = 'idle'
   jianghuView = session.combat ? 'combat' : 'worlds'
   inventoryDetailOpen = false
+  recruitmentDetailHeroId = null
   careerTreeOpen = false
   factionRosterOpen = false
   showResetConfirmation = false
@@ -3242,6 +3265,7 @@ app.addEventListener('click', (event) => {
     inkPanelReturnFocus = inkAction
     inkPanelOpen = true
     inkFactionPanel = panel
+    if (panel !== 'recruit') recruitmentDetailHeroId = null
     activeTab = 'idle'
     jianghuView = 'world'
     jianghuSection = 'factions'
@@ -3575,6 +3599,16 @@ app.addEventListener('click', (event) => {
     }
   } else performAction(button)
   render()
+})
+
+app.addEventListener('change', (event) => {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement) || !target.classList.contains('attr-tab-radio')) return
+  const tab = target.dataset.attrTab
+  if (tab === 'basic' || tab === 'additive' || tab === 'special' || tab === 'element' || tab === 'mastery' || tab === 'weapon') {
+    heroAttributeTab = tab
+    render()
+  }
 })
 
 window.addEventListener('storage', (event) => {

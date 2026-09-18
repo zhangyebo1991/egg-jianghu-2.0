@@ -411,6 +411,16 @@ test('侠客页展示当前职业与诸天属性', async ({ page }) => {
   await expect(stats.locator('[data-stat-label="物攻"] .av')).not.toHaveText('0')
   await expect(stats.locator('[data-stat-label="命中修正"] .av')).toHaveText('0%')
 
+  for (const tab of ['additive', 'special', 'element'] as const) {
+    await page.locator(`.heroes-page label[data-attr-tab="${tab}"]`).click()
+    await expect(page.locator(`.heroes-page .attr-tab-radio[data-attr-tab="${tab}"]`)).toBeChecked()
+    await expect(page.locator(`.heroes-page .attr-panel[data-attr-tab="${tab}"]`)).toBeVisible()
+  }
+  await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="career"]').click()
+  await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="basic"]').click()
+  await expect(page.locator('.heroes-page .attr-tab-radio[data-attr-tab="element"]')).toBeChecked()
+  await expect(page.locator('.heroes-page .attr-panel[data-attr-tab="element"]')).toBeVisible()
+
   await page.locator('.heroes-page [data-action="hero-main-tab"][data-main-tab="career"]').click()
   const career = page.getByTestId('hero-career-panel')
   await expect(career).toBeVisible()
@@ -694,7 +704,15 @@ test('兑换页聚合位面声望、贡献兑换与招募', async ({ page }, tes
   await page.getByTestId('faction-recruitment-hero-2').getByRole('button', { name: '查看详情' }).click()
   await expect(page.getByTestId('faction-recruitment-detail')).toBeVisible()
   await expect(page.getByTestId('faction-recruitment-detail')).toContainText('邢道荣')
+  await expect(page.getByTestId('faction-recruitment-detail')).toContainText('初始战斗属性')
+  await expect(page.getByTestId('faction-recruitment-detail')).toContainText('附加与特殊属性')
   await page.getByTestId('faction-recruitment-detail').getByRole('button', { name: '关闭侠客详情' }).click()
+  await expect(page.getByTestId('faction-recruitment-detail')).toHaveCount(0)
+  await page.getByTestId('faction-recruitment-hero-2').getByRole('button', { name: '查看详情' }).click()
+  await expect(page.getByTestId('faction-recruitment-detail')).toBeVisible()
+  await page.getByRole('button', { name: '关闭册页', exact: true }).click()
+  await openWorldSection(page, 'factions')
+  await page.locator('.ink-faction-tabs [data-faction-panel="recruit"]').click()
   await expect(page.getByTestId('faction-recruitment-detail')).toHaveCount(0)
   await recruitment.scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('faction-recruitment.png'), fullPage: true })

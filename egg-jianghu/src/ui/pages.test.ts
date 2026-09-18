@@ -23,6 +23,7 @@ it('侠客基础页显示邢道荣的原版能力，不再从战斗面板丢失�
 const heroesFixture = (): HeroesPageViewModel => ({
   selectedHeroId: 'hero_test',
   mainTab: 'basic',
+  attributeTab: 'basic',
   heroes: [{
     id: 'hero_test', name: '试剑人', grade: '乙', recruited: true,
     level: 12, experience: 340, experienceRequired: 1200, careerId: 'job_1', careerName: '白丁', careerLevel: 5,
@@ -123,6 +124,7 @@ const recruitmentFixture = (): NonNullable<FactionsPageViewModel['recruitment']>
     name: '邢道荣',
     worldId: 'world_01',
     worldName: '东汉三国',
+    factionName: '清风堂', grade: '乙', category: '剑', careerName: '白丁', recruited: false,
     price: 100,
     resourceName: '位面货币',
     aptitudes: { strength: 38, insight: 17, constitution: 47, agility: 26, resolve: 34 },
@@ -131,6 +133,10 @@ const recruitmentFixture = (): NonNullable<FactionsPageViewModel['recruitment']>
     unlocked: true,
     actionReason: null,
     ordinaryPool: false,
+    initialStats: {
+      maxHp: 310, effectiveAgility: 190, externalAttack: 132, internalAttack: 105, externalDefense: 61, internalDefense: 49,
+      criticalChance: .05, criticalMultiplier: 1.5, lifeSteal: 0, accuracy: 0, evade: 0, initialEnergy: 0, energyRecovery: 1, cooldownRate: 0, controlResistance: 0,
+    },
   }],
   detailHero: null,
 })
@@ -398,6 +404,9 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('暴击几率')
     expect(html).toContain('物理增伤')
     expect(html).toContain('命中修正</dt><dd>7.3%')
+    const additive = renderHeroesPage({ ...heroesFixture(), attributeTab: 'additive' })
+    expect(additive).toContain('data-attr-tab="additive" checked')
+    expect(additive).not.toContain('data-attr-tab="basic" checked')
   })
 
   it('侠客页展示当前职业、已修列表与转职树入口', () => {
@@ -503,6 +512,18 @@ describe('version 10 长期循环页面', () => {
     expect(html).toContain('451 SP + 势力贡献 80')
     expect(html).toContain('效果值 100')
     expect(html).toContain('来源 <b>全真教</b>')
+  })
+
+  it('招募详情展示初始档案和未培养属性，而非重复名册五维', () => {
+    const recruitment = recruitmentFixture()
+    recruitment.detailHero = recruitment.heroes[0]
+    const html = renderFactionsPage({ ...factionsFixture(), recruitment }, 'recruit')
+    expect(html).toContain('未培养、未穿戴装备时的初始档案')
+    expect(html).toContain('初始职业 · 白丁')
+    expect(html).toContain('来源 · 清风堂')
+    expect(html).toContain('初始战斗属性')
+    expect(html).toContain('附加与特殊属性')
+    expect(html).toContain('元素、专精与武器属性初始无加成')
   })
 
   it('悬榜、招募与传承页均不显示势力选择器', () => {
